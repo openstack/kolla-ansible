@@ -1,0 +1,88 @@
+[DEFAULT]
+
+debug = {{ designate_logging_debug }}
+
+log_dir = /var/log/kolla/designate
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[service:central]
+default_pool_id = {{ designate_pool_id }}
+
+[service:api]
+api_base_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ designate_api_port }}
+api_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+api_port = {{ designate_api_port }}
+enable_api_v1 = True
+enabled_extensions_v1 = 'diagnostics, quotas, reports, sync, touch'
+enable_api_v2 = True
+enabled_extensions_v2 = 'quotas, reports'
+
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ designate_keystone_user }}
+password = {{ designate_keystone_password }}
+http_connect_timeout = 60
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[service:sink]
+enabled_notification_handlers = nova_fixed, neutron_floatingip
+workers = {{ openstack_service_workers }}
+
+[service:mdns]
+listen = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ designate_mdns_port }}
+workers = {{ openstack_service_workers }}
+
+[service:worker]
+enabled = True
+notify = True
+workers = {{ openstack_service_workers }}
+
+[service:pool_manager]
+cache_driver = sqlalchemy
+pool_id = {{ designate_pool_id }}
+workers = {{ openstack_service_workers }}
+
+[pool_manager_cache:sqlalchemy]
+connection = mysql+pymysql://{{ designate_pool_manager_database_user }}:{{ designate_pool_manager_database_password }}@{{ designate_pool_manager_database_address }}/{{ designate_pool_manager_database_name }}
+max_retries = 10
+idle_timeout = 3600
+
+[pool_manager_cache:memcache]
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[storage:sqlalchemy]
+connection = mysql+pymysql://{{ designate_database_user }}:{{ designate_database_password }}@{{ designate_database_address }}/{{ designate_database_name }}
+max_retries = 10
+idle_timeout = 3600
+
+[handler:nova_fixed]
+notification_topics = notifications_designate
+control_exchange = nova
+format = '(display_name)s.%(domain)s'
+
+[handler:neutron_floatingip]
+notification_topics = notifications_designate
+control_exchange = neutron
+format = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(domain)s'
+
+[oslo_messaging_notifications]
+topics = notifications_designate
+driver = messaging
+
+[oslo_messaging_rabbit]
+rabbit_userid = {{ rabbitmq_user }}
+rabbit_password = {{ rabbitmq_password }}
+rabbit_hosts = {% for host in groups['rabbitmq'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[oslo_concurrency]
+lock_path = /var/lib/designate/tmp

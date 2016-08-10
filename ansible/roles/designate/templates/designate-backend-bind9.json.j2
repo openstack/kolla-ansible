@@ -1,0 +1,35 @@
+{% set bind_cmd = 'named' if kolla_base_distro in ['ubuntu', 'debian'] else 'named' %}
+{% set bind_file = 'bind/named.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'named.conf' %}
+
+{
+    "command": "/usr/sbin/{{ bind_cmd }} -g",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/named.conf",
+            "dest": "/etc/{{ bind_file }}",
+            "owner": "root",
+            "perm": "0660"
+        },
+        {
+            "source": "{{ container_config_directory }}/rndc.conf",
+            "dest": "/etc/rndc.conf",
+            "owner": "root",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "{{ container_config_directory }}/rndc.key",
+            "dest": "/etc/rndc.key",
+            "owner": "root",
+            "perm": "0600",
+            "optional": true
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/named",
+            "owner": "root:root",
+            "recurse": true
+        }
+    ]
+}

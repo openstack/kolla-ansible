@@ -1,0 +1,28 @@
+- name: default-bind
+  id: {{ designate_pool_id }}
+  description: Default BIND9 Pool
+  attributes: {}
+  ns_records:
+    - hostname: {{ designate_ns_record }}.
+      priority: 1
+  nameservers:
+{% for host in groups['designate-backend-bind9'] %}
+    - host: {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}
+      port: {{ designate_bind_port }}
+{% endfor %}
+  targets:
+{% for bind_host in groups['designate-backend-bind9'] %}
+    - type: bind9
+      description: BIND9 Server {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+      masters:
+{% for mdns_host in groups['designate-mdns'] %}
+        - host: {{ hostvars[mdns_host]['ansible_' + hostvars[mdns_host]['api_interface']]['ipv4']['address'] }}
+          port: 5354
+{% endfor %}
+      options:
+        host: {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+        port: {{ designate_bind_port }}
+        rndc_host: {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+        rndc_port: {{ designate_rndc_port }}
+        rndc_key_file: /etc/designate/rndc.key
+{% endfor %}

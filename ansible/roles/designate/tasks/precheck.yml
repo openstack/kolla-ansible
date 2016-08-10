@@ -1,0 +1,48 @@
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - "{{ item }}"
+  register: container_facts
+  with_items:
+    - designate_api
+    - designate_backend_bind9
+
+- name: Checking free port for designate API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ designate_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['designate_api'] is not defined
+    - inventory_hostname in groups['designate-api']
+
+- name: Checking free port for designate mdns
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ designate_mdns_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['designate_mdns'] is not defined
+    - inventory_hostname in groups['designate-mdns']
+
+- name: Checking free port for designate backend bind9 port
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ designate_bind_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['designate_backend_bind9'] is not defined
+    - inventory_hostname in groups['designate-backend-bind9']
+
+- name: Checking free port for designate backend rndc port
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ designate_rndc_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['designate_backend_bind9'] is not defined
+    - inventory_hostname in groups['designate-backend-bind9']
