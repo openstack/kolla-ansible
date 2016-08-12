@@ -1,0 +1,39 @@
+---
+project_name: "trove"
+
+####################
+# Database
+####################
+trove_database_name: "trove"
+trove_database_user: "trove"
+trove_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+
+####################
+# Docker
+####################
+trove_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-trove-conductor"
+trove_conductor_tag: "{{ openstack_release }}"
+trove_conductor_image_full: "{{ trove_conductor_image }}:{{ trove_conductor_tag }}"
+
+trove_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-trove-api"
+trove_api_tag: "{{ openstack_release }}"
+trove_api_image_full: "{{ trove_api_image }}:{{ trove_api_tag }}"
+
+trove_taskmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-trove-taskmanager"
+trove_taskmanager_tag: "{{ openstack_release }}"
+trove_taskmanager_image_full: "{{ trove_taskmanager_image }}:{{ trove_taskmanager_tag }}"
+
+
+####################
+# OpenStack
+####################
+trove_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
+trove_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
+trove_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
+
+trove_logging_debug: "{{ openstack_logging_debug }}"
+
+trove_keystone_user: "trove"
+
+openstack_trove_auth: "{'auth_url':'{{ openstack_auth.auth_url }}','username':'{{ openstack_auth.username }}','password':'{{ openstack_auth.password }}','project_name':'{{ openstack_auth.project_name }}','domain_name':'default'}"

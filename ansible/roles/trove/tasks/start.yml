@@ -1,0 +1,38 @@
+---
+- name: Starting trove-api container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ trove_api_image_full }}"
+    name: "trove_api"
+    volumes:
+      - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['trove-api']
+
+- name: Starting trove-conductor container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ trove_conductor_image_full }}"
+    name: "trove_conductor"
+    volumes:
+      - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "trove:/var/lib/trove/"
+  when: inventory_hostname in groups['trove-conductor']
+
+- name: Starting trove-taskmanager container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ trove_taskmanager_image_full }}"
+    name: "trove_taskmanager"
+    volumes:
+      - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "trove:/var/lib/trove/"
+  when: inventory_hostname in groups['trove-taskmanager']

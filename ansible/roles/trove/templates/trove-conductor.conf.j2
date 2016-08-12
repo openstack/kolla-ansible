@@ -1,0 +1,13 @@
+[DEFAULT]
+debug = {{ trove_logging_debug }}
+
+log_dir = /var/log/kolla/trove
+trove_auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+conductor_manager = trove.conductor.manager.Manager
+control_exchange = trove
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[database]
+connection = mysql+pymysql://{{ trove_database_user }}:{{ trove_database_password }}@{{ trove_database_address }}/{{ trove_database_name }}
+max_retries = -1
