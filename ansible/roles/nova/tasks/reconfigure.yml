@@ -54,6 +54,16 @@
     - nova_console == 'spice'
     - inventory_hostname in groups['nova-spicehtml5proxy']
 
+- name: Ensuring the nova_serialproxy container is up
+  kolla_docker:
+    name: "nova_serialproxy"
+    action: "get_container_state"
+  register: container_state
+  failed_when: container_state.Running == false
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - inventory_hostname in groups['nova-serialproxy']
+
 - include: config.yml
 
 - name: Check the configs for nova libvirt, ssh, conductor, api, consoleauth and scheduler containers
@@ -105,6 +115,15 @@
   when:
     - nova_console == 'spice'
     - inventory_hostname in groups['nova-spicehtml5proxy']
+
+- name: Check the configs in the nova_serialproxy container
+  command: docker exec nova_serialproxy /usr/local/bin/kolla_set_configs --check
+  changed_when: false
+  failed_when: false
+  register: nova_serialproxy_check_result
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - inventory_hostname in groups['nova-serialproxy']
 
 # NOTE(jeffrey4l): when config_strategy == 'COPY_ALWAYS'
 # and container env['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE',
@@ -158,6 +177,15 @@
   when:
     - nova_console == 'spice'
     - inventory_hostname in groups['nova-spicehtml5proxy']
+
+- name: Container config strategy for nova_serialproxy
+  kolla_docker:
+    name: nova_serialproxy
+    action: "get_container_env"
+  register: nova_serialproxy_container_env
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - inventory_hostname in groups['nova-serialproxy']
 
 - name: Remove the nova libvirt, ssh, conductor, api, consoleauth and scheduler containers
   kolla_docker:
@@ -226,6 +254,17 @@
     - config_strategy == 'COPY_ONCE' or nova_spicehtml5proxy_container_env['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE'
     - nova_spicehtml5proxy_check_result['rc'] == 1
 
+- name: Remove nova_serialproxy container
+  kolla_docker:
+    name: nova_serialproxy
+    action: "remove_container"
+  register: remove_nova_serialproxy_container
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - inventory_hostname in groups['nova-serialproxy']
+    - config_strategy == 'COPY_ONCE' or nova_serialproxy_container_env['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE'
+    - nova_serialproxy_check_result['rc'] == 1
+
 - include: start.yml
   when: remove_containers.changed
 
@@ -253,6 +292,11 @@
   when:
     - nova_console == 'spice'
     - remove_nova_spicehtml5proxy_container.changed
+
+- include: start.yml
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - remove_nova_serialproxy_container.changed
 
 - name: Restart the nova libvirt, ssh, conductor, api, consoleauth and scheduler containers
   kolla_docker:
@@ -316,3 +360,14 @@
     - inventory_hostname in groups['nova-spicehtml5proxy']
     - nova_spicehtml5proxy_container_env['KOLLA_CONFIG_STRATEGY'] != 'COPY_ONCE'
     - nova_spicehtml5proxy_check_result['rc'] == 1
+
+- name: Restart the nova_serialproxy container
+  kolla_docker:
+    name: "nova_serialproxy"
+    action: "restart_container"
+  when:
+    - enable_nova_serialconsole_proxy | bool
+    - config_strategy == 'COPY_ALWAYS'
+    - inventory_hostname in groups['nova-serialproxy']
+    - nova_serialproxy_container_env['KOLLA_CONFIG_STRATEGY'] != 'COPY_ONCE'
+    - nova_serialproxy_check_result['rc'] == 1

@@ -4,6 +4,7 @@
     name:
       - nova_api
       - nova_novncproxy
+      - nova_serialproxy
       - nova_spicehtml5proxy
   register: container_facts
 
@@ -37,6 +38,17 @@
     - container_facts['nova_novncproxy'] is not defined
     - nova_console == 'novnc'
     - inventory_hostname in groups['nova-novncproxy']
+
+- name: Checking free port for Nova Serial Proxy
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ nova_serialproxy_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_serialproxy'] is not defined
+    - enable_nova_serialconsole_proxy | bool
+    - inventory_hostname in groups['nova-serialproxy']
 
 - name: Checking free port for Nova Spice HTML5 Proxy
   wait_for:

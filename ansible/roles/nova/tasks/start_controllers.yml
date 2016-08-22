@@ -51,6 +51,20 @@
       - "kolla_logs:/var/log/kolla/"
   when: inventory_hostname in groups['nova-scheduler']
 
+- name: Starting nova-serialproxy container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ nova_serialproxy_image_full }}"
+    name: "nova_serialproxy"
+    volumes:
+      - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when:
+    - inventory_hostname in groups['nova-serialproxy']
+    - enable_nova_serialconsole_proxy | bool
+
 - name: Starting nova-spicehtml5proxy container
   kolla_docker:
     action: "start_container"
