@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "memcached"
 
@@ -11,7 +14,9 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    mode: "0660"
   register: memcached_config_json
+  become: true
   with_items:
     - "memcached"
   notify: Restart memcached container
@@ -25,9 +30,11 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
+  become: true
   register: check_memcached_container
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - action != "config"
   notify: Restart memcached container
+

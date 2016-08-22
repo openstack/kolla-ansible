@@ -4,6 +4,7 @@
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     recurse: yes
+  become: true
   with_items:
     - "fluentd"
     - "fluentd/input"
@@ -18,6 +19,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: common_config_jsons
   with_dict: "{{ common_services }}"
   notify:
@@ -27,6 +30,8 @@
   template:
     src: "conf/input/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
+    mode: "0660"
+  become: true
   register: fluentd_input
   with_items:
     - "00-global"
@@ -42,6 +47,8 @@
   template:
     src: "conf/output/{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
+    mode: "0660"
+  become: true
   register: fluentd_output
   when: item.enabled | bool
   with_items:
@@ -74,7 +81,9 @@
   template:
     src: "conf/format/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
+    mode: "0660"
   register: fluentd_format
+  become: true
   with_items:
     - "apache_access"
     - "wsgi_access"
@@ -85,6 +94,8 @@
   template:
     src: "conf/filter/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item }}.conf"
+    mode: "0660"
+  become: true
   register: fluentd_filter
   with_items:
     - "00-record_transformer"
@@ -96,6 +107,8 @@
   template:
     src: "td-agent.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/td-agent.conf"
+    mode: "0660"
+  become: true
   register: fluentd_td_agent
   with_items:
     - "fluentd"
@@ -106,6 +119,8 @@
   template:
     src: "cron-logrotate-{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/cron/logrotate/{{ item.name }}.conf"
+    mode: "0660"
+  become: true
   register: cron_confs
   when: item.enabled | bool
   with_items:
@@ -164,6 +179,17 @@
     - { name: "zun", enabled: "{{ enable_zun }}" }
   notify:
     - Restart cron container
+
+- name: Ensuring config directories have correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  with_items:
+    - "fluentd"
+    - "cron"
 
 - name: Check common containers
   kolla_docker:

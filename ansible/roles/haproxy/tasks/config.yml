@@ -1,6 +1,7 @@
 ---
 - name: Setting sysctl values
   sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
+  become: true
   with_items:
     - { name: "net.ipv4.ip_nonlocal_bind", value: 1}
     - { name: "net.unix.max_dgram_qlen", value: 128}
@@ -10,7 +11,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -20,6 +24,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: haproxy_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -35,6 +41,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/haproxy/haproxy.cfg"
+    mode: "0660"
+  become: true
   register: haproxy_cfg
   when:
     - inventory_hostname in groups[service.group]
@@ -53,6 +61,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/keepalived/keepalived.conf"
+    mode: "0660"
+  become: true
   register: keepalived_conf
   when:
     - inventory_hostname in groups[service.group]
@@ -70,6 +80,8 @@
   copy:
     src: "{{ kolla_external_fqdn_cert }}"
     dest: "{{ node_config_directory }}/haproxy/{{ item }}"
+    mode: "0660"
+  become: true
   register: haproxy_pem
   when:
     - kolla_enable_tls_external | bool
@@ -97,3 +109,4 @@
   with_dict: "{{ haproxy_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
