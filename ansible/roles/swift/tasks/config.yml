@@ -4,6 +4,8 @@
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     recurse: yes
+    mode: "0770"
+  become: true
   with_items:
     - "swift"
     - "swift-account-auditor"
@@ -26,6 +28,8 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    mode: "0660"
+  become: true
   with_items:
     - "swift-account-auditor"
     - "swift-account-reaper"
@@ -54,6 +58,8 @@
       - "{{ node_custom_config }}/swift/{{ item }}.conf"
       - "{{ node_custom_config }}/swift/{{ inventory_hostname }}/{{ item }}.conf"
     dest: "{{ node_config_directory }}/swift-{{ item }}/swift.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "account-auditor"
     - "account-reaper"
@@ -81,6 +87,8 @@
       - "{{ node_custom_config }}/swift/{{ item }}.conf"
       - "{{ node_custom_config }}/swift/{{ inventory_hostname }}/{{ item }}.conf"
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "account-auditor"
     - "account-reaper"
@@ -98,6 +106,8 @@
       - "{{ node_custom_config }}/swift/{{ item }}.conf"
       - "{{ node_custom_config }}/swift/{{ inventory_hostname }}/{{ item }}.conf"
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "container-auditor"
     - "container-replicator"
@@ -115,6 +125,8 @@
       - "{{ node_custom_config }}/swift/{{ item }}.conf"
       - "{{ node_custom_config }}/swift/{{ inventory_hostname }}/{{ item }}.conf"
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "object-auditor"
     - "object-expirer"
@@ -132,6 +144,8 @@
       - "{{ node_custom_config }}/swift/{{ item }}.conf"
       - "{{ node_custom_config }}/swift/{{ inventory_hostname }}/{{ item }}.conf"
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "proxy-server"
 
@@ -139,12 +153,16 @@
   template:
     src: "rsyncd.conf.j2"
     dest: "{{ node_config_directory }}/swift-rsyncd/rsyncd.conf"
+    mode: "0660"
+  become: true
 
 - name: Copying over Swift ring files
   copy:
     src: "{{ node_custom_config }}/swift/{{ item }}"
     dest: "{{ node_config_directory }}/swift/{{ item }}"
     backup: yes
+    mode: "0660"
+  become: true
   with_items:
     - "account.builder"
     - "account.ring.gz"

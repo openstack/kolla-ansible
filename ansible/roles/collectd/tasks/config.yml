@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -13,7 +16,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}/collectd.conf.d"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -23,6 +29,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: collectd_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -37,6 +45,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/collectd/collectd.conf"
+    mode: "0660"
+  become: true
   with_first_found:
     - "{{ node_custom_config }}/collectd/{{ inventory_hostname }}/collectd.conf"
     - "{{ node_custom_config }}/collectd/collectd.conf"

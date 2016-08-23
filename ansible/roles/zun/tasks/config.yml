@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ zun_services }}"
 
@@ -28,6 +31,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: zun_config_jsons
   when:
     - item.value.enabled | bool
@@ -48,6 +53,8 @@
       - "{{ node_custom_config }}/zun/{{ item.key }}.conf"
       - "{{ node_custom_config }}/zun/{{ inventory_hostname }}/zun.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/zun.conf"
+    mode: "0660"
+  become: true
   register: zun_confs
   when:
     - item.value.enabled | bool
@@ -63,6 +70,8 @@
   template:
     src: "wsgi-zun.conf.j2"
     dest: "{{ node_config_directory }}/zun-api/wsgi-zun.conf"
+    mode: "0660"
+  become: true
   register: zun_conf_wsgi
   when:
     - inventory_hostname in groups[service.group]
@@ -74,6 +83,8 @@
   template:
     src: "{{ zun_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ zun_policy_file }}"
+    mode: "0660"
+  become: true
   register: zun_policy_overwriting
   when:
     - zun_policy_file is defined

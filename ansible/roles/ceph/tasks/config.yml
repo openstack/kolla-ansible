@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "ceph-mon"
     - "ceph-osd"
@@ -16,6 +19,8 @@
   template:
     src: "{{ item.name }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.name }}/config.json"
+    mode: "0660"
+  become: true
   when:
     - inventory_hostname in groups[item.group]
   with_items:
@@ -41,6 +46,8 @@
       - "{{ node_custom_config }}/ceph.conf"
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "ceph-mon"
     - "ceph-osd"

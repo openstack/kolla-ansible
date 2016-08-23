@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -30,6 +33,8 @@
   template:
     src: "{{ aodh_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ aodh_policy_file }}"
+    mode: "0660"
+  become: true
   register: aodh_policy_overwriting
   when:
     - aodh_policy_file is defined
@@ -46,6 +51,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: aodh_config_jsons
   when:
     - item.value.enabled | bool
@@ -68,6 +75,8 @@
       - "{{ node_custom_config }}/aodh/{{ item.key }}.conf"
       - "{{ node_custom_config }}/aodh/{{ inventory_hostname }}/aodh.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/aodh.conf"
+    mode: "0660"
+  become: true
   register: aodh_confs
   when:
     - item.value.enabled | bool
@@ -85,6 +94,8 @@
   template:
     src: "wsgi-aodh.conf.j2"
     dest: "{{ node_config_directory }}/aodh-api/wsgi-aodh.conf"
+    mode: "0660"
+  become: true
   register: aodh_conf_wsgi
   when:
     - inventory_hostname in groups[service.group]

@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -28,6 +31,8 @@
       - "{{ node_custom_config }}/{{ item }}"
       - "{{ node_custom_config }}/vmtp/{{ item }}"
     dest: "{{ python_path }}/vmtp/{{ item }}"
+    mode: "0660"
+  become: true
   register: vmtp_confs
   when:
     - inventory_hostname in groups[service.group]

@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "murano-api"
     - "murano-engine"
@@ -29,6 +32,8 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    mode: "0660"
+  become: true
   with_items:
     - "murano-api"
     - "murano-engine"
@@ -44,6 +49,8 @@
       - "{{ node_custom_config }}/murano/{{ item }}.conf"
       - "{{ node_custom_config }}/murano/{{ inventory_hostname }}/murano.conf"
     dest: "{{ node_config_directory }}/{{ item }}/murano.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "murano-api"
     - "murano-engine"

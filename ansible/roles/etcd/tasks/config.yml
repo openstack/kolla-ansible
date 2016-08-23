@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
@@ -13,6 +16,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: etcd_config_jsons
   when:
     - item.value.enabled | bool
@@ -28,6 +33,8 @@
     name: "{{ item.value.container_name }}"
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
+    mode: "0660"
+  become: true
   register: check_etcd_containers
   when:
     - action != "config"

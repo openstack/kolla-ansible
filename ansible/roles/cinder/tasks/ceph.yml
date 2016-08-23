@@ -7,6 +7,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -24,6 +28,8 @@
       - "{{ node_custom_config }}/ceph.conf"
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
+    mode: "0660"
+  become: true
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -67,6 +73,7 @@
     content: "{{ item.content }}\n\r"
     dest: "{{ node_config_directory }}/{{ item.service_name }}/ceph.client.{{ item.key_name }}.keyring"
     mode: "0600"
+  become: true
   with_items:
     - { service_name: "cinder-volume", key_name: "cinder", content: "{{ cephx_key_cinder.stdout }}" }
     - { service_name: "cinder-backup", key_name: "cinder", content: "{{ cephx_key_cinder.stdout }}" }

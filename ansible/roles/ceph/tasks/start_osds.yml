@@ -12,6 +12,7 @@
     osds: "{{ (osd_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).disks|from_json }}"
 
 - name: Mounting Ceph OSD volumes
+  become: true
   mount:
     src: "UUID={{ item.fs_uuid }}"
     fstype: "{{ ceph_osd_filesystem }}"
@@ -23,6 +24,7 @@
   become_method: sudo
 
 - name: Gathering OSD IDs
+  become: true
   command: "cat /var/lib/ceph/osd/{{ item['fs_uuid'] }}/whoami"
   with_items: "{{ osds }}"
   register: id

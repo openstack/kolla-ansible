@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -30,6 +33,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: rally_config_jsons
   when:
     - item.value.enabled | bool
@@ -46,6 +51,8 @@
       - "{{ role_path }}/templates/rally.conf.j2"
       - "{{ node_custom_config }}/rally.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
+    mode: "0660"
+  become: true
   register: rally_confs
   when:
     - item.value.enabled | bool
@@ -58,6 +65,8 @@
   template:
     src: "{{ rally_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ rally_policy_file }}"
+    mode: "0660"
+  become: true
   register: rally_policy_overwriting
   when:
     - rally_policy_file is defined
