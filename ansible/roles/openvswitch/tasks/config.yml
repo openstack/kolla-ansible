@@ -1,18 +1,23 @@
 ---
 - name: Ensuring config directories exist
+  become: true
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
   with_dict: "{{ openvswitch_services }}"
 
 - name: Copying over config.json files for services
+  become: true
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0770"
   register: openvswitch_config_jsons
   when:
     - item.value.enabled | bool
@@ -63,3 +68,4 @@
   with_dict: "{{ openvswitch_services }}"
   notify:
     - "Restart {{ item.key }} container"
+

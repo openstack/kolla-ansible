@@ -3,6 +3,7 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
+    mode: "0770"
   with_items:
     - "nova-compute"
     - "nova-libvirt/secrets"
@@ -29,6 +30,7 @@
   copy:
     src: "{{ nova_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
+    mode: "0660"
   with_items:
     - nova-compute
     - nova-libvirt
@@ -40,6 +42,7 @@
   copy:
     src: "{{ node_custom_config }}/nova/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/"
+    mode: "0660"
   with_items:
     - nova-compute
     - nova-libvirt
@@ -91,3 +94,15 @@
     - uuid: "{{ cinder_rbd_secret_uuid }}"
       content: "{{ cinder_cephx_raw_key.stdout }}"
       enabled: "{{ cinder_backend_ceph }}"
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  with_items:
+    - "nova-compute"
+    - "nova-libvirt/secrets"
+  when: inventory_hostname in groups['compute']

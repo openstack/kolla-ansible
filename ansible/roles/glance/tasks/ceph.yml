@@ -3,6 +3,7 @@
   file:
     path: "{{ node_config_directory }}/glance-api"
     state: "directory"
+    mode: "0770"
   when: inventory_hostname in groups['glance-api']
 
 - name: Copying over ceph.conf(s)
@@ -12,6 +13,7 @@
       - "{{ node_custom_config }}/ceph.conf"
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/glance-api/ceph.conf"
+    mode: "0660"
   when: inventory_hostname in groups['glance-api']
 
 - include: ../../ceph_pools.yml
@@ -36,3 +38,14 @@
     dest: "{{ node_config_directory }}/glance-api/ceph.client.glance.keyring"
     mode: "0600"
   when: inventory_hostname in groups['glance-api']
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  when: inventory_hostname in groups['glance-api']
+  with_items:
+    - "glance-api"
