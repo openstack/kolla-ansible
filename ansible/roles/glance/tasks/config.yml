@@ -1,34 +1,46 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item.service }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  when: inventory_hostname in groups[item.group]
-  with_items: "{{ glance_service_groups }}"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ glance_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item.service }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item.service }}/config.json"
-  when: inventory_hostname in groups[item.group]
-  with_items: "{{ glance_service_groups }}"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: glance_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ glance_services }}"
+  notify:
+    - Restart glance-api container
+    - Restart glance-registry container
 
 - name: Copying over glance-*.conf
   merge_configs:
     vars:
-      service_name: "{{ item.service }}"
+      service_name: "{{ item.key }}"
     sources:
-      - "{{ role_path }}/templates/{{ item.service }}.conf.j2"
+      - "{{ role_path }}/templates/{{ item.key }}.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/glance.conf"
-      - "{{ node_custom_config }}/glance/{{ item.service }}.conf"
-      - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/{{ item.service }}.conf"
-    dest: "{{ node_config_directory }}/{{ item.service }}/{{ item.service }}.conf"
-  when: inventory_hostname in groups[item.group]
-  with_items: "{{ glance_service_groups }}"
+      - "{{ node_custom_config }}/glance/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/{{ item.key }}.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
+  register: glance_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ glance_services }}"
+  notify:
+    - Restart glance-api container
+    - Restart glance-registry container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/glance/policy.json"
@@ -37,8 +49,28 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/glance/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.service }}/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: glance_policy_jsons
   when:
-    - inventory_hostname in groups[item.group]
     - glance_policy.stat.exists
-  with_items: "{{ glance_service_groups }}"
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ glance_services }}"
+  notify:
+    - Restart glance-api container
+    - Restart glance-registry container
+
+- name: Check glance containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_glance_containers
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ glance_services }}"
+  notify:
+    - Restart glance-api container
+    - Restart glance-registry container

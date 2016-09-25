@@ -1,8 +1,26 @@
 ---
 project_name: "glance"
-glance_service_groups:
-  - { name: glance_api, service: glance-api, group: glance-api }
-  - { name: glance_registry, service: glance-registry, group: glance-registry }
+
+glance_services:
+  glance-api:
+    container_name: glance_api
+    group: glance-api
+    enabled: true
+    image: "{{ glance_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/glance-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "glance:/var/lib/glance/"
+      - "kolla_logs:/var/log/kolla/"
+  glance-registry:
+    container_name: glance_registry
+    group: glance-registry
+    enabled: true
+    image: "{{ glance_registry_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/glance-registry/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
 
 
 ####################
