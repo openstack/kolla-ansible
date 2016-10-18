@@ -1,0 +1,18 @@
+#!/bin/bash
+if [[ $(pgrep qemu) ]]; then
+    echo "Some qemu processes were detected."
+    echo "Docker will not be able to stop the nova_libvirt container with those running."
+    echo "Please clean them up before rerunning this script."
+    exit 1
+fi
+
+if [ -n "$1" ]; then
+    containers_to_stop=($(docker ps | grep -E "$1" | awk '{print $1}'))
+else
+    containers_to_stop=$(docker ps --filter "label=kolla_version" --format "{{.Names}}" -a)
+fi
+
+echo "Stopping containers..."
+(docker stop -t 30 ${containers_to_stop} 2>&1) > /dev/null
+
+echo "All containers stopped!"
