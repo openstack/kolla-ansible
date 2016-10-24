@@ -53,6 +53,16 @@
     - role: prechecks
       when: action == "precheck"
 
+- name: Apply role chrony
+  hosts:
+    - chrony-server
+    - chrony
+  serial: '{{ serial|default("0") }}'
+  roles:
+    - { role: chrony,
+        tags: chrony,
+        when: enable_chrony | bool }
+
 - name: Apply role collectd
   hosts: collectd
   serial: '{{ serial|default("0") }}'

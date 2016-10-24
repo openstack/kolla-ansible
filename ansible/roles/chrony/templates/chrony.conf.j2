@@ -1,0 +1,38 @@
+{% for host in groups['chrony-server'] %}
+{% if inventory_hostname != host %}
+server {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }} iburst
+{% endif %}
+{% endfor %}
+{% for ntp_server in external_ntp_servers %}
+server {{ ntp_server }} iburst
+{% endfor %}
+
+keyfile /etc/chrony/chrony.keys
+
+commandkey 1
+
+driftfile /var/lib/chrony/chrony.drift
+
+log tracking measurements statistics
+logdir /var/log/kolla/chrony
+
+maxupdateskew 100.0
+
+dumponexit
+
+dumpdir /var/lib/chrony
+
+{% if inventory_hostname in groups['chrony-server'] %}
+allow all
+{% else %}
+port 0
+deny all
+{% endif %}
+
+bindaddress {{ api_interface_address }}
+
+logchange 0.5
+
+hwclockfile /etc/adjtime
+
+rtcsync
