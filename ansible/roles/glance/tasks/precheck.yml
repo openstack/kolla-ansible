@@ -1,1 +1,27 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - glance_api
+      - glance_registry
+  register: container_facts
+
+- name: Checking free port for Glance API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ glance_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - inventory_hostname in groups['glance-api']
+    - container_facts['glance_api'] is not defined
+
+- name: Checking free port for Glance Registry
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ glance_registry_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - inventory_hostname in groups['glance-registry']
+    - container_facts['glance_registry'] is not defined
