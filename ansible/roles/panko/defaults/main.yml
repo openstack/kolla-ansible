@@ -1,0 +1,31 @@
+---
+project_name: "panko"
+
+####################
+# Database
+####################
+panko_database_name: "panko"
+panko_database_user: "panko"
+panko_database_port: "{{ mongodb_port if panko_database_type == 'mongodb' else database_port }}"
+panko_database_mongodb_address: "{% for host in groups['mongodb'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ pankor_database_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+panko_database_mysql_address: "{{ kolla_internal_fqdn }}"
+
+####################
+# Docker
+####################
+panko_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-panko-api"
+panko_api_tag: "{{ openstack_release }}"
+panko_api_image_full: "{{ panko_api_image }}:{{ panko_api_tag }}"
+
+####################
+# OpenStack
+####################
+panko_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ panko_api_port }}"
+panko_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ panko_api_port }}"
+panko_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ panko_api_port }}"
+
+panko_logging_debug: "{{ openstack_logging_debug }}"
+
+panko_keystone_user: "panko"
+
+openstack_panko_auth: "{'auth_url':'{{ openstack_auth.auth_url }}','username':'{{ openstack_auth.username }}','password':'{{ openstack_auth.password }}','project_name':'{{ openstack_auth.project_name }}','domain_name':'default'}"

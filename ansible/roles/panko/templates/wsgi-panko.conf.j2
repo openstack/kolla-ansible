@@ -1,0 +1,17 @@
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+Listen {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ panko_api_port }}
+
+<VirtualHost *:{{ panko_api_port }}>
+
+  ErrorLog "/var/log/kolla/panko/panko-api-error.log"
+  CustomLog "/var/log/kolla/panko/panko-api-access.log" combined
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess panko group=panko processes={{ openstack_service_workers }} threads=1 user=panko python-path={{ python_path }}
+  WSGIProcessGroup panko
+  WSGIScriptAlias / "{{ python_path }}/panko/api/app.wsgi"
+
+  <Directory "{{ python_path }}/panko/api">
+        Require all granted
+  </Directory>
+
+</VirtualHost>
