@@ -1,0 +1,40 @@
+---
+- name: Creating the Tacker service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=tacker
+        service_type=nfv-orchestration
+        description='Tacker Service'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_tacker_auth }}' }}"
+    -e "{'openstack_tacker_auth':{{ openstack_tacker_auth }}}"
+  register: tacker_endpoint
+  changed_when: "{{ tacker_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (tacker_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: tacker_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ tacker_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ tacker_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ tacker_public_endpoint }}'}
+
+- name: Creating the Tacker project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user=tacker
+        password={{ tacker_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_tacker_auth }}' }}"
+    -e "{'openstack_tacker_auth':{{ openstack_tacker_auth }}}"
+  register: tacker_user
+  changed_when: "{{ tacker_user.stdout.find('localhost | SUCCESS => ') != -1 and (tacker_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: tacker_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True

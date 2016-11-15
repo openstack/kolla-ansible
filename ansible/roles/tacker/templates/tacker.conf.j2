@@ -1,0 +1,59 @@
+[DEFAULT]
+debug = {{ tacker_logging_debug }}
+
+log_dir = /var/log/kolla/tacker
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+bind_host = {{ api_interface_address }}
+bind_port = {{ tacker_server_port }}
+
+{% if enable_nova | bool %}
+nova_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}
+nova_admin_user_name = nova
+nova_admin_password = {{ nova_keystone_password }}
+nova_admin_tenant_id = service
+nova_admin_auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+
+[tacker_nova]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ nova_keystone_user }}
+password = {{ nova_keystone_password }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+{% endif %}
+
+[database]
+connection = mysql+pymysql://{{ tacker_database_user }}:{{ tacker_database_password }}@{{ tacker_database_address }}/{{ tacker_database_name }}
+max_retries = -1
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ tacker_keystone_user }}
+password = {{ tacker_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% if enable_heat | bool %}
+[tacker_heat]
+heat_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ heat_api_port }}/v1
+{% endif %}
+
+[oslo_messaging_notifications]
+{% if enable_ceilometer | bool %}
+driver = messagingv2
+topics = notifications
+{% else %}
+driver = noop
+{% endif %}
