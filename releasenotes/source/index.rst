@@ -8,9 +8,6 @@ Contents
    :maxdepth: 2
 
    unreleased
-   newton
-   mitaka
-   liberty
 
 
 Indices and tables
