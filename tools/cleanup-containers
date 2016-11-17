@@ -1,5 +1,6 @@
 #!/bin/bash
-if [[ $COMPUTE ]] && [[ $(pgrep qemu) ]]; then
+QEMU_PIDS=$(pgrep qemu)
+if [[ $COMPUTE ]] && [[ $QEMU_PIDS ]] && [[ $(ps --no-headers wwwup $QEMU_PIDS | grep --invert-match '\-xen\-domid 0') ]]; then
     echo "Some qemu processes were detected."
     echo "Docker will not be able to stop the nova_libvirt container with those running."
     echo "Please clean them up before rerunning this script."
