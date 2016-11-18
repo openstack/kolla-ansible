@@ -1,6 +1,22 @@
 {% set apache_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {% set apache_file = '000-default.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'horizon.conf' %}
+{% set services = [
+    ( 'ceilometer', enable_ceilometer ),
+    ( 'cinder', enable_cinder ),
+    ( 'cloudkitty', enable_cloudkitty ),
+    ( 'glance', enable_glance ),
+    ( 'heat', enable_heat ),
+    ( 'ironic', enable_ironic ),
+    ( 'keystone', enable_keystone ),
+    ( 'manila', enable_manila ),
+    ( 'neutron', enable_neutron ),
+    ( 'nova', enable_nova ),
+    ( 'sahara', enable_sahara ),
+    ( 'senlin', enable_senlin ),
+    ( 'trove', enable_trove )
+] %}
+
 {
     "command": "/usr/sbin/{{ apache_cmd }} -DFOREGROUND",
     "config_files": [
@@ -10,6 +26,15 @@
             "owner": "horizon",
             "perm": "0644"
         },
+{% for service, enabled in services if enabled | bool %}
+        {
+            "source": "{{ container_config_directory }}/horizon/{{ service }}_policy.json",
+            "dest": "/etc/openstack-dashboard/{{ service }}_policy.json",
+            "owner": "horizon",
+            "perm": "0600",
+            "optional": true
+        },
+{% endfor %}
         {
             "source": "{{ container_config_directory }}/local_settings",
             "dest": "/etc/openstack-dashboard/local_settings",
