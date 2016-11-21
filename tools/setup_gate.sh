@@ -27,9 +27,9 @@ EOF
     /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
         --cache-dir /opt/git git://git.openstack.org \
         openstack/kolla
-    sudo pip install ${KOLLA_DIR}
-    # TODO(Jeffrey4l): ignore the known failed images
-    sudo kolla-build -p gate || true
+    pushd "${KOLLA_DIR}"
+    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    popd
 }
 
 function setup_config {
@@ -59,6 +59,7 @@ include_header = /etc/kolla/header
 namespace = lokolla
 base = ${BASE_DISTRO}
 install_type = ${INSTALL_TYPE}
+profile = gate
 EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then
