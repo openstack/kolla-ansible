@@ -6,11 +6,11 @@ Bifrost Guide
 Prep host
 =========
 
-clone kolla
------------
-git clone https://github.com/openstack/kolla
+clone kolla-ansible
+-------------------
+git clone https://github.com/openstack/kolla-ansible
 
-cd kolla
+cd kolla-ansible
 
 set up kolla dependcies `doc`:quickstart.rst
 

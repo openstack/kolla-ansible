@@ -332,17 +332,17 @@ Copy the Kolla configuration files to ``/etc``:
 Installing Kolla and dependencies for development
 -------------------------------------------------
 
-To clone the Kolla repo:
+To clone the kolla-ansible repo:
 
 ::
 
-    git clone https://git.openstack.org/openstack/kolla
+    git clone https://git.openstack.org/openstack/kolla-ansible
 
 To install Kolla's Python dependencies use:
 
 ::
 
-    pip install -r kolla/requirements.txt -r kolla/test-requirements.txt
+    pip install -r kolla-ansible/requirements.txt -r kolla-ansible/test-requirements.txt
 
 .. note:: This does not actually install Kolla. Many commands in this documentation are named
     differently in the tools directory.
@@ -352,7 +352,7 @@ to ``/etc``:
 
 ::
 
-    cd kolla
+    cd kolla-ansible
     cp -r etc/kolla /etc/
 
 Install Python Clients
