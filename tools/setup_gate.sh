@@ -17,11 +17,23 @@ if [[ ! -f /etc/sudoers.d/jenkins ]]; then
     echo "jenkins ALL=(:docker) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/jenkins
 fi
 
+function build_image {
+    KOLLA_DIR=$(mktemp -d)
+    cat > /tmp/clonemap <<EOF
+clonemap:
+ - name: openstack/kolla
+   dest: ${KOLLA_DIR}
+EOF
+    /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
+        --cache-dir /opt/git git://git.openstack.org \
+        openstack/kolla
+    sudo pip install ${KOLLA_DIR}
+    # TODO(Jeffrey4l): ignore the known failed images
+    sudo kolla-build -p gate || true
+}
+
 function setup_config {
-    # generate the config
-    tox -e genconfig
-    # Copy configs
-    sudo cp -a etc/kolla /etc/
+    sudo cp -r etc/kolla /etc/
     # Generate passwords
     sudo tools/generate_passwords.py
 
@@ -36,17 +48,27 @@ trusted-host = $NODEPOOL_MIRROR_HOST
 EOF
     echo "RUN echo $(base64 -w0 ${PIP_CONF}) | base64 -d > /etc/pip.conf" | sudo tee /etc/kolla/header
     rm ${PIP_CONF}
-    sed -i 's|^#include_header.*|include_header = /etc/kolla/header|' /etc/kolla/kolla-build.conf
+
+    # Get base distro and install type from workspace. The full path looks like
+    #   /home/jenkins/workspace/gate-kolla-ansible-dsvm-deploy-centos-source-centos-7-nv
 
     # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
-    sed -i 's|^#namespace.*|namespace = lokolla|' /etc/kolla/kolla-build.conf
+    cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
+[DEFAULT]
+include_header = /etc/kolla/header
+namespace = lokolla
+base = ${BASE_DISTRO}
+install_type = ${INSTALL_TYPE}
+EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then
         # Infra does not sign thier mirrors so we ignore gpg signing in the gate
         echo "RUN echo 'APT::Get::AllowUnauthenticated \"true\";' > /etc/apt/apt.conf" | sudo tee -a /etc/kolla/header
 
         # Optimize the repos to take advantage of the Infra provided mirrors for Ubuntu
-        sed -i 's|^#apt_sources_list.*|apt_sources_list = /etc/kolla/sources.list|' /etc/kolla/kolla-build.conf
+        cat << EOF | sudo tee -a /etc/kolla/kolla-build.conf
+apt_sources_list = /etc/kolla/sources.list
+EOF
         sudo cp /etc/apt/sources.list /etc/kolla/sources.list
         sudo cat /etc/apt/sources.list.available.d/ubuntu-cloud-archive.list | sudo tee -a /etc/kolla/sources.list
         # Append non-infra provided repos to list
@@ -152,3 +174,8 @@ setup_ssh
 setup_ansible
 setup_node
 setup_config
+build_image
+
+sudo tools/deploy_aio.sh "${BASE_DISTRO}" "${INSTALL_TYPE}"
+
+tools/dump_info.sh
