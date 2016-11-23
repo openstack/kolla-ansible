@@ -1,3 +1,0 @@
-#!/bin/bash
-
-modprobe openvswitch
