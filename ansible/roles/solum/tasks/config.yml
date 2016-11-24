@@ -1,0 +1,40 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "solum-api"
+    - "solum-worker"
+    - "solum-deployer"
+    - "solum-conductor"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "solum-api"
+    - "solum-worker"
+    - "solum-deployer"
+    - "solum-conductor"
+
+- name: Copying over solum.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/templates/solum.conf.j2"
+      - "{{ node_config_directory }}/config/global.conf"
+      - "{{ node_config_directory }}/config/database.conf"
+      - "{{ node_config_directory }}/config/messaging.conf"
+      - "{{ node_config_directory }}/config/solum.conf"
+      - "{{ node_config_directory }}/config/solum/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/solum/{{ inventory_hostname }}/solum.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/solum.conf"
+  with_items:
+    - "solum-api"
+    - "solum-worker"
+    - "solum-deployer"
+    - "solum-conductor"
