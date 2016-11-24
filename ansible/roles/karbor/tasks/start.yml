@@ -1,0 +1,36 @@
+---
+- name: Starting karbor-api container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ karbor_api_image_full }}"
+    name: "karbor_api"
+    volumes:
+      - "{{ node_config_directory }}/karbor-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['karbor-api']
+
+- name: Starting karbor-protection container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ karbor_protection_image_full }}"
+    name: "karbor_protection"
+    volumes:
+      - "{{ node_config_directory }}/karbor-protection/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['karbor-protection']
+
+- name: Starting karbor-operationengine container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ karbor_operationengine_image_full }}"
+    name: "karbor_operationengine"
+    volumes:
+      - "{{ node_config_directory }}/karbor-operationengine/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['karbor-operationengine']

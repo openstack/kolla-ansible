@@ -1,0 +1,46 @@
+[DEFAULT]
+debug = {{ karbor_logging_debug }}
+log_dir = /var/log/kolla/karbor
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% if service_name == 'karbor-api' %}
+osapi_karbor_listen = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+osapi_karbor_listen_port = {{ karbor_api_port }}
+{% endif %}
+
+[database]
+connection = mysql+pymysql://{{ karbor_database_user }}:{{ karbor_database_password }}@{{ karbor_database_address }}/{{ karbor_database_name }}
+max_retries = -1
+
+[trustee]
+user_domain_id = default
+username = {{ karbor_keystone_user }}
+password = {{ karbor_keystone_password }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:35357
+auth_type = password
+
+[clients_keystone]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:5000
+
+[karbor_client]
+version = 1
+service_type = data-protect
+service_name = karbor
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:5000
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:35357
+project_domain_name = Default
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ karbor_keystone_user }}
+password = {{ karbor_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[oslo_messaging_rabbit]
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
