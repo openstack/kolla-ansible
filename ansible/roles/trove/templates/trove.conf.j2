@@ -1,0 +1,34 @@
+[DEFAULT]
+debug = {{ trove_logging_debug }}
+
+log_dir = /var/log/kolla/trove
+port = {{ trove_api_port }}
+host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+trove_api_workers = {{ openstack_service_workers }}
+auth_strategy = keystone
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+trove_auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+{% if enable_nova | bool %}
+nova_compute_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2
+{% endif %}
+{% if enable_cinder | bool %}
+cinder_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ cinder_api_port }}/v1
+{% endif %}
+{% if enable_swift | bool %}
+swift_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ swift_api_port }}/AUTH_
+{% endif %}
+
+[database]
+connection = mysql+pymysql://{{ trove_database_user }}:{{ trove_database_password }}@{{ trove_database_address }}/{{ trove_database_name }}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+project_domain_name = Default
+project_name = service
+user_domain_name = Default
+username = {{ trove_keystone_user }}
+password = {{ trove_keystone_password }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password

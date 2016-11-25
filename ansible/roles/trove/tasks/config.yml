@@ -1,0 +1,45 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "trove-conductor"
+    - "trove-api"
+    - "trove-taskmanager"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "trove-conductor"
+    - "trove-api"
+    - "trove-taskmanager"
+
+- name: Copying over trove conf files
+  template:
+    src: "{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/{{ item }}.conf"
+  with_items:
+    - "trove-conductor"
+    - "trove-taskmanager"
+
+- name: Copying over trove.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/templates/trove.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/trove.conf"
+      - "{{ node_custom_config }}/trove/{{ item }}.conf"
+      - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/trove.conf"
+  with_items:
+    - "trove-conductor"
+    - "trove-api"
+    - "trove-taskmanager"

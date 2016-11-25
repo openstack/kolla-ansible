@@ -1,0 +1,40 @@
+---
+- name: Creating the Trove service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=trove
+        service_type=database
+        description='Trove Database Service'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_trove_auth }}' }}"
+    -e "{'openstack_trove_auth':{{ openstack_trove_auth }}}"
+  register: trove_endpoint
+  changed_when: "{{ trove_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (trove_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: trove_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ trove_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ trove_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ trove_public_endpoint }}'}
+
+- name: Creating the Trove project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user=trove
+        password={{ trove_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_trove_auth }}' }}"
+    -e "{'openstack_trove_auth':{{ openstack_trove_auth }}}"
+  register: trove_user
+  changed_when: "{{ trove_user.stdout.find('localhost | SUCCESS => ') != -1 and (trove_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: trove_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
