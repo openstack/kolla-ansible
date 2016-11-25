@@ -433,9 +433,9 @@ class TestImage(base.BaseTestCase):
              'auth_email': 'fake_mail@foogle.com'
              })
         self.dw.dc.pull.return_value = [
-            '{"status":"Pull complete","progressDetail":{},"id":"22f7"}\r\n',
-            '{"status":"Digest: sha256:47c3bdbcf99f0c1a36e4db"}\r\n',
-            '{"status":"Downloaded newer image for ubuntu:16.04"}\r\n'
+            b'{"status":"Pull complete","progressDetail":{},"id":"22f7"}\r\n',
+            b'{"status":"Digest: sha256:47c3bdbcf99f0c1a36e4db"}\r\n',
+            b'{"status":"Downloaded newer image for ubuntu:16.04"}\r\n'
         ]
 
         self.dw.pull_image()
@@ -449,9 +449,9 @@ class TestImage(base.BaseTestCase):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
         self.dw.dc.pull.return_value = [
-            '{"status":"Pull complete","progressDetail":{},"id":"22f7"}\r\n',
-            '{"status":"Digest: sha256:47c3bdbf0c1a36e4db"}\r\n',
-            '{"status":"mage is up to date for ubuntu:16.04"}\r\n'
+            b'{"status":"Pull complete","progressDetail":{},"id":"22f7"}\r\n',
+            b'{"status":"Digest: sha256:47c3bdbf0c1a36e4db"}\r\n',
+            b'{"status":"mage is up to date for ubuntu:16.04"}\r\n'
         ]
 
         self.dw.pull_image()
@@ -465,7 +465,7 @@ class TestImage(base.BaseTestCase):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
         self.dw.dc.pull.return_value = [
-            '{"status": "some random message"}\r\n']
+            b'{"status": "some random message"}\r\n']
 
         self.dw.pull_image()
         self.dw.dc.pull.assert_called_once_with(
@@ -481,7 +481,7 @@ class TestImage(base.BaseTestCase):
         self.dw = get_DockerWorker(
             {'image': 'unknown:16.04'})
         self.dw.dc.pull.return_value = [
-            '{"error": "image unknown not found"}\r\n']
+            b'{"error": "image unknown not found"}\r\n']
 
         self.dw.pull_image()
         self.dw.dc.pull.assert_called_once_with(
@@ -497,7 +497,7 @@ class TestImage(base.BaseTestCase):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
         self.dw.dc.pull.return_value = [
-            '{"error": "unexpected error"}\r\n']
+            b'{"error": "unexpected error"}\r\n']
 
         self.dw.pull_image()
         self.dw.dc.pull.assert_called_once_with(
