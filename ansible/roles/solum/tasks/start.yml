@@ -1,0 +1,48 @@
+---
+- name: Starting solum-worker container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ solum_worker_image_full }}"
+    name: "solum_worker"
+    volumes:
+      - "{{ node_config_directory }}/solum-worker/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['solum-worker']
+
+- name: Starting solum-api container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ solum_api_image_full }}"
+    name: "solum_api"
+    volumes:
+      - "{{ node_config_directory }}/solum-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['solum-api']
+
+- name: Starting solum-deployer container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ solum_deployer_image_full }}"
+    name: "solum_deployer"
+    volumes:
+      - "{{ node_config_directory }}/solum-deployer/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['solum-deployer']
+
+- name: Starting solum-conductor container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ solum_conductor_image_full }}"
+    name: "solum_conductor"
+    volumes:
+      - "{{ node_config_directory }}/solum-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['solum-conductor']

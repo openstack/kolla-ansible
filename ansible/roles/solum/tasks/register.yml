@@ -1,0 +1,63 @@
+---
+- name: Creating the Solum image builder service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=solum_image_builder
+        service_type=image_builder
+        description='Openstack Solum Image Builder'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_solum_auth }}' }}"
+    -e "{'openstack_solum_auth':{{ openstack_solum_auth }}}"
+  register: solum_image_builder_endpoint
+  changed_when: "{{ solum_image_builder_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (solum_image_builder_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: solum_image_builder_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ solum_image_builder_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ solum_image_builder_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ solum_image_builder_public_endpoint }}'}
+
+- name: Creating the Solum application deployment service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=solum_application_deployment
+        service_type=application_deployment
+        description='Openstack Solum Application Deployment'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_solum_auth }}' }}"
+    -e "{'openstack_solum_auth':{{ openstack_solum_auth }}}"
+  register: solum_application_deployment_endpoint
+  changed_when: "{{ solum_application_deployment_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (solum_application_deployment_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: solum_application_deployment_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ solum_application_deployment_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ solum_application_deployment_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ solum_application_deployment_public_endpoint }}'}
+
+- name: Creating the Solum project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user=solum
+        password={{ solum_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_solum_auth }}' }}"
+    -e "{'openstack_solum_auth':{{ openstack_solum_auth }}}"
+  register: solum_user
+  changed_when: "{{ solum_user.stdout.find('localhost | SUCCESS => ') != -1 and (solum_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: solum_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True

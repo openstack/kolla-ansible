@@ -1,0 +1,64 @@
+[DEFAULT]
+debug = {{ solum_logging_debug }}
+log_dir = /var/log/kolla/solum
+
+{% if service_name == 'solum-api' %}
+bind_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+bind_port = {{ solum_application_deployment_port }}
+{% endif %}
+
+[api]
+image_format = vm
+port = {{ solum_application_deployment_port }}
+workers = {{ openstack_service_workers }}
+
+[conductor]
+topic = solum-conductor
+
+[deployer]
+growth_factor = 1.1
+wait_interval = 1
+max_attempts = 2000
+handler = heat
+topic = solum-deployer
+
+[worker]
+proj_dir = /solum
+handler = shell
+topic = solum-worker
+task_log_dir = /var/log/kolla/solum/worker
+image_storage = glance
+docker_build_timeout = 1800
+lp_operator_tenant_name = service
+lp_operator_password = {{ solum_keystone_password }}
+lp_operator_user = {{ solum_keystone_user }}
+
+[builder]
+port = {{ solum_image_builder_public_endpoint }}
+host = {{ ansible_hostname }}_{{ item }}
+
+[database]
+connection = mysql+pymysql://{{ solum_database_user }}:{{ solum_database_password }}@{{ solum_database_address }}/{{ solum_database_name }}
+max_retries = -1
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v2.0
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+auth_protocol = http
+auth_prot = 35357
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ solum_keystone_user }}
+password = {{ solum_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[oslo_messaging_rabbit]
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[oslo_messaging_notifications]
+driver = messagingv2
