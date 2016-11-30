@@ -1,0 +1,40 @@
+---
+- name: Creating the Octavia service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=octavia
+        service_type=application-catalog
+        description='Openstack Application Catalogue'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_octavia_auth }}' }}"
+    -e "{'openstack_octavia_auth':{{ openstack_octavia_auth }}}"
+  register: octavia_endpoint
+  changed_when: "{{ octavia_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (octavia_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: octavia_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ octavia_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ octavia_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ octavia_public_endpoint }}'}
+
+- name: Creating the Octavia project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user=octavia
+        password={{ octavia_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_octavia_auth }}' }}"
+    -e "{'openstack_octavia_auth':{{ openstack_octavia_auth }}}"
+  register: octavia_user
+  changed_when: "{{ octavia_user.stdout.find('localhost | SUCCESS => ') != -1 and (octavia_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: octavia_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True

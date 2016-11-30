@@ -1,0 +1,49 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "octavia-api"
+    - "octavia-health-manager"
+    - "octavia-housekeeping"
+    - "octavia-worker"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "octavia-api"
+    - "octavia-health-manager"
+    - "octavia-housekeeping"
+    - "octavia-worker"
+
+- name: Copying over octavia.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/templates/octavia.conf.j2"
+      - "{{ node_config_directory }}/config/global.conf"
+      - "{{ node_config_directory }}/config/database.conf"
+      - "{{ node_config_directory }}/config/messaging.conf"
+      - "{{ node_config_directory }}/config/octavia.conf"
+      - "{{ node_config_directory }}/config/octavia/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/octavia/{{ inventory_hostname }}/octavia.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/octavia.conf"
+  with_items:
+    - "octavia-api"
+    - "octavia-health-manager"
+    - "octavia-housekeeping"
+    - "octavia-worker"
+
+- name: Copying certificate files
+  copy:
+    src: "{{ node_config_directory }}/config/octavia/{{ item }}"
+    dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
+  with_items:
+    - cakey.pem
+    - ca_01.pem
+    - client.pem
