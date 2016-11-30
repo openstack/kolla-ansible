@@ -25,8 +25,6 @@ done
 REAL_PATH=$(python -c "import os,sys;print os.path.realpath('$0')")
 cd "$(dirname "$REAL_PATH")/.."
 
-NETWORK_MANAGER="neutron"
-
 # Test for credentials set
 if [[ "${OS_USERNAME}" == "" ]]; then
     echo "No Keystone credentials specified.  Try running source openrc"
@@ -48,28 +46,21 @@ fi
 echo Creating glance image.
 glance image-create --name cirros --progress --disk-format qcow2 --container-format bare --visibility public --progress --file ./$IMAGE
 
-if [[ "${NETWORK_MANAGER}" == "nova" ]] ; then
-    echo Configuring nova networking.
-    nova secgroup-add-rule default tcp 22 22 0.0.0.0/0
-    nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
-    nova network-create vmnet --fixed-range-v4=10.0.0.0/24 --bridge=br100 --multi-host=T
-else
-    echo Configuring neutron.
-    neutron net-create public1 --router:external --provider:physical_network physnet1 --provider:network_type flat
-    neutron subnet-create --name 1-subnet --disable-dhcp --allocation-pool start=10.0.2.150,end=10.0.2.199 public1 10.0.2.0/24 --gateway 10.0.2.1
-    neutron net-create demo-net --provider:network_type vxlan
-    neutron subnet-create demo-net 10.0.0.0/24 --name demo-subnet --gateway 10.0.0.1 --dns-nameservers list=true 8.8.8.8
-    neutron router-create demo-router
-    neutron router-interface-add demo-router demo-subnet
-    neutron router-gateway-set demo-router public1
+echo Configuring neutron.
+neutron net-create public1 --router:external --provider:physical_network physnet1 --provider:network_type flat
+neutron subnet-create --name 1-subnet --disable-dhcp --allocation-pool start=10.0.2.150,end=10.0.2.199 public1 10.0.2.0/24 --gateway 10.0.2.1
+neutron net-create demo-net --provider:network_type vxlan
+neutron subnet-create demo-net 10.0.0.0/24 --name demo-subnet --gateway 10.0.0.1 --dns-nameservers list=true 8.8.8.8
+neutron router-create demo-router
+neutron router-interface-add demo-router demo-subnet
+neutron router-gateway-set demo-router public1
 
-    # Sec Group Config
-    neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol icmp --remote-ip-prefix 0.0.0.0/0
-    neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 22 --port-range-max 22 --remote-ip-prefix 0.0.0.0/0
-    # Open heat-cfn so it can run on a different host
-    neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8000 --port-range-max 8000 --remote-ip-prefix 0.0.0.0/0
-    neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8080 --port-range-max 8080 --remote-ip-prefix 0.0.0.0/0
-fi
+# Sec Group Config
+neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol icmp --remote-ip-prefix 0.0.0.0/0
+neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 22 --port-range-max 22 --remote-ip-prefix 0.0.0.0/0
+# Open heat-cfn so it can run on a different host
+neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8000 --port-range-max 8000 --remote-ip-prefix 0.0.0.0/0
+neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8080 --port-range-max 8080 --remote-ip-prefix 0.0.0.0/0
 
 if [ ! -f ~/.ssh/id_rsa.pub ]; then
     echo Generating ssh key.
