@@ -12,22 +12,28 @@ NODEPOOL_MIRROR_HOST=${NODEPOOL_MIRROR_HOST:-mirror.$NODEPOOL_REGION.$NODEPOOL_C
 NODEPOOL_MIRROR_HOST=$(echo $NODEPOOL_MIRROR_HOST|tr '[:upper:]' '[:lower:]')
 NODEPOOL_PYPI_MIRROR=${NODEPOOL_PYPI_MIRROR:-http://$NODEPOOL_MIRROR_HOST/pypi/simple}
 
+GIT_PROJECT_DIR=$(mktemp -d)
+
 # Just for mandre :)
 if [[ ! -f /etc/sudoers.d/jenkins ]]; then
     echo "jenkins ALL=(:docker) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/jenkins
 fi
 
-function build_image {
-    KOLLA_DIR=$(mktemp -d)
+function clone_repos {
     cat > /tmp/clonemap <<EOF
 clonemap:
  - name: openstack/kolla
-   dest: ${KOLLA_DIR}
+   dest: ${GIT_PROJECT_DIR}/kolla
+ - name: openstack/requirements
+   dest: ${GIT_PROJECT_DIR}/requirements
 EOF
     /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
         --cache-dir /opt/git git://git.openstack.org \
-        openstack/kolla
-    pushd "${KOLLA_DIR}"
+        openstack/kolla openstack/requirements
+}
+
+function build_image {
+    pushd "${GIT_PROJECT_DIR}/kolla"
     sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
     popd
 }
@@ -138,7 +144,7 @@ function setup_ansible {
     mkdir /tmp/kolla
 
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible>=2" "docker-py>=1.6.0" "python-openstackclient" "python-neutronclient"
+    sudo -H pip install -U -c ${GIT_PROJECT_DIR}/requirements/upper-constraints.txt "ansible>=2" "docker-py>=1.6.0" "python-openstackclient" "python-neutronclient"
     detect_distro
 
     setup_inventory
@@ -146,7 +152,7 @@ function setup_ansible {
     # Record the running state of the environment as seen by the setup module
     ansible all -i ${RAW_INVENTORY} -m setup > /tmp/logs/ansible/initial-setup
 
-    sudo pip install ara
+    sudo pip install -c ${GIT_PROJECT_DIR}/requirements/upper-constraints.txt ara
     sudo mkdir /etc/ansible
     sudo tee /etc/ansible/ansible.cfg<<EOF
 [defaults]
@@ -170,6 +176,7 @@ function setup_logging {
 
 setup_logging
 tools/dump_info.sh
+clone_repos
 setup_workaround_broken_nodepool
 setup_ssh
 setup_ansible
