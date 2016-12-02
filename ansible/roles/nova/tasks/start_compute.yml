@@ -1,13 +1,7 @@
 ---
-- name: Starting nova-libvirt container
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ nova_libvirt_image_full }}"
-    name: "nova_libvirt"
-    pid_mode: "host"
-    privileged: True
-    volumes:
+- name: Prepare nova-libvirt volumes list
+  set_fact:
+    libvirt_volumes:
       - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "/lib/modules:/lib/modules:ro"
@@ -17,8 +11,18 @@
       - "kolla_logs:/var/log/kolla/"
       - "libvirtd:/var/lib/libvirt"
       - "nova_compute:/var/lib/nova/"
-      - "/var/lib/nova/mnt:/var/lib/nova/mnt:shared"
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "nova_libvirt_qemu:/etc/libvirt/qemu"
+
+- name: Starting nova-libvirt container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ nova_libvirt_image_full }}"
+    name: "nova_libvirt"
+    pid_mode: "host"
+    privileged: True
+    volumes: '{{ libvirt_volumes | reject("equalto", "") | list }}'
   register: start_nova_libvirt_container
   # NOTE(Jeffrey4l): retry 5 to remove nova_libvirt container because when
   # guests running, nova_libvirt will raise error even though it is removed.
@@ -28,7 +32,7 @@
 
 - name: Prepare volumes list
   set_fact:
-     mounts:
+     nova_compute_volumes:
       - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "/lib/modules:/lib/modules:ro"
@@ -38,7 +42,7 @@
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "libvirtd:/var/lib/libvirt"
       - "nova_compute:/var/lib/nova/"
-      - "/var/lib/nova/mnt:/var/lib/nova/mnt:shared"
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}" 
 
 - name: Starting nova-compute container
   kolla_docker:
@@ -47,7 +51,7 @@
     image: "{{ nova_compute_image_full }}"
     name: "nova_compute"
     privileged: True
-    volumes: '{{ mounts | reject("equalto", "") | list}}'
+    volumes: '{{ nova_compute_volumes | reject("equalto", "") | list}}'
   when:
     - inventory_hostname in groups['compute']
     - not enable_nova_fake | bool
@@ -85,19 +89,23 @@
     - inventory_hostname in groups['compute']
     - enable_nova_fake | bool
 
+- name: Prepare nova-ssh volumes list
+  set_fact:
+    nova_ssh_volumes:
+      - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+      - "nova_compute:/var/lib/nova"
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+      - "heka_socket:/var/lib/kolla/heka/"
+
 - name: Starting nova-ssh container
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ nova_ssh_image_full }}"
     name: "nova_ssh"
-    volumes:
-      - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
-      - "nova_compute:/var/lib/nova"
-      - "/var/lib/nova/mnt:/var/lib/nova/mnt:shared"
-      - "heka_socket:/var/lib/kolla/heka/"
+    volumes: '{{ nova_ssh_volumes | reject("equalto", "") | list }}'
   # TODO(jeffrey4l): how to handle the nova-compute-fake and
   # nova-compute-ironic
   when: inventory_hostname in groups['compute']
