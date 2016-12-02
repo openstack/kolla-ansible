@@ -1,19 +1,17 @@
 ---
-- name: Starting heka container
+- name: Starting fluentd container
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       SKIP_LOG_SETUP: "true"
-    image: "{{ heka_image_full }}"
-    name: "heka"
+    image: "{{ fluentd_image_full }}"
+    name: "fluentd"
     volumes:
-      - "{{ node_config_directory }}/heka/:{{ container_config_directory }}/:ro"
+      - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
-      - "heka:/var/cache/hekad"
-      - "heka_socket:/var/lib/kolla/heka/"
 
 - name: Starting kolla-toolbox container
   kolla_docker:
@@ -45,5 +43,4 @@
     volumes:
       - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "heka_socket:/var/lib/kolla/heka/"
       - "kolla_logs:/var/log/kolla/"

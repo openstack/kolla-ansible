@@ -1,0 +1,12 @@
+<filter openstack_python>
+  @type parser
+  reserve_data true
+  key_name message
+  <parse>
+  @type "grok"
+  grok_pattern %{TIMESTAMP_ISO8601:Timestamp} %{NUMBER:Pid} %{LOGLEVEL:severity_label} %{NOTSPACE:python_module} \[req-(?:%{NOTSPACE:request_id}) (?:%{NOTSPACE:user_id}) (?:%{NOTSPACE:tenant_id}) .*\] %{GREEDYDATA:Payload}
+  time_format "%Y-%m-%d %H:%M:%S.%L"
+  time_key Timestamp
+  keep_time_key true
+  </parse>
+</filter>
