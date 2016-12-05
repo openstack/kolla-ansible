@@ -38,17 +38,6 @@
     - role: prechecks
       when: action == "precheck"
 
-- name: Apply role ceph
-  hosts:
-    - ceph-mon
-    - ceph-osd
-    - ceph-rgw
-  serial: '{{ serial|default("0") }}'
-  roles:
-    - { role: ceph,
-        tags: ceph,
-        when: enable_ceph | bool }
-
 - name: Apply role collectd
   hosts: collectd
   serial: '{{ serial|default("0") }}'
@@ -156,6 +145,17 @@
     - { role: keystone,
         tags: keystone,
         when: enable_keystone | bool }
+
+- name: Apply role ceph
+  hosts:
+    - ceph-mon
+    - ceph-osd
+    - ceph-rgw
+  serial: '{{ serial|default("0") }}'
+  roles:
+    - { role: ceph,
+        tags: ceph,
+        when: enable_ceph | bool }
 
 - name: Apply role swift
   hosts:
