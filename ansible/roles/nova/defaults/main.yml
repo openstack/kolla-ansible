@@ -1,6 +1,130 @@
 ---
 project_name: "nova"
 
+nova_services:
+  nova-libvirt:
+    container_name: nova_libvirt
+    group: compute
+    enabled: True
+    image: "{{ nova_libvirt_image_full }}"
+    pid_mode: "host"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run/:/run/:shared"
+      - "/dev:/dev"
+      - "/sys/fs/cgroup:/sys/fs/cgroup"
+      - "kolla_logs:/var/log/kolla/"
+      - "libvirtd:/var/lib/libvirt"
+      - "nova_compute:/var/lib/nova/"
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+      - "nova_libvirt_qemu:/etc/libvirt/qemu"
+  nova-ssh:
+    container_name: "nova_ssh"
+    group: "compute"
+    image: "{{ nova_ssh_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+      - "nova_compute:/var/lib/nova"
+      - "/var/lib/nova/mnt:/var/lib/nova/mnt:shared"
+      - "heka_socket:/var/lib/kolla/heka/"
+  nova-api:
+    container_name: "nova_api"
+    group: "nova-api"
+    image: "{{ nova_api_image_full }}"
+    enabled: True
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/nova-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-consoleauth:
+    container_name: "nova_consoleauth"
+    group: "nova-consoleauth"
+    image: "{{ nova_consoleauth_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/nova-consoleauth/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-novncproxy:
+    container_name: "nova_novncproxy"
+    group: "nova-novncproxy"
+    image: "{{ nova_novncproxy_image_full }}"
+    enabled: "{{ nova_console == 'novnc' }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-novncproxy/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-scheduler:
+    container_name: "nova_scheduler"
+    group: "nova-scheduler"
+    image: "{{ nova_scheduler_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-spicehtml5proxy:
+    container_name: "nova_spicehtml5proxy"
+    group: "nova-spicehtml5proxy"
+    image: "{{ nova_spicehtml5proxy_image_full }}"
+    enabled: "{{ nova_console == 'spice' }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-spicehtml5proxy/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-serialproxy:
+    container_name: "nova_serialproxy"
+    group: "nova-serialproxy"
+    image: "{{ nova_serialproxy_image_full }}"
+    enabled: "{{ enable_nova_serialconsole_proxy | bool }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-conductor:
+    container_name: "nova_conductor"
+    group: "nova-conductor"
+    enabled: True
+    image: "{{ nova_conductor_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  nova-compute:
+    container_name: "nova_compute"
+    group: "compute"
+    image: "{{ nova_compute_image_full }}"
+    privileged: True
+    enabled: "{{ not enable_nova_fake | bool or not enable_ironic | bool }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "/dev:/dev"
+      - "kolla_logs:/var/log/kolla/"
+      - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+      - "libvirtd:/var/lib/libvirt"
+      - "nova_compute:/var/lib/nova/"
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+  nova-compute-ironic:
+    container_name: "nova_compute_ironic"
+    group: "nova-compute-ironic"
+    image: "{{ nova_compute_ironic_image_full }}"
+    enabled: "{{ enable_ironic | bool }}"
+    volumes:
+      - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
 ####################
 # Ceph
 ####################
