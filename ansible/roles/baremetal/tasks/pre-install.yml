@@ -1,7 +1,7 @@
 ---
 # NOTE: raw install is required to support cloud images which do not have python installed
 - name: "Install python2 and python-simplejson"
-  become: true
+  become: True
   raw: "yum install -y python python-simplejson || (apt-get update && apt-get install -y python2.7 python-simplejson)"
 
 - name: Gather facts
@@ -14,7 +14,7 @@
     line: "127.0.0.1 localhost"
     state: present
   become: True
-  when: customize_etc_hosts | bool == True
+  when: customize_etc_hosts | bool
 
 - name: Generate /etc/hosts for all of the nodes
   blockinfile:
@@ -25,7 +25,7 @@
           {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }}
           {% endfor %}
   become: True
-  when: customize_etc_hosts | bool == True
+  when: customize_etc_hosts | bool
 
 - name: Ensure sudo group is present
   group: name=sudo state=present
@@ -34,7 +34,7 @@
 - name: Ensure kolla group is present
   group: name=kolla state=present
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Create kolla user
   user:
@@ -43,7 +43,7 @@
     group: kolla
     groups: "sudo"
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Grant kolla user passwordless sudo
   lineinfile:
@@ -52,14 +52,14 @@
     regexp: '^kolla'
     line: 'kolla ALL=(ALL) NOPASSWD: ALL'
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Add public key to kolla user authorized keys
   authorized_key:
     user: kolla
     key: "{{ kolla_ssh_key.public_key }}"
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Install apt packages
   command: apt-get update
@@ -125,7 +125,7 @@
     group: kolla
     mode: 0755
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Ensure /etc/kolla directory exists
   file:
