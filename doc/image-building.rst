@@ -4,7 +4,7 @@
 Building Container Images
 =========================
 
-The ``kolla-build`` command is responsible for building docker images.
+The ``kolla-build`` command is responsible for building Docker images.
 
 .. note::
 
@@ -95,7 +95,7 @@ Or put following line to ``DEFAULT`` section in ``kolla-build.conf`` ::
 
 
 ``kolla-build`` uses ``kolla`` as default Docker namespace. This is
-controlled with the ``-n`` command line option. To push images to a dockerhub
+controlled with the ``-n`` command line option. To push images to a Dockerhub
 repository named ``mykollarepo``::
 
     kolla-build -n mykollarepo --push
@@ -130,7 +130,7 @@ The locations of OpenStack source code are written in
 Now the source type supports ``url``, ``git``, and ``local``. The location of
 the ``local`` source type can point to either a directory containing the source
 code or to a tarball of the source. The ``local`` source type permits to make
-the best use of the docker cache.
+the best use of the Docker cache.
 
 ``etc/kolla/kolla-build.conf`` looks like::
 
@@ -350,9 +350,9 @@ follows::
 Known issues
 ============
 
-#. Can't build base image because docker fails to install systemd or httpd.
+#. Can't build base image because Docker fails to install systemd or httpd.
 
-   There are some issues between docker and AUFS. The simple workaround to
+   There are some issues between Docker and AUFS. The simple workaround to
    avoid the issue is that add ``-s devicemapper`` or ``-s btrfs`` to
    ``DOCKER_OPTS``. Get more information about `the issue from the Docker bug
    tracker <https://github.com/docker/docker/issues/6980>`_ and `how to
@@ -394,7 +394,7 @@ Now the Docker registry service is running.
 Docker Insecure Registry Config
 -------------------------------
 
-For docker to pull images, it is necessary to modify the Docker configuration.
+For Docker to pull images, it is necessary to modify the Docker configuration.
 The guide assumes that the IP of the machine running Docker registry is
 172.22.2.81.
 
@@ -404,7 +404,7 @@ to ``DOCKER_OPTS`` in ``/etc/default/docker``.
 In CentOS, uncomment ``INSECURE_REGISTRY`` and set ``INSECURE_REGISTRY``
 to ``--insecure-registry 172.22.2.81:4000`` in ``/etc/sysconfig/docker``.
 
-And restart the docker service.
+And restart the Docker service.
 
 To build and push images to local registry, use the following command::
 

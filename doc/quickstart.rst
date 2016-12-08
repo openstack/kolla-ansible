@@ -141,9 +141,9 @@ following command:
     curl -sSL https://get.docker.io | bash
 
 This command will install the most recent stable version of Docker, but please
-note that Kolla releases are not in sync with docker in any way, so some things
+note that Kolla releases are not in sync with Docker in any way, so some things
 could stop working with new version. The latest release of Kolla is tested to
-work with docker-engine >= 1.10.0. To check your docker version run this
+work with docker-engine >= 1.10.0. To check your Docker version run this
 command:
 
 ::
@@ -155,7 +155,7 @@ in the Docker daemon to launch with. This means setting up the following
 information in the ``docker.service`` file. If you do not set the MountFlags
 option correctly then ``kolla-ansible`` will fail to deploy the
 ``neutron-dhcp-agent`` container and throws APIError/HTTPError. After adding
-the drop-in unit file as follows, reload and restart the docker service:
+the drop-in unit file as follows, reload and restart the Docker service:
 
 ::
 
@@ -168,7 +168,7 @@ the drop-in unit file as follows, reload and restart the docker service:
     MountFlags=shared
     EOF
 
-Restart docker by executing the following commands:
+Restart Docker by executing the following commands:
 
 ::
 
@@ -404,7 +404,7 @@ Kolla, but if running from master, it is recommended to build images locally.
 
 Checkout the :doc:`image-building` for more advanced build configuration.
 
-Before running the below instructions, ensure the docker daemon is running
+Before running the below instructions, ensure the Docker daemon is running
 or the build process will fail. To build images using default parameters run:
 
 ::
@@ -513,7 +513,7 @@ veth pair is listed here and the other end is in a bridge on the system. ::
 
     neutron_external_interface: "eth1"
 
-If using a local docker registry, set the ``docker_registry`` information where
+If using a local Docker registry, set the ``docker_registry`` information where
 the local registry is operating on IP address 192.168.1.100 and the port 4000.
 
 ::
@@ -651,7 +651,7 @@ Any time the tags of a release change, it is possible that the container
 implementation from older versions won't match the Ansible playbooks in a new
 version. If running multinode from a registry, each node's Docker image cache
 must be refreshed with the latest images before a new deployment can occur. To
-refresh the docker cache from the local Docker registry:
+refresh the Docker cache from the local Docker registry:
 
 ::
 
