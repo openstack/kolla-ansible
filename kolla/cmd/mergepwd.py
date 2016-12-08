@@ -32,7 +32,7 @@ def main():
     new_passwords.update(old_passwords)
 
     with open(args.final, "w") as destination:
-        yaml.dump(new_passwords, destination)
+        yaml.dump(new_passwords, destination, default_flow_style=False)
 
 
 if __name__ == '__main__':
