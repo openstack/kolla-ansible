@@ -1,6 +1,39 @@
 ---
 project_name: "keystone"
 
+keystone_services:
+  keystone:
+    container_name: "keystone"
+    group: "keystone"
+    enabled: true
+    image: "{{ keystone_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "{% if keystone_token_provider == 'fernet' %}keystone_fernet_tokens:/etc/keystone/fernet-keys{% endif %}"
+  keystone-ssh:
+    container_name: "keystone_ssh"
+    group: "keystone"
+    enabled: "{{ keystone_token_provider == 'fernet' }}"
+    image: "{{ keystone_ssh_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/keystone-ssh/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+  keystone-fernet:
+    container_name: "keystone_fernet"
+    group: "keystone"
+    enabled: "{{ keystone_token_provider == 'fernet' }}"
+    image: "{{ keystone_fernet_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/keystone-fernet/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+
+
 ####################
 # Database
 ####################
