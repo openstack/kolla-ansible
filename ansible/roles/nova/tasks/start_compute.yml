@@ -49,9 +49,9 @@
     privileged: True
     volumes: '{{ mounts | reject("equalto", "") | list}}'
   when:
-    - inventory_hostname in groups['compute']
     - not enable_nova_fake | bool
     - not enable_ironic | bool
+    - inventory_hostname in groups['compute']
 
 - name: Starting nova-compute-ironic container
   kolla_docker:
@@ -64,8 +64,8 @@
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
   when:
-    - inventory_hostname in groups['nova-compute-ironic']
     - enable_ironic | bool
+    - inventory_hostname in groups['nova-compute-ironic']
 
 - name: Starting nova-compute-fake containers
   kolla_docker:
@@ -82,8 +82,8 @@
       - "kolla_logs:/var/log/kolla/"
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
-    - inventory_hostname in groups['compute']
     - enable_nova_fake | bool
+    - inventory_hostname in groups['compute']
 
 - name: Starting nova-ssh container
   kolla_docker:
