@@ -44,7 +44,7 @@
   become: True
   when:
     - ansible_distribution == "Ubuntu"
-    - apparmor_libvirtd_profile.stat.exists == True
+    - apparmor_libvirtd_profile.stat.exists | bool
 
 - name: Create docker group
   group:
@@ -57,29 +57,29 @@
      append: yes
      groups: docker
   become: True
-  when: create_kolla_user | bool == True
+  when: create_kolla_user | bool
 
 - name: Start docker
   service:
      name: docker
      state: started
-  become: yes
+  become: True
 
 - name: Restart docker
   service:
      name: docker
      state: restarted
-  become: yes
+  become: True
 
 - name: Enable docker
   service:
      name: docker
      enabled: yes
-  become: yes
+  become: True
 
 - name: Reboot
   command: reboot -f
-  become: yes
+  become: True
   when:
    - reboot_required is defined
-   - reboot_required | bool == true
+   - reboot_required | bool
