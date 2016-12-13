@@ -66,6 +66,9 @@ namespace = lokolla
 base = ${BASE_DISTRO}
 install_type = ${INSTALL_TYPE}
 profile = gate
+
+[profiles]
+gate = cron,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,heka,horizon
 EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then
