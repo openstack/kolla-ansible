@@ -1,0 +1,48 @@
+---
+- name: Starting octavia-api container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ octavia_api_image_full }}"
+    name: "octavia_api"
+    volumes:
+      - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['octavia-api']
+
+- name: Starting octavia-health-manager container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ octavia_api_image_full }}"
+    name: "octavia_health_manager"
+    volumes:
+      - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['octavia-health-manager']
+
+- name: Starting octavia-housekeeping container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ octavia_api_image_full }}"
+    name: "octavia_housekeeping"
+    volumes:
+      - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['octavia-housekeeping']
+
+- name: Starting octavia-worker container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ octavia_api_image_full }}"
+    name: "octavia_worker"
+    volumes:
+      - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  when: inventory_hostname in groups['octavia-worker']

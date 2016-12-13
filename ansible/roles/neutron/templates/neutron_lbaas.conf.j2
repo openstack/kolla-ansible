@@ -1,4 +1,16 @@
 {% if enable_neutron_lbaas | bool %}
 [service_providers]
+{% if enable_octavia | bool %}
+service_provider = LOADBALANCERV2:Octavia:neutron_lbaas.drivers.octavia.driver.OctaviaDriver:default
+
+[service_auth]
+auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v2.0
+admin_tenant_name = admin
+admin_user = admin
+admin_password = {{ keystone_admin_password }}
+auth_version = 2
+{% else %}
 service_provider = LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default
+{% endif %}
+
 {% endif %}

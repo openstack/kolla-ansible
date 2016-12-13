@@ -1,0 +1,74 @@
+[DEFAULT]
+debug = {{ octavia_logging_debug }}
+
+log_dir = /var/log/kolla/octavia
+
+api_handler = queue_producer
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+bind_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+bind_port = {{ octavia_api_port }}
+
+[certificates]
+ca_private_key_passphrase = {{ octavia_ca_password }}
+ca_private_key = /etc/octavia/certs/private/cakey.pem
+ca_certificate = /etc/octavia/certs/ca_01.pem
+
+[haproxy_amphora]
+server_ca = /etc/octavia/certs/ca_01.pem
+client_cert = /etc/octavia/certs/client.pem
+
+[database]
+connection = mysql+pymysql://{{ octavia_database_user }}:{{ octavia_database_password }}@{{ octavia_database_address }}/{{ octavia_database_name }}
+max_retries = -1
+
+[service_auth]
+auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+username = admin
+password = {{ keystone_admin_password }}
+user_domain_name = Default
+project_name = admin
+project_domain_name = Default
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_host = {{ kolla_internal_fqdn }}
+auth_port = {{ keystone_public_port }}
+auth_protocol = {{ internal_protocol }}
+auth_type = password
+admin_tenant_name = service
+admin_user = {{ octavia_keystone_user }}
+admin_password = {{ octavia_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[health_manager]
+bind_port = {{ octavia_health_manager_port }}
+bind_ip = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+controller_ip_port_list = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ octavia_health_manager_port }}
+heartbeat_key =insecure
+
+[controller_worker]
+amp_boot_network_list = {{ octavia_amp_boot_network_list }}
+amp_image_tag = amphora
+amp_secgroup_list = {{ octavia_amp_secgroup_list }}
+amp_flavor_id = {{ octavia_amp_flavor_id }}
+amp_ssh_key_name = octavia_ssh_key
+network_driver = allowed_address_pairs_driver
+compute_driver = compute_nova_driver
+amphora_driver = amphora_haproxy_rest_driver
+amp_active_retries = 100
+amp_active_wait_sec = 2
+loadbalancer_topology = {{ octavia_loadbalancer_topology }}
+
+[oslo_messaging]
+topic = octavia_prov
+rpc_thread_pool_size = 2

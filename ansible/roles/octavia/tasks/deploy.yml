@@ -1,0 +1,18 @@
+---
+- include: "register.yml"
+  when: inventory_hostname in groups['octavia-api']
+
+- include: "config.yml"
+  when: inventory_hostname in groups['octavia-api'] or
+        inventory_hostname in groups['octavia-health-manager'] or
+        inventory_hostname in groups['octavia-housekeeping'] or
+        inventory_hostname in groups['octavia-worker']
+
+- include: "bootstrap.yml"
+  when: inventory_hostname in groups['octavia-api']
+
+- include: "start.yml"
+  when: inventory_hostname in groups['octavia-api'] or
+        inventory_hostname in groups['octavia-health-manager'] or
+        inventory_hostname in groups['octavia-housekeeping'] or
+        inventory_hostname in groups['octavia-worker']
