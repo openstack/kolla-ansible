@@ -5,3 +5,16 @@
   changed_when: "{{ (keystone_bootstrap.stdout | from_json).changed }}"
   failed_when: "{{ (keystone_bootstrap.stdout | from_json).failed }}"
   run_once: True
+
+- name: Creating default user role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m os_keystone_role
+    -a "name={{ keystone_default_user_role }}
+        auth={{ '{{ openstack_keystone_auth }}' }}"
+    -e "{'openstack_keystone_auth':{{ openstack_keystone_auth }}}"
+  register: default_role
+  changed_when: "{{ default_role.stdout.find('localhost | SUCCESS => ') != -1 and (default_role.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: default_role.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
