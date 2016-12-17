@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 # Copyright 2015 Sam Yaple
+# Copyright 2017 99Cloud Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +15,71 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ConfigParser
+
+import collections
 import inspect
 import os
-from six import StringIO
 
 from ansible.plugins import action
+from six import StringIO
+
+from oslo_config import iniparser
+
+
+class OverrideConfigParser(iniparser.BaseParser):
+
+    def __init__(self):
+        self._cur_sections = collections.OrderedDict()
+        self._sections = collections.OrderedDict()
+        self._cur_section = None
+
+    def assignment(self, key, value):
+        cur_value = self._cur_section.get(key)
+        if len(value) == 1 and value[0] == '':
+            value = []
+        if not cur_value:
+            self._cur_section[key] = [value]
+        else:
+            self._cur_section[key].append(value)
+
+    def parse(self, lineiter):
+        self._cur_sections = collections.OrderedDict()
+        super(OverrideConfigParser, self).parse(lineiter)
+
+        # merge _cur_sections into _sections
+        for section, values in self._cur_sections.items():
+            if section not in self._sections:
+                self._sections[section] = collections.OrderedDict()
+            for key, value in values.items():
+                self._sections[section][key] = value
+
+    def new_section(self, section):
+        cur_section = self._cur_sections.get(section)
+        if not cur_section:
+            cur_section = collections.OrderedDict()
+            self._cur_sections[section] = cur_section
+        self._cur_section = cur_section
+        return cur_section
+
+    def write(self, fp):
+        def write_key_value(key, values):
+            for v in values:
+                if not v:
+                    fp.write('{} =\n'.format(key))
+                for index, value in enumerate(v):
+                    if index == 0:
+                        fp.write('{} = {}\n'.format(key, value))
+                    else:
+                        fp.write('{}   {}\n'.format(len(key)*' ', value))
+
+        def write_section(section):
+            for key, values in section.items():
+                write_key_value(key, values)
+
+        for section in self._sections:
+            fp.write('[{}]\n'.format(section))
+            write_section(self._sections[section])
+            fp.write('\n')
 
 
 class ActionModule(action.ActionBase):
@@ -33,7 +93,7 @@ class ActionModule(action.ActionBase):
                 template_data = f.read()
             result = self._templar.template(template_data)
             fakefile = StringIO(result)
-            config.readfp(fakefile)
+            config.parse(fakefile)
             fakefile.close()
 
     def run(self, tmp=None, task_vars=None):
@@ -62,7 +122,7 @@ class ActionModule(action.ActionBase):
         temp_vars = task_vars.copy()
         temp_vars.update(extra_vars)
 
-        config = ConfigParser.ConfigParser()
+        config = OverrideConfigParser()
         old_vars = self._templar._available_variables
         self._templar.set_available_variables(temp_vars)
 
