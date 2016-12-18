@@ -11,5 +11,22 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  register: memcached_config_json
   with_items:
     - "memcached"
+  notify: Restart memcached container
+
+- name: Check memcached container
+  vars:
+    service: "{{ memcached_services.memcached }}"
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  register: check_memcached_container
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify: Restart memcached container
