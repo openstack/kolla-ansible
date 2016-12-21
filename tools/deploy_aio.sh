@@ -72,6 +72,7 @@ keepalived_virtual_router_id: "${KEEPALIVED_VIRTUAL_ROUTER_ID}"
 docker_restart_policy: "never"
 # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
 docker_namespace: "lokolla"
+docker_registry: "${PRIVATE_ADDRESS}:4000"
 network_interface: "${PRIVATE_INTERFACE}"
 neutron_external_interface: "fake_interface"
 enable_horizon: "yes"
