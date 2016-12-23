@@ -21,3 +21,13 @@
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
   with_items:
     - "collectd"
+
+- name: Copying over collectd.conf for services
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/collectd/collectd.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/collectd/{{ inventory_hostname }}/collectd.conf"
+    - "{{ node_custom_config }}/collectd/collectd.conf"
+    - "{{ node_custom_config }}/collectd.conf"
+    - "collectd.conf.j2"
