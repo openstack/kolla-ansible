@@ -124,6 +124,17 @@
     - "{{ 'ironic_api' not in haproxy_stat }}"
     - inventory_hostname in groups['haproxy']
 
+- name: Checking free port for Magnum API HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ magnum_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_magnum | bool
+    - "{{ 'magnum_api' not in haproxy_stat }}"
+    - inventory_hostname in groups['haproxy']
+
 - name: Checking free port for Manila API HAProxy
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
