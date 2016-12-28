@@ -1,1 +1,27 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - heat_api
+      - heat_api_cfn
+  register: container_facts
+
+- name: Checking free port for Heat API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ heat_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['heat_api'] is not defined
+    - inventory_hostname in groups['heat-api']
+
+- name: Checking free port for Heat API CFN
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ heat_api_cfn_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['heat_api_cfn'] is not defined
+    - inventory_hostname in groups['heat-api-cfn']

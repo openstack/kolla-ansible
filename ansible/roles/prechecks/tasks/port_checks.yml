@@ -193,45 +193,9 @@
     - enable_haproxy | bool
     - inventory_hostname in groups['haproxy']
 
-- name: Checking free port for Heat API
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ heat_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_heat | bool
-    - inventory_hostname in groups['heat-api']
 
-- name: Checking free port for Heat API HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ heat_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_heat | bool
-    - inventory_hostname in groups['haproxy']
 
-- name: Checking free port for Heat API CFN
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ heat_api_cfn_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_heat | bool
-    - inventory_hostname in groups['heat-api-cfn']
 
-- name: Checking free port for Heat API CFN HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ heat_api_cfn_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_heat | bool
-    - inventory_hostname in groups['haproxy']
 
 - name: Checking free port for Horizon
   wait_for:
