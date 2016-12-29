@@ -1,1 +1,50 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - nova_api
+      - nova_novncproxy
+      - nova_spicehtml5proxy
+  register: container_facts
+
+- name: Checking free port for Nova API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ nova_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_api'] is not defined
+    - inventory_hostname in groups['nova-api']
+
+- name: Checking free port for Nova Metadata
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ nova_metadata_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_api'] is not defined
+    - inventory_hostname in groups['nova-api']
+
+- name: Checking free port for Nova NoVNC Proxy
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ nova_novncproxy_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_novncproxy'] is not defined
+    - nova_console == 'novnc'
+    - inventory_hostname in groups['nova-novncproxy']
+
+- name: Checking free port for Nova Spice HTML5 Proxy
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ nova_spicehtml5proxy_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_spicehtml5proxy'] is not defined
+    - nova_console == 'spice'
+    - inventory_hostname in groups['nova-spicehtml5proxy']
