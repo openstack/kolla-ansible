@@ -353,26 +353,6 @@
     - enable_murano | bool
     - inventory_hostname in groups['haproxy']
 
-- name: Checking free port for Neutron Server
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ neutron_server_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_neutron | bool
-    - inventory_hostname in groups['neutron-server']
-
-- name: Checking free port for Neutron Server HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ neutron_server_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_neutron | bool
-    - inventory_hostname in groups['haproxy']
-
 - name: Checking free port for Nova API
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
