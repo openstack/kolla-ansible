@@ -33,6 +33,11 @@ options:
       - The module args use by the module
     required: False
     type: str or dict
+  module_extra_vars:
+    description:
+      - The extra variables used by the module
+    required: False
+    type: str or dict
 author: Jeffrey Zhang
 '''
 
@@ -51,6 +56,19 @@ EXAMPLES = '''
           login_user: root
           login_password: admin
           name: testdb
+    - name: Creating default user role
+      kolla_toolbox:
+        module_name: os_keystone_role
+        module_args:
+          name: _member_
+          auth: "{{ '{{ openstack_keystone_auth }}' }}"
+        module_extra_vars:
+          openstack_keystone_auth:
+            auth_url: http://127.0.0.1:5000
+            username: admin
+            password: password
+            project_name: "admin"
+            domain_name: "default"
 '''
 
 
@@ -76,13 +94,19 @@ def gen_commandline(params):
             module_args = ' '.join("{}='{}'".format(key, value)
                                    for key, value in module_args.items())
         command.extend(['-a', module_args])
+    if params.get('module_extra_vars'):
+        extra_vars = params.get('module_extra_vars')
+        if isinstance(extra_vars, dict):
+            extra_vars = json.dumps(extra_vars)
+        command.extend(['--extra-vars', extra_vars])
     return command
 
 
 def main():
     specs = dict(
         module_name=dict(type='str'),
-        module_args=dict(type='str')
+        module_args=dict(type='str'),
+        module_extra_vars=dict(type='json')
         )
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
     client = docker.Client()
