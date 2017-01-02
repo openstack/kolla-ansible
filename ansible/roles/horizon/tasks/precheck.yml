@@ -1,1 +1,16 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - horizon
+  register: container_facts
+
+- name: Checking free port for Horizon
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "80"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['horizon'] is not defined
+    - inventory_hostname in groups['horizon']
