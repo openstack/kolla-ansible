@@ -1,0 +1,55 @@
+---
+project_name: "zun"
+
+zun_services:
+  zun-api:
+    container_name: zun_api
+    group: zun-api
+    enabled: true
+    image: "{{ zun_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  zun-compute:
+    container_name: zun_compute
+    group: zun-compute
+    enabled: true
+    image: "{{ zun_compute_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/zun-compute/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+## Database
+####################
+zun_database_name: "zun"
+zun_database_user: "zun"
+zun_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+
+####################
+## Docker
+####################
+zun_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-zun-compute"
+zun_compute_tag: "{{ openstack_release }}"
+zun_compute_image_full: "{{ zun_compute_image }}:{{ zun_compute_tag }}"
+
+zun_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-zun-api"
+zun_api_tag: "{{ openstack_release }}"
+zun_api_image_full: "{{ zun_api_image }}:{{ zun_api_tag }}"
+
+
+####################
+## OpenStack
+####################
+zun_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
+zun_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
+zun_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
+
+zun_logging_debug: "{{ openstack_logging_debug }}"
+
+zun_keystone_user: "zun"
+
+openstack_zun_auth: "{{ openstack_auth }}"

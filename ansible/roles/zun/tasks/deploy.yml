@@ -1,0 +1,13 @@
+---
+- include: register.yml
+  when: inventory_hostname in groups['zun-api']
+
+- include: config.yml
+  when: inventory_hostname in groups['zun-api'] or
+        inventory_hostname in groups['zun-compute']
+
+- include: bootstrap.yml
+  when: inventory_hostname in groups['zun-api']
+
+- name: Flush handlers
+  meta: flush_handlers
