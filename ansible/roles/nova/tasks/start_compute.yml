@@ -30,7 +30,7 @@
   until: start_nova_libvirt_container|success
   when: inventory_hostname in groups['compute']
 
-- name: Prepare volumes list
+- name: Prepare nova-compute volumes list
   set_fact:
      nova_compute_volumes:
       - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
@@ -42,7 +42,7 @@
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "libvirtd:/var/lib/libvirt"
       - "nova_compute:/var/lib/nova/"
-      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}" 
+      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
 
 - name: Starting nova-compute container
   kolla_docker:
@@ -51,7 +51,7 @@
     image: "{{ nova_compute_image_full }}"
     name: "nova_compute"
     privileged: True
-    volumes: '{{ nova_compute_volumes | reject("equalto", "") | list}}'
+    volumes: '{{ nova_compute_volumes | reject("equalto", "") | list }}'
   when:
     - not enable_nova_fake | bool
     - not enable_ironic | bool
