@@ -33,6 +33,7 @@ options:
     required: True
     type: str
     choices:
+      - compare_container
       - compare_image
       - create_volume
       - get_container_env
@@ -40,6 +41,7 @@ options:
       - pull_image
       - remove_container
       - remove_volume
+      - recreate_or_restart_container
       - restart_container
       - start_container
       - stop_container
@@ -266,6 +268,12 @@ class DockerWorker(object):
         if not container:
             return None
         return self.dc.inspect_container(self.params.get('name'))
+
+    def compare_container(self):
+        container = self.check_container()
+        if not container or self.check_container_differs():
+            self.changed = True
+        return self.changed
 
     def check_container_differs(self):
         container_info = self.get_container_info()
@@ -554,6 +562,21 @@ class DockerWorker(object):
         options = self.build_container_options()
         self.dc.create_container(**options)
 
+    def recreate_or_restart_container(self):
+        self.changed = True
+        container = self.check_container()
+        # get config_strategy from env
+        environment = self.params.get('environment')
+        config_strategy = environment.get('KOLLA_CONFIG_STRATEGY')
+
+        if not container:
+            self.start_container()
+        elif container and config_strategy == 'COPY_ONCE':
+            self.remove_container()
+            self.start_container()
+        elif container and config_strategy == 'COPY_ALWAYS':
+            self.restart_container()
+
     def start_container(self):
         if not self.check_image():
             self.pull_image()
@@ -651,16 +674,14 @@ class DockerWorker(object):
 def generate_module():
     argument_spec = dict(
         common_options=dict(required=False, type='dict', default=dict()),
-        action=dict(required=True, type='str', choices=['compare_image',
-                                                        'create_volume',
-                                                        'get_container_env',
-                                                        'get_container_state',
-                                                        'pull_image',
-                                                        'remove_container',
-                                                        'remove_volume',
-                                                        'restart_container',
-                                                        'start_container',
-                                                        'stop_container']),
+        action=dict(required=True, type='str',
+                    choices=['compare_container', 'compare_image',
+                             'create_volume', 'get_container_env',
+                             'get_container_state', 'pull_image',
+                             'recreate_or_restart_container',
+                             'remove_container', 'remove_volume',
+                             'restart_container', 'start_container',
+                             'stop_container']),
         api_version=dict(required=False, type='str', default='auto'),
         auth_email=dict(required=False, type='str'),
         auth_password=dict(required=False, type='str'),

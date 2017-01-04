@@ -43,16 +43,13 @@ class ModuleArgsTest(base.BaseTestCase):
         argument_spec = dict(
             common_options=dict(required=False, type='dict', default=dict()),
             action=dict(
-                required=True, type='str', choices=['compare_image',
-                                                    'create_volume',
-                                                    'get_container_env',
-                                                    'get_container_state',
-                                                    'pull_image',
-                                                    'remove_container',
-                                                    'remove_volume',
-                                                    'restart_container',
-                                                    'start_container',
-                                                    'stop_container']),
+                required=True, type='str',
+                choices=['compare_container', 'compare_image', 'create_volume',
+                         'get_container_env', 'get_container_state',
+                         'pull_image', 'recreate_or_restart_container',
+                         'remove_container', 'remove_volume',
+                         'restart_container', 'start_container',
+                         'stop_container']),
             api_version=dict(required=False, type='str', default='auto'),
             auth_email=dict(required=False, type='str'),
             auth_password=dict(required=False, type='str'),
@@ -371,6 +368,40 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.module.fail_json.assert_called_once_with(
             msg="No such container: fake_container")
+
+    def test_recreate_or_restart_container_not_container(self):
+        self.dw = get_DockerWorker({
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
+        self.dw.check_container = mock.Mock(return_value=None)
+        self.dw.start_container = mock.Mock()
+
+        self.dw.recreate_or_restart_container()
+
+        self.dw.start_container.assert_called_once_with()
+
+    def test_recreate_or_restart_container_container_copy_always(self):
+        self.dw = get_DockerWorker({
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
+        self.dw.check_container = mock.Mock(
+            return_value=self.fake_data['containers'][0])
+        self.dw.restart_container = mock.Mock()
+
+        self.dw.recreate_or_restart_container()
+
+        self.dw.restart_container.assert_called_once_with()
+
+    def test_recreate_or_restart_container_container_copy_once(self):
+        self.dw = get_DockerWorker({
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ONCE')})
+        self.dw.check_container = mock.Mock(
+            return_value=self.fake_data['containers'][0])
+        self.dw.start_container = mock.Mock()
+        self.dw.remove_container = mock.Mock()
+
+        self.dw.recreate_or_restart_container()
+
+        self.dw.remove_container.assert_called_once_with()
+        self.dw.start_container.assert_called_once_with()
 
 
 class TestImage(base.BaseTestCase):
