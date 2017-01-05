@@ -434,7 +434,7 @@ class DockerWorker(object):
         image, tag = self.parse_image()
 
         statuses = [
-            json.loads(line.strip()) for line in self.dc.pull(
+            json.loads(line.strip().decode('utf-8')) for line in self.dc.pull(
                 repository=image, tag=tag, stream=True
             )
         ]
