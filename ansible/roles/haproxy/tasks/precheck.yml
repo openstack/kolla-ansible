@@ -124,6 +124,17 @@
     - "{{ 'sahara_api' not in haproxy_stat }}"
     - inventory_hostname in groups['haproxy']
 
+- name: Checking free port for Trove API HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ trove_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_trove | bool
+    - "{{ 'trove_api' not in haproxy_stat }}"
+    - inventory_hostname in groups['haproxy']
+
 - name: Checking free port for Watcher API HAProxy
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
@@ -134,4 +145,3 @@
     - enable_watcher | bool
     - "{{ 'watcher_api' not in haproxy_stat }}"
     - inventory_hostname in groups['haproxy']
-
