@@ -122,5 +122,19 @@ volume_backend_name = nfs-1
 nfs_shares_config = /etc/cinder/nfs_shares
 {% endif %}
 
+{% if enable_cinder_backend_hnas_iscsi | bool %}
+[hnas-iscsi]
+volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
+volume_backend_name = {{ hnas_volume_backend_name }}
+hnas_username = {{ hnas_username }}
+hnas_password = {{ hnas_password }}
+hnas_mgmt_ip0 = {{ hnas_mgmt_ip0 }}
+hnas_chap_enabled = True
+
+hnas_svc0_volume_type = {{ hnas_svc0_volume_type }}
+hnas_svc0_hdp = {{ hnas_svc0_hdp }}
+hnas_svc0_iscsi_ip = {{ hnas_svc0_iscsi_ip }}
+{% endif %}
+
 [privsep_entrypoint]
 helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
