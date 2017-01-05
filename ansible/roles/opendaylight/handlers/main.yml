@@ -1,0 +1,31 @@
+---
+- name: Restart opendaylight container
+  vars:
+    service_name: "opendaylight"
+    service: "{{ opendaylight_services[service_name] }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(False) }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - opendaylight_config_json | changed
+      or opendaylight_config_start_odl | changed
+      or opendaylight_config_custom_props | changed
+      or opendaylight_config_jetty | changed
+      or opendaylight_config_features | changed
+      or opendaylight_config_ovsdb | changed
+      or opendaylight_config_tomcat | changed
+      or opendaylight_config_logging | changed
+      or opendaylight_config_netvirt | changed
+      or opendaylight_config_netvirt_acl | changed
+      or opendaylight_config_env | changed
+      or opendaylight_config_akka | changed
+      or opendaylight_config_modules | changed
+      or opendaylight_config_module_shards | changed
+      or check_opendaylight_containers | changed

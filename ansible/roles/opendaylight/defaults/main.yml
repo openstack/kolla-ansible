@@ -1,0 +1,24 @@
+---
+project_name: "opendaylight"
+
+opendaylight_services:
+  opendaylight:
+    container_name: "opendaylight"
+    image: "{{ opendaylight_image_full }}"
+    enabled: True
+    privileged: True
+    group: "opendaylight"
+    host_in_groups: "{{ inventory_hostname in groups['opendaylight'] }}"
+    volumes:
+      - "{{ node_config_directory }}/opendaylight/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+# Docker
+####################
+
+opendaylight_install_type: "{{ kolla_install_type }}"
+opendaylight_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ opendaylight_install_type }}-opendaylight"
+opendaylight_tag: "{{ openstack_release }}"
+opendaylight_image_full: "{{ opendaylight_image }}:{{ opendaylight_tag }}"

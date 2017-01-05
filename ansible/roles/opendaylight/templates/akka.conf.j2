@@ -1,0 +1,33 @@
+
+odl-cluster-data {
+  akka {
+    remote {
+      artery {
+          enabled = off
+          canonical.hostname = "{{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}"
+          canonical.port = {{ opendaylight_clustering_port }}
+        }
+      netty.tcp {
+        hostname = "{{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}"
+        port = {{ opendaylight_clustering_port }}
+      }
+    }
+
+    cluster {
+      seed-nodes = [{% for host in groups['opendaylight'] %}"akka.tcp://opendaylight-cluster-data@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_clustering_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+
+      roles = [
+        "{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
+      ]
+
+    }
+
+    persistence {
+
+      journal {
+        leveldb {
+        }
+      }
+    }
+  }
+}

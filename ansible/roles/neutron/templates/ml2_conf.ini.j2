@@ -12,12 +12,22 @@ mechanism_drivers = openvswitch,l2population
 {% endif %}
 {% elif neutron_plugin_agent == "linuxbridge" %}
 mechanism_drivers = linuxbridge,l2population
+{% elif neutron_plugin_agent == "opendaylight" %}
+mechanism_drivers = {{ opendaylight_mechanism_driver }}
 {% endif %}
 
 {% if neutron_extension_drivers %}
 extension_drivers = {{ neutron_extension_drivers|map(attribute='name')|join(',') }}
 {% elif enable_hyperv | bool %}
 extension_drivers = port_security
+{% endif %}
+
+{% if enable_opendaylight | bool %}
+[ml2_odl]
+url = {{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ opendaylight_haproxy_restconf_port }}/controller/nb/v2/neutron
+username = admin
+password = {{ opendaylight_password }}
+port_binding_controller = {{ opendaylight_port_binding_type }}
 {% endif %}
 
 [ml2_type_vlan]
@@ -41,13 +51,13 @@ vxlan_group = 239.1.1.1
 {% endif %}
 
 [securitygroup]
-{% if neutron_plugin_agent == "openvswitch" %}
+{% if neutron_plugin_agent == "openvswitch" or neutron_plugin_agent == "opendaylight" %}
 firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
 {% elif neutron_plugin_agent == "linuxbridge" %}
 firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 {% endif %}
 
-{% if neutron_plugin_agent == "openvswitch" %}
+{% if neutron_plugin_agent == "openvswitch" or neutron_plugin_agent == "opendaylight" %}
 {% if not enable_hyperv | bool %}
 [agent]
 tunnel_types = vxlan
