@@ -173,26 +173,6 @@
     - enable_haproxy | bool
     - inventory_hostname in groups['haproxy']
 
-- name: Checking free port for Ironic
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ ironic_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_ironic | bool
-    - inventory_hostname in groups['ironic-api']
-
-- name: Checking free port for Ironic HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ ironic_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_ironic | bool
-    - inventory_hostname in groups['haproxy']
-
 - name: Checking free port for Influxdb Admin
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
