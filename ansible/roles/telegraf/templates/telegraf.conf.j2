@@ -51,3 +51,23 @@
   username = "{{ rabbitmq_user }}"
   password = "{{ rabbitmq_password }}"
 {% endif %}
+{% if inventory_hostname in groups['mariadb'] and enable_mariadb | bool %}
+[[inputs.mysql]]
+  servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address }}:{{ database_port }})/"]
+  perf_events_statements_digest_text_limit  = 120
+  perf_events_statements_limit              = 250
+  perf_events_statements_time_limit         = 86400
+  table_schema_databases                    = []
+  gather_table_schema                       = true
+  gather_process_list                       = true
+  gather_info_schema_auto_inc               = true
+  gather_slave_status                       = true
+  gather_binary_logs                        = true
+  gather_table_io_waits                     = true
+  gather_table_lock_waits                   = true
+  gather_index_io_waits                     = true
+  gather_event_waits                        = true
+  gather_file_events_stats                  = true
+  gather_perf_events_statements             = true
+  interval_slow                             = "30m"
+{% endif %}
