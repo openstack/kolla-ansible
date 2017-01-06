@@ -11,12 +11,12 @@ unset LANG
 unset LANGUAGE
 LC_ALL=C
 export LC_ALL
-for i in curl nova neutron openstack; do
+for i in curl openstack; do
     if [[ ! $(type $i 2>/dev/null) ]]; then
         if [ "$i" == 'curl' ]; then
-            echo "$i not installed. Please install $i before proceeding"
+            echo "Please install $i before proceeding"
         else
-            echo "python-${i}client not installed. Please install python-${i}client before proceeding"
+            echo "Please install python-${i}client before proceeding"
         fi
         exit
     fi
@@ -32,7 +32,7 @@ if [[ "${OS_USERNAME}" == "" ]]; then
 fi
 
 # Test to ensure configure script is run only once
-if glance image-list | grep -q cirros; then
+if openstack image list | grep -q cirros; then
     echo "This tool should only be run once per deployment."
     exit
 fi
@@ -44,23 +44,34 @@ if ! [ -f "$IMAGE" ]; then
     curl -L -o ./$IMAGE $IMAGE_URL/$IMAGE
 fi
 echo Creating glance image.
-glance image-create --name cirros --progress --disk-format qcow2 --container-format bare --visibility public --progress --file ./$IMAGE
+openstack image create --disk-format qcow2 --container-format bare --public \
+    --file ./$IMAGE cirros
 
 echo Configuring neutron.
-neutron net-create public1 --router:external --provider:physical_network physnet1 --provider:network_type flat
-neutron subnet-create --name 1-subnet --disable-dhcp --allocation-pool start=10.0.2.150,end=10.0.2.199 public1 10.0.2.0/24 --gateway 10.0.2.1
-neutron net-create demo-net --provider:network_type vxlan
-neutron subnet-create demo-net 10.0.0.0/24 --name demo-subnet --gateway 10.0.0.1 --dns-nameservers list=true 8.8.8.8
-neutron router-create demo-router
-neutron router-interface-add demo-router demo-subnet
-neutron router-gateway-set demo-router public1
+openstack network create --external --provider-physical-network physnet1 \
+    --provider-network-type flat public1
+openstack subnet create --no-dhcp \
+    --allocation-pool start=10.0.2.150,end=10.0.2.199 --network public1 \
+    --subnet-range 10.0.2.0/24 --gateway 10.0.2.1 1-subnet
+
+openstack network create --provider-network-type vxlan demo-net
+openstack subnet create --subnet-range 10.0.0.0/24 --network demo-net \
+    --gateway 10.0.0.1 --dns-nameserver 8.8.8.8 demo-subnet
+
+openstack router create demo-router
+openstack router add subnet demo-router demo-subnet
+openstack router set --external-gateway public1 demo-router
 
 # Sec Group Config
-neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol icmp --remote-ip-prefix 0.0.0.0/0
-neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 22 --port-range-max 22 --remote-ip-prefix 0.0.0.0/0
+openstack security group rule create --ingress --ethertype IPv4 \
+    --protocol icmp default
+openstack security group rule create --ingress --ethertype IPv4 \
+    --protocol tcp --dst-port 22 default
 # Open heat-cfn so it can run on a different host
-neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8000 --port-range-max 8000 --remote-ip-prefix 0.0.0.0/0
-neutron security-group-rule-create default --direction ingress --ethertype IPv4 --protocol tcp --port-range-min 8080 --port-range-max 8080 --remote-ip-prefix 0.0.0.0/0
+openstack security group rule create --ingress --ethertype IPv4 \
+    --protocol tcp --dst-port 8000 default
+openstack security group rule create --ingress --ethertype IPv4 \
+    --protocol tcp --dst-port 8080 default
 
 if [ ! -f ~/.ssh/id_rsa.pub ]; then
     echo Generating ssh key.
@@ -68,7 +79,7 @@ if [ ! -f ~/.ssh/id_rsa.pub ]; then
 fi
 if [ -r ~/.ssh/id_rsa.pub ]; then
     echo Configuring nova public key and quotas.
-    nova keypair-add --pub-key ~/.ssh/id_rsa.pub mykey
+    openstack keypair create --public-key ~/.ssh/id_rsa.pub mykey
 fi
 
 # Increase the quota to allow 40 m1.small instances to be created
@@ -78,24 +89,21 @@ ADMIN_USER_ID=$(openstack user list | awk '/ admin / {print $2}')
 ADMIN_PROJECT_ID=$(openstack project list | awk '/ admin / {print $2}')
 
 # 40 instances
-nova quota-update --instances 40 $ADMIN_PROJECT_ID
-nova quota-update --user $ADMIN_USER_ID --instances 40 $ADMIN_PROJECT_ID
+openstack quota set --instances 40 $ADMIN_PROJECT_ID
 
 # 40 cores
-nova quota-update --cores 40 $ADMIN_PROJECT_ID
-nova quota-update --user $ADMIN_USER_ID --cores 40 $ADMIN_PROJECT_ID
+openstack quota set --cores 40 $ADMIN_PROJECT_ID
 
 # 96GB ram
-nova quota-update --ram 96000 $ADMIN_PROJECT_ID
-nova quota-update --user $ADMIN_USER_ID --ram 96000 $ADMIN_PROJECT_ID
+openstack quota set --ram 96000 $ADMIN_PROJECT_ID
 
 # add default flavors, if they don't already exist
 if ! openstack flavor list | grep -q m1.tiny; then
-        openstack flavor create --id 1 --ram 512 --disk 1 --vcpus 1 m1.tiny
-        openstack flavor create --id 2 --ram 2048 --disk 20 --vcpus 1 m1.small
-        openstack flavor create --id 3 --ram 4096 --disk 40 --vcpus 2 m1.medium
-        openstack flavor create --id 4 --ram 8192 --disk 80 --vcpus 4 m1.large
-        openstack flavor create --id 5 --ram 16384 --disk 160 --vcpus 8 m1.xlarge
+    openstack flavor create --id 1 --ram 512 --disk 1 --vcpus 1 m1.tiny
+    openstack flavor create --id 2 --ram 2048 --disk 20 --vcpus 1 m1.small
+    openstack flavor create --id 3 --ram 4096 --disk 40 --vcpus 2 m1.medium
+    openstack flavor create --id 4 --ram 8192 --disk 80 --vcpus 4 m1.large
+    openstack flavor create --id 5 --ram 16384 --disk 160 --vcpus 8 m1.xlarge
 fi
 
 DEMO_NET_ID=$(openstack network list | awk '/ demo-net / {print $2}')
