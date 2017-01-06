@@ -1,0 +1,28 @@
+#jinja2: trim_blocks: False
+[DEFAULT]
+log_dir = /var/log/kolla/panko
+debug = {{ panko_logging_debug }}
+
+[database]
+{% if panko_database_type == "mongodb" %}
+event_connection = mongodb://{{ panko_database_user }}:{{ panko_database_password }}@{{ panko_database_mongodb_address }}/{{ panko_database_name }}
+metering_connection = mongodb://{{ panko_database_user }}:{{ panko_database_password }}@{{ panko_database_mongodb_address }}/{{ panko_database_name }}
+{% elif panko_database_type == "mysql" %}
+event_connection = mysql+pymysql://{{ panko_database_user }}:{{ panko_database_password }}@{{ panko_database_mysql_address }}:{{ panko_database_port }}/{{ panko_database_name }}
+metering_connection = mysql+pymysql://{{ panko_database_user }}:{{ panko_database_password }}@{{ panko_database_mysql_address }}:{{ panko_database_port }}/{{ panko_database_name }}
+{% endif %}
+
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+project_domain_name = Default
+project_name = service
+user_domain_name = Default
+username = {{ panko_keystone_user }}
+password = {{ panko_keystone_password }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}

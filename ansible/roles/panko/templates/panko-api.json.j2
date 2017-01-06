@@ -1,0 +1,33 @@
+{% set panko_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set panko_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "{{ panko_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/panko.conf",
+            "dest": "/etc/panko/panko.conf",
+            "owner": "panko",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/policy.json",
+            "dest": "/etc/panko/policy.json",
+            "owner": "panko",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "{{ container_config_directory }}/wsgi-panko.conf",
+            "dest": "/etc/{{ panko_dir }}/wsgi-panko.conf",
+            "owner": "panko",
+            "perm": "0640"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/panko",
+            "owner": "panko:panko",
+            "recurse": true
+        }
+    ]
+}
