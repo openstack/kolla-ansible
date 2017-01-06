@@ -1,0 +1,96 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "designate-api"
+    - "designate-central"
+    - "designate-mdns"
+    - "designate-sink"
+    - "designate-backend-bind9"
+    - "designate-worker"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "designate-api"
+    - "designate-central"
+    - "designate-mdns"
+    - "designate-sink"
+    - "designate-backend-bind9"
+    - "designate-worker"
+
+- name: Copying over designate.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/templates/designate.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/designate.conf"
+      - "{{ node_custom_config }}/designate/{{ item }}.conf"
+      - "{{ node_custom_config }}/designate/{{ inventory_hostname }}/designate.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/designate.conf"
+  with_items:
+    - "designate-api"
+    - "designate-central"
+    - "designate-mdns"
+    - "designate-sink"
+    - "designate-worker"
+
+- name: Copying over pools.yaml
+  template:
+    src:  "{{ item }}"
+    dest: "{{ node_config_directory }}/designate-worker/pools.yaml"
+  with_first_found:
+    - "{{ node_custom_config }}/designate/pools.yaml"
+    - "{{ role_path }}/templates/pools.yaml.j2"
+
+- name: Copying over named.conf
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/designate-backend-bind9/named.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/designate/designate-backend-bind9/{{ inventory_hostname }}/named.conf"
+    - "{{ node_custom_config }}/designate/designate-backend-bind9/named.conf"
+    - "{{ node_custom_config }}/designate/named.conf"
+    - "{{ role_path }}/templates/named.conf.j2"
+
+- name: Copying over rndc.conf
+  template:
+    src: "rndc.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/rndc.conf"
+  with_items:
+    - "designate-backend-bind9"
+    - "designate-worker"
+
+- name: Copying over rndc.key
+  template:
+    src: "rndc.key.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/rndc.key"
+  with_items:
+    - "designate-backend-bind9"
+    - "designate-worker"
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ node_custom_config }}/designate/policy.json"
+  register: designate_policy
+
+- name: Copying over existing policy.json
+  template:
+    src: "{{ node_custom_config }}/designate/policy.json"
+    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
+  with_items:
+    - "designate-api"
+    - "designate-central"
+    - "designate-mdns"
+    - "designate-sink"
+    - "designate-worker"
+  when:
+    designate_policy.stat.exists

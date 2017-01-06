@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import argparse
+import hmac
 import os
 import random
 import string
 import sys
 
 from Crypto.PublicKey import RSA
+from hashlib import md5
 from oslo_utils import uuidutils
 import yaml
 
@@ -51,7 +53,7 @@ def main():
     # These keys should be random uuids
     uuid_keys = ['ceph_cluster_fsid', 'rbd_secret_uuid',
                  'gnocchi_project_id', 'gnocchi_resource_id',
-                 'gnocchi_user_id']
+                 'gnocchi_user_id', 'designate_pool_id']
 
     # SSH key pair
     ssh_keys = ['kolla_ssh_key', 'nova_ssh_key',
@@ -59,6 +61,9 @@ def main():
 
     # If these keys are None, leave them as None
     blank_keys = ['docker_registry_password']
+
+    # HMAC-MD5 keys
+    hmac_md5_keys = ['designate_rndc_key']
 
     # length of password
     length = 40
@@ -82,6 +87,10 @@ def main():
                 continue
             if k in uuid_keys:
                 passwords[k] = uuidutils.generate_uuid()
+            elif k in hmac_md5_keys:
+                passwords[k] = (hmac.new(
+                    uuidutils.generate_uuid(), '', md5)
+                    .digest().encode('base64')[:-1])
             else:
                 passwords[k] = ''.join([
                     random.SystemRandom().choice(
