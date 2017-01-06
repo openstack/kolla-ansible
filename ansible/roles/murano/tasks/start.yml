@@ -60,8 +60,8 @@
                     {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}/v3 \
                 --murano-url \
                     {{ admin_protocol }}://{{ api_interface_address }}:{{ murano_api_port }} \
-                package-import --is-public /io.murano.zip"
+                package-import --exists-action u --is-public /io.murano.zip"
   run_once: True
   delegate_to: "{{ groups['murano-api'][0] }}"
   when:
-    - status.stdout.find("io.murano") == -1
+    - status.stdout.find("io.murano") == -1 or action == "upgrade"
