@@ -1,1 +1,16 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - tacker
+  register: container_facts
+
+- name: Checking free port for Tacker Server
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ tacker_server_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['tacker'] is not defined
+    - inventory_hostname in groups['tacker']
