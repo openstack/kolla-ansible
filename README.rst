@@ -147,10 +147,10 @@ workflow <http://docs.openstack.org/infra/manual/developers.html>`__.
 
 -  We communicate using the #openstack-kolla irc channel.
 -  File bugs, blueprints, track releases, etc on
-   `Launchpad <https://launchpad.net/kolla>`__.
+   `Launchpad <https://launchpad.net/kolla-ansible>`__.
 -  Attend weekly
    `meetings <https://wiki.openstack.org/wiki/Meetings/Kolla>`__.
--  Contribute `code <https://git.openstack.org/openstack/kolla>`__.
+-  Contribute `code <https://git.openstack.org/cgit/openstack/kolla-ansible>`__.
 
 Contributors
 ============
