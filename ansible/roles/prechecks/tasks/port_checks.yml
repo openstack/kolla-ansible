@@ -33,26 +33,6 @@
                 kolla_internal_vip_address | ipaddr(ip_addr_output.stdout.split()[3]) is none"
   when: enable_haproxy | bool
 
-- name: Checking free port for Congress API
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ congress_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_congress | bool
-    - inventory_hostname in groups['congress-api']
-
-- name: Checking free port for Congress API HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ congress_api_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_congress | bool
-    - inventory_hostname in groups['haproxy']
-
 - name: Checking free port for Etcd Peer
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
