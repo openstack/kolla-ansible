@@ -1,1 +1,16 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - searchlight_api
+  register: container_facts
+
+- name: Checking free port for Searchlight API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ searchlight_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['searchlight_api'] is not defined
+    - inventory_hostname in groups['searchlight-api']
