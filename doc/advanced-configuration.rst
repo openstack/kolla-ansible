@@ -58,6 +58,13 @@ Provisions must be taken outside of kolla for these names to map to the
 configured IP addresses. Using a DNS server or the /etc/hosts file are
 two ways to create this mapping.
 
+RabbitMQ Hostname Resolution
+============================
+
+RabbitMQ doesn't work with IP address, hence the IP address of api_interface
+should be resolvable by hostnames to make sure that all RabbitMQ Cluster
+hosts can resolve each others hostname beforehand.
+
 TLS Configuration
 =================
 
