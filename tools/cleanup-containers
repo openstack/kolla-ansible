@@ -1,5 +1,5 @@
 #!/bin/bash
-QEMU_PIDS=$(pgrep qemu)
+QEMU_PIDS=$(pgrep -l qemu | awk '!/qemu-ga/ {print $1}')
 if [[ $COMPUTE ]] && [[ $QEMU_PIDS ]] && [[ $(ps --no-headers wwwup $QEMU_PIDS | grep --invert-match '\-xen\-domid 0') ]]; then
     echo "Some qemu processes were detected."
     echo "Docker will not be able to stop the nova_libvirt container with those running."
