@@ -51,4 +51,16 @@
     volumes:
       - "{{ node_config_directory }}/ironic-inspector/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
   when: inventory_hostname in groups['ironic-inspector']
+
+- name: Staring ironic-dnsmasq container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ ironic_dnsmasq_image_full }}"
+    name: "ironic_dnsmasq"
+    volumes:
+      - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+  when: inventory_hostname in groups['ironic-conductor']

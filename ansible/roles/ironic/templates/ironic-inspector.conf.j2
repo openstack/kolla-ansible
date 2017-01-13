@@ -1,0 +1,35 @@
+[DEFAULT]
+debug = {{ ironic_logging_debug }}
+log_dir = /var/log/kolla/ironic
+
+listen_address = {{ api_interface_address }}
+listen_port = {{ ironic_inspector_port }}
+
+[ironic]
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ ironic_inspector_keystone_user }}
+password = {{ ironic_inspector_keystone_password }}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ ironic_inspector_keystone_user }}
+password = {{ ironic_inspector_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[firewall]
+dnsmasq_interface = {{ ironic_dnsmasq_interface }}
+
+[database]
+connection = mysql+pymysql://{{ ironic_inspector_database_user }}:{{ ironic_inspector_database_password }}@{{ ironic_inspector_database_address }}/{{ ironic_inspector_database_name }}

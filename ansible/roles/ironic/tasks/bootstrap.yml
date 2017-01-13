@@ -7,10 +7,15 @@
       login_port: "{{ database_port }}"
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
-      name: "{{ ironic_database_name }}"
+      name: "{{ item.database_name }}"
   register: database
   run_once: True
-  delegate_to: "{{ groups['ironic-api'][0] }}"
+  delegate_to: "{{ item.delegate_to }}"
+  with_items:
+    - database_name: "{{ ironic_database_name }}"
+      delegate_to: "{{ groups['ironic-api'][0] }}"
+    - database_name: "{{ ironic_inspector_database_name }}"
+      delegate_to: "{{ groups['ironic-inspector'][0] }}"
 
 - name: Creating Ironic database user and setting permissions
   kolla_toolbox:
@@ -20,13 +25,20 @@
       login_port: "{{ database_port }}"
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
-      name: "{{ ironic_database_name }}"
-      password: "{{ ironic_database_password }}"
+      name: "{{ item.database_name }}"
+      password: "{{ item.database_password }}"
       host: "%"
-      priv: "{{ ironic_database_name }}.*:ALL"
+      priv: "{{ item.database_name }}.*:ALL"
       append_privs: "yes"
   run_once: True
-  delegate_to: "{{ groups['ironic-api'][0] }}"
+  delegate_to: "{{ item.delegate_to }}"
+  with_items:
+    - database_name: "{{ ironic_database_name }}"
+      database_password: "{{ ironic_database_password }}"
+      delegate_to: "{{ groups['ironic-api'][0] }}"
+    - database_name: "{{ ironic_inspector_database_name }}"
+      database_password: "{{ ironic_inspector_database_password }}"
+      delegate_to: "{{ groups['ironic-inspector'][0] }}"
 
 - include: bootstrap_service.yml
   when: database.changed
