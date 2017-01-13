@@ -9,9 +9,14 @@
     - "gnocchi-metricd"
     - "gnocchi-statsd"
 
-- name: Copying over config(s)
-  template:
-    src: roles/ceph/templates/ceph.conf.j2
+- name: Copying over ceph.conf(s)
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/../ceph/templates/ceph.conf.j2"
+      - "{{ node_custom_config }}/ceph.conf"
+      - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
   when: inventory_hostname in groups[item]
   with_items:
