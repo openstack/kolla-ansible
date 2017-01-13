@@ -7,12 +7,14 @@ Team and repository tags
 
 .. Change things from this point on
 
-==============
-Kolla Overview
-==============
+======================
+Kolla-Ansible Overview
+======================
 
-The Kolla project is a member of the OpenStack `Big Tent
-Governance <http://governance.openstack.org/reference/projects/index.html>`__.
+The Kolla-Ansible is a deliverable project separated from Kolla project.
+
+Kolla-Ansible deploys OpenStack services and infrastructure components
+in Docker containers.
 
 Kolla's mission statement is:
 
@@ -20,9 +22,6 @@ Kolla's mission statement is:
 
     To provide production-ready containers and deployment tools for operating
     OpenStack clouds.
-
-Kolla provides `Docker <http://docker.com/>`__ containers and
-`Ansible <http://ansible.com/>`__ playbooks to meet Kolla's mission.
 
 Kolla is highly opinionated out of the box, but allows for complete
 customization. This permits operators with little experience to deploy
@@ -32,32 +31,16 @@ configuration to suit the operator's exact requirements.
 Getting Started
 ===============
 
-Learn about Kolla by reading the documentation online
-`docs.openstack.org <http://docs.openstack.org/developer/kolla/>`__.
+Learn about Kolla-Ansible by reading the documentation online
+`docs.openstack.org <http://docs.openstack.org/developer/kolla-ansible/>`__.
 
 Get started by reading the `Developer
-Quickstart <http://docs.openstack.org/developer/kolla/quickstart.html>`__.
-
-Docker images
-=============
-
-The `Docker images <https://docs.docker.com/engine/tutorials/dockerimages/>`__
-are built by the Kolla project maintainers. A detailed process for
-contributing to the images can be found in the `image building
-guide <http://docs.openstack.org/developer/kolla/image-building.html>`__.
-
-The Kolla developers build images in the `kolla` namespace for every tagged
-release and implement an Ansible roles for many but not all of them.
-
-You can view the available images on `Docker Hub
-<https://hub.docker.com/u/kolla/>`__ or with the Docker CLI::
-
-    $ sudo docker search kolla
+Quickstart <http://docs.openstack.org/developer/kolla-ansible/quickstart.html>`__.
 
 OpenStack services
 ------------------
 
-Kolla provides images to deploy the following OpenStack projects:
+Kolla-Ansible deploys containers for the following OpenStack projects:
 
 - `Aodh <http://docs.openstack.org/developer/aodh/>`__
 - `Barbican <http://docs.openstack.org/developer/barbican/>`__
@@ -67,13 +50,11 @@ Kolla provides images to deploy the following OpenStack projects:
 - `CloudKitty <http://docs.openstack.org/developer/cloudkitty/>`__
 - `Congress <http://docs.openstack.org/developer/congress/>`__
 - `Designate <http://docs.openstack.org/developer/designate/>`__
-- `Freezer <https://wiki.openstack.org/wiki/Freezer-docs>`__
 - `Glance <http://docs.openstack.org/developer/glance/>`__
 - `Gnocchi <http://docs.openstack.org/developer/gnocchi/>`__
 - `Heat <http://docs.openstack.org/developer/heat/>`__
 - `Horizon <http://docs.openstack.org/developer/horizon/>`__
 - `Ironic <http://docs.openstack.org/developer/ironic/>`__
-- `Karbor <http://docs.openstack.org/developer/karbor/>`__
 - `Keystone <http://docs.openstack.org/developer/keystone/>`__
 - `Kuryr <http://docs.openstack.org/developer/kuryr/>`__
 - `Magnum <http://docs.openstack.org/developer/magnum/>`__
@@ -99,7 +80,7 @@ Kolla provides images to deploy the following OpenStack projects:
 Infrastructure components
 -------------------------
 
-Kolla provides images to deploy the following infrastructure components:
+Kolla-Ansible deploys containers for the following infrastructure components:
 
 - `Ceph <http://ceph.com/>`__ implementation for Cinder, Glance and Nova
 - `collectd <https://collectd.org>`__,
@@ -124,18 +105,17 @@ Kolla provides images to deploy the following infrastructure components:
 Directories
 ===========
 
--  ``ansible`` - Contains Ansible playbooks to deploy Kolla in Docker
-   containers.
+-  ``ansible`` - Contains Ansible playbooks to deploy OpenStack services and
+   infrastructure components in Docker containers.
 -  ``contrib`` - Contains demos scenarios for Heat and Murano and a development
    environment for Vagrant
 -  ``doc`` - Contains documentation.
--  ``docker`` - Contains jinja2 templates for the Docker build system.
 -  ``etc`` - Contains a reference etc directory structure which requires
    configuration of a small number of configuration variables to achieve
    a working All-in-One (AIO) deployment.
 -  ``tests`` - Contains functional testing tools.
--  ``tools`` - Contains tools for interacting with Kolla.
--  ``specs`` - Contains the Kolla communities key arguments about
+-  ``tools`` - Contains tools for interacting with Kolla-Ansible.
+-  ``specs`` - Contains the Kolla-Ansible communities key arguments about
    architectural shifts in the code base.
 
 Getting Involved
@@ -150,7 +130,7 @@ workflow <http://docs.openstack.org/infra/manual/developers.html>`__.
    `Launchpad <https://launchpad.net/kolla-ansible>`__.
 -  Attend weekly
    `meetings <https://wiki.openstack.org/wiki/Meetings/Kolla>`__.
--  Contribute `code <https://git.openstack.org/cgit/openstack/kolla-ansible>`__.
+-  Contribute `code <https://git.openstack.org/openstack/kolla-ansible>`__.
 
 Contributors
 ============
