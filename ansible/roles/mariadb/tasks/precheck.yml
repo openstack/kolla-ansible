@@ -1,1 +1,42 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - mariadb
+  register: container_facts
+
+- name: Checking free port for MariaDB
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ database_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['mariadb'] is not defined
+
+- name: Checking free port for MariaDB WSREP
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ mariadb_wsrep_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['mariadb'] is not defined
+
+- name: Checking free port for MariaDB IST
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ mariadb_ist_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['mariadb'] is not defined
+
+- name: Checking free port for MariaDB SST
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ mariadb_sst_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['mariadb'] is not defined
