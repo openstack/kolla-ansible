@@ -33,16 +33,6 @@
                 kolla_internal_vip_address | ipaddr(ip_addr_output.stdout.split()[3]) is none"
   when: enable_haproxy | bool
 
-- name: Checking free port for Kuryr
-  wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ kuryr_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_kuryr | bool
-    - inventory_hostname in groups['compute']
-
 - name: Checking free port for HAProxy stats
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
