@@ -2,15 +2,15 @@
 - name: Get container facts
   kolla_container_facts:
     name:
-      - ceph_rgw
+      - panko_api
   register: container_facts
 
-- name: Checking free port for RadosGW
+- name: Checking free port for Panko API
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
-    port: "{{ rgw_port }}"
+    port: "{{ panko_api_port }}"
     connect_timeout: 1
     state: stopped
   when:
-    - container_facts['ceph-rgw'] is not defined
-    - inventory_hostname in groups['ceph-rgw']
+    - container_facts['panko_api'] is not defined
+    - inventory_hostname in groups['panko-api']
