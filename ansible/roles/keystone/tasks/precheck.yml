@@ -1,1 +1,26 @@
 ---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - keystone
+  register: container_facts
+
+- name: Checking free port for Keystone Admin
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ keystone_admin_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['keystone'] is not defined
+    - inventory_hostname in groups['keystone']
+
+- name: Checking free port for Keystone Public
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ keystone_public_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['keystone'] is not defined
+    - inventory_hostname in groups['keystone']
