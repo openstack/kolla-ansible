@@ -1,5 +1,7 @@
 ---
 - name: Running Heat bootstrap container
+  vars:
+    heat_api: "{{ heat_services['heat-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -13,14 +15,11 @@
       OS_PASSWORD: "{{ openstack_auth.password }}"
       OS_PROJECT_NAME: "{{ openstack_auth.project_name }}"
       HEAT_DOMAIN_ADMIN_PASSWORD: "{{ heat_domain_admin_password }}"
-    image: "{{ heat_api_image_full }}"
+    image: "{{ heat_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_heat"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ heat_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['heat-api'][0] }}"
+  delegate_to: "{{ groups[heat_api.group][0] }}"
