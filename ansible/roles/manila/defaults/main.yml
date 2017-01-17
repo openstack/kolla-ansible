@@ -1,7 +1,50 @@
 ---
 project_name: "manila"
 
-####################
+manila_services:
+  manila-api:
+    container_name: "manila_api"
+    group: "manila-api"
+    image: "{{ manila_api_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  manila-scheduler:
+    container_name: "manila_scheduler"
+    group: "manila-scheduler"
+    image: "{{ manila_scheduler_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  manila-share:
+    container_name: "manila_share"
+    group: "manila-share"
+    image: "{{ manila_share_image_full }}"
+    enabled: True
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run/:/run/:shared"
+      - "kolla_logs:/var/log/kolla/"
+  manila-data:
+    container_name: "manila_data"
+    group: "manila-data"
+    image: "{{ manila_data_image_full }}"
+    enabled: True
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run/:/run/:shared"
+      - "kolla_logs:/var/log/kolla/"
+
+
+#####################
 ## Database
 #####################
 manila_database_name: "manila"
@@ -28,6 +71,7 @@ manila_data_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 manila_data_tag: "{{ openstack_release }}"
 manila_data_image_full: "{{ manila_data_image }}:{{ manila_data_tag }}"
 
+
 #####################
 ## OpenStack
 #####################
@@ -45,6 +89,7 @@ manila_service_instance_user: "manila"
 manila_service_instance_password: "manila"
 
 openstack_manila_auth: "{{ openstack_auth }}"
+
 
 ####################
 # Manila
