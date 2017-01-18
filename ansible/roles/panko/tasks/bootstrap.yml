@@ -10,60 +10,38 @@
   when:
     - panko_database_type == "mongodb"
 
-- name: Checking Panko mysql database
-  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
-    -m mysql_db
-    -a "login_host='{{ panko_database_mysql_address }}'
-        login_port='{{ panko_database_port }}'
-        login_user='{{ panko_database_user }}'
-        login_password='{{ panko_database_password }}'
-        name='{{ panko_database_name }}'"
-  register: mysql_access
-  failed_when: False
-  changed_when: False
-  run_once: True
-  when:
-    - panko_database_type == "mysql"
-
-- name: Creating panko mysql database
-  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
-    -m mysql_db
-    -a "login_host='{{ panko_database_mysql_address }}'
-        login_port='{{ panko_database_port }}'
-        login_user='{{ database_user }}'
-        login_password='{{ database_password }}'
-        name='{{ panko_database_name }}'"
+- name: Creating Panko mysql database
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ panko_database_mysql_address }}"
+      login_port: "{{ panko_database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ panko_database_name }}"
   register: mysql_panko_database
-  changed_when: "{{ mysql_panko_database.stdout.find('localhost | SUCCESS => ') != -1 and
-                    (mysql_panko_database.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
-  failed_when: mysql_panko_database.stdout.split()[2] != 'SUCCESS'
   run_once: True
   delegate_to: "{{ groups['panko-api'][0] }}"
   when:
     - panko_database_type == "mysql"
-    - "'FAILED' in mysql_access.stdout"
 
-- name: Creating panko database user and setting permissions
-  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
-    -m mysql_user
-    -a "login_host='{{ panko_database_mysql_address }}'
-        login_port='{{ panko_database_port }}'
-        login_user='{{ database_user }}'
-        login_password='{{ database_password }}'
-        name='{{ panko_database_name }}'
-        password='{{ panko_database_password }}'
-        host='%'
-        priv='{{ panko_database_name }}.*:ALL'
-        append_privs='yes'"
-  register: database_user_create
-  changed_when: "{{ database_user_create.stdout.find('localhost | SUCCESS => ') != -1 and
-                    (database_user_create.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
-  failed_when: database_user_create.stdout.split()[2] != 'SUCCESS'
+- name: Creating Panko mysql database user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ panko_database_mysql_address }}"
+      login_port: "{{ panko_database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ panko_database_name }}"
+      password: "{{ panko_database_password }}"
+      host: "%"
+      priv: "{{ panko_database_name }}.*:ALL"
+      append_privs: "yes"
   run_once: True
   delegate_to: "{{ groups['panko-api'][0] }}"
   when:
     - panko_database_type == "mysql"
-    - "'FAILED' in mysql_access.stdout"
 
  - include: bootstrap_service.yml
    when: ((panko_database_type == "mongodb" and mongodb_panko_database.changed)
