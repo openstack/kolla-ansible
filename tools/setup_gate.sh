@@ -32,12 +32,6 @@ EOF
         openstack/kolla openstack/requirements
 }
 
-function build_image {
-    pushd "${GIT_PROJECT_DIR}/kolla"
-    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
-    popd
-}
-
 function setup_config {
     sudo cp -r etc/kolla /etc/
     # Generate passwords
@@ -66,6 +60,8 @@ namespace = lokolla
 base = ${BASE_DISTRO}
 install_type = ${INSTALL_TYPE}
 profile = gate
+registry = 127.0.0.1:4000
+push = true
 
 [profiles]
 gate = cron,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,heka,horizon
@@ -177,6 +173,26 @@ function setup_logging {
     mkdir -p /tmp/logs/{ansible,build,kolla,kolla_configs,system_logs}
 }
 
+function prepare_images {
+    docker run -d -p 4000:5000 --restart=always -v /tmp/kolla_registry/:/var/lib/registry --name registry registry:2
+
+    # NOTE(Jeffrey4l): Zuul adds all changes depend on to ZUUL_CHANGES
+    # variable. if find "openstack/kolla:" string, it means this patch depends
+    # on one of Kolla patch. Then build image by using Kolla's code.
+    # Otherwise, pull images from tarballs.openstack.org site.
+    if echo "$ZUUL_CHANGES" | grep -q -i "openstack/kolla:"; then
+        pushd "${GIT_PROJECT_DIR}/kolla"
+        sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+        popd
+    else
+        BRANCH=$(echo "$ZUUL_BRANCH" | cut -d/ -f2)
+        filename=${BASE_DISTRO}-${INSTALL_TYPE}-registry-${BRANCH}.tar.gz
+        wget -q -c -O "/tmp/$filename" \
+            "http://tarballs.openstack.org/kolla/images/$filename"
+        sudo tar xzf "/tmp/$filename" -C /tmp/kolla_registry
+    fi
+}
+
 setup_logging
 tools/dump_info.sh
 clone_repos
@@ -185,7 +201,7 @@ setup_ssh
 setup_ansible
 setup_node
 setup_config
-build_image
+prepare_images
 
 sudo tools/deploy_aio.sh "${BASE_DISTRO}" "${INSTALL_TYPE}"
 
