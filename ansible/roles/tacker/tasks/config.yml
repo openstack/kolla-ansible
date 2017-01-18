@@ -1,34 +1,46 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "tacker"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled
+  with_dict: "{{ tacker_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "tacker"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: tacker_config_jsons
+  with_dict: "{{ tacker_services }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled
+  notify:
+    - Restart tacker container
 
 - name: Copying over tacker.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/tacker.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/tacker.conf"
-      - "{{ node_custom_config }}/tacker/{{ item }}.conf"
+      - "{{ node_custom_config }}/tacker/{{ item.key }}.conf"
       - "{{ node_custom_config }}/tacker/{{ inventory_hostname }}/tacker.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/tacker.conf"
-  with_items:
-    - "tacker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/tacker.conf"
+  register: tacker_confs
+  with_dict: "{{ tacker_services }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  notify:
+    - Restart tacker container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/tacker/policy.json"
@@ -37,8 +49,27 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/tacker/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "tacker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: tacker_policy_jsons
   when:
-    tacker_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - tacker_policy.stat.exists
+  with_dict: "{{ tacker_services }}"
+  notify:
+    - Restart tacker containers
+
+- name: Check tacker containers
+  kolla_docker:
+    action: "compare_container"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
+  when:
+    - action != 'config'
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  register: check_tacker_containers
+  with_dict: "{{ tacker_services }}"
+  notify:
+    - Restart tacker container
