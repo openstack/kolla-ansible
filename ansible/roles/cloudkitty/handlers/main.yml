@@ -1,0 +1,46 @@
+---
+- name: Restart cloudkitty-api container
+  vars:
+    service_name: "cloudkitty-api"
+    service: "{{ cloudkitty_services[service_name] }}"
+    config_json: "{{ cloudkitty_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    cloudkitty_conf: "{{ cloudkitty_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ cloudkitty_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    cloudkitty_api_container: "{{ check_cloudkitty_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or cloudkitty_conf.changed | bool
+      or policy_json.changed | bool
+      or cloudkitty_api_container.changed | bool
+
+- name: Restart cloudkitty-processor container
+  vars:
+    service_name: "cloudkitty-processor"
+    service: "{{ cloudkitty_services[service_name] }}"
+    config_json: "{{ cloudkitty_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    cloudkitty_conf: "{{ cloudkitty_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ cloudkitty_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    cloudkitty_processor_container: "{{ check_cloudkitty_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or cloudkitty_conf.changed | bool
+      or policy_json.changed | bool
+      or cloudkitty_processor_container.changed | bool

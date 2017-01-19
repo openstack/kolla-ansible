@@ -1,5 +1,7 @@
 ---
 - name: Running Cloudkitty bootstrap container
+  vars:
+    cloudkitty_api: "{{ cloudkitty_services['cloudkitty-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ cloudkitty_api_image_full }}"
+    image: "{{ cloudkitty_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_cloudkitty"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/cloudkitty-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cloudkitty_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['cloudkitty-api'][0] }}"
+  delegate_to: "{{ groups[cloudkitty_api.group][0] }}"
