@@ -3,5 +3,8 @@
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ rabbitmq_image_full }}"
-  when: inventory_hostname in groups['rabbitmq']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ rabbitmq_services }}"
