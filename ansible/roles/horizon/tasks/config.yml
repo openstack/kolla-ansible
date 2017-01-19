@@ -1,29 +1,45 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "horizon"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ horizon_services }}"
 
 - name: Copying over config.json files for services
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "horizon"
+    src: "horizon.json.j2"
+    dest: "{{ node_config_directory }}/horizon/config.json"
+  register: horizon_config_json
+  when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
+  notify:
+    - Restart horizon container
 
 - name: Copying over horizon.conf
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/horizon.conf"
+  register: horizon_conf
   with_first_found:
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/horizon.conf"
     - "{{ node_custom_config }}/horizon/horizon.conf"
     - "horizon.conf.j2"
+  when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
+  notify:
+    - Restart horizon container
 
 - name: Copying over local_settings
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/local_settings"
@@ -31,6 +47,12 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/local_settings"
     - "{{ node_custom_config }}/horizon/local_settings"
     - "local_settings.j2"
+  register: horizon_local_settings
+  when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
+  notify:
+    - Restart horizon container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/horizon/{{ item.name }}_policy.json"
@@ -52,10 +74,15 @@
     - { name: "trove", enabled: "{{ enable_trove }}" }
 
 - name: Copying over existing policy.json
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ node_custom_config }}/horizon/{{ item[0]['name'] }}_policy.json"
     dest: "{{ node_config_directory }}/horizon/{{ item[0]['name'] }}_policy.json"
+  register: policy_jsons
   when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
     - item[0]['enabled'] | bool
     - item[1]['stat']['exists']
   with_together:
@@ -73,3 +100,21 @@
        { name: "senlin", enabled: "{{ enable_senlin }}" },
        { name: "trove", enabled: "{{ enable_trove }}" }]
     - "{{ custom_policy.results }}"
+
+- name: Check horizon container
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ horizon.container_name }}"
+    image: "{{ horizon.image }}"
+    environment: "{{ horizon.environment }}"
+    volumes: "{{ horizon.volumes }}"
+  register: check_horizon_container
+  when:
+    - action != "config"
+    - inventory_hostname in groups[horizon.group]
+    - horizon.enabled | bool
+  notify:
+    - Restart horizon container
