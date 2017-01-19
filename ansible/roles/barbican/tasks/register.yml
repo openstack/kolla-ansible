@@ -40,3 +40,18 @@
   retries: 10
   delay: 5
   run_once: True
+
+- name: Creating default barbican roles
+  kolla_toolbox:
+    module_name: os_keystone_role
+    module_args:
+      name: "{{ item }}"
+      auth: "{{ '{{ openstack_barbican_auth }}' }}"
+    module_extra_vars:
+      openstack_barbican_auth: "{{ openstack_barbican_auth }}"
+  run_once: True
+  with_items:
+    - "{{ barbican_keymanager_role }}"
+    - "{{ barbican_creator_role }}"
+    - "{{ barbican_observer_role }}"
+    - "{{ barbican_audit_role }}"
