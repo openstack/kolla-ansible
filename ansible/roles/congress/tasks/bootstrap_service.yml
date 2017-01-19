@@ -1,5 +1,7 @@
 ---
 - name: Running congress bootstrap container
+  vars:
+    congress_api: "{{ congress_services['congress-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ congress_api_image_full }}"
+    image: "{{ congress_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_congress"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/congress-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ congress_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['congress-api'][0] }}"
+  delegate_to: "{{ groups[congress_api.group][0] }}"
