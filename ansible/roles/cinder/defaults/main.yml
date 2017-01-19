@@ -1,6 +1,52 @@
 ---
 project_name: "cinder"
 
+cinder_services:
+  cinder-api:
+    container_name: cinder_api
+    group: cinder-api
+    enabled: true
+    image: "{{ cinder_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  cinder-scheduler:
+    container_name: cinder_scheduler
+    group: cinder-scheduler
+    enabled: true
+    image: "{{ cinder_scheduler_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cinder-scheduler/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  cinder-volume:
+    container_name: cinder_volume
+    group: cinder-volume
+    enabled: true
+    image: "{{ cinder_volume_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cinder-volume/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/dev/:/dev/"
+      - "/run/:/run/:shared"
+      - "{% if enable_iscsid | bool %}cinder:/var/lib/cinder{% endif %}"
+      - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+      - "kolla_logs:/var/log/kolla/"
+  cinder-backup:
+    container_name: cinder_backup
+    group: cinder-backup
+    enabled: true
+    image: "{{ cinder_backup_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cinder-backup/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/dev/:/dev/"
+      - "/run/:/run/:shared"
+      - "{% if enable_cinder_backend_lvm | bool %}cinder:/var/lib/cinder{% endif %}"
+      - "{% if enable_cinder_backend_lvm | bool %}iscsi_info:/etc/iscsi{% endif %}"
+      - "kolla_logs:/var/log/kolla/"
+
 ####################
 # Ceph
 ####################
