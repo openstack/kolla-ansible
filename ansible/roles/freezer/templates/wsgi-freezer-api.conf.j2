@@ -1,0 +1,23 @@
+{% set freezer_log_dir = '/var/log/kolla/freezer' %}
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+Listen {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ freezer_api_port }}
+
+<VirtualHost *:{{ freezer_api_port }}>
+    WSGIDaemonProcess freezer-api processes={{ openstack_service_workers }} threads=1 user=freezer display-name=%{GROUP}
+    WSGIProcessGroup freezer-api
+    WSGIApplicationGroup freezer-api
+    WSGIScriptAlias / {{ python_path }}/freezer_api/cmd/wsgi.py
+
+    ErrorLog {{ freezer_log_dir }}/freezer-api.log
+    CustomLog {{ freezer_log_dir }}/freezer-api_access.log combined
+    LogLevel info
+
+    <Directory {{ python_path }}/freezer_api>
+      Options Indexes FollowSymLinks MultiViews
+      Require all granted
+      AllowOverride None
+      Order allow,deny
+      allow from all
+      LimitRequestBody 102400
+    </Directory>
+</VirtualHost>

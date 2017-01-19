@@ -1,0 +1,88 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ freezer_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: freezer_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ freezer_services }}"
+  notify:
+    - Restart freezer-api container
+
+- name: Copying over wsgi-freezer-api.conf
+  template:
+    src: "wsgi-freezer-api.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/wsgi-freezer-api.conf"
+  register: wsgi_freezer_api
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - service.enabled | bool
+  with_dict: "{{ freezer_services }}"
+  notify:
+    - Restart freezer-api container
+
+- name: Copying over freezer-api.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item.key }}"
+    sources:
+      - "{{ role_path }}/templates/freezer-api.conf.j2"
+      - "{{ node_config_directory }}/global.conf"
+      - "{{ node_config_directory }}/database.conf"
+      - "{{ node_config_directory }}/messaging.conf"
+      - "{{ node_config_directory }}/freezer.conf"
+      - "{{ node_custom_config }}/freezer/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/freezer/{{ inventory_hostname }}/{{ item.key }}.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/freezer-api.conf"
+  register: freezer_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ freezer_services }}"
+  notify:
+    - Restart freezer-api container
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ node_config_directory }}/freezer/policy.json"
+  register: freezer_policy
+
+- name: Copying over existing policy.json
+  template:
+    src: "{{ node_config_directory }}/freezer/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: freezer_policy_jsons
+  when:
+    - freezer_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ freezer_services }}"
+  notify:
+    - Restart freezer-api container
+
+- name: Check freezer containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_freezer_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ freezer_services }}"
+  notify:
+    - Restart freezer-api container

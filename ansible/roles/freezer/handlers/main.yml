@@ -1,0 +1,24 @@
+---
+- name: Restart freezer-api container
+  vars:
+    service_name: "freezer-api"
+    service: "{{ freezer_services[service_name] }}"
+    config_json: "{{ freezer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    freezer_conf: "{{ freezer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ freezer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    freezer_api_container: "{{ check_freezer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or wsgi_freezer_api.changed | bool
+      or freezer_conf.changed | bool
+      or policy_json.changed | bool
+      or freezer_api_container.changed | bool
