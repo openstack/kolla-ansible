@@ -1,0 +1,39 @@
+---
+project_name: "karbor"
+
+####################
+# Database
+####################
+karbor_database_name: "karbor"
+karbor_database_user: "karbor"
+karbor_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+
+####################
+# Docker
+####################
+karbor_protection_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-karbor-protection"
+karbor_protection_tag: "{{ openstack_release }}"
+karbor_protection_image_full: "{{ karbor_protection_image }}:{{ karbor_protection_tag }}"
+
+karbor_operationengine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-karbor-operationengine"
+karbor_operationengine_tag: "{{ openstack_release }}"
+karbor_operationengine_image_full: "{{ karbor_operationengine_image }}:{{ karbor_operationengine_tag }}"
+
+karbor_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-karbor-api"
+karbor_api_tag: "{{ openstack_release }}"
+karbor_api_image_full: "{{ karbor_api_image }}:{{ karbor_api_tag }}"
+
+
+####################
+# OpenStack
+####################
+karbor_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ karbor_api_port }}/v1/%(tenant_id)s"
+karbor_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ karbor_api_port }}/v1/%(tenant_id)s"
+karbor_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ karbor_api_port }}/v1/%(tenant_id)s"
+
+karbor_logging_debug: "{{ openstack_logging_debug }}"
+
+karbor_keystone_user: "karbor"
+
+openstack_karbor_auth: "{'auth_url':'{{ openstack_auth.auth_url }}','username':'{{ openstack_auth.username }}','password':'{{ openstack_auth.password }}','project_name':'{{ openstack_auth.project_name }}'}"

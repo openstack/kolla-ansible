@@ -1,0 +1,16 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - karbor_api
+  register: container_facts
+
+- name: Checking free port for Karbor Admin
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ karbor_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - inventory_hostname in groups['karbor-api']
+    - container_facts['karbor-api'] is not defined

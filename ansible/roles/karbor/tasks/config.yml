@@ -1,0 +1,47 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item }}/providers.d"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "karbor-api"
+    - "karbor-protection"
+    - "karbor-operationengine"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "karbor-api"
+    - "karbor-protection"
+    - "karbor-operationengine"
+
+- name: Copying over karbor.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item }}"
+    sources:
+      - "{{ role_path }}/templates/karbor.conf.j2"
+      - "{{ node_config_directory }}/config/global.conf"
+      - "{{ node_config_directory }}/config/database.conf"
+      - "{{ node_config_directory }}/config/messaging.conf"
+      - "{{ node_config_directory }}/config/karbor.conf"
+      - "{{ node_config_directory }}/config/karbor/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/karbor/{{ inventory_hostname }}/karbor.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/karbor.conf"
+  with_items:
+    - "karbor-api"
+    - "karbor-protection"
+    - "karbor-operationengine"
+
+- name: Copying over openstack-infra.conf
+  template:
+    src: "providers.d/openstack-infra.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/providers.d/openstack-infra.conf"
+  with_items:
+    - "karbor-api"
+    - "karbor-protection"
+    - "karbor-operationengine"

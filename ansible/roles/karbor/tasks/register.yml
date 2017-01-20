@@ -1,0 +1,40 @@
+---
+- name: Creating the Karbor service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=karbor
+        service_type=data-protect
+        description='Application Data Protection Service'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_karbor_auth }}' }}"
+    -e "{'openstack_karbor_auth':{{ openstack_karbor_auth }}}"
+  register: karbor_endpoint
+  changed_when: "{{ karbor_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (karbor_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: karbor_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ karbor_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ karbor_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ karbor_public_endpoint }}'}
+
+- name: Creating the Karbor project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user=karbor
+        password={{ karbor_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_karbor_auth }}' }}"
+    -e "{'openstack_karbor_auth':{{ openstack_karbor_auth }}}"
+  register: karbor_user
+  changed_when: "{{ karbor_user.stdout.find('localhost | SUCCESS => ') != -1 and (karbor_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: karbor_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
