@@ -61,6 +61,9 @@
     - "{{ node_custom_config }}/designate/designate-backend-bind9/named.conf"
     - "{{ node_custom_config }}/designate/named.conf"
     - "{{ role_path }}/templates/named.conf.j2"
+  when:
+    - designate_backend == 'bind9'
+    - inventory_hostname in groups['designate-backend-bind9']
 
 - name: Copying over rndc.conf
   template:
@@ -69,6 +72,10 @@
   with_items:
     - "designate-backend-bind9"
     - "designate-worker"
+  when:
+    - designate_backend == 'bind9'
+    - inventory_hostname in groups['designate-backend-bind9']
+      or inventory_hostname in groups['designate-worker']
 
 - name: Copying over rndc.key
   template:
@@ -77,6 +84,10 @@
   with_items:
     - "designate-backend-bind9"
     - "designate-worker"
+  when:
+    - designate_backend == 'bind9'
+    - inventory_hostname in groups['designate-backend-bind9']
+      or inventory_hostname in groups['designate-worker']
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/designate/policy.json"
