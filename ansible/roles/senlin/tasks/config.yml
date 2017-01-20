@@ -1,37 +1,46 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "senlin-api"
-    - "senlin-engine"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ senlin_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "senlin-api"
-    - "senlin-engine"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: senlin_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ senlin_services }}"
+  notify:
+    - Restart senlin-api container
+    - Restart senlin-engine container
 
 - name: Copying over senlin.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/senlin.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/senlin.conf"
-      - "{{ node_custom_config }}/senlin/{{ item }}.conf"
+      - "{{ node_custom_config }}/senlin/{{ item.key }}.conf"
       - "{{ node_custom_config }}/senlin/{{ inventory_hostname }}/senlin.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/senlin.conf"
-  with_items:
-    - "senlin-api"
-    - "senlin-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/senlin.conf"
+  register: senlin_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ senlin_services }}"
+  notify:
+    - Restart senlin-api container
+    - Restart senlin-engine container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/senlin/policy.json"
@@ -40,9 +49,30 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/senlin/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "senlin-api"
-    - "senlin-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: senlin_policy_jsons
   when:
-    senlin_policy.stat.exists
+    - senlin_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ senlin_services }}"
+  notify:
+    - Restart senlin-api container
+    - Restart senlin-engine container
+
+- name: Check senlin containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_senlin_containers
+  when:
+    - action != 'genconfig'
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ senlin_services }}"
+  notify:
+    - Restart senlin-api container
+    - Restart senlin-engine container
