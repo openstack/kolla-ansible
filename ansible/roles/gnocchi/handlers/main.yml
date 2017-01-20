@@ -1,0 +1,71 @@
+---
+- name: Restart gnocchi-api container
+  vars:
+    service_name: "gnocchi-api"
+    service: "{{ gnocchi_services[service_name] }}"
+    config_json: "{{ gnocchi_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_conf: "{{ gnocchi_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ gnocchi_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_api_container: "{{ check_gnocchi_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or gnocchi_conf.changed | bool
+      or policy_json.changed | bool
+      or gnocchi_api_paste_ini.changed | bool
+      or gnocchi_wsgi_conf.changed | bool
+      or gnocchi_api_container.changed | bool
+
+- name: Restart gnocchi-metricd container
+  vars:
+    service_name: "gnocchi-metricd"
+    service: "{{ gnocchi_services[service_name] }}"
+    config_json: "{{ gnocchi_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_conf: "{{ gnocchi_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ gnocchi_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_metricd_container: "{{ check_gnocchi_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or gnocchi_conf.changed | bool
+      or policy_json.changed | bool
+      or gnocchi_metricd_container.changed | bool
+
+- name: Restart gnocchi-statsd container
+  vars:
+    service_name: "gnocchi-statsd"
+    service: "{{ gnocchi_services[service_name] }}"
+    config_json: "{{ gnocchi_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_conf: "{{ gnocchi_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ gnocchi_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    gnocchi_statsd_container: "{{ check_gnocchi_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or gnocchi_conf.changed | bool
+      or policy_json.changed | bool
+      or gnocchi_statsd_container.changed | bool
