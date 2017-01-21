@@ -1,50 +1,65 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "aodh-api"
-    - "aodh-evaluator"
-    - "aodh-listener"
-    - "aodh-notifier"
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ aodh_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "aodh-api"
-    - "aodh-listener"
-    - "aodh-evaluator"
-    - "aodh-notifier"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: aodh_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ aodh_services }}"
+  notify:
+    - Restart aodh-api container
+    - Restart aodh-evaluator container
+    - Restart aodh-listener container
+    - Restart aodh-notifier container
 
 - name: Copying over aodh.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/aodh.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/aodh.conf"
-      - "{{ node_custom_config }}/aodh/{{ item }}.conf"
+      - "{{ node_custom_config }}/aodh/{{ item.key }}.conf"
       - "{{ node_custom_config }}/aodh/{{ inventory_hostname }}/aodh.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/aodh.conf"
-  with_items:
-    - "aodh-api"
-    - "aodh-evaluator"
-    - "aodh-listener"
-    - "aodh-notifier"
+    dest: "{{ node_config_directory }}/{{ item.key }}/aodh.conf"
+  register: aodh_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ aodh_services }}"
+  notify:
+    - Restart aodh-api container
+    - Restart aodh-evaluator container
+    - Restart aodh-listener container
+    - Restart aodh-notifier container
 
 - name: Copying over wsgi-aodh files for services
+  vars:
+    service: "{{ aodh_services['aodh-api'] }}"
   template:
     src: "wsgi-aodh.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/wsgi-aodh.conf"
-  with_items:
-    - "aodh-api"
+    dest: "{{ node_config_directory }}/aodh-api/wsgi-aodh.conf"
+  register: aodh_conf_wsgi
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart aodh-api container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/aodh/policy.json"
@@ -53,11 +68,34 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/aodh/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "aodh-api"
-    - "aodh-evaluator"
-    - "aodh-listener"
-    - "aodh-notifier"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: aodh_policy_jsons
   when:
-    aodh_policy.stat.exists
+    - aodh_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ aodh_services }}"
+  notify:
+    - Restart aodh-api container
+    - Restart aodh-evaluator container
+    - Restart aodh-listener container
+    - Restart aodh-notifier container
+
+- name: Check aodh containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_aodh_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ aodh_services }}"
+  notify:
+    - Restart aodh-api container
+    - Restart aodh-evaluator container
+    - Restart aodh-listener container
+    - Restart aodh-notifier container
