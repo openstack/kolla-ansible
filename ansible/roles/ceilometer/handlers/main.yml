@@ -1,0 +1,118 @@
+---
+- name: Restart ceilometer-api container
+  vars:
+    service_name: "ceilometer-api"
+    service: "{{ ceilometer_services[service_name] }}"
+    config_json: "{{ ceilometer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_api_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ceilometer_conf.changed | bool
+      or policy_json.changed | bool
+      or wsgi_ceilometer_api.changed | bool
+      or ceilometer_api_container.changed | bool
+
+- name: Restart ceilometer-notification container
+  vars:
+    service_name: "ceilometer-notification"
+    service: "{{ ceilometer_services[service_name] }}"
+    config_json: "{{ ceilometer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_notification_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ceilometer_conf.changed | bool
+      or policy_json.changed | bool
+      or ceilometer_events.changed | bool
+      or ceilometer_notification_container.changed | bool
+
+- name: Restart ceilometer-central container
+  vars:
+    service_name: "ceilometer-central"
+    service: "{{ ceilometer_services[service_name] }}"
+    config_json: "{{ ceilometer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_central_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ceilometer_conf.changed | bool
+      or policy_json.changed | bool
+      or ceilometer_central_container.changed | bool
+
+- name: Restart ceilometer-collector container
+  vars:
+    service_name: "ceilometer-collector"
+    service: "{{ ceilometer_services[service_name] }}"
+    config_json: "{{ ceilometer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_collector_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ceilometer_conf.changed | bool
+      or policy_json.changed | bool
+      or ceilometer_collector_container.changed | bool
+
+- name: Restart ceilometer-compute container
+  vars:
+    service_name: "ceilometer-compute"
+    service: "{{ ceilometer_services[service_name] }}"
+    config_json: "{{ ceilometer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ceilometer_compute_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ceilometer_conf.changed | bool
+      or policy_json.changed | bool
+      or ceilometer_compute_container.changed | bool

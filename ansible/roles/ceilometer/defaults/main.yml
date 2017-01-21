@@ -1,6 +1,60 @@
 ---
 project_name: "ceilometer"
 
+ceilometer_services:
+  ceilometer-api:
+    container_name: ceilometer_api
+    group: ceilometer-api
+    enabled: True
+    image: "{{ ceilometer_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ceilometer:/var/lib/ceilometer/"
+      - "kolla_logs:/var/log/kolla/"
+  ceilometer-notification:
+    container_name: ceilometer_notification
+    group: ceilometer-notification
+    enabled: True
+    image: "{{ ceilometer_notification_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-notification/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  ceilometer-central:
+    container_name: ceilometer_central
+    group: ceilometer-central
+    enabled: True
+    image: "{{ ceilometer_central_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-central/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ceilometer:/var/lib/ceilometer/"
+      - "kolla_logs:/var/log/kolla/"
+  ceilometer-collector:
+    container_name: ceilometer_collector
+    group: ceilometer-collector
+    enabled: True
+    image: "{{ ceilometer_collector_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-collector/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ceilometer:/var/lib/ceilometer/"
+      - "kolla_logs:/var/log/kolla/"
+  ceilometer-compute:
+    container_name: ceilometer_compute
+    group: ceilometer-compute
+    enabled: True
+    privileged: True
+    image: "{{ ceilometer_compute_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-compute/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run/:/run/:shared"
+      - "ceilometer:/var/lib/ceilometer/"
+      - "kolla_logs:/var/log/kolla/"
+      - "nova_libvirt:/var/lib/libvirt"
+
 
 ####################
 # Database
