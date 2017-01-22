@@ -1,5 +1,7 @@
 ---
 - name: Running Octavia bootstrap container
+  vars:
+    octavia_api: "{{ octavia_services['octavia-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ octavia_api_image_full }}"
+    image: "{{ octavia_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_octavia"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ octavia_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['octavia-api'][0] }}"
+  delegate_to: "{{ groups[octavia_api.group][0] }}"
