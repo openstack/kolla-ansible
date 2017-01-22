@@ -1,0 +1,69 @@
+---
+- name: Restart mistral-api container
+  vars:
+    service_name: "mistral-api"
+    service: "{{ mistral_services[service_name] }}"
+    config_json: "{{ mistral_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_conf: "{{ mistral_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ mistral_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_api_container: "{{ check_mistral_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or mistral_conf.changed | bool
+      or policy_json.changed | bool
+      or mistral_api_container.changed | bool
+
+- name: Restart mistral-engine container
+  vars:
+    service_name: "mistral-engine"
+    service: "{{ mistral_services[service_name] }}"
+    config_json: "{{ mistral_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_conf: "{{ mistral_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ mistral_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_engine_container: "{{ check_mistral_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or mistral_conf.changed | bool
+      or policy_json.changed | bool
+      or mistral_engine_container.changed | bool
+
+- name: Restart mistral-executor container
+  vars:
+    service_name: "mistral-executor"
+    service: "{{ mistral_services[service_name] }}"
+    config_json: "{{ mistral_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_conf: "{{ mistral_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ mistral_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    mistral_executor_container: "{{ check_mistral_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or mistral_conf.changed | bool
+      or policy_json.changed | bool
+      or mistral_executor_container.changed | bool

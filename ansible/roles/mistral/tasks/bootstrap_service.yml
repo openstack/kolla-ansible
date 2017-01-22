@@ -1,5 +1,7 @@
 ---
 - name: Running Mistral bootstrap container
+  vars:
+    mistral_api: "{{ mistral_services['mistral-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ mistral_api_image_full }}"
+    image: "{{ mistral_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_mistral"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/mistral-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ mistral_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['mistral-api'][0] }}"
+  delegate_to: "{{ groups[mistral_api.group][0] }}"
