@@ -1,6 +1,35 @@
 ---
 project_name: "barbican"
 
+barbican_services:
+  barbican-api:
+    container_name: barbican_api
+    group: barbican-api
+    enabled: true
+    image: "{{ barbican_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "barbican:/var/lib/barbican/"
+      - "kolla_logs:/var/log/kolla/"
+  barbican-keystone-listener:
+    container_name: barbican_keystone_listener
+    group: barbican-keystone-listener
+    enabled: true
+    image: "{{ barbican_keystone_listener_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  barbican-worker:
+    container_name: barbican_worker
+    group: barbican-worker
+    enabled: true
+    image: "{{ barbican_worker_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
 
 ####################
 # Database
