@@ -712,13 +712,24 @@ def generate_module():
         volumes=dict(required=False, type='list'),
         volumes_from=dict(required=False, type='list')
     )
-    required_together = [
-        ['tls_cert', 'tls_key']
+    required_if = [
+        ['action', 'pull_image', ['image']],
+        ['action', 'start_container', ['image', 'name']],
+        ['action', 'compare_container', ['name']],
+        ['action', 'compare_image', ['name']],
+        ['action', 'create_volume', ['name']],
+        ['action', 'get_container_env', ['name']],
+        ['action', 'get_container_state', ['name']],
+        ['action', 'recreate_or_restart_container', ['name']],
+        ['action', 'remove_container', ['name']],
+        ['action', 'remove_volume', ['name']],
+        ['action', 'restart_container', ['name']],
+        ['action', 'stop_container', ['name']]
     ]
     module = AnsibleModule(
         argument_spec=argument_spec,
-        required_together=required_together,
-        bypass_checks=True
+        required_if=required_if,
+        bypass_checks=False
     )
 
     new_args = module.params.pop('common_options', dict())
@@ -739,21 +750,6 @@ def generate_module():
 
 def main():
     module = generate_module()
-
-    # TODO(SamYaple): Replace with required_if when Ansible 2.0 lands
-    if (module.params.get('action') in ['pull_image', 'start_container']
-       and not module.params.get('image')):
-        module.fail_json(
-            msg="missing required arguments: image",
-            failed=True
-        )
-    # TODO(SamYaple): Replace with required_if when Ansible 2.0 lands
-    if (module.params.get('action') != 'pull_image'
-       and not module.params.get('name')):
-        module.fail_json(
-            msg="missing required arguments: name",
-            failed=True
-        )
 
     try:
         dw = DockerWorker(module)
