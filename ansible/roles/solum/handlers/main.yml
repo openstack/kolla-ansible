@@ -1,0 +1,84 @@
+---
+- name: Restart solum-api container
+  vars:
+    service_name: "solum-api"
+    service: "{{ solum_services[service_name] }}"
+    config_json: "{{ solum_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_conf: "{{ solum_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_api_container: "{{ check_solum_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or solum_conf.changed | bool
+      or solum_api_container.changed | bool
+
+- name: Restart solum-worker container
+  vars:
+    service_name: "solum-worker"
+    service: "{{ solum_services[service_name] }}"
+    config_json: "{{ solum_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_conf: "{{ solum_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_worker_container: "{{ check_solum_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or solum_conf.changed | bool
+      or solum_worker_container.changed | bool
+
+- name: Restart solum-deployer container
+  vars:
+    service_name: "solum-deployer"
+    service: "{{ solum_services[service_name] }}"
+    config_json: "{{ solum_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_conf: "{{ solum_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_deployer_container: "{{ check_solum_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or solum_conf.changed | bool
+      or solum_deployer_container.changed | bool
+
+- name: Restart solum-conductor container
+  vars:
+    service_name: "solum-conductor"
+    service: "{{ solum_services[service_name] }}"
+    config_json: "{{ solum_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_conf: "{{ solum_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    solum_conductor_container: "{{ check_solum_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or solum_conf.changed | bool
+      or solum_conductor_container.changed | bool
