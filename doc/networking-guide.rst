@@ -87,3 +87,65 @@ to the following link:
 For the source code, please refer to the following link:
 
     https://github.com/openstack/networking-sfc
+
+Neutron VPNaaS (VPN-as-a-Service)
+================================
+
+Preparation and deployment
+--------------------------
+
+Modify the configuration file ``/etc/kolla/globals.yml`` and change
+the following:
+
+::
+
+    enable_neutron_vpnaas: "yes"
+
+Verification
+------------
+
+VPNaaS is a complex subject, hence this document provides directions for a
+simple smoke test to verify the service is up and running.
+
+On the network node(s), the ``neutron_vpnaas_agent`` should be up (image naming
+and versioning may differ depending on deploy configuration):
+
+::
+
+    docker ps --filter name=neutron_vpnaas_agent
+    CONTAINER ID        IMAGE
+    COMMAND             CREATED             STATUS              PORTS
+    NAMES
+    97d25657d55e
+    operator:5000/kolla/oraclelinux-source-neutron-vpnaas-agent:4.0.0
+    "kolla_start"       44 minutes ago      Up 44 minutes
+    neutron_vpnaas_agent
+
+kolla-ansible includes a small script that can be used in tandem with
+``tools/init-runonce`` to verify the VPN using two routers and two Nova VMs:
+
+::
+
+    tools/init-runonce
+    tools/init-vpn
+
+Verify both VPN services are active:
+
+::
+
+    neutron vpn-service-list
+    +--------------------------------------+----------+--------------------------------------+--------+
+    | id                                   | name     | router_id                            | status |
+    +--------------------------------------+----------+--------------------------------------+--------+
+    | ad941ec4-5f3d-4a30-aae2-1ab3f4347eb1 | vpn_west | 051f7ce3-4301-43cc-bfbd-7ffd59af539e | ACTIVE |
+    | edce15db-696f-46d8-9bad-03d087f1f682 | vpn_east | 058842e0-1d01-4230-af8d-0ba6d0da8b1f | ACTIVE |
+    +--------------------------------------+----------+--------------------------------------+--------+
+
+Two VMs can now be booted, one on vpn_east, the other on vpn_west, and
+encrypted ping packets observed being sent from one to the other.
+
+For more information on this and VPNaaS in Neutron refer to the VPNaaS area on
+the OpenStack wiki:
+
+    https://wiki.openstack.org/wiki/Neutron/VPNaaS/HowToInstall
+    https://wiki.openstack.org/wiki/Neutron/VPNaaS

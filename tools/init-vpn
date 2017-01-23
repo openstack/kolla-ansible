@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Script originally copied from https://wiki.openstack.org/wiki/Neutron/VPNaaS/HowToInstall
+
+EXT_NW_ID=`neutron net-list | awk '/public/{print $2}'`
+WEST_SUBNET='192.168.1.0/24'
+EAST_SUBNET='192.168.2.0/24'
+
+function setup_site(){
+    local site_name=$1
+    local cidr=$2
+    neutron net-create net_$site_name
+    neutron subnet-create --name subnet_$site_name net_$site_name $2
+    neutron router-create router_$site_name
+    neutron router-interface-add router_$site_name subnet_$site_name
+    neutron router-gateway-set router_$site_name $EXT_NW_ID
+    neutron vpn-service-create --name vpn_$site_name router_$site_name subnet_$site_name
+}
+
+function get_external_ip(){
+    local router_id=`neutron router-show $1 | awk '/ id /{print $4}'`
+    echo `neutron port-list -c fixed_ips -c device_id -c device_owner|grep router_gateway | awk
+'/'.$router_id.'/{print $5}' | sed 's/["}]//g'`
+}
+
+function clean_site(){
+    local site_name=$1
+    neutron ipsec-site-connection-delete conn_$site_name
+    neutron vpn-service-list | awk '/vpn_'$site_name'/{print "neutron vpn-service-delete " $2}' |
+bash
+    neutron router-gateway-clear router_$site_name
+    neutron router-interface-delete router_$site_name subnet_$site_name
+    neutron router-list | awk '/router_'$site_name'/{print "neutron router-delete " $2}' | bash
+    neutron subnet-list | awk '/subnet_'$site_name'/{print "neutron subnet-delete " $2}' | bash
+    neutron net-list | awk '/net_'$site_name'/{print "neutron net-delete " $2}' | bash
+}
+
+function setup(){
+    neutron vpn-ikepolicy-create ikepolicy1
+    neutron vpn-ipsecpolicy-create ipsecpolicy1
+    setup_site west $WEST_SUBNET
+    WEST_IP=$(get_external_ip router_west)
+    setup_site east $EAST_SUBNET
+    EAST_IP=$(get_external_ip router_east)
+    neutron ipsec-site-connection-create --name conn_east --vpnservice-id vpn_east --ikepolicy-id
+ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $WEST_IP --peer-id $WEST_IP --peer-cidr
+$WEST_SUBNET --psk secret
+    neutron ipsec-site-connection-create --name conn_west --vpnservice-id vpn_west --ikepolicy-id
+ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $EAST_IP --peer-id $EAST_IP --peer-cidr
+$EAST_SUBNET --psk secret
+}
+
+function cleanup(){
+    clean_site west
+    clean_site east
+    neutron vpn-ikepolicy-delete ikepolicy1
+    neutron vpn-ipsecpolicy-delete ipsecpolicy1
+}
+
+cleanup
+setup
