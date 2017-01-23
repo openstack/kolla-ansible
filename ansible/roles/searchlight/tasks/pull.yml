@@ -1,14 +1,10 @@
 ---
-- name: Pulling searchlight-api image
+- name: Pulling searchlight images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ searchlight_api_image_full }}"
-  when: inventory_hostname in groups['searchlight-api']
-
-- name: Pulling searchlight-listener image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ searchlight_listener_image_full }}"
-  when: inventory_hostname in groups['searchlight-listener']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ searchlight_services }}"

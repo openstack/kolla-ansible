@@ -1,5 +1,7 @@
 ---
 - name: Running Searchlight bootstrap container
+  vars:
+    searchlight_api: "{{ searchlight_services['searchlight-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ searchlight_api_image_full }}"
+    image: "{{ searchlight_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_searchlight"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/searchlight-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ searchlight_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['searchlight-api'][0] }}"
+  delegate_to: "{{ groups[searchlight_api.group][0] }}"
