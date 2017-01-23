@@ -1,22 +1,25 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "heat-api"
-    - "heat-api-cfn"
-    - "heat-engine"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ heat_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "heat-api"
-    - "heat-api-cfn"
-    - "heat-engine"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: heat_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ heat_services }}"
+  notify:
+    - Restart heat-api container
+    - Restart heat-api-cfn container
+    - Restart heat-engine container
 
 - name: Copying over the heat-engine environment file
   template:
@@ -28,20 +31,25 @@
 - name: Copying over heat.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/heat.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/heat.conf"
-      - "{{ node_custom_config }}/heat/{{ item }}.conf"
+      - "{{ node_custom_config }}/heat/{{ item.key }}.conf"
       - "{{ node_custom_config }}/heat/{{ inventory_hostname }}/heat.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/heat.conf"
-  with_items:
-    - "heat-api"
-    - "heat-api-cfn"
-    - "heat-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/heat.conf"
+  register: heat_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ heat_services }}"
+  notify:
+    - Restart heat-api container
+    - Restart heat-api-cfn container
+    - Restart heat-engine container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/heat/policy.json"
@@ -50,10 +58,30 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/heat/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "heat-api"
-    - "heat-api-cfn"
-    - "heat-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: heat_policy_jsons
   when:
-    heat_policy.stat.exists
+    - heat_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ heat_services }}"
+  notify:
+    - Restart heat-api container
+    - Restart heat-api-cfn container
+    - Restart heat-engine container
+
+- name: Check heat containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_heat_containers
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ heat_services }}"
+  notify:
+    - Restart heat-api container
+    - Restart heat-api-cfn container
+    - Restart heat-engine container
