@@ -1,18 +1,25 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "tempest"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ tempest_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "tempest"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: tempest_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ tempest_services }}"
+  notify:
+    - Restart tempest container
 
 - name: Copying over tempest.conf
   merge_configs:
@@ -21,9 +28,14 @@
     sources:
       - "{{ role_path }}/templates/tempest.conf.j2"
       - "{{ node_custom_config }}/tempest.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/tempest.conf"
-  with_items:
-    - "tempest"
+    dest: "{{ node_config_directory }}/{{ item.key }}/tempest.conf"
+  register: tempest_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ tempest_services }}"
+  notify:
+    - Restart tempest container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/tempest/policy.json"
@@ -32,6 +44,28 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/tempest/policy.json"
-    dest: "{{ node_config_directory }}/tempest/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: tempest_policy_jsons
   when:
-    tempest_policy.stat.exists
+    - tempest_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ tempest_services }}"
+  notify:
+    - Restart tempest container
+
+- name: Check tempest containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_tempest_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ tempest_services }}"
+  notify:
+    - Restart tempest container
