@@ -1,35 +1,10 @@
 ---
-- name: Pulling ironic-api image
+- name: Pulling ironic images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ ironic_api_image_full }}"
-  when: inventory_hostname in groups['ironic-api']
-
-- name: Pulling ironic-conductor image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ ironic_conductor_image_full }}"
-  when: inventory_hostname in groups['ironic-conductor']
-
-- name: Pulling ironic-dnsmasq image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ ironic_dnsmasq_image_full }}"
-  when: inventory_hostname in groups['ironic-inspector']
-
-- name: Pulling ironic-inspector image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ ironic_inspector_image_full }}"
-  when: inventory_hostname in groups['ironic-inspector']
-
-- name: Pulling ironic-pxe image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ ironic_pxe_image_full }}"
-  when: inventory_hostname in groups['ironic-pxe']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ironic_services }}"

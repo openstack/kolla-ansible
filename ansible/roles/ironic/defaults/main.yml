@@ -1,6 +1,63 @@
 ---
 project_name: "ironic"
 
+ironic_services:
+  ironic-api:
+    container_name: ironic_api
+    group: ironic-api
+    enabled: true
+    image: "{{ ironic_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ironic-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+  ironic-conductor:
+    container_name: ironic_conductor
+    group: ironic-conductor
+    enabled: true
+    image: "{{ ironic_conductor_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/ironic-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla"
+      - "ironic:/var/lib/ironic"
+      - "ironic_pxe:/tftpboot/"
+  ironic-inspector:
+    container_name: ironic_inspector
+    group: ironic-inspector
+    enabled: true
+    image: "{{ ironic_inspector_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/ironic-inspector/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+  ironic-pxe:
+    container_name: ironic_pxe
+    group: ironic-pxe
+    enabled: true
+    image: "{{ ironic_pxe_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ironic-pxe/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ironic_pxe:/tftpboot/"
+      - "kolla_logs:/var/log/kolla"
+  ironic-dnsmasq:
+    container_name: ironic_dnsmasq
+    group: ironic-inspector
+    enabled: true
+    image: "{{ ironic_dnsmasq_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+
+
 ####################
 # Database
 ####################
