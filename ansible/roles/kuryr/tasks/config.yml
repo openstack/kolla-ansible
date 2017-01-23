@@ -1,28 +1,61 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "kuryr"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ kuryr_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "kuryr"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: kuryr_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ kuryr_services }}"
+  notify:
+    - Restart kuryr container
 
 - name: Copying over kuryr.conf
-  template:
-    src: "kuryr.conf.j2"
-    dest: "{{ node_config_directory }}/kuryr/kuryr.conf"
+  merge_configs:
+    vars:
+      service_name: "{{ item.key }}"
+    sources:
+      - "{{ role_path }}/templates/kuryr.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/kuryr.conf"
+      - "{{ node_custom_config }}/kuryr/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/kuryr/{{ inventory_hostname }}/{{ item.key }}.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/kuryr.conf"
+  register: kuryr_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ kuryr_services }}"
+  notify:
+    - Restart kuryr container
 
 - name: Copying over kuryr.spec
+  vars:
+    service: "{{ kuryr_services['kuryr']}}"
   template:
     src: "kuryr.spec.j2"
-    dest: "{{ node_config_directory }}/kuryr/kuryr.spec"
+    dest: "{{ node_config_directory }}/{{ item }}/kuryr.spec"
+  register: kuryr_spec
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - "kuryr"
+  notify:
+    - Restart kuryr container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/kuryr/policy.json"
@@ -31,6 +64,29 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/kuryr/policy.json"
-    dest: "{{ node_config_directory }}/kuryr/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: kuryr_policy_jsons
   when:
-    kuryr_policy.stat.exists
+    - kuryr_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ kuryr_services }}"
+  notify:
+    - Restart kuryr container
+
+- name: Check kuryr containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged|default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_kuryr_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ kuryr_services }}"
+  notify:
+    - Restart kuryr container
