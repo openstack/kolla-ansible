@@ -1,5 +1,7 @@
 ---
 - name: Running Senlin bootstrap container
+  vars:
+    senlin_api: "{{ senlin_services['senlin-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ senlin_api_image_full }}"
+    image: "{{ senlin_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_senlin"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ senlin_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['senlin-api'][0] }}"
+  delegate_to: "{{ groups[senlin_api.group][0] }}"
