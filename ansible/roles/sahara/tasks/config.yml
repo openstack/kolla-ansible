@@ -1,37 +1,46 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "sahara-api"
-    - "sahara-engine"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ sahara_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "sahara-api"
-    - "sahara-engine"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: sahara_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ sahara_services }}"
+  notify:
+    - Restart sahara-api container
+    - Restart sahara-engine container
 
 - name: Copying over sahara.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/sahara.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/sahara.conf"
-      - "{{ node_custom_config }}/sahara/{{ item }}.conf"
+      - "{{ node_custom_config }}/sahara/{{ item.key }}.conf"
       - "{{ node_custom_config }}/sahara/{{ inventory_hostname }}/sahara.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/sahara.conf"
-  with_items:
-    - "sahara-api"
-    - "sahara-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/sahara.conf"
+  register: sahara_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ sahara_services }}"
+  notify:
+    - Restart sahara-api container
+    - Restart sahara-engine container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/sahara/policy.json"
@@ -40,9 +49,30 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/sahara/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "sahara-api"
-    - "sahara-engine"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: sahara_policy_jsons
   when:
-    sahara_policy.stat.exists
+    - sahara_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ sahara_services }}"
+  notify:
+    - Restart sahara-api container
+    - Restart sahara-engine container
+
+- name: Check sahara containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_sahara_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ sahara_services }}"
+  notify:
+    - Restart sahara-api container
+    - Restart sahara-engine container
