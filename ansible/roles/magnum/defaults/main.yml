@@ -1,6 +1,28 @@
 ---
 project_name: "magnum"
 
+magnum_services:
+  magnum-api:
+    container_name: magnum_api
+    group: magnum-api
+    enabled: true
+    image: "{{ magnum_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/magnum-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  magnum-conductor:
+    container_name: magnum_conductor
+    group: magnum-conductor
+    enabled: true
+    image: "{{ magnum_conductor_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/magnum-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "magnum:/var/lib/magnum/"
+      - "kolla_logs:/var/log/kolla/"
+
+
 ####################
 # Database
 ####################
