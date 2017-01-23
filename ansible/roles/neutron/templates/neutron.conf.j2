@@ -50,6 +50,11 @@ transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}
 router_distributed = True
 {% endif %}
 
+{% if enable_designate | bool %}
+dns_domain = {{ designate_ns_record }}.
+external_dns_driver = designate
+{% endif %}
+
 [nova]
 auth_url = {{ keystone_admin_url }}
 auth_type = password
@@ -108,4 +113,20 @@ drivers = ovs
 {% if enable_octavia | bool %}
 [octavia]
 base_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ octavia_api_port }}
+{% endif %}
+
+{% if enable_designate | bool %}
+[designate]
+url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ designate_api_port }}/v2
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ designate_keystone_user }}
+password = {{ designate_keystone_password }}
+allow_reverse_dns_lookup = True
+ipv4_ptr_zone_prefix_size = 24
+ipv6_ptr_zone_prefix_size = 116
 {% endif %}

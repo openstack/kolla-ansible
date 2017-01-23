@@ -15,12 +15,8 @@ mechanism_drivers = openvswitch,l2population
 mechanism_drivers = linuxbridge,l2population
 {% endif %}
 
-{% if enable_neutron_qos | bool %}
-extension_drivers = qos
-{% endif %}
-
-{% if enable_tacker | bool %}
-extension_drivers = port_security
+{% if extension_drivers %}
+extension_drivers = {{ neutron_extension_drivers|map(attribute='name')|join(',') }} 
 {% endif %}
 
 [ml2_type_vlan]

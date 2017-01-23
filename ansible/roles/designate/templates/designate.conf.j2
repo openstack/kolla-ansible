@@ -39,7 +39,7 @@ enabled_notification_handlers = nova_fixed, neutron_floatingip
 workers = {{ openstack_service_workers }}
 
 [service:mdns]
-listen = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ designate_mdns_port }}
+listen = {{ hostvars[inventory_hostname]['ansible_' + dns_interface]['ipv4']['address'] }}:{{ designate_mdns_port }}
 workers = {{ openstack_service_workers }}
 
 [service:worker]
@@ -66,18 +66,30 @@ max_retries = 10
 idle_timeout = 3600
 
 [handler:nova_fixed]
+#NOTE: zone_id must be manually filled an ID from openstack zone list
+zone_id =
 notification_topics = notifications_designate
 control_exchange = nova
-format = '(display_name)s.%(domain)s'
+formatv4 = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s'
+formatv4 = '%(hostname)s.%(project)s.%(zone)s'
+formatv4 = '%(hostname)s.%(zone)s'
+formatv6 = '%(hostname)s.%(zone)s'
+formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 
 [handler:neutron_floatingip]
+#NOTE: zone_id must be manually filled an ID from openstack zone list
+zone_id =
 notification_topics = notifications_designate
 control_exchange = neutron
-format = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(domain)s'
+formatv4 = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s'
+formatv4 = '%(hostname)s.%(project)s.%(zone)s'
+formatv4 = '%(hostname)s.%(zone)s'
+formatv6 = '%(hostname)s.%(zone)s'
+formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 
 [oslo_messaging_notifications]
 topics = notifications_designate
-driver = messaging
+driver = messagingv2
 
 [oslo_messaging_rabbit]
 rabbit_userid = {{ rabbitmq_user }}
