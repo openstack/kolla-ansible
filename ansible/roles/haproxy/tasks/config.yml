@@ -8,43 +8,91 @@
 
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "keepalived"
-    - "haproxy"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ haproxy_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "keepalived"
-    - "haproxy"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: haproxy_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ haproxy_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+    - Ensuring latest haproxy config is used
 
 - name: Copying over haproxy.cfg
+  vars:
+    service: "{{ haproxy_services['haproxy'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/haproxy/haproxy.cfg"
+  register: haproxy_cfg
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_first_found:
     - "{{ node_custom_config }}/haproxy/{{ inventory_hostname }}/haproxy.cfg"
     - "{{ node_custom_config }}/haproxy/haproxy.cfg"
     - "haproxy.cfg.j2"
+  notify:
+    - Restart haproxy container
+    - Ensuring latest haproxy config is used
 
 - name: Copying over keepalived.conf
+  vars:
+    service: "{{ haproxy_services['keepalived'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/keepalived/keepalived.conf"
+  register: keepalived_conf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_first_found:
     - "{{ node_custom_config }}/keepalived/{{ inventory_hostname }}/keepalived.conf"
     - "{{ node_custom_config }}/keepalived/keepalived.conf"
     - "keepalived.conf.j2"
+  notify:
+    - Restart keepalived container
 
 - name: Copying over haproxy.pem
+  vars:
+    service: "{{ haproxy_services['haproxy'] }}"
   copy:
     src: "{{ kolla_external_fqdn_cert }}"
     dest: "{{ node_config_directory }}/haproxy/{{ item }}"
+  register: haproxy_pem
+  when:
+    - kolla_enable_tls_external | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "haproxy.pem"
-  when: kolla_enable_tls_external | bool
+  notify:
+    - Restart haproxy container
+    - Ensuring latest haproxy config is used
+
+- name: Check haproxy containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_haproxy_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ haproxy_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

@@ -1,0 +1,61 @@
+---
+- name: Restart haproxy container
+  vars:
+    service_name: "haproxy"
+    service: "{{ haproxy_services[service_name] }}"
+    config_json: "{{ haproxy_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    haproxy_container: "{{ check_haproxy_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or haproxy_cfg.changed | bool
+      or haproxy_pem.changed | bool
+      or haproxy_container.changed | bool
+  notify:
+    - Waiting for virtual IP to appear
+
+- name: Restart keepalived container
+  vars:
+    service_name: "keepalived"
+    service: "{{ haproxy_services[service_name] }}"
+    config_json: "{{ haproxy_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    keepalived_container: "{{ check_haproxy_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or keepalived_conf.changed | bool
+      or keepalived_container.changed | bool
+  notify:
+    - Waiting for virtual IP to appear
+
+- name: Ensuring latest haproxy config is used
+  command: docker exec haproxy /usr/local/bin/kolla_ensure_haproxy_latest_config
+  register: status
+  changed_when: status.stdout.find('changed') != -1
+  when:
+    - haproxy_config_jsons.changed | bool
+      or haproxy_cfg.changed | bool
+      or haproxy_pem.changed | bool
+
+- name: Waiting for virtual IP to appear
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ database_port }}"

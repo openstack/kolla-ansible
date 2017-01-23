@@ -1,14 +1,10 @@
 ---
-- name: Pulling keepalived image
+- name: Pulling haproxy images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ keepalived_image_full }}"
-  when: inventory_hostname in groups['haproxy']
-
-- name: Pulling haproxy image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ haproxy_image_full }}"
-  when: inventory_hostname in groups['haproxy']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ haproxy_services }}"
