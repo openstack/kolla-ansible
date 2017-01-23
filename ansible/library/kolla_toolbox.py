@@ -87,14 +87,12 @@ def main():
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
     client = docker.Client()
     command_line = gen_commandline(module.params)
-    kolla_toolbox = client.containers(all=True,
-                                      filters=dict(name='kolla_toolbox'))
+    kolla_toolbox = client.containers(filters=dict(name='kolla_toolbox',
+                                                   status='running'))
     if not kolla_toolbox:
-        module.fail_json(msg='Can not find kolla_toolbox container in target')
-    kolla_toolbox = kolla_toolbox[0]
-    if kolla_toolbox['State'] != 'running':
-        module.fail_json(msg='kolla_toolbox container is not running')
+        module.fail_json(msg='kolla_toolbox container is not running.')
 
+    kolla_toolbox = kolla_toolbox[0]
     job = client.exec_create(kolla_toolbox, command_line)
     output = client.exec_start(job)
 
