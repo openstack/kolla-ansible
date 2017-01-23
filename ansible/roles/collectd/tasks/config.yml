@@ -1,28 +1,39 @@
 ---
 - name: Ensuring collectd config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "collectd"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ collectd_services }}"
 
 - name: Ensuring Plugin directory exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}/collectd.conf.d"
+    path: "{{ node_config_directory }}/{{ item.key }}/collectd.conf.d"
     state: "directory"
     recurse: yes
-  with_items:
-    - "collectd"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ collectd_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "collectd"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: collectd_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ collectd_services }}"
+  notify:
+    - Restart collectd container
 
 - name: Copying over collectd.conf for services
+  vars:
+    service: "{{ collectd_services['collectd'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/collectd/collectd.conf"
@@ -31,3 +42,26 @@
     - "{{ node_custom_config }}/collectd/collectd.conf"
     - "{{ node_custom_config }}/collectd.conf"
     - "collectd.conf.j2"
+  register: collectd_conf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart collectd container
+
+- name: Check collectd containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_collectd_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ collectd_services }}"
+  notify:
+    - Restart collectd container
