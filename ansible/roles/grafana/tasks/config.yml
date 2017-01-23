@@ -1,27 +1,55 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "grafana"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ grafana_services }}"
 
 - name: Copying over config.json files
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "grafana"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: grafana_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ grafana_services }}"
+  notify:
+    - Restart grafana container
 
 - name: Copying over grafana.ini
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/grafana.ini.j2"
-      - "{{ node_custom_config }}/{{ item }}.ini"
-      - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/{{ item }}.ini"
+      - "{{ node_custom_config }}/{{ item.key }}.ini"
+      - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/{{ item.key }}.ini"
     dest: "{{ node_config_directory }}/grafana/grafana.ini"
-  with_items:
-    - "grafana"
+  register: grafana_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ grafana_services }}"
+  notify:
+    - Restart grafana container
+
+- name: Check grafana containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_grafana_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ grafana_services }}"
+  notify:
+    - Restart grafana container
