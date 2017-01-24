@@ -1,14 +1,10 @@
 ---
-- name: Pulling magnum-api image
+- name: Pulling magnum images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ magnum_api_image_full }}"
-  when: inventory_hostname in groups['magnum-api']
-
-- name: Pulling magnum-conductor image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ magnum_conductor_image_full }}"
-  when: inventory_hostname in groups['magnum-conductor']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ magnum_services }}"
