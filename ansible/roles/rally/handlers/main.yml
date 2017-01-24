@@ -1,0 +1,23 @@
+- name: Restart rally container
+  vars:
+    service_name: "rally"
+    service: "{{ rally_services[service_name] }}"
+    config_json: "{{ rally_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    rally_conf: "{{ rally_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ rally_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    rally_container: "{{ check_rally_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or rally_conf.changed | bool
+      or policy_json.changed | bool
+      or rally_container.changed | bool
