@@ -1,5 +1,7 @@
 ---
 - name: Running panko bootstrap container
+  vars:
+    panko_api: "{{ panko_services['panko-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -8,14 +10,11 @@
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       PANKO_DATABASE_TYPE: "{{ panko_database_type }}"
-    image: "{{ panko_api_image_full }}"
+    image: "{{ panko_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_panko"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/panko-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ panko_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['panko-api'][0] }}"
+  delegate_to: "{{ groups[panko_api.group][0] }}"

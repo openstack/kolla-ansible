@@ -1,41 +1,61 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "panko-api"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ panko_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "panko-api"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: panko_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ panko_services }}"
+  notify:
+    - Restart panko-api container
 
 - name: Copying over panko.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/panko.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/panko.conf"
-      - "{{ node_custom_config }}/panko/{{ item }}.conf"
-      - "{{ node_custom_config }}/panko/{{ inventory_hostname }}/{{ item }}.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/panko.conf"
-  with_items:
-    - "panko-api"
+      - "{{ node_custom_config }}/panko/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/panko/{{ inventory_hostname }}/{{ item.key }}.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/panko.conf"
+  register: panko_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ panko_services }}"
+  notify:
+    - Restart panko-api container
 
 - name: Copying over wsgi-panko files for services
+  vars:
+    service: "{{ panko_services['panko-api']}}"
   template:
     src: "wsgi-panko.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-panko.conf"
+  register: panko_wsgi
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "panko-api"
+  notify:
+    - Restart panko-api container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/panko/policy.json"
@@ -44,8 +64,28 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/panko/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "panko-api"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: panko_policy_jsons
   when:
-    panko_policy.stat.exists
+    - panko_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ panko_services }}"
+  notify:
+    - Restart panko-api container
+
+- name: Check panko containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_panko_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ panko_services }}"
+  notify:
+    - Restart panko-api container
