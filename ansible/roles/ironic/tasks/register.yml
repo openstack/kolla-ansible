@@ -17,6 +17,7 @@
   retries: 10
   delay: 5
   run_once: True
+  when: inventory_hostname in groups['ironic-api']
   with_items:
     - {'interface': 'admin', 'url': '{{ ironic_admin_endpoint }}'}
     - {'interface': 'internal', 'url': '{{ ironic_internal_endpoint }}'}
@@ -38,3 +39,46 @@
   retries: 10
   delay: 5
   run_once: True
+  when: inventory_hostname in groups['ironic-api']
+
+- name: Creating the Ironic Inspector service and endpoint
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_service
+    -a "service_name=ironic-inspector
+        service_type=baremetal-introspection
+        description='Ironic Inspector baremetal introspection service'
+        endpoint_region={{ openstack_region_name }}
+        url='{{ item.url }}'
+        interface='{{ item.interface }}'
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_ironic_inspector_auth }}' }}"
+    -e "{'openstack_ironic_inspector_auth':{{ openstack_ironic_inspector_auth }}}"
+  register: ironic_inspector_endpoint
+  changed_when: "{{ ironic_inspector_endpoint.stdout.find('localhost | SUCCESS => ') != -1 and (ironic_inspector_endpoint.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: ironic_inspector_endpoint.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  when: inventory_hostname in groups['ironic-inspector']
+  with_items:
+    - {'interface': 'admin', 'url': '{{ ironic_inspector_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ ironic_inspector_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ ironic_inspector_public_endpoint }}'}
+
+- name: Creating the Ironic Inspector project, user, and role
+  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
+    -m kolla_keystone_user
+    -a "project=service
+        user={{ ironic_inspector_keystone_user }}
+        password={{ ironic_inspector_keystone_password }}
+        role=admin
+        region_name={{ openstack_region_name }}
+        auth={{ '{{ openstack_ironic_inspector_auth }}' }}"
+    -e "{'openstack_ironic_inspector_auth':{{ openstack_ironic_inspector_auth }}}"
+  register: ironic_inspector_user
+  changed_when: "{{ ironic_inspector_user.stdout.find('localhost | SUCCESS => ') != -1 and (ironic_inspector_user.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
+  until: ironic_inspector_user.stdout.split()[2] == 'SUCCESS'
+  retries: 10
+  delay: 5
+  run_once: True
+  when: inventory_hostname in groups['ironic-inspector']

@@ -9,6 +9,7 @@
     - "ironic-conductor"
     - "ironic-inspector"
     - "ironic-pxe"
+    - "ironic-dnsmasq"
 
 - name: Copying over config.json files for services
   template:
@@ -19,6 +20,7 @@
     - "ironic-conductor"
     - "ironic-inspector"
     - "ironic-pxe"
+    - "ironic-dnsmasq"
 
 - name: Copying over ironic.conf
   merge_configs:
@@ -36,7 +38,46 @@
   with_items:
     - "ironic-api"
     - "ironic-conductor"
-    - "ironic-inspector"
+
+- name: Copying over inspector.conf
+  merge_configs:
+    vars:
+      service_name: "ironic-inspector"
+    sources:
+      - "{{ role_path }}/templates/ironic-inspector.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/ironic-inspector.conf"
+      - "{{ node_custom_config }}/ironic-inspector/inspector.conf"
+      - "{{ node_custom_config }}/ironic-inspector/{{ inventory_hostname }}/inspector.conf"
+    dest: "{{ node_config_directory }}/ironic-inspector/inspector.conf"
+
+- name: Copying over dnsmasq.conf
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-dnsmasq/dnsmasq.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/ironic/ironic-dnsmasq.conf"
+    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ironic-dnsmasq.conf"
+    - "ironic-dnsmasq.conf.j2"
+
+- name: Copying pxelinux.cfg default
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-pxe/default"
+  with_first_found:
+    - "{{ node_custom_config }}/ironic/pxelinux.default"
+    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/pxelinux.default"
+    - "pxelinux.default.j2"
+
+- name: Copying ironic-agent kernel and initramfs
+  copy:
+    src: "{{ node_custom_config }}/ironic/{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-pxe/{{ item }}"
+  with_items:
+    - "ironic-agent.kernel"
+    - "ironic-agent.initramfs"
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/ironic/policy.json"
