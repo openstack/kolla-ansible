@@ -64,7 +64,7 @@ registry = 127.0.0.1:4000
 push = true
 
 [profiles]
-gate = cron,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,heka,horizon
+gate = cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon
 EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then

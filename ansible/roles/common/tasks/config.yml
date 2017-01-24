@@ -5,7 +5,11 @@
     state: "directory"
     recurse: yes
   with_items:
-    - "heka"
+    - "fluentd"
+    - "fluentd/input"
+    - "fluentd/output"
+    - "fluentd/format"
+    - "fluentd/filter"
     - "kolla-toolbox"
     - "cron"
     - "cron/logrotate"
@@ -15,56 +19,50 @@
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
   with_items:
-    - "heka"
+    - "fluentd"
     - "kolla-toolbox"
     - "cron"
 
-- name: Copying over heka config files
+- name: Copying over fluentd input config files
   template:
-    src: "heka-{{ item.src|default(item.name) }}.toml.j2"
-    dest: "{{ node_config_directory }}/heka/heka-{{ item.name }}.toml"
-  when: item.enabled | bool
+    src: "conf/input/{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
   with_items:
-    - { name: "aodh", enabled: "{{ enable_aodh }}" }
-    - { name: "barbican", enabled: "{{ enable_barbican }}"}
-    - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
-    - { name: "elasticsearch", enabled: "{{ enable_elasticsearch }}" }
-    - { name: "global", enabled: "yes" }
-    - { name: "gnocchi", enabled: "{{ enable_gnocchi }}" }
-    - { name: "grafana", enabled: "{{ enable_grafana }}" }
-    - { name: "haproxy", enabled: "{{ enable_haproxy }}" }
-    - { name: "horizon", enabled: "{{ enable_horizon }}" }
-    - { name: "keepalived", enabled: "{{ enable_haproxy }}" }
-    - { name: "keystone", enabled: "{{ enable_keystone }}" }
-    - { name: "mariadb", enabled: "{{ enable_mariadb }}" }
-    - { name: "openstack", enabled: "yes" }
-    - { name: "panko", enabled: "{{ enable_panko }}" }
-    - { name: "rabbitmq", enabled: "{{ enable_rabbitmq }}" }
-    - { name: "swift-account-auditor", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-account-reaper", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-account-replicator", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-account-server", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-container-auditor", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-container-replicator", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-container-server", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-container-updater", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-object-auditor", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-object-expirer", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-object-replicator", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-object-server", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-object-updater", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-proxy-server", src: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "swift-rsyncd", src: "swift", enabled: "{{ enable_swift }}" }
+    - "00-global"
+    - "01-syslog"
+    - "02-mariadb"
+    - "03-rabbitmq"
 
-- name: Heka custom config file exists
-  local_action: stat path="{{ node_custom_config }}/heka/heka-custom.toml"
-  register: heka_custom_stat_result
-
-- name: Copying over heka custom config file
+- name: Copying over fluentd ouput config files
   template:
-    src: "{{ node_custom_config }}/heka/heka-custom.toml"
-    dest: "{{ node_config_directory }}/heka/heka-custom.toml"
-  when: heka_custom_stat_result.stat.exists == true
+    src: "conf/output/{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/output/{{ item }}.conf"
+  with_items:
+    - "00-local"
+    - "01-es"
+- name: Copying over fluentd format config files
+  template:
+    src: "conf/format/{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
+  with_items:
+    - "apache_access"
+    - "wsgi_access"
+    - "wsgi_python"
+
+- name: Copying over fluentd filter config files
+  template:
+    src: "conf/filter/{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/filter/{{ item }}.conf"
+  with_items:
+    - "00-record_transformer"
+    - "01-rewrite"
+
+- name: Copying over tg-agent.conf
+  template:
+    src: "td-agent.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/td-agent.conf"
+  with_items:
+    - "fluentd"
 
 - name: Copying over cron logrotate config files
   template:

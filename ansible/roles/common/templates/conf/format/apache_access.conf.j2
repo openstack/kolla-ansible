@@ -1,0 +1,20 @@
+<filter apache_access>
+  @type parser
+  reserve_data true
+  key_name message
+  <parse>
+  @type "grok"
+  grok_pattern \[%{HTTPDATE:Timestamp}\] "(?:%{WORD:http_method} %{NOTSPACE:http_url}(?: HTTP/%{NUMBER:http_version})?|%{DATA:rawrequest})" %{NUMBER:http_status} (?:\d+|-)
+  time_key Timestamp
+  time_format %d/%b/%Y:%H:%M:%S %z
+  keep_time_key true
+  </parse>
+</filter>
+
+<filter apache_access>
+   @type record_transformer
+   <record>
+     severity_label INFO
+     Severity 6
+   </record>
+</filter>
