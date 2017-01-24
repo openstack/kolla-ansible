@@ -1,6 +1,212 @@
 ---
 project_name: "neutron"
 
+neutron_services:
+  openvswitch-db-server:
+    container_name: "openvswitch_db"
+    image: "{{ openvswitch_db_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+    host_in_groups: >-
+      {{
+        inventory_hostname in groups['compute']
+        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+        or inventory_hostname in groups['neutron-dhcp-agent']
+        or inventory_hostname in groups['neutron-l3-agent']
+        or inventory_hostname in groups['neutron-metadata-agent']
+        or inventory_hostname in groups['neutron-vpnaas-agent']
+      }}
+    volumes:
+      - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+      - "openvswitch_db:/var/lib/openvswitch/"
+  openvswitch-vswitchd:
+    container_name: "openvswitch_vswitchd"
+    image: "{{ openvswitch_vswitchd_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+    host_in_groups: >-
+      {{
+        inventory_hostname in groups['compute']
+        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+        or inventory_hostname in groups['neutron-dhcp-agent']
+        or inventory_hostname in groups['neutron-l3-agent']
+        or inventory_hostname in groups['neutron-metadata-agent']
+        or inventory_hostname in groups['neutron-vpnaas-agent']
+      }}
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/openvswitch-vswitchd/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-server:
+    container_name: "neutron_server"
+    image: "{{ neutron_server_image_full }}"
+    enabled: true
+    group: "neutron-server"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-server'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-openvswitch-agent:
+    container_name: "neutron_openvswitch_agent"
+    image: "{{ neutron_openvswitch_agent_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+    privileged: True
+    host_in_groups: >-
+      {{
+        ( inventory_hostname in groups['compute']
+          or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+          or inventory_hostname in groups['neutron-dhcp-agent']
+          or inventory_hostname in groups['neutron-l3-agent']
+          or inventory_hostname in groups['neutron-metadata-agent']
+          or inventory_hostname in groups['neutron-vpnaas-agent']
+          and not enable_nova_fake | bool
+        ) or
+        ( inventory_hostname in groups['neutron-dhcp-agent']
+          or inventory_hostname in groups['neutron-l3-agent']
+          or inventory_hostname in groups['neutron-metadata-agent']
+          or inventory_hostname in groups['neutron-vpnaas-agent']
+          and enable_nova_fake | bool
+        )
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-openvswitch-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-sfc-agent:
+    container_name: "neutron_sfc_agent"
+    image: "{{ neutron_sfc_agent_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+    privileged: True
+    host_in_groups: >-
+      {{
+        ( inventory_hostname in groups['compute']
+          or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+          or inventory_hostname in groups['neutron-dhcp-agent']
+          or inventory_hostname in groups['neutron-l3-agent']
+          or inventory_hostname in groups['neutron-metadata-agent']
+          and not enable_nova_fake | bool
+        ) or
+        ( inventory_hostname in groups['neutron-dhcp-agent']
+          or inventory_hostname in groups['neutron-l3-agent']
+          or inventory_hostname in groups['neutron-metadata-agent']
+          and enable_nova_fake | bool
+        )
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-sfc-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-linuxbridge-agent:
+    container_name: "neutron_linuxbridge_agent"
+    image: "{{  neutron_linuxbridge_agent_image_full }}"
+    privileged: True
+    enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
+    environment:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      NEUTRON_BRIDGE: "br-ex"
+      NEUTRON_INTERFACE: "{{ neutron_external_interface }}"
+    host_in_groups: >-
+      {{
+        inventory_hostname in groups['compute']
+        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+        or inventory_hostname in groups['neutron-dhcp-agent']
+        or inventory_hostname in groups['neutron-l3-agent']
+        or inventory_hostname in groups['neutron-metadata-agent']
+        or inventory_hostname in groups['neutron-vpnaas-agent']
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-linuxbridge-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-dhcp-agent:
+    container_name: "neutron_dhcp_agent"
+    image: "{{ neutron_dhcp_agent_image_full }}"
+    privileged: True
+    enabled: True
+    group: "neutron-dhcp-agent"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run/:/run/:shared"
+      - "/run/netns/:/run/netns/:shared"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-l3-agent:
+    container_name: "neutron_l3_agent"
+    image: "{{ neutron_l3_agent_image_full }}"
+    privileged: True
+    enabled: "{{ not enable_neutron_vpnaas | bool }}"
+    host_in_groups: >-
+      {{
+        inventory_hostname in groups['neutron-l3-agent']
+        or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-l3-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "/run/netns/:/run/netns/:shared"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-lbaas-agent:
+    container_name: "neutron_lbaas_agent"
+    image: "{{ neutron_lbaas_agent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_lbaas | bool }}"
+    group: "neutron-lbaas-agent"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-lbaas-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-lbaas-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "/run/netns/:/run/netns/:shared"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-metadata-agent:
+    container_name: "neutron_metadata_agent"
+    image: "{{ neutron_metadata_agent_image_full }}"
+    privileged: True
+    enabled: true
+    host_in_groups: >-
+      {{
+        inventory_hostname in groups['neutron-metadata-agent']
+        or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-metadata-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run/netns/:/run/netns/:shared"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-vpnaas-agent:
+    container_name: "neutron_vpnaas_agent"
+    image: "{{ neutron_vpnaas_agent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_vpnaas | bool }}"
+    group: "neutron-vpnaas-agent"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-vpnaas-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-vpnaas-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "/run/netns/:/run/netns/:shared"
+      - "/lib/modules:/lib/modules:ro"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
+
+
 ####################
 # Database
 ####################
