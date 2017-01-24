@@ -87,6 +87,14 @@ html5proxy_base_url = {{ public_protocol }}://{% if orchestration_engine == 'KUB
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_port }}
 {% endif %}
+{% if enable_nova_serialconsole_proxy | bool %}
+[serial_console]
+enabled = true
+base_url = ws://{{ kolla_external_fqdn }}:{{ nova_serialproxy_port }}/
+serialproxy_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+serialproxy_port = {{ nova_serialproxy_port }}
+proxyclient_address = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+{% endif %}
 
 {% if service_name == "nova-compute-ironic" %}
 [ironic]
