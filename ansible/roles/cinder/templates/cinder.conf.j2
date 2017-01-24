@@ -126,15 +126,28 @@ nfs_shares_config = /etc/cinder/nfs_shares
 {% if enable_cinder_backend_hnas_iscsi | bool %}
 [hnas-iscsi]
 volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
-volume_backend_name = {{ hnas_volume_backend_name }}
-hnas_username = {{ hnas_username }}
-hnas_password = {{ hnas_password }}
-hnas_mgmt_ip0 = {{ hnas_mgmt_ip0 }}
+volume_backend_name = {{ hnas_iscsi_backend }}
+hnas_username = {{ hnas_iscsi_username }}
+hnas_password = {{ hnas_iscsi_password }}
+hnas_mgmt_ip0 = {{ hnas_iscsi_mgmt_ip0 }}
 hnas_chap_enabled = True
 
-hnas_svc0_volume_type = {{ hnas_svc0_volume_type }}
-hnas_svc0_hdp = {{ hnas_svc0_hdp }}
-hnas_svc0_iscsi_ip = {{ hnas_svc0_iscsi_ip }}
+hnas_svc0_volume_type = {{ hnas_iscsi_svc0_volume_type }}
+hnas_svc0_hdp = {{ hnas_iscsi_svc0_hdp }}
+hnas_svc0_iscsi_ip = {{ hnas_iscsi_svc0_ip }}
+{% endif %}
+
+{% if enable_cinder_backend_hnas_nfs | bool %}
+[hnas-nfs]
+volume_driver = cinder.volume.drivers.hitachi.hnas_nfs.HNASNFSDriver
+nfs_shares_config = /home/cinder/nfs_shares
+volume_backend_name = {{ hnas_nfs_backend }}
+hnas_username = {{ hnas_nfs_username }}
+hnas_password = {{ hnas_nfs_password }}
+hnas_mgmt_ip0 = {{ hnas_nfs_mgmt_ip0 }}
+
+hnas_svc0_volume_type = {{ hnas_nfs_svc0_volume_type }}
+hnas_svc0_hdp = {{ hnas_nfs_svc0_hdp }}
 {% endif %}
 
 [privsep_entrypoint]
