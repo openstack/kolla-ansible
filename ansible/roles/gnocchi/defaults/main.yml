@@ -1,6 +1,38 @@
 ---
 project_name: "gnocchi"
 
+gnocchi_services:
+  gnocchi-api:
+    container_name: gnocchi_api
+    group: gnocchi-api
+    enabled: true
+    image: "{{ gnocchi_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/gnocchi-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "gnocchi:/var/lib/gnocchi/"
+      - "kolla_logs:/var/log/kolla/"
+  gnocchi-metricd:
+    container_name: gnocchi_metricd
+    group: gnocchi-metricd
+    enabled: true
+    image: "{{ gnocchi_metricd_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/gnocchi-metricd/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "gnocchi:/var/lib/gnocchi/"
+      - "kolla_logs:/var/log/kolla/"
+  gnocchi-statsd:
+    container_name: gnocchi_statsd
+    group: gnocchi-statsd
+    enabled: true
+    image: "{{ gnocchi_statsd_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/gnocchi-statsd/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "gnocchi:/var/lib/gnocchi/"
+      - "kolla_logs:/var/log/kolla/"
+
 
 ####################
 # Ceph
