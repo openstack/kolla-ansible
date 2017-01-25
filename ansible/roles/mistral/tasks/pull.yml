@@ -1,21 +1,10 @@
 ---
-- name: Pulling mistral-api image
+- name: Pulling mistral images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ mistral_api_image_full }}"
-  when: inventory_hostname in groups['mistral-api']
-
-- name: Pulling mistral-engine image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ mistral_engine_image_full }}"
-  when: inventory_hostname in groups['mistral-engine']
-
-- name: Pulling mistral-executor image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ mistral_executor_image_full }}"
-  when: inventory_hostname in groups['mistral-executor']
+    image: "{{ item.value.image }}"
+  with_dict: "{{ mistral_services }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool

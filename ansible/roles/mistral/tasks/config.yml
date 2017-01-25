@@ -1,40 +1,44 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "mistral-api"
-    - "mistral-engine"
-    - "mistral-executor"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ mistral_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "mistral-api"
-    - "mistral-engine"
-    - "mistral-executor"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: mistral_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ mistral_services }}"
+  notify:
+    - Restart {{ item.key }} container
 
 - name: Copying over mistral.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/mistral.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/mistral.conf"
-      - "{{ node_custom_config }}/mistral/{{ item }}.conf"
+      - "{{ node_custom_config }}/mistral/{{ item.key }}.conf"
       - "{{ node_custom_config }}/mistral/{{ inventory_hostname }}/mistral.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/mistral.conf"
-  with_items:
-    - "mistral-api"
-    - "mistral-engine"
-    - "mistral-executor"
+    dest: "{{ node_config_directory }}/{{ item.key }}/mistral.conf"
+  register: mistral_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ mistral_services }}"
+  notify:
+    - Restart {{ item.key }} container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/mistral/policy.json"
@@ -43,10 +47,28 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/mistral/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "mistral-api"
-    - "mistral-engine"
-    - "mistral-executor"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: mistral_policy_jsons
   when:
-    mistral_policy.stat.exists
+    - mistral_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mistral_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Check mistral containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_mistral_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mistral_services }}"
+  notify:
+    - Restart {{ item.key }} container
