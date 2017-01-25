@@ -1,6 +1,9 @@
 #!/bin/bash
+
+containers_running=$(docker ps --filter "label=kolla_version" --format "{{.Names}}")
+
 QEMU_PIDS=$(pgrep -l qemu | awk '!/qemu-ga/ {print $1}')
-if [[ $COMPUTE ]] && [[ $QEMU_PIDS ]] && [[ $(ps --no-headers wwwup $QEMU_PIDS | grep --invert-match '\-xen\-domid 0') ]]; then
+if [[ "${containers_running}" =~ "nova_libvirt" ]] && [[ $QEMU_PIDS ]] && [[ $(ps --no-headers wwwup $QEMU_PIDS | grep --invert-match '\-xen\-domid 0') ]]; then
     echo "Some qemu processes were detected."
     echo "Docker will not be able to stop the nova_libvirt container with those running."
     echo "Please clean them up before rerunning this script."
@@ -17,8 +20,6 @@ else
     volumes_to_remove=$(docker inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' ${containers_to_kill} | \
         egrep -v '(^\s*$)' | sort | uniq)
 fi
-
-containers_running=$(docker ps --filter "label=kolla_version" --format "{{.Names}}")
 
 if [[ "${containers_to_kill}" =~ "openvswitch_vswitchd" ]] && [[ "${containers_running}" =~ "neutron_openvswitch_agent" ]]; then
 echo "Removing ovs bridge..."
