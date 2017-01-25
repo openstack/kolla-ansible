@@ -1,5 +1,7 @@
 ---
 - name: Running Sahara bootstrap container
+  vars:
+    sahara_api: "{{ sahara_services['sahara-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,15 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ sahara_api_image_full }}"
+    image: "{{ sahara_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_sahara"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/sahara-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "sahara:/var/lib/sahara/"
+    volumes: "{{ sahara_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['sahara-api'][0] }}"
+  delegate_to: "{{ groups[sahara_api.group][0] }}"

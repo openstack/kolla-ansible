@@ -1,14 +1,10 @@
 ---
-- name: Pulling sahara-engine image
+- name: Pulling sahara images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ sahara_engine_image_full }}"
-  when: inventory_hostname in groups['sahara-engine']
-
-- name: Pulling sahara-api image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ sahara_api_image_full }}"
-  when: inventory_hostname in groups['sahara-api']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ sahara_services }}"
