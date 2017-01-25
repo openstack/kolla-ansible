@@ -11,46 +11,68 @@
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "barbican-api"
-    - "barbican-worker"
-    - "barbican-keystone-listener"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: barbican_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ barbican_services }}"
+  notify:
+    - Restart {{ item.key }} container
 
 - name: Copying over barbican-api.ini
+  vars:
+    service: "{{ barbican_services['barbican-api'] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/barbican-api.ini.j2"
       - "{{ node_custom_config }}/barbican-api/barbican-api.ini"
       - "{{ node_custom_config }}/barbican-api/{{ inventory_hostname }}/barbican-api.ini"
     dest: "{{ node_config_directory }}/barbican-api/vassals/barbican-api.ini"
+  register: barbican_api_ini
+  when:
+    - inventory_hostname in groups['barbican-api']
+    - service.enabled | bool
+  notify:
+    - Restart barbican-api container
 
 - name: Copying over barbican-api-paste.ini
+  vars:
+    service: "{{ barbican_services['barbican-api'] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/barbican-api-paste.ini.j2"
       - "{{ node_custom_config }}/barbican-api/barbican-api-paste.ini"
       - "{{ node_custom_config }}/barbican-api/{{ inventory_hostname }}/barbican-api-paste.ini"
     dest: "{{ node_config_directory }}/barbican-api/barbican-api-paste.ini"
+  when:
+    - inventory_hostname in groups['barbiacn-api']
+    - service.enabled | bool
+  register: barbican_api_paste
+  notify:
+    - Restart barbican-api container
 
 - name: Copying over barbican.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/barbican.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/barbican.conf"
-      - "{{ node_custom_config }}/barbican/{{ item }}.conf"
+      - "{{ node_custom_config }}/barbican/{{ item.key }}.conf"
       - "{{ node_custom_config }}/barbican/{{ inventory_hostname }}/barbican.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/barbican.conf"
-  with_items:
-    - "barbican-api"
-    - "barbican-keystone-listener"
-    - "barbican-worker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/barbican.conf"
+  register: barbican_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ barbican_services }}"
+  notify:
+    - Restart {{ item.key }} container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/barbican/policy.json"
@@ -59,10 +81,28 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/barbican/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "barbican-api"
-    - "barbican-keystone-listener"
-    - "barbican-worker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: barbican_policy_jsons
   when:
-    barbican_policy.stat.exists
+    - barbican_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ barbican_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Check barbican containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_barbican_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ barbican_services }}"
+  notify:
+    - Restart {{ item.key }} container

@@ -1,0 +1,71 @@
+---
+- name: Restart barbican-api container
+  vars:
+    service_name: "barbican-api"
+    service: "{{ barbican_services[service_name] }}"
+    config_json: "{{ barbican_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_conf: "{{ barbican_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ barbican_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_api_container: "{{ check_barbican_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or barbican_conf.changed | bool
+      or policy_json.changed | bool
+      or barbican_api_ini.changed | bool
+      or barbican_api_paste.changed | bool
+      or barbican_api_container.changed | bool
+
+- name: Restart barbican-keystone-listener container
+  vars:
+    service_name: "barbican-keystone-listener"
+    service: "{{ barbican_services[service_name] }}"
+    config_json: "{{ barbican_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_conf: "{{ barbican_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ barbican_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_keystone_listener_container: "{{ check_barbican_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or barbican_conf.changed | bool
+      or policy_json.changed | bool
+      or barbican_keystone_listener_container.changed | bool
+
+- name: Restart barbican-worker container
+  vars:
+    service_name: "barbican-worker"
+    service: "{{ barbican_services[service_name] }}"
+    config_json: "{{ barbican_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_conf: "{{ barbican_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ barbican_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    barbican_worker_container: "{{ check_barbican_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or barbican_conf.changed | bool
+      or policy_json.changed | bool
+      or barbican_worker_container.changed | bool

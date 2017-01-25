@@ -1,5 +1,7 @@
 ---
 - name: Running barbican bootstrap container
+  vars:
+    barbican_api: "{{ barbican_services['barbican-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,15 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ barbican_api_image_full }}"
+    image: "{{ barbican_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_barbican"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "barbican:/var/lib/barbican/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ barbican_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['barbican-api'][0] }}"
+  delegate_to: "{{ groups[barbican_api.group][0] }}"
