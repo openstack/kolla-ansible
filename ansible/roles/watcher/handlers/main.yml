@@ -1,0 +1,69 @@
+---
+- name: Restart watcher-applier container
+  vars:
+    service_name: "watcher-applier"
+    service: "{{ watcher_services[service_name] }}"
+    config_json: "{{ watcher_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_conf: "{{ watcher_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ watcher_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_applier_container: "{{ check_watcher_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or watcher_conf.changed | bool
+      or policy_json.changed | bool
+      or watcher_applier_container.changed | bool
+
+- name: Restart watcher-engine container
+  vars:
+    service_name: "watcher-engine"
+    service: "{{ watcher_services[service_name] }}"
+    config_json: "{{ watcher_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_conf: "{{ watcher_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ watcher_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_engine_container: "{{ check_watcher_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or watcher_conf.changed | bool
+      or policy_json.changed | bool
+      or watcher_engine_container.changed | bool
+
+- name: Restart watcher-api container
+  vars:
+    service_name: "watcher-api"
+    service: "{{ watcher_services[service_name] }}"
+    config_json: "{{ watcher_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_conf: "{{ watcher_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ watcher_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    watcher_api_container: "{{ check_watcher_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or watcher_conf.changed | bool
+      or policy_json.changed | bool
+      or watcher_api_container.changed | bool

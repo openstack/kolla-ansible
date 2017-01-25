@@ -1,40 +1,48 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "watcher-api"
-    - "watcher-engine"
-    - "watcher-applier"
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ watcher_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "watcher-api"
-    - "watcher-engine"
-    - "watcher-applier"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: watcher_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ watcher_services }}"
+  notify:
+    - Restart watcher-api container
+    - Restart watcher-engine container
+    - Restart watcher-applier container
 
 - name: Copying over watcher.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/watcher.conf.j2"
       - "{{ node_config_directory }}/config/global.conf"
       - "{{ node_config_directory }}/config/database.conf"
       - "{{ node_config_directory }}/config/messaging.conf"
       - "{{ node_config_directory }}/config/watcher.conf"
-      - "{{ node_config_directory }}/config/watcher/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/watcher/{{ item.key }}.conf"
       - "{{ node_config_directory }}/config/watcher/{{ inventory_hostname }}/watcher.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/watcher.conf"
-  with_items:
-    - "watcher-api"
-    - "watcher-engine"
-    - "watcher-applier"
+    dest: "{{ node_config_directory }}/{{ item.key }}/watcher.conf"
+  register: watcher_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ watcher_services }}"
+  notify:
+    - Restart watcher-api container
+    - Restart watcher-engine container
+    - Restart watcher-applier container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/watcher/policy.json"
@@ -43,10 +51,32 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/watcher/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "watcher-api"
-    - "watcher-engine"
-    - "watcher-applier"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: watcher_policy_jsons
   when:
-    watcher_policy.stat.exists
+    - watcher_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ watcher_services }}"
+  notify:
+    - Restart watcher-api container
+    - Restart watcher-applier container
+    - Restart watcher-engine container
+
+- name: Check watcher containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_watcher_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ watcher_services }}"
+  notify:
+    - Restart watcher-api container
+    - Restart watcher-applier container
+    - Restart watcher-engine container
