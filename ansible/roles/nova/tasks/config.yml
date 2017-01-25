@@ -12,98 +12,137 @@
 
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "nova-api"
-    - "nova-compute"
-    - "nova-compute-ironic"
-    - "nova-conductor"
-    - "nova-consoleauth"
-    - "nova-libvirt"
-    - "nova-novncproxy"
-    - "nova-scheduler"
-    - "nova-spicehtml5proxy"
-    - "nova-ssh"
-    - "nova-serialproxy"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ nova_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "nova-api"
-    - "nova-compute"
-    - "nova-compute-ironic"
-    - "nova-conductor"
-    - "nova-consoleauth"
-    - "nova-libvirt"
-    - "nova-novncproxy"
-    - "nova-scheduler"
-    - "nova-spicehtml5proxy"
-    - "nova-ssh"
-    - "nova-serialproxy"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ nova_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over nova.conf
+  vars:
+    services_require_nova_conf:
+      - nova-api
+      - nova-compute
+      - nova-compute-ironic
+      - nova-conductor
+      - nova-consoleauth
+      - nova-novncproxy
+      - nova-serialproxy
+      - nova-scheduler
+      - nova-spicehtml5proxy
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/nova.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/nova.conf"
-      - "{{ node_custom_config }}/nova/{{ item }}.conf"
+      - "{{ node_custom_config }}/nova/{{ item.key }}.conf"
       - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/nova.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/nova.conf"
-  with_items:
-    - "nova-api"
-    - "nova-compute"
-    - "nova-compute-ironic"
-    - "nova-conductor"
-    - "nova-consoleauth"
-    - "nova-novncproxy"
-    - "nova-scheduler"
-    - "nova-spicehtml5proxy"
-    - "nova-serialproxy"
+    dest: "{{ node_config_directory }}/{{ item.key }}/nova.conf"
+  register: nova_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - item.key in services_require_nova_conf
+  with_dict: "{{ nova_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over libvirt configuration
+  vars:
+    service: "{{ nova_services['nova-libvirt'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-libvirt/{{ item.dest }}"
+  register: nova_libvirt_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - { src: "qemu.conf.j2", dest: "qemu.conf" }
     - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
+  notify:
+    - Restart nova-libvirt container
 
 - name: Copying files for nova-ssh
+  vars:
+    service: "{{ nova_services['nova-ssh'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-ssh/{{ item.dest }}"
+  register: nova_ssh_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - { src: "sshd_config.j2", dest: "sshd_config" }
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
     - { src: "ssh_config.j2", dest: "ssh_config" }
+  notify:
+    - Restart nova-ssh container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/nova/policy.json"
   register: nova_policy
 
 - name: Copying over existing policy.json
+  vars:
+    services_require_policy_json:
+      - nova-api
+      - nova-compute
+      - nova-compute-ironic
+      - nova-conductor
+      - nova-consoleauth
+      - nova-novncproxy
+      - nova-serialproxy
+      - nova-scheduler
+      - nova-spicehtml5proxy
   template:
     src: "{{ node_custom_config }}/nova/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "nova-api"
-    - "nova-compute"
-    - "nova-compute-ironic"
-    - "nova-conductor"
-    - "nova-consoleauth"
-    - "nova-novncproxy"
-    - "nova-scheduler"
-    - "nova-spicehtml5proxy"
-    - "nova-serialproxy"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: policy_jsons
   when:
-    nova_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - nova_policy.stat.exists | bool
+    - item.key in services_require_policy_json
+  with_dict: "{{ nova_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+# check whether the containers parameter is changed. If yes, trigger the handler
+- name: Check nova containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    pid_mode: "{{ item.value.pid_mode|default('') }}"
+    privileged: "{{ item.value.privileged|default(False) }}"
+    volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
+  register: check_nova_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ nova_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

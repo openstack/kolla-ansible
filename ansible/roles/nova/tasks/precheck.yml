@@ -9,6 +9,8 @@
   register: container_facts
 
 - name: Checking free port for Nova API
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ nova_api_port }}"
@@ -16,9 +18,12 @@
     state: stopped
   when:
     - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups['nova-api']
+    - inventory_hostname in groups[nova_api.group]
+    - nova_api.enabled | bool
 
 - name: Checking free port for Nova Metadata
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ nova_metadata_port }}"
@@ -26,9 +31,12 @@
     state: stopped
   when:
     - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups['nova-api']
+    - inventory_hostname in groups[nova_api.group]
+    - nova_api.enabled | bool
 
 - name: Checking free port for Nova NoVNC Proxy
+  vars:
+    nova_novncproxy: "{{ nova_services['nova-novncproxy'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ nova_novncproxy_port }}"
@@ -36,10 +44,12 @@
     state: stopped
   when:
     - container_facts['nova_novncproxy'] is not defined
-    - nova_console == 'novnc'
-    - inventory_hostname in groups['nova-novncproxy']
+    - nova_novncproxy.enabled | bool
+    - inventory_hostname in groups[nova_novncproxy.group]
 
 - name: Checking free port for Nova Serial Proxy
+  vars:
+    nova_serialproxy: "{{ nova_services['nova-serialproxy'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ nova_serialproxy_port }}"
@@ -47,10 +57,12 @@
     state: stopped
   when:
     - container_facts['nova_serialproxy'] is not defined
-    - enable_nova_serialconsole_proxy | bool
-    - inventory_hostname in groups['nova-serialproxy']
+    - nova_serialproxy.enabled | bool
+    - inventory_hostname in groups[nova_serialproxy.group]
 
 - name: Checking free port for Nova Spice HTML5 Proxy
+  vars:
+    nova_spicehtml5proxy: "{{ nova_services['nova-spicehtml5proxy'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ nova_spicehtml5proxy_port }}"
@@ -58,5 +70,5 @@
     state: stopped
   when:
     - container_facts['nova_spicehtml5proxy'] is not defined
-    - nova_console == 'spice'
-    - inventory_hostname in groups['nova-spicehtml5proxy']
+    - nova_spicehtml5proxy.enabled | bool
+    - inventory_hostname in groups[nova_spicehtml5proxy.group]
