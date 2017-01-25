@@ -16,7 +16,7 @@ import pbr.version
 
 
 __version__ = pbr.version.VersionInfo(
-    'kolla').version_string()
+    'kolla-ansible').version_string()
 
 # Make a project global TLS trace storage repository
 TLS = threading.local()
