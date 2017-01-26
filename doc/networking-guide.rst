@@ -122,7 +122,7 @@ and versioning may differ depending on deploy configuration):
     "kolla_start"       44 minutes ago      Up 44 minutes
     neutron_vpnaas_agent
 
-kolla-ansible includes a small script that can be used in tandem with
+Kolla-Ansible includes a small script that can be used in tandem with
 ``tools/init-runonce`` to verify the VPN using two routers and two Nova VMs:
 
 ::

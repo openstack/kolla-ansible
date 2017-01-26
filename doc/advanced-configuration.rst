@@ -135,7 +135,7 @@ It is not always practical to get a certificate signed by a well-known
 trust CA, for example a development or internal test kolla deployment. In
 these cases it can be useful to have a self-signed certificate to use.
 
-For convenience, the kolla-ansible command will generate the necessary
+For convenience, the ``kolla-ansible`` command will generate the necessary
 certificate files based on the information in the ``globals.yml``
 configuration file:
 
