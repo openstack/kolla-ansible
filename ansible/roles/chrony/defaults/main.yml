@@ -1,0 +1,22 @@
+---
+project_name: "chrony"
+
+chrony_services:
+  chrony:
+    container_name: "chrony"
+    group: "chrony"
+    image: "{{ chrony_image_full }}"
+    enabled: True
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/chrony/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+
+
+####################
+# Docker
+####################
+chrony_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-chrony"
+chrony_tag: "{{ openstack_release }}"
+chrony_image_full: "{{ chrony_image }}:{{ chrony_tag }}"

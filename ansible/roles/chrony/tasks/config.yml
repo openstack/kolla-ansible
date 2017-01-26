@@ -1,0 +1,45 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "chrony"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "chrony"
+  notify:
+    - Restart chrony container
+
+- name: Copying over chrony.conf
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/chrony/chrony.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/chrony/{{ inventory_hostname }}/chrony.conf"
+    - "{{ node_custom_config }}/chrony/chrony.conf"
+    - "chrony.conf.j2"
+  notify:
+    - Restart chrony container
+
+- name: Check chrony container
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged }}"
+    volumes: "{{ item.value.volumes }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - action != "genconfig"
+  with_dict: "{{ chrony_services }}"
+  notify:
+    - Restart chrony container
+
