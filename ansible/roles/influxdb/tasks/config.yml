@@ -4,20 +4,50 @@
     path: "{{ node_config_directory }}/influxdb"
     state: "directory"
     recurse: yes
-  when: inventory_hostname in groups['influxdb']
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ influxdb_services }}"
 
 - name: Copying over config.json files
   template:
-    src: "{{ item  }}.json.j2"
+    src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/influxdb/config.json"
-  when: inventory_hostname in groups['influxdb']
-  with_items:
-    - influxdb
+  register: influxdb_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ influxdb_services }}"
+  notify:
+    - Restart influxdb container
 
 - name: Copying over influxdb config file
+  vars:
+    service: "{{ influxdb_services['influxdb']}}"
   template:
     src: "{{ role_path }}/templates/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/influxdb/influxdb.conf"
-  when: inventory_hostname in groups['influxdb']
+  register: influxdb_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
-    - influxdb
+    - "influxdb"
+  notify:
+    - Restart influxdb container
+
+- name: Check influxdb containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_influxdb_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ influxdb_services }}"
+  notify:
+    - Restart influxdb container
