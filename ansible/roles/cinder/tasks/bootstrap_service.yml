@@ -1,5 +1,7 @@
 ---
 - name: Running Cinder bootstrap container
+  vars:
+    cinder_api: "{{ cinder_services['cinder-api'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ cinder_api_image_full }}"
+    image: "{{ cinder_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_cinder"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cinder_api.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['cinder-api'][0] }}"
+  delegate_to: "{{ groups[cinder_api.group][0] }}"
