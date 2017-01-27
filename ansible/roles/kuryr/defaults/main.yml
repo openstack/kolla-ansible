@@ -1,6 +1,25 @@
 ---
 project_name: "kuryr"
 
+# NOTE(huikang, apuimedo): when you request a driver in a docker operation, such
+# as docker network create, docker searches /usr/lib/docker or /etc/docker
+# subdirs for network/storage plugin specs or json definitions. so it's either
+# have ansible place the file there, or volume mount it and let the container
+# place the file there
+
+kuryr_services:
+  kuryr:
+    container_name: kuryr
+    group: compute
+    enabled: True
+    image: "{{ kuryr_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/kuryr/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "/usr/lib/docker:/usr/lib/docker"
+
 
 ####################
 # Docker

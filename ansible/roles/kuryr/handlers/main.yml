@@ -1,0 +1,25 @@
+---
+- name: Restart kuryr container
+  vars:
+    service_name: "kuryr"
+    service: "{{ kuryr_services[service_name] }}"
+    config_json: "{{ kuryr_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    kuryr_conf: "{{ kuryr_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ kuryr_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    kuryr_container: "{{ check_kuryr_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or kuryr_conf.changed | bool
+      or kuryr_spec.changed | bool
+      or policy_json.changed | bool
+      or kuryr_container.changed | bool
