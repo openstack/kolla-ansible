@@ -1,40 +1,68 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "solum-api"
-    - "solum-worker"
-    - "solum-deployer"
-    - "solum-conductor"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ solum_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "solum-api"
-    - "solum-worker"
-    - "solum-deployer"
-    - "solum-conductor"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: solum_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ solum_services }}"
+  notify:
+    - Restart solum-api container
+    - Restart solum-conductor container
+    - Restart solum-deployer container
+    - Restart solum-worker container
 
 - name: Copying over solum.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/solum.conf.j2"
       - "{{ node_config_directory }}/config/global.conf"
       - "{{ node_config_directory }}/config/database.conf"
       - "{{ node_config_directory }}/config/messaging.conf"
       - "{{ node_config_directory }}/config/solum.conf"
-      - "{{ node_config_directory }}/config/solum/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/solum/{{ item.key }}.conf"
       - "{{ node_config_directory }}/config/solum/{{ inventory_hostname }}/solum.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/solum.conf"
-  with_items:
-    - "solum-api"
-    - "solum-worker"
-    - "solum-deployer"
-    - "solum-conductor"
+    dest: "{{ node_config_directory }}/{{ item.key }}/solum.conf"
+  register: solum_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ solum_services }}"
+  notify:
+    - Restart solum-api container
+    - Restart solum-conductor container
+    - Restart solum-deployer container
+    - Restart solum-worker container
+
+- name: Check solum containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_solum_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ solum_services }}"
+  notify:
+    - Restart solum-api container
+    - Restart solum-conductor container
+    - Restart solum-deployer container
+    - Restart solum-worker container
