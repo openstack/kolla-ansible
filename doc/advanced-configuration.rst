@@ -62,8 +62,8 @@ RabbitMQ Hostname Resolution
 ============================
 
 RabbitMQ doesn't work with IP address, hence the IP address of api_interface
-should be resolvable by hostnames to make sure that all RabbitMQ Cluster
-hosts can resolve each others hostname beforehand.
+should be resolvable by hostnames to make sure that all RabbitMQ Cluster hosts
+can resolve each others hostname beforehand.
 
 TLS Configuration
 =================
@@ -226,5 +226,5 @@ For example:
 
     database_port: 3307
 
-As <service>_port value is saved in different services' configurationso
+As <service>_port value is saved in different services' configuration so
 it's advised to make above change before deploying.
