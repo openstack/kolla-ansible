@@ -1,0 +1,19 @@
+---
+- name: Running Freezer bootstrap container
+  vars:
+    freezer_api: "{{ freezer_services['freezer-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ freezer_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_freezer"
+    restart_policy: "never"
+    volumes: "{{ freezer_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[freezer_api.group][0] }}"

@@ -1,0 +1,15 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name: "{{ freezer_services.keys() }}"
+  register: container_facts
+
+- name: Checking free port for Freezer API
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ freezer_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - inventory_hostname in groups[freezer_services['freezer-api']['group']]
+    - container_facts['freezer_api'] is not defined

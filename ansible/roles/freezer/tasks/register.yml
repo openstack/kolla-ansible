@@ -1,0 +1,42 @@
+---
+- name: Creating the freezer service and endpoint
+  kolla_toolbox:
+    module_name: kolla_keystone_service
+    module_args:
+      service_name: freezer
+      service_type: backup-service
+      description: 'Openstack Freezer Backup Service'
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_freezer_auth }}' }}"
+    module_extra_vars:
+      openstack_freezer_auth: "{{ openstack_freezer_auth }}"
+  register: freezer_endpoint
+  until: freezer_endpoint|success
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ freezer_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ freezer_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ freezer_public_endpoint }}'}
+
+- name: Creating the freezer project, user, and role
+  kolla_toolbox:
+    module_name: kolla_keystone_user
+    module_args:
+      project: service
+      user: freezer
+      password: "{{ freezer_keystone_password }}"
+      role: admin
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_freezer_auth }}' }}"
+    module_extra_vars:
+      openstack_freezer_auth: "{{ openstack_freezer_auth }}"
+  register: freezer_user
+  until: freezer_user|success
+  retries: 10
+  delay: 5
+  run_once: True

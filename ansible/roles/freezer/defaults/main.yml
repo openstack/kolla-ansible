@@ -1,0 +1,44 @@
+---
+project_name: "freezer"
+
+freezer_services:
+  freezer-api:
+    container_name: freezer_api
+    group: freezer-api
+    enabled: true
+    image: "{{ freezer_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/freezer-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "freezer:/var/lib/freezer/"
+      - "kolla_logs:/var/log/kolla/"
+
+
+####################
+# Database
+####################
+freezer_database_name: "freezer"
+freezer_database_user: "freezer"
+freezer_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+
+####################
+# Docker
+####################
+freezer_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-freezer-api"
+freezer_api_tag: "{{ openstack_release }}"
+freezer_api_image_full: "{{ freezer_api_image }}:{{ freezer_api_tag }}"
+
+
+####################
+# OpenStack
+####################
+freezer_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ freezer_api_port }}"
+freezer_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ freezer_api_port }}"
+freezer_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ freezer_api_port }}"
+
+freezer_logging_debug: "{{ openstack_logging_debug }}"
+
+freezer_keystone_user: "freezer"
+
+openstack_freezer_auth: "{'auth_url':'{{ openstack_auth.auth_url }}','username':'{{ openstack_auth.username }}','password':'{{ openstack_auth.password }}','project_name':'{{ openstack_auth.project_name }}'}"
