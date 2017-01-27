@@ -1,49 +1,76 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "octavia-api"
-    - "octavia-health-manager"
-    - "octavia-housekeeping"
-    - "octavia-worker"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ octavia_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "octavia-api"
-    - "octavia-health-manager"
-    - "octavia-housekeeping"
-    - "octavia-worker"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: octavia_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ octavia_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over octavia.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/octavia.conf.j2"
       - "{{ node_config_directory }}/config/global.conf"
       - "{{ node_config_directory }}/config/database.conf"
       - "{{ node_config_directory }}/config/messaging.conf"
       - "{{ node_config_directory }}/config/octavia.conf"
-      - "{{ node_config_directory }}/config/octavia/{{ item }}.conf"
+      - "{{ node_config_directory }}/config/octavia/{{ item.key }}.conf"
       - "{{ node_config_directory }}/config/octavia/{{ inventory_hostname }}/octavia.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/octavia.conf"
-  with_items:
-    - "octavia-api"
-    - "octavia-health-manager"
-    - "octavia-housekeeping"
-    - "octavia-worker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
+  register: octavia_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ octavia_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying certificate files
+  vars:
+    service: "{{ octavia_services['octavia-worker'] }}"
   copy:
     src: "{{ node_config_directory }}/config/octavia/{{ item }}"
     dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
+  register: octavia_worker_certificate
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - cakey.pem
     - ca_01.pem
     - client.pem
+  notify:
+    - Restart octavia-worker container
+
+- name: Check octavia containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_octavia_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ octavia_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
