@@ -1,0 +1,25 @@
+---
+- name: Restart telegraf container
+  vars:
+    service_name: "telegraf"
+    service: "{{ telegraf_services[service_name] }}"
+    config_json: "{{ telegraf_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    telegraf_container: "{{ check_telegraf_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    pid_mode: "{{ service.pid_mode }}"
+    environment:
+      HOST_PROC: "/rootfs/proc"
+      HOST_SYS: "/rootfs/sys"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or telegraf_confs.changed | bool
+      or telegraf_plugin.changed | bool
+      or telegraf_container.changed | bool

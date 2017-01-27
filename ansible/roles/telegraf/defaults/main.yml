@@ -1,6 +1,22 @@
 ---
 project_name: "telegraf"
 
+telegraf_services:
+  telegraf:
+    container_name: "telegraf"
+    image: "{{ telegraf_image_full }}"
+    enabled: true
+    pid_mode: "host"
+    group: "telegraf"
+    volumes:
+      - "{{ node_config_directory }}/telegraf/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/sys:/rootfs/sys:ro"
+      - "/proc:/rootfs/proc:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+
 ####################
 # Docker
 ####################
