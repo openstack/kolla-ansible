@@ -4,28 +4,40 @@
 Multinode Deployment of Kolla
 =============================
 
-Deploy a registry (required for multinode)
-==========================================
+.. _deploy_a_registry:
+
+Deploy a registry
+=================
 
 A Docker registry is a locally hosted registry that replaces the need to pull
 from the Docker Hub to get images. Kolla can function with or without a local
-registry, however for a multinode deployment a registry is required.
+registry, however for a multinode deployment some type of registry is mandatory.
+Only one registry must be deployed, although HA features exist for registry
+services.
 
 The Docker registry prior to version 2.3 has extremely bad performance because
 all container data is pushed for every image rather than taking advantage of
 Docker layering to optimize push operations. For more information reference
 `pokey registry <https://github.com/docker/docker/issues/14018>`__.
 
-
 The Kolla community recommends using registry 2.3 or later. To deploy registry
-with version greater than 2.3, do the following:
+with version 2.3 or later, do the following:
 
 ::
 
-    docker run -d -p 4000:5000 --restart=always --name registry registry:2
+    tools/start-registry
 
-.. note:: Kolla looks for the Docker registry to use port 4000. (Docker default is
-          port 5000)
+.. _configure_docker_all_nodes:
+
+Configure Docker on all nodes
+=============================
+
+.. note:: As the subtitle for this section implies, these steps should be
+          applied to all nodes, not just the deployment node.
+
+The ``start-registry`` script configures a docker registry that proxies Kolla
+images from Docker Hub, and can also be used with custom built images (see
+:doc:`image-building`).
 
 After starting the registry, it is necessary to instruct Docker that it will
 be communicating with an insecure registry. To enable insecure registry
@@ -36,7 +48,7 @@ registry is currently running:
 ::
 
     # CentOS
-    INSECURE_REGISTRY="--insecure-registry 192.168.1.100:4000"
+    INSECURE_REGISTRY="--insecure-registry 192.168.1.100:5000"
 
 For Ubuntu, check whether its using upstart or systemd.
 
@@ -50,7 +62,7 @@ Edit ``/etc/default/docker`` and add:
 ::
 
     # Ubuntu
-    DOCKER_OPTS="--insecure-registry 192.168.1.100:4000"
+    DOCKER_OPTS="--insecure-registry 192.168.1.100:5000"
 
 If Ubuntu is using systemd, additional settings needs to be configured.
 Copy Docker's systemd unit file to ``/etc/systemd/system/`` directory:
@@ -94,9 +106,9 @@ Edit the Inventory File
 =======================
 
 The ansible inventory file contains all the information needed to determine
-what services will land on which hosts. Edit the inventory file in the 
-kolla-ansible directory ``ansible/inventory/multinode`` or if kolla-ansible
-was installed with pip, it can be found in ``/usr/share/kolla``.
+what services will land on which hosts. Edit the inventory file in the kolla
+directory ``ansible/inventory/multinode``. If kolla was installed with pip,
+the inventory file can be found in ``/usr/share/kolla``.
 
 Add the ip addresses or hostnames to a group and the services associated with
 that group will land on that host:

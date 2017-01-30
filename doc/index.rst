@@ -51,10 +51,10 @@ Kolla Overview
    production-architecture-guide
    quickstart
    multinode
-   image-building
    advanced-configuration
    operating-kolla
    security
+   troubleshooting
 
 Kolla Services
 ==============

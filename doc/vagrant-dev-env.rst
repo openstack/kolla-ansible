@@ -43,15 +43,15 @@ Install required dependencies as follows:
 
 On CentOS 7::
 
-    sudo yum install vagrant ruby-devel libvirt-devel libvirt-python gcc git
+    sudo yum install vagrant ruby-devel libvirt-devel libvirt-python zlib-devel libpng-devel gcc git
 
 On Fedora 22 or later::
 
-    sudo dnf install vagrant ruby-devel libvirt-devel libvirt-python gcc git
+    sudo dnf install vagrant ruby-devel libvirt-devel libvirt-python zlib-devel libpng-devel gcc git
 
 On Ubuntu 14.04 or later::
 
-    sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt libvirt-dev nfs-kernel-server gcc git
+    sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt libvirt-dev nfs-kernel-server zlib-dev libpng-dev gcc git
 
 .. note:: Many distros ship outdated versions of Vagrant by default. When in
           doubt, always install the latest from the downloads page above.
@@ -87,15 +87,14 @@ correctly. On Fedora 22::
     sudo systemctl start libvirtd
     sudo systemctl enable libvirtd
 
-Find a location in the system's home directory and checkout the kolla-ansible
-repo::
+Find a location in the system's home directory and checkout the Kolla repo::
 
-    git clone https://git.openstack.org/openstack/kolla-ansible
+    git clone https://git.openstack.org/openstack/kolla
 
 Developers can now tweak the Vagrantfile or bring up the default **all-in-one**
 CentOS 7-based environment::
 
-    cd kolla-ansible/contrib/dev/vagrant && vagrant up
+    cd kolla/contrib/dev/vagrant && vagrant up
 
 The command ``vagrant status`` provides a quick overview of the VMs composing
 the environment.

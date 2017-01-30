@@ -41,7 +41,7 @@ Cinder and Ceph are required, enable it in ``/etc/kolla/globals.yml``:
     enable_cinder: "yes"
     enable_ceph: "yes"
 
-Enable Manila and generic backend in ``/etc/kolla/globals.yml``:
+Enable Manila and generic back end in ``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
@@ -83,7 +83,7 @@ Launch an Instance
 
 Before being able to create a share, the manila with the generic driver and the
 DHSS mode enabled requires the definition of at least an image, a network and a
-share-network for being used to create a share server. For that backend
+share-network for being used to create a share server. For that back end
 configuration, the share server is an instance where NFS/CIFS shares are
 served.
 
@@ -285,6 +285,72 @@ Mount the NFS share in the instance using the export location of the share:
 
     # mount -v 10.254.0.3:/shares/share-422dc546-8f37-472b-ac3c-d23fe410d1b6 ~/test_folder
 
+Share Migration
+===============
+
+As administrator, you can migrate a share with its data from one location to
+another in a manner that is transparent to users and workloads. You can use
+manila client commands to complete a share migration.
+
+For share migration, is needed modify ``manila.conf`` and set a ip in the same
+provider network for ``data_node_access_ip``.
+
+Modify the file ``/etc/kolla/config/manila.conf`` and add the contents:
+
+.. code-block:: console
+
+    [DEFAULT]
+    data_node_access_ip = 10.10.10.199
+
+
+.. note::
+
+    Share migration requires have more than one back end configured.
+    `Configure multiple back ends
+    <http://docs.openstack.org/developer/kolla/manila-hnas-guide.html#configure-multiple-back-ends>`__.
+
+Use the manila migration command, as shown in the following example:
+
+.. code-block:: console
+
+     manila migration-start --preserve-metadata True|False \
+      --writable True|False --force_host_assisted_migration True|False \
+      --new_share_type share_type --new_share_network share_network \
+      shareID destinationHost
+
+- ``--force-host-copy``: Forces the generic host-based migration mechanism and
+  bypasses any driver optimizations.
+- ``destinationHost``: Is in this format ``host#pool`` which includes
+  destination host and pool.
+- ``--writable`` and ``--preserve-metadata``: Are only for driver assisted.
+- ``--new_share_network``: Only if driver supports shared network.
+- ``--new_share_type``: Choose share type compatible with destinationHost.
+
+Checking share migration progress
+---------------------------------
+
+Use the ``manila migration-get-progress shareID`` command to check progress.
+
+.. code-block:: console
+
+     manila migration-get-progress demo-share1
+     +----------------+-----------------------+
+     | Property       | Value                 |
+     +----------------+-----------------------+
+     | task_state     | data_copying_starting |
+     | total_progress | 0                     |
+     +----------------+-----------------------+
+
+     manila migration-get-progress demo-share1
+     +----------------+-------------------------+
+     | Property       | Value                   |
+     +----------------+-------------------------+
+     | task_state     | data_copying_completing |
+     | total_progress | 100                     |
+     +----------------+-------------------------+
+
+Use the ``manila migration-complete shareID`` command to complete share
+migration process
 
 For more information about how to manage shares, see the
 `OpenStack User Guide
