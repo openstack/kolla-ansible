@@ -20,11 +20,20 @@ all container data is pushed for every image rather than taking advantage of
 Docker layering to optimize push operations. For more information reference
 `pokey registry <https://github.com/docker/docker/issues/14018>`__.
 
+Edit the ``/etc/kolla/globals.yml`` and add the following where 192.168.1.100
+is the IP address of the machine and 5000 is the port where the registry is
+currently running:
+
+::
+
+    docker_registry = 192.168.1.100:5000
+
 The Kolla community recommends using registry 2.3 or later. To deploy registry
 with version 2.3 or later, do the following:
 
 ::
 
+    cd kolla
     tools/start-registry
 
 The Docker registry can be configured as a pull through cache to proxy the
@@ -122,8 +131,18 @@ what services will land on which hosts. Edit the inventory file in the kolla
 directory ``ansible/inventory/multinode``. If kolla was installed with pip,
 the inventory file can be found in ``/usr/share/kolla``.
 
-Add the ip addresses or hostnames to a group and the services associated with
-that group will land on that host:
+Add the IP addresses or hostnames to a group and the services associated with
+that group will land on that host. IP addresses or hostnames must be added to
+the groups control, network, compute, monitoring and storage. Also, define
+additional behavioral inventory parameters such as ``ansible_ssh_user``,
+``ansible_become`` and ``ansible_private_key_file/ansible_ssh_pass`` which
+controls how ansible interacts with remote hosts.
+
+.. note::
+
+   Ansible uses SSH to connect the deployment host and target hosts. For more
+   information about SSH authentication please reference
+   `Ansible documentation <http://docs.ansible.com/ansible/intro_inventory.html>`__.
 
 ::
 
@@ -131,8 +150,15 @@ that group will land on that host:
    # additional groups are for more control of the environment.
    [control]
    # These hostname must be resolvable from your deployment host
-   control01
-   192.168.122.24
+   control01      ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
+   192.168.122.24 ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
+
+.. note::
+
+   Additional inventory parameters might be required according to your
+   environment setup. Reference `Ansible Documentation
+   <http://docs.ansible.com/ansible/intro_inventory.html>`__ for more
+   information.
 
 
 For more advanced roles, the operator can edit which services will be
@@ -152,6 +178,13 @@ grouped together and changing these around can break your deployment:
 
 Deploying Kolla
 ===============
+
+.. note::
+
+    If there are multiple keepalived clusters running within the same layer 2
+    network, edit the file ``/etc/kolla/globals.yml`` and specify a
+    ``keepalived_virtual_router_id``. The ``keepalived_virtual_router_id`` should
+    be unique and belong to the range 0 to 255.
 
 First, check that the deployment targets are in a state where Kolla may deploy
 to them:
