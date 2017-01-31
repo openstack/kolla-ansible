@@ -85,7 +85,9 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
     image: "{{ item.value.image }}"
-    volumes: "{{ item.value.volumes }}"
+    volumes: "{{ item.value.volumes | reject('equalto', '') | list }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    ipc_mode: "{{ item.value.ipc_mode | default('') }}"
   register: check_cinder_containers
   when:
     - action != "config"

@@ -12,7 +12,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
   when:
     - action != "config"
     - inventory_hostname in groups[service.group]
@@ -20,7 +20,7 @@
     - config_json.changed | bool
       or cinder_conf.changed | bool
       or policy_json.changed | bool
-      or cinder_api_container.changed |
+      or cinder_api_container.changed | bool
 
 - name: Restart cinder-scheduler container
   vars:
@@ -35,7 +35,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
   when:
     - action != "config"
     - inventory_hostname in groups[service.group]
@@ -58,7 +58,9 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    ipc_mode: "{{ service.ipc_mode | default('') }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
   when:
     - action != "config"
     - inventory_hostname in groups[service.group]
@@ -81,7 +83,8 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
   when:
     - action != "config"
     - inventory_hostname in groups[service.group]
