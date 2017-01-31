@@ -1,7 +1,11 @@
 <source>
   @type syslog
   port {{ fluentd_syslog_port }}
+{% if orchestration_engine != 'KUBERNETES' %}
   bind {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+{% else %}
+  bind 0.0.0.0
+{% endif %}
   tag syslog
   format /^(?<Payload>.*)$/
 </source>
