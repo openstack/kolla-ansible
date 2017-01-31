@@ -385,10 +385,25 @@ class TestContainer(base.BaseTestCase):
         self.dw.check_container = mock.Mock(
             return_value=self.fake_data['containers'][0])
         self.dw.restart_container = mock.Mock()
+        self.dw.check_container_differs = mock.Mock(return_value=False)
 
         self.dw.recreate_or_restart_container()
 
         self.dw.restart_container.assert_called_once_with()
+
+    def test_recreate_or_restart_container_container_copy_always_differs(self):
+        self.dw = get_DockerWorker({
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
+        self.dw.check_container = mock.Mock(
+            return_value=self.fake_data['containers'][0])
+        self.dw.start_container = mock.Mock()
+        self.dw.remove_container = mock.Mock()
+        self.dw.check_container_differs = mock.Mock(return_value=True)
+
+        self.dw.recreate_or_restart_container()
+
+        self.dw.remove_container.assert_called_once_with()
+        self.dw.start_container.assert_called_once_with()
 
     def test_recreate_or_restart_container_container_copy_once(self):
         self.dw = get_DockerWorker({

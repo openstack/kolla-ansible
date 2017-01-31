@@ -574,10 +574,13 @@ class DockerWorker(object):
 
         if not container:
             self.start_container()
-        elif container and config_strategy == 'COPY_ONCE':
+            return
+        # If config_strategy is COPY_ONCE or container's parameters are
+        # changed, try to start a new one.
+        if config_strategy == 'COPY_ONCE' or self.check_container_differs():
             self.remove_container()
             self.start_container()
-        elif container and config_strategy == 'COPY_ALWAYS':
+        elif config_strategy == 'COPY_ALWAYS':
             self.restart_container()
 
     def start_container(self):
