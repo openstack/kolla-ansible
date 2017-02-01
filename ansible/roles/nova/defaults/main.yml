@@ -33,6 +33,15 @@ nova_services:
       - "nova_compute:/var/lib/nova"
       - "/var/lib/nova/mnt:/var/lib/nova/mnt:shared"
       - "heka_socket:/var/lib/kolla/heka/"
+  placement-api:
+    container_name: "placement_api"
+    group: "placement-api"
+    image: "{{ placement_api_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
   nova-api:
     container_name: "nova_api"
     group: "nova-api"
@@ -200,6 +209,10 @@ nova_serialproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 nova_serialproxy_tag: "{{ openstack_release }}"
 nova_serialproxy_image_full: "{{ nova_serialproxy_image }}:{{ nova_serialproxy_tag }}"
 
+placement_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-nova-placement-api"
+placement_api_tag: "{{ openstack_release }}"
+placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
+
 ####################
 # OpenStack
 ####################
@@ -211,8 +224,14 @@ nova_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_a
 nova_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
 nova_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
 
+placement_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ placement_api_port }}"
+placement_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ placement_api_port }}"
+placement_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ placement_api_port }}"
+
 nova_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_nova_auth: "{{ openstack_auth }}"
+openstack_placement_auth: "{{ openstack_auth }}"
+
 
 nova_ssh_port: "8022"

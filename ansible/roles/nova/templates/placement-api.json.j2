@@ -1,0 +1,33 @@
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/nova.conf",
+            "dest": "/etc/nova/nova.conf",
+            "owner": "nova",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/policy.json",
+            "dest": "/etc/nova/policy.json",
+            "owner": "nova",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "{{ container_config_directory }}/placement-api-wsgi.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/placement-api-wsgi.conf",
+            "owner": "nova",
+            "perm": "0644"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/nova",
+            "owner": "nova:nova",
+            "recurse": true
+        }
+    ]
+}

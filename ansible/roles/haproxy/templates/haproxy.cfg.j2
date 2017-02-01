@@ -115,6 +115,13 @@ listen nova_metadata
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ nova_metadata_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
 
+listen placement_api
+  bind {{ kolla_internal_vip_address }}:{{ placement_api_port }}
+  http-request del-header X-Forwarded-Proto
+{% for host in groups['placement-api'] %}
+  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ placement_api_port }} check inter 2000 rise 2 fall 5
+{% endfor %}
+
 {% if nova_console == 'novnc' %}
 listen nova_novncproxy
   bind {{ kolla_internal_vip_address }}:{{ nova_novncproxy_port }}
@@ -154,6 +161,14 @@ listen nova_metadata_external
   http-request set-header X-Forwarded-Proto https if { ssl_fc }
 {% for host in groups['nova-api'] %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ nova_metadata_port }} check inter 2000 rise 2 fall 5
+{% endfor %}
+
+listen placement_api_external
+  bind {{ kolla_internal_vip_address }}:{{ placement_api_port }}
+  http-request del-header X-Forwarded-Proto
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+{% for host in groups['placement-api'] %}
+  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ placement_api_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
 
 {% if nova_console == 'novnc' %}
