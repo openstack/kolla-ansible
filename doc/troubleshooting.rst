@@ -15,19 +15,9 @@ Kolla community has added a precheck feature which ensures the deployment
 targets are in a state where Kolla may deploy to them. To run the prechecks,
 execute:
 
-Production
-==========
-
 ::
 
     kolla-ansible prechecks
-
-Development
-===========
-
-::
-
-    ./tools/kolla-ansible prechecks
 
 If a failure during deployment occurs it nearly always occurs during evaluation
 of the software. Once the Operator learns the few configuration options
@@ -40,19 +30,9 @@ In this scenario, Kolla's behavior is undefined.
 The fastest way during to recover from a deployment failure is to
 remove the failed deployment:
 
-Production
-==========
-
 ::
 
     kolla-ansible destroy -i <<inventory-file>>
-
-Development
-===========
-
-::
-
-    ./tools/kolla-ansible destroy -i <<inventory-file>>
 
 Any time the tags of a release change, it is possible that the container
 implementation from older versions won't match the Ansible playbooks in a new
@@ -60,19 +40,9 @@ version. If running multinode from a registry, each node's Docker image cache
 must be refreshed with the latest images before a new deployment can occur. To
 refresh the docker cache from the local Docker registry:
 
-Production
-==========
-
 ::
 
     kolla-ansible pull
-
-Development
-===========
-
-::
-
-    ./tools/kolla-ansible pull
 
 Debugging Kolla
 ===============
@@ -129,4 +99,4 @@ values are overridden, in ``/etc/kolla/globals.yml``. The value of
    This step is necessary until the default Kibana dashboard is implemented in
    Kolla.
 
-.. _launchpad bug: https://bugs.launchpad.net/kolla/+filebug
+.. _launchpad bug: https://bugs.launchpad.net/kolla-ansible/+filebug
