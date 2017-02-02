@@ -21,22 +21,6 @@
     - Restart gnocchi-metricd container
     - Restart gnocchi-statsd container
 
-- name: Copying over api-paste.ini
-  vars:
-    service: "{{ gnocchi_services['gnocchi-api'] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/api-paste.ini.j2"
-      - "{{ node_custom_config }}/gnocchi/api-paste.ini"
-      - "{{ node_custom_config }}/gnocchi/{{ inventory_hostname }}/api-paste.ini"
-    dest: "{{ node_config_directory }}/gnocchi-api/api-paste.ini"
-  register: gnocchi_api_paste_ini
-  when:
-    - inventory_hostname in groups['gnocchi-api']
-    - service.enabled | bool
-  notify:
-    - Restart gnocchi-api container
-
 - name: Copying over gnocchi.conf
   merge_configs:
     vars:
