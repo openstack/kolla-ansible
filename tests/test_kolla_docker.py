@@ -80,16 +80,27 @@ class ModuleArgsTest(base.BaseTestCase):
             volumes=dict(required=False, type='list'),
             volumes_from=dict(required=False, type='list')
             )
-        required_together = [
-            ['tls_cert', 'tls_key']
+        required_if = [
+            ['action', 'pull_image', ['image']],
+            ['action', 'start_container', ['image', 'name']],
+            ['action', 'compare_container', ['name']],
+            ['action', 'compare_image', ['name']],
+            ['action', 'create_volume', ['name']],
+            ['action', 'get_container_env', ['name']],
+            ['action', 'get_container_state', ['name']],
+            ['action', 'recreate_or_restart_container', ['name']],
+            ['action', 'remove_container', ['name']],
+            ['action', 'remove_volume', ['name']],
+            ['action', 'restart_container', ['name']],
+            ['action', 'stop_container', ['name']]
         ]
 
         kd.AnsibleModule = mock.MagicMock()
         kd.generate_module()
         kd.AnsibleModule.assert_called_with(
             argument_spec=argument_spec,
-            required_together=required_together,
-            bypass_checks=True
+            required_if=required_if,
+            bypass_checks=False
         )
 
 FAKE_DATA = {
