@@ -37,7 +37,7 @@ Configure Docker on all nodes
 
 The ``start-registry`` script configures a docker registry that proxies Kolla
 images from Docker Hub, and can also be used with custom built images (see
-:doc:`image-building`).
+`Building Container Images`_).
 
 After starting the registry, it is necessary to instruct Docker that it will
 be communicating with an insecure registry. To enable insecure registry
@@ -148,10 +148,10 @@ to them:
 
     kolla-ansible prechecks -i <path/to/multinode/inventory/file>
 
-For additional environment setup see the :ref:`deploying-kolla`.
-
 Run the deployment:
 
 ::
 
     kolla-ansible deploy -i <path/to/multinode/inventory/file>
+
+.. _Building Container Images: http://docs.openstack.org/developer/kolla/image-building.html

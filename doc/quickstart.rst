@@ -324,7 +324,7 @@ For mounting /run and /var/lib/nova/mnt as shared upon startup, edit
 
     If CentOS/Fedora/OracleLinux container images are built on an Ubuntu host,
     the back-end storage driver must not be AUFS (see the known issues in
-    :doc:`image-building`).
+    `Building Container Images`_).
 
 Install Kolla for deployment or evaluation
 ==========================================
@@ -471,7 +471,7 @@ View the images.
 
 Developers running from master are required to build container images as
 the Docker Hub does not contain built images for the master branch.
-Reference the :doc:`image-building` for more advanced build configuration.
+Reference the `Building Container Images`_ for more advanced build configuration.
 
 To build images using default parameters run:
 
@@ -671,3 +671,4 @@ default to ``kolla_internal_vip_address``.
 
 .. _Docker Hub Image Registry: https://hub.docker.com/u/kolla/
 .. _launchpad bug: https://bugs.launchpad.net/kolla/+filebug
+.. _Building Container Images: http://docs.openstack.org/developer/kolla/image-building.html
