@@ -60,10 +60,10 @@ class ModuleArgsTest(base.BaseTestCase):
             name=dict(required=False, type='str'),
             environment=dict(required=False, type='dict'),
             image=dict(required=False, type='str'),
-            ipc_mode=dict(required=False, type='str', choices=['host']),
+            ipc_mode=dict(required=False, type='str', choices=['host', '']),
             cap_add=dict(required=False, type='list', default=list()),
             security_opt=dict(required=False, type='list', default=list()),
-            pid_mode=dict(required=False, type='str', choices=['host']),
+            pid_mode=dict(required=False, type='str', choices=['host', '']),
             privileged=dict(required=False, type='bool', default=False),
             remove_on_exit=dict(required=False, type='bool', default=True),
             restart_policy=dict(
