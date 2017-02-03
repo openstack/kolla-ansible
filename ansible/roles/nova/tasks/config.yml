@@ -35,6 +35,7 @@
 - name: Copying over nova.conf
   vars:
     services_require_nova_conf:
+      - placement-api
       - nova-api
       - nova-compute
       - nova-compute-ironic
@@ -81,6 +82,19 @@
   notify:
     - Restart nova-libvirt container
 
+- name: Copying over placement-api wsgi configuration
+  vars:
+    service: "{{ nova_services['placement-api'] }}"
+  template:
+    src: "placement-api-wsgi.conf.j2"
+    dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
+  register: placement_api_wsgi_conf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart placement-api container
+
 - name: Copying files for nova-ssh
   vars:
     service: "{{ nova_services['nova-ssh'] }}"
@@ -106,6 +120,7 @@
 - name: Copying over existing policy.json
   vars:
     services_require_policy_json:
+      - placement-api
       - nova-api
       - nova-compute
       - nova-compute-ironic

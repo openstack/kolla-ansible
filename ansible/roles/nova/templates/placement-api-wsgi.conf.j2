@@ -1,0 +1,23 @@
+{% set log_dir = '/var/log/kolla/nova' %}
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% set wsgi_directory = '/usr/bin' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+Listen {{ api_interface_address }}:{{ placement_api_port }}
+
+<VirtualHost *:{{ placement_api_port }}>
+    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=nova group=nova display-name=%{GROUP} python-path={{ python_path }}
+    WSGIProcessGroup placement-api
+    WSGIScriptAlias / {{ wsgi_directory }}/nova-placement-api
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    <IfVersion >= 2.4>
+      ErrorLogFormat "%{cu}t %M"
+    </IfVersion>
+    ErrorLog "{{ log_dir }}/placement-api.log"
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "{{ log_dir }}/placement-api-access.log" logformat
+    <Directory {{ wsgi_directory }}>
+        <Files nova-placement-api>
+            Require all granted
+        </Files>
+    </Directory>
+</VirtualHost>

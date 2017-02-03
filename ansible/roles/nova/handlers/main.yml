@@ -46,6 +46,30 @@
       or nova_libvirt_confs.changed | bool
       or nova_libvirt_container.changed | bool
 
+- name: Restart placement-api container
+  vars:
+    service_name: "placement-api"
+    service: "{{ nova_services[service_name] }}"
+    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    placement_api_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or nova_conf.changed | bool
+      or policy_json.changed | bool
+      or placement_api_wsgi_conf | changed
+      or placement_api_container.changed | bool
+
 - name: Restart nova-api container
   vars:
     service_name: "nova-api"
