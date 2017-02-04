@@ -7,7 +7,7 @@ How To Contribute
 Basics
 ======
 
-#. Our source code is hosted on `OpenStack Kolla Git`_. Bugs should be filed on
+#. Our source code is hosted on `OpenStack Kolla-Ansible Git`_. Bugs should be filed on
    launchpad_.
 
 #. Please follow OpenStack `Gerrit Workflow`_ to contribute to Kolla.
@@ -23,8 +23,8 @@ Basics
 
 #. TrivialFix tags or bugs are not required for documentation changes.
 
-.. _OpenStack Kolla Git: https://git.openstack.org/cgit/openstack/kolla/
-.. _launchpad: https://bugs.launchpad.net/kolla
+.. _OpenStack Kolla-Ansible Git: https://git.openstack.org/cgit/openstack/kolla-ansible/
+.. _launchpad: https://bugs.launchpad.net/kolla-ansible
 .. _here: https://wiki.openstack.org/wiki/GitCommitMessages
 
 Development Environment
@@ -33,7 +33,7 @@ Development Environment
 Please follow our `quickstart`_ to deploy your environment and test your
 changes.
 
-.. _quickstart: http://docs.openstack.org/developer/kolla/quickstart.html
+.. _quickstart: http://docs.openstack.org/developer/kolla-ansible/quickstart.html
 
 Please use the existing sandbox repository, available at
 https://git.openstack.org/cgit/openstack-dev/sandbox, for learning, understanding
