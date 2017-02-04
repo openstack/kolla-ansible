@@ -183,7 +183,7 @@ following command:
 This command will install the most recent stable version of Docker, but please
 note that Kolla releases are not in sync with Docker in any way, so some things
 could stop working with new version. The latest release of Kolla is tested to
-work with docker-engine >= 1.10.0. To check your Docker version run this
+work with docker-engine>=1.10.0,!=1.13.0. To check your Docker version run this
 command:
 
 ::
