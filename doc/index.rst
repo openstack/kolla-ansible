@@ -66,6 +66,7 @@ Kolla Services
    external-ceph-guide
    cinder-guide
    cinder-guide-hnas
+   designate-guide
    ironic-guide
    manila-guide
    manila-hnas-guide
