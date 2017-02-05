@@ -755,6 +755,9 @@ def generate_module():
     # if pid_mode = ""/None/False, remove it
     if not new_args.get('pid_mode', False):
         new_args.pop('pid_mode', None)
+    # if ipc_mode = ""/None/False, remove it
+    if not new_args.get('ipc_mode', False):
+        new_args.pop('ipc_mode', None)
 
     module.params = new_args
     return module
