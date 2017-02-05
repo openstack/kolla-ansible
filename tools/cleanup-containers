@@ -2,7 +2,7 @@
 
 containers_running=$(docker ps --filter "label=kolla_version" --format "{{.Names}}")
 
-QEMU_PIDS=$(pgrep -l qemu | awk '!/qemu-ga/ {print $1}')
+QEMU_PIDS=$(pgrep -l qemu | awk '!/qemu-ga/  && !/qemu-img/ {print $1}')
 if [[ "${containers_running}" =~ "nova_libvirt" ]] && [[ $QEMU_PIDS ]] && [[ $(ps --no-headers wwwup $QEMU_PIDS | grep --invert-match '\-xen\-domid 0') ]]; then
     echo "Some qemu processes were detected."
     echo "Docker will not be able to stop the nova_libvirt container with those running."
