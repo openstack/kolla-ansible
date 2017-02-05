@@ -5,7 +5,7 @@
 
 - name: Check if Keystone Domain specific settings enabled
   local_action: stat path="{{ node_custom_config }}/keystone/domains"
-  register: keystone_domain_cfg
+  register: keystone_domain_directory
 
 - name: Ensuring config directories exist
   file:
@@ -16,17 +16,6 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled
   with_dict: "{{ keystone_services }}"
-
-- name: Creating Keystone Domain directory
-  vars:
-    keystone: "{{ keystone_services.keystone }}"
-  file:
-    dest: "{{ node_config_directory }}/keystone/domains/"
-    state: "directory"
-  when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
-    - keystone_domain_cfg.stat.exists
 
 - name: Copying over config.json files for services
   template:
@@ -65,18 +54,34 @@
     - Restart keystone container
     - Restart keystone-fernet container
 
+- name: Creating Keystone Domain directory
+  vars:
+    keystone: "{{ keystone_services.keystone }}"
+  file:
+    dest: "{{ node_config_directory }}/keystone/domains/"
+    state: "directory"
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone.enabled | bool
+    - keystone_domain_directory.stat.exists
+
+- name: Get file list in custom domains folder
+  local_action: find path="{{ node_custom_config }}/keystone/domains" recurse=no file_type=file
+  register: keystone_domains
+  when: keystone_domain_directory.stat.exists
+
 - name: Copying Keystone Domain specific settings
   vars:
     keystone: "{{ keystone_services.keystone }}"
   copy:
-    src: "{{ item }}"
+    src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/keystone/domains/"
   register: keystone_domains
   when:
     - inventory_hostname in groups[keystone.group]
     - keystone.enabled | bool
-  with_fileglob:
-    - "{{ node_custom_config }}/keystone/domains/*"
+    - keystone_domain_directory.stat.exists
+  with_items: "{{ keystone_domains.files|default([]) }}"
   notify:
     - Restart keystone container
 
