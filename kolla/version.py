@@ -12,4 +12,4 @@
 
 import pbr.version
 
-version_info = pbr.version.VersionInfo('kolla')
+version_info = pbr.version.VersionInfo('kolla-ansible')
