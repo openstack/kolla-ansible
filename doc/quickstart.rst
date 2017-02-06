@@ -329,11 +329,11 @@ For mounting /run and /var/lib/nova/mnt as shared upon startup, edit
 Install Kolla for deployment or evaluation
 ==========================================
 
-Install Kolla and its dependencies using pip.
+Install kolla-ansible and its dependencies using pip.
 
 ::
 
-    pip install kolla
+    pip install kolla-ansible
 
 Copy the configuration files globals.yml and passwords.yml to /etc directory.
 
