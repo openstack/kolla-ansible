@@ -309,6 +309,13 @@ class DockerWorker(object):
             return True
 
     def compare_security_opt(self, container_info):
+        ipc_mode = self.params.get('ipc_mode')
+        pid_mode = self.params.get('pid_mode')
+        privileged = self.params.get('privileged', False)
+        # NOTE(jeffrey4l) security opt is disabled when using host ipc mode or
+        # host pid mode or privileged. So no need to compare security opts
+        if ipc_mode == 'host' or pid_mode == 'host' or privileged:
+            return False
         new_sec_opt = self.params.get('security_opt', list())
         current_sec_opt = container_info['HostConfig'].get('SecurityOpt',
                                                            list())
