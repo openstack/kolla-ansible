@@ -1,0 +1,21 @@
+---
+- name: Restart elasticsearch container
+  vars:
+    service_name: "elasticsearch"
+    service: "{{ elasticsearch_services[service_name] }}"
+    config_json: "{{ elasticsearch_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    elasticsearch_conf: "{{ elasticsearch_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    elasticsearch_container: "{{ check_elasticsearch_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or elasticsearch_conf.changed | bool
+      or elasticsearch_container.changed | bool
