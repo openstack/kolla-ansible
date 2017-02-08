@@ -19,7 +19,7 @@ import inspect
 import os
 
 from yaml import dump
-from yaml import load
+from yaml import safe_load
 try:
     from yaml import CDumper as Dumper  # noqa: F401
     from yaml import CLoader as Loader  # noqa: F401
@@ -42,7 +42,7 @@ class ActionModule(action.ActionBase):
             with open(source, 'r') as f:
                 template_data = f.read()
             template_data = self._templar.template(template_data)
-            result = load(template_data)
+            result = safe_load(template_data)
         return result or {}
 
     def run(self, tmp=None, task_vars=None):
