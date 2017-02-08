@@ -77,7 +77,6 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Trove <http://docs.openstack.org/developer/trove/>`__
 - `Vmtp <http://vmtp.readthedocs.io/en/latest/>`__
 - `Watcher <http://docs.openstack.org/developer/watcher/>`__
-- `Zaqar <http://docs.openstack.org/developer/zaqar/>`__
 
 Infrastructure components
 -------------------------
