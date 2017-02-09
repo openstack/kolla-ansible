@@ -79,7 +79,7 @@ triggered on the Docker host when the neutron-agents containers are launched.
 This can be useful when you want to do a new clean deployment, particularly one
 changing the network topology.
 
-``tools/cleanup-images`` is used to remove all Docker images built by Kolla
+``tools/cleanup-images --all`` is used to remove all Docker images built by Kolla
 from the local Docker cache.
 
 ``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla

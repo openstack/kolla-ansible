@@ -6,11 +6,73 @@ cd "$(dirname "$REAL_PATH")/.."
 
 . tools/validate-docker-execute.sh
 
-KOLLA_IMAGES=$(docker images -a --filter "label=kolla_version" --format "{{.ID}}")
+function process_cmd {
+    if [[ -z "$KOLLA_IMAGES" ]]; then
+        echo "No images to cleanup, exit now."
+        exit 0
+    fi
 
-if [[ -z "$KOLLA_IMAGES" ]]; then
-    echo "No images to cleanup, exit now."
-    exit 0
-fi
+    $CMD
 
-docker rmi -f $@ $KOLLA_IMAGES
+    if [[ $? -ne 0 ]]; then
+        echo "Command failed $CMD"
+        exit 1
+    fi
+}
+
+function usage {
+    cat <<EOF
+Usage: $0 COMMAND [options]
+
+Options:
+    --all, -a                              Remove all kolla images
+    --dangling                             Remove orphaned images
+    --help, -h                             Show this usage information
+    --image, -i <image>                    Delete selected images
+    --image-version <image_version>        Set Kolla image version
+EOF
+}
+
+SHORT_OPTS="ahi:"
+LONG_OPTS="all,dangling,help,image:,image-version:"
+ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
+
+eval set -- "$ARGS"
+
+case "$1" in
+
+    (--all|-a)
+            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version" --format "{{.ID}}")"
+            shift
+            ;;
+
+    (--dangling)
+            KOLLA_IMAGES="$(docker images -a --filter dangling=true --format "{{.ID}}")"
+            shift
+            ;;
+
+    (--image|-i)
+            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version" --format "{{.Repository}}\t{{.ID}}" | grep -E "$2" | awk '{print $2}')"
+            shift 2
+            ;;
+
+    (--image-version)
+            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version=${2}" --format "{{.ID}}")"
+            shift 2
+            ;;
+
+    (--help|-h)
+            usage
+            shift
+            exit 0
+            ;;
+
+    (--)
+            shift
+            break
+            ;;
+
+esac
+
+CMD="docker rmi -f $@ $KOLLA_IMAGES"
+process_cmd
