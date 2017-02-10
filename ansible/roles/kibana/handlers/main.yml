@@ -1,0 +1,21 @@
+---
+- name: Restart kibana container
+  vars:
+    service_name: "kibana"
+    service: "{{ kibana_services[service_name] }}"
+    config_json: "{{ kibana_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    kibana_conf: "{{ kibana_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    kibana_container: "{{ check_kibana_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or kibana_conf.changed | bool
+      or kibana_container.changed | bool
