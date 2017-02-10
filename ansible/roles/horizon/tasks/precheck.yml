@@ -6,6 +6,8 @@
   register: container_facts
 
 - name: Checking free port for Horizon
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ horizon_port }}"
@@ -13,4 +15,4 @@
     state: stopped
   when:
     - container_facts['horizon'] is not defined
-    - inventory_hostname in groups['horizon']
+    - inventory_hostname in groups[horizon.group]

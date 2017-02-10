@@ -1,5 +1,7 @@
 ---
 - name: Running Horizon bootstrap container
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,13 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ horizon_image_full }}"
+    image: "{{ horizon.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_horizon"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/horizon/:{{ container_config_directory }}/:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ horizon.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['horizon'][0] }}"
+  delegate_to: "{{ groups[horizon.group][0] }}"

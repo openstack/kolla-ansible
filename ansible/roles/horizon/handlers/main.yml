@@ -1,0 +1,21 @@
+---
+- name: Restart horizon container
+  vars:
+    service_name: "horizon"
+    service: "{{ horizon_services[service_name] }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - horizon_config_json | changed
+      or horizon_conf | changed
+      or horizon_local_settings | changed
+      or policy_jsons | changed
+      or check_horizon_container | changed
