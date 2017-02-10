@@ -28,7 +28,8 @@ Requirements
 - You must set an iSCSI domain to EVS
 
 Supported shared file systems and operations
--------------------------------------------
+--------------------------------------------
+
 The NFS and iSCSI drivers support these operations:
 
 - Create, delete, attach, and detach volumes.
@@ -51,6 +52,66 @@ The NFS and iSCSI drivers support these operations:
 
 - Manage and unmanage snapshots (HNAS NFS only).
 
+Configuration example for Hitachi NAS Platform iSCSI and NFS
+============================================================
+
+iSCSI backend
+-------------
+
+Enable cinder hnas backend iscsi in ``/etc/kolla/globals.yml``
+
+.. code-block:: console
+
+    enable_cinder_backend_hnas_iscsi: "yes"
+
+Create or modify the file ``/etc/kolla/config/cinder.conf`` and add the
+contents:
+
+.. code-block:: console
+
+    [DEFAULT]
+    enabled_backends = hnas-iscsi
+
+    [hnas-iscsi]
+    volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
+    volume_iscsi_backend = hnas_iscsi_backend
+    hnas_iscsi_username = supervisor
+    hnas_iscsi_password = supervisor
+    hnas_iscsi_mgmt_ip0 = <hnas_ip>
+    hnas_chap_enabled = True
+
+    hnas_iscsi_svc0_volume_type = iscsi_gold
+    hnas_iscsi_svc0_hdp = FS-Baremetal1
+    hnas_iscsi_svc0_iscsi_ip = <svc0_ip>
+
+NFS backend
+-----------
+
+Enable cinder hnas backend nfs in ``/etc/kolla/globals.yml``
+
+.. code-block:: console
+
+    enable_cinder_backend_hnas_nfs: "yes"
+
+Create or modify the file ``/etc/kolla/config/cinder.conf`` and
+add the contents:
+
+.. code-block:: console
+
+    [DEFAULT]
+    enabled_backends = hnas-nfs
+
+    [hnas-nfs]
+    volume_driver = cinder.volume.drivers.hitachi.hnas_nfs.HNASNFSDriver
+    volume_nfs_backend = hnas_nfs_backend
+    hnas_nfs_username = supervisor
+    hnas_nfs_password = supervisor
+    hnas_nfs_mgmt_ip0 = <hnas_ip>
+    hnas_chap_enabled = True
+
+    hnas_nfs_svc0_volume_type = nfs_gold
+    hnas_nfs_svc0_hdp = <svc0_ip>/<export_name>
+
 Configuration on Kolla deployment
 ---------------------------------
 
@@ -60,7 +121,6 @@ Enable Shared File Systems service and HNAS driver in
 .. code-block:: console
 
     enable_cinder: "yes"
-    enable_cinder_backend_hnas_iscsi: "yes"
 
 Configuration on HNAS
 ---------------------
@@ -100,7 +160,7 @@ ID created before:
     $ neutron router-interface-add <ROUTER_ID> <SUBNET_ID>
 
 Create volume
-============================
+=============
 
 Create a non-bootable volume.
 
@@ -161,30 +221,6 @@ Verify Operation.
     +--------------------------------------+---------------+----------------+------+-------------------------------------------+
     | 4f5b8ae8-9781-411e-8ced-de616ae64cfd | my-volume     | in-use         |    1 | Attached to private-instance on /dev/vdb  |
     +--------------------------------------+---------------+----------------+------+-------------------------------------------+
-
-Configure hnas-iscsi backend
-============================
-Below are configuration examples for both iSCSI backend.
-For HNAS iSCSI driver, create this section in your cinder.conf file:
-
-Modify the file ``/etc/kolla/config/cinder.conf`` and add the contents:
-
-.. code-block:: console
-
-    [DEFAULT]
-    enabled_backends = hnas-iscsi
-
-    [hnas-iscsi]
-    volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
-    volume_backend_name = hnas_iscsi_backend
-    hnas_username = supervisor
-    hnas_password = supervisor
-    hnas_mgmt_ip0 = <hnas_ip>
-    hnas_chap_enabled = True
-
-    hnas_svc0_volume_type = iscsi_gold
-    hnas_svc0_hdp = FS-Baremetal1
-    hnas_svc0_iscsi_ip = <svc0_ip>
 
 For more information about how to manage volumes, see the
 `OpenStack User Guide
