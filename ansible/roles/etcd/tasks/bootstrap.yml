@@ -1,5 +1,7 @@
 ---
 - name: Running etcd bootstrap container
+  vars:
+    etcd: "{{ etcd_services['etcd'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,13 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ etcd_image_full }}"
+    image: "{{ etcd.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_etcd"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_etcd:/var/lib/etcd/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ etcd.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[etcd.group][0] }}"
