@@ -1,0 +1,129 @@
+---
+project_name: "vitrage"
+
+vitrage_services:
+  vitrage-api:
+    container_name: vitrage_api
+    group: vitrage-api
+    enabled: true
+    image: "{{ vitrage_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  vitrage-collector:
+    container_name: vitrage_collector
+    group: vitrage-collector
+    enabled: true
+    image: "{{ vitrage_collector_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/vitrage-collector/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  vitrage-notifier:
+    container_name: vitrage_notifier
+    group: vitrage-notifier
+    enabled: true
+    image: "{{ vitrage_notifier_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/vitrage-notifier/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  vitrage-graph:
+    container_name: vitrage_graph
+    group: vitrage-graph
+    enabled: true
+    image: "{{ vitrage_graph_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/vitrage-graph/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  vitrage-ml:
+    container_name: vitrage_ml
+    group: vitrage-ml
+    enabled: true
+    image: "{{ vitrage_ml_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/vitrage-ml/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+## Database
+#####################
+vitrage_database_name: "vitrage"
+vitrage_database_user: "vitrage"
+vitrage_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+####################
+# Docker
+####################
+
+vitrage_install_type: "{{ kolla_install_type }}"
+vitrage_tag: "{{ openstack_release }}"
+
+vitrage_graph_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-graph"
+vitrage_graph_tag: "{{ vitrage_tag }}"
+vitrage_graph_image_full: "{{ vitrage_graph_image }}:{{ vitrage_graph_tag }}"
+
+vitrage_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-api"
+vitrage_api_tag: "{{ vitrage_tag }}"
+vitrage_api_image_full: "{{ vitrage_api_image }}:{{ vitrage_api_tag }}"
+
+vitrage_notifier_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-notifier"
+vitrage_notifier_tag: "{{ vitrage_tag }}"
+vitrage_notifier_image_full: "{{ vitrage_notifier_image }}:{{ vitrage_notifier_tag }}"
+
+vitrage_collector_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-collector"
+vitrage_collector_tag: "{{ vitrage_tag }}"
+vitrage_collector_image_full: "{{ vitrage_collector_image }}:{{ vitrage_collector_tag }}"
+
+vitrage_ml_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-ml"
+vitrage_ml_tag: "{{ vitrage_tag }}"
+vitrage_ml_image_full: "{{ vitrage_ml_image }}:{{ vitrage_ml_tag }}"
+
+####################
+# OpenStack
+####################
+vitrage_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ vitrage_api_port }}"
+vitrage_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ vitrage_api_port }}"
+vitrage_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ vitrage_api_port }}"
+
+vitrage_logging_debug: "{{ openstack_logging_debug }}"
+
+vitrage_keystone_user: "vitrage"
+
+openstack_vitrage_auth: "{{ openstack_auth }}"
+
+#####################
+# Datasources
+#####################
+vitrage_notifier:
+  - name: "aodh"
+    enabled: "{{ enable_aodh | bool }}"
+  - name: "mistral"
+    enabled: "{{ enable_mistral | bool }}"
+  - name: "nova"
+    enabled: "{{ enable_nova | bool }}"
+
+vitrage_notifiers: "{{ vitrage_notifier | selectattr('enabled', 'equalto', true) | list }}"
+
+vitrage_datasource:
+  - name: "static"
+    enabled: true
+  - name: "nova.host,nova.instance,nova.zone"
+    enabled: "{{ enable_nova | bool }}"
+  - name: "aodh"
+    enabled: "{{ enable_aodh | bool }}"
+  - name: "collectd"
+    enabled: "{{ enable_collectd | bool }}"
+  - name: "cinder.volume"
+    enabled: "{{ enable_cinder | bool }}"
+  - name: "neutron.network,neutron.port"
+    enabled: "{{ enable_neutron | bool }}"
+#TODO(egonzalez) Heat cannot be used with default policy.json due stacks:global_index=rule:deny_everybody.
+# Document process to deploy vitrage+heat.
+  - name: "heat.stack"
+    enabled: "no"
+
+vitrage_datasources: "{{ vitrage_datasource | selectattr('enabled', 'equalto', true) | list }}"

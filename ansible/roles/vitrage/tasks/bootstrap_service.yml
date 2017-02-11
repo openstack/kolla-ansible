@@ -1,0 +1,19 @@
+---
+- name: Running Vitrage bootstrap container
+  vars:
+    vitrage_api: "{{ vitrage_services['vitrage-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ vitrage_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_vitrage"
+    restart_policy: "never"
+    volumes: "{{ vitrage_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[vitrage_api.group][0] }}"
