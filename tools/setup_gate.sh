@@ -143,7 +143,7 @@ function setup_ansible {
     mkdir /tmp/kolla
 
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U -c ${GIT_PROJECT_DIR}/requirements/upper-constraints.txt "ansible>=2" "docker-py>=1.6.0" "python-openstackclient" "python-neutronclient"
+    sudo -H pip install -U "ansible>=2" "docker-py>=1.6.0" "python-openstackclient" "python-neutronclient" "ara"
     detect_distro
 
     setup_inventory
@@ -151,7 +151,6 @@ function setup_ansible {
     # Record the running state of the environment as seen by the setup module
     ansible all -i ${RAW_INVENTORY} -m setup > /tmp/logs/ansible/initial-setup
 
-    sudo pip install -c ${GIT_PROJECT_DIR}/requirements/upper-constraints.txt ara
     sudo mkdir /etc/ansible
     sudo tee /etc/ansible/ansible.cfg<<EOF
 [defaults]
