@@ -1,5 +1,7 @@
 ---
 - name: Running Neutron bootstrap container
+  vars:
+    neutron_server: "{{ neutron_services['neutron-server'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,19 +9,18 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_server_image_full }}"
+    image: "{{ neutron_server.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_neutron"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ neutron_server.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['neutron-server'][0] }}"
+  delegate_to: "{{ groups[neutron_server.group][0] }}"
 
 - name: Running Neutron lbaas bootstrap container
+  vars:
+    neutron_lbaas_agent: "{{ neutron_services['neutron-lbaas-agent'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -27,22 +28,21 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_lbaas_agent_image_full }}"
+    image: "{{ neutron_lbaas_agent.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_neutron_lbaas_agent"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/neutron-lbaas-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ neutron_lbaas_agent.volumes }}"
   when:
-    - enable_neutron_lbaas | bool
-    - inventory_hostname in groups['neutron-lbaas-agent']
+    - neutron_lbaas_agent.enabled | bool
+    - neutron_lbaas_agent.host_in_groups | bool
   run_once: True
-  delegate_to: "{{ groups['neutron-lbaas-agent'][0] }}"
+  delegate_to: "{{ groups[neutron_lbaas_agent.group][0] }}"
 
 - name: Running Neutron vpnaas bootstrap container
+  vars:
+    neutron_vpnaas_agent: "{{ neutron_services['neutron-vpnaas-agent'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -50,17 +50,14 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_vpnaas_agent_image_full }}"
+    image: "{{ neutron_vpnaas_agent.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_neutron_vpnaas_agent"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/neutron-vpnaas-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ neutron_vpnaas_agent.image }}"
   when:
-    - enable_neutron_vpnaas | bool
-    - inventory_hostname in groups['neutron-vpnaas-agent']
+    - neutron_vpnaas_agent.enabled | bool
+    - neutron_vpnaas_agent.host_in_groups | bool
   run_once: True
-  delegate_to: "{{ groups['neutron-vpnaas-agent'][0] }}"
+  delegate_to: "{{ groups[neutron_vpnaas_agent.group][0] }}"

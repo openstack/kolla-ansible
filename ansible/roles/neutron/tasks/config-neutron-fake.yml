@@ -11,6 +11,7 @@
   template:
     src: "neutron-openvswitch-agent.json.j2"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/config.json"
+  register: fake_config_json
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
@@ -29,6 +30,7 @@
       - "{{ node_config_directory }}/config/neutron/{{ item }}.conf"
       - "{{ node_config_directory }}/config/neutron/{{ inventory_hostname }}/neutron.conf"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/neutron.conf"
+  register: fake_neutron_conf
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
@@ -43,7 +45,48 @@
       - "{{ node_config_directory }}/config/neutron/ml2_conf.ini"
       - "{{ node_config_directory }}/config/neutron/{{ inventory_hostname }}/neutron.conf"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/ml2_conf.ini"
+  register: fake_neutron_ml2_conf_ini
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
     - neutron_plugin_agent == "openvswitch"
+
+- name: Checking neutron-openvswitch-agent container for nova fake node
+  vars:
+    neutron_openvswitch_agent: "{{ neutron_services['neutron-openvswitch-agent'] }}"
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ neutron_openvswitch_agent.container_name }}"
+    image: "{{ neutron_openvswitch_agent.image }}"
+    privileged: "{{ neutron_openvswitch_agent.privileged | default(False) }}"
+    volumes: "{{ neutron_openvswitch_agent.volumes }}"
+  register: check_fake_neutron_openvswitch_agent
+  when:
+    - action != "config"
+    - enable_nova_fake | bool
+    - neutron_plugin_agent == "openvswitch"
+    - inventory_hostname in groups["compute"]
+  with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
+  notify:
+    - Restart fake neutron-openvswitch-agent container
+
+- name: Checking neutron-sfc-agent container for nova fake node
+  vars:
+    neutron_sfc_agent: "{{ neutron_services['neutron-sfc-agent'] }}"
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ neutron_sfc_agent.container_name }}"
+    image: "{{ neutron_sfc_agent.image }}"
+    privileged: "{{ neutron_sfc_agent.privileged | default(False) }}"
+    volumes: "{{ neutron_sfc_agent.volumes }}"
+  register: check_fake_neutron_sfc_agent
+  when:
+    - action != "config"
+    - enable_nova_fake | bool
+    - neutron_plugin_agent == "sfc"
+    - inventory_hostname in groups["compute"]
+  with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
+  notify:
+    - Restart fake neutron-sfc-agent container
