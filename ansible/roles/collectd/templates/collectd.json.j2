@@ -1,3 +1,20 @@
+{% set collectd_config = '/etc/collectd/collectd.conf' if kolla_base_distro in ['ubuntu', 'debian'] else '/etc/collectd.conf' %}
+
 {
-    "command": "/usr/sbin/collectd -f"
+    "command": "/usr/sbin/collectd -f -C {{ collectd_config }}",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/collectd.conf",
+            "dest": "{{ collectd_config }}",
+            "owner": "collectd",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/collectd",
+            "owner": "collectd:collectd",
+            "recurse": true
+        }
+    ]
 }
