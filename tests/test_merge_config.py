@@ -96,6 +96,7 @@ class OverrideConfigParserTest(base.BaseTestCase):
             output = StringIO()
             parser.write(output)
             self.assertEqual(ini, output.getvalue())
+            output.close()
 
     def test_merge(self):
         parser = merge_configs.OverrideConfigParser()
@@ -104,3 +105,4 @@ class OverrideConfigParserTest(base.BaseTestCase):
         output = StringIO()
         parser.write(output)
         self.assertEqual(TESTC, output.getvalue())
+        output.close()
