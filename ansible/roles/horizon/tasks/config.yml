@@ -4,7 +4,9 @@
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  when: inventory_hostname in groups[item.value.group]
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
   with_dict: "{{ horizon_services }}"
 
 - name: Copying over config.json files for services

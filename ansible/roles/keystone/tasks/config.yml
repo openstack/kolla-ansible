@@ -14,7 +14,7 @@
     recurse: yes
   when:
     - inventory_hostname in groups[item.value.group]
-    - item.value.enabled
+    - item.value.enabled | bool
   with_dict: "{{ keystone_services }}"
 
 - name: Copying over config.json files for services
@@ -25,7 +25,7 @@
   with_dict: "{{ keystone_services }}"
   when:
     - inventory_hostname in groups[item.value.group]
-    - item.value.enabled
+    - item.value.enabled | bool
   notify:
     - Restart keystone container
     - Restart keystone-ssh container
