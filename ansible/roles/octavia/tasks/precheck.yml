@@ -25,3 +25,13 @@
   when:
     - container_facts['octavia_health_manager'] is not defined
     - inventory_hostname in groups['octavia-health-manager']
+
+- name: Checking certificate files exist for octavia
+  local_action: stat path="{{ node_custom_config }}/octavia/{{ item }}"
+  register: result
+  failed_when: not result.stat.exists
+  when: inventory_hostname in groups['octavia-worker']
+  with_items:
+    - cakey.pem
+    - ca_01.pem
+    - client.pem
