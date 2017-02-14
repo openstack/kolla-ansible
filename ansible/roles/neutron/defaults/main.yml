@@ -8,12 +8,13 @@ neutron_services:
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
     host_in_groups: >-
       {{
-        inventory_hostname in groups['compute']
-        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-        or inventory_hostname in groups['neutron-dhcp-agent']
-        or inventory_hostname in groups['neutron-l3-agent']
-        or inventory_hostname in groups['neutron-metadata-agent']
-        or inventory_hostname in groups['neutron-vpnaas-agent']
+      True if orchestration_engine == 'KUBERNETES' else
+      inventory_hostname in groups['compute']
+      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+      or inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      or inventory_hostname in groups['neutron-vpnaas-agent']
       }}
     volumes:
       - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
@@ -27,12 +28,13 @@ neutron_services:
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
     host_in_groups: >-
       {{
-        inventory_hostname in groups['compute']
-        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-        or inventory_hostname in groups['neutron-dhcp-agent']
-        or inventory_hostname in groups['neutron-l3-agent']
-        or inventory_hostname in groups['neutron-metadata-agent']
-        or inventory_hostname in groups['neutron-vpnaas-agent']
+      True if orchestration_engine == 'KUBERNETES' else
+      inventory_hostname in groups['compute']
+      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+      or inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      or inventory_hostname in groups['neutron-vpnaas-agent']
       }}
     privileged: True
     volumes:
@@ -46,7 +48,7 @@ neutron_services:
     image: "{{ neutron_server_image_full }}"
     enabled: true
     group: "neutron-server"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-server'] }}"
+    host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-server'] }}"
     volumes:
       - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
@@ -58,20 +60,21 @@ neutron_services:
     privileged: True
     host_in_groups: >-
       {{
-        ( inventory_hostname in groups['compute']
-          or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-          or inventory_hostname in groups['neutron-dhcp-agent']
-          or inventory_hostname in groups['neutron-l3-agent']
-          or inventory_hostname in groups['neutron-metadata-agent']
-          or inventory_hostname in groups['neutron-vpnaas-agent']
-          and not enable_nova_fake | bool
-        ) or
-        ( inventory_hostname in groups['neutron-dhcp-agent']
-          or inventory_hostname in groups['neutron-l3-agent']
-          or inventory_hostname in groups['neutron-metadata-agent']
-          or inventory_hostname in groups['neutron-vpnaas-agent']
-          and enable_nova_fake | bool
-        )
+      True if orchestration_engine == 'KUBERNETES' else
+      ( inventory_hostname in groups['compute']
+      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+      or inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      or inventory_hostname in groups['neutron-vpnaas-agent']
+      and not enable_nova_fake | bool
+      ) or
+      ( inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      or inventory_hostname in groups['neutron-vpnaas-agent']
+      and enable_nova_fake | bool
+      )
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-openvswitch-agent/:{{ container_config_directory }}/:ro"
@@ -86,18 +89,19 @@ neutron_services:
     privileged: True
     host_in_groups: >-
       {{
-        ( inventory_hostname in groups['compute']
-          or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-          or inventory_hostname in groups['neutron-dhcp-agent']
-          or inventory_hostname in groups['neutron-l3-agent']
-          or inventory_hostname in groups['neutron-metadata-agent']
-          and not enable_nova_fake | bool
-        ) or
-        ( inventory_hostname in groups['neutron-dhcp-agent']
-          or inventory_hostname in groups['neutron-l3-agent']
-          or inventory_hostname in groups['neutron-metadata-agent']
-          and enable_nova_fake | bool
-        )
+      True if orchestration_engine == 'KUBERNETES' else
+      ( inventory_hostname in groups['compute'] or
+      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+      or inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      and not enable_nova_fake | bool
+      ) or
+      ( inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      and enable_nova_fake | bool
+      )
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-sfc-agent/:{{ container_config_directory }}/:ro"
@@ -116,12 +120,13 @@ neutron_services:
       NEUTRON_INTERFACE: "{{ neutron_external_interface }}"
     host_in_groups: >-
       {{
-        inventory_hostname in groups['compute']
-        or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-        or inventory_hostname in groups['neutron-dhcp-agent']
-        or inventory_hostname in groups['neutron-l3-agent']
-        or inventory_hostname in groups['neutron-metadata-agent']
-        or inventory_hostname in groups['neutron-vpnaas-agent']
+      True if orchestration_engine == 'KUBERNETES' else
+      inventory_hostname in groups['compute']
+      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+      or inventory_hostname in groups['neutron-dhcp-agent']
+      or inventory_hostname in groups['neutron-l3-agent']
+      or inventory_hostname in groups['neutron-metadata-agent']
+      or inventory_hostname in groups['neutron-vpnaas-agent']
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-linuxbridge-agent/:{{ container_config_directory }}/:ro"
@@ -135,7 +140,7 @@ neutron_services:
     privileged: True
     enabled: True
     group: "neutron-dhcp-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
+    host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes:
       - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
@@ -150,8 +155,9 @@ neutron_services:
     enabled: "{{ not enable_neutron_vpnaas | bool }}"
     host_in_groups: >-
       {{
-        inventory_hostname in groups['neutron-l3-agent']
-        or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
+      True if orchestration_engine == 'KUBERNETES' else
+      inventory_hostname in groups['neutron-l3-agent']
+      or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-l3-agent/:{{ container_config_directory }}/:ro"
@@ -166,7 +172,7 @@ neutron_services:
     privileged: True
     enabled: "{{ enable_neutron_lbaas | bool }}"
     group: "neutron-lbaas-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-lbaas-agent'] }}"
+    host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-lbaas-agent'] }}"
     volumes:
       - "{{ node_config_directory }}/neutron-lbaas-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
@@ -181,8 +187,9 @@ neutron_services:
     enabled: true
     host_in_groups: >-
       {{
-        inventory_hostname in groups['neutron-metadata-agent']
-        or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
+      True if orchestration_engine == 'KUBERNETES' else
+      inventory_hostname in groups['neutron-metadata-agent']
+      or (inventory_hostname in groups['compute'] and enable_neutron_dvr | bool)
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-metadata-agent/:{{ container_config_directory }}/:ro"
@@ -196,7 +203,7 @@ neutron_services:
     privileged: True
     enabled: "{{ enable_neutron_vpnaas | bool }}"
     group: "neutron-vpnaas-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-vpnaas-agent'] }}"
+    host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-vpnaas-agent'] }}"
     volumes:
       - "{{ node_config_directory }}/neutron-vpnaas-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
