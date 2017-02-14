@@ -19,21 +19,8 @@
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "mariadb:/var/lib/mysql"
+  notify:
+    - Starting first MariaDB container
 
-- name: Starting first MariaDB container
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    environment:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      BOOTSTRAP_ARGS: "--wsrep-new-cluster"
-    image: "{{ mariadb_image_full }}"
-    labels:
-      BOOTSTRAP:
-    name: "mariadb"
-    restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "mariadb:/var/lib/mysql"
+- set_fact:
+    bootstrap_host: "{{ inventory_hostname }}"

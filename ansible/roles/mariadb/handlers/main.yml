@@ -1,0 +1,120 @@
+---
+- name: Starting first MariaDB container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      BOOTSTRAP_ARGS: "--wsrep-new-cluster"
+    image: "{{ service.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "{{ service.container_name }}"
+    restart_policy: "never"
+    volumes: "{{ service.volumes }}"
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+  notify:
+    - wait first mariadb container
+    - restart slave mariadb
+    - restart master mariadb
+
+
+# TODO(jeffrey4l), remove the task check when the wait_for bug is fixed
+# https://github.com/ansible/ansible-modules-core/issues/2788
+- name: wait first mariadb container
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port | success
+  retries: 10
+  delay: 6
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+
+- name: restart slave mariadb
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+    mariadb_container: "{{ check_mariadb_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - inventory_hostname != master_host
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - mariadb_config_json.changed | bool
+      or mariadb_galera_conf.changed | bool
+      or mariadb_wsrep_notify.changed | bool
+      or mariadb_container.changed | bool
+      or bootstrap_host is defined
+  notify:
+    - wait for slave mariadb
+
+# TODO(jeffrey4l), remove the task check when the wait_for bug is fixed
+# https://github.com/ansible/ansible-modules-core/issues/2788
+- name: wait for slave mariadb
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port | success
+  retries: 10
+  delay: 6
+  when:
+    - inventory_hostname != master_host
+
+- name: restart master mariadb
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+    mariadb_container: "{{ check_mariadb_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - inventory_hostname == master_host
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - mariadb_config_json.changed | bool
+      or mariadb_galera_conf.changed | bool
+      or mariadb_wsrep_notify.changed | bool
+      or mariadb_container.changed | bool
+      or bootstrap_host is defined
+  notify:
+    - Waiting for master mariadb
+
+# TODO(jeffrey4l), remove the task check when the wait_for bug is fixed
+# https://github.com/ansible/ansible-modules-core/issues/2788
+- name: Waiting for master mariadb
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port | success
+  retries: 10
+  delay: 6
+  when:
+    - inventory_hostname == master_host
