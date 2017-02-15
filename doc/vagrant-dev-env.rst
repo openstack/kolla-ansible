@@ -126,8 +126,8 @@ Once logged on the **operator** VM call the ``kolla-build`` utility::
 
     kolla-build
 
-``kolla-build`` accept arguments as documented in `Building Container Images`_. It
-builds Docker images and pushes them to the local registry if the **push**
+``kolla-build`` accept arguments as documented in `Building Container Images`_.
+It builds Docker images and pushes them to the local registry if the **push**
 option is enabled (in Vagrant this is the default behaviour).
 
 Deploying OpenStack with Kolla

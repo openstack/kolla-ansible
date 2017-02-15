@@ -88,8 +88,8 @@ Prepare bifrost configs
 Create servers.yml
 ------------------
 
-The ``servers.yml`` will describing your physical nodes and list IPMI credentials.
-See bifrost dynamic inventory examples for more details.
+The ``servers.yml`` will describing your physical nodes and list IPMI
+credentials.  See bifrost dynamic inventory examples for more details.
 
 For example ``/etc/kolla/config/bifrost/servers.yml``
 

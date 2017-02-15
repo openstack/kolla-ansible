@@ -11,9 +11,9 @@ Deploy a registry
 
 A Docker registry is a locally hosted registry that replaces the need to pull
 from the Docker Hub to get images. Kolla can function with or without a local
-registry, however for a multinode deployment some type of registry is mandatory.
-Only one registry must be deployed, although HA features exist for registry
-services.
+registry, however for a multinode deployment some type of registry is
+mandatory.  Only one registry must be deployed, although HA features exist for
+registry services.
 
 The Docker registry prior to version 2.3 has extremely bad performance because
 all container data is pushed for every image rather than taking advantage of

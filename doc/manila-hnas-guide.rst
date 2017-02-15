@@ -25,7 +25,7 @@ Requirements
 
 
 Supported shared file systems and operations
--------------------------------------------
+--------------------------------------------
 The driver supports CIFS and NFS shares.
 
 The following operations are supported:

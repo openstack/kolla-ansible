@@ -469,9 +469,9 @@ View the images.
 
     docker images
 
-Developers running from master are required to build container images as
-the Docker Hub does not contain built images for the master branch.
-Reference the `Building Container Images`_ for more advanced build configuration.
+Developers running from master are required to build container images as the
+Docker Hub does not contain built images for the master branch.  Reference the
+`Building Container Images`_ for more advanced build configuration.
 
 To build images using default parameters run:
 
