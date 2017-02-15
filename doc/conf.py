@@ -36,7 +36,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'kolla'
+project = u'kolla-ansible'
 copyright = u'2013, OpenStack Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -44,7 +44,7 @@ copyright = u'2013, OpenStack Foundation'
 # built documents.
 #
 # The short X.Y version.
-from kolla.version import version_info as kolla_version
+from kolla_ansible.version import version_info as kolla_version
 # The full version, including alpha/beta/rc tags.
 release = kolla_version.version_string_with_vcs()
 # The short X.Y version.

@@ -1,1 +1,1 @@
-../kolla/cmd/genpwd.py
+../kolla_ansible/cmd/genpwd.py
