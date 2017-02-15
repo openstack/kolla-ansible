@@ -16,7 +16,7 @@
 import os
 import sys
 
-from kolla.version import version_info as kolla_version
+from kolla_ansible.version import version_info as kolla_version
 
 sys.path.insert(0, os.path.abspath('../..'))
 

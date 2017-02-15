@@ -1,1 +1,1 @@
-../kolla/cmd/mergepwd.py
+../kolla_ansible/cmd/mergepwd.py
