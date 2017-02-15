@@ -15,6 +15,29 @@ sql_connection = mysql+pymysql://{{ barbican_database_user }}:{{ barbican_databa
 
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
+# ================= Secret Store Plugin ===================
+[secretstore]
+namespace = barbican.secretstore.plugin
+enabled_secretstore_plugins = store_crypto
+
+# ================= Crypto plugin ===================
+[crypto]
+namespace = barbican.crypto.plugin
+enabled_crypto_plugins = p11_crypto
+
+[p11_crypto_plugin]
+# Path to vendor PKCS11 library
+library_path = '/usr/lib/libCryptoki2_64.so'
+# Password to login to PKCS11 session
+login = '{{ barbican_p11_password }}'
+# Label to identify master KEK in the HSM (must not be the same as HMAC label)
+mkek_label = 'kolla_master_kek'
+# Length in bytes of master KEK
+mkek_length = 32
+# Label to identify HMAC key in the HSM (must not be the same as MKEK label)
+hmac_label = 'kolla_hmac'
+
+
 [keystone_notifications]
 enable = True
 
