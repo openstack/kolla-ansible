@@ -35,11 +35,15 @@
 
 - name: Copying over fluentd ouput config files
   template:
-    src: "conf/output/{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/output/{{ item }}.conf"
+    src: "conf/output/{{ item.name }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
+  when: item.enabled | bool
   with_items:
-    - "00-local"
-    - "01-es"
+    - name: "00-local"
+      enabled: true
+    - name: "01-es"
+      enabled: "{{ enable_elasticsearch }}"
+
 - name: Copying over fluentd format config files
   template:
     src: "conf/format/{{ item }}.conf.j2"
@@ -48,7 +52,7 @@
     - "apache_access"
     - "wsgi_access"
     - "wsgi_python"
-    
+
 - name: Copying over fluentd filter config files
   template:
     src: "conf/filter/{{ item }}.conf.j2"
