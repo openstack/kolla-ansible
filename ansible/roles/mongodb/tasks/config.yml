@@ -1,22 +1,51 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "mongodb"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mongodb_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "mongodb"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: mongodb_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mongodb_services }}"
+  notify:
+    - Restart mongodb container
 
 - name: Copying over mongodb.conf
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ node_config_directory }}/mongodb/{{ item }}"
-  with_items:
-     - "mongodb.conf"
+    src: "{{ item.key }}.conf.j2"
+    dest: "{{ node_config_directory }}/mongodb/{{ item.key }}.conf"
+  register: mongodb_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mongodb_services }}"
+  notify:
+    - Restart mongodb container
+
+- name: Check mongodb containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged|default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_mongodb_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mongodb_services }}"
+  notify:
+    - Restart mongodb container
