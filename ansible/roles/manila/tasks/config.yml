@@ -1,44 +1,53 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "manila-api"
-    - "manila-data"
-    - "manila-scheduler"
-    - "manila-share"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ manila_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "manila-api"
-    - "manila-data"
-    - "manila-scheduler"
-    - "manila-share"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: manila_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ manila_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over manila.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/manila.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/manila.conf"
-      - "{{ node_custom_config }}/manila/{{ item }}.conf"
+      - "{{ node_custom_config }}/manila/{{ item.key }}.conf"
       - "{{ node_custom_config }}/manila/{{ inventory_hostname }}/manila.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/manila.conf"
-  with_items:
-    - "manila-api"
-    - "manila-data"
-    - "manila-scheduler"
+    dest: "{{ node_config_directory }}/{{ item.key }}/manila.conf"
+  register: manila_confs
+  when:
+    - item.key in [ "manila-api", "manila-data", "manila-scheduler" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ manila_services }}"
+  notify:
+    - Restart manila-api container
+    - Restart manila-data container
+    - Restart manila-scheduler container
 
 - name: Copying over manila-share.conf
+  vars:
+    service: "{{ manila_services['manila-share'] }}"
   merge_configs:
     vars:
       service_name: "{{ item }}"
@@ -53,8 +62,14 @@
       - "{{ node_custom_config }}/manila/{{ item }}.conf"
       - "{{ node_custom_config }}/manila/{{ inventory_hostname }}/manila.conf"
     dest: "{{ node_config_directory }}/{{ item }}/manila.conf"
+  register: manila_conf_share
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "manila-share"
+  notify:
+    - Restart manila-share container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/manila/policy.json"
@@ -63,11 +78,29 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/manila/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "manila-api"
-    - "manila-data"
-    - "manila-scheduler"
-    - "manila-share"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: policy_jsons
   when:
-    manila_policy.stat.exists
+    - manila_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ manila_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Check manila containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged|default(False) }}"
+    volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
+  register: check_manila_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ manila_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
