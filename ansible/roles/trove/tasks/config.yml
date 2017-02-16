@@ -1,45 +1,73 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "trove-conductor"
-    - "trove-api"
-    - "trove-taskmanager"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "trove-conductor"
-    - "trove-api"
-    - "trove-taskmanager"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: trove_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over trove conf files
   template:
-    src: "{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/{{ item }}.conf"
-  with_items:
-    - "trove-conductor"
-    - "trove-taskmanager"
+    src: "{{ item.key }}.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
+  register: trove_conf_file
+  when:
+    - item.key in [ "trove-conductor", "trove-taskmanager" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
+  notify:
+    - Restart trove-conductor container
+    - Restart trove-taskmanager container
 
 - name: Copying over trove.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/trove.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/trove.conf"
-      - "{{ node_custom_config }}/trove/{{ item }}.conf"
+      - "{{ node_custom_config }}/trove/{{ item.key }}.conf"
       - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/trove.conf"
-  with_items:
-    - "trove-conductor"
-    - "trove-api"
-    - "trove-taskmanager"
+    dest: "{{ node_config_directory }}/{{ item.key }}/trove.conf"
+  register: trove_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Check trove containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_trove_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
