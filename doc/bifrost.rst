@@ -82,6 +82,24 @@ Production
 
     kolla-build bifrost-deploy
 
+Prepare Kolla-Ansible Inventory
+===============================
+
+Kolla-ansible will deploy bifrost on the hosts in the ``bifrost`` Ansible
+group.  In the ``all-in-one`` and ``multinode`` inventory files, a ``bifrost``
+group is defined which contains all hosts in the ``deployment`` group.  This
+top level ``deployment`` group is intended to represent the host running the
+``bifrost_deploy`` container.  By default, this group contains ``localhost``.
+See `edit-inventory`_ for details on how to modify the Ansible inventory in a
+multinode deployment.
+
+Bifrost does not currently support running on multiple hosts so the ``bifrost``
+group should contain only a single host, however this is not enforced by
+kolla-ansible.  Bifrost manages a number of services that conflict with
+services deployed by kolla including OpenStack Ironic, MariaDB, RabbitMQ and
+(optionally) OpenStack Keystone.  These services should not be deployed on the
+host on which bifrost is deployed.
+
 Prepare bifrost configs
 =======================
 
