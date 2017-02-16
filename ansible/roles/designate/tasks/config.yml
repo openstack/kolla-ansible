@@ -1,93 +1,120 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "designate-api"
-    - "designate-central"
-    - "designate-mdns"
-    - "designate-sink"
-    - "designate-backend-bind9"
-    - "designate-worker"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "designate-api"
-    - "designate-central"
-    - "designate-mdns"
-    - "designate-sink"
-    - "designate-backend-bind9"
-    - "designate-worker"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: designate_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-api container
+    - Restart designate-central container
+    - Restart designate-mdns container
+    - Restart designate-sink container
+    - Restart designate-backend-bind9 container
+    - Restart designate-worker container
 
 - name: Copying over designate.conf
   merge_configs:
     vars:
-      service_name: "{{ item }}"
+      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/designate.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/database.conf"
       - "{{ node_custom_config }}/messaging.conf"
       - "{{ node_custom_config }}/designate.conf"
-      - "{{ node_custom_config }}/designate/{{ item }}.conf"
+      - "{{ node_custom_config }}/designate/{{ item.key }}.conf"
       - "{{ node_custom_config }}/designate/{{ inventory_hostname }}/designate.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/designate.conf"
-  with_items:
-    - "designate-api"
-    - "designate-central"
-    - "designate-mdns"
-    - "designate-sink"
-    - "designate-worker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/designate.conf"
+  register: designate_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-api container
+    - Restart designate-central container
+    - Restart designate-mdns container
+    - Restart designate-sink container
+    - Restart designate-worker container
 
 - name: Copying over pools.yaml
+  vars:
+    service: "{{ designate_services['designate-worker'] }}"
   template:
     src:  "{{ item }}"
     dest: "{{ node_config_directory }}/designate-worker/pools.yaml"
+  register: designate_pool
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_first_found:
     - "{{ node_custom_config }}/designate/pools.yaml"
     - "{{ role_path }}/templates/pools.yaml.j2"
+  notify:
+    - Restart designate-worker container
 
 - name: Copying over named.conf
+  vars:
+    service: "{{ designate_services['designate-backend-bind9'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/designate-backend-bind9/named.conf"
+  register: designate_named
+  when:
+    - designate_backend == 'bind9'
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_first_found:
     - "{{ node_custom_config }}/designate/designate-backend-bind9/{{ inventory_hostname }}/named.conf"
     - "{{ node_custom_config }}/designate/designate-backend-bind9/named.conf"
     - "{{ node_custom_config }}/designate/named.conf"
     - "{{ role_path }}/templates/named.conf.j2"
-  when:
-    - designate_backend == 'bind9'
-    - inventory_hostname in groups['designate-backend-bind9']
+  notify:
+    - Restart designate-backend-bind9 container
 
 - name: Copying over rndc.conf
   template:
     src: "rndc.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/rndc.conf"
-  with_items:
-    - "designate-backend-bind9"
-    - "designate-worker"
+  register: designate_rndc_conf
   when:
     - designate_backend == 'bind9'
-    - inventory_hostname in groups['designate-backend-bind9']
-      or inventory_hostname in groups['designate-worker']
+    - item.key in [ "designate-backend-bind9", "designate-worker" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-backend-bind9 container
+    - Restart designate-worker container
 
 - name: Copying over rndc.key
   template:
     src: "rndc.key.j2"
     dest: "{{ node_config_directory }}/{{ item }}/rndc.key"
-  with_items:
-    - "designate-backend-bind9"
-    - "designate-worker"
+  register: designate_rndc_key
   when:
     - designate_backend == 'bind9'
-    - inventory_hostname in groups['designate-backend-bind9']
-      or inventory_hostname in groups['designate-worker']
+    - item.key in [ "designate-backend-bind9", "designate-worker" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-backend-bind9 container
+    - Restart designate-worker container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/designate/policy.json"
@@ -96,12 +123,37 @@
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/designate/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
-  with_items:
-    - "designate-api"
-    - "designate-central"
-    - "designate-mdns"
-    - "designate-sink"
-    - "designate-worker"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: designate_policy_jsons
   when:
-    designate_policy.stat.exists
+    - designate_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-api container
+    - Restart designate-central container
+    - Restart designate-mdns container
+    - Restart designate-sink container
+    - Restart designate-worker container
+
+- name: Check designate containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_designate_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-api container
+    - Restart designate-central container
+    - Restart designate-mdns container
+    - Restart designate-sink container
+    - Restart designate-backend-bind9 container
+    - Restart designate-worker container

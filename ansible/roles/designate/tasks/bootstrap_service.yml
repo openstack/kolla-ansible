@@ -1,5 +1,7 @@
 ---
 - name: Running Designate bootstrap container
+  vars:
+    designate_central: "{{ designate_services['designate-central'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -7,14 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ designate_central_image_full }}"
+    image: "{{ designate_central.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_designate"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/designate-central/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ designate_central.volumes }}"
   run_once: True
-  delegate_to: "{{ groups['designate-central'][0] }}"
+  delegate_to: "{{ groups[designate_central.group][0] }}"

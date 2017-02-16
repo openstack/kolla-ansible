@@ -1,44 +1,10 @@
 ---
-- name: Pulling designate-api image
+- name: Pulling designate images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ designate_api_image_full }}"
-  when: inventory_hostname in groups['designate-api']
-
-- name: Pulling designate-central image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ designate_central_image_full }}"
-  when: inventory_hostname in groups['designate-central']
-
-- name: Pulling designate-mdns image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ designate_mdns_image_full }}"
-  when: inventory_hostname in groups['designate-mdns']
-
-- name: Pulling designate-worker image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ designate_worker_image_full }}"
-  when: inventory_hostname in groups['designate-worker']
-
-- name: Pulling designate-sink image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ designate_sink_image_full }}"
-  when: inventory_hostname in groups['designate-sink']
-
-- name: Pulling designate-backend-bind9 image
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ designate_backend_bind9_image_full }}"
+    image: "{{ item.value.image }}"
   when:
-    - designate_backend == 'bind9'
-    - inventory_hostname in groups['designate-backend-bind9']
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
