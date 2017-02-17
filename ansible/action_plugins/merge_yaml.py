@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Copyright 2015 Sam Yaple
 # Copyright 2016 intel
