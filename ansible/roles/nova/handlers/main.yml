@@ -168,12 +168,12 @@
 
 - name: Restart nova-serialproxy container
   vars:
-    service_name: "nova-spicehtml5proxy"
+    service_name: "nova-serialproxy"
     service: "{{ nova_services[service_name] }}"
     config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_spicehtml5proxy_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    nova_serialproxy_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
@@ -188,7 +188,7 @@
     - config_json.changed | bool
       or nova_conf.changed | bool
       or policy_json.changed | bool
-      or nova_spicehtml5proxy_container.changed | bool
+      or nova_serialproxy_container.changed | bool
 
 - name: Restart nova-scheduler container
   vars:
