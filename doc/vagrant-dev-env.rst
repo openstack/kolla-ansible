@@ -140,11 +140,11 @@ Deploy **all-in-one** with::
 Deploy multinode
 On Centos 7::
 
-    sudo kolla-ansible deploy -i /usr/share/kolla/ansible/inventory/multinode
+    sudo kolla-ansible deploy -i /usr/share/kolla-ansible/ansible/inventory/multinode
 
 On Ubuntu 14.04 or later::
 
-    sudo kolla-ansible deploy -i /usr/local/share/kolla/ansible/inventory/multinode
+    sudo kolla-ansible deploy -i /usr/local/share/kolla-ansible/ansible/inventory/multinode
 
 Validate OpenStack is operational::
 
