@@ -608,7 +608,7 @@ the content shown below.
     mkdir /etc/kolla/config/nova
     cat << EOF > /etc/kolla/config/nova/nova-compute.conf
     [libvirt]
-    virt_type=qemu
+    virt_type = qemu
     EOF
 
 For *all-in-one* deployments, the following commands can be run. These will
@@ -650,7 +650,7 @@ with a glance image and neutron networks.
 
 ::
 
-    source /etc/kolla/admin-openrc.sh
+    . /etc/kolla/admin-openrc.sh
 
     #centOS
     cd /usr/share/kolla-ansible
