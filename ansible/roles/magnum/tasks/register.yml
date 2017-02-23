@@ -42,11 +42,8 @@
       auth: "{{ '{{ openstack_magnum_auth }}' }}"
     module_extra_vars:
       openstack_magnum_auth: "{{ openstack_magnum_auth }}"
+  register: trustee_domain
   run_once: True
-
-- name: Setting Magnum trustee domain value
-  set_fact:
-    magnum_trustee_domain_id: "{{ trustee_domain.id }}"
 
 - name: Creating Magnum trustee user
   kolla_toolbox:
@@ -64,7 +61,7 @@
   kolla_toolbox:
     module_name: "os_user_role"
     module_args:
-      domain: "{{ magnum_trustee_domain_id }}"
+      domain: "{{ trustee_domain.id }}"
       user: "{{ magnum_trustee_domain_admin }}"
       role: "admin"
       auth: "{{ '{{ openstack_magnum_auth }}' }}"
