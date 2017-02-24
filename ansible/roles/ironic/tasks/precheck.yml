@@ -14,3 +14,14 @@
   when:
     - container_facts['ironic_api'] is not defined
     - inventory_hostname in groups['ironic-api']
+
+- name: Checking ironic-agent files exist for Ironic
+  local_action: stat path="{{ node_custom_config }}/ironic/{{ item }}"
+  register: result
+  failed_when: not result.stat.exists
+  when:
+    - inventory_hostname in groups['ironic-pxe']
+    - orchestration_engine != 'KUBERNETES'
+  with_items:
+    - "ironic-agent.kernel"
+    - "ironic-agent.initramfs"
