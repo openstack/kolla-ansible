@@ -1,19 +1,23 @@
 ---
-- name: Cinder sanity checks
-  command: docker exec -t kolla_toolbox /usr/bin/ansible localhost
-    -m kolla_sanity
-    -a "service=cinder
-        project=service
-        user={{ openstack_auth.username }}
-        password={{ cinder_keystone_password }}
-        role=admin
-        region_name={{ openstack_region_name }}
-        auth={{ '{{ openstack_cinder_auth }}' }}"
-    -e "{'openstack_cinder_auth':{{ openstack_cinder_auth }}}"
-  register: cinder_sanity
-  changed_when: "{{ cinder_sanity.stdout.find('localhost | SUCCESS => ') != -1 and (cinder_sanity.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed }}"
-  until: cinder_sanity.stdout.split()[2] == 'SUCCESS'
-  retries: 10
-  delay: 5
+- name: Cinder sanity check - create volume
+  kolla_toolbox:
+    module_name: os_volume
+    module_args:
+      auth: "{{ openstack_cinder_auth }}"
+      state: present
+      size: 1
+      display_name: kolla_test_volume
   run_once: True
+  delegate_to: "{{ groups['cinder-api'][0] }}"
+  when: kolla_enable_sanity_cinder | bool
+
+- name: Cinder sanity check - cleanup volume
+  kolla_toolbox:
+    module_name: os_volume
+    module_args:
+      auth: "{{ openstack_cinder_auth }}"
+      state: absent
+      display_name: kolla_test_volume
+  run_once: True
+  delegate_to: "{{ groups['cinder-api'][0] }}"
   when: kolla_enable_sanity_cinder | bool
