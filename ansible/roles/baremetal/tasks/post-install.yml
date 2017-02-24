@@ -1,9 +1,9 @@
 ---
 - name: Ensure docker service directory exists
   file:
-      path=/etc/systemd/system/docker.service.d
-      state=directory
-      recurse=yes
+    path=/etc/systemd/system/docker.service.d
+    state=directory
+    recurse=yes
   become: True
   when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version > "14") or
         (ansible_os_family == "RedHat") or (ansible_distribution == "Debian")
@@ -11,8 +11,8 @@
 - name: Configure docker service
   become: True
   template:
-     src=docker_systemd_service.j2
-     dest=/etc/systemd/system/docker.service.d/kolla.conf
+    src=docker_systemd_service.j2
+    dest=/etc/systemd/system/docker.service.d/kolla.conf
   when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version > "14") or
         (ansible_os_family == "RedHat") or (ansible_distribution == "Debian")
 
@@ -25,8 +25,8 @@
 - name: Configure docker service
   become: True
   template:
-     src=docker_defaults.j2
-     dest=/etc/default/docker
+    src=docker_defaults.j2
+    dest=/etc/default/docker
   when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version < "15")
 
 - name: Docker mount shared
@@ -48,38 +48,38 @@
 
 - name: Create docker group
   group:
-     name: docker
+    name: docker
   become: True
 
 - name: Add kolla user to docker group
   user:
-     name: kolla
-     append: yes
-     groups: docker
+    name: kolla
+    append: yes
+    groups: docker
   become: True
   when: create_kolla_user | bool
 
 - name: Start docker
   service:
-     name: docker
-     state: started
+    name: docker
+    state: started
   become: True
 
 - name: Restart docker
   service:
-     name: docker
-     state: restarted
+    name: docker
+    state: restarted
   become: True
 
 - name: Enable docker
   service:
-     name: docker
-     enabled: yes
+    name: docker
+    enabled: yes
   become: True
 
 - name: Reboot
   command: reboot -f
   become: True
   when:
-   - reboot_required is defined
-   - reboot_required | bool
+    - reboot_required is defined
+    - reboot_required | bool
