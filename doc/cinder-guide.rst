@@ -30,8 +30,9 @@ a real physical volume or a loopback mounted file for development.
 
 Create a Volume Group
 =====================
-Use ``pvcreate`` and ``vgcreate`` to create the volume group. For example
-with the devices ``/dev/sdb`` and ``/dev/sdc``:
+When using the ``lvm`` backend, a volume group will need to be created on each
+storage node.  Use ``pvcreate`` and ``vgcreate`` to create the volume group. For
+example with the devices ``/dev/sdb`` and ``/dev/sdc``:
 
 ::
 
@@ -49,6 +50,12 @@ system. ::
     losetup /dev/loop2 /var/lib/cinder_data.img
     pvcreate /dev/loop2
     vgcreate cinder-volumes /dev/loop2
+
+Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
+
+::
+
+    enable_cinder_backend_lvm: "yes"
 
 Validation
 ==========
