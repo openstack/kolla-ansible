@@ -35,9 +35,11 @@
     pid_mode: "{{ service.pid_mode | default('') }}"
     privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  register: restart_nova_libvirt
   # NOTE(Jeffrey4l): retry 5 to remove nova_libvirt container because when
   # guests running, nova_libvirt will raise error even though it is removed.
   retries: 5
+  until: restart_nova_libvirt | success
   when:
     - action != "config"
     - inventory_hostname in groups[service.group]
