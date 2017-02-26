@@ -299,3 +299,24 @@ extension_drivers:
     enabled: "{{ enable_designate | bool }}"
 
 neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto', true)|list }}"
+
+####################
+# Service Plugins
+####################
+service_plugins:
+  - name: "flow_classifier"
+    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+  - name: "neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2"
+    enabled: "{{ enable_neutron_lbaas | bool }}"
+  - name: "neutron.services.firewall.fwaas_plugin.FirewallPlugin"
+    enabled: "{{ enable_neutron_fwaas | bool }}"
+  - name: "neutron_vpnaas.services.vpn.plugin.VPNDriverPlugin"
+    enabled: "{{ enable_neutron_vpnaas | bool }}"
+  - name: "qos"
+    enabled: "{{ enable_neutron_qos | bool }}"
+  - name: "router"
+    enabled: true
+  - name: "sfc"
+    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+
+neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
