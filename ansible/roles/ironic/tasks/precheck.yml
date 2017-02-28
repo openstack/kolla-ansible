@@ -3,6 +3,7 @@
   kolla_container_facts:
     name:
       - ironic_api
+      - ironic_inspector
   register: container_facts
 
 - name: Checking free port for Ironic
@@ -14,6 +15,16 @@
   when:
     - container_facts['ironic_api'] is not defined
     - inventory_hostname in groups['ironic-api']
+
+- name: Checking free port for Ironic Inspector
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ ironic_inspector_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['ironic_inspector'] is not defined
+    - inventory_hostname in groups['ironic-inspector']
 
 - name: Checking ironic-agent files exist for Ironic
   local_action: stat path="{{ node_custom_config }}/ironic/{{ item }}"
