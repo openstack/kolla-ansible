@@ -102,6 +102,13 @@ def gen_commandline(params):
     return command
 
 
+def get_docker_client():
+    try:
+        return docker.Client
+    except AttributeError:
+        return docker.APIClient
+
+
 def main():
     specs = dict(
         module_name=dict(type='str'),
@@ -109,7 +116,7 @@ def main():
         module_extra_vars=dict(type='json')
         )
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
-    client = docker.Client()
+    client = get_docker_client()()
     command_line = gen_commandline(module.params)
     kolla_toolbox = client.containers(filters=dict(name='kolla_toolbox',
                                                    status='running'))
