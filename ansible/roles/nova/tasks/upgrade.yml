@@ -1,14 +1,34 @@
 ---
+# TODO(Jeffrey4l): since nova need cell0 database in N->O, we need to call it.
+# It should be removed later
+- include: bootstrap.yml bootstrap_service=no
+
+# TODO(Jeffrey4l): Since nova need cell0 in N->O, we need to create it first.
+# This should be removed later
+# In newton branch, map_cell0 return nothing. So simple ignore any error here.
+- name: Creating nova cell0
+  command: >
+    docker exec nova_api nova-manage cell_v2 map_cell0
+    --database_connection mysql+pymysql://{{ nova_database_user }}:{{ nova_database_password }}@{{ nova_database_address }}/{{ nova_database_name }}_cell0
+  register: nova_cell0
+  # In Newton, cell_v2 map_cell0 will return 1 when cell0 already exsits.
+  failed_when: false
+  run_once: True
+  delegate_to: "{{ groups['nova-api'][0] }}"
+
+# Newton need transport-url, thats why is not using simple_cell_setup.yml file
+- name: Running nova simple cell setup
+  command: >
+    docker exec nova_api nova-manage cell_v2 simple_cell_setup
+    --transport-url rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+  register: cell_setup
+  changed_when: '"Cell0 is already setup" not in cell_setup.stdout'
+  failed_when: 'cell_setup.rc != 0 and "Cell0 is already setup" not in cell_setup.stdout'
+  run_once: True
+  delegate_to: "{{ groups['nova-api'][0] }}"
+
 # Create new set of configs on nodes
 - include: config.yml
-
-# TODO(inc0): since nova is creating new database in L->M, we need to call it.
-# It should be removed later
-- include: bootstrap.yml
-
-# TODO(Jeffrey4l): Since nova need setup nova cell in N->O, we need to call it.
-# This should be removed later
-- include: simple_cell_setup.yml
 
 - include: bootstrap_service.yml
 
