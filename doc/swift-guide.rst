@@ -9,20 +9,15 @@ Overview
 Kolla can deploy a full working Swift setup in either a **all-in-one** or
 **multinode** setup.
 
-Prerequisites
-=============
-Before running Swift we need to generate **rings**, which are binary compressed
-files that at a high level let the various Swift services know where data is in
-the cluster. We hope to automate this process in a future release.
-
 Disks with a partition table (recommended)
 ==========================================
 
-Swift also expects block devices to be available for storage. To prepare a disk
-for use as Swift storage device, a special partition name and filesystem label
-need to be added. So that Kolla can detect those disks and mount for services.
+Swift requires block devices to be available for storage. To prepare a disk
+for use as a Swift storage device, a special partition name and filesystem label
+need to be added.
 
-Follow the example below to add 3 disks for an **all-in-one** demo setup.
+The following should be done on each storage node, the example is shown
+for three disks:
 
 ::
 
@@ -67,64 +62,81 @@ Given hard disks with labels swd1, swd2, swd3, use the following settings in
 Rings
 =====
 
-Run following commands locally to generate Rings for **all-in-one** demo setup.
-The commands work with **disks with partition table** example listed above.
-Please modify accordingly if your setup is different.
+Before running Swift we need to generate **rings**, which are binary compressed
+files that at a high level let the various Swift services know where data is in
+the cluster. We hope to automate this process in a future release.
+
+The following example commands should be run from the ``operator`` node to
+generate rings for a demo setup.  The commands work with **disks with partition
+table** example listed above.  Please modify accordingly if your setup is
+different.
 
 ::
 
   export KOLLA_INTERNAL_ADDRESS=1.2.3.4
-  export KOLLA_BASE_DISTRO=centos
-  export KOLLA_INSTALL_TYPE=binary
+  export KOLLA_SWIFT_BASE_IMAGE="kolla/oraclelinux-source-swift-base:4.0.0"
+
+  mkdir -p /etc/kolla/config/swift
 
   # Object ring
   docker run \
+    --rm \
     -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-    kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base \
-    swift-ring-builder /etc/kolla/config/swift/object.builder create 10 3 1
+    $KOLLA_SWIFT_BASE_IMAGE \
+    swift-ring-builder \
+      /etc/kolla/config/swift/object.builder create 10 3 1
 
   for i in {0..2}; do
     docker run \
+      --rm \
       -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-      kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base swift-ring-builder \
-      /etc/kolla/config/swift/object.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6000/d${i} 1;
+      $KOLLA_SWIFT_BASE_IMAGE \
+      swift-ring-builder \
+        /etc/kolla/config/swift/object.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6000/d${i} 1;
   done
 
   # Account ring
   docker run \
+    --rm \
     -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-    kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base \
-    swift-ring-builder /etc/kolla/config/swift/account.builder create 10 3 1
+    $KOLLA_SWIFT_BASE_IMAGE \
+    swift-ring-builder \
+      /etc/kolla/config/swift/account.builder create 10 3 1
 
   for i in {0..2}; do
     docker run \
+      --rm \
       -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-      kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base swift-ring-builder \
-      /etc/kolla/config/swift/account.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6001/d${i} 1;
+      $KOLLA_SWIFT_BASE_IMAGE \
+      swift-ring-builder \
+        /etc/kolla/config/swift/account.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6001/d${i} 1;
   done
 
   # Container ring
   docker run \
+    --rm \
     -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-    kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base \
-    swift-ring-builder /etc/kolla/config/swift/container.builder create 10 3 1
+    $KOLLA_SWIFT_BASE_IMAGE \
+    swift-ring-builder \
+      /etc/kolla/config/swift/container.builder create 10 3 1
 
   for i in {0..2}; do
     docker run \
+      --rm \
       -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-      kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base swift-ring-builder \
-      /etc/kolla/config/swift/container.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6002/d${i} 1;
+      $KOLLA_SWIFT_BASE_IMAGE \
+      swift-ring-builder \
+        etc/kolla/config/swift/container.builder add r1z1-${KOLLA_INTERNAL_ADDRESS}:6002/d${i} 1;
   done
 
   for ring in object account container; do
     docker run \
+      --rm \
       -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
-      kolla/${KOLLA_BASE_DISTRO}-${KOLLA_INSTALL_TYPE}-swift-base swift-ring-builder \
-      /etc/kolla/config/swift/${ring}.builder rebalance;
+      $KOLLA_SWIFT_BASE_IMAGE \
+      swift-ring-builder \
+        /etc/kolla/config/swift/${ring}.builder rebalance;
   done
-
-Similar commands can be used for **multinode**, you will just need to run the
-**add** step for each IP in the cluster.
 
 For more info, see
 http://docs.openstack.org/kilo/install-guide/install/apt/content/swift-initial-rings.html
@@ -138,17 +150,11 @@ Enable Swift in ``/etc/kolla/globals.yml``:
     enable_swift : "yes"
 
 Once the rings are in place, deploying Swift is the same as any other Kolla
-Ansible service. Below is the minimal command to bring up Swift **all-in-one**,
-and it's dependencies:
+Ansible service:
 
 ::
 
-  ansible-playbook \
-    -i ansible/inventory/all-in-one \
-    -e @/etc/kolla/globals.yml \
-    -e @etc/kolla/passwords.yml \
-    ansible/site.yml \
-    --tags=rabbitmq,mariadb,keystone,swift
+  kolla-ansible deploy
 
 Validation
 ==========
