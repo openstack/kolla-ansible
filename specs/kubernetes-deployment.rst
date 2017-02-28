@@ -246,7 +246,7 @@ kibana as the default logging mechanism.
 The community will implement centralized logging by using a 'side car' container
 in the Kubernetes pod [17]. The logging service will trace the logs from the
 shared volume of the running serivce and send the data to elastic search. This
-solution is ideal because volumes are shared amoung the containers in a pod.
+solution is ideal because volumes are shared among the containers in a pod.
 
 Implementation
 ==============
