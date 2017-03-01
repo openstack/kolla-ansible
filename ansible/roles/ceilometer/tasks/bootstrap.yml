@@ -9,7 +9,7 @@
   when:
     - ceilometer_database_type == "mongodb"
 
-- name: Checking Ceilometer mysql database
+- name: Creating external Ceilometer MySQL database by using given credential
   kolla_toolbox:
     module_name: mysql_db
     module_args:
@@ -25,7 +25,7 @@
   when:
     - ceilometer_database_type == "mysql"
 
-- name: Creating Ceilometer mysql database
+- name: Fallback to create internal Ceilometer MySQL database
   kolla_toolbox:
     module_name: mysql_db
     module_args:
@@ -39,7 +39,7 @@
   delegate_to: "{{ groups['ceilometer-api'][0] }}"
   when:
     - ceilometer_database_type == "mysql"
-    - "'FAILED' in mysql_access.stdout"
+    - mysql_access.failed
 
 - name: Creating Ceilometer database user and setting permissions
   kolla_toolbox:
@@ -58,7 +58,7 @@
   delegate_to: "{{ groups['ceilometer-api'][0] }}"
   when:
     - ceilometer_database_type == "mysql"
-    - "'FAILED' in mysql_access.stdout"
+    - mysql_access.failed
 
 # TODO(Jeffrey4l): fix idempotent when ceilometer_database_type == "gnocchi"
 # NOTE(vbel): bootstrapping of mysql db for ceilometer is idempotent
