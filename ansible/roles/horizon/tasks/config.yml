@@ -63,17 +63,26 @@
   with_items:
     - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
     - { name: "cinder", enabled: "{{ enable_cinder }}" }
-    - { name: "cloudkitty", enabled: "{{ enable_cloudkitty }}" }
+    - { name: "cloudkitty", enabled: "{{ enable_horizon_cloudkitty }}" }
+    - { name: "freezer", enabled: "{{ enable_horizon_freezer }}" }
     - { name: "glance", enabled: "{{ enable_glance }}" }
     - { name: "heat", enabled: "{{ enable_heat }}" }
-    - { name: "ironic", enabled: "{{ enable_ironic }}" }
+    - { name: "ironic", enabled: "{{ enable_horizon_ironic }}" }
     - { name: "keystone", enabled: "{{ enable_keystone }}" }
-    - { name: "manila", enabled: "{{ enable_manila }}" }
+    - { name: "karbor", enabled: "{{ enable_horizon_karbor }}" }
+    - { name: "magnum", enabled: "{{ enable_horizon_magnum }}" }
+    - { name: "manila", enabled: "{{ enable_horizon_manila }}" }
+    - { name: "mistral", enabled: "{{ enable_horizon_mistral }}" }
+    - { name: "murano", enabled: "{{ enable_horizon_murano }}" }
     - { name: "neutron", enabled: "{{ enable_neutron }}" }
     - { name: "nova", enabled: "{{ enable_nova }}" }
-    - { name: "sahara", enabled: "{{ enable_sahara }}" }
-    - { name: "senlin", enabled: "{{ enable_senlin }}" }
-    - { name: "trove", enabled: "{{ enable_trove }}" }
+    - { name: "sahara", enabled: "{{ enable_horizon_sahara }}" }
+    - { name: "searchlight", enabled: "{{ enable_horizon_searchlight }}" }
+    - { name: "senlin", enabled: "{{ enable_horizon_senlin }}" }
+    - { name: "solum", enabled: "{{ enable_horizon_solum }}" }
+    - { name: "tacker", enabled: "{{ enable_horizon_tacker }}" }
+    - { name: "trove", enabled: "{{ enable_horizon_trove }}" }
+    - { name: "watcher", enabled: "{{ enable_horizon_watcher }}" }
 
 - name: Copying over existing policy.json
   vars:
@@ -85,23 +94,9 @@
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
-    - item[0]['enabled'] | bool
-    - item[1]['stat']['exists']
-  with_together:
-    - [{ name: "ceilometer", enabled: "{{ enable_ceilometer }}" },
-       { name: "cinder", enabled: "{{ enable_cinder }}" },
-       { name: "cloudkitty", enabled: "{{ enable_cloudkitty }}" },
-       { name: "glance", enabled: "{{ enable_glance }}" },
-       { name: "heat", enabled: "{{ enable_heat }}" },
-       { name: "ironic", enabled: "{{ enable_ironic }}" },
-       { name: "keystone", enabled: "{{ enable_keystone }}" },
-       { name: "manila", enabled: "{{ enable_manila }}" },
-       { name: "neutron", enabled: "{{ enable_neutron }}" },
-       { name: "nova", enabled: "{{ enable_nova }}" },
-       { name: "sahara", enabled: "{{ enable_sahara }}" },
-       { name: "senlin", enabled: "{{ enable_senlin }}" },
-       { name: "trove", enabled: "{{ enable_trove }}" }]
-    - "{{ custom_policy.results }}"
+    - item.item.enabled | bool
+    - item.stat.exists
+  with_items: "{{ custom_policy.results }}"
 
 - name: Check horizon container
   vars:
