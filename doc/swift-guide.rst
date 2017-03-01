@@ -127,7 +127,7 @@ Similar commands can be used for **multinode**, you will just need to run the
 **add** step for each IP in the cluster.
 
 For more info, see
-http://docs.openstack.org/kilo/install-guide/install/apt/content/swift-initial-rings.html
+https://docs.openstack.org/project-install-guide/object-storage/ocata/initial-rings.html
 
 Deploying
 =========
