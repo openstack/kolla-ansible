@@ -7,8 +7,8 @@ How To Contribute
 Basics
 ======
 
-#. Our source code is hosted on `OpenStack Kolla-Ansible Git`_. Bugs should be filed on
-   launchpad_.
+#. Our source code is hosted on `OpenStack Kolla-Ansible Git`_. Bugs should be
+   filed on launchpad_.
 
 #. Please follow OpenStack `Gerrit Workflow`_ to contribute to Kolla.
 

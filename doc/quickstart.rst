@@ -346,8 +346,8 @@ Copy the configuration files globals.yml and passwords.yml to /etc directory.
     cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/kolla/
 
 The inventory files (all-in-one and multinode) are located in
-/usr/local/share/kolla-ansible/ansible/inventory. Copy the configuration files to the
-current directory.
+/usr/local/share/kolla-ansible/ansible/inventory. Copy the configuration files
+to the current directory.
 
 ::
 

@@ -54,7 +54,7 @@ In Kolla operators should configure following network interfaces:
 
 * ``storage_interface`` - This is the interface that is used by virtual
   machines to communicate to Ceph. This can be heavily utilized so it's
-  recommended to put this network on 10Gig networking. Defaults to 
+  recommended to put this network on 10Gig networking. Defaults to
   ``network_interface``.
 
 * ``cluster_interface`` - This is another interface used by Ceph. It's used for
