@@ -24,8 +24,8 @@
   with_items:
     - firewalld
   when:
-   - ansible_os_family == 'RedHat'
-   - firewalld_check.rc == 0
+    - ansible_os_family == 'RedHat'
+    - firewalld_check.rc == 0
 
 - name: Install apt packages
   package: name={{item}} state=present
@@ -38,21 +38,21 @@
   register: kernel_updated
   become: True
   when:
-   - ansible_distribution|lower == "ubuntu" | bool
-   - ansible_distribution_release|lower == "trusty" | bool
+    - ansible_distribution|lower == "ubuntu" | bool
+    - ansible_distribution_release|lower == "trusty" | bool
 
 - name: Set reboot required
   set_fact:
     reboot_required: True
   when:
-   - kernel_updated is defined
-   - kernel_updated.changed
+    - kernel_updated is defined
+    - kernel_updated.changed
 
 - name: Install deltarpm packages
   package: name={{item}} state=installed
   become: True
   with_items:
-  - deltarpm
+    - deltarpm
   when: ansible_os_family == 'RedHat'
 
 - name: Install yum packages
