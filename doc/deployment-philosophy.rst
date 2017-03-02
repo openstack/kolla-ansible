@@ -56,8 +56,8 @@ configuration options documentation is extremely mature and well-formulated.
 As an example, consider running Kolla in a virtual machine. In order to
 launch virtual machines from Nova in a virtual environment, it is necessary
 to use the QEMU hypervisor, rather than the KVM hypervisor. To achieve this
-result, simply modify the file `/etc/kolla/config/nova/nova-compute.conf` and
-add the contents::
+result, simply `mkdir -p /etc/kolla/config` and modify the file
+`/etc/kolla/config/nova.conf` with the contents::
 
     [libvirt]
     virt_type=qemu
