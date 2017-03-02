@@ -78,6 +78,8 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Trove <http://docs.openstack.org/developer/trove/>`__
 - `Vmtp <http://vmtp.readthedocs.io/en/latest/>`__
 - `Watcher <http://docs.openstack.org/developer/watcher/>`__
+- `Zaqar <http://docs.openstack.org/developer/zaqar/>`__
+- `Zun <http://wiki.openstack.org/wiki/zun>`__
 
 Infrastructure components
 -------------------------
@@ -91,11 +93,13 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 - `Elasticsearch <https://www.elastic.co/de/products/elasticsearch>`__ and
    `Kibana <https://www.elastic.co/de/products/kibana>`__ to search, analyze,
    and visualize log messages.
+- `Fluentd <https://http://www.fluentd.org/>__` as an open source data collector
+  for unified logging layer.
 - `HAProxy <http://www.haproxy.org/>`__ and
   `Keepalived <http://www.keepalived.org/>`__ for high availability of services
   and their endpoints.
-- `Heka <http://hekad.readthedocs.org/>`__ A distributed and
-  scalable logging system for OpenStack services.
+- `Kafka <http://kafka.apache.org/documentation/>`__ A distributed streaming
+  platform.
 - `MariaDB and Galera Cluster <https://mariadb.com/kb/en/mariadb/galera-cluster/>`__
   for highly available MySQL databases
 - `MongoDB <https://www.mongodb.org/>`__ as a database backend for Ceilometer
