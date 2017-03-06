@@ -14,3 +14,12 @@
   when:
     - container_facts['ceilometer_api'] is not defined
     - inventory_hostname in groups['ceilometer-api']
+
+- name: Checking mongodb backend for ceilometer
+  run_once: True
+  local_action: fail msg="ceilometer_database_type set to 'mongodb' but mongodb is not enabled"
+  changed_when: false
+  when:
+    - enable_ceilometer | bool
+    - not enable_mongodb | bool
+    - ceilometer_database_type == "mongodb"

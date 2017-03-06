@@ -38,6 +38,16 @@
     - container_facts['swift_object_server'] is not defined
     - inventory_hostname in groups['swift-object-server']
 
+- name: Checking free port for Rsync
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+    port: "873"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['swift_object_server'] is not defined
+    - inventory_hostname in groups['swift-object-server']
+
 - name: Checking free port for Swift Proxy Server
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
