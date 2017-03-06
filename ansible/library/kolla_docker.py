@@ -496,6 +496,9 @@ class DockerWorker(object):
         vol_dict = dict()
 
         for vol in volumes:
+            if len(vol) == 0:
+                continue
+
             if ':' not in vol:
                 vol_list.append(vol)
                 continue
