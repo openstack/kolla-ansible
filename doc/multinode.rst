@@ -27,6 +27,22 @@ with version 2.3 or later, do the following:
 
     tools/start-registry
 
+The Docker registry can be configured as a pull through cache to proxy the
+official Kolla images hosted in Docker Hub. In order to configure the local
+registry as a pull through cache, in the host machine set the environment
+variable ``REGISTRY_PROXY_REMOTEURL`` to the URL for the repository on
+Docker Hub.
+
+::
+
+    export REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
+
+.. note::
+
+    Pushing to a registry configured as a pull-through cache is unsupported.
+    For more information, Reference the `Docker Documentation
+    <https://docs.docker.com/registry/configuration/>`__.
+
 .. _configure_docker_all_nodes:
 
 Configure Docker on all nodes
@@ -34,10 +50,6 @@ Configure Docker on all nodes
 
 .. note:: As the subtitle for this section implies, these steps should be
           applied to all nodes, not just the deployment node.
-
-The ``start-registry`` script configures a docker registry that proxies Kolla
-images from Docker Hub, and can also be used with custom built images (see
-`Building Container Images`_).
 
 After starting the registry, it is necessary to instruct Docker that it will
 be communicating with an insecure registry. To enable insecure registry
