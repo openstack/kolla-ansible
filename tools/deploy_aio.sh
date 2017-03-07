@@ -124,3 +124,6 @@ sanity_check
 tools/kolla-ansible -vvv reconfigure
 # TODO(jeffrey4l): need run a real upgrade
 tools/kolla-ansible -vvv upgrade
+
+# run prechecks again
+tools/kolla-ansible -vvv prechecks
