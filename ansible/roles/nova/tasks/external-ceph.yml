@@ -8,13 +8,21 @@
     - "nova-libvirt/secrets"
   when: inventory_hostname in groups['compute']
 
-- name: Find keyring files
-  local_action: find paths="{{ node_custom_config }}/nova/" patterns="^ceph\.client\..*?\.keyring$" use_regex=True
-  register: cephx_keyring_files
+- name: Check nova keyring file
+  local_action: stat path="{{ node_custom_config }}/nova/ceph.client.nova.keyring"
+  register: nova_cephx_keyring_file
+  failed_when: not nova_cephx_keyring_file.stat.exists
 
-- name: Copy over ceph keyring file
+- name: Check cinder keyring file
+  local_action: state path="{{ node_custom_config }}/nova/ceph.client.cinder.keyring"
+  register: cinder_cephx_keyring_file
+  failed_when: not cinder_cephx_keyring_file.stat.exists
+  when: cinder_backend_ceph | bool
+
+# NOTE: nova-compute and nova-libvirt only need ceph.client.nova.keyring.
+- name: Copy over ceph nova keyring file
   copy:
-    src: "{{ cephx_keyring_files.files[0].path }}"
+    src: "{{ nova_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
   with_items:
     - nova-compute
@@ -30,20 +38,43 @@
     - nova-libvirt
   when: inventory_hostname in groups['compute']
 
-- name: Pushing secrets xml for libvirt
+- name: Pushing nova secret xml for libvirt
   template:
     src: "secret.xml.j2"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ rbd_secret_uuid }}.xml"
+    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
     mode: "0600"
-  when: inventory_hostname in groups['compute']
+  when:
+    - inventory_hostname in groups['compute']
+    - item.enabled | bool
+  with_items:
+    - uuid: "{{ rbd_secret_uuid }}"
+      name: "client.nova secret"
+      enabled: true
+    - uuid: "{{ cinder_rbd_secret_uuid }}"
+      name: "client.cinder secret"
+      enabled: "{{ cinder_backend_ceph }}"
 
-- name: Extract key from file
-  local_action: shell cat {{ cephx_keyring_files.files[0].path }} | grep -E 'key\s*=' | awk '{ print $3 }'
-  register: cephx_raw_key
+- name: Extract nova key from file
+  local_action: shell cat "{{ nova_cephx_keyring_file.stat.path }}" | grep -E 'key\s*=' | awk '{ print $3 }'
+  register: nova_cephx_raw_key
+
+- name: Extract cinder key from file
+  local_action: shell cat "{{ cinder_cephx_keyring_file.stat.path }}" | grep -E 'key\s*=' | awk '{ print $3 }'
+  register: cinder_cephx_raw_key
+  when: cinder_backend_ceph | bool
 
 - name: Pushing secrets key for libvirt
   copy:
-    content: "{{ cephx_raw_key.stdout }}"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ rbd_secret_uuid }}.base64"
+    content: "{{ item.content }}"
+    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
     mode: "0600"
-  when: inventory_hostname in groups['compute']
+  when:
+    - inventory_hostname in groups['compute']
+    - item.enabled | bool
+  with_items:
+    - uuid: "{{ rbd_secret_uuid }}"
+      content: nova_cephx_raw_key
+      enabled: true
+    - uuid: "{{ cinder_rbd_secret_uuid }}"
+      content: cinder_cephx_raw_key
+      enabled: "{{ cinder_backend_ceph }}"
