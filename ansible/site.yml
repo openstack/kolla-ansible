@@ -245,6 +245,20 @@
         tags: ironic,
         when: enable_ironic | bool }
 
+- name: Apply role cinder
+  gather_facts: false
+  hosts:
+    - ceph-mon
+    - cinder-api
+    - cinder-backup
+    - cinder-scheduler
+    - cinder-volume
+  serial: '{{ serial|default("0") }}'
+  roles:
+    - { role: cinder,
+        tags: cinder,
+        when: enable_cinder | bool }
+
 - name: Apply role nova
   gather_facts: false
   hosts:
@@ -288,20 +302,6 @@
     - { role: kuryr,
         tags: kuryr,
         when: enable_kuryr | bool }
-
-- name: Apply role cinder
-  gather_facts: false
-  hosts:
-    - ceph-mon
-    - cinder-api
-    - cinder-backup
-    - cinder-scheduler
-    - cinder-volume
-  serial: '{{ serial|default("0") }}'
-  roles:
-    - { role: cinder,
-        tags: cinder,
-        when: enable_cinder | bool }
 
 - name: Apply role heat
   gather_facts: false
