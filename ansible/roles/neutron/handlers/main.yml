@@ -359,3 +359,28 @@
       or neutron_vpnaas_agent_ini | changed
       or policy_json | changed
       or neutron_vpnaas_agent_container | changed
+
+- name: Restart neutron-bgp-dragent container
+  vars:
+    service_name: "neutron-bgp-dragent"
+    service: "{{ neutron_services[service_name] }}"
+    config_json: "{{ neutron_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    neutron_conf: "{{ neutron_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    neutron_bgp_dragent_container: "{{ check_neutron_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(False) }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - config_json | changed
+      or neutron_conf | changed
+      or neutron_bgp_dragent_ini | changed
+      or policy_json | changed
+      or neutron_bgp_dragent_container | changed

@@ -212,6 +212,21 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+  neutron-bgp-dragent:
+    container_name: "neutron_bgp_dragent"
+    image: "{{ neutron_bgp_dragent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_bgp_dragent | bool }}"
+    group: "neutron-bgp-dragent"
+    host_in_groups: "{{ False if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-bgp-dragent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-bgp-dragent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "/run/netns/:/run/netns/:shared"
+      - "/lib/modules:/lib/modules:ro"
+      - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "kolla_logs:/var/log/kolla/"
 
 
 ####################
@@ -260,6 +275,10 @@ neutron_server_image_full: "{{ neutron_server_image }}:{{ neutron_server_tag }}"
 neutron_vpnaas_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-neutron-vpnaas-agent"
 neutron_vpnaas_agent_tag: "{{ openstack_release }}"
 neutron_vpnaas_agent_image_full: "{{ neutron_vpnaas_agent_image }}:{{ neutron_vpnaas_agent_tag }}"
+
+neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-neutron-bgp-dragent"
+neutron_bgp_dragent_tag: "{{ openstack_release }}"
+neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_dragent_tag }}"
 
 openvswitch_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-openvswitch-db-server"
 openvswitch_db_tag: "{{ openstack_release }}"
@@ -318,5 +337,7 @@ service_plugins:
     enabled: true
   - name: "sfc"
     enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+  - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"
+    enabled: "{{ enable_neutron_bgp_dragent | bool }}"
 
 neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
