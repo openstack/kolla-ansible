@@ -6,6 +6,7 @@
       - nova_novncproxy
       - nova_serialproxy
       - nova_spicehtml5proxy
+      - nova_libvirt
       - placement_api
   register: container_facts
 
@@ -86,3 +87,13 @@
     - container_facts['placement_api'] is not defined
     - inventory_hostname in groups[placement_api.group]
     - placement_api.enabled | bool
+
+- name: Checking that libvirt is not running
+  vars:
+    nova_libvirt: "{{ nova_services['nova-libvirt'] }}"
+  stat: path=/var/run/libvirt/libvirt-sock
+  register: result
+  failed_when: result.stat.exists
+  when:
+    - container_facts['nova_libvirt'] is not defined
+    - inventory_hostname in groups[nova_libvirt.group]
