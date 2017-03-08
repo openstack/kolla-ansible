@@ -37,9 +37,16 @@
   run_once: True
 
 # TODO(SamYaple): Improve failed_when and changed_when tests
-- name: Pulling cephx keyring for libvirt
+- name: Pulling nova cephx keyring for libvirt
   command: docker exec ceph_mon ceph auth get-key client.nova
-  register: cephx_raw_key
+  register: nova_cephx_raw_key
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: False
+  run_once: True
+
+- name: Pulling cinder cephx keyring for libvirt
+  command: docker exec ceph_mon ceph auth get-key client.cinder
+  register: cinder_cephx_raw_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
   run_once: True
@@ -54,13 +61,31 @@
 - name: Pushing secrets xml for libvirt
   template:
     src: "secret.xml.j2"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ rbd_secret_uuid }}.xml"
+    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
     mode: "0600"
-  when: inventory_hostname in groups['compute']
+  when:
+    - inventory_hostname in groups['compute']
+    - item.enabled | bool
+  with_items:
+    - uuid: "{{ rbd_secret_uuid }}"
+      name: client.nova secret
+      enabled: true
+    - uuid: "{{ cinder_rbd_secret_uuid }}"
+      name: client.cinder secret
+      enabled: "{{ cinder_backend_ceph }}"
 
 - name: Pushing secrets key for libvirt
   copy:
-    content: "{{ cephx_raw_key.stdout }}"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ rbd_secret_uuid }}.base64"
+    content: "{{ item.content }}"
+    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
     mode: "0600"
-  when: inventory_hostname in groups['compute']
+  when:
+    - inventory_hostname in groups['compute']
+    - item.enabled | bool
+  with_items:
+    - uuid: "{{ rbd_secret_uuid }}"
+      content: "{{ nova_cephx_raw_key.stdout }}"
+      enabled: true
+    - uuid: "{{ cinder_rbd_secret_uuid }}"
+      content: "{{ cinder_cephx_raw_key.stdout }}"
+      enabled: "{{ cinder_backend_ceph }}"

@@ -51,9 +51,13 @@ def main():
     passwords_file = os.path.expanduser(args.passwords)
 
     # These keys should be random uuids
-    uuid_keys = ['ceph_cluster_fsid', 'rbd_secret_uuid',
-                 'gnocchi_project_id', 'gnocchi_resource_id',
-                 'gnocchi_user_id', 'designate_pool_id',
+    uuid_keys = ['ceph_cluster_fsid',
+                 'rbd_secret_uuid',
+                 'cinder_rbd_secret_uuid',
+                 'gnocchi_project_id',
+                 'gnocchi_resource_id',
+                 'gnocchi_user_id',
+                 'designate_pool_id',
                  'karbor_openstack_infra_id']
 
     # SSH key pair
