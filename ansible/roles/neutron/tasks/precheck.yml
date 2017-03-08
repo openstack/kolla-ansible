@@ -14,3 +14,36 @@
   when:
     - container_facts['neutron_server'] is not defined
     - inventory_hostname in groups['neutron-server']
+
+- name: Checking number of network agents
+  local_action: fail msg="Number of network agents are less than two when enabling agent ha"
+  changed_when: false
+  when:
+    - enable_neutron_agent_ha | bool
+    - groups['neutron-dhcp-agent'] | length < 2
+      or groups['neutron-l3-agent'] | length < 2
+
+# When MountFlags is set to shared, a signal bit configured on 20th bit of a number
+# We need to check the 20th bit. 2^20 = 1048576. So we are validating against it.
+- name: Checking if 'MountFlags' for docker service is set to 'shared'
+  command: systemctl show docker
+  register: result
+  changed_when: false
+  failed_when: result.stdout.find('MountFlags=1048576') == -1
+  when:
+    - (inventory_hostname in groups['neutron-dhcp-agent']
+       or inventory_hostname in groups['neutron-l3-agent']
+       or inventory_hostname in groups['neutron-metadata-agent'])
+    - ansible_os_family == 'RedHat'
+       or (ansible_distribution == 'Ubuntu' and ansible_distribution_version > '14.04')
+
+- name: Checking if '/run' mount flag is set to 'shared'
+  command: awk '$5 == "/run" {print $7}' /proc/self/mountinfo
+  register: result
+  changed_when: false
+  failed_when: result.stdout.find('shared') == -1
+  when:
+    - (inventory_hostname in groups['neutron-dhcp-agent']
+       or inventory_hostname in groups['neutron-l3-agent']
+       or inventory_hostname in groups['neutron-metadata-agent'])
+    - ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'

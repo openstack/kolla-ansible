@@ -14,3 +14,13 @@
   when:
     - container_facts['cinder_api'] is not defined
     - inventory_hostname in groups['cinder-api']
+
+- name: Checking LVM volume group exists for Cinder
+  command: "vgs {{ cinder_volume_group }}"
+  register: result
+  changed_when: false
+  failed_when: result | failed
+  when:
+    - enable_cinder | bool
+    - enable_cinder_backend_lvm | bool
+    - inventory_hostname in groups['cinder-volume']
