@@ -52,6 +52,13 @@ EXAMPLES = '''
 import docker
 
 
+def get_docker_client():
+    try:
+        return docker.Client
+    except AttributeError:
+        return docker.APIClient
+
+
 def main():
     argument_spec = dict(
         name=dict(required=False, type='list', default=[]),
@@ -61,7 +68,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
 
     results = dict(changed=False, _containers=[])
-    client = docker.Client(version=module.params.get('api_version'))
+    client = get_docker_client()(version=module.params.get('api_version'))
     containers = client.containers()
     names = module.params.get('name')
     if names and not isinstance(names, list):
