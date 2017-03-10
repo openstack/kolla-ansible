@@ -13,8 +13,8 @@ Disks with a partition table (recommended)
 ==========================================
 
 Swift requires block devices to be available for storage. To prepare a disk
-for use as a Swift storage device, a special partition name and filesystem label
-need to be added.
+for use as a Swift storage device, a special partition name and filesystem
+label need to be added.
 
 The following should be done on each storage node, the example is shown
 for three disks:
