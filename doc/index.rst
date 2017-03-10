@@ -51,6 +51,7 @@ Kolla Overview
    production-architecture-guide
    quickstart
    multinode
+   multi-regions
    advanced-configuration
    operating-kolla
    security
