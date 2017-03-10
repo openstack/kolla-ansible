@@ -63,6 +63,7 @@ Kolla Services
    :maxdepth: 1
 
    ceph-guide
+   central-logging-guide
    external-ceph-guide
    cinder-guide
    cinder-guide-hnas
@@ -71,7 +72,6 @@ Kolla Services
    manila-guide
    manila-hnas-guide
    swift-guide
-   kibana-guide
    bifrost
    networking-guide
    kuryr-guide
