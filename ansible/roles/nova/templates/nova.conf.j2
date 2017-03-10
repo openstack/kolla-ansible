@@ -201,10 +201,9 @@ rbd_secret_uuid = {{ rbd_secret_uuid }}
 compute = auto
 
 [oslo_messaging_notifications]
-{% if enable_ceilometer | bool or enable_searchlight | bool  or enable_designate | bool %}
+{% if nova_enabled_notification_topics %}
 driver = messagingv2
-{% set topics=["notifications" if enable_ceilometer | bool else "", "notifications_designate" if enable_designate | bool else ""] %}
-topics = {{ topics|reject("equalto", "")|list|join(",") }}
+topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}
