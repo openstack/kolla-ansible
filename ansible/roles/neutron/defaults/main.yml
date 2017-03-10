@@ -320,3 +320,14 @@ service_plugins:
     enabled: "{{ neutron_plugin_agent == 'sfc' }}"
 
 neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
+
+####################
+# Notification
+####################
+neutron_notification_topics:
+  - name: notifications
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool }}"
+  - name: notifications_designate
+    enabled: "{{ enable_designate | bool }}"
+
+neutron_enabled_notification_topics: "{{ neutron_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
