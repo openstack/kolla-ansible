@@ -609,6 +609,7 @@ the content shown below.
     cat << EOF > /etc/kolla/config/nova/nova-compute.conf
     [libvirt]
     virt_type = qemu
+    cpu_mode = none
     EOF
 
 For *all-in-one* deployments, the following commands can be run. These will
