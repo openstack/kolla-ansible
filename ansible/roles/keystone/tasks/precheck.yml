@@ -3,6 +3,7 @@
   kolla_container_facts:
     name:
       - keystone
+      - keystone_ssh
   register: container_facts
 
 - name: Checking free port for Keystone Admin
@@ -23,6 +24,19 @@
     state: stopped
   when:
     - container_facts['keystone'] is not defined
+    - inventory_hostname in groups['keystone']
+
+- name: Checking free port for Keystone SSH
+  vars:
+    keystone_ssh: "{{ keystone_services['keystone-ssh'] }}"
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ keystone_ssh_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['keystone_ssh'] is not defined
+    - keystone_ssh.enabled | bool
     - inventory_hostname in groups['keystone']
 
 - name: Checking fernet_token_expiry in globals.yml. Update fernet_token_expiry to allowed value if this task fails
