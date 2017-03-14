@@ -31,8 +31,8 @@ a real physical volume or a loopback mounted file for development.
 Create a Volume Group
 =====================
 When using the ``lvm`` backend, a volume group will need to be created on each
-storage node.  Use ``pvcreate`` and ``vgcreate`` to create the volume group. For
-example with the devices ``/dev/sdb`` and ``/dev/sdc``:
+storage node.  Use ``pvcreate`` and ``vgcreate`` to create the volume group.
+For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
 
 ::
 
