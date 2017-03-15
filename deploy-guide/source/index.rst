@@ -1,14 +1,36 @@
+..
+      Copyright 2014-2015 OpenStack Foundation
+      All Rights Reserved.
+
+      Licensed under the Apache License, Version 2.0 (the "License"); you may
+      not use this file except in compliance with the License. You may obtain
+      a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+      WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+      License for the specific language governing permissions and limitations
+      under the License.
+
 ======================
 Kolla Deployment Guide
 ======================
 
+Kolla's Mission
+===============
+
+Kolla provides Docker containers and Ansible playbooks to meet Kolla's mission.
+Kolla's mission is to provide production-ready containers and deployment tools
+for operating OpenStack clouds.
+
+Kolla is highly opinionated out of the box, but allows for complete
+customization. This permits operators with minimal experience to deploy
+OpenStack quickly and as experience grows modify the OpenStack configuration to
+suit the operator's exact requirements.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   get-started.rst
-   next-steps.rst
-
-The Kolla service provides...
-
-This chapter assumes a working setup of OpenStack following the
-`OpenStack Installation Tutorial <http://docs.openstack.org/#install-guides>`_.
+   kolla-ansible-index.rst
