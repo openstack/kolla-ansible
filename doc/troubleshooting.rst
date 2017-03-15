@@ -61,7 +61,7 @@ The logs can be examined by executing:
 
 ::
 
-    docker exec -it heka bash
+    docker exec -it fluentd bash
 
 The logs from all services in all containers may be read from
 ``/var/log/kolla/SERVICE_NAME``

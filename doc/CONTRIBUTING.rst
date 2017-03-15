@@ -139,13 +139,6 @@ that Kolla uses throughout that should be followed.
     include service specific setup and steps as not all services can be
     upgraded in the same way.
 
-* Log delivery
-
-  - For OpenStack services the service has be added to the ``file_match``
-    parameter in the ``openstack_logstreamer_input`` section in the
-    ``heka-openstack.toml.j2`` template file in
-    ``ansible/roles/comm/templates`` to deliver log messages to Elasticsearch.
-
 * Logrotation
 
   - For OpenStack services there should be a ``cron-logrotate-PROJECT.conf.j2``
