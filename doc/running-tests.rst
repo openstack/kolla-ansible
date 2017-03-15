@@ -4,8 +4,7 @@
 Running tests
 =============
 
-Kolla contains a suite of tests in the
-``tests`` and ``kolla/tests`` directories.
+Kolla-ansible contains a suit of tests in the ``tests`` directory.
 
 Any proposed code change in gerrit is automatically rejected by the OpenStack
 Jenkins server [#f1]_ if the change causes test failures.
@@ -55,28 +54,28 @@ Instead of running all tests, you can specify an individual directory, file,
 class or method that contains test code, i.e. filter full names of tests by a
 string.
 
-To run the tests located only in the ``kolla/tests``
+To run the tests located only in the ``kolla-ansible/tests``
 directory use:
 
 .. code-block:: console
 
-    $ tox -e py27 kolla.tests
+    $ tox -e py27 kolla-ansible.tests
 
-To run the tests of a specific file say ``kolla/tests/test_kolla_docker.py``:
+To run the tests of a specific file say ``kolla-ansible/tests/test_kolla_docker.py``:
 
 .. code-block:: console
 
     $ tox -e py27 test_kolla_docker
 
 To run the tests in the ``ModuleArgsTest`` class in
-the ``kolla/tests/test_kolla_docker.py`` file:
+the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
     $ tox -e py27 test_kolla_docker.ModuleArgsTest
 
 To run the ``ModuleArgsTest.test_module_args`` test method in
-the ``kolla/tests/test_kolla_docker.py`` file:
+the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
