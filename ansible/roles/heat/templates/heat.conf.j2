@@ -15,7 +15,10 @@ stack_user_domain_name = heat_user_domain
 
 deferred_auth_method = trusts
 trusts_delegated_roles = heat_stack_owner
+
+{% if service_name == 'heat-engine' %}
 num_engine_workers = {{ openstack_service_workers }}
+{% endif %}
 
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -30,6 +33,7 @@ workers = {{ openstack_service_workers }}
 [heat_api_cfn]
 bind_host = {{ api_interface_address }}
 bind_port = {{ heat_api_cfn_port }}
+workers = {{ openstack_service_workers }}
 {% endif %}
 
 [database]
