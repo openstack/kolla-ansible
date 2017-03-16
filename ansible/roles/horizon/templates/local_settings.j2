@@ -184,11 +184,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = 'djangomail'
 #EMAIL_HOST_PASSWORD = 'top-secret!'
 
+{% if multiple_regions_names|length > 1 %}
 # For multiple regions uncomment this configuration, and add (endpoint, title).
-#AVAILABLE_REGIONS = [
-#    ('http://cluster1.example.com:5000/v2.0', 'cluster1'),
-#    ('http://cluster2.example.com:5000/v2.0', 'cluster2'),
-#]
+AVAILABLE_REGIONS = [
+{% for region_name in multiple_regions_names %}
+    ('{{ keystone_internal_url }}', '{{ region_name }}'),
+{% endfor %}
+]
+{% endif %}
 
 OPENSTACK_HOST = "{% if orchestration_engine == 'KUBERNETES' %}{{ api_interface_address }}{% else %}{{ kolla_internal_fqdn }}{% endif %}"
 
