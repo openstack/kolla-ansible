@@ -60,7 +60,7 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 
 [glance]
-glance_host = {% for host in groups['glance-api'] %}{{ internal_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}glance-api{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ glance_api_port }}{% if not loop.last %},{% endif %}{% endfor %}
+glance_host = {{ internal_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}glance-api{% else %}{{ kolla_internal_fqdn }}{% endif %}:{{ glance_api_port }}
 
 [neutron]
 {% if orchestration_engine == 'KUBERNETES' %}
