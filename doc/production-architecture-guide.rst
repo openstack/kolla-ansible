@@ -14,18 +14,18 @@ Node types and services running on them
 A basic Kolla inventory consists of several types of nodes, known in Ansible as
 ``groups``.
 
-* Controller - This is the cloud controller node. It hosts control services
+* Controller - Cloud controller nodes which host control services
   like APIs and databases. This group should have odd number of nodes for
   quorum.
 
-* Network - This is the network node. It will host Neutron agents along with
+* Network - Network nodes host Neutron agents along with
   haproxy / keepalived. These nodes will have a floating ip defined in
   ``kolla_internal_vip_address``.
 
-* Compute - These are servers for compute services. This is where guest VMs
+* Compute - Compute nodes for compute services. This is where guest VMs
   live.
 
-* Storage - Storage servers, for cinder-volume, LVM or ceph-osd.
+* Storage - Storage nodes, for cinder-volume, LVM or ceph-osd.
 
 Network configuration
 =====================

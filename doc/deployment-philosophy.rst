@@ -9,8 +9,8 @@ Overview
 
 Kolla has an objective to replace the inflexible, painful, resource-intensive
 deployment process of OpenStack with a flexible, painless, inexpensive
-deployment process. Often to deploy OpenStack at the 100+ node scale small
-businesses may require means building a team of OpenStack professionals to
+deployment process. Often to deploy OpenStack at the 100+ nodes scale, small
+businesses may require building a team of OpenStack professionals to
 maintain and manage the OpenStack deployment. Finding people experienced in
 OpenStack deployment is very difficult and expensive, resulting in a big
 barrier for OpenStack adoption. Kolla seeks to remedy this set of problems by
