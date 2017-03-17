@@ -86,14 +86,16 @@ Infrastructure components
 
 Kolla-Ansible deploys containers for the following infrastructure components:
 
-- `Ceph <http://ceph.com/>`__ implementation for Cinder, Glance and Nova
-- `collectd <https://collectd.org>`__,
+- `Ceph <http://ceph.com/>`__ implementation for Cinder, Glance and Nova.
+- `Collectd <https://collectd.org/>`__,
+  `Telegraf <https://github.com/influxdata/telegraf/>`__,
   `InfluxDB <https://influxdata.com/time-series-platform/influxdb/>`__, and
-  `Grafana <http://grafana.org>`__ for performance monitoring.
-- `Elasticsearch <https://www.elastic.co/de/products/elasticsearch>`__ and
-   `Kibana <https://www.elastic.co/de/products/kibana>`__ to search, analyze,
-   and visualize log messages.
-- `Fluentd <https://http://www.fluentd.org/>`__ as an open source data collector
+  `Grafana <http://grafana.org/>`__ for performance monitoring.
+- `Elasticsearch <https://www.elastic.co/de/products/elasticsearch/>`__ and
+  `Kibana <https://www.elastic.co/de/products/kibana/>`__ to search, analyze,
+  and visualize log messages.
+- `Etcd <https://github.com/coreos/etcd/>`__ a distributed reliable key-value store.
+- `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
   for unified logging layer.
 - `HAProxy <http://www.haproxy.org/>`__ and
   `Keepalived <http://www.keepalived.org/>`__ for high availability of services
@@ -101,10 +103,11 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 - `Kafka <http://kafka.apache.org/documentation/>`__ A distributed streaming
   platform.
 - `MariaDB and Galera Cluster <https://mariadb.com/kb/en/mariadb/galera-cluster/>`__
-  for highly available MySQL databases
+  for highly available MySQL databases.
+- `Memcached <https://memcached.org/>`__ a distributed memory object caching system.
 - `MongoDB <https://www.mongodb.org/>`__ as a database backend for Ceilometer
-  and Gnocchi
-- `Open vSwitch <http://openvswitch.org/>`__ and Linuxbridge backends for Neutron
+  and Gnocchi.
+- `Open vSwitch <http://openvswitch.org/>`__ and Linuxbridge backends for Neutron.
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
 
