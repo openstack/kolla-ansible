@@ -119,10 +119,10 @@ Directories
 -  ``etc`` - Contains a reference etc directory structure which requires
    configuration of a small number of configuration variables to achieve
    a working All-in-One (AIO) deployment.
--  ``tests`` - Contains functional testing tools.
--  ``tools`` - Contains tools for interacting with Kolla-Ansible.
 -  ``specs`` - Contains the Kolla-Ansible communities key arguments about
    architectural shifts in the code base.
+-  ``tests`` - Contains functional testing tools.
+-  ``tools`` - Contains tools for interacting with Kolla-Ansible.
 
 Getting Involved
 ================
