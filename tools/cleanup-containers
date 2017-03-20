@@ -11,9 +11,9 @@ if [[ "${containers_running}" =~ "nova_libvirt" ]] && [[ $QEMU_PIDS ]] && [[ $(p
 fi
 
 if [ -n "$1" ]; then
-    containers_to_kill=($(docker ps --filter "label=kolla_version" --format "{{.Names}}" -a | grep -E "$1" | awk '{print $1}'))
-    volumes_to_remove=($(docker inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' $1 | \
-        egrep -v '(^\s*$)' | sort | uniq))
+    containers_to_kill=$(docker ps --filter "label=kolla_version" --format "{{.Names}}" -a | grep -E "$1" | awk '{print $1}')
+    volumes_to_remove=$(docker inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' ${containers_to_kill} | \
+        egrep -v '(^\s*$)' | sort | uniq)
 else
     containers_to_kill=$(docker ps --filter "label=kolla_version" --format "{{.Names}}" -a)
 
