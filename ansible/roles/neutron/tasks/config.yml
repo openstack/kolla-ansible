@@ -47,6 +47,7 @@
       - "neutron-server"
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
+      - "neutron-bgp-dragent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron.conf.j2"
@@ -251,6 +252,22 @@
   notify:
     - "Restart {{ service_name }} container"
 
+- name: Copying over bgp_dragent.ini
+  vars:
+    service_name: "neutron-bgp-dragent"
+    neutron_bgp_dragent: "{{ neutron_services['neutron-bgp-dragent'] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/bgp_dragent.ini.j2"
+      - "{{ node_custom_config }}/neutron/bgp_dragent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/bgp_dragent.ini"
+  register: neutron_bgp_dragent_ini
+  when:
+    - neutron_bgp_dragent.enabled | bool
+    - neutron_bgp_dragent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/neutron/policy.json"
   register: neutron_policy
@@ -267,6 +284,7 @@
       - "neutron-server"
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
+      - "neutron-bgp-dragent"
   template:
     src: "{{ node_custom_config }}/neutron/policy.json"
     dest: "{{ node_config_directory }}/{{ service_name }}/policy.json"
