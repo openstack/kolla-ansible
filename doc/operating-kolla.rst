@@ -59,7 +59,7 @@ Then run the command to upgrade::
   counting and results in an unremovable container.
 
 .. note:: Because of system technical limitations, upgrade of a libvirt
-  container when using software emulation (``virt_driver=qemu`` in nova.conf),
+  container when using software emulation (``virt_type = qemu`` in nova.conf),
   does not work at all. This is acceptable because KVM is the recommended
   virtualization driver to use with Nova.
 
