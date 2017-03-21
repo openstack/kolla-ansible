@@ -1,40 +1,34 @@
 #!/bin/bash
 
-NETWORK_MANAGER=$(grep -sri NETWORK_MANAGER ../../compose/openstack.env | cut -f2 -d "=")
-if [ "$NETWORK_MANAGER" != "neutron" ]; then
-    echo 'Magnum depends on the Neutron network manager to operate.'
-    echo 'Exiting because the network manager is' "$NETWORK_MANAGER".
-    exit 1
-fi
-
-echo Downloading glance image.
 IMAGE_URL=https://fedorapeople.org/groups/magnum
-IMAGE=fedora-21-atomic-3.qcow2
+IMAGE_NAME=fedora-21-atomic-6
+IMAGE=${IMAGE_NAME}.qcow2
 if ! [ -f "$IMAGE" ]; then
+    echo "Downloading ${IMAGE_NAME} image"
     curl -L -o ./$IMAGE $IMAGE_URL/$IMAGE
 fi
 
-NIC_ID=$(neutron net-show public1 | awk '/ id /{print $4}')
+NIC_ID=$(openstack network show public1 | awk '/ id /{print $4}')
 
-glance image-delete fedora-21-atomic-3 2> /dev/null
+openstack image delete ${IMAGE_NAME} 2> /dev/null
 
-echo Loading fedora-atomic image into glance
-glance image-create --name fedora-21-atomic-3 --progress --is-public true --disk-format qcow2 --container-format bare --file ./$IMAGE
-GLANCE_IMAGE_ID=$(glance image-show fedora-21-atomic-3 | grep id | awk '{print $4}')
+echo "Loading ${IMAGE_NAME} image into glance"
+openstack image create --public --disk-format qcow2 --container-format bare --file ./$IMAGE ${IMAGE_NAME}
+GLANCE_IMAGE_ID=$(openstack image show ${IMAGE_NAME} | grep id | awk '{print $4}')
 
-echo registering os-distro property with image
-glance image-update $GLANCE_IMAGE_ID --property os_distro=fedora-atomic
+echo "Registering os-distro property with image"
+openstack image set $GLANCE_IMAGE_ID --property os_distro=fedora-atomic
 
-echo Creating baymodel
-magnum baymodel-create \
-    --name testbaymodel \
-    --image-id $GLANCE_IMAGE_ID \
-    --keypair-id mykey \
+echo "Creating cluster-template"
+magnum cluster-template-create \
+    --name testclustertemplate \
+    --image $GLANCE_IMAGE_ID \
+    --keypair mykey \
     --fixed-network 10.0.3.0/24 \
-    --external-network-id $NIC_ID \
-    --dns-nameserver 8.8.8.8 --flavor-id m1.small \
+    --external-network $NIC_ID \
+    --tls-disabled \
+    --dns-nameserver 8.8.8.8 --flavor m1.small \
     --docker-volume-size 5 --coe kubernetes
 
-echo Creating Bay
-magnum bay-create --name testbay --baymodel testbaymodel --node-count 2
-
+echo "Creating cluster"
+magnum cluster-create --name testcluster --cluster-template testclustertemplate --node-count 2
