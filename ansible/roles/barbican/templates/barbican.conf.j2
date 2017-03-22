@@ -2,7 +2,6 @@
 debug = {{ barbican_logging_debug }}
 log_dir = /var/log/kolla/barbican
 
-
 bind_port = {{ barbican_api_port }}
 bind_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
 host_href = {{ public_protocol }}://{{ kolla_external_fqdn }}:{{ barbican_api_port }}
@@ -23,11 +22,12 @@ enabled_secretstore_plugins = store_crypto
 # ================= Crypto plugin ===================
 [crypto]
 namespace = barbican.crypto.plugin
-enabled_crypto_plugins = p11_crypto
+enabled_crypto_plugins = {{ barbican_crypto_plugin }}
 
+{% if barbican_crypto_plugin == 'p11_crypto' %}
 [p11_crypto_plugin]
 # Path to vendor PKCS11 library
-library_path = '/usr/lib/libCryptoki2_64.so'
+library_path = {{ barbican_library_path }}
 # Password to login to PKCS11 session
 login = '{{ barbican_p11_password }}'
 # Label to identify master KEK in the HSM (must not be the same as HMAC label)
@@ -36,6 +36,12 @@ mkek_label = 'kolla_master_kek'
 mkek_length = 32
 # Label to identify HMAC key in the HSM (must not be the same as MKEK label)
 hmac_label = 'kolla_hmac'
+{% endif %}
+{% if barbican_crypto_plugin == 'simple_crypto' %}
+[simple_crypto_plugin]
+# the kek should be a 32-byte value which is base64 encoded
+kek = '{{ barbican_crypto_password }}'
+{% endif %}
 
 
 [keystone_notifications]

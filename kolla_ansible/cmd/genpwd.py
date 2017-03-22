@@ -21,6 +21,7 @@ import sys
 
 from Crypto.PublicKey import RSA
 from hashlib import md5
+from hashlib import sha256
 from oslo_utils import uuidutils
 import yaml
 
@@ -70,6 +71,9 @@ def main():
     # HMAC-MD5 keys
     hmac_md5_keys = ['designate_rndc_key']
 
+    # HMAC-SHA256 keys
+    hmac_sha256_keys = ['barbican_crypto_key']
+
     # length of password
     length = 40
 
@@ -95,6 +99,10 @@ def main():
             elif k in hmac_md5_keys:
                 passwords[k] = (hmac.new(
                     uuidutils.generate_uuid(), '', md5)
+                    .digest().encode('base64')[:-1])
+            elif k in hmac_sha256_keys:
+                passwords[k] = (hmac.new(
+                    uuidutils.generate_uuid(), '', sha256)
                     .digest().encode('base64')[:-1])
             else:
                 passwords[k] = ''.join([
