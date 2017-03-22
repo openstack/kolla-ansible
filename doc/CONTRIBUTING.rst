@@ -154,6 +154,13 @@ that Kolla uses throughout that should be followed.
   - For OpenStack services there should be an entry in the ``services`` list
     in the ``cron.json.j2`` template file in ``ansible/roles/common/templates``.
 
+* Log delivery
+
+  - For OpenStack services the service should add a new ``rewriterule`` in the
+    ``match`` element in the ``01-rewrite.conf.j2`` template file in
+    ``ansible/roles/common/templates/conf/filter`` to deliver log messages to
+    Elasticsearch.
+
 * Documentation
 
   - For OpenStack services there should be an entry in the list
