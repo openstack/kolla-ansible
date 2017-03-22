@@ -1,2 +1,2 @@
-.. multinode.rst:
+.. multinode:
 .. include:: ../../doc/multinode.rst

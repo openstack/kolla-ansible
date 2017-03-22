@@ -29,7 +29,7 @@ bare metal or a virtual machine with Kolla.
 
 If developing Kolla on a system that provides VirtualBox or Libvirt in addition
 to Vagrant, use the Vagrant virtual environment documented in
-:doc:`vagrant-dev-env`.
+`Development Environment with Vagrant <https://docs.openstack.org/project-deploy-guide/kolla-ansible/ocata/vagrant-dev-env.html>`_.
 
 Prerequisites
 =============
@@ -388,8 +388,10 @@ A local registry is recommended but not required for an ``all-in-one``
 installation when developing for master. Since no master images are available
 on docker hub, the docker cache may be used for all-in-one deployments.  When
 deploying multinode, a registry is strongly recommended to serve as a single
-source of images. Reference the :doc:`multinode` for more information on using
-a local Docker registry. Otherwise, the Docker Hub Image Registry contains all
+source of images. Reference the
+`Multinode Deployment of Kolla <https://docs.openstack.org/project-deploy-guide/kolla-ansible/ocata/multinode.html>`_
+for more information on using a local Docker registry.
+Otherwise, the Docker Hub Image Registry contains all
 images from each of Kolla’s major releases. The latest release tag is 3.0.2 for
 Newton.
 
@@ -527,11 +529,12 @@ There are two methods of deployment: *all-in-one* and *multinode*.  The
 <http://docs.openstack.org/developer/devstack/>`__ deploy which installs all
 OpenStack services on a single host. In the *multinode* deployment, OpenStack
 services can be run on specific hosts. This documentation describes deploying
-an *all-in-one* setup. To setup *multinode* see the :doc:`multinode`.
+an *all-in-one* setup. To setup *multinode* see the
+`Multinode Deployment of Kolla <https://docs.openstack.org/project-deploy-guide/kolla-ansible/ocata/multinode.html>`_.
 
 Each method is represented as an Ansible inventory file. More information on
 the Ansible inventory file can be found in the Ansible `inventory introduction
-<https://docs.ansible.com/intro_inventory.html>`__.
+<https://docs.ansible.com/intro_inventory.html>`_.
 
 All variables for the environment can be specified in the files:
 ``/etc/kolla/globals.yml`` and ``/etc/kolla/passwords.yml``.
