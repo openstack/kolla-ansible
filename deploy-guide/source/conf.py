@@ -55,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Deployment Guide for Kolla Service'
+project = u'Kolla-Ansible'
 bug_tag = u'deploy-guide'
 copyright = u'2016, OpenStack contributors'
 
@@ -258,7 +258,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'installguide', u'Deploy Guide',
+    ('index', 'deployguide', u'Deploy Guide',
      [u'OpenStack contributors'], 1)
 ]
 
