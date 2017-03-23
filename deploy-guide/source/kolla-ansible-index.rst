@@ -27,13 +27,13 @@ Services
    :maxdepth: 2
 
    bifrost.rst
+   central-logging-guide.rst
    ceph-guide.rst
    cinder-guide.rst
    cinder-guide-hnas.rst
    designate-guide.rst
    external-ceph-guide.rst
    ironic-guide.rst
-   kibana-guide.rst
    kuryr-guide.rst
    manila-guide.rst
    manila-hnas-guide.rst
