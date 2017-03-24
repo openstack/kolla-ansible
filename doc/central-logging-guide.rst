@@ -47,7 +47,7 @@ The default username is ``kibana``, the password can be located under
 When Kibana is opened for the first time, it requires creating a default index
 pattern. To view, analyse and search logs, at least one index pattern has to be
 created. To match indices stored in ElasticSearch, we suggest setting the
-"Index name or pattern" field to ``log-*``. The rest of the fields can be left
+"Index name or pattern" field to ``flog-*``. The rest of the fields can be left
 as is.
 
 After setting parameters, create an index by clicking the ``Create`` button.
