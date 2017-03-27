@@ -267,6 +267,24 @@
   local_action: stat path="{{ node_custom_config }}/neutron/policy.json"
   register: neutron_policy
 
+- name: Copying over nsx.ini
+  vars:
+    service_name: "neutron-server"
+    neutron_server: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/nsx.ini.j2"
+      - "{{ node_custom_config }}/neutron/nsx.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/nsx.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/nsx.ini"
+  register: nsx_ini
+  when:
+    - neutron_server.enabled | bool
+    - neutron_server.host_in_groups | bool
+    - neutron_plugin_agent == 'vmware_nsxv'
+  notify:
+    - "Restart {{ service_name }} container"
+
 - name: Copying over existing policy.json
   vars:
     service_name: "{{ item.key }}"

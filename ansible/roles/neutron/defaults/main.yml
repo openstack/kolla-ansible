@@ -95,7 +95,7 @@ neutron_services:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
-    enabled: True
+    enabled: "{{ neutron_plugin_agent != 'vmware_nsxv' }}"
     group: "neutron-dhcp-agent"
     host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes:
@@ -108,7 +108,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ not enable_neutron_vpnaas | bool }}"
+    enabled: "{{ not enable_neutron_vpnaas | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
     host_in_groups: >-
       {{
       True if orchestration_engine == 'KUBERNETES' else
@@ -125,7 +125,7 @@ neutron_services:
     container_name: "neutron_lbaas_agent"
     image: "{{ neutron_lbaas_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_lbaas | bool }}"
+    enabled: "{{ enable_neutron_lbaas | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
     group: "neutron-lbaas-agent"
     host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-lbaas-agent'] }}"
     volumes:
@@ -137,7 +137,7 @@ neutron_services:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
     privileged: True
-    enabled: true
+    enabled: "{{ neutron_plugin_agent != 'vmware_nsxv' }}"
     host_in_groups: >-
       {{
       True if orchestration_engine == 'KUBERNETES' else
@@ -154,7 +154,7 @@ neutron_services:
     container_name: "neutron_vpnaas_agent"
     image: "{{ neutron_vpnaas_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_vpnaas | bool }}"
+    enabled: "{{ enable_neutron_vpnaas | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
     group: "neutron-vpnaas-agent"
     host_in_groups: "{{ True if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-vpnaas-agent'] }}"
     volumes:
@@ -167,7 +167,7 @@ neutron_services:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_bgp_dragent | bool }}"
+    enabled: "{{ enable_neutron_bgp_dragent | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
     group: "neutron-bgp-dragent"
     host_in_groups: "{{ False if orchestration_engine == 'KUBERNETES' else inventory_hostname in groups['neutron-bgp-dragent'] }}"
     volumes:
@@ -292,3 +292,23 @@ neutron_notification_topics:
     enabled: "{{ enable_designate | bool }}"
 
 neutron_enabled_notification_topics: "{{ neutron_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# VMware NSXV
+####################
+vmware_nsxv_user: "nsx_manager_user"
+vmware_nsxv_password: "nsx_manager_password"
+vmware_nsxv_manager_uri: "https://127.0.0.1"
+vmware_nsxv_insecure: "True"
+vmware_nsxv_cluster_moid: "TestCluster"
+vmware_nsxv_datacenter_moid: "TestDataCeter"
+vmware_nsxv_resource_pool_id: "TestRSGroup"
+vmware_nsxv_datastore_id: "TestDataStore"
+vmware_nsxv_external_network: "TestDVSPort-Ext"
+vmware_nsxv_vdn_scope_id: "TestVDNScope"
+vmware_nsxv_dvs_id: "TestDVS"
+vmware_nsxv_backup_edge_pool: "service:compact:1:2"
+vmware_nsxv_spoofguard_enabled: "false"
+vmware_nsxv_metadata_initializer: "false"
+vmware_nsxv_edge_ha: "false"
+
