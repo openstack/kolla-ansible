@@ -1,2 +1,2 @@
-.. quickstart.rst:
+.. quickstart:
 .. include:: ../../doc/quickstart.rst
