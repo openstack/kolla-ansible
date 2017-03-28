@@ -411,7 +411,7 @@ deployment. Optionally, the passwords may be populated in the file by hand.
 
     kolla-genpwd
 
-To quickly prepare hosts, playbook bootstrap-servers can be used.This is an
+To quickly prepare hosts, playbook bootstrap-servers can be used. This is an
 Ansible playbook which works on Ubuntu 14.04, 16.04 and CentOS 7 hosts to
 install and prepare the cluster for OpenStack installation.
 
@@ -457,7 +457,7 @@ Restart Docker and ensure that Docker is running.
     systemctl restart docker
 
 The Kolla community builds and pushes tested images for each tagged release of
-Kolla.  Pull required images with appropriate tags.
+Kolla. Pull required images with appropriate tags.
 
 ::
 
@@ -470,7 +470,7 @@ View the images.
     docker images
 
 Developers running from master are required to build container images as the
-Docker Hub does not contain built images for the master branch.  Reference the
+Docker Hub does not contain built images for the master branch. Reference the
 `Building Container Images`_ for more advanced build configuration.
 
 To build images using default parameters run:
