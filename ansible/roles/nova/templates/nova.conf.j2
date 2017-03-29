@@ -224,16 +224,13 @@ api_paste_config = /etc/nova/api-paste.ini
 max_attempts = 10
 discover_hosts_in_cells_interval = 60
 
-# TODO(sdake): rework this hacky workaround after the placement API is
-#              implemented in the Kolla-kubernetes deliverable.
-#              In order to implement the placement API, the kolla-kubernetes
-#              deliverable needs the Kolla deliverable to release 4.0.0
-#              images to docker hub.  See this blueprint for status:
-# https://blueprints.launchpad.net/kolla-kubernetes/+spec/kolla-kubernetes-placement
-{% if orchestration_engine != 'KUBERNETES' %}
 [placement]
 auth_type = password
+{% if orchestration_engine == 'KUBERNETES' %}
+auth_url = {{ keystone_admin_url }}
+{% else %}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+{% endif %}
 username = {{ placement_keystone_user }}
 password = {{ placement_keystone_password }}
 user_domain_name = default
@@ -241,4 +238,3 @@ project_name = service
 project_domain_name = default
 os_region_name = {{ openstack_region_name }}
 os_interface = internal
-{% endif %}
