@@ -74,10 +74,15 @@ method, NFS allows both way synchronization and offers much better performance
 than VirtualBox shared folders. On Fedora 22::
 
     sudo systemctl start nfs-server
+    sudo systemctl start rpcbind.service
+    sudo systemctl start mountd.service
     firewall-cmd --permanent --add-port=2049/udp
     firewall-cmd --permanent --add-port=2049/tcp
     firewall-cmd --permanent --add-port=111/udp
     firewall-cmd --permanent --add-port=111/tcp
+    firewall-cmd --permanent --add-service=nfs
+    firewall-cmd --permanent --add-service=rpcbind
+    firewall-cmd --permanent --add-service=mountd
     sudo systemctl restart firewalld
 
 Ensure your system has libvirt and associated software installed and setup
