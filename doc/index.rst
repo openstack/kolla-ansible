@@ -14,35 +14,28 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-=================================
-Welcome to Kolla's documentation!
-=================================
+=========================================
+Welcome to Kolla-Ansible's documentation!
+=========================================
 
 Kolla's Mission
 ===============
 
-Kolla provides Docker containers and Ansible playbooks to meet Kolla's mission.
 Kolla's mission is to provide production-ready containers and deployment tools
 for operating OpenStack clouds.
 
-Kolla is highly opinionated out of the box, but allows for complete
+Kolla-Ansible is highly opinionated out of the box, but allows for complete
 customization. This permits operators with minimal experience to deploy
 OpenStack quickly and as experience grows modify the OpenStack configuration to
 suit the operator's exact requirements.
 
-Site Notes
-==========
-
-This documentation is continually updated and may not represent the state of
-the project at any specific prior release. To access documentation for a
-previous release of kolla, append the OpenStack release name to the URL, for
-example:
-
-    http://docs.openstack.org/developer/kolla/mitaka/
+For information on building container images for use with Kolla-Ansible, please
+refer to the `Kolla image documentation
+<http://docs.openstack.org/developer/kolla>`_.
 
 
-Kolla Overview
-==============
+Overview
+========
 
 .. toctree::
    :maxdepth: 1
@@ -57,8 +50,8 @@ Kolla Overview
    security
    troubleshooting
 
-Kolla Services
-==============
+Services
+========
 
 .. toctree::
    :maxdepth: 1
