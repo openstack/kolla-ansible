@@ -48,19 +48,17 @@
 
 - name: Copying over openstack-infra.conf
   vars:
-    service: "{{ item.key }}"
+    service_name: 'karbor-protection'
+    service: "{{ karbor_services[service_name] }}"
   template:
     src: "providers.d/openstack-infra.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/providers.d/openstack-infra.conf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/providers.d/openstack-infra.conf"
   register: openstack_infra_conf
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ karbor_services }}"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   notify:
-    - Restart karbor-api container
     - Restart karbor-protection container
-    - Restart karbor-operationengine container
 
 - name: Check karbor containers
   kolla_docker:
