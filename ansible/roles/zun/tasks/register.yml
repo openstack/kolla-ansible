@@ -1,0 +1,42 @@
+---
+- name: Creating the Zun service and endpoint
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "{{ item.service_name }}"
+      service_type: "{{ item.service_type }}"
+      description: "Container Service"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_zun_auth }}' }}"
+    module_extra_vars:
+      openstack_zun_auth: "{{ openstack_zun_auth }}"
+  register: zun_endpoint
+  until: zun_endpoint|success
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ zun_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ zun_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ zun_public_endpoint }}'}
+
+- name: Creating the Zun project, user, and role
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "service"
+      user: "{{ zun_keystone_user }}"
+      password: "{{ zun_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_zun_auth }}' }}"
+    module_extra_vars:
+      openstack_zun_auth: "{{ openstack_zun_auth }}"
+  register: zun_user
+  until: zun_user|success
+  retries: 10
+  delay: 5
+  run_once: True

@@ -621,3 +621,14 @@
     - enable_watcher | bool
     - inventory_hostname in groups['haproxy']
     - "{{ 'watcher_api' not in haproxy_stat }}"
+
+- name: Checking free port for Zun API HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ zun_api_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_zun | bool
+    - inventory_hostname in groups['haproxy']
+    - "{{ 'zun_api' not in haproxy_stat }}"

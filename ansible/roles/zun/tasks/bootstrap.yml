@@ -1,0 +1,32 @@
+---
+- name: Creating Zun database
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ zun_database_name }}"
+  register: database
+  run_once: True
+  delegate_to: "{{ groups['zun-api'][0] }}"
+
+- name: Creating Zun database user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ zun_database_name }}"
+      password: "{{ zun_database_password }}"
+      host: "%"
+      priv: "{{ zun_database_name }}.*:ALL"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['zun-api'][0] }}"
+
+- include: bootstrap_service.yml
+  when: database.changed

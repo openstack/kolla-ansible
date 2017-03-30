@@ -1,0 +1,33 @@
+[DEFAULT]
+debug = {{ zun_logging_debug }}
+log_dir = /var/log/kolla/zun
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% if service_name == 'zun-api' %}
+osapi_zun_listen = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+osapi_zun_listen_port = {{ zun_api_port }}
+{% endif %}
+
+[database]
+connection = mysql+pymysql://{{ zun_database_user }}:{{ zun_database_password }}@{{ zun_database_address }}/{{ zun_database_name }}
+max_retries = -1
+
+[zun_client]
+version = 1
+service_type = container
+service_name = zun
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+project_domain_name = Default
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ zun_keystone_user }}
+password = {{ zun_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}

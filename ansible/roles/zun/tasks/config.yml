@@ -1,0 +1,77 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when: inventory_hostname in groups[item.value.group]
+  with_dict: "{{ zun_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: zun_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ zun_services }}"
+  notify:
+    - Restart zun-api container
+    - Restart zun-compute container
+
+- name: Copying over zun.conf
+  merge_configs:
+    vars:
+      service_name: "{{ item.key }}"
+    sources:
+      - "{{ role_path }}/templates/zun.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/zun.conf"
+      - "{{ node_custom_config }}/zun/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/zun/{{ inventory_hostname }}/zun.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/zun.conf"
+  register: zun_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ zun_services }}"
+  notify:
+    - Restart zun-api container
+    - Restart zun-compute container
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ node_custom_config }}/zun/policy.json"
+  register: zun_policy
+
+- name: Copying over existing policy.json
+  template:
+    src: "{{ node_custom_config }}/zun/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: zun_policy_jsons
+  when:
+    - zun_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ zun_services }}"
+  notify:
+    - Restart zun-api container
+    - Restart zun-compute container
+
+- name: Check zun containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_zun_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ zun_services }}"
+  notify:
+    - Restart zun-api container
+    - Restart zun-compute container
