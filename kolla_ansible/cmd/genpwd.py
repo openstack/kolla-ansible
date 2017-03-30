@@ -112,7 +112,7 @@ def main():
                 ])
 
     with open(passwords_file, 'w') as f:
-        f.write(yaml.dump(passwords, default_flow_style=False))
+        f.write(yaml.safe_dump(passwords, default_flow_style=False))
 
 if __name__ == '__main__':
     main()
