@@ -1,6 +1,29 @@
 ---
 project_name: "haproxy"
 
+haproxy_services:
+  haproxy:
+    container_name: haproxy
+    group: haproxy
+    enabled: true
+    image: "{{ haproxy_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "haproxy_socket:/var/lib/kolla/haproxy/"
+  keepalived:
+    container_name: keepalived
+    group: haproxy
+    enabled: true
+    image: "{{ keepalived_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "haproxy_socket:/var/lib/kolla/haproxy/"
+
 
 ####################
 # Docker
