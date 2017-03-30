@@ -246,7 +246,7 @@ Validate OpenStack is operational:
 .. code-block:: console
 
    kolla-ansible post-deploy
-   . /etc/kolla/admin-openrc.sh
+   export OS_CLOUD=kolla-admin
    openstack user list
 
 Or navigate to ``http://172.28.128.254/`` with a web browser.

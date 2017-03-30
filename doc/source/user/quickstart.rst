@@ -537,15 +537,14 @@ Using OpenStack
 
       pip install python-openstackclient -c https://releases.openstack.org/constraints/upper/|KOLLA_OPENSTACK_RELEASE|
 
-#. OpenStack requires an openrc file where credentials for admin user
-   are set. To generate this file:
+#. OpenStack requires a ``clouds.yaml`` file where credentials for the
+   admin user are set. To generate this file:
 
    * For deployment or evaluation, run:
 
      .. code-block:: console
 
         kolla-ansible post-deploy
-        . /etc/kolla/admin-openrc.sh
 
    * For development, run:
 
@@ -553,7 +552,6 @@ Using OpenStack
 
         cd kolla-ansible/tools
         ./kolla-ansible post-deploy
-        . /etc/kolla/admin-openrc.sh
 
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.

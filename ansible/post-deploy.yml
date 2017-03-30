@@ -1,4 +1,25 @@
 ---
+- name: Creating clouds.yaml file on the deploy node
+  hosts: localhost
+  tasks:
+    - name: Create /etc/openstack directory
+      become: true
+      file:
+        state: directory
+        dest: "/etc/openstack"
+        owner: "{{ ansible_facts.user_uid }}"
+        group: "{{ ansible_facts.user_gid }}"
+        mode: 0700
+
+    - name: Template out clouds.yaml
+      become: true
+      template:
+        src: "roles/common/templates/clouds.yaml.j2"
+        dest: "/etc/openstack/clouds.yaml"
+        owner: "{{ ansible_facts.user_uid }}"
+        group: "{{ ansible_facts.user_gid }}"
+        mode: 0600
+
 - name: Creating admin openrc file on the deploy node
   hosts: localhost
   tasks:
