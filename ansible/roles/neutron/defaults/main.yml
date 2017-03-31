@@ -2,47 +2,6 @@
 project_name: "neutron"
 
 neutron_services:
-  openvswitch-db-server:
-    container_name: "openvswitch_db"
-    image: "{{ openvswitch_db_image_full }}"
-    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
-    host_in_groups: >-
-      {{
-      True if orchestration_engine == 'KUBERNETES' else
-      inventory_hostname in groups['compute']
-      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-      or inventory_hostname in groups['neutron-dhcp-agent']
-      or inventory_hostname in groups['neutron-l3-agent']
-      or inventory_hostname in groups['neutron-metadata-agent']
-      or inventory_hostname in groups['neutron-vpnaas-agent']
-      }}
-    volumes:
-      - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
-      - "openvswitch_db:/var/lib/openvswitch/"
-  openvswitch-vswitchd:
-    container_name: "openvswitch_vswitchd"
-    image: "{{ openvswitch_vswitchd_image_full }}"
-    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
-    host_in_groups: >-
-      {{
-      True if orchestration_engine == 'KUBERNETES' else
-      inventory_hostname in groups['compute']
-      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-      or inventory_hostname in groups['neutron-dhcp-agent']
-      or inventory_hostname in groups['neutron-l3-agent']
-      or inventory_hostname in groups['neutron-metadata-agent']
-      or inventory_hostname in groups['neutron-vpnaas-agent']
-      }}
-    privileged: True
-    volumes:
-      - "{{ node_config_directory }}/openvswitch-vswitchd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
   neutron-server:
     container_name: "neutron_server"
     image: "{{ neutron_server_image_full }}"
@@ -280,14 +239,6 @@ neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' 
 neutron_bgp_dragent_tag: "{{ openstack_release }}"
 neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_dragent_tag }}"
 
-openvswitch_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-openvswitch-db-server"
-openvswitch_db_tag: "{{ openstack_release }}"
-openvswitch_db_image_full: "{{ openvswitch_db_image }}:{{ openvswitch_db_tag }}"
-
-openvswitch_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-openvswitch-vswitchd"
-openvswitch_vswitchd_tag: "{{ openstack_release }}"
-openvswitch_vswitchd_image_full: "{{ openvswitch_vswitchd_image }}:{{ openvswitch_vswitchd_tag }}"
-
 
 ####################
 # OpenStack
@@ -301,8 +252,6 @@ neutron_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:
 neutron_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ neutron_server_port }}"
 
 neutron_logging_debug: "{{ openstack_logging_debug }}"
-
-neutron_bridge_name: "br-ex"
 
 openstack_neutron_auth: "{{ openstack_auth }}"
 

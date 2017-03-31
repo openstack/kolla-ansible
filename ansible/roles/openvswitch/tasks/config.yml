@@ -1,0 +1,39 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ openvswitch_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: openvswitch_config_jsons
+  when:
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ openvswitch_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Check openvswitch containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_openvswitch_containers
+  when:
+    - action != "config"
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ openvswitch_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

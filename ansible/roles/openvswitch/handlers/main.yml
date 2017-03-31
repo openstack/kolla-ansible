@@ -1,0 +1,59 @@
+---
+- name: Restart openvswitch-db-server container
+  vars:
+    service_name: "openvswitch-db-server"
+    service: "{{ openvswitch_services[service_name] }}"
+    config_json: "{{ openvswitch_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    openvswitch_db_container: "{{ check_openvswitch_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - config_json | changed
+      or openvswitch_db_container | changed
+  notify:
+    - Waiting for openvswitch_db service to be ready
+    - Ensuring OVS bridge is properly setup
+
+- name: Waiting for openvswitch_db service to be ready
+  command: docker exec openvswitch_db ovs-vsctl --no-wait show
+  register: check_result
+  until: check_result | success
+  changed_when: False
+  retries: 30
+  delay: 2
+  notify:
+
+- name: Ensuring OVS bridge is properly setup
+  command: docker exec openvswitch_db /usr/local/bin/kolla_ensure_openvswitch_configured {{ item.0 }} {{ item.1 }}
+  register: status
+  changed_when: status.stdout.find('changed') != -1
+  with_together:
+    - "{{ neutron_bridge_name.split(',') }}"
+    - "{{ neutron_external_interface.split(',') }}"
+
+- name: Restart openvswitch-vswitchd container
+  vars:
+    service_name: "openvswitch-vswitchd"
+    service: "{{ openvswitch_services[service_name] }}"
+    config_json: "{{ openvswitch_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    openvswitch_vswitchd_container: "{{ check_openvswitch_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(False) }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - config_json | changed
+      or openvswitch_vswitchd_container | changed
