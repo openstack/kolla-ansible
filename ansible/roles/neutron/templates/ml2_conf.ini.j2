@@ -54,6 +54,10 @@ arp_responder = true
 enable_distributed_routing = True
 {% endif %}
 
+{% if enable_neutron_qos | bool %}
+extensions = qos
+{% endif %}
+
 [ovs]
 bridge_mappings = {% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -64,7 +68,6 @@ integration_bridge = br-int-{{ item }}
 {% elif neutron_plugin_agent == "linuxbridge" %}
 [linux_bridge]
 physical_interface_mappings = physnet1:{{ neutron_external_interface }}
-
 
 [vxlan]
 l2_population = true
