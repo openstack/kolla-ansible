@@ -10,7 +10,7 @@ log_level = INFO
 workers = {{ openstack_service_workers }}
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk ratelimit authtoken keystoneauth slo dlo proxy-server
+pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk ratelimit authtoken keystoneauth slo dlo {% if enable_ceilometer | bool %}ceilometer {% endif %}proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -48,7 +48,17 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
-operator_roles = admin,{{ keystone_default_user_role }}
+operator_roles = admin,{{ keystone_default_user_role }}{% if enable_ceilometer | bool %},ResellerAdmin{% endif %}
+
+{% if enable_ceilometer | bool %}
+[filter:ceilometer]
+paste.filter_factory = ceilometermiddleware.swift:filter_factory
+control_exchange = swift
+url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+driver = messagingv2
+topic = notifications
+log_level = WARN
+{% endif %}
 
 [filter:container_sync]
 use = egg:swift#container_sync

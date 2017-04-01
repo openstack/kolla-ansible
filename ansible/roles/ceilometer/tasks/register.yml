@@ -32,3 +32,15 @@
     module_extra_vars:
      openstack_ceilometer_auth: "{{ openstack_ceilometer_auth }}"
   run_once: True
+
+- name: Associate the ResellerAdmin role and ceilometer user
+  kolla_toolbox:
+    module_name: "os_user_role"
+    module_args:
+      project: "service"
+      user: "{{ ceilometer_keystone_user }}"
+      role: "ResellerAdmin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_ceilometer_auth }}' }}"
+  when: enable_swift | bool
+  run_once: True

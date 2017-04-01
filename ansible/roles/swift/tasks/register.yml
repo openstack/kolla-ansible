@@ -32,3 +32,14 @@
     module_extra_vars:
       openstack_swift_auth: "{{ openstack_swift_auth }}"
   run_once: True
+
+- name: Creating the ResellerAdmin role
+  kolla_toolbox:
+    module_name: "os_keystone_role"
+    module_args:
+      project: "service"
+      role: "ResellerAdmin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_swift_auth }}' }}"
+  when: enable_ceilometer | bool
+  run_once: True
