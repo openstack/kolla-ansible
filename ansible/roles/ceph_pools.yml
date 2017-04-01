@@ -78,3 +78,23 @@
   failed_when: False
   run_once: True
   when: "{{ ceph_enable_cache | bool }}"
+
+- name: Setting cache target_max_bytes
+  command: docker exec ceph_mon ceph osd pool set {{ pool_name }}-cache target_max_bytes {{ ceph_target_max_bytes }}
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: False
+  failed_when: False
+  run_once: True
+  when:
+    - "{{ ceph_enable_cache | bool }}"
+    - "{{ ceph_target_max_bytes != '' }}"
+
+- name: Setting cache target_max_objects
+  command: docker exec ceph_mon ceph osd pool set {{ pool_name }}-cache target_max_objects {{ ceph_target_max_objects }}
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: False
+  failed_when: False
+  run_once: True
+  when:
+    - "{{ ceph_enable_cache | bool }}"
+    - "{{ ceph_target_max_objects != '' }}"
