@@ -61,7 +61,8 @@ directory use:
 
     $ tox -e py27 kolla-ansible.tests
 
-To run the tests of a specific file say ``kolla-ansible/tests/test_kolla_docker.py``:
+To run the tests of a specific file
+say ``kolla-ansible/tests/test_kolla_docker.py``:
 
 .. code-block:: console
 
