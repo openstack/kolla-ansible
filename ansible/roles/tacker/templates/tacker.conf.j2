@@ -16,6 +16,12 @@ nova_admin_password = {{ nova_keystone_password }}
 nova_admin_tenant_id = service
 nova_admin_auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
 
+[tacker]
+monitor_driver = ping,http_ping
+{% if enable_ceilometer | bool %}
+alarm_monitor_driver = ceilometer
+{% endif %}
+
 [tacker_nova]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
@@ -45,6 +51,20 @@ password = {{ tacker_keystone_password }}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% if enable_aodh | bool %}
+[alarm_auth]
+username = {{ tacker_keystone_user }}
+password = {{ tacker_keystone_password }}
+project_name = service
+url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+{% endif %}
+
+{% if enable_ceilometer | bool %}
+[ceilometer]
+host = {{ api_interface_address }}
+port = {{ tacker_server_port }}
+{% endif %}
 
 {% if enable_heat | bool %}
 [tacker_heat]
