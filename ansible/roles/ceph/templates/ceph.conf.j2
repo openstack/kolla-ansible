@@ -1,7 +1,9 @@
 [global]
 log file = /var/log/kolla/ceph/$cluster-$name.log
-log to syslog = true
-err to syslog = true
+log to syslog = false
+err to syslog = false
+log to stderr = false
+err to stderr = false
 
 fsid = {{ ceph_cluster_fsid }}
 {% if orchestration_engine != 'KUBERNETES' %}
@@ -26,6 +28,7 @@ setuser match path = /var/lib/ceph/$type/$cluster-$id
 # NOTE(SamYaple): The monitor files have been known to grow very large. The
 #                 only fix for that is to compact the files.
 mon compact on start = true
+mon cluster log file = /var/log/kolla/ceph/$cluster.log
 
 {% if service_name is defined and service_name == 'ceph-rgw' %}
 [client.radosgw.gateway]
