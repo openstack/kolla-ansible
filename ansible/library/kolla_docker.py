@@ -595,6 +595,7 @@ class DockerWorker(object):
         # If config_strategy is COPY_ONCE or container's parameters are
         # changed, try to start a new one.
         if config_strategy == 'COPY_ONCE' or self.check_container_differs():
+            self.stop_container()
             self.remove_container()
             self.start_container()
         elif config_strategy == 'COPY_ALWAYS':
@@ -606,6 +607,7 @@ class DockerWorker(object):
 
         container = self.check_container()
         if container and self.check_container_differs():
+            self.stop_container()
             self.remove_container()
             container = self.check_container()
 
@@ -627,6 +629,7 @@ class DockerWorker(object):
                     msg="Container exited with non-zero return code"
                 )
             if self.params.get('remove_on_exit'):
+                self.stop_container()
                 self.remove_container()
 
     def get_container_env(self):
@@ -655,23 +658,29 @@ class DockerWorker(object):
 
     def stop_container(self):
         name = self.params.get('name')
+        graceful_timeout = self.params.get('graceful_timeout')
+        if not graceful_timeout:
+            graceful_timeout = 10
         container = self.check_container()
         if not container:
             self.module.fail_json(
                 msg="No such container: {} to stop".format(name))
         elif not container['Status'].startswith('Exited '):
             self.changed = True
-            self.dc.stop(name)
+            self.dc.stop(name, timeout=graceful_timeout)
 
     def restart_container(self):
         name = self.params.get('name')
+        graceful_timeout = self.params.get('graceful_timeout')
+        if not graceful_timeout:
+            graceful_timeout = 10
         info = self.get_container_info()
         if not info:
             self.module.fail_json(
                 msg="No such container: {}".format(name))
         else:
             self.changed = True
-            self.dc.restart(name)
+            self.dc.restart(name, timeout=graceful_timeout)
 
     def create_volume(self):
         if not self.check_volume():
@@ -722,6 +731,7 @@ def generate_module():
         security_opt=dict(required=False, type='list', default=list()),
         pid_mode=dict(required=False, type='str', choices=['host', '']),
         privileged=dict(required=False, type='bool', default=False),
+        graceful_timeout=dict(required=False, type='int', default=10),
         remove_on_exit=dict(required=False, type='bool', default=True),
         restart_policy=dict(required=False, type='str', choices=[
                             'no',

@@ -65,6 +65,7 @@ class ModuleArgsTest(base.BaseTestCase):
             security_opt=dict(required=False, type='list', default=list()),
             pid_mode=dict(required=False, type='str', choices=['host', '']),
             privileged=dict(required=False, type='bool', default=False),
+            graceful_timeout=dict(required=False, type='int', default=10),
             remove_on_exit=dict(required=False, type='bool', default=True),
             restart_policy=dict(
                 required=False, type='str', choices=['no',
@@ -229,6 +230,7 @@ class TestContainer(base.BaseTestCase):
         updated_cont_list.pop(0)
         self.dw.dc.containers.side_effect = [self.fake_data['containers'],
                                              self.fake_data['containers'],
+                                             self.fake_data['containers'],
                                              updated_cont_list,
                                              self.fake_data['containers']
                                              ]
@@ -270,7 +272,7 @@ class TestContainer(base.BaseTestCase):
 
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
-        self.dw.dc.stop.assert_called_once_with('my_container')
+        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
 
     def test_stop_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake_container',
@@ -296,7 +298,7 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.dc.inspect_container.assert_called_once_with('my_container')
-        self.dw.dc.restart.assert_called_once_with('my_container')
+        self.dw.dc.restart.assert_called_once_with('my_container', timeout=10)
 
     def test_restart_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake-container',
