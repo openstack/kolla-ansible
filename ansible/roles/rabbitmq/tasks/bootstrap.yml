@@ -3,7 +3,7 @@
   kolla_docker:
     action: "create_volume"
     common_options: "{{ docker_common_options }}"
-    name: "rabbitmq"
+    name: "{{ project_name }}"
   register: rabbitmq_volume
 
 - name: Running RabbitMQ bootstrap container
@@ -14,14 +14,15 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      RABBITMQ_CLUSTER_COOKIE: "{{ rabbitmq_cluster_cookie }}"
+      RABBITMQ_CLUSTER_COOKIE: "{{ role_rabbitmq_cluster_cookie }}"
+      RABBITMQ_LOG_DIR: "/var/log/kolla/{{ project_name }}"
     image: "{{ rabbitmq_image_full }}"
     labels:
       BOOTSTRAP:
-    name: "rabbitmq_bootstrap"
+    name: "{{ project_name }}_bootstrap"
     restart_policy: "never"
     volumes:
-      - "{{ node_config_directory }}/rabbitmq/:{{ container_config_directory }}/:ro"
+      - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "rabbitmq:/var/lib/rabbitmq/"
+      - "{{ project_name }}:/var/lib/rabbitmq/"
   when: rabbitmq_volume | changed

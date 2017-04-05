@@ -1,7 +1,7 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item.key }}"
+    path: "{{ node_config_directory }}/{{ project_name }}"
     state: "directory"
     recurse: yes
   when:
@@ -12,7 +12,7 @@
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    dest: "{{ node_config_directory }}/{{ project_name }}/config.json"
   register: rabbitmq_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -26,7 +26,7 @@
     service: "{{ rabbitmq_services['rabbitmq'] }}"
   template:
     src: "{{ item }}.j2"
-    dest: "{{ node_config_directory }}/rabbitmq/{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/{{ item }}"
   register: rabbitmq_confs
   when:
     - inventory_hostname in groups[service.group]
@@ -46,6 +46,7 @@
     name: "{{ item.value.container_name }}"
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
+    environment: "{{ item.value.environment }}"
   register: check_rabbitmq_containers
   when:
     - action != "config"

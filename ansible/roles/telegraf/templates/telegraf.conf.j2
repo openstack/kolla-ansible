@@ -53,6 +53,12 @@
   username = "{{ rabbitmq_user }}"
   password = "{{ rabbitmq_password }}"
 {% endif %}
+{% if inventory_hostname in groups['outward-rabbitmq'] and enable_outward_rabbitmq | bool %}
+[[inputs.rabbitmq]]
+  url = "{{ outward_rabbitmq_proto }}://{{ api_interface_address }}:{{ outward_rabbitmq_management_port }}"
+  username = "{{ outward_rabbitmq_user }}"
+  password = "{{ outward_rabbitmq_password }}"
+{% endif %}
 {% if inventory_hostname in groups['mariadb'] and enable_mariadb | bool %}
 [[inputs.mysql]]
   servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address }}:{{ database_port }})/"]

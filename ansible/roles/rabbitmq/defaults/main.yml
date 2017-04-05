@@ -3,14 +3,18 @@ project_name: "rabbitmq"
 
 rabbitmq_services:
   rabbitmq:
-    container_name: rabbitmq
-    group: rabbitmq
+    container_name: "{{ project_name }}"
+    group: "{{ role_rabbitmq_groups }}"
     enabled: true
     image: "{{ rabbitmq_image_full }}"
+    environment:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      RABBITMQ_CLUSTER_COOKIE: "{{ role_rabbitmq_cluster_cookie }}"
+      RABBITMQ_LOG_DIR: "/var/log/kolla/{{ project_name }}"
     volumes:
-      - "{{ node_config_directory }}/rabbitmq/:{{ container_config_directory }}/:ro"
+      - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "rabbitmq:/var/lib/rabbitmq/"
+      - "{{ project_name }}:/var/lib/rabbitmq/"
       - "kolla_logs:/var/log/kolla/"
 
 

@@ -59,3 +59,57 @@
   with_items: "{{ rabbitmq_hostnames.results }}"
   when:
     - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
+
+- name: Checking free port for outward RabbitMQ
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ outward_rabbitmq_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_outward_rabbitmq | bool
+    - inventory_hostname in groups['outward-rabbitmq']
+
+- name: Checking free port for outward RabbitMQ Management
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ outward_rabbitmq_management_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_outward_rabbitmq | bool
+    - inventory_hostname in groups['outward-rabbitmq']
+
+- name: Checking free port for outward RabbitMQ Cluster
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ outward_rabbitmq_cluster_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_outward_rabbitmq | bool
+    - inventory_hostname in groups['outward-rabbitmq']
+
+- name: Checking free port for outward RabbitMQ EPMD
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ outward_rabbitmq_epmd_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - enable_outward_rabbitmq | bool
+    - inventory_hostname in groups['outward-rabbitmq']
+
+- name: Check if all outward rabbit hostnames are resolvable
+  command: "getent ahostsv4 {{ hostvars[item]['ansible_hostname'] }}"
+  changed_when: false
+  register: outward_rabbitmq_hostnames
+  with_items: "{{ groups['outward-rabbitmq'] }}"
+  when:
+    - enable_outward_rabbitmq | bool
+
+- fail: msg="Hostname has to resolve to IP address of api_interface"
+  with_items: "{{ outward_rabbitmq_hostnames.results }}"
+  when:
+    - enable_outward_rabbitmq | bool
+    - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
