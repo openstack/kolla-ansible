@@ -65,6 +65,7 @@ Services
    ironic-guide
    manila-guide
    manila-hnas-guide
+   nova-fake-driver
    swift-guide
    bifrost
    networking-guide
