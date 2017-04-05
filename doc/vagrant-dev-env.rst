@@ -49,7 +49,7 @@ On Fedora 22 or later::
 
     sudo dnf install vagrant ruby-devel libvirt-devel libvirt-python zlib-devel libpng-devel gcc git
 
-On Ubuntu 14.04 or later::
+On Ubuntu 16.04 or later::
 
     sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt libvirt-dev nfs-kernel-server zlib-dev libpng-dev gcc git
 
@@ -142,7 +142,7 @@ On Centos 7::
 
     sudo kolla-ansible deploy -i /usr/share/kolla-ansible/ansible/inventory/multinode
 
-On Ubuntu 14.04 or later::
+On Ubuntu 16.04 or later::
 
     sudo kolla-ansible deploy -i /usr/local/share/kolla-ansible/ansible/inventory/multinode
 

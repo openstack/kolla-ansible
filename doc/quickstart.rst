@@ -61,16 +61,6 @@ Kolla builds images which are used by Kolla-Ansible to deploy OpenStack. The
 deployment is tested on CentOS, Oracle Linux and Ubuntu as both container OS
 platforms and bare metal deployment targets.
 
-Ubuntu: For Ubuntu based systems where Docker is used it is recommended to use
-the latest available LTS kernel. While all kernels should work for Docker, some
-older kernels may have issues with some of the different Docker back ends such
-as AUFS and OverlayFS. In order to update kernel in Ubuntu 14.04 LTS to 4.2,
-run:
-
-::
-
-    apt-get install linux-image-generic-lts-wily
-
 .. note:: Install is *very* sensitive about version of components. Please
    review carefully because default Operating System repos are likely out of
    date.
@@ -296,8 +286,7 @@ libvirt profile.
 Additional steps for upstart and other non-systemd distros
 ==========================================================
 
-For Ubuntu 14.04 which uses upstart and other non-systemd distros, run the
-following.
+For other non-systemd distros, run the following.
 
 ::
 
@@ -414,7 +403,7 @@ deployment. Optionally, the passwords may be populated in the file by hand.
     kolla-genpwd
 
 To quickly prepare hosts, playbook bootstrap-servers can be used. This is an
-Ansible playbook which works on Ubuntu 14.04, 16.04 and CentOS 7 hosts to
+Ansible playbook which works on Ubuntu 16.04 and CentOS 7 hosts to
 install and prepare the cluster for OpenStack installation.
 
 ::

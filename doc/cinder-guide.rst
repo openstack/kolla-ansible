@@ -123,8 +123,6 @@ targeted for nova compute role.
   - Stop ``open-iscsi`` system service due to its conflicts
     with iscsid container.
 
-    For Ubuntu 14.04 (upstart): ``service open-iscsi stop``
-
     Ubuntu 16.04 (systemd):
     ``systemctl stop open-iscsi; systemctl stop iscsid``
 
