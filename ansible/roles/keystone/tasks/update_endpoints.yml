@@ -1,0 +1,21 @@
+---
+- name: Updating keystone endpoints
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "keystone"
+      service_type: "identity"
+      description: "Identity Service"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_keystone_auth }}' }}"
+    module_extra_vars:
+      openstack_keystone_auth: "{{ openstack_keystone_auth }}"
+  run_once: True
+  register: update
+  with_items:
+    - {'interface': 'admin', 'url': '{{ keystone_admin_url }}'}
+    - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
+    - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
