@@ -436,6 +436,12 @@ class DockerWorker(object):
         else:
             return full_image, 'latest'
 
+    def get_image_id(self):
+        full_image = self.params.get('image')
+
+        image = self.dc.images(name=full_image, quiet=True)
+        return image[0] if len(image) == 1 else None
+
     def pull_image(self):
         if self.params.get('auth_username'):
             self.dc.login(
@@ -446,6 +452,7 @@ class DockerWorker(object):
             )
 
         image, tag = self.parse_image()
+        old_image_id = self.get_image_id()
 
         statuses = [
             json.loads(line.strip().decode('utf-8')) for line in self.dc.pull(
@@ -468,23 +475,8 @@ class DockerWorker(object):
                         failed=True
                     )
 
-            if status and status.get('status'):
-                # NOTE(SamYaple): This allows us to use v1 and v2 docker
-                # registries.  Eventually docker will stop supporting v1
-                # registries and when that happens we can remove this.
-                if 'legacy registry' in status['status']:
-                    continue
-                elif 'Downloaded newer image for' in status['status']:
-                    self.changed = True
-                    return
-                elif 'Image is up to date for' in status['status']:
-                    return
-                else:
-                    self.module.fail_json(
-                        msg="Unknown status message: {}".format(
-                            status['status']),
-                        failed=True
-                    )
+        new_image_id = self.get_image_id()
+        self.changed = old_image_id != new_image_id
 
     def remove_container(self):
         if self.check_container():
