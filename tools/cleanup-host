@@ -56,8 +56,14 @@ if [[ "$glance_file_datadir_volume" != "glance" && -d "$glance_file_datadir_volu
     rm -rfv  $glance_file_datadir_volume
 fi
 
-echo "Getting folders name..."
 FOLDER_PATH="/etc/kolla/"
+
+if [[ -e "$FOLDER_PATH/ovsdpdk-db/ovs-dpdkctl.sh" ]]; then
+    echo uninstalling ovs-dpdk service files and tools.
+    sudo CONFIG_FILE="$FOLDER_PATH/ovsdpdk-db/ovs-dpdkctl.conf" $FOLDER_PATH/ovsdpdk-db/ovs-dpdkctl.sh uninstall
+fi
+
+echo "Getting folders name..."
 for dir in $FOLDER_PATH*; do
     if [ "$dir" == "$FOLDER_PATH""passwords.yml" ] || \
        [ "$dir" == "$FOLDER_PATH""globals.yml" ] || \

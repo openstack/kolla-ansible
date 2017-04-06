@@ -1,0 +1,108 @@
+---
+- name: Restart ovsdpdk-db container
+  vars:
+    service_name: "ovsdpdk-db"
+    service: "{{ ovsdpdk_services[service_name] }}"
+    config_json: "{{ ovsdpdk_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ovsdpdk_db_container: "{{ check_ovsdpdk_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - config_json | changed
+      or ovsdpdk_db_container | changed
+  notify:
+    - Waiting the ovs db service to be ready
+    - Ensuring ovsdpdk bridges are properly setup indexed
+    - Restart ovsdpdk-vswitchd container
+    - Ensuring ovsdpdk bridges are properly setup named
+    - wait for dpdk tunnel ip
+    - ovs-dpdk gather facts
+
+- name: Waiting the ovs db service to be ready
+  vars:
+    service_name: "ovsdpdk-db"
+    service: "{{ ovsdpdk_services[service_name] }}"
+  command: docker exec "{{ service.container_name }}" ovs-vsctl --no-wait show
+  register: check_result
+  until: check_result | success
+  changed_when: False
+  retries: 30
+  delay: 2
+
+- name: Ensuring ovsdpdk bridges are properly setup indexed
+  vars:
+    service_name: "ovsdpdk-db"
+    service: "{{ ovsdpdk_services[service_name] }}"
+  command: "docker exec -e \"CONFIG_FILE={{ container_config_directory }}/ovs-dpdkctl.conf\" {{ service.container_name }} {{ container_config_directory }}/ovs-dpdkctl.sh init"
+  register: status
+  changed_when: status.stdout.find('changed') != -1
+  when:
+    - (inventory_hostname in groups['compute']
+       or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+       or inventory_hostname in groups['neutron-dhcp-agent']
+       or inventory_hostname in groups['neutron-l3-agent']
+       or inventory_hostname in groups['neutron-metadata-agent']
+       or inventory_hostname in groups['neutron-vpnaas-agent'])
+    -  ovs_physical_port_policy == 'indexed'
+
+- name: Restart ovsdpdk-vswitchd container
+  vars:
+    service_name: "ovsdpdk-vswitchd"
+    service: "{{ ovsdpdk_services[service_name] }}"
+    config_json: "{{ ovsdpdk_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ovsdpdk_vswitchd_container: "{{ check_ovsdpdk_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    privileged: "{{ service.privileged | default(True) }}"
+  when:
+    - action != "config"
+    - service.enabled | bool
+    - service.host_in_groups | bool
+    - config_json | changed
+      or ovsdpdk_vswitchd_container | changed
+
+
+- name: Ensuring ovsdpdk bridges are properly setup named
+  vars:
+    service_name: "ovsdpdk-db"
+    service: "{{ ovsdpdk_services[service_name] }}"
+  command: "docker exec -e \"CONFIG_FILE={{ container_config_directory }}/ovs-dpdkctl.conf\" {{ service.container_name }} {{ container_config_directory }}/ovs-dpdkctl.sh init"
+  register: status
+  changed_when: status.stdout.find('changed') != -1
+  when:
+    - (inventory_hostname in groups['compute']
+       or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+       or inventory_hostname in groups['neutron-dhcp-agent']
+       or inventory_hostname in groups['neutron-l3-agent']
+       or inventory_hostname in groups['neutron-metadata-agent']
+       or inventory_hostname in groups['neutron-vpnaas-agent'])
+    -  ovs_physical_port_policy == 'named'
+
+
+- name: wait for dpdk tunnel ip
+  wait_for:
+    host: "{{ dpdk_tunnel_interface_address }}"
+    timeout: 300
+    sleep: 5
+
+- name: ovs-dpdk gather facts
+  setup:
+    filter: ansible_*
+  when:
+    - (inventory_hostname in groups['compute']
+       or (enable_manila | bool and inventory_hostname in groups['manila-share'])
+       or inventory_hostname in groups['neutron-dhcp-agent']
+       or inventory_hostname in groups['neutron-l3-agent']
+       or inventory_hostname in groups['neutron-metadata-agent']
+       or inventory_hostname in groups['neutron-vpnaas-agent'])

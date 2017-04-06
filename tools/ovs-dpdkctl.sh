@@ -8,6 +8,7 @@ fi
 FULL_PATH=$(realpath "${BASH_SOURCE[0]}")
 CONFIG_FILE=${CONFIG_FILE:-"/etc/default/ovs-dpdk.conf"}
 SERVICE_FILE="/etc/systemd/system/ovs-dpdkctl.service"
+BRIDGE_SERVICE_FILE="/etc/systemd/system/ovs-dpdk-bridge.service"
 
 function get_value {
     crudini --get $CONFIG_FILE $@
@@ -37,8 +38,12 @@ function del_config {
     rm -f $CONFIG_FILE
 }
 
+function is_redhat_family {
+    [[ -e /etc/redhat-release ]] ; echo $?
+}
+
 function generate_pciwhitelist {
-    local _Whitelist=''
+    _Whitelist=''
     for nic in $(list_dpdk_nics); do
         address="$(get_value $nic address)"
         if [ "$_Whitelist" == '' ]; then
@@ -79,6 +84,7 @@ function gen_config {
     set_value ovs ovs_socket_mem ${ovs_socket_mem:-"512"}
     set_value ovs dpdk_interface_driver ${dpdk_interface_driver:-"uio_pci_generic"}
     set_value ovs hugepage_mountpoint ${hugepage_mountpoint:-"/dev/hugepages"}
+    set_value ovs physical_port_policy ${ovs_physical_port_policy:-"named"}
 
     ls -al /sys/class/net/* | awk '$0 ~ /pci/ {n=split($NF,a,"/"); print "\n[" a[n] "]\naddress = " a[n-2]  "\ndriver ="}' >> $CONFIG_FILE
 
@@ -93,8 +99,8 @@ function gen_config {
 }
 
 function bind_nic {
-    echo $1 > /sys/bus/pci/drivers/$2/bind
     echo $2 > /sys/bus/pci/devices/$1/driver_override
+    echo $1 > /sys/bus/pci/drivers/$2/bind
 }
 
 function unbind_nic {
@@ -137,7 +143,6 @@ function unbind_nics {
     done
 }
 
-
 function get_address_by_name {
     ls -al /sys/class/net/$1 | awk '$0 ~ /pci/ {n=split($NF,a,"/"); print a[n-2] }'
 }
@@ -147,7 +152,7 @@ function get_driver_by_address {
 }
 
 function get_port_bridge {
-    for pair in $(get_value ovs port port_mappings); do
+    for pair in $(get_value ovs port_mappings); do
         nic=`echo $pair | cut -f 1 -d ":"`
         if [[ "$nic" == "$1" ]]; then
             bridge=`echo $pair | cut -f 2 -d ":"`
@@ -178,11 +183,11 @@ function init_ovs_bridges {
 }
 
 function init_ovs_interfaces {
-    local pci_port_pairs ==''
+    pci_port_pairs=''
     for nic in $(list_dpdk_nics); do
         address="$(get_value $nic address)"
         if [ "$pci_port_pairs" == '' ]; then
-            pci_port_pairs ="$address,$nic"
+            pci_port_pairs="$address,$nic"
         else
             pci_port_pairs="$pci_port_pairs $address,$nic"
         fi
@@ -194,10 +199,13 @@ function init_ovs_interfaces {
         nic="$(echo $pair | cut -f 2 -d ",")"
         bridge="$(get_port_bridge $nic)"
         # ovs 2.6 and older requires dpdkX names, ovs 2.7+ requires dpdk-devargs instead.
-        ovs-vsctl --no-wait --may-exist add-port $bridge "dpdk${dpdk_port_number}" \
-        -- set Interface  "dpdk${dpdk_port_number}" type=dpdk ||  \
-        ovs-vsctl --no-wait --may-exist add-port $bridge $nic \
-        -- set Interface  $nic type=dpdk options:dpdk-devargs=$addr
+        if [ "$(get_value ovs physical_port_policy)" == "indexed" ]; then
+            ovs-vsctl --no-wait --may-exist add-port $bridge "dpdk${dpdk_port_number}" \
+            -- set Interface  "dpdk${dpdk_port_number}" type=dpdk
+        else
+            ovs-vsctl --may-exist add-port $bridge $nic \
+            -- set Interface  $nic type=dpdk options:dpdk-devargs=$addr
+        fi
 
         dpdk_port_number=$((dpdk_port_number+1))
     done
@@ -208,6 +216,57 @@ function init {
     init_ovs_db
     init_ovs_bridges
     init_ovs_interfaces
+}
+
+function install_network_manager_conf {
+    pair=$(get_value ovs cidr_mappings)
+    bridge=`echo $pair | cut -f 1 -d ":"`
+    cidr=`echo $pair | cut -f 2 -d ":"`
+    ip=`echo $cidr | cut -f 1 -d "/"`
+    prefix=`echo $cidr | cut -f 2 -d "/"`
+    mask=""
+    full_octets=$(expr $prefix / 8)
+    partial_octet=$(expr $prefix % 8)
+
+    for octet in 0 1 2 3 ; do
+        if [[ "$octet" < "$full_octets" ]]; then
+            mask+=255
+        elif [[ "$octet" == "$full_octets" ]]; then
+            mask+=$((256 - 2**(8-$partial_octet)))
+        else
+            mask+=0
+        fi
+        [[ "$octet" < 3 ]] && mask+=.
+    done
+    if  [[ is_redhat_family == 0 ]]; then
+        cat << EOF | tee "/etc/sysconfig/network-scripts/ifcfg-$bridge"
+DEVICE=$bridge
+BOOTPROTO=static
+IPADDR=$ip
+NETMASK=$mask
+HOTPLUG=yes
+ONBOOT=yes
+EOF
+install_redhat_bridge_service $bridge
+    else
+        cat << EOF | tee "/etc/network/interfaces.d/$bridge.cfg"
+    auto $bridge
+    iface $bridge inet static
+        address $ip
+        netmask $mask
+EOF
+
+    fi
+}
+
+function uninstall_network_manager_conf {
+    pair=$(get_value ovs cidr_mappings)
+    bridge=`echo $pair | cut -f 1 -d ":"`
+    if  [[ is_redhat_family == 0 ]]; then
+        rm -f /etc/sysconfig/network-scripts/ifcfg-$bridge
+    else
+        rm -f /etc/network/interfaces.d/$bridge.cfg
+    fi
 }
 
 function install_service {
@@ -235,13 +294,63 @@ EOF
     systemctl enable ovs-dpdkctl
 }
 
+function install_redhat_bridge_service {
+    cat << EOF | tee "$BRIDGE_SERVICE_FILE"
+[Unit]
+Description=configuration service for ovs-dpdk bridge.
+After=docker.service
+After=network.target
+After=ovs-dpdkctl.service
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStartPre=/bin/bash -c "[[ -e /sys/class/net/$1 ]]"
+ExecStart=/usr/sbin/ifup $1
+ExecStop=/usr/sbin/ifdown $1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+    systemctl daemon-reload
+    systemctl enable ovs-dpdk-bridge
+}
+
 function uninstall_service {
     systemctl disable ovs-dpdkctl
     rm -f "$SERVICE_FILE"
+    if [ -e "$BRIDGE_SERVICE_FILE" ]; then
+        systemctl disable ovs-dpdk-bridge
+        rm -f "$BRIDGE_SERVICE_FILE"
+    fi
     systemctl daemon-reload
 }
 
+function configure_kernel_modules {
+    driver="$(get_value ovs dpdk_interface_driver)"
+    lsmod | grep -ws $driver > /dev/null || modprobe $driver
+    if  [[ is_redhat_family == 0 ]]; then
+        [[ ! -e /etc/modules-load.d/${driver}.conf ]] && echo $driver | tee /etc/modules-load.d/${driver}.conf
+    else
+        grep -ws $driver /etc/modules > /dev/null || echo $driver | tee -a /etc/modules
+    fi
+}
+
+function unconfigure_kernel_modules {
+    driver="$(get_value ovs dpdk_interface_driver)"
+    lsmod | grep -ws $driver > /dev/null && rmmod $driver
+    if [[ is_redhat_family == 0 ]] ; then
+        [[ -e /etc/modules-load.d/${driver}.conf ]] && rm -f /etc/modules-load.d/${driver}.conf
+    else
+        grep  -ws $driver /etc/modules > /dev/null && sed -e "s/$driver//" -i /etc/modules
+    fi
+}
+
 function install {
+    configure_kernel_modules
     if [ ! -e "$SERVICE_FILE" ]; then
         install_service
     fi
@@ -253,6 +362,10 @@ function install {
         gen_config
     fi
     systemctl start ovs-dpdkctl
+    install_network_manager_conf
+    if  [[ is_redhat_family == 0 ]]; then
+        systemctl start ovs-dpdk-bridge
+    fi
 }
 
 function uninstall {
@@ -260,14 +373,16 @@ function uninstall {
     if [ -e "$SERVICE_FILE" ]; then
         uninstall_service
     fi
+    uninstall_network_manager_conf
+    unconfigure_kernel_modules
     if [ -e /bin/ovs-dpdkctl ]; then
         rm -f /bin/ovs-dpdkctl
     fi
     if [ -e "$CONFIG_FILE" ]; then
         rm -f "$CONFIG_FILE"
     fi
-}
 
+}
 
 function useage {
     cat << "EOF"
