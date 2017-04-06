@@ -22,18 +22,15 @@ firewall_driver = nova.virt.firewall.NoopFirewallDriver
 
 allow_resize_to_same_host = true
 
-{% if enable_ironic | bool %}
-scheduler_host_manager = ironic_host_manager
-{% endif %}
-
 {% if service_name == "nova-compute-ironic" %}
 host={{ ansible_hostname }}-ironic
 log_file = /var/log/kolla/nova/nova-compute-ironic.log
 compute_driver = ironic.IronicDriver
 ram_allocation_ratio = 1.0
 reserved_host_memory_mb = 0
-{% elif enable_nova_fake | bool %}
-scheduler_default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
+{% endif %}
+
+{% if enable_nova_fake | bool %}
 {% if orchestration_engine == 'KUBERNETES' %}
 host = empty
 {% else %}
@@ -232,6 +229,14 @@ secure_proxy_ssl_header = X-Forwarded-Proto
 [scheduler]
 max_attempts = 10
 discover_hosts_in_cells_interval = 60
+
+{% if enable_ironic | bool %}
+host_manager = ironic_host_manager
+{% endif %}
+
+{% if enable_nova_fake | bool %}
+default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
+{% endif %}
 
 [placement]
 auth_type = password
