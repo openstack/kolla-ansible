@@ -1,0 +1,46 @@
+---
+- name: Restart blazar-api container
+  vars:
+    service_name: "blazar-api"
+    service: "{{ blazar_services[service_name] }}"
+    config_json: "{{ blazar_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    blazar_conf: "{{ blazar_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ blazar_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    blazar_api_container: "{{ check_blazar_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or blazar_conf.changed | bool
+      or policy_json.changed | bool
+      or blazar_api_container.changed | bool
+
+- name: Restart blazar-manager container
+  vars:
+    service_name: "blazar-manager"
+    service: "{{ blazar_services[service_name] }}"
+    config_json: "{{ blazar_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    blazar_conf: "{{ blazar_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ blazar_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    blazar_manager_container: "{{ check_blazar_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or blazar_conf.changed | bool
+      or policy_json.changed | bool
+      or blazar_manager_container.changed | bool

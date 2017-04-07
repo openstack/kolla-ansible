@@ -1,0 +1,54 @@
+---
+- name: Creating blazar database
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ blazar_database_name }}"
+  register: database
+  run_once: True
+  delegate_to: "{{ groups['blazar-api'][0] }}"
+
+- name: Creating blazar database user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ blazar_database_name }}"
+      password: "{{ blazar_database_password }}"
+      host: "%"
+      priv: "{{ blazar_database_name }}.*:ALL"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['blazar-api'][0] }}"
+
+# TODO(egonzalez) Use os_nova_host_aggregate ansible module once ansible min version is 2.3
+# http://docs.ansible.com/ansible/os_nova_host_aggregate_module.html
+- name: Creating blazar host aggregate
+  command: >
+    docker exec kolla_toolbox openstack
+    --os-interface internal
+    --os-auth-url {{ keystone_admin_url }}
+    --os-identity-api-version 3
+    --os-project-domain-name default
+    --os-tenant-name admin
+    --os-username admin
+    --os-password {{ keystone_admin_password }}
+    --os-user-domain-name default
+    aggregate create {{ blazar_aggregate_pool_name }}
+  register: blazar_host_aggregate
+  changed_when: blazar_host_aggregate | success
+  failed_when:
+    - blazar_host_aggregate.rc != 0
+    - "{{ 'already' not in blazar_host_aggregate.stderr }}"
+  run_once: True
+  delegate_to: "{{ groups['blazar-api'][0] }}"
+
+- include: bootstrap_service.yml
+  when: database.changed

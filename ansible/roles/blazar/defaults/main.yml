@@ -1,0 +1,63 @@
+---
+project_name: "blazar"
+
+blazar_services:
+  blazar-api:
+    container_name: blazar_api
+    group: blazar-api
+    enabled: true
+    image: "{{ blazar_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  blazar-manager:
+    container_name: blazar_manager
+    group: blazar-manager
+    enabled: true
+    image: "{{ blazar_manager_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/blazar-manager/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+# Blazar
+####################
+blazar_aggregate_pool_name: "freepool"
+
+####################
+# Database
+####################
+blazar_database_name: "blazar"
+blazar_database_user: "blazar"
+blazar_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
+
+
+####################
+# Docker
+####################
+blazar_install_type: "{{ kolla_install_type }}"
+blazar_tag: "{{ openstack_release }}"
+
+blazar_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ blazar_install_type }}-blazar-manager"
+blazar_manager_tag: "{{ blazar_tag }}"
+blazar_manager_image_full: "{{ blazar_manager_image }}:{{ blazar_manager_tag }}"
+
+blazar_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ blazar_install_type }}-blazar-api"
+blazar_api_tag: "{{ blazar_tag }}"
+blazar_api_image_full: "{{ blazar_api_image }}:{{ blazar_api_tag }}"
+
+
+####################
+# OpenStack
+####################
+blazar_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ blazar_api_port }}/v1"
+blazar_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ blazar_api_port }}/v1"
+blazar_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ blazar_api_port }}/v1"
+
+blazar_logging_debug: "{{ openstack_logging_debug }}"
+
+blazar_keystone_user: "blazar"
+
+openstack_blazar_auth: "{{ openstack_auth }}"
