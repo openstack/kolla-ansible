@@ -51,7 +51,8 @@ Commands:
     mariadb_recovery    Recover a completely stopped mariadb cluster
     bootstrap-servers   bootstrap servers with kolla deploy dependencies
     destroy             Destroy Kolla containers, volumes and host configuration
-                        (--include-images to also destroy Kolla images)
+                            --include-images to also destroy Kolla images
+                            --include-dev to also destroy dev mode repos
     deploy              Deploy and start all kolla containers
     deploy-bifrost      Deploy and start bifrost container
     deploy-servers      Enroll and deploy servers with bifrost
@@ -96,7 +97,7 @@ EOF
 }
 
 SHORT_OPTS="hi:p:t:k:e:v"
-LONG_OPTS="help,inventory:,playbook:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,yes-i-really-really-mean-it,include-images"
+LONG_OPTS="help,inventory:,playbook:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,yes-i-really-really-mean-it,include-images,include-dev"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
 
 eval set -- "$ARGS"
@@ -111,8 +112,9 @@ CONFIG_DIR="/etc/kolla"
 PASSWORDS_FILE="${CONFIG_DIR}/passwords.yml"
 DANGER_CONFIRM=
 INCLUDE_IMAGES=
-# Serial is not recommended and disabled by default. User could enable it by
-# simply configuring ANSIBLE_SERIAL variable.
+INCLUDE_DEV=
+# Serial is not recommended and disabled by default. Users can enable it by
+# configuring ANSIBLE_SERIAL variable.
 ANSIBLE_SERIAL=${ANSIBLE_SERIAL:-0}
 
 while [ "$#" -gt 0 ]; do
@@ -150,6 +152,11 @@ while [ "$#" -gt 0 ]; do
 
     (--include-images)
             INCLUDE_IMAGES="$1"
+            shift 1
+            ;;
+
+    (--include-dev)
+            INCLUDE_DEV="$1"
             shift 1
             ;;
 
@@ -210,6 +217,9 @@ case "$1" in
         PLAYBOOK="${BASEDIR}/ansible/destroy.yml"
         if [[ "${INCLUDE_IMAGES}" == "--include-images" ]]; then
             EXTRA_OPTS="$EXTRA_OPTS -e destroy_include_images=yes"
+        fi
+        if [[ "${INCLUDE_DEV}" == "--include-dev" ]]; then
+            EXTRA_OPTS="$EXTRA_OPTS -e destroy_include_dev=yes"
         fi
         if [[ "${DANGER_CONFIRM}" != "--yes-i-really-really-mean-it" ]]; then
             cat << EOF

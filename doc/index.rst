@@ -48,6 +48,7 @@ Overview
    advanced-configuration
    operating-kolla
    security
+   kolla-for-openstack-development
    troubleshooting
 
 Services
