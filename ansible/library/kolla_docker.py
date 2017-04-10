@@ -180,7 +180,7 @@ EXAMPLES = '''
         action: remove_container
     - name: Pull image without starting container
       kolla_docker:
-        action: pull_container
+        action: pull_image
         image: private-registry.example.com:5000/ubuntu
     - name: Create named volume
         action: create_volume
