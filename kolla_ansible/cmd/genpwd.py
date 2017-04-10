@@ -69,7 +69,8 @@ def main():
     blank_keys = ['docker_registry_password']
 
     # HMAC-MD5 keys
-    hmac_md5_keys = ['designate_rndc_key']
+    hmac_md5_keys = ['designate_rndc_key',
+                     'osprofiler_secret']
 
     # HMAC-SHA256 keys
     hmac_sha256_keys = ['barbican_crypto_key']
