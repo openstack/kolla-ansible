@@ -68,7 +68,7 @@ gate = cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,mem
 EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then
-        # Infra does not sign thier mirrors so we ignore gpg signing in the gate
+        # Infra does not sign their mirrors so we ignore gpg signing in the gate
         echo "RUN echo 'APT::Get::AllowUnauthenticated \"true\";' > /etc/apt/apt.conf" | sudo tee -a /etc/kolla/header
 
         # Optimize the repos to take advantage of the Infra provided mirrors for Ubuntu
