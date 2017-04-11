@@ -59,15 +59,31 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 flavor = keystone
 
 [glance_store]
-{% if enable_ceph | bool and glance_backend_ceph | bool %}
+{% if glance_backend_vmware | bool %}
+default_store = vsphere
+{% elif enable_ceph | bool and glance_backend_ceph | bool %}
 default_store = rbd
-stores = rbd,http
-rbd_store_user = glance
-rbd_store_pool = {{ ceph_glance_pool_name }}
-rbd_store_chunk_size = 8
 {% else %}
 default_store = file
 filesystem_store_datadir = /var/lib/glance/images/
+{% endif %}
+
+{% if glance_store_backends %}
+stores = {{ glance_store_backends|map(attribute='name')|join(',') }}
+{% endif %}
+
+{% if enable_ceph | bool and glance_backend_ceph | bool %}
+rbd_store_user = glance
+rbd_store_pool = {{ ceph_glance_pool_name }}
+rbd_store_chunk_size = 8
+{% endif %}
+
+{% if glance_backend_vmware | bool %}
+vmware_server_host = {{ vmware_vcenter_host_ip }}
+vmware_server_username = {{ vmware_vcenter_host_username }}
+vmware_server_password = {{ vmware_vcenter_host_password }}
+vmware_datastores = {{ vmware_vcenter_name }}:{{ vmware_datastore_name }}
+vmware_insecure = True
 {% endif %}
 
 [oslo_messaging_notifications]
