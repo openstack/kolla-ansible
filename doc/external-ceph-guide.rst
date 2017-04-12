@@ -35,6 +35,7 @@ service in ``/etc/kolla/global.yml``:
 
   glance_backend_ceph: "yes"
   cinder_backend_ceph: "yes"
+  nova_backend_ceph: "yes"
 
 The combination of ``enable_ceph: "no"`` and ``<service>_backend_ceph: "yes"``
 triggers the activation of external ceph mechanism in Kolla.
@@ -152,12 +153,6 @@ It is important that the files are named ceph.client*.
 
 Nova
 ------
-
-In ``/etc/kolla/global.yml`` set
-
-::
-
-  nova_backend_ceph: "yes"
 
 Put ceph.conf and keyring file into ``/etc/kolla/config/nova``:
 
