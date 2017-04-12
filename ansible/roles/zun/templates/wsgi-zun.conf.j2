@@ -1,0 +1,25 @@
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+Listen {{ api_interface_address }}:{{ zun_api_port }}
+
+<VirtualHost *:{{ zun_api_port }}>
+
+  ## Vhost docroot
+  DocumentRoot "/var/www/cgi-bin/zun"
+
+  ## Directories, there should at least be a declaration for /var/www/cgi-bin/zun
+
+  <Directory "/var/www/cgi-bin/zun">
+    Options Indexes FollowSymLinks MultiViews
+    AllowOverride None
+    Require all granted
+  </Directory>
+
+  ## Logging
+  ErrorLog "/var/log/kolla/zun/zun_api_wsgi_error.log"
+  ServerSignature Off
+  CustomLog "/var/log/kolla/zun/zun_api_wsgi_access.log" combined
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess zun group=zun processes={{ openstack_service_workers }} threads=1 user=zun python-path={{ python_path }}
+  WSGIProcessGroup zun
+  WSGIScriptAlias / "/var/www/cgi-bin/zun/app.wsgi"
+</VirtualHost>

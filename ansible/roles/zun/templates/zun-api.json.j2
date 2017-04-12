@@ -1,5 +1,7 @@
+{% set zun_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set zun_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "zun-api --config-file /etc/zun/zun.conf",
+    "command": "{{ zun_cmd }} -DFOREGROUND",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/zun.conf",
@@ -8,16 +10,17 @@
             "perm": "0600"
         },
         {
-            "source": "{{ container_config_directory }}/api-paste.ini",
-            "dest": "/etc/zun/api-paste.ini",
-            "owner": "zun",
+            "source": "{{ container_config_directory }}/wsgi-zun.conf",
+            "dest": "/etc/{{ zun_dir }}/wsgi-zun.conf",
+            "owner": "root",
             "perm": "0600"
         },
         {
             "source": "{{ container_config_directory }}/policy.json",
             "dest": "/etc/zun/policy.json",
             "owner": "zun",
-            "perm": "0600"
+            "perm": "0600",
+            "optional": true
         }
     ],
     "permissions": [

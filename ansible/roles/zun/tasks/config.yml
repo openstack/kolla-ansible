@@ -42,6 +42,19 @@
     - Restart zun-api container
     - Restart zun-compute container
 
+- name: Copying over wsgi-zun files for services
+  vars:
+    service: "{{ zun_services['zun-api'] }}"
+  template:
+    src: "wsgi-zun.conf.j2"
+    dest: "{{ node_config_directory }}/zun-api/wsgi-zun.conf"
+  register: zun_conf_wsgi
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart zun-api container
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/zun/policy.json"
   register: zun_policy
@@ -65,6 +78,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
     image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
     volumes: "{{ item.value.volumes }}"
   register: check_zun_containers
   when:
