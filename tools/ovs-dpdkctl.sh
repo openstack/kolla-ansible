@@ -309,20 +309,20 @@ options:
   - debuging:
     - To enable debuging export OVS_DPDK_CTL_DEBUG=True
   - install:
-    - The varibles discribed below can be defined to customise
+    - The varibles described below can be defined to customise
       installation of ovs-dpdkctl.
       <variable>=<value> ovs-dpdkctl.sh install
     - bridge_mappings:
-      - A comma seperated list of physnet to bridge mappings.
+      - A comma separated list of physnet to bridge mappings.
       - Example: bridge_mappings=physnet1:br-ex1,physnet2:br-ex2
       - Default: ""
     - port_mappings:
-      - A comma seperated list of port to bridge mappings.
+      - A comma separated list of port to bridge mappings.
       - Example: port_mappings=eth1:br-ex1,eth2:br-ex2
       - Default: generated form bridge_mappings assuming bridge names
                  are constructed by appending br- to port name.
     - cidr_mappings:
-      - A comma seperated list of bridge to cidr mappings.
+      - A comma separated list of bridge to cidr mappings.
       - Example: cidr_mappings=br-ex1:192.168.1.1/24,br-ex2:192.168.2.1/24
       - Default: ""
     - ovs_coremask:
@@ -336,8 +336,8 @@ options:
       - A hex encoded string container a bitmask of what cpu cores
         to pin the dataplane pool mode driver treads of the ovs-vswitchd to.
       - Each bit set in the bitmask will result in the creating of a pmd.
-      - For best performance it is recomended to allocate at least 1 pmd per
-        numa node. On systems with HyperThreading enabled it is recomended to also
+      - For best performance it is recommended to allocate at least 1 pmd per
+        numa node. On systems with HyperThreading enabled it is recommended to also
         allocate the HT sibling core in the pmd_coremask.cores allocated
         to ovs with dpdk via the pmd_coremask should be removed from the
         nova vcpu_pin_set and isolated from the kernel scheduler.
@@ -350,7 +350,7 @@ options:
       - Example: ovs_mem_channels=2
       - Default: "4"
     - ovs_socket_mem:
-      - A comma seperated list of hugepage memory, specifed in MBs per numa node,
+      - A comma separated list of hugepage memory, specifed in MBs per numa node,
         allocated to the ovs-vswitchd to use for the dpdk dataplane.
       - For best performance memory should be allocated evenly across all numa node
         that will run a pmd.
@@ -365,7 +365,7 @@ options:
       - Example: dpdk_interface_driver=vfio_pci
       - Default: "uio_pci_generic"
     - pci_whitelist:
-      - A repeated space seperated list of pci whitelist flags
+      - A repeated space separated list of pci whitelist flags
         for allowed ovs-dpdk ports.
       - The pci_whitelist allows multiple dpdk primary process to
         utilise different pci devices without resulting in a conflict
