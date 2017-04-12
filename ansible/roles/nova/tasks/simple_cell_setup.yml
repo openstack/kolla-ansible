@@ -1,16 +1,33 @@
 ---
-- name: Waiting for nova-compute service up
+#- name: Waiting for nova-compute service up
+#  command: >
+#    docker exec kolla_toolbox openstack
+#    --os-interface internal
+#    --os-auth-url {{ keystone_admin_url }}
+#    --os-identity-api-version 3
+#    --os-project-domain-name default
+#    --os-tenant-name admin
+#    --os-username admin
+#    --os-password {{ keystone_admin_password }}
+#    --os-user-domain-name default
+#    compute service list -f json --service nova-compute
+#  register: nova_compute_services
+#  changed_when: false
+#  run_once: True
+#  delegate_to: "{{ groups['nova-api'][0] }}"
+#  retries: 20
+#  delay: 10
+#  until:
+#    - nova_compute_services | success
+#    - nova_compute_services.stdout | from_json | length != 0
+
+# NOTE (egonzalez) Remove after service-list is fixed
+- name: TMP Waiting for nova-compute service up
   command: >
-    docker exec kolla_toolbox openstack
-    --os-interface internal
-    --os-auth-url {{ keystone_admin_url }}
-    --os-identity-api-version 3
-    --os-project-domain-name default
-    --os-tenant-name admin
-    --os-username admin
-    --os-password {{ keystone_admin_password }}
-    --os-user-domain-name default
-    compute service list -f json --service nova-compute
+    docker exec kolla_toolbox mysql
+      -unova -p{{ nova_database_password }}
+      -h {{ database_address }} nova
+      -e "SELECT topic from services WHERE topic = 'compute'";
   register: nova_compute_services
   changed_when: false
   run_once: True
@@ -19,7 +36,7 @@
   delay: 10
   until:
     - nova_compute_services | success
-    - nova_compute_services.stdout | from_json | length != 0
+    - nova_compute_services.stdout | length != 0
 
 - name: Running nova simple cell setup
   command: docker exec nova_api nova-manage cell_v2 simple_cell_setup
