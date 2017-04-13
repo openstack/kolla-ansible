@@ -27,12 +27,12 @@
       service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/octavia.conf.j2"
-      - "{{ node_config_directory }}/config/global.conf"
-      - "{{ node_config_directory }}/config/database.conf"
-      - "{{ node_config_directory }}/config/messaging.conf"
-      - "{{ node_config_directory }}/config/octavia.conf"
-      - "{{ node_config_directory }}/config/octavia/{{ item.key }}.conf"
-      - "{{ node_config_directory }}/config/octavia/{{ inventory_hostname }}/octavia.conf"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/database.conf"
+      - "{{ node_custom_config }}/messaging.conf"
+      - "{{ node_custom_config }}/octavia.conf"
+      - "{{ node_custom_config }}/octavia/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
   register: octavia_confs
   when:
@@ -46,7 +46,7 @@
   vars:
     service: "{{ octavia_services['octavia-worker'] }}"
   copy:
-    src: "{{ node_config_directory }}/config/octavia/{{ item }}"
+    src: "{{ node_custom_config }}/octavia/{{ item }}"
     dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
   register: octavia_worker_certificate
   when:
