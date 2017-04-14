@@ -532,6 +532,12 @@ services can be run on specific hosts. This documentation describes deploying
 an *all-in-one* setup. To setup *multinode* see the
 `Multinode Deployment of Kolla <https://docs.openstack.org/project-deploy-guide/kolla-ansible/ocata/multinode.html>`_.
 
+.. note::
+
+    For *multinode* deployment of kolla, check if all the hostnames are
+    resolvable. RabbitMQ can't work with IP addresses, so we need to make
+    sure that all RabbitMQ cluster hosts can resolve each other's hostnames.
+
 Each method is represented as an Ansible inventory file. More information on
 the Ansible inventory file can be found in the Ansible `inventory introduction
 <https://docs.ansible.com/intro_inventory.html>`_.
