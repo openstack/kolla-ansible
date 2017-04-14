@@ -1,33 +1,43 @@
 ---
-#- name: Waiting for nova-compute service up
-#  command: >
-#    docker exec kolla_toolbox openstack
-#    --os-interface internal
-#    --os-auth-url {{ keystone_admin_url }}
-#    --os-identity-api-version 3
-#    --os-project-domain-name default
-#    --os-tenant-name admin
-#    --os-username admin
-#    --os-password {{ keystone_admin_password }}
-#    --os-user-domain-name default
-#    compute service list -f json --service nova-compute
-#  register: nova_compute_services
-#  changed_when: false
-#  run_once: True
-#  delegate_to: "{{ groups['nova-api'][0] }}"
-#  retries: 20
-#  delay: 10
-#  until:
-#    - nova_compute_services | success
-#    - nova_compute_services.stdout | from_json | length != 0
-
-# NOTE (egonzalez) Remove after service-list is fixed
-- name: TMP Waiting for nova-compute service up
+- name: Create cell0 mappings
   command: >
-    docker exec kolla_toolbox mysql
-      -unova -p{{ nova_database_password }}
-      -h {{ database_address }} nova
-      -e "SELECT topic from services WHERE topic = 'compute'";
+    docker exec nova_api nova-manage cell_v2 map_cell0
+  register: map_cell0
+  changed_when:
+    - map_cell0 | success
+    - '"Cell0 is already setup" not in map_cell0.stdout'
+  failed_when:
+    - map_cell0.rc != 0
+  run_once: True
+  delegate_to: "{{ groups['nova-api'][0] }}"
+
+- include: bootstrap_service.yml
+  when: map_cell0.changed
+
+- name: Create base cell for legacy instances
+  command: >
+    docker exec nova_api nova-manage cell_v2 create_cell
+  register: base_cell
+  changed_when:
+    - base_cell | success
+  failed_when:
+    - base_cell.rc != 0
+    - '"already exists" not in base_cell.stdout'
+  run_once: True
+  delegate_to: "{{ groups['nova-api'][0] }}"
+
+- name: Waiting for nova-compute service up
+  command: >
+    docker exec kolla_toolbox openstack
+    --os-interface internal
+    --os-auth-url {{ keystone_admin_url }}
+    --os-identity-api-version 3
+    --os-project-domain-name default
+    --os-tenant-name admin
+    --os-username admin
+    --os-password {{ keystone_admin_password }}
+    --os-user-domain-name default
+    compute service list -f json --service nova-compute
   register: nova_compute_services
   changed_when: false
   run_once: True
@@ -36,16 +46,12 @@
   delay: 10
   until:
     - nova_compute_services | success
-    - nova_compute_services.stdout | length != 0
+    - nova_compute_services.stdout | from_json | length != 0
 
-- name: Running nova simple cell setup
-  command: docker exec nova_api nova-manage cell_v2 simple_cell_setup
-  register: cell_setup
-  changed_when:
-    - cell_setup | success
-    - '"Cell0 is already setup" not in cell_setup.stdout'
-  failed_when:
-    - cell_setup.rc != 0
-    - '"No hosts found to map to cell, exiting." not in cell_setup.stdout'
+- name: Discovering nova hosts
+  command: >
+    docker exec nova_api nova-manage cell_v2 discover_hosts
+  register: discover_hosts
+  changed_when: False
   run_once: True
   delegate_to: "{{ groups['nova-api'][0] }}"
