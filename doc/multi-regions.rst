@@ -67,8 +67,8 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
 
    kolla_internal_fqdn_r1: 10.10.10.254
 
-   keystone_admin_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_admin_port }}/v3"
-   keystone_internal_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_public_port }}/v3"
+   keystone_admin_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_admin_port }}"
+   keystone_internal_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_public_port }}"
 
    openstack_auth:
        auth_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_admin_port }}"
@@ -76,7 +76,7 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
        password: "{{ keystone_admin_password }}"
        project_name: "admin"
 
-Configuration files of nova/neutron/glance... have to be updated to
+Configuration files of cinder,nova,neutron,glance... have to be updated to
 contact RegionOne's Keystone. Fortunately, Kolla offers to override all
 configuration files at the same time thanks to the
 ``node_custom_config`` variable (see :ref:`service-config`). This
@@ -96,6 +96,29 @@ directory, a ``nova.conf`` file with below content:
 
    [placement]
    auth_url = {{ keystone_admin_url }}
+
+The Heat section inside the configuration file also
+has to be updated to contact RegionOne's Keystone. So create, in the same
+directory, a ``heat.conf`` file with below content:
+
+::
+   [trustee]
+   auth_uri = {{ keystone_internal_url }}
+   auth_url = {{ keystone_internal_url }}
+
+   [ec2authtoken]
+   auth_uri = {{ keystone_internal_url }}
+
+   [clients_keystone]
+   auth_uri = {{ keystone_internal_url }}
+
+The Ceilometer section inside the configuration file also
+has to be updated to contact RegionOne's Keystone. So create, in the same
+directory, a ``ceilometer.conf`` file with below content:
+
+::
+  [service_credentials]
+  auth_url = {{ keystone_internal_url }}
 
 And link the directory that contains these files into the
 ``/etc/kolla/globals.yml``:
