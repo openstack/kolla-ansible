@@ -7,7 +7,7 @@ api_handler = queue_producer
 
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-bind_host = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+bind_host = {{ api_interface_address }}
 bind_port = {{ octavia_api_port }}
 
 [certificates]
@@ -52,8 +52,8 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [health_manager]
 bind_port = {{ octavia_health_manager_port }}
-bind_ip = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
-controller_ip_port_list = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ octavia_health_manager_port }}
+bind_ip = {{ api_interface_address }}
+controller_ip_port_list = {{ api_interface_address }}:{{ octavia_health_manager_port }}
 heartbeat_key =insecure
 
 [controller_worker]

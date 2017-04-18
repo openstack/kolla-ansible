@@ -4,7 +4,7 @@ log_dir = /var/log/kolla/zun
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 {% if service_name == 'zun-api' %}
-osapi_zun_listen = {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+osapi_zun_listen = {{ api_interface_address }}
 osapi_zun_listen_port = {{ zun_api_port }}
 {% endif %}
 
