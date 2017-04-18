@@ -481,6 +481,22 @@ class TestImage(base.BaseTestCase):
         self.dw.dc.images.assert_called_once_with()
         self.assertTrue(return_data)
 
+    def test_get_image_id_not_exists(self):
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
+        self.dw.dc.images.return_value = []
+
+        return_data = self.dw.get_image_id()
+        self.assertIsNone(return_data)
+
+    def test_get_image_id_exists(self):
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
+        self.dw.dc.images.return_value = ['sha256:47c3bdbcf99f0c1a36e4db']
+
+        return_data = self.dw.get_image_id()
+        self.assertEqual('sha256:47c3bdbcf99f0c1a36e4db', return_data)
+
     def test_pull_image_new(self):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
@@ -493,6 +509,10 @@ class TestImage(base.BaseTestCase):
             b'{"status":"Pull complete","progressDetail":{},"id":"22f7"}\r\n',
             b'{"status":"Digest: sha256:47c3bdbcf99f0c1a36e4db"}\r\n',
             b'{"status":"Downloaded newer image for ubuntu:16.04"}\r\n'
+        ]
+        self.dw.dc.images.side_effect = [
+            [],
+            ['sha256:47c3bdbcf99f0c1a36e4db']
         ]
 
         self.dw.pull_image()
@@ -510,6 +530,10 @@ class TestImage(base.BaseTestCase):
             b'{"status":"Digest: sha256:47c3bdbf0c1a36e4db"}\r\n',
             b'{"status":"mage is up to date for ubuntu:16.04"}\r\n'
         ]
+        self.dw.dc.images.side_effect = [
+            ['sha256:47c3bdbcf99f0c1a36e4db'],
+            ['sha256:47c3bdbcf99f0c1a36e4db']
+        ]
 
         self.dw.pull_image()
         self.dw.dc.pull.assert_called_once_with(
@@ -517,22 +541,6 @@ class TestImage(base.BaseTestCase):
             tag='16.04',
             stream=True)
         self.assertFalse(self.dw.changed)
-
-    def test_pull_image_unknown_status(self):
-        self.dw = get_DockerWorker(
-            {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
-        self.dw.dc.pull.return_value = [
-            b'{"status": "some random message"}\r\n']
-
-        self.dw.pull_image()
-        self.dw.dc.pull.assert_called_once_with(
-            repository='myregistrydomain.com:5000/ubuntu',
-            tag='16.04',
-            stream=True)
-        self.assertFalse(self.dw.changed)
-        self.dw.module.fail_json.assert_called_with(
-            msg='Unknown status message: some random message',
-            failed=True)
 
     def test_pull_image_not_exists(self):
         self.dw = get_DockerWorker(
