@@ -94,9 +94,4 @@ The values ``<kolla_internal_vip_address>``, ``<kolla_external_vip_address>``
 values are overridden, in ``/etc/kolla/globals.yml``. The value of
 ``<kibana_password>`` can be found in ``/etc/kolla/passwords.yml``.
 
-.. note:: When you log in to Kibana web interface for the first time, you are
-   prompted to create an index. Please create an index using the name ``flog-*``.
-   This step is necessary until the default Kibana dashboard is implemented in
-   Kolla.
-
 .. _launchpad bug: https://bugs.launchpad.net/kolla-ansible/+filebug

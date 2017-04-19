@@ -1,0 +1,68 @@
+---
+- name: Wait for kibana port
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ kibana_server_port }}"
+
+- name: Wait for kibana to register in elasticsearch
+  uri:
+    url: "{{ internal_protocol }}://{{ api_interface_address }}:{{ elasticsearch_port }}/.kibana"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 5
+  delay: 2
+
+- name: Get kibana default indexes
+  uri:
+    HEADER_Content-Type: application/json
+    url: "{{ internal_protocol }}://{{ api_interface_address }}:{{ elasticsearch_port }}/.kibana"
+    method: GET
+  register: kibana_default_indexes
+  when: kibana_default_index is defined
+
+- name: Set kibana default indexes fact
+  set_fact:
+    kibana_default_indexes: "{{ kibana_default_indexes.json | default([]) }}"
+  when:
+    - kibana_default_indexes is defined
+
+- name: Add index pattern to kibana
+  uri:
+    url: "{{ internal_protocol }}://{{ api_interface_address }}:{{ elasticsearch_port }}/.kibana/index-pattern/{{ kibana_default_index_pattern }}"
+    method: PUT
+    body: "{{ kibana_default_index | to_json }}"
+    body_format: json
+    status_code: 201
+  when:
+    - kibana_default_index is defined
+    - kibana_default_indexes is defined
+    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
+
+- name: Find kibana version
+  command: docker exec -t kibana /opt/kibana/bin/kibana --version
+  register: kibana_version
+  when:
+    - kibana_default_index is defined
+    - kibana_default_indexes is defined
+    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
+
+- set_fact:
+    kibana_version: "{{ kibana_version.stdout }}"
+  when:
+    - kibana_default_index is defined
+    - kibana_default_indexes is defined
+    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
+
+- name: Change kibana config to set index as defaultIndex
+  uri:
+    url: "http://{{ api_interface_address }}:{{ elasticsearch_port }}/.kibana/config/{{ kibana_version }}"
+    method: PUT
+    body:
+      defaultIndex: "{{ kibana_default_index_pattern }}"
+    body_format: json
+    status_code: 200
+  when:
+    - kibana_default_index is defined
+    - kibana_default_indexes is defined
+    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
