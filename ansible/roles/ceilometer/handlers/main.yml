@@ -31,6 +31,7 @@
     ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     ceilometer_notification_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    panko_conf: "{{ panko_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
@@ -46,6 +47,7 @@
       or policy_json.changed | bool
       or ceilometer_events.changed | bool
       or ceilometer_notification_container.changed | bool
+      or panko_conf.changed | bool
 
 - name: Restart ceilometer-central container
   vars:
@@ -78,6 +80,7 @@
     ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ ceilometer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     ceilometer_collector_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    panko_conf: "{{ panko_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
@@ -92,6 +95,7 @@
       or ceilometer_conf.changed | bool
       or policy_json.changed | bool
       or ceilometer_collector_container.changed | bool
+      or panko_conf.changed | bool
 
 - name: Restart ceilometer-compute container
   vars:
