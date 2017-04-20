@@ -67,10 +67,6 @@ Step 1 is done by using Kolla's INI merge mechanism: Create a file in
   rbd_store_user = glance
   rbd_store_ceph_conf = /etc/ceph/ceph.conf
 
-  [image_format]
-  container_formats = bare
-  disk_formats = raw
-
 Now put ceph.conf and the keyring file (name depends on the username created in
 Ceph) into the same directory, for example:
 
