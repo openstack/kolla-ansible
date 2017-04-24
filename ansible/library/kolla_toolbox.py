@@ -38,6 +38,12 @@ options:
       - The extra variables used by the module
     required: False
     type: str or dict
+  api_version:
+    description:
+      - The version of the API for docker-py to use when contacting Docker
+    required: False
+    type: str
+    default: auto
 author: Jeffrey Zhang
 '''
 
@@ -113,10 +119,12 @@ def main():
     specs = dict(
         module_name=dict(type='str'),
         module_args=dict(type='str'),
-        module_extra_vars=dict(type='json')
-        )
+        module_extra_vars=dict(type='json'),
+        api_version=dict(required=False, type='str', default='auto')
+    )
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
-    client = get_docker_client()()
+    client = get_docker_client()(
+        version=module.params.get('api_version'))
     command_line = gen_commandline(module.params)
     kolla_toolbox = client.containers(filters=dict(name='kolla_toolbox',
                                                    status='running'))
