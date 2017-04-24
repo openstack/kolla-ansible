@@ -68,16 +68,37 @@ Tips and Tricks
 ===============
 Kolla ships with several utilities intended to facilitate ease of operation.
 
-``tools/cleanup-containers`` can be used to remove deployed containers from the
+``tools/cleanup-containers`` is used to remove deployed containers from the
 system. This can be useful when you want to do a new clean deployment. It will
 preserve the registry and the locally built images in the registry, but will
 remove all running Kolla containers from the local Docker daemon. It also
 removes the named volumes.
 
-``tools/cleanup-host`` can be used to remove remnants of network changes
+``tools/cleanup-host`` is used to remove remnants of network changes
 triggered on the Docker host when the neutron-agents containers are launched.
 This can be useful when you want to do a new clean deployment, particularly one
 changing the network topology.
 
-``tools/cleanup-images`` can be used to remove all Docker images built by Kolla
+``tools/cleanup-images`` is used to remove all Docker images built by Kolla
 from the local Docker cache.
+
+``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
+containers..
+
+``kolla-ansible -i INVENTORY destroy`` is used to clean up containers and
+volumes in the cluster.
+
+``kolla-ansible -i INVENTORY mariadb_recovery`` is used to recover a
+completely stopped mariadb cluster.
+
+``kolla-ansible -i INVENTORY prechecks`` is used to check if all requirements
+are meet before deploy for each of the OpenStack services.
+
+``kolla-ansible -i INVENTORY post-deploy`` is used to do post deploy on deploy
+node to get the admin openrc file.
+
+``kolla-ansible -i INVENTORY check`` is used to do post-deployment smoke
+tests.
+
+.. note:: In order to do smoke tests, requires
+``kolla_enable_sanity_checks=yes``.
