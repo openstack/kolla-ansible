@@ -608,7 +608,7 @@ the content shown below.
 
 ::
 
-    mkdir /etc/kolla/config/nova
+    mkdir -p /etc/kolla/config/nova
     cat << EOF > /etc/kolla/config/nova/nova-compute.conf
     [libvirt]
     virt_type = qemu
