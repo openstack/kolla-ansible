@@ -1,0 +1,54 @@
+### Skydive agent config file
+
+auth:
+  type: keystone
+  analyzer_username: {{ openstack_auth['username'] }}
+  analyzer_password: {{ openstack_auth['password'] }}
+
+logging:
+  default: DEBUG
+  topology/probes: INFO
+  topology/graph: INFO
+
+openstack:
+  auth_url: {{ keystone_public_url }}/v3
+  username: {{ openstack_auth['username'] }}
+  password: {{ openstack_auth['password'] }}
+  tenant_name: {{ openstack_auth['project_name'] }}
+  region_name: {{ openstack_region_name }}
+  domain_name: Default
+
+etcd:
+  servers:
+{% if enable_etcd == "yes" %}
+{% for host in groups['etcd'] %}
+    - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+{% endfor %}
+{% else %}
+{% for host in groups['skydive-analyzer'] %}
+  - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+{% endfor %}
+{% endif %}
+
+analyzers:
+{% for host in groups['skydive-analyzer'] %}
+  - {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ skydive_analyzer_port }}
+{% endfor %}
+
+agent:
+  listen: {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}:{{ skydive_agents_port }}
+  flow:
+    probes:
+      - gopacket
+{% if neutron_plugin_agent == "openvswitch" %}
+      - ovssflow
+{% endif %}
+  topology:
+    probes:
+      - netlink
+      - netns
+      - neutron
+{% if neutron_plugin_agent == "openvswitch" %}
+      - ovsdb
+{% endif %}
+

@@ -1,0 +1,43 @@
+---
+- name: Restart skydive-analyzer container
+  vars:
+    service_name: "skydive-analyzer"
+    service: "{{ skydive_services[service_name] }}"
+    config_json: "{{ skydive_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    skydive_conf: "{{ skydive_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    skydive_analyzer_container: "{{ check_skydive_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or skydive_conf.changed |bool
+      or skydive_analyzer_container.changed | bool
+
+- name: Restart skydive-agent container
+  vars:
+    service_name: "skydive-agent"
+    service: "{{ skydive_services[service_name] }}"
+    config_json: "{{ skydive_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    skydive_conf: "{{ skydive_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    skydive_agent_container: "{{ check_skydive_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or skydive_conf.changed |bool
+      or skydive_agent_container.changed | bool
+
