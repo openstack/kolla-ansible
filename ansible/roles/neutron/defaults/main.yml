@@ -40,31 +40,6 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
-  neutron-sfc-agent:
-    container_name: "neutron_sfc_agent"
-    image: "{{ neutron_sfc_agent_image_full }}"
-    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
-    privileged: True
-    host_in_groups: >-
-      {{
-      ( inventory_hostname in groups['compute']
-      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-      or inventory_hostname in groups['neutron-dhcp-agent']
-      or inventory_hostname in groups['neutron-l3-agent']
-      or inventory_hostname in groups['neutron-metadata-agent']
-      and not enable_nova_fake | bool
-      ) or
-      ( inventory_hostname in groups['neutron-dhcp-agent']
-      or inventory_hostname in groups['neutron-l3-agent']
-      or inventory_hostname in groups['neutron-metadata-agent']
-      and enable_nova_fake | bool
-      )
-      }}
-    volumes:
-      - "{{ node_config_directory }}/neutron-sfc-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
     image: "{{  neutron_linuxbridge_agent_image_full }}"
@@ -211,10 +186,6 @@ neutron_openvswitch_agent_image: "{{ docker_registry ~ '/' if docker_registry el
 neutron_openvswitch_agent_tag: "{{ neutron_tag }}"
 neutron_openvswitch_agent_image_full: "{{ neutron_openvswitch_agent_image }}:{{ neutron_openvswitch_agent_tag }}"
 
-neutron_sfc_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-sfc-agent"
-neutron_sfc_agent_tag: "{{ neutron_tag }}"
-neutron_sfc_agent_image_full: "{{ neutron_sfc_agent_image }}:{{ neutron_sfc_agent_tag }}"
-
 neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-server"
 neutron_server_tag: "{{ neutron_tag }}"
 neutron_server_image_full: "{{ neutron_server_image }}:{{ neutron_server_tag }}"
@@ -252,6 +223,8 @@ extension_drivers:
     enabled: true
   - name: "dns"
     enabled: "{{ enable_designate | bool }}"
+  - name: "sfc"
+    enabled: "{{ enable_neutron_sfc | bool }}"
 
 neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto', true)|list }}"
 
@@ -260,7 +233,7 @@ neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto'
 ####################
 service_plugins:
   - name: "flow_classifier"
-    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+    enabled: "{{ enable_neutron_sfc | bool }}"
   - name: "lbaasv2"
     enabled: "{{ enable_neutron_lbaas | bool }}"
   - name: "firewall"
@@ -272,7 +245,7 @@ service_plugins:
   - name: "router"
     enabled: true
   - name: "sfc"
-    enabled: "{{ neutron_plugin_agent == 'sfc' }}"
+    enabled: "{{ enable_neutron_sfc | bool }}"
   - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"
     enabled: "{{ enable_neutron_bgp_dragent | bool }}"
 
@@ -288,6 +261,17 @@ neutron_notification_topics:
     enabled: "{{ enable_designate | bool }}"
 
 neutron_enabled_notification_topics: "{{ neutron_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Agent Extensions
+####################
+agent_extensions:
+  - name: "qos"
+    enabled: "{{ enable_neutron_qos | bool }}"
+  - name: "sfc"
+    enabled: "{{ enable_neutron_sfc | bool }}"
+
+neutron_agent_extensions: "{{ agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # VMware NSXV
@@ -307,4 +291,3 @@ vmware_nsxv_backup_edge_pool: "service:compact:1:2"
 vmware_nsxv_spoofguard_enabled: "false"
 vmware_nsxv_metadata_initializer: "false"
 vmware_nsxv_edge_ha: "false"
-

@@ -61,3 +61,26 @@
     - neutron_vpnaas_agent.host_in_groups | bool
   run_once: True
   delegate_to: "{{ groups[neutron_vpnaas_agent.group][0] }}"
+
+- name: Running Neutron sfc bootstrap container
+  vars:
+    neutron_server: "{{ neutron_services['neutron-server'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      NEUTRON_SFC_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ neutron_server.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_neutron_sfc"
+    restart_policy: "never"
+    volumes: "{{ neutron_server.volumes }}"
+  when:
+    - enable_neutron_sfc | bool
+    - neutron_server.enabled | bool
+    - neutron_server.host_in_groups | bool
+  run_once: True
+  delegate_to: "{{ groups[neutron_server.group][0] }}"

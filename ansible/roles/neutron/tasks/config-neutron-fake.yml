@@ -70,23 +70,3 @@
   with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
   notify:
     - Restart fake neutron-openvswitch-agent container
-
-- name: Checking neutron-sfc-agent container for nova fake node
-  vars:
-    neutron_sfc_agent: "{{ neutron_services['neutron-sfc-agent'] }}"
-  kolla_docker:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ neutron_sfc_agent.container_name }}"
-    image: "{{ neutron_sfc_agent.image }}"
-    privileged: "{{ neutron_sfc_agent.privileged | default(False) }}"
-    volumes: "{{ neutron_sfc_agent.volumes }}"
-  register: check_fake_neutron_sfc_agent
-  when:
-    - action != "config"
-    - enable_nova_fake | bool
-    - neutron_plugin_agent == "sfc"
-    - inventory_hostname in groups["compute"]
-  with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
-  notify:
-    - Restart fake neutron-sfc-agent container

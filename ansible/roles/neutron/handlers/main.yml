@@ -82,54 +82,6 @@
       or fake_neutron_ml2_conf_ini | changed
       or check_fake_neutron_openvswitch_agent | changed
 
-- name: Restart fake neutron-sfc-agent container
-  vars:
-    service_name: "neutron-sfc-agent"
-    service: "{{ neutron_services[service_name] }}"
-    config_json: "{{ neutron_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_conf: "{{ neutron_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_ml2_conf: "{{ neutron_ml2_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_sfc_agent_container: "{{ check_neutron_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    privileged: "{{ service.privileged | default(False) }}"
-  with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
-  when:
-    - action != "config"
-    - enable_nova_fake | bool
-    - neutron_plugin_agent == "sfc"
-    - inventory_hostname in groups["compute"]
-    - fake_config_json | changed
-      or fake_neutron_conf | changed
-      or fake_neutron_ml2_conf_ini | changed
-      or check_fake_neutron_sfc_agent | changed
-
-# TODO(Jeffrey4l): sfc do not have config.json file at all. it is not finished
-- name: Restart neutron-sfc-agent container
-  vars:
-    service_name: "neutron-sfc-agent"
-    service: "{{ neutron_services[service_name] }}"
-    config_json: "{{ neutron_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_sfc_agent_container: "{{ check_neutron_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    privileged: "{{ service.privileged | default(False) }}"
-  when:
-    - action != "config"
-    - service.enabled | bool
-    - service.host_in_groups | bool
-    - config_json | changed
-      or neutron_sfc_agent_container | changed
-
 - name: Restart neutron-linuxbridge-agent container
   vars:
     service_name: "neutron-linuxbridge-agent"
