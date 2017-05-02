@@ -304,7 +304,7 @@ following.
     mount --make-shared /run
     mount --make-shared /var/lib/nova/mnt
 
-If /var/lib/nova/mnt is not present, can do below work around.
+If /var/lib/nova/mnt is not present, do the workaround below.
 
 ::
 
