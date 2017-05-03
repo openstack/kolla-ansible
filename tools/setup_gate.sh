@@ -116,6 +116,7 @@ function setup_ssh {
 
     # From now on use the new IdentityFile for connecting to other hosts
     echo "IdentityFile /home/jenkins/.ssh/kolla" >> /home/jenkins/.ssh/config
+    chmod 600 /home/jenkins/.ssh/config
 }
 
 function setup_inventory {
