@@ -88,13 +88,13 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 
 - `Ceph <http://ceph.com/>`__ implementation for Cinder, Glance and Nova.
 - `Collectd <https://collectd.org/>`__,
-  `Telegraf <https://github.com/influxdata/telegraf/>`__,
+  `Telegraf <https://docs.influxdata.com/telegraf/>`__,
   `InfluxDB <https://influxdata.com/time-series-platform/influxdb/>`__, and
   `Grafana <http://grafana.org/>`__ for performance monitoring.
 - `Elasticsearch <https://www.elastic.co/de/products/elasticsearch/>`__ and
   `Kibana <https://www.elastic.co/de/products/kibana/>`__ to search, analyze,
   and visualize log messages.
-- `Etcd <https://github.com/coreos/etcd/>`__ a distributed reliable key-value store.
+- `Etcd <https://coreos.com/etcd/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
   for unified logging layer.
 - `HAProxy <http://www.haproxy.org/>`__ and
