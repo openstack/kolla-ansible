@@ -76,8 +76,7 @@ Docker Python           1.6.0        none         On target nodes
 Python Jinja2           2.6.0        none         On deployment host
 =====================   ===========  ===========  =========================
 
-Dependencies for the stable/newton branch and later (including master branch)
-are:
+Dependencies for the stable/newton are:
 
 =====================   ===========  ===========  =========================
 Component               Min Version  Max Version  Comment
@@ -85,6 +84,18 @@ Component               Min Version  Max Version  Comment
 Ansible                 2.0.0        none         On deployment host
 Docker                  1.10.0       none         On target nodes
 Docker Python           1.6.0        none         On target nodes
+Python Jinja2           2.8.0        none         On deployment host
+=====================   ===========  ===========  =========================
+
+Dependencies for the stable/ocata branch and later (including master branch)
+are:
+
+=====================   ===========  ===========  =========================
+Component               Min Version  Max Version  Comment
+=====================   ===========  ===========  =========================
+Ansible                 2.0.0        none         On deployment host
+Docker                  1.10.0       none         On target nodes
+Docker Python           1.8.1        none         On target nodes
 Python Jinja2           2.8.0        none         On deployment host
 =====================   ===========  ===========  =========================
 
