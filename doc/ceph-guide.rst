@@ -44,15 +44,19 @@ usage with Kolla.
     Sector size (logical/physical): 512B/512B
     Partition Table: gpt
     Number  Start   End     Size    File system  Name                      Flags
-         1      1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
+    1       1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
 
 
 Using an external journal drive
 -------------------------------
 
-The steps documented above created a journal partition of 5 GByte
-and a data partition with the remaining storage capacity on the same tagged
-drive.
+Create a journal partition of 5 GByte and a data partition with the remaining
+storage capacity on the same tagged drive.
+
+::
+
+    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_J 0 5GB
+    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_D 5GB 100%
 
 It is a common practice to place the journal of an OSD on a separate
 journal drive. This section documents how to use an external journal drive.
