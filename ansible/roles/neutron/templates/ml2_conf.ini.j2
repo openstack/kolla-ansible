@@ -59,7 +59,9 @@ extensions = qos
 {% endif %}
 
 [ovs]
+{% if inventory_hostname in groups["network"] or (inventory_hostname in groups["compute"] and enable_neutron_dvr | bool) %}
 bridge_mappings = {% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 
 ovsdb_connection = tcp:{{ api_interface_address }}:6640
 {% if enable_nova_fake | bool %}
