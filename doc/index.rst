@@ -70,6 +70,7 @@ Services
    bifrost
    networking-guide
    kuryr-guide
+   zun-guide
 
 Developer Docs
 ==============
