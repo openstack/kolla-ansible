@@ -1,0 +1,21 @@
+_kolla_ansible() {
+    local cur prev opts
+
+    COMPREPLY=()
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    kolla_ansible_opts="$(kolla-ansible bash-completion)"
+    kolla_ansible_flags="$(echo ${kolla_ansible_opts} | sed 's/ [^-][a-z0-9_-]*//g' )"
+    kolla_ansible_actions="$(echo ${kolla_ansible_opts} | sed 's/--[a-z0-9-]*//g' | sed 's/ -[a-z]//g' )"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${kolla_ansible_flags}" -- ${cur}) )
+        return 0
+    else
+        COMPREPLY=( $(compgen -W "${kolla_ansible_actions}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F _kolla_ansible -A file kolla-ansible
