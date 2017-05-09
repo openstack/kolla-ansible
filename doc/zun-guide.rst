@@ -17,7 +17,7 @@ To allow Zun Compute connect to the Docker Daemon, add the following in the
 
 .. note::
 
-  ``DOCKER_SERVICE_IP`` is zun-compute host IP address. ```2375``` is port that
+  ``DOCKER_SERVICE_IP`` is zun-compute host IP address. ``2375`` is port that
   allows Docker daemon to be accessed remotely.
 
 By default zun is disabled in the ``group_vars/all.yml``.
