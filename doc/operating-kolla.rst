@@ -100,5 +100,5 @@ node to get the admin openrc file.
 ``kolla-ansible -i INVENTORY check`` is used to do post-deployment smoke
 tests.
 
-.. note:: In order to do smoke tests, requires
-``kolla_enable_sanity_checks=yes``.
+.. note::
+  In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.

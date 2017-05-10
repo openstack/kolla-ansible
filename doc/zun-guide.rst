@@ -9,7 +9,7 @@ Preparation and Deployment
 --------------------------
 
 To allow Zun Compute connect to the Docker Daemon, add the following in the
-``docker.service` file on each zun-compute node.
+``docker.service`` file on each zun-compute node.
 
 ::
 
