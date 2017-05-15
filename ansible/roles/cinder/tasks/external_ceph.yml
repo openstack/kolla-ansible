@@ -1,25 +1,33 @@
 ---
 - name: Ensuring config directory exists
+  vars:
+    services_need_directory:
+      - "cinder-volume"
+      - "cinder-backup"
   file:
-    path: "{{ node_config_directory }}/cinder-{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-  when: inventory_hostname in groups['cinder-volume'] or
-        inventory_hostname in groups['cinder-backup']
-  with_items:
-    - volume
-    - backup
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+    - item.key in services_need_directory
+  with_dict: "{{ cinder_services }}"
 
 - name: Copying over ceph.conf for Cinder
   vars:
-    service_name: "{{ item }}"
+    services_need_config:
+      - "cinder-volume"
+      - "cinder-backup"
   merge_configs:
     sources:
       - "{{ node_custom_config }}/cinder/ceph.conf"
-      - "{{ node_custom_config }}/cinder/{{ item }}/ceph.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
-  with_items:
-    - "cinder-backup"
-    - "cinder-volume"
+      - "{{ node_custom_config }}/cinder/{{ item.key }}/ceph.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+    - item.key in services_need_config
+  with_dict: "{{ cinder_services }}"
 
 - name: Copy over Ceph keyring files for cinder-volume
   copy:
@@ -27,7 +35,10 @@
     dest: "{{ node_config_directory }}/cinder-volume/"
   with_fileglob:
     - "{{ node_custom_config }}/cinder/cinder-volume/ceph.client*"
-  when: external_ceph_cephx_enabled | bool
+  when:
+    - external_ceph_cephx_enabled | bool
+    - inventory_hostname in groups['cinder-volume']
+    - cinder_services['cinder-volume'].enabled | bool
 
 - name: Copy over Ceph keyring files for cinder-backup
   copy:
@@ -35,4 +46,7 @@
     dest: "{{ node_config_directory }}/cinder-backup/"
   with_fileglob:
     - "{{ node_custom_config }}/cinder/cinder-volume/ceph.client*"
-  when: external_ceph_cephx_enabled | bool
+  when:
+    - external_ceph_cephx_enabled | bool
+    - inventory_hostname in groups['cinder-backup']
+    - cinder_services['cinder-backup'].enabled | bool
