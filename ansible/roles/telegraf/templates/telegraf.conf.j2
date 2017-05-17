@@ -24,8 +24,10 @@
 [[inputs.disk]]
   ignore_fs = ["tmpfs", "devtmpfs"]
 [[inputs.diskio]]
+{% if inventory_hostname in groups['influxdb'] and enable_influxdb | bool %}
 [[inputs.influxdb]]
-  urls = [{% for host in groups['influxdb'] %}"{{ influxdb_proto }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address']}}:{{ influxdb_http_port }}/debug/vars"{% if not loop.last %},{% endif %}{% endfor %}]
+  urls = ["{{ influxdb_proto }}://{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ influxdb_http_port }}/debug/vars"]
+{% endif %}
 [[inputs.kernel]]
 [[inputs.mem]]
 [[inputs.processes]]
