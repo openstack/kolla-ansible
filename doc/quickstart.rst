@@ -661,7 +661,7 @@ with a glance image and neutron networks.
 
 .. note::
 
-    Different hardware results in results in variance with deployment times.
+    Different hardware results in variance with deployment times.
 
 After successful deployment of OpenStack, the Horizon dashboard will be
 available by entering IP address or hostname from ``kolla_external_fqdn``, or
