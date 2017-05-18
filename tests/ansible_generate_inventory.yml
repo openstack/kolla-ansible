@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Get node addresses
+      set_fact:
+        primary_node_address: "{{ lookup('file', '/etc/nodepool/primary_node_private') }}"
+        sub_node_addresses: "{{ lookup('file', '/etc/nodepool/sub_nodes_private').split('\n') }}"
+
+    - set_fact: node_group="{{ lookup('template', 'templates/inventory.j2')}}"
+
+    - name: Ensure /tmp/kolla exists
+      file:
+        path: "/tmp/kolla"
+        state: "directory"
+
+    - name: Copy default ansible kolla-ansible inventory
+      copy:
+        src: ../ansible/inventory/all-in-one
+        dest: /tmp/kolla/raw_inventory
+
+    - name: Replace localhost with IPs
+      replace:
+        path: /tmp/kolla/raw_inventory
+        regexp: "localhost.*$"
+        replace: "{{ node_group }}"

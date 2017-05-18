@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  connection: local
+  become: True
+  tasks:
+    - name: Get api_interface name
+      set_fact: api_interface_address="{{ lookup('file', '/etc/nodepool/primary_node_private') }}"
+
+    - shell: "ip a | grep {{ api_interface_address }}"
+      register: api_interface_name
+
+    - set_fact: api_interface_name="{{ api_interface_name.stdout_lines[0].split(" ")[-1] }}"
+
+    - set_fact:
+        is_multinode: "{{ lookup('file', '/etc/nodepool/sub_nodes') }}"
+
+    - name: Ensure /etc/kolla dir
+      file:
+        path: /etc/kolla
+        state: "directory"
+
+    - name: Setup globals.yml
+      template:
+        src: "templates/globals-default.j2"
+        dest: "/etc/kolla/globals.yml"
+
+    - name: Copy passwords.yml
+      copy:
+        src: "../etc/kolla/passwords.yml"
+        dest: "/etc/kolla/passwords.yml"
+
+    - name: Ensure /etc/kolla/config directory
+      file:
+        path: /etc/kolla/config/nova
+        state: "directory"
+
+    - name: Setup overrides
+      template:
+        src: "templates/nova-compute-overrides.j2"
+        dest: "/etc/kolla/config/nova/nova-compute.conf"
