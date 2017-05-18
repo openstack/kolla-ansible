@@ -1,0 +1,21 @@
+---
+kolla_base_distro: "{{ base }}"
+kolla_install_type: "{{ type }}"
+
+{% if is_multinode %}
+enable_haproxy: "no"
+kolla_internal_vip_address: "{{ api_interface_address }}"
+{% else %}
+kolla_internal_vip_address: "169.254.169.10"
+{% endif %}
+
+network_interface: "{{ api_interface_name }}"
+docker_restart_policy: "never"
+# NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
+docker_namespace: "lokolla"
+docker_registry: "{{ api_interface_address }}:4000"
+neutron_external_interface: "fake_interface"
+enable_horizon: "yes"
+enable_heat: "no"
+openstack_logging_debug: "True"
+openstack_service_workers: "1"
