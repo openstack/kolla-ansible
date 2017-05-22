@@ -182,9 +182,14 @@ function sanity_check {
     neutron --debug agent-list
     tools/init-runonce
     nova --debug boot --poll --image $(openstack image list | awk '/cirros/ {print $2}') --nic net-id=$(openstack network list | awk '/demo-net/ {print $2}') --flavor 1 kolla_boot_test
+
     nova --debug list
     # If the status is not ACTIVE, print info and exit 1
     nova --debug show kolla_boot_test | awk '{buf=buf"\n"$0} $2=="status" && $4!="ACTIVE" {failed="yes"}; END {if (failed=="yes") {print buf; exit 1}}'
+    if echo $ACTION | grep -q "ceph"; then
+        openstack volume create --size 2 test_volume
+        openstack server add volume kolla_boot_test test_volume --device /dev/vdb
+    fi
 }
 
 function get_logs {
@@ -200,10 +205,14 @@ setup_ansible
 setup_config
 setup_node
 
-ansible-playbook -e type=$INSTALL_TYPE -e base=$BASE_DISTRO tests/ansible_generate_config.yml > /tmp/logs/ansible/generate_config
+ansible-playbook -e type=$INSTALL_TYPE -e base=$BASE_DISTRO -e action=$ACTION tests/ansible_generate_config.yml > /tmp/logs/ansible/generate_config
 tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
 sudo tools/generate_passwords.py
 prepare_images
+
+if echo $ACTION | grep -q "ceph"; then
+    ansible-playbook -i ${RAW_INVENTORY} tests/ansible_setup_ceph_disks.yml > /tmp/logs/ansible/setup_ceph_disks
+fi
 
 trap get_logs EXIT
 
