@@ -1,25 +1,56 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "rabbitmq"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ rabbitmq_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "rabbitmq"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: rabbitmq_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ rabbitmq_services }}"
+  notify:
+    - Restart rabbitmq container
 
 - name: Copying over rabbitmq configs
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
   template:
     src: "{{ item }}.j2"
     dest: "{{ node_config_directory }}/rabbitmq/{{ item }}"
+  register: rabbitmq_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
      - "rabbitmq-env.conf"
      - "rabbitmq.config"
      - "rabbitmq-clusterer.config"
      - "definitions.json"
+  notify:
+    - Restart rabbitmq container
+
+- name: Check rabbitmq containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_rabbitmq_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ rabbitmq_services }}"
+  notify:
+    - Restart rabbitmq container
