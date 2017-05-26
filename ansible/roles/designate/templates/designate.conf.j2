@@ -39,9 +39,11 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 enabled_notification_handlers = nova_fixed, neutron_floatingip
 workers = {{ openstack_service_workers }}
 
+{% if service_name == 'designate-mdns' %}
 [service:mdns]
 listen = {{ hostvars[inventory_hostname]['ansible_' + dns_interface]['ipv4']['address'] }}:{{ designate_mdns_port }}
 workers = {{ openstack_service_workers }}
+{% endif %}
 
 [service:worker]
 enabled = True
