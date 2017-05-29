@@ -255,3 +255,110 @@ from each Ceph monitor node:
         -i ansible/inventory/multinode \
         -a 'docker volume rm ceph_mon_config' \
         ceph-mon
+
+=====================
+Simple 3 Node Example
+=====================
+
+This example will show how to deploy Ceph in a very simple setup using 3 storage
+nodes. 2 of those nodes (kolla1 and kolla2) will also provide other services
+like control, network, compute, monitoring and compute. The 3rd (kolla3) node
+will only act as a storage node.
+
+This example will only focus on the Ceph aspect of the deployment and assumes
+that you can already deploy a fully functional environment using 2 nodes that
+does not employ Ceph yet. So we will be adding to the existing multinode
+inventory file you already have.
+
+Each of the 3 nodes are assumed to have two disk, ``/dev/sda`` (40GB)
+and ``/dev/sdb`` (10GB). Size is not all that important... but for now make sure
+each sdb disk are of the same size and are at least 10GB. This example will use
+a single disk (/dev/sdb) for both Ceph data and journal. It will not implement
+caching.
+
+Here is the top part of the multinode inventory file used in the example
+environment before adding the 3rd node for Ceph:
+
+::
+
+    [control]
+    # These hostname must be resolvable from your deployment host
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [network]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [compute]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [monitoring]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [storage]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+
+
+Configuration
+=============
+
+To prepare the 2nd disk (/dev/sdb) of each nodes for use by Ceph you will need
+to add a partition label to it as shown below:
+
+::
+
+    # <WARNING ALL DATA ON /dev/sdb will be LOST!>
+    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+
+Make sure to run this command on each of the 3 nodes or the deployment will
+fail.
+
+Next, edit the multinode inventory file and make sure the 3 nodes are listed
+under [storage]. In this example I will add kolla3.ducourrier.com to the
+existing inventory file:
+
+::
+
+    [control]
+    # These hostname must be resolvable from your deployment host
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [network]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [compute]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [monitoring]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+
+    [storage]
+    kolla1.ducourrier.com
+    kolla2.ducourrier.com
+    kolla3.ducourrier.com
+
+It is now time to enable Ceph in the environment by editing the
+``/etc/kolla/globals.yml`` file:
+
+::
+
+    enable_ceph: "yes"
+    enable_ceph_rgw: "yes"
+    enable_cinder: "yes"
+    glance_backend_file: "no"
+    glance_backend_ceph: "yes"
+
+Finally deploy the Ceph-enabled configuration:
+
+::
+
+    kolla-ansible deploy -i path/to/inventory-file
