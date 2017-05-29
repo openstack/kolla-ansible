@@ -5,7 +5,7 @@ log_dir = /var/log/kolla/aodh
 debug = {{ aodh_logging_debug }}
 notification_topics = notifications
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 [api]
 port = {{ aodh_api_port }}
@@ -38,3 +38,6 @@ project_name = service
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
 auth_type = password
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}

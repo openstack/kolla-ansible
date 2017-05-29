@@ -12,7 +12,7 @@ log_file = /var/log/kolla/mistral/mistral-executor.log
 # stderr and collected by Docker
 use_stderr = False
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 {% if service_name == 'mistral-api' %}
 [api]
@@ -54,6 +54,7 @@ os_actions_endpoint_type = internal
 default_region = {{ openstack_region_name }}
 
 [oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 driver = noop
 
 {% if enable_osprofiler | bool %}

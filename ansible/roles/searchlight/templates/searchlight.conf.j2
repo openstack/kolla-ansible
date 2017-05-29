@@ -3,8 +3,7 @@ debug = {{ searchlight_logging_debug }}
 
 policy_file = /etc/searchlight/policy.json
 log_dir = /var/log/kolla/searchlight
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
+transport_url = {{ rpc_transport_url }}
 
 [api]
 port = {{ searchlight_api_port }}
@@ -35,6 +34,9 @@ auth_type = password
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 
 [service_credentials]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}

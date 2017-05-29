@@ -18,8 +18,7 @@ rpc_backend = rabbit
 log_dir = C:\OpenStack\Log
 log_file = nova-compute.log
 force_config_drive = True
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
+transport_url = {{ rpc_transport_url }}
 
 [placement]
 auth_type = password
@@ -58,3 +57,6 @@ username = {{ neutron_keystone_user }}
 password = {{ neutron_keystone_password }}
 auth_url = {{ keystone_admin_url }}/v3
 auth_type = v3password
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}

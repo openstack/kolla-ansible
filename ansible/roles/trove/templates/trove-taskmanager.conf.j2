@@ -8,7 +8,7 @@ nova_proxy_admin_tenant_name = services
 nova_proxy_admin_user = trove
 taskmanager_manager = trove.taskmanager.manager.Manager
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 trove_auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
 {% if enable_nova | bool %}
@@ -26,6 +26,7 @@ connection = mysql+pymysql://{{ trove_database_user }}:{{ trove_database_passwor
 max_retries = -1
 
 [oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 {% if enable_ceilometer | bool %}
 driver = messagingv2
 topics = 'notifications'

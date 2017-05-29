@@ -12,7 +12,7 @@ max_allowed_request_size_in_bytes = 1000000
 db_auto_create = False
 sql_connection = mysql+pymysql://{{ barbican_database_user }}:{{ barbican_database_password }}@{{ barbican_database_address }}/{{ barbican_database_name }}
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 # ================= Secret Store Plugin ===================
 [secretstore]
@@ -70,3 +70,6 @@ project_name = service
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
 auth_type = password
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}

@@ -123,6 +123,27 @@ keepalived_virtual_router_id: "51"
 #######################
 es_heap_size: "1G"
 
+###################
+# Messaging options
+###################
+# olso.messaging rpc transport valid options are [ rabbit, amqp ]
+om_rpc_transport: "rabbit"
+om_rpc_user: "{{ rabbitmq_user }}"
+om_rpc_password: "{{ rabbitmq_password }}"
+om_rpc_port: "{{ rabbitmq_port }}"
+om_rpc_group: "rabbitmq"
+
+rpc_transport_url: "{{ om_rpc_transport }}://{% for host in groups[om_rpc_group] %}{{ om_rpc_user }}:{{ om_rpc_password }}@{{ hostvars[host]['ansible_' + api_interface]['ipv4']['address'] }}:{{ om_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+# oslo.messaging notify transport valid options are [ rabbit ]
+om_notify_transport: "rabbit"
+om_notify_user: "{{ rabbitmq_user }}"
+om_notify_password: "{{ rabbitmq_password }}"
+om_notify_port: "{{ rabbitmq_port }}"
+om_notify_group: "rabbitmq"
+
+notify_transport_url: "{{ om_notify_transport }}://{% for host in groups[om_notify_group] %}{{ om_notify_user }}:{{ om_notify_password }}@{{ hostvars[host]['ansible_' + api_interface]['ipv4']['address'] }}:{{ om_notify_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
 ####################
 # Networking options
 ####################
@@ -240,7 +261,7 @@ panko_api_port: "8977"
 
 placement_api_port: "8780"
 
-qdrouterd_port: "15676"
+qdrouterd_port: "31459"
 
 rabbitmq_port: "5672"
 rabbitmq_management_port: "15672"
@@ -343,7 +364,7 @@ enable_mariadb: "yes"
 enable_memcached: "yes"
 enable_neutron: "yes"
 enable_nova: "yes"
-enable_rabbitmq: "yes"
+enable_rabbitmq: "{{ 'yes' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'no' }}"
 enable_outward_rabbitmq: "{{ enable_murano | bool }}"
 
 # Additional optional OpenStack features and services are specified here
@@ -423,7 +444,7 @@ enable_openvswitch: "{{ neutron_plugin_agent != 'linuxbridge' | bool }}"
 enable_ovs_dpdk: "no"
 enable_osprofiler: "no"
 enable_panko: "no"
-enable_qdrouterd: "no"
+enable_qdrouterd: "{{ 'yes' if om_rpc_transport == 'amqp' else 'no' }}"
 enable_rally: "no"
 enable_redis: "no"
 enable_sahara: "no"
