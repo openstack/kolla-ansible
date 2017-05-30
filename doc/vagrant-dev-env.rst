@@ -92,14 +92,18 @@ correctly. On Fedora 22::
     sudo systemctl start libvirtd
     sudo systemctl enable libvirtd
 
-Find a location in the system's home directory and checkout the Kolla repo::
+Find a location in the system's home directory and checkout Kolla repos::
 
+    git clone https://git.openstack.org/openstack/kolla-ansible
     git clone https://git.openstack.org/openstack/kolla
+
+Both repos must share the same parent directory so the bootstrap code can
+locate them.
 
 Developers can now tweak the Vagrantfile or bring up the default **all-in-one**
 CentOS 7-based environment::
 
-    cd kolla/contrib/dev/vagrant && vagrant up
+    cd kolla-ansible/contrib/dev/vagrant && vagrant up
 
 The command ``vagrant status`` provides a quick overview of the VMs composing
 the environment.
