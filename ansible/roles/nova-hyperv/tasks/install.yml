@@ -1,0 +1,26 @@
+---
+- name: Create MSIs download directory
+  win_command: "cmd /c mkdir {{ msi_dir }}"
+  args:
+    creates: "{{ msi_dir }}"
+
+- name: Download Nova and FreeRDP-WebConnect MSIs
+  win_get_url:
+    url: "{{ item.name }}"
+    dest: "{{ item.destination }}"
+    force: no
+  with_items:
+    - { name: "{{ nova_msi_url }}", destination: "{{ msi_dir }}\\{{ hyperv_compute_msi }}" }
+    - { name: "{{ freerdp_msi_url }}", destination: "{{ msi_dir }}\\{{ freerdp_webconnect_msi }}" }
+
+- name: Install the Compute MSI
+  win_command: "msiexec /i {{ hyperv_compute_msi }} SKIPNOVACONF=0"
+  args:
+    chdir: "{{ msi_dir }}"
+    creates: "%PROGRAMFILES%\\Cloudbase Solutions\\OpenStack\\Nova\\bin"
+
+- name: Install the FreeRDP-WebConnect MSI
+  win_command: "msiexec.exe /i {{ freerdp_webconnect_msi }}"
+  args:
+    chdir: "{{ msi_dir }}"
+    creates: "%PROGRAMFILES%\\Cloudbase Solutions\\FreeRDP-WebConnect\\Binaries"

@@ -1,0 +1,28 @@
+[global]
+debug = {{ openstack_logging_debug }}
+redirect = false
+port = {{ rdp_port }}
+bindaddr = {% for host in groups['hyperv'] %}{% for ip in hostvars[inventory_hostname]['ansible_ip_addresses'] %}{% if host == ip %}{{ ip }}{% endif %}{% endfor %}{% endfor %}
+
+
+[http]
+documentroot = C:\Program Files\Cloudbase Solutions\FreeRDP-WebConnect\WebRoot\
+
+[ssl]
+port=4430
+bindaddr = {% for host in groups['hyperv'] %}{% for ip in hostvars[inventory_hostname]['ansible_ip_addresses'] %}{% if host == ip %}{{ ip }}{% endif %}{% endfor %}{% endfor %}
+
+certfile = C:\Program Files\Cloudbase Solutions\FreeRDP-WebConnect\etc\server.cer
+
+[rdpoverride]
+nofullwindowdrag = true
+
+[openstack]
+authurl = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}/v2.0
+tenantname = service
+username = {{ nova_keystone_user }}
+password = {{ nova_keystone_password }}
+
+[hyperv]
+hostusername = {{ hyperv_username }}
+hostpassword = {{ hyperv_password }}

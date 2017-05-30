@@ -1,0 +1,61 @@
+[DEFAULT]
+compute_driver = compute_hyperv.driver.HyperVDriver
+instances_path = C:\OpenStack\Instances
+use_cow_images = true
+flat_injected = true
+mkisofs_cmd = C:\Program Files\Cloudbase Solutions\OpenStack\Nova\bin\mkisofs.exe
+debug = {{ openstack_logging_debug }}
+allow_resize_to_same_host = true
+running_deleted_instance_action = reap
+running_deleted_instance_poll_interval = 120
+resize_confirm_window = 5
+resume_guests_state_on_host_boot = true
+rpc_response_timeout = 1800
+lock_path = C:\OpenStack\Log
+vif_plugging_is_fatal = false
+vif_plugging_timeout = 60
+rpc_backend = rabbit
+log_dir = C:\OpenStack\Log
+log_file = nova-compute.log
+force_config_drive = True
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+
+[placement]
+auth_type = password
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}/v3
+project_name = service
+username = {{ placement_keystone_user }}
+password = {{ placement_keystone_password }}
+project_domain_name = default
+user_domain_name = default
+os_region_name = {{ openstack_region_name }}
+
+[glance]
+api_servers = {{ internal_protocol }}://{% for host in groups['glance-api'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+
+[hyperv]
+vswitch_name = {{ vswitch_name }}
+limit_cpu_features = false
+config_drive_inject_password = true
+qemu_img_cmd = C:\Program Files\Cloudbase Solutions\OpenStack\Nova\bin\qemu-img.exe
+config_drive_cdrom = true
+dynamic_memory_ratio = 1
+enable_instance_metrics_collection = false
+
+
+[rdp]
+enabled = true
+html5_proxy_base_url = {{ public_protocol }}://{{ ansible_fqdn }}:{{ rdp_port }}
+
+[neutron]
+url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}
+auth_strategy = keystone
+project_domain_name = default
+project_name = service
+user_domain_name = default
+username = {{ neutron_keystone_user }}
+password = {{ neutron_keystone_password }}
+auth_url = {{ keystone_admin_url }}/v3
+auth_plugin = v3password
