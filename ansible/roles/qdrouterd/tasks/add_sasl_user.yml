@@ -1,0 +1,16 @@
+---
+- name: Wait for qdrouterd is up
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ qdrouterd_port }}"
+    connect_timeout: 1
+    state: started
+  when:
+    - action != "config"
+
+- name: Create qdrouterd sasl user
+  shell: echo {{ qdrouterd_password }} | docker exec -u root -i qdrouterd saslpasswd2 -c -p -f /var/lib/qdrouterd/qdrouterd.sasldb -u AMQP {{ qdrouterd_user }}
+  run_once: true
+  changed_when: true
+  when:
+    - action != "config"

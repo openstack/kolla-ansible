@@ -1,0 +1,72 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ qdrouterd_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: qdrouterd_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ qdrouterd_services }}"
+  notify:
+    - Restart qdrouterd container
+
+- name: Copying over qdrouterd config
+  vars:
+    service: "{{ qdrouterd_services['qdrouterd'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/qdrouterd/qdrouterd.conf"
+  register: qdrouterd_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/qdrouterd/{{ inventory_hostname }}/qdrouterd.conf"
+    - "{{ node_custom_config }}/qdrouterd/qdrouterd.conf"
+    - "qdrouterd.conf.j2"
+  notify:
+    - Restart qdrouterd container
+
+- name: Copying over qdrouterd sasl config
+  vars:
+    service: "{{ qdrouterd_services['qdrouterd'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/qdrouterd/qdrouterd-sasl.conf"
+  register: qdrouterd_sasl_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/qdrouterd/{{ inventory_hostname }}/qdrouterd-sasl.conf"
+    - "{{ node_custom_config }}/qdrouterd/qdrouterd-sasl.conf"
+    - "qdrouterd-sasl.conf.j2"
+  notify:
+    - Restart qdrouterd container
+
+- name: Check qdrouterd containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_qdrouterd_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ qdrouterd_services }}"
+  notify:
+    - Restart qdrouterd container
