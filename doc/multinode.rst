@@ -81,12 +81,14 @@ section:
     [Service]
     MountFlags=shared
     EnvironmentFile=/etc/sysconfig/docker
+    ExecStart=
     ExecStart=/usr/bin/docker daemon $INSECURE_REGISTRY
 
     # Ubuntu
     [Service]
     MountFlags=shared
     EnvironmentFile=-/etc/default/docker
+    ExecStart=
     ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 
 Restart Docker by executing the following commands:
