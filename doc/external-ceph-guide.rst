@@ -96,8 +96,9 @@ Cinder
 ------
 
 Configuring external Ceph for Cinder works very similar to
-Glance. The required Cinder configuration goes into
-/etc/kolla/config/cinder/cinder-volume.conf:
+Glance.
+
+Edit /etc/kolla/config/cinder/cinder-volume.conf with the following content:
 
 ::
 
@@ -112,6 +113,20 @@ Glance. The required Cinder configuration goes into
   volume_backend_name=rbd-1
   volume_driver=cinder.volume.drivers.rbd.RBDDriver
   rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
+
+Edit /etc/kolla/config/cinder/cinder-backup.conf with the following content:
+
+::
+
+  [DEFAULT]
+  backup_ceph_conf=/etc/ceph/ceph.conf
+  backup_ceph_user=cinder
+  backup_ceph_chunk_size = 134217728
+  backup_ceph_pool=backups
+  backup_driver = cinder.backup.drivers.ceph
+  backup_ceph_stripe_unit = 0
+  backup_ceph_stripe_count = 0
+  restore_discard_excess_bytes = true
 
 Next, place the ceph.conf file into
 /etc/kolla/config/cinder/ceph.conf:
