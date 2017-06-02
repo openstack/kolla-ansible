@@ -1,15 +1,12 @@
-.. _kibana-guide:
+.. _central-logging-guide:
 
-===============
-Kibana in Kolla
-===============
+========================
+Central Logging in Kolla
+========================
 
 An OpenStack deployment generates vast amounts of log data. In order to
 successfully monitor this and use it to diagnose problems, the standard "ssh
 and grep" solution quickly becomes unmanageable.
-
-Kolla can deploy Kibana as part of the E*K stack in order to allow operators to
-search and visualise logs in a centralised manner.
 
 Preparation and deployment
 ==========================
@@ -20,6 +17,26 @@ the following:
 ::
 
     enable_central_logging: "yes"
+
+Elasticsearch
+=============
+
+Kolla deploys Elasticsearch as part of the E*K stack to store, organize
+and make logs easily accessible.
+
+By default Elasticsearch is deployed on port ``9200``.
+
+.. note::
+
+    Elasticsearch stores a lot of logs, so if you are running centralized logging,
+    remember to give ``/var/lib/docker`` an adequate space.
+
+
+Kibana
+======
+
+Kolla deploys Kibana as part of the E*K stack in order to allow operators to
+search and visualise logs in a centralised manner.
 
 After successful deployment, Kibana can be accessed using a browser on
 ``<kolla_external_vip_address>:5601``.
@@ -39,7 +56,7 @@ After setting parameters, create an index by clicking the ``Create`` button.
           in Kolla.
 
 Search logs - Discover tab
-==========================
+--------------------------
 
 Operators can create and store searches based on various fields from logs, for
 example, "show all logs marked with ERROR on nova-compute".
@@ -103,7 +120,7 @@ can still be seen how Kibana helps in tracing this data, particularly in a
 large scale deployment scenario.
 
 Visualize data - Visualize tab
-==============================
+------------------------------
 
 In the visualization tab a wide range of charts is available. If any
 visualization has not been saved yet, after choosing this tab *Create a new
@@ -123,7 +140,7 @@ of the left-side menu.
    will be lost after leaving a page or creating another visualization.
 
 Organize visualizations and searches - Dashboard tab
-====================================================
+----------------------------------------------------
 
 In the Dashboard tab all of saved visualizations and searches can be
 organized in one Dashboard. To add visualization or search, one can choose
@@ -140,7 +157,7 @@ If a Dashboard has already been saved, it can be opened by choosing *open
 dashboard* option in the menu on the right.
 
 Exporting and importing created items - Settings tab
-====================================================
+----------------------------------------------------
 
 Once visualizations, searches or dashboards are created, they can be exported
 to a JSON format by choosing Settings tab and then Objects tab. Each of the
