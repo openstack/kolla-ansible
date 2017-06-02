@@ -16,10 +16,13 @@ zun_services:
     group: zun-compute
     enabled: true
     image: "{{ zun_compute_image_full }}"
+    privileged: True
     volumes:
       - "{{ node_config_directory }}/zun-compute/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "/run:/run:shared"
+      - "/usr/lib/docker:/usr/lib/docker"
 
 ####################
 ## Database
@@ -44,9 +47,9 @@ zun_api_image_full: "{{ zun_api_image }}:{{ zun_api_tag }}"
 ####################
 ## OpenStack
 ####################
-zun_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
-zun_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
-zun_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ zun_api_port }}/v1/%(tenant_id)s"
+zun_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/"
+zun_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ zun_api_port }}/v1/"
+zun_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ zun_api_port }}/v1/"
 
 zun_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -12,6 +12,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes }}"
   when:
     - action != "config"
@@ -19,6 +20,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or zun_conf.changed | bool
+      or zun_conf_wsgi.changed | bool
       or policy_json.changed | bool
       or zun_api_container.changed | bool
 
@@ -35,6 +37,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes }}"
   when:
     - action != "config"

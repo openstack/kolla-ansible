@@ -3,10 +3,17 @@ debug = {{ zun_logging_debug }}
 log_dir = /var/log/kolla/zun
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-{% if service_name == 'zun-api' %}
-osapi_zun_listen = {{ api_interface_address }}
-osapi_zun_listen_port = {{ zun_api_port }}
-{% endif %}
+container_driver = docker.driver.DockerDriver
+image_driver_list = glance
+db_type = sql
+
+[api]
+host_ip = {{ api_interface_address }}
+port = {{ zun_api_port }}
+workers = {{ openstack_service_workers }}
+
+[compute]
+topic = zun-compute
 
 [database]
 connection = mysql+pymysql://{{ zun_database_user }}:{{ zun_database_password }}@{{ zun_database_address }}/{{ zun_database_name }}
@@ -17,10 +24,9 @@ version = 1
 service_type = container
 service_name = zun
 
-[keystone_authtoken]
+[keystone_auth]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
-project_domain_name = Default
 auth_type = password
 project_domain_id = default
 user_domain_id = default
@@ -31,3 +37,32 @@ password = {{ zun_keystone_password }}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ zun_keystone_user }}
+password = {{ zun_keystone_password }}
+service_token_roles_required = True
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+
+[glance_client]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ zun_keystone_user }}
+password = {{ zun_keystone_password }}
+region_name = {{ openstack_region_name }}
+endpoint_type = internalURL
+api_version = 2
