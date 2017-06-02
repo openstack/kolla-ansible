@@ -111,6 +111,7 @@ Glance. The required Cinder configuration goes into
   rbd_pool=volumes
   volume_backend_name=rbd-1
   volume_driver=cinder.volume.drivers.rbd.RBDDriver
+  rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 
 Next, place the ceph.conf file into
 /etc/kolla/config/cinder/ceph.conf:
