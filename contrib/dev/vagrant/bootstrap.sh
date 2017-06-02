@@ -9,6 +9,7 @@
 VM=$1
 MODE=$2
 KOLLA_PATH=$3
+KOLLA_ANSIBLE_PATH=$4
 
 export http_proxy=
 export https_proxy=
@@ -168,6 +169,7 @@ function configure_operator {
 
     pip install --upgrade "ansible>=2" python-openstackclient python-neutronclient tox
 
+    pip install ${KOLLA_ANSIBLE_PATH}
     pip install ${KOLLA_PATH}
 
     # Set selinux to permissive
@@ -177,8 +179,9 @@ function configure_operator {
     fi
 
     tox -c ${KOLLA_PATH}/tox.ini -e genconfig
-    cp -r ${KOLLA_PATH}/etc/kolla/ /etc/kolla
-    ${KOLLA_PATH}/tools/generate_passwords.py
+    cp -r ${KOLLA_ANSIBLE_PATH}/etc/kolla/ /etc/kolla
+    cp -r ${KOLLA_PATH}/etc/kolla/* /etc/kolla
+    ${KOLLA_ANSIBLE_PATH}/tools/generate_passwords.py
     mkdir -p /usr/share/kolla
     chown -R vagrant: /etc/kolla /usr/share/kolla
 
