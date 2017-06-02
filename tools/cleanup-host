@@ -45,6 +45,12 @@ sudo cp /etc/fstab /etc/fstab_backup
 echo "Removing ceph references from fstab..."
 sudo sed -i '/\/var\/lib\/ceph\/osd\//d' /etc/fstab
 
+if [[ "$enable_swift" == "yes" ]]; then
+    echo "Removing swift references from fstab..."
+    cat /etc/fstab | grep "/srv/node/d*" | xargs umount
+    sed -i '/\/srv\/node\//d' /etc/fstab
+fi
+
 echo "Getting folders name..."
 FOLDER_PATH="/etc/kolla/"
 for dir in $FOLDER_PATH*; do
