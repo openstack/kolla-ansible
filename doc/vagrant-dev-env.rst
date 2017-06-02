@@ -63,8 +63,14 @@ If you are going to use VirtualBox, then install vagrant-vbguest::
 
   vagrant plugin install vagrant-vbguest
 
-Vagrant supports a wide range of virtualization technologies. This
-documentation describes libvirt. To install vagrant-libvirt plugin::
+Vagrant supports a wide range of virtualization technologies. If VirtualBox is
+used, the vbguest plugin will be required to install the VirtualBox Guest
+Additions in the virtual machine::
+
+    vagrant plugin install vagrant-vbguest
+
+This documentation focuses on libvirt specifics. To install vagrant-libvirt
+plugin::
 
   vagrant plugin install --plugin-version ">= 0.0.31" vagrant-libvirt
 

@@ -35,38 +35,37 @@ DISTRO ||= "centos"
 # is libvirt.
 GRAPHICSIP ||= "127.0.0.1"
 
-# The bootstrap.sh provision_script requires CentOS 7 or Ubuntu 15.10.
 # Provisioning other boxes than the default ones may therefore
 # require changes to bootstrap.sh.
 PROVISION_SCRIPT ||= "bootstrap.sh"
 
+# The bootstrap.sh provisioning script requires CentOS or Ubuntu; see below
+# for the supported versions for each provider.
+#
+# kolla and kolla-ansible will be mounted in $HOME and the username depends
+# on the image.
+#
 PROVIDER_DEFAULTS ||= {
   libvirt: {
     centos: {
       base_image: "centos/7",
       bridge_interface: "virbr0",
-      vagrant_shared_folder: "/home/vagrant/sync",
       sync_method: "nfs",
-      kolla_path: "/home/vagrant/kolla",
-      kolla_ansible_path: "/home/vagrant/kolla-ansible"
+      username: "vagrant"
     }
   },
   virtualbox: {
     centos: {
-      base_image: "puppetlabs/centos-7.0-64-puppet",
+      base_image: "centos/7",
       bridge_interface: "wlp3s0b1",
-      vagrant_shared_folder: "/home/vagrant/sync",
       sync_method: "virtualbox",
-      kolla_path: "/home/vagrant/kolla",
-      kolla_ansible_path: "/home/vagrant/kolla-ansible"
+      username: "vagrant"
     },
     ubuntu: {
-      base_image: "ubuntu/wily64",
+      base_image: "ubuntu/xenial64",
       bridge_interface: "wlp3s0b1",
-      vagrant_shared_folder: "/home/vagrant/sync",
       sync_method: "virtualbox",
-      kolla_path: "/home/vagrant/kolla",
-      kolla_ansible_path: "/home/vagrant/kolla-ansible"
+      username: "ubuntu"
     }
   }
 }
@@ -176,6 +175,13 @@ Vagrant.configure(2) do |config|
 
   config.vm.box = get_default(:base_image)
 
+  # these may change depending on the image
+  username = get_default(:username)
+  user_home = "/home/#{username}"
+  vagrant_shared_folder = "#{user_home}/sync"
+  kolla_path = "#{user_home}/kolla"
+  kolla_ansible_path = "#{user_home}/kolla-ansible"
+
   # Next to the hostonly NAT-network there is a host-only network with all
   # nodes attached. Plus, each node receives a 3rd adapter connected to the
   # outside public network.
@@ -198,12 +204,12 @@ Vagrant.configure(2) do |config|
     chmod 600 /root/.ssh/authorized_keys
     echo '#{my_publickey}' > /root/.ssh/id_rsa.pub
     chmod 644 /root/.ssh/id_rsa.pub
-    mkdir -p /home/vagrant/.ssh
-    echo '#{my_privatekey}' >> /home/vagrant/.ssh/id_rsa
-    chmod 600 /home/vagrant/.ssh/*
-    echo 'Host *' > ~vagrant/.ssh/config
-    echo StrictHostKeyChecking no >> ~vagrant/.ssh/config
-    chown -R vagrant: /home/vagrant/.ssh
+    mkdir -p #{user_home}/.ssh
+    echo '#{my_privatekey}' >> #{user_home}/.ssh/id_rsa
+    chmod 600 #{user_home}/.ssh/*
+    echo 'Host *' > #{user_home}/.ssh/config
+    echo StrictHostKeyChecking no >> #{user_home}/.ssh/config
+    chown -R #{username} #{user_home}/.ssh
   EOS
 
   config.hostmanager.enabled = true
@@ -224,12 +230,12 @@ Vagrant.configure(2) do |config|
   # The operator controls the deployment
   config.vm.define "operator", primary: true do |admin|
     admin.vm.hostname = "operator.local"
-    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{get_default(:kolla_path)} #{get_default(:kolla_ansible_path)}"
-    admin.vm.synced_folder kolla_ansible_repo_path, get_default(:kolla_ansible_path), create:"True", type: get_default(:sync_method)
-    admin.vm.synced_folder kolla_repo_path, get_default(:kolla_path), create:"True", type: get_default(:sync_method)
+    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{kolla_path} #{kolla_ansible_path}"
+    admin.vm.synced_folder kolla_ansible_repo_path, kolla_ansible_path, create:"True", type: get_default(:sync_method)
+    admin.vm.synced_folder kolla_repo_path, kolla_path, create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder File.join(vagrant_dir, 'storage', 'operator'), "/data/host", create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder File.join(vagrant_dir, 'storage', 'shared'), "/data/shared", create:"True", type: get_default(:sync_method)
-    admin.vm.synced_folder ".", get_default(:vagrant_shared_folder), disabled: true
+    admin.vm.synced_folder ".", vagrant_shared_folder, disabled: true
     admin.vm.provider PROVIDER do |vm|
       vm.memory = MULTINODE ? get_setting(:operator, :memory) : get_setting(:aio, :memory)
       vm.cpus = MULTINODE ? get_setting(:operator, :cpus) : get_setting(:aio, :cpus)
@@ -247,10 +253,10 @@ Vagrant.configure(2) do |config|
         hostname = "#{node_type}0#{i}"
         config.vm.define hostname do |node|
           node.vm.hostname = "#{hostname}.local"
-          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{get_default(:kolla_path)} #{get_default(:kolla_ansible_path)}"
+          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{kolla_path} #{kolla_ansible_path}"
           node.vm.synced_folder File.join(vagrant_dir, 'storage', node_type), "/data/host", create:"True", type: get_default(:sync_method)
           node.vm.synced_folder File.join(vagrant_dir, 'storage', 'shared'), "/data/shared", create:"True", type: get_default(:sync_method)
-          node.vm.synced_folder ".", get_default(:vagrant_shared_folder), disabled: true
+          node.vm.synced_folder ".", vagrant_shared_folder, disabled: true
           node.vm.provider PROVIDER do |vm|
             vm.memory = get_setting(node_type.to_sym, :memory)
             vm.cpus = get_setting(node_type.to_sym, :cpus)
