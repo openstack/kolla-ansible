@@ -24,7 +24,6 @@ scheduler_host_manager = ironic_host_manager
 host={{ ansible_hostname }}-ironic
 log_file = /var/log/kolla/nova/nova-compute-ironic.log
 compute_driver = ironic.IronicDriver
-vnc_enabled = False
 ram_allocation_ratio = 1.0
 reserved_host_memory_mb = 0
 {% elif enable_nova_fake | bool %}
@@ -60,12 +59,16 @@ workers = {{ openstack_service_workers }}
 
 {% if nova_console == 'novnc' %}
 [vnc]
+{% if service_name == "nova-compute-ironic" %}
+enabled = false
+{% else %}
 novncproxy_host = {{ api_interface_address }}
 novncproxy_port = {{ nova_novncproxy_port }}
 vncserver_listen = {{ api_interface_address }}
 vncserver_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups['compute'] %}
 novncproxy_base_url = {{ public_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}kolla_kubernetes_external_vip{% else %}{{ kolla_external_fqdn }}{% endif %}:{{ nova_novncproxy_port }}/vnc_auto.html
+{% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
 [vnc]
