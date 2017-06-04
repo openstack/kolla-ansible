@@ -3,6 +3,42 @@
 # this role has already run. We can track what has run with host facts.
 common_run: False
 
+common_services:
+  fluentd:
+    container_name: fluentd
+    image: "{{ fluentd_image_full }}"
+    environment:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      SKIP_LOG_SETUP: "true"
+    volumes:
+      - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  kolla-toolbox:
+    container_name: kolla_toolbox
+    image: "{{ kolla_toolbox_image_full }}"
+    environment:
+      ANSIBLE_NOCOLOR: "1"
+      ANSIBLE_LIBRARY: "/usr/share/ansible"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/kolla-toolbox/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/dev/:/dev/"
+      - "/run/:/run/:shared"
+      - "kolla_logs:/var/log/kolla/"
+# DUMMY_ENVIRONMENT is needed because empty environment is not supported
+  cron:
+    container_name: cron
+    image: "{{ cron_image_full }}"
+    environment:
+      DUMMY_ENVIRONMENT:
+    volumes:
+      - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+
 ####################
 # Docker
 ####################

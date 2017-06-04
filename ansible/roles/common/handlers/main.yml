@@ -1,0 +1,67 @@
+---
+- name: Restart fluentd container
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+    config_json: "{{ common_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    fluentd_container: "{{ check_common_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    environment: "{{ service.environment }}"
+  when:
+    - action != "config"
+    - config_json.changed | bool
+      or fluentd_input.changed | bool
+      or fluentd_output.changed | bool
+      or fluentd_format.changed | bool
+      or fluentd_filter.changed | bool
+      or fluentd_td_agent.changed | bool
+      or fluentd_container.changed | bool
+
+- name: Restart kolla-toolbox container
+  vars:
+    service_name: "kolla-toolbox"
+    service: "{{ common_services[service_name] }}"
+    config_json: "{{ common_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    kolla_toolbox_container: "{{ check_common_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+    environment: "{{ service.environment }}"
+  when:
+    - action != "config"
+    - config_json.changed | bool
+      or kolla_toolbox_container.changed | bool
+  notify:
+    - Initializing toolbox container using normal user
+
+- name: Initializing toolbox container using normal user
+  command: docker exec -t kolla_toolbox /usr/bin/ansible --version
+  changed_when: false
+
+- name: Restart cron container
+  vars:
+    service_name: "cron"
+    service: "{{ common_services[service_name] }}"
+    config_json: "{{ common_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    cron_container: "{{ check_common_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    environment: "{{ service.environment }}"
+  when:
+    - action != "config"
+    - config_json.changed | bool
+      or cron_confs.changed | bool
+      or check_common_containers.changed | bool

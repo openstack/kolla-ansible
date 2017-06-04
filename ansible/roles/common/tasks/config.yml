@@ -16,27 +16,31 @@
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "fluentd"
-    - "kolla-toolbox"
-    - "cron"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: common_config_jsons
+  with_dict: "{{ common_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over fluentd input config files
   template:
     src: "conf/input/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
+  register: fluentd_input
   with_items:
     - "00-global"
     - "01-syslog"
     - "02-mariadb"
     - "03-rabbitmq"
+  notify:
+    - Restart fluentd container
 
 - name: Copying over fluentd output config files
   template:
     src: "conf/output/{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
+  register: fluentd_output
   when: item.enabled | bool
   with_items:
     - name: "00-local"
@@ -44,35 +48,47 @@
     - name: "01-es"
       enabled: "{{ enable_elasticsearch | bool or
                 ( elasticsearch_address != kolla_internal_vip_address ) | bool }}"
+  notify:
+    - Restart fluentd container
 
 - name: Copying over fluentd format config files
   template:
     src: "conf/format/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
+  register: fluentd_format
   with_items:
     - "apache_access"
     - "wsgi_access"
     - "wsgi_python"
+  notify:
+    - Restart fluentd container
 
 - name: Copying over fluentd filter config files
   template:
     src: "conf/filter/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item }}.conf"
+  register: fluentd_filter
   with_items:
     - "00-record_transformer"
     - "01-rewrite"
+  notify:
+    - Restart fluentd container
 
 - name: Copying over td-agent.conf
   template:
     src: "td-agent.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/td-agent.conf"
+  register: fluentd_td_agent
   with_items:
     - "fluentd"
+  notify:
+    - Restart fluentd container
 
 - name: Copying over cron logrotate config files
   template:
     src: "cron-logrotate-{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/cron/logrotate/{{ item.name }}.conf"
+  register: cron_confs
   when: item.enabled | bool
   with_items:
     - { name: "ansible", enabled: "yes" }
@@ -125,3 +141,21 @@
     - { name: "trove", enabled: "{{ enable_trove }}" }
     - { name: "watcher", enabled: "{{ enable_watcher }}" }
     - { name: "zun", enabled: "{{ enable_zun }}" }
+  notify:
+    - Restart cron container
+
+- name: Check common containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    environment: "{{ item.value.environment }}"
+  register: check_common_containers
+  when:
+    - action != "config"
+  with_dict: "{{ common_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
