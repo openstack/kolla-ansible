@@ -52,7 +52,6 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Designate <http://docs.openstack.org/developer/designate/>`__
 - `Freezer <https://wiki.openstack.org/wiki/Freezer-docs>`__
 - `Glance <http://docs.openstack.org/developer/glance/>`__
-- `Gnocchi <http://docs.openstack.org/developer/gnocchi/>`__
 - `Heat <http://docs.openstack.org/developer/heat/>`__
 - `Horizon <http://docs.openstack.org/developer/horizon/>`__
 - `Ironic <http://docs.openstack.org/developer/ironic/>`__
@@ -97,6 +96,7 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 - `Etcd <https://coreos.com/etcd/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
   for unified logging layer.
+- `Gnocchi <http://gnocchi.xyz/>`__ A time-series storage database.
 - `HAProxy <http://www.haproxy.org/>`__ and
   `Keepalived <http://www.keepalived.org/>`__ for high availability of services
   and their endpoints.
