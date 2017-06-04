@@ -92,6 +92,16 @@ enable_horizon: "yes"
 enable_heat: "no"
 openstack_logging_debug: "True"
 openstack_service_workers: "1"
+
+# enable port security in gate until this bug is fixed
+# https://bugs.launchpad.net/neutron/+bug/1694420
+extension_drivers:
+  - name: "qos"
+    enabled: "{{ enable_neutron_qos | bool }}"
+  - name: "port_security"
+    enabled: true
+  - name: "dns"
+    enabled: "{{ enable_designate | bool }}"
 EOF
 
     mkdir /etc/kolla/config/nova
