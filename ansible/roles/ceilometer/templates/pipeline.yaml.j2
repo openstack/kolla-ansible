@@ -1,20 +1,17 @@
 ---
 sources:
     - name: meter_source
-      interval: 600
       meters:
           - "*"
       sinks:
           - meter_sink
     - name: cpu_source
-      interval: 600
       meters:
           - "cpu"
       sinks:
           - cpu_sink
           - cpu_delta_sink
     - name: disk_source
-      interval: 600
       meters:
           - "disk.read.bytes"
           - "disk.read.requests"
@@ -27,7 +24,6 @@ sources:
       sinks:
           - disk_sink
     - name: network_source
-      interval: 600
       meters:
           - "network.incoming.bytes"
           - "network.incoming.packets"
@@ -39,7 +35,7 @@ sinks:
     - name: meter_sink
       transformers:
       publishers:
-          - notifier://
+          - gnocchi://
     - name: cpu_sink
       transformers:
           - name: "rate_of_change"
@@ -50,7 +46,7 @@ sinks:
                     type: "gauge"
                     scale: "100.0 / (10**9 * (resource_metadata.cpu_number or 1))"
       publishers:
-          - notifier://
+          - gnocchi://
     - name: cpu_delta_sink
       transformers:
           - name: "delta"
@@ -59,7 +55,7 @@ sinks:
                     name: "cpu.delta"
                 growth_only: True
       publishers:
-          - notifier://
+          - gnocchi://
     - name: disk_sink
       transformers:
           - name: "rate_of_change"
@@ -74,7 +70,7 @@ sinks:
                         unit: "\\1/s"
                     type: "gauge"
       publishers:
-          - notifier://
+          - gnocchi://
     - name: network_sink
       transformers:
           - name: "rate_of_change"
@@ -89,4 +85,4 @@ sinks:
                         unit: "\\1/s"
                     type: "gauge"
       publishers:
-          - notifier://
+          - gnocchi://

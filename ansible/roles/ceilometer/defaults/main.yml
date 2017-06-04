@@ -2,6 +2,7 @@
 project_name: "ceilometer"
 
 ceilometer_services:
+# TODO(jeffrey4l): ceilometer_api_image is still required for bootstrap service. Remove this after use ceilometer notification image instead
   ceilometer-api:
     container_name: ceilometer_api
     group: ceilometer-api
@@ -31,16 +32,6 @@ ceilometer_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "ceilometer:/var/lib/ceilometer/"
       - "kolla_logs:/var/log/kolla/"
-  ceilometer-collector:
-    container_name: ceilometer_collector
-    group: ceilometer-collector
-    enabled: True
-    image: "{{ ceilometer_collector_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/ceilometer-collector/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "ceilometer:/var/lib/ceilometer/"
-      - "kolla_logs:/var/log/kolla/"
   ceilometer-compute:
     container_name: ceilometer_compute
     group: ceilometer-compute
@@ -57,17 +48,6 @@ ceilometer_services:
 
 
 ####################
-# Database
-####################
-ceilometer_database_name: "ceilometer"
-ceilometer_database_user: "ceilometer"
-ceilometer_database_port: "{{ mongodb_port if ceilometer_database_type == 'mongodb' else database_port }}"
-
-ceilometer_database_mongodb_address: "{% for host in groups['mongodb'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ ceilometer_database_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-ceilometer_database_mysql_address: "{{ kolla_internal_fqdn }}"
-
-
-####################
 # Docker
 ####################
 ceilometer_install_type: "{{ kolla_install_type }}"
@@ -77,6 +57,7 @@ ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else
 ceilometer_notification_tag: "{{ ceilometer_tag }}"
 ceilometer_notification_image_full: "{{ ceilometer_notification_image }}:{{ ceilometer_notification_tag }}"
 
+# TODO(jeffrey4l): ceilometer_api_image is still required for bootstrap service. Remove this after use ceilometer notification image instead
 ceilometer_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-api"
 ceilometer_api_tag: "{{ ceilometer_tag }}"
 ceilometer_api_image_full: "{{ ceilometer_api_image }}:{{ ceilometer_api_tag }}"
@@ -84,10 +65,6 @@ ceilometer_api_image_full: "{{ ceilometer_api_image }}:{{ ceilometer_api_tag }}"
 ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-central"
 ceilometer_central_tag: "{{ ceilometer_tag }}"
 ceilometer_central_image_full: "{{ ceilometer_central_image }}:{{ ceilometer_central_tag }}"
-
-ceilometer_collector_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-collector"
-ceilometer_collector_tag: "{{ ceilometer_tag }}"
-ceilometer_collector_image_full: "{{ ceilometer_collector_image }}:{{ ceilometer_collector_tag }}"
 
 ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-compute"
 ceilometer_compute_tag: "{{ ceilometer_tag }}"
@@ -97,10 +74,6 @@ ceilometer_compute_image_full: "{{ ceilometer_compute_image }}:{{ ceilometer_com
 ####################
 # OpenStack
 ####################
-ceilometer_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ ceilometer_api_port }}"
-ceilometer_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ ceilometer_api_port }}"
-ceilometer_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ ceilometer_api_port }}"
-
 ceilometer_logging_debug: "{{ openstack_logging_debug }}"
 
 ceilometer_keystone_user: "ceilometer"
