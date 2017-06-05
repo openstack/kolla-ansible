@@ -53,7 +53,6 @@ memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-
 [glance_client]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
@@ -66,3 +65,13 @@ password = {{ zun_keystone_password }}
 region_name = {{ openstack_region_name }}
 endpoint_type = internalURL
 api_version = 2
+{% if enable_osprofiler | bool %}
+
+[profiler]
+enabled = true
+trace_sqlalchemy = true
+hmac_keys = {{ osprofiler_secret }}
+{% if enable_elasticsearch | bool %}
+connection_string = elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}
+{% endif %}
+{% endif %}

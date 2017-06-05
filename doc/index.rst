@@ -71,6 +71,7 @@ Services
    networking-guide
    kuryr-guide
    zun-guide
+   osprofiler-guide
 
 Developer Docs
 ==============

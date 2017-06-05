@@ -152,3 +152,13 @@ hnas_svc0_hdp = {{ hnas_nfs_svc0_hdp }}
 
 [privsep_entrypoint]
 helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
+
+{% if enable_osprofiler | bool %}
+[profiler]
+enabled = true
+trace_sqlalchemy = true
+hmac_keys = {{ osprofiler_secret }}
+{% if enable_elasticsearch | bool %}
+connection_string = elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}
+{% endif %}
+{% endif %}
