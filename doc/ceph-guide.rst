@@ -260,10 +260,10 @@ from each Ceph monitor node:
 Simple 3 Node Example
 =====================
 
-This example will show how to deploy Ceph in a very simple setup using 3 storage
-nodes. 2 of those nodes (kolla1 and kolla2) will also provide other services
-like control, network, compute, monitoring and compute. The 3rd (kolla3) node
-will only act as a storage node.
+This example will show how to deploy Ceph in a very simple setup using 3
+storage nodes. 2 of those nodes (kolla1 and kolla2) will also provide other
+services like control, network, compute, monitoring and compute. The 3rd
+(kolla3) node will only act as a storage node.
 
 This example will only focus on the Ceph aspect of the deployment and assumes
 that you can already deploy a fully functional environment using 2 nodes that
@@ -271,10 +271,10 @@ does not employ Ceph yet. So we will be adding to the existing multinode
 inventory file you already have.
 
 Each of the 3 nodes are assumed to have two disk, ``/dev/sda`` (40GB)
-and ``/dev/sdb`` (10GB). Size is not all that important... but for now make sure
-each sdb disk are of the same size and are at least 10GB. This example will use
-a single disk (/dev/sdb) for both Ceph data and journal. It will not implement
-caching.
+and ``/dev/sdb`` (10GB). Size is not all that important... but for now make
+sure each sdb disk are of the same size and are at least 10GB. This example
+will use a single disk (/dev/sdb) for both Ceph data and journal. It will not
+implement caching.
 
 Here is the top part of the multinode inventory file used in the example
 environment before adding the 3rd node for Ceph:
