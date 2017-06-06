@@ -1,0 +1,88 @@
+---
+- hosts: all
+  tasks:
+    - name: Check node role
+      command: "cat /etc/nodepool/role"
+      register: node_role
+
+    - set_fact: node_role="{{ node_role.stdout }}"
+
+    - name: Ensure /tmp/logs dir
+      file:
+        path: "/tmp/logs"
+        state: "directory"
+      when:
+        - node_role == "sub"
+
+    - name: Get /tmp/logs symlink target
+      command: "readlink -f /tmp/logs"
+      register: logs_target
+
+    - name: Ensure primary node directories
+      file:
+        path: "{{ logs_target.stdout }}/{{ item }}"
+        state: "directory"
+        mode: 0777
+      when:
+        - node_role == "primary"
+      with_items:
+        - "subnodes"
+        - "docker_logs"
+        - "kolla_configs"
+        - "system_logs"
+        - "kolla"
+
+    - name: Ensure sub node directories
+      file:
+        path: "/tmp/logs/{{ item }}"
+        state: "directory"
+        mode: 0777
+      when:
+        - node_role == "sub"
+      with_items:
+        - "docker_logs"
+        - "kolla_configs"
+        - "system_logs"
+        - "kolla"
+
+    - name: Run diagnostics script
+      script: get_logs.sh
+      register: get_logs_result
+      failed_when: false
+
+    - name: Print get_logs output
+      debug:
+        msg: "{{ get_logs_result.stdout }}"
+
+    - name: Run dump_info script
+      script: ../tools/dump_info.sh
+
+    - name: Download logs from all subnodes
+      synchronize:
+        src: "/tmp/logs"
+        dest: "{{ logs_target.stdout }}/subnodes/{{ ansible_hostname }}"
+        mode: "pull"
+      when:
+        - node_role == "sub"
+
+    - name: Change permission of all log files
+      command: "chmod -R 777 {{ logs_target.stdout }}"
+
+    - name: Fail if get_logs has failed
+      fail:
+        msg: "{{ get_logs_result.stdout }}"
+      when: get_logs_result.rc != 0
+
+    - name: Copy inventory file to logs
+      copy:
+        src: "/tmp/kolla/raw_inventory"
+        dest: "{{ logs_target.stdout }}/ansible/inventory"
+      when:
+        - node_role == "primary"
+
+    - name: Copy hosts file to logs
+      copy:
+        src: "/etc/hosts"
+        dest: "{{ logs_target.stdout }}/system_logs/hosts"
+      when:
+        - node_role == "primary"
