@@ -41,17 +41,16 @@ choice. Various downloads can be found at the `Vagrant downloads
 
 Install required dependencies as follows:
 
-On CentOS 7::
+On CentOS::
 
-    sudo yum install vagrant ruby-devel libvirt-devel libvirt-python zlib-devel libpng-devel gcc git
-
-On Fedora 22 or later::
-
-    sudo dnf install vagrant ruby-devel libvirt-devel libvirt-python zlib-devel libpng-devel gcc git
+  sudo yum install ruby-devel libvirt-devel zlib-devel libpng-devel gcc \
+  qemu-kvm qemu-img libvirt libvirt-python libvirt-client virt-install \
+  bridge-utils
 
 On Ubuntu 16.04 or later::
 
-    sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt libvirt-dev nfs-kernel-server zlib-dev libpng-dev gcc git
+  sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt \
+  libvirt-dev nfs-kernel-server zlib-dev libpng-dev gcc git
 
 .. note:: Many distros ship outdated versions of Vagrant by default. When in
           doubt, always install the latest from the downloads page above.
@@ -59,36 +58,50 @@ On Ubuntu 16.04 or later::
 Next install the hostmanager plugin so all hosts are recorded in ``/etc/hosts``
 (inside each vm)::
 
-    vagrant plugin install vagrant-hostmanager vagrant-vbguest
+  vagrant plugin install vagrant-hostmanager
+
+If you are going to use VirtualBox, then install vagrant-vbguest::
+
+  vagrant plugin install vagrant-vbguest
 
 Vagrant supports a wide range of virtualization technologies. This
 documentation describes libvirt. To install vagrant-libvirt plugin::
 
-    vagrant plugin install --plugin-version ">= 0.0.31" vagrant-libvirt
+  vagrant plugin install --plugin-version ">= 0.0.31" vagrant-libvirt
 
 Some Linux distributions offer vagrant-libvirt packages, but the version they
 provide tends to be too old to run Kolla. A version of >= 0.0.31 is required.
 
+To use libvirt from Vagrant with a low privileges user without being asked for
+a password, add the user to the libvirt group::
+
+  sudo gpasswd -a ${USER} libvirt
+  newgrp libvirt
+
 Setup NFS to permit file sharing between host and VMs. Contrary to the rsync
 method, NFS allows both way synchronization and offers much better performance
-than VirtualBox shared folders. On Fedora 22::
+than VirtualBox shared folders. On CentOS::
 
+    # Add the virtual interfaces to the internal zone
+    sudo firewall-cmd --zone=internal --add-interface=virbr0
+    sudo firewall-cmd --zone=internal --add-interface=virbr1
+    # Enable nfs, rpc-bind and mountd services for firewalld
+    sudo firewall-cmd --permanent --zone=internal --add-service=nfs
+    sudo firewall-cmd --permanent --zone=internal --add-service=rpc-bind
+    sudo firewall-cmd --permanent --zone=internal --add-service=mountd
+    sudo firewall-cmd --permanent --zone=internal --add-port=2049/udp
+    sudo firewall-cmd --permanent --add-port=2049/tcp
+    sudo firewall-cmd --permanent --add-port=111/udp
+    sudo firewall-cmd --permanent --add-port=111/tcp
+    sudo firewall-cmd --reload
+    # Start required services for NFS
+    sudo systemctl restart firewalld
     sudo systemctl start nfs-server
     sudo systemctl start rpcbind.service
-    sudo systemctl start mountd.service
-    firewall-cmd --permanent --add-port=2049/udp
-    firewall-cmd --permanent --add-port=2049/tcp
-    firewall-cmd --permanent --add-port=111/udp
-    firewall-cmd --permanent --add-port=111/tcp
-    firewall-cmd --permanent --add-service=nfs
-    firewall-cmd --permanent --add-service=rpcbind
-    firewall-cmd --permanent --add-service=mountd
-    sudo systemctl restart firewalld
 
 Ensure your system has libvirt and associated software installed and setup
-correctly. On Fedora 22::
+correctly. On CentOS::
 
-    sudo dnf install @virtualization
     sudo systemctl start libvirtd
     sudo systemctl enable libvirtd
 

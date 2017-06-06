@@ -29,9 +29,10 @@ Verify operation
 
 Retrieve ``osprofiler_secret`` key present at ``/etc/kolla/passwords.yml``.
 
-Profiler UUIDs can be created executing OpenStack clients (Nova, Glance, Cinder, Heat, Keystone)
-with ``--profile`` option or using the official Openstack client with ``--os-profile``.
-In example to get the OSprofiler trace UUID for ``openstack server create``.
+Profiler UUIDs can be created executing OpenStack clients (Nova, Glance,
+Cinder, Heat, Keystone) with ``--profile`` option or using the official
+Openstack client with ``--os-profile``. In example to get the OSprofiler trace
+UUID for ``openstack server create``.
 
 .. code-block:: console
 
@@ -48,7 +49,8 @@ The previous command will output the command to retrieve OSprofiler trace.
 
 .. code-block:: console
 
-    $ osprofiler trace show --html <TRACE_ID> --connection-string elasticsearch://<api_interface_address>:9200
+    $ osprofiler trace show --html <TRACE_ID> --connection-string \
+      elasticsearch://<api_interface_address>:9200
 
 For more information about how OSprofiler works, see
 `OSProfiler – Cross-project profiling library
