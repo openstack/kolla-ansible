@@ -24,6 +24,25 @@
     - Restart cinder-volume container
     - Restart cinder-backup container
 
+- name: Copying over cinder-wsgi.conf
+  vars:
+    service: "{{ cinder_services['cinder-api'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/cinder-api/cinder-wsgi.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/cinder-wsgi.conf"
+    - "{{ node_custom_config }}/cinder/cinder-wsgi.conf"
+    - "cinder-wsgi.conf.j2"
+  register: wsgi_cinder_api
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - kolla_base_distro in ['debian', 'ubuntu']
+    - kolla_install_type == 'binary'
+  notify:
+    - Restart cinder-api container
+
 - name: Copying over cinder.conf
   merge_configs:
     vars:
