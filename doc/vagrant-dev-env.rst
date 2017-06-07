@@ -49,8 +49,7 @@ On CentOS::
 
 On Ubuntu 16.04 or later::
 
-  sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt \
-  libvirt-dev nfs-kernel-server zlib-dev libpng-dev gcc git
+  sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt libvirt-dev nfs-kernel-server zlib1g-dev libpng12-dev gcc git
 
 .. note:: Many distros ship outdated versions of Vagrant by default. When in
           doubt, always install the latest from the downloads page above.
