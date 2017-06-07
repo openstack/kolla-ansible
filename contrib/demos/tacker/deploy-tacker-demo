@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function gen_config {
+    echo "Generating sample config"
+    DEMO_NET=$(openstack network list | awk '/demo-net/ { print $2 }')
+    IMAGE_ID=$(openstack image list | awk '/cirros/ { print $2 }')
+    cat > ./kolla-sample-vim.yaml <<EOF
+auth_url: ${OS_AUTH_URL}
+username: ${OS_USERNAME}
+password: ${OS_PASSWORD}
+project_name: ${OS_PROJECT_NAME}
+project_domain_name: ${OS_PROJECT_DOMAIN_NAME}
+user_domain_name: ${OS_USER_DOMAIN_NAME}
+EOF
+    cat > ./kolla-sample-vnfd.yaml <<EOF
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0_0
+
+description: Demo example
+
+metadata:
+  template_name: sample-tosca-vnfd
+
+topology_template:
+  node_templates:
+    VDU1:
+      type: tosca.nodes.nfv.VDU.Tacker
+      capabilities:
+        nfv_compute:
+          properties:
+            num_cpus: 1
+            mem_size: 512 MB
+            disk_size: 0 GB
+      properties:
+        image: ${IMAGE_ID}
+        availability_zone: nova
+        mgmt_driver: noop
+
+    CP1:
+      type: tosca.nodes.nfv.CP.Tacker
+      properties:
+        management: true
+        order: 0
+        anti_spoofing_protection: false
+      requirements:
+        - virtualLink:
+            node: VL1
+        - virtualBinding:
+            node: VDU1
+
+    VL1:
+      type: tosca.nodes.nfv.VL
+      properties:
+        network_name: ${DEMO_NET}
+        vendor: Tacker
+EOF
+}
+
+function deploy {
+    echo "Registering sample VIM"
+    tacker vim-register --is-default --config-file ./kolla-sample-vim.yaml --description "kolla sample vim" kolla-sample-vim
+    echo "Creating sample VNFD"
+    tacker vnfd-create --vnfd-file ./kolla-sample-vnfd.yaml kolla-sample-vnfd
+    echo "Creating sample VNF"
+    VNFD_ID=$(tacker vnfd-list | awk '/kolla-sample-vnfd/ { print $2 }')
+    tacker vnf-create --vnfd-id ${VNFD_ID} kolla-sample-vnf
+}
+
+gen_config
+deploy
