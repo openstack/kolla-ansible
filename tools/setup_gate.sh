@@ -33,10 +33,8 @@ EOF
 }
 
 function setup_config {
-    sudo cp -r etc/kolla /etc/
-    # Generate passwords
-    sudo tools/generate_passwords.py
-
+    sudo mkdir /etc/kolla
+    sudo chmod -R 777 /etc/kolla
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
     PIP_CONF=$(mktemp)
@@ -102,39 +100,14 @@ function setup_workaround_broken_nodepool {
 }
 
 function setup_ssh {
-    # Generate a new keypair that Ansible will use
-    ssh-keygen -f /home/jenkins/.ssh/kolla -N ''
-    cat /home/jenkins/.ssh/kolla.pub >> /home/jenkins/.ssh/authorized_keys
-
-    # Push the public key around to all of the nodes
-    for ip in $(cat /etc/nodepool/sub_nodes_private); do
-        scp /home/jenkins/.ssh/kolla.pub ${ip}:/home/jenkins/.ssh/authorized_keys
-        # TODO(SamYaple): Remove this root key pushing once Kolla doesn't
-        # require root anymore.
-        ssh ${ip} -i /home/jenkins/.ssh/kolla 'sudo mkdir -p /root/.ssh; sudo cp /home/jenkins/.ssh/* /root/.ssh/'
-    done
-
-    # From now on use the new IdentityFile for connecting to other hosts
-    echo "IdentityFile /home/jenkins/.ssh/kolla" >> /home/jenkins/.ssh/config
-    chmod 600 /home/jenkins/.ssh/config
+    sudo chown jenkins /etc/nodepool/id_rsa
+    sudo chmod 600 /etc/nodepool/id_rsa
 }
 
 function setup_inventory {
-    local counter=0
 
     echo -e "127.0.0.1\tlocalhost" > /tmp/hosts
-    for ip in $(cat /etc/nodepool/{node_private,sub_nodes_private}); do
-        : $((counter++))
-        # FIXME(jeffrey4l): do not set two hostnames in oneline. this is a
-        # wordround fix for the rabbitmq failed when deploy on CentOS in the CI
-        # gate. the ideal fix should set the hostname in setup_gate.sh script.
-        # But it do not work as expect with unknown reason
-        ssh-keyscan "${ip}" >> ~/.ssh/known_hosts
-        echo -e "${ip}\tnode${counter}" >> /tmp/hosts
-        echo -e "${ip}\t$(ssh ${ip} hostname)" >> /tmp/hosts
-        echo "node${counter}" >> ${RAW_INVENTORY}
-    done
-
+    ansible-playbook tests/ansible_generate_inventory.yml
     sudo chown root: /tmp/hosts
     sudo chmod 644 /tmp/hosts
     sudo mv /tmp/hosts /etc/hosts
@@ -176,7 +149,7 @@ function setup_logging {
 }
 
 function prepare_images {
-    docker run -d -p 4000:5000 --restart=always -v /tmp/kolla_registry/:/var/lib/registry --name registry registry:2
+    sudo docker run -d -p 4000:5000 --restart=always -v /tmp/kolla_registry/:/var/lib/registry --name registry registry:2
 
     # NOTE(Jeffrey4l): Zuul adds all changes depend on to ZUUL_CHANGES
     # variable. if find "openstack/kolla:" string, it means this patch depends
@@ -195,16 +168,71 @@ function prepare_images {
     fi
 }
 
+
+
+function sanity_check {
+    # Wait for service ready
+    sleep 15
+    . /etc/kolla/admin-openrc.sh
+    # TODO(Jeffrey4l): Restart the memcached container to cleanup all cache.
+    # Remove this after this bug is fixed
+    # https://bugs.launchpad.net/oslo.cache/+bug/1590779
+    sudo docker restart memcached
+    nova --debug service-list
+    neutron --debug agent-list
+    tools/init-runonce
+    nova --debug boot --poll --image $(openstack image list | awk '/cirros/ {print $2}') --nic net-id=$(openstack network list | awk '/demo-net/ {print $2}') --flavor 1 kolla_boot_test
+    nova --debug list
+    # If the status is not ACTIVE, print info and exit 1
+    nova --debug show kolla_boot_test | awk '{buf=buf"\n"$0} $2=="status" && $4!="ACTIVE" {failed="yes"}; END {if (failed=="yes") {print buf; exit 1}}'
+}
+
+function get_logs {
+    ansible-playbook -i ${RAW_INVENTORY} tests/ansible_get_logs.yml > /tmp/logs/ansible/get-logs
+}
+
 setup_logging
 tools/dump_info.sh
 clone_repos
 setup_workaround_broken_nodepool
 setup_ssh
 setup_ansible
-setup_node
 setup_config
+setup_node
+
+ansible-playbook -e type=$INSTALL_TYPE -e base=$BASE_DISTRO tests/ansible_generate_config.yml > /tmp/logs/ansible/generate_config
+tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
+sudo tools/generate_passwords.py
 prepare_images
 
-sudo tools/deploy_aio.sh "${BASE_DISTRO}" "${INSTALL_TYPE}"
+trap get_logs EXIT
 
-tools/dump_info.sh
+# Create dummy interface for neutron
+ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
+
+#TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
+sudo chmod -R 777 /etc/kolla
+# Actually do the deployment
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks1
+# TODO(jeffrey4l): add pull action when we have a local registry
+# service in CI
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy > /tmp/logs/ansible/deploy
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/post-deploy
+
+# Test OpenStack Environment
+# TODO: use kolla-ansible check when it's ready
+sanity_check
+
+# TODO(jeffrey4l): make some configure file change and
+# trigger a real reconfigure
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/post-deploy
+# TODO(jeffrey4l): need run a real upgrade
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
+
+# run prechecks again
+tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
+
+get_logs
+
+ara generate html /tmp/logs/playbook_reports/
+gzip --recursive --best /tmp/logs/playbook_reports/
