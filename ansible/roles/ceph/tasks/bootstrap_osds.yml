@@ -35,6 +35,7 @@
   with_items: "{{ osds_bootstrap|default([]) }}"
   when:
     - item.external_journal | bool == False
+    - item.device.split('/')[2] in ansible_devices  # if there is no device in setup (like loopback, we don't need to warn user
     - ansible_devices[item.device.split('/')[2]].partitions|count > 1
     - ceph_osd_wipe_disk != "yes-i-really-really-mean-it"
 
