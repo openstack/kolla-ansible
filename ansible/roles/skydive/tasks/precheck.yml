@@ -1,0 +1,34 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - skydive_analyzer
+      - skydive_agent
+  register: container_facts
+
+- name: Checking free port for Skydive Analyzer
+  vars:
+    skydive_analyzer: "{{ skydive_services['skydive-analyzer'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ skydive_analyzer_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['skydive_analyzer'] is not defined
+    - inventory_hostname in groups[skydive_analyzer.group]
+    - skydive_analyzer.enabled | bool
+
+- name: Checking free port for Skydive Agent
+  vars:
+    skydive_agent: "{{ skydive_services['skydive-agent'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ skydive_agents_port }}"
+    connect_timeout: 1
+    state: stopped
+  when:
+    - container_facts['skydive_agent'] is not defined
+    - inventory_hostname in groups[skydive_agent.group]
+    - skydive_agent.enabled | bool
+

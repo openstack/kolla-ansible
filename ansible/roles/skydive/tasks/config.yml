@@ -1,0 +1,53 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}/config"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ skydive_services }}"
+
+- name: Copying over default config.json files
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: skydive_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ skydive_services }}"
+  notify:
+    - Restart skydive-analyzer container
+    - Restart skydive-agent container
+
+- name: Copying over skydive config file
+  template:
+    src: "{{ item.key }}.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/skydive.conf"
+  register: skydive_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ skydive_services }}"
+  notify:
+    - Restart skydive-analyzer container
+    - Restart skydive-agent container
+
+- name: Check skydive containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_skydive_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ skydive_services }}"
+  notify:
+    - Restart skydive-analyzer container
+    - Restart skydive-agent container
