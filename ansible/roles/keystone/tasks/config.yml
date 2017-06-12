@@ -116,19 +116,27 @@
   notify:
     - Restart keystone container
 
+- name: Checking whether keystone-paste.ini file exists
+  vars:
+    keystone: "{{ keystone_services.keystone }}"
+  stat:
+    path: "{{ node_custom_config }}/keystone/keystone-paste.ini"
+  register: check_keystone_paste_ini
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone.enabled | bool
+
 - name: Copying over keystone-paste.ini
   vars:
     keystone: "{{ keystone_services.keystone }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/keystone-paste.ini.j2"
-      - "{{ node_custom_config }}/keystone/keystone-paste.ini"
-      - "{{ node_custom_config }}/keystone/{{ inventory_hostname }}/keystone-paste.ini"
+  template:
+    src: "{{ node_custom_config }}/keystone/keystone-paste.ini"
     dest: "{{ node_config_directory }}/keystone/keystone-paste.ini"
   register: keystone_paste_ini
   when:
     - inventory_hostname in groups[keystone.group]
     - keystone.enabled | bool
+    - check_keystone_paste_ini.stat.exists | bool
   notify:
     - Restart keystone container
 
