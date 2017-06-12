@@ -239,3 +239,14 @@ openstack_placement_auth: "{{ openstack_auth }}"
 
 
 nova_ssh_port: "8022"
+
+####################
+# Notification
+####################
+nova_notification_topics:
+  - name: notifications
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool }}"
+  - name: notifications_designate
+    enabled: "{{ enable_designate | bool }}"
+
+nova_enabled_notification_topics: "{{ nova_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
