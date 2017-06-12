@@ -11,12 +11,8 @@ default_pool_id = {{ designate_pool_id }}
 workers = {{ openstack_service_workers }}
 
 [service:api]
+listen = {{ hostvars[inventory_hostname]['ansible_' + dns_interface]['ipv4']['address'] }}:{{ designate_api_port }}
 api_base_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ designate_api_port }}
-api_host = {{ api_interface_address }}
-api_port = {{ designate_api_port }}
-enable_api_v1 = True
-enabled_extensions_v1 = 'diagnostics, quotas, reports, sync, touch'
-enable_api_v2 = True
 enabled_extensions_v2 = 'quotas, reports'
 workers = {{ openstack_service_workers }}
 
@@ -30,6 +26,7 @@ project_name = service
 username = {{ designate_keystone_user }}
 password = {{ designate_keystone_password }}
 http_connect_timeout = 60
+service_token_roles_required = True
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
@@ -44,6 +41,8 @@ listen = {{ hostvars[inventory_hostname]['ansible_' + dns_interface]['ipv4']['ad
 workers = {{ openstack_service_workers }}
 
 [service:worker]
+# TODO (egonzalez): Remove enabled option in worker section once https://bugs.launchpad.net/designate/+bug/1676827
+# is fixed. Enabled is deprecated but without explicitly enabling worker service not start
 enabled = True
 notify = True
 workers = {{ openstack_service_workers }}
@@ -92,6 +91,8 @@ formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 topics = notifications_designate
 driver = messagingv2
 
+# TODO (egonzalez): Currently pool update fail when using transport_url.
+# Remove this section after bug https://bugs.launchpad.net/designate/+bug/1673403 is fixed
 [oslo_messaging_rabbit]
 rabbit_userid = {{ rabbitmq_user }}
 rabbit_password = {{ rabbitmq_password }}
