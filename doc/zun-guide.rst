@@ -8,12 +8,15 @@ workload on OpenStack." [1].
 Preparation and Deployment
 --------------------------
 
+Zun requires kuryr and etcd services, for more information about how to
+configure kuryr refer to `Kuryr Guide <https://docs.openstack.org/developer/kolla-ansible/kuryr-guide.html>`_.
+
 To allow Zun Compute connect to the Docker Daemon, add the following in the
 ``docker.service`` file on each zun-compute node.
 
 ::
 
-  ExecStart= -H tcp://<DOCKER_SERVICE_IP>:2375 -H unix:///var/run/docker.sock
+  ExecStart= -H tcp://<DOCKER_SERVICE_IP>:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://<DOCKER_SERVICE_IP>:2379 --cluster-advertise=<DOCKER_SERVICE_IP>:2375
 
 .. note::
 
@@ -22,11 +25,13 @@ To allow Zun Compute connect to the Docker Daemon, add the following in the
 
 By default zun is disabled in the ``group_vars/all.yml``.
 In order to enable it, you need to edit the file globals.yml and set the
-following variable:
+following variables:
 
 ::
 
   enable_zun: "yes"
+  enable_kuryr: "yes"
+  enable_etcd: "yes"
 
 Deploy the OpenStack cloud and zun.
 
@@ -61,7 +66,7 @@ Create zun container.
 
 ::
 
-  $ zun create --name test --command "ping -c 4 8.8.8.8" cirros
+  $ zun create --name test cirros "ping -c 4 8.8.8.8"
 
 Verify container is created.
 

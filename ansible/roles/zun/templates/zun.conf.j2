@@ -7,6 +7,9 @@ container_driver = docker.driver.DockerDriver
 image_driver_list = glance
 db_type = sql
 
+[network]
+driver = kuryr
+
 [api]
 host_ip = {{ api_interface_address }}
 port = {{ zun_api_port }}
@@ -65,8 +68,20 @@ password = {{ zun_keystone_password }}
 region_name = {{ openstack_region_name }}
 endpoint_type = internalURL
 api_version = 2
-{% if enable_osprofiler | bool %}
 
+[neutron_client]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ zun_keystone_user }}
+password = {{ zun_keystone_password }}
+region_name = {{ openstack_region_name }}
+endpoint_type = internalURL
+
+{% if enable_osprofiler | bool %}
 [profiler]
 enabled = true
 trace_sqlalchemy = true
