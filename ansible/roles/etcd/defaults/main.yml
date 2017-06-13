@@ -19,6 +19,11 @@ etcd_services:
       ETCD_OUT_FILE: "/var/log/kolla/etcd/etcd.log"
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
     image: "{{ etcd_image_full }}"
+    host_in_groups: >-
+      {{
+      inventory_hostname in groups['control']
+      or (enable_kuryr | bool and inventory_hostname in groups['compute'])
+      }}
     volumes:
       - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
