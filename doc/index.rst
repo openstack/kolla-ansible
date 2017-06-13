@@ -72,6 +72,7 @@ Services
    kuryr-guide
    zun-guide
    osprofiler-guide
+   skydive-guide
 
 Developer Docs
 ==============
