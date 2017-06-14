@@ -45,11 +45,12 @@ During development, it may be desirable to use file backed block storage. It
 is possible to use a file and mount it as a block device via the loopback
 system. ::
 
-    mknod /dev/loop2 b 7 2
-    dd if=/dev/zero of=/var/lib/cinder_data.img bs=1G count=20
-    losetup /dev/loop2 /var/lib/cinder_data.img
-    pvcreate /dev/loop2
-    vgcreate cinder-volumes /dev/loop2
+
+    free_device=$(losetup -f)
+    fallocate -l 20G /var/lib/cinder_data.img
+    losetup $free_device /var/lib/cinder_data.img
+    pvcreate $free_device
+    vgcreate cinder-volumes $free_device
 
 Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 
