@@ -26,8 +26,12 @@ horizon_services:
       ENABLE_TROVE: "{{ 'yes' if enable_horizon_trove | bool else 'no' }}"
       ENABLE_WATCHER: "{{ 'yes' if enable_horizon_watcher | bool else 'no' }}"
       ENABLE_ZUN: "{{ 'yes' if enable_horizon_zun | bool else 'no' }}"
+      FORCE_GENERATE: "{{ 'yes' if horizon_dev_mode | bool else 'no' }}"
     volumes:
       - "{{ node_config_directory }}/horizon/:{{ container_config_directory }}/:ro"
+      - "{{ kolla_dev_repos_directory ~ '/horizon/horizon:/var/lib/kolla/venv/lib/python2.7/site-packages/horizon' if horizon_dev_mode | bool else '' }}"
+      - "{{ kolla_dev_repos_directory ~ '/horizon/openstack_dashboard:/var/lib/kolla/venv/lib/python2.7/site-packages/openstack_dashboard' if horizon_dev_mode | bool else '' }}"
+      - "{{ kolla_dev_repos_directory ~ '/murano-dashboard/muranodashboard:/var/lib/kolla/venv/lib/python2.7/site-packages/muranodashboard' if horizon_murano_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
 
@@ -53,3 +57,14 @@ horizon_image_full: "{{ horizon_image }}:{{ horizon_tag }}"
 openstack_horizon_auth: "{'auth_url':'{{ openstack_auth.auth_url }}','username':'{{ openstack_auth.username }}','password':'{{ openstack_auth.password }}','project_name':'{{ openstack_auth.project_name }}'}"
 
 horizon_logging_debug: "{{ openstack_logging_debug }}"
+
+
+####################
+# Kolla
+####################
+horizon_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+murano_dashboard_git_repository: "{{ kolla_dev_repos_git }}/murano-dashboard"
+
+horizon_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+horizon_dev_mode: "{{ kolla_dev_mode }}"
+horizon_murano_dev_mode: "{{ kolla_dev_mode }}"
