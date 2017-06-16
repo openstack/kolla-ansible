@@ -169,6 +169,7 @@ requirements it can be installed by:
     apt-get install ansible
 
 .. WARNING::
+
    Kolla uses PBR in its implementation. PBR provides version information
    to Kolla about the package in use. This information is later used when
    building images to specify the Docker tag used in the image built. When
@@ -526,6 +527,7 @@ View the images.
     docker images
 
 .. WARNING::
+
     Mixing of OpenStack releases with Kolla releases (example, updating
     kolla-build.conf to build Mitaka Keystone to be deployed with Newton Kolla) is
     not recommended and will likely cause issues.
