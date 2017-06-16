@@ -1,0 +1,35 @@
+---
+- name: Create log directory
+  win_command: "cmd /c mkdir {{ log_dir }}"
+  args:
+    creates: "{{ log_dir }}"
+
+- name: Configure nova-compute
+  win_template:
+    src: "{{ item }}"
+    dest: "%PROGRAMFILES%\\Cloudbase Solutions\\OpenStack\\Nova\\etc\\nova.conf"
+  with_first_found:
+    - "{{ node_custom_config  }}/nova-hyperv/{{ inventory_hostname }}/nova_hyperv.conf"
+    - "{{ node_custom_config  }}/nova-hyperv/nova_hyperv.conf"
+    - "nova_hyperv.conf.j2"
+  notify: Restart nova-compute
+
+- name: Configure neutron-hyperv-agent
+  win_template:
+    src: "{{ item }}"
+    dest: "%PROGRAMFILES%\\Cloudbase Solutions\\OpenStack\\Nova\\etc\\neutron_hyperv_agent.conf"
+  with_first_found:
+    - "{{ node_custom_config  }}/nova-hyperv/{{ inventory_hostname }}/neutron_hyperv_agent.conf"
+    - "{{ node_custom_config  }}/nova-hyperv/neutron_hyperv_agent.conf"
+    - "neutron_hyperv_agent.conf.j2"
+  notify: Restart neutron-hyperv-agent
+
+- name: Configure FreeRDP-WebConnect
+  win_template:
+    src: "{{ item }}"
+    dest: "%PROGRAMFILES%\\Cloudbase Solutions\\FreeRDP-WebConnect\\etc\\wsgate.ini"
+  with_first_found:
+    - "{{ node_custom_config  }}/nova-hyperv/{{ inventory_hostname }}/wsgate.ini"
+    - "{{ node_custom_config  }}/nova-hyperv/wsgate.ini"
+    - "wsgate.ini.j2"
+  notify: Restart FreeRDP-WebConnect
