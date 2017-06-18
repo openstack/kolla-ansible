@@ -1,13 +1,16 @@
-{% for host in groups['chrony-server'] %}
-{% if inventory_hostname != host %}
-server {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }} iburst
-{% endif %}
-{% endfor %}
+{% set keyfile = '/etc/chrony.keys' if kolla_base_distro in ['centos', 'oraclelinux', 'redhat'] else '/etc/chrony/chrony.keys' %}
+
+server {{ kolla_internal_vip_address }} iburst
+{# NOTE(jeffrey4l): external_ntp_servers may be None here #}
+{% if external_ntp_servers %}
 {% for ntp_server in external_ntp_servers %}
 server {{ ntp_server }} iburst
 {% endfor %}
+{% endif %}
 
-keyfile /etc/chrony/chrony.keys
+user chrony
+
+keyfile {{ keyfile }}
 
 commandkey 1
 
@@ -26,13 +29,16 @@ dumpdir /var/lib/chrony
 
 {% if inventory_hostname in groups['chrony-server'] %}
 allow all
+# prevent chrony sync from self
+deny {{ kolla_internal_vip_address }}
+deny {{ api_interface_address }}
 local stratum 10
 {% else %}
 port 0
 deny all
 {% endif %}
 
-bindaddress {{ api_interface_address }}
+bindaddress {{ kolla_internal_vip_address }}
 
 logchange 0.5
 
