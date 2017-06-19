@@ -19,7 +19,9 @@ import random
 import string
 import sys
 
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 from hashlib import md5
 from hashlib import sha256
 from oslo_utils import uuidutils
@@ -35,9 +37,20 @@ if PROJECT_ROOT not in sys.path:
 
 
 def generate_RSA(bits=4096):
-    new_key = RSA.generate(bits, os.urandom)
-    private_key = new_key.exportKey("PEM")
-    public_key = new_key.publickey().exportKey("OpenSSH")
+    new_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=bits,
+        backend=default_backend()
+    )
+    private_key = new_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    public_key = new_key.public_key().public_bytes(
+        encoding=serialization.Encoding.OpenSSH,
+        format=serialization.PublicFormat.OpenSSH
+    )
     return private_key, public_key
 
 
