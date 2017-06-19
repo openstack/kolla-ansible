@@ -102,3 +102,18 @@ tests.
 
 .. note::
   In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
+
+``kolla-mergepwd --old OLD_PASSWORDS --new NEW_PASSWORDS --final FINAL_PASSWORDS``
+is used to merge passwords from old installation with newly generated passwords
+during upgrade of Kolla release. The workflow is:
+
+- save old passwords from ``/etc/kolla/passwords.yml`` into ``passwords.yml.old``
+- generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``
+- merge ``passwords.yml.old`` and ``passwords.yml.new`` into ``/etc/kolla/passwords.yml``
+
+For example::
+
+  mv /etc/kolla/passwords.yml passwords.yml.old
+  cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
+  kolla-genpwd -p passwords.yml.new
+  kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
