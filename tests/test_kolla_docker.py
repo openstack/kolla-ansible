@@ -173,7 +173,7 @@ FAKE_DATA = {
 }
 
 
-@mock.patch("docker.Client")
+@mock.patch("docker.APIClient")
 def get_DockerWorker(mod_param, mock_dclient):
     module = mock.MagicMock()
     module.params = mod_param
