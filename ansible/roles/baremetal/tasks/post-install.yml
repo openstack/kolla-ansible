@@ -15,6 +15,7 @@
     dest=/etc/systemd/system/docker.service.d/kolla.conf
   when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version > "14") or
         (ansible_os_family == "RedHat") or (ansible_distribution == "Debian")
+  register: docker_configured
 
 - name: Reload docker service file
   become: True
@@ -70,6 +71,7 @@
     name: docker
     state: restarted
   become: True
+  when: docker_configured.changed
 
 - name: Enable docker
   service:
