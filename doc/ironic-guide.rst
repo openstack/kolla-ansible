@@ -20,6 +20,21 @@ The Ironic implementation is "tech preview", so currently instances can only be
 deployed on baremetal. Further work will be done to allow scheduling for both
 virtualized and baremetal deployments.
 
+Configuring Web Console
+=======================
+Configuration based off upstream web_console_documentation_.
+
+Serial speed must be the same as the serial configuration in the BIOS settings.
+Default value: 115200bps, 8bit, non-parity.If you have different serial speed.
+
+Set ironic_console_serial_speed in ``/etc/kolla/globals.yml``:
+
+::
+
+    ironic_console_serial_speed: 9600n8
+
+.. _web_console_documentation: https://docs.openstack.org/developer/ironic/deploy/console.html#node-web-console
+
 Post-deployment configuration
 =============================
 Configuration based off upstream documentation_.
