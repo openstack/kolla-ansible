@@ -6,12 +6,14 @@
 # suppressed by the deployer by setting a value for the option.
 
 [DEFAULT]
+{% if not enable_keystone | bool %}
+auth_strategy = noauth
+admin_user = {{ openstack_auth.username }}
+admin_password = {{ keystone_admin_password }}
+{% endif %}
 debug = {{ ironic_logging_debug }}
 
 log_dir = /var/log/kolla/ironic
-
-admin_user = {{ openstack_auth.username }}
-admin_password = {{ keystone_admin_password }}
 
 enabled_drivers = pxe_ipmitool,pxe_ssh
 
@@ -34,6 +36,7 @@ automated_clean=false
 connection = mysql+pymysql://{{ ironic_database_user }}:{{ ironic_database_password }}@{{ ironic_database_address }}/{{ ironic_database_name }}
 max_retries = -1
 
+{% if enable_keystone | bool %}
 [keystone_authtoken]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
@@ -47,6 +50,7 @@ password = {{ ironic_keystone_password }}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 
 
 [glance]
