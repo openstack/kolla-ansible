@@ -2,13 +2,22 @@
 project_name: "tacker"
 
 tacker_services:
-  tacker:
-    container_name: "tacker"
-    group: "tacker"
+  tacker-server:
+    container_name: "tacker_server"
+    group: "tacker-server"
     enabled: true
-    image: "{{ tacker_image_full }}"
+    image: "{{ tacker_server_image_full }}"
     volumes:
-      - "{{ node_config_directory }}/tacker/:{{ container_config_directory }}/:ro"
+      - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  tacker-conductor:
+    container_name: "tacker_conductor"
+    group: "tacker-conductor"
+    enabled: true
+    image: "{{ tacker_conductor_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
 
@@ -22,9 +31,16 @@ tacker_database_address: "{{ kolla_internal_fqdn }}:{{ database_port }}"
 ########
 # Docker
 ########
-tacker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-tacker"
+tacker_install_type: "{{ kolla_install_type }}"
 tacker_tag: "{{ openstack_release }}"
-tacker_image_full: "{{ tacker_image }}:{{ tacker_tag }}"
+
+tacker_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ tacker_install_type }}-tacker-server"
+tacker_server_tag: "{{ tacker_tag }}"
+tacker_server_image_full: "{{ tacker_server_image }}:{{ tacker_server_tag }}"
+
+tacker_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ tacker_install_type }}-tacker-conductor"
+tacker_conductor_tag: "{{ tacker_tag }}"
+tacker_conductor_image_full: "{{ tacker_conductor_image }}:{{ tacker_conductor_tag }}"
 
 ####################
 # OpenStack

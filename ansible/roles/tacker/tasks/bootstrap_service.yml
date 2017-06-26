@@ -1,7 +1,7 @@
 ---
 - name: Running tacker bootstrap container
   vars:
-    tacker: "{{ tacker_services.tacker }}"
+    tacker_server: "{{ tacker_services['tacker-server'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -9,11 +9,11 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ tacker.image }}"
+    image: "{{ tacker_server.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_tacker"
     restart_policy: "never"
-    volumes: "{{ tacker.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ tacker_server.volumes|reject('equalto', '')|list }}"
   run_once: True
-  delegate_to: "{{ groups[tacker.group][0] }}"
+  delegate_to: "{{ groups[tacker_server.group][0] }}"
