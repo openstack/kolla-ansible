@@ -2,6 +2,11 @@
 debug = {{ mistral_logging_debug }}
 
 log_dir = /var/log/kolla/mistral
+{% if service_name == 'mistral-engine' %}
+log_file = /var/log/kolla/mistral/mistral-engine.log
+{% elif service_name == 'mistral-executor' %}
+log_file = /var/log/kolla/mistral/mistral-executor.log
+{% endif %}
 
 # NOTE(elemoine): set use_stderr to False or the logs will also be sent to
 # stderr and collected by Docker
@@ -14,6 +19,12 @@ transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}
 host = {{ api_interface_address }}
 port = {{ mistral_api_port }}
 api_workers = {{ openstack_service_workers }}
+{% elif service_name == 'mistral-engine' %}
+[engine]
+host = {{ api_interface_address }}
+{% elif service_name == 'mistral-executor' %}
+[executor]
+host = {{ api_interface_address }}
 {% endif %}
 
 [database]
@@ -38,6 +49,10 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 [mistral]
 url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ mistral_api_port }}
 
+[openstack_actions]
+os_actions_endpoint_type = internal
+default_region = {{ openstack_region_name }}
+
 [oslo_messaging_notifications]
 driver = noop
 
@@ -50,3 +65,6 @@ hmac_keys = {{ osprofiler_secret }}
 connection_string = elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}
 {% endif %}
 {% endif %}
+
+[coordination]
+backend_url = redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}
