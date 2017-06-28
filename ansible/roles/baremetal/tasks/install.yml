@@ -35,21 +35,6 @@
   with_items: "{{ debian_pkg_install }}"
   when: ansible_os_family == 'Debian'
 
-- name: Install wily kernel
-  package: name=linux-generic-lts-wily state=latest
-  register: kernel_updated
-  become: True
-  when:
-    - ansible_distribution|lower == "ubuntu" | bool
-    - ansible_distribution_release|lower == "trusty" | bool
-
-- name: Set reboot required
-  set_fact:
-    reboot_required: True
-  when:
-    - kernel_updated is defined
-    - kernel_updated.changed
-
 - name: Install deltarpm packages
   package: name={{item}} state=installed
   become: True
