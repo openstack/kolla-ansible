@@ -16,7 +16,11 @@ Listen {{ api_interface_address }}:{{ horizon_port }}
         Require all granted
     </Location>
 
+{% if kolla_base_distro == 'ubuntu' and kolla_install_type == 'binary' %}
+    Alias /static /var/lib/openstack-dashboard/static
+{% else %}
     Alias /static {{ python_path }}/static
+{% endif %}
     <Location "/static">
         SetHandler None
     </Location>
