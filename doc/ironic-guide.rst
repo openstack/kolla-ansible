@@ -20,6 +20,21 @@ The Ironic implementation is "tech preview", so currently instances can only be
 deployed on baremetal. Further work will be done to allow scheduling for both
 virtualized and baremetal deployments.
 
+Pre-deployment Configuration
+============================
+
+Enable Ironic role in ``/etc/kolla/globals.yml``:
+
+.. code-block:: console
+
+    enable_ironic: "yes"
+
+Beside that an additional network type 'flat' has to be added to a list of tenant network types:
+
+.. code-block:: console
+
+    neutron_tenant_network_types: "vxlan,flat"
+
 Configuring Web Console
 =======================
 Configuration based off upstream web_console_documentation_.

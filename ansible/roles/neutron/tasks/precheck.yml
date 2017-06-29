@@ -36,3 +36,13 @@
        or inventory_hostname in groups['neutron-l3-agent']
        or inventory_hostname in groups['neutron-metadata-agent'])
     - ansible_os_family == 'RedHat' or ansible_distribution == 'Ubuntu'
+
+- name: Checking tenant network types
+  vars:
+    type_drivers: "{{ neutron_type_drivers.replace(' ', '').split(',') | reject('equalto', '') | list }}"
+    tenant_network_types: "{{ neutron_tenant_network_types.replace(' ', '').split(',') | reject('equalto', '') | list }}"
+  local_action: fail msg="Tenant network type '{{ item }}' is not in type drivers [{{ neutron_type_drivers }}]"
+  changed_when: false
+  when: item not in type_drivers
+  run_once: true
+  with_items: "{{ tenant_network_types }}"

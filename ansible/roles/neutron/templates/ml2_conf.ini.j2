@@ -1,16 +1,8 @@
 # ml2_conf.ini
 [ml2]
-{% if enable_ironic | bool %}
-tenant_network_types = vxlan, flat
-mechanism_drivers = openvswitch
-{% elif enable_hyperv | bool %}
-type_drivers = flat,vlan,vxlan
-tenant_network_types = flat,vlan
-{% else %}
 # Changing type_drivers after bootstrap can lead to database inconsistencies
-type_drivers = flat,vlan,vxlan
-tenant_network_types = vxlan
-{% endif %}
+type_drivers = {{ neutron_type_drivers }}
+tenant_network_types = {{ neutron_tenant_network_types }}
 
 {% if neutron_plugin_agent == "openvswitch" %}
 {% if enable_hyperv | bool %}

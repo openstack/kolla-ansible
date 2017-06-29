@@ -94,6 +94,12 @@ Hyper-V options are also required in ``/etc/kolla/globals.yml``:
     vswitch_name: <HyperV virtual switch name>
     nova_msi_url: "https://www.cloudbase.it/downloads/HyperVNovaCompute_Beta.msi"
 
+If tenant networks are to be built using VLAN add corresponding type in ``/etc/kolla/globals.yml``:
+
+.. code-block:: console
+
+    neutron_tenant_network_types: 'flat,vlan'
+
 The virtual switch is the same one created on the HyperV setup part.
 For nova_msi_url, different Nova MSI (Mitaka/Newton/Ocata) versions can be found on
 `Cloudbase website
