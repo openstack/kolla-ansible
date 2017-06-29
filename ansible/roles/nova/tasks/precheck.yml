@@ -12,9 +12,14 @@
   register: container_facts
 
 - name: Checking available compute nodes in inventory
+  vars:
+    nova_compute_ironic: "{{ nova_services['nova-compute-ironic'] }}"
   fail:
-    msg: "At least 1 compute node required in inventory"
-  when: groups['compute'] | length < 1
+    msg: >
+      At least 1 compute node required in inventory when ironic is disabled.
+  when:
+    - groups['compute'] | length < 1
+    - not nova_compute_ironic.enabled | bool
 
 - name: Checking free port for Nova API
   vars:
