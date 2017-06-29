@@ -13,8 +13,11 @@
 
 - name: Checking available compute nodes in inventory
   fail:
-    msg: "At least 1 compute node required in inventory"
-  when: groups['compute'] | length < 1
+    msg: >
+      At least 1 compute node required in inventory when ironic is disabled.
+  when:
+    - groups['compute'] | length < 1
+    - groups['nova-compute-ironic'] | length < 1
 
 - name: Checking free port for Nova API
   vars:
