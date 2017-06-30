@@ -89,6 +89,8 @@ listen glance_registry
 
 listen glance_api
   bind {{ kolla_internal_vip_address }}:{{ glance_api_port }}
+  timeout client {{ haproxy_glance_api_client_timeout }}
+  timeout server {{ haproxy_glance_api_server_timeout }}
 {% for host in groups['glance-api'] %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
