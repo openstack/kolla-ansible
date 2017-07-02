@@ -51,7 +51,6 @@ osapi_volume_listen = {{ api_interface_address }}
 osapi_volume_listen_port = {{ cinder_api_port }}
 
 api_paste_config = /etc/cinder/api-paste.ini
-nova_catalog_info = compute:nova:internalURL
 
 auth_strategy = keystone
 
@@ -64,6 +63,11 @@ topics = notifications
 {% else %}
 driver = noop
 {% endif %}
+
+[nova]
+region_name = {{ openstack_region_name }}
+interface = internal
+token_auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 
 [database]
 connection = mysql+pymysql://{{ cinder_database_user }}:{{ cinder_database_password }}@{% if orchestration_engine == 'KUBERNETES' %}{{ cinder_database_address }}{% else %}{{ cinder_database_address }}{% endif %}/{{ cinder_database_name }}
