@@ -262,7 +262,7 @@ Simple 3 Node Example
 
 This example will show how to deploy Ceph in a very simple setup using 3
 storage nodes. 2 of those nodes (kolla1 and kolla2) will also provide other
-services like control, network, compute, monitoring and compute. The 3rd
+services like control, network, compute, and monitoring. The 3rd
 (kolla3) node will only act as a storage node.
 
 This example will only focus on the Ceph aspect of the deployment and assumes
