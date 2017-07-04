@@ -129,10 +129,10 @@ Install dependencies needed to build the code with ``pip`` package manager.
 ::
 
     #CentOS
-    yum install python-devel libffi-devel gcc openssl-devel
+    yum install python-devel libffi-devel gcc openssl-devel libselinux-python
 
     #Ubuntu
-    apt-get install python-dev libffi-dev gcc libssl-dev
+    apt-get install python-dev libffi-dev gcc libssl-dev python-selinux
 
 Kolla deploys OpenStack using `Ansible <http://www.ansible.com>`__. Install
 Ansible from distribution packaging if the distro packaging has recommended
