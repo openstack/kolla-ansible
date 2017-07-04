@@ -10,12 +10,14 @@
 
 - name: Check nova keyring file
   local_action: stat path="{{ node_custom_config }}/nova/ceph.client.nova.keyring"
+  run_once: True
   register: nova_cephx_keyring_file
   failed_when: not nova_cephx_keyring_file.stat.exists
   when: external_ceph_cephx_enabled | bool
 
 - name: Check cinder keyring file
   local_action: stat path="{{ node_custom_config }}/nova/ceph.client.cinder.keyring"
+  run_once: True
   register: cinder_cephx_keyring_file
   failed_when: not cinder_cephx_keyring_file.stat.exists
   when:
@@ -61,11 +63,13 @@
 
 - name: Extract nova key from file
   local_action: shell cat "{{ nova_cephx_keyring_file.stat.path }}" | grep -E 'key\s*=' | awk '{ print $3 }'
+  run_once: True
   register: nova_cephx_raw_key
   when: external_ceph_cephx_enabled | bool
 
 - name: Extract cinder key from file
   local_action: shell cat "{{ cinder_cephx_keyring_file.stat.path }}" | grep -E 'key\s*=' | awk '{ print $3 }'
+  run_once: True
   register: cinder_cephx_raw_key
   when:
     - cinder_backend_ceph | bool
