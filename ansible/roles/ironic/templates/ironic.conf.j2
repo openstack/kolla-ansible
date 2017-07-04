@@ -62,18 +62,35 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 default_boot_option = netboot
 
 [glance]
-glance_host = {{ internal_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}glance-api{% else %}{{ kolla_internal_fqdn }}{% endif %}:{{ glance_api_port }}
+glance_api_servers = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ glance_api_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ ironic_keystone_user }}
+password = {{ ironic_keystone_password }}
 
 [neutron]
-{% if orchestration_engine == 'KUBERNETES' %}
-url = {{ internal_protocol }}://neutron-server:{{ neutron_server_port }}
-{% else %}
 url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}
-{% endif %}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ ironic_keystone_user }}
+password = {{ ironic_keystone_password }}
 cleaning_network = {{ ironic_cleaning_network }}
 
 [inspector]
 enabled = true
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ ironic_keystone_user }}
+password = {{ ironic_keystone_password }}
 
 [agent]
 deploy_logs_local_path = /var/log/kolla/ironic
