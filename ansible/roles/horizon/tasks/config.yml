@@ -88,8 +88,8 @@
   vars:
     horizon: "{{ horizon_services['horizon'] }}"
   template:
-    src: "{{ node_custom_config }}/horizon/{{ item[0]['name'] }}_policy.json"
-    dest: "{{ node_config_directory }}/horizon/{{ item[0]['name'] }}_policy.json"
+    src: "{{ node_custom_config }}/horizon/{{ item.item.name }}_policy.json"
+    dest: "{{ node_config_directory }}/horizon/{{ item.item.name }}_policy.json"
   register: policy_jsons
   when:
     - horizon.enabled | bool
@@ -97,6 +97,8 @@
     - item.item.enabled | bool
     - item.stat.exists
   with_items: "{{ custom_policy.results }}"
+  notify:
+    - Restart horizon container
 
 - name: Check horizon container
   vars:
