@@ -120,11 +120,10 @@
 - name: Checking whether keystone-paste.ini file exists
   vars:
     keystone: "{{ keystone_services.keystone }}"
-  stat:
-    path: "{{ node_custom_config }}/keystone/keystone-paste.ini"
+  local_action: stat path="{{ node_custom_config }}/keystone/keystone-paste.ini"
+  run_once: True
   register: check_keystone_paste_ini
   when:
-    - inventory_hostname in groups[keystone.group]
     - keystone.enabled | bool
 
 - name: Copying over keystone-paste.ini
