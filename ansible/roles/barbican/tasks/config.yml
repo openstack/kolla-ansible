@@ -37,18 +37,25 @@
   notify:
     - Restart barbican-api container
 
+- name: Checking whether barbican-api-paste.ini file exists
+  vars:
+    barbican-api: "{{ barbican_services['barbican-api'] }}"
+  local_action: stat path="{{ node_custom_config }}/barbican/barbican-api-paste.ini"
+  run_once: True
+  register: check_barbican_api_paste_ini
+  when:
+    - barbican-api.enabled | bool
+
 - name: Copying over barbican-api-paste.ini
   vars:
     service: "{{ barbican_services['barbican-api'] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/barbican-api-paste.ini.j2"
-      - "{{ node_custom_config }}/barbican-api/barbican-api-paste.ini"
-      - "{{ node_custom_config }}/barbican-api/{{ inventory_hostname }}/barbican-api-paste.ini"
+  template:
+    src: "{{ node_custom_config }}/barbican/barbican-api-paste.ini"
     dest: "{{ node_config_directory }}/barbican-api/barbican-api-paste.ini"
   when:
     - inventory_hostname in groups['barbican-api']
     - service.enabled | bool
+    - check_barbican_api_paste_ini.stat.exists
   register: barbican_api_paste
   notify:
     - Restart barbican-api container
