@@ -34,9 +34,13 @@ host = {{ ansible_hostname }}_{{ item }}
 {% endif %}
 
 allow_overlapping_ips = true
-core_plugin = ml2
 
+{% if neutron_plugin_agent == 'vmware_nsxv' %}
+core_plugin = vmware_nsx.plugin.NsxVPlugin
+{% else %}
+core_plugin = ml2
 service_plugins = {{ neutron_service_plugins|map(attribute='name')|join(',') }}
+{% endif %}
 
 {% if enable_neutron_agent_ha | bool %}
 dhcp_agents_per_network = {{ dhcp_agents_per_network }}

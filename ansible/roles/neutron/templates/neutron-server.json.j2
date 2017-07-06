@@ -1,5 +1,5 @@
 {
-    "command": "neutron-server --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_lbaas.conf --config-file /etc/neutron/neutron_vpnaas.conf",
+    "command": "neutron-server --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_lbaas.conf --config-file /etc/neutron/neutron_vpnaas.conf {% if neutron_plugin_agent == 'vmware_nsxv' %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/neutron.conf",
@@ -31,7 +31,14 @@
             "owner": "neutron",
             "perm": "0600",
             "optional": true
+        }{% if neutron_plugin_agent == 'vmware_nsxv' -%},
+        {
+            "source": "{{ container_config_directory }}/nsx.ini",
+            "dest": "/etc/neutron/plugins/vmware/nsx.ini",
+            "owner": "neutron",
+            "perm": "0600"
         }
+        {% endif -%}
     ],
     "permissions": [
         {
