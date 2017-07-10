@@ -51,6 +51,13 @@ EOF
     #   /home/jenkins/workspace/gate-kolla-ansible-dsvm-deploy-centos-source-centos-7-nv
 
     # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
+
+GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
+
+if echo $ACTION | grep -q "ceph"; then
+GATE_IMAGES+=",ceph,cinder"
+fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
@@ -62,7 +69,7 @@ registry = 127.0.0.1:4000
 push = true
 
 [profiles]
-gate = cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon
+gate = ${GATE_IMAGES}
 EOF
 
     if [[ "${DISTRO}" == "Debian" ]]; then
