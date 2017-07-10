@@ -11,6 +11,7 @@ source /etc/nodepool/provider
 NODEPOOL_MIRROR_HOST=${NODEPOOL_MIRROR_HOST:-mirror.$NODEPOOL_REGION.$NODEPOOL_CLOUD.openstack.org}
 NODEPOOL_MIRROR_HOST=$(echo $NODEPOOL_MIRROR_HOST|tr '[:upper:]' '[:lower:]')
 NODEPOOL_PYPI_MIRROR=${NODEPOOL_PYPI_MIRROR:-http://$NODEPOOL_MIRROR_HOST/pypi/simple}
+NODEPOOL_TARBALLS_MIRROR=${NODEPOOL_TARBALLS_MIRROR:-http://$NODEPOOL_MIRROR_HOST:8080/tarballs}
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
@@ -163,7 +164,7 @@ function prepare_images {
         BRANCH=$(echo "$ZUUL_BRANCH" | cut -d/ -f2)
         filename=${BASE_DISTRO}-${INSTALL_TYPE}-registry-${BRANCH}.tar.gz
         wget -q -c -O "/tmp/$filename" \
-            "http://tarballs.openstack.org/kolla/images/$filename"
+            "${NODEPOOL_TARBALLS_MIRROR}/kolla/images/$filename"
         sudo tar xzf "/tmp/$filename" -C /tmp/kolla_registry
     fi
 }
