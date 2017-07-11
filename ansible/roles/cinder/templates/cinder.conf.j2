@@ -154,6 +154,17 @@ hnas_svc0_volume_type = {{ hnas_nfs_svc0_volume_type }}
 hnas_svc0_hdp = {{ hnas_nfs_svc0_hdp }}
 {% endif %}
 
+{% if cinder_backend_vmwarevc_vmdk | bool %}
+[vmwarevc-vmdk]
+volume_backend_name=vmwarevc-vmdk
+volume_driver = cinder.volume.drivers.vmware.vmdk.VMwareVcVmdkDriver
+vmware_host_ip = {{ vmware_vcenter_host_ip }}
+vmware_host_username = {{ vmware_vcenter_host_username }}
+vmware_host_password = {{ vmware_vcenter_host_password }}
+vmware_cluster_name = {{ vmware_vcenter_cluster_name }}
+vmware_insecure = True
+{% endif %}
+
 [privsep_entrypoint]
 helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
 
