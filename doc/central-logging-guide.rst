@@ -154,3 +154,13 @@ item can be exported separately by selecting it in the menu. All of the items
 can also be exported at once by choosing *export everything* option.
 In the same tab (Settings - Objects) one can also import saved items by
 choosing *import* option.
+
+Custom log forwarding
+=====================
+
+In some scenarios it may be useful to forward logs to a logging service other
+than elasticsearch.  This can be done by configuring custom fluentd outputs.
+
+Configuration of custom fluentd outputs is possible by placing output
+configuration files in ``/etc/kolla/config/fluentd/output/*.conf`` on the
+control host.
