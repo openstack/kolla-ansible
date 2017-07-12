@@ -156,7 +156,9 @@ function prepare_images {
     # variable. if find "openstack/kolla:" string, it means this patch depends
     # on one of Kolla patch. Then build image by using Kolla's code.
     # Otherwise, pull images from tarballs.openstack.org site.
-    if echo "$ZUUL_CHANGES" | grep -q -i "openstack/kolla:"; then
+    # NOTE(inc0): Publisher variable is set when Kolla runs publisher jobs.
+    # When that happens we don't build images, we download them from temp location.
+    if echo "$ZUUL_CHANGES" | grep -i "openstack/kolla:" && ! [[ $PUBLISHER ]]; then
         pushd "${GIT_PROJECT_DIR}/kolla"
         sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
         popd
@@ -164,7 +166,7 @@ function prepare_images {
         BRANCH=$(echo "$ZUUL_BRANCH" | cut -d/ -f2)
         filename=${BASE_DISTRO}-${INSTALL_TYPE}-registry-${BRANCH}.tar.gz
         wget -q -c -O "/tmp/$filename" \
-            "${NODEPOOL_TARBALLS_MIRROR}/kolla/images/$filename"
+            "${NODEPOOL_TARBALLS_MIRROR}/kolla/images/${TMP_REGISTRY}${filename}"
         sudo tar xzf "/tmp/$filename" -C /tmp/kolla_registry
     fi
 }
