@@ -22,9 +22,9 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying over manila.conf
+  vars:
+    service_name: "{{ item.key }}"
   merge_configs:
-    vars:
-      service_name: "{{ item.key }}"
     sources:
       - "{{ role_path }}/templates/manila.conf.j2"
       - "{{ node_custom_config }}/global.conf"
@@ -48,9 +48,8 @@
 - name: Copying over manila-share.conf
   vars:
     service: "{{ manila_services['manila-share'] }}"
+    service_name: "{{ item }}"
   merge_configs:
-    vars:
-      service_name: "{{ item }}"
     sources:
       - "{{ role_path }}/templates/manila.conf.j2"
       - "{{ role_path }}/templates/manila-share.conf.j2"

@@ -98,8 +98,6 @@ class ActionModule(action.ActionBase):
 
     def run(self, tmp=None, task_vars=None):
 
-        if task_vars is None:
-            task_vars = dict()
         result = super(ActionModule, self).run(tmp, task_vars)
 
         # NOTE(jeffrey4l): Ansible 2.1 add a remote_user param to the
@@ -114,22 +112,15 @@ class ActionModule(action.ActionBase):
             tmp = self._make_tmp_path(remote_user)
 
         sources = self._task.args.get('sources', None)
-        extra_vars = self._task.args.get('vars', list())
 
         if not isinstance(sources, list):
             sources = [sources]
 
-        temp_vars = task_vars.copy()
-        temp_vars.update(extra_vars)
-
         config = OverrideConfigParser()
-        old_vars = self._templar._available_variables
-        self._templar.set_available_variables(temp_vars)
 
         for source in sources:
             self.read_config(source, config)
 
-        self._templar.set_available_variables(old_vars)
         # Dump configparser to string via an emulated file
 
         fakefile = StringIO()
@@ -140,7 +131,6 @@ class ActionModule(action.ActionBase):
         fakefile.close()
 
         new_module_args = self._task.args.copy()
-        new_module_args.pop('vars', None)
         new_module_args.pop('sources', None)
 
         new_module_args.update(
