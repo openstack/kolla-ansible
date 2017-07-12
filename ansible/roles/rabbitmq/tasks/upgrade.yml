@@ -1,4 +1,5 @@
 ---
+# TODO(mickt): Revert Change I3766271c62779c8dbd31e7cf2300473815bbbe68 when Pike is released.
 - name: Checking if rabbitmq container needs upgrading
   vars:
     service_name: "rabbitmq"
@@ -9,17 +10,21 @@
     name: "{{ project_name }}"
     image: "{{ rabbitmq_image_full }}"
     environment: "{{ service.environment }}"
-  when: inventory_hostname in groups[role_rabbitmq_groups]
+  when:
+    - inventory_hostname in groups[role_rabbitmq_groups]
+    - project_name == "rabbitmq"
   register: rabbitmq_differs
 
 - include: config.yml
+  when: project_name == "rabbitmq"
 
 - name: Find gospel node
   command: docker exec -t {{ project_name }} /usr/local/bin/rabbitmq_get_gospel_node
-  changed_when: "{{ (gospel_node.stdout | from_json).changed }}"
-  failed_when: "{{ (gospel_node.stdout | from_json).failed }}"
+  changed_when: "(gospel_node.stdout | from_json).changed"
+  failed_when: "(gospel_node.stdout | from_json).failed"
   register: gospel_node
   run_once: True
+  when: project_name == "rabbitmq"
 
 - name: Stopping non-gospel nodes
   kolla_docker:
@@ -27,17 +32,20 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ project_name }}"
   when:
+    - project_name == "rabbitmq"
     - rabbitmq_hostname != (gospel_node.stdout | from_json).hostname
     - rabbitmq_differs['result']
 
 - name: Flush handlers
   meta: flush_handlers
   when:
+    - project_name == "rabbitmq"
     - rabbitmq_hostname == (gospel_node.stdout | from_json).hostname
     - rabbitmq_differs['result']
 
 - name: Flush handlers
   meta: flush_handlers
   when:
+    - project_name == "rabbitmq"
     - rabbitmq_hostname != (gospel_node.stdout | from_json).hostname
     - rabbitmq_differs['result']
