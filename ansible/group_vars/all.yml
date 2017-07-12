@@ -19,10 +19,6 @@ node_config_directory: "/etc/kolla/{{ project }}"
 ###################
 # Kolla options
 ###################
-
-# Which orchestration engine to use. Valid options are [ ANSIBLE, KUBERNETES ]
-orchestration_engine: "ANSIBLE"
-
 # Valid options are [ COPY_ONCE, COPY_ALWAYS ]
 config_strategy: "COPY_ALWAYS"
 
@@ -53,13 +49,8 @@ kolla_dev_mode: "no"
 # kolla-kubernetes
 ####################
 # By default, Kolla API services bind to the network address assigned
-# to the api_interface.  Allow the bind address to be an override.  In
-# some cases (Kubernetes), the api_interface address is not known
-# until container runtime, and thus it is necessary to bind to all
-# interfaces "0.0.0.0".  When used outside of Kubernetes, binding to
-# all interfaces may present a security issue, and thus is not
-# recommended.
-api_interface_address:  "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] if orchestration_engine == 'ANSIBLE' else '0.0.0.0' }}"
+# to the api_interface.  Allow the bind address to be an override.
+api_interface_address:  "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
 
 ################
 # Chrony options
@@ -129,7 +120,7 @@ cluster_interface: "{{ network_interface }}"
 tunnel_interface: "{{ network_interface }}"
 bifrost_network_interface: "{{ network_interface }}"
 dns_interface: "{{ network_interface }}"
-tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] if orchestration_engine == 'ANSIBLE' else '0.0.0.0' }}"
+tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] }}"
 
 # Valid options are [ openvswitch, linuxbridge, sfc ]
 neutron_plugin_agent: "openvswitch"
@@ -286,8 +277,8 @@ openstack_region_name: "RegionOne"
 multiple_regions_names:
     - "{{ openstack_region_name }}"
 
-openstack_service_workers: "{{ [ansible_processor_vcpus, 5]|min if orchestration_engine == 'ANSIBLE' else '1'}}"
-openstack_service_rpc_workers: "{{ [ansible_processor_vcpus, 3]|min if orchestration_engine == 'ANSIBLE' else '1'}}"
+openstack_service_workers: "{{ [ansible_processor_vcpus, 5]|min }}"
+openstack_service_rpc_workers: "{{ [ansible_processor_vcpus, 3]|min }}"
 
 # Optionally allow Kolla to set sysctl values
 set_sysctl: "yes"

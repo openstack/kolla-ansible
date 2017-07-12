@@ -6,13 +6,11 @@ log to stderr = false
 err to stderr = false
 
 fsid = {{ ceph_cluster_fsid }}
-{% if orchestration_engine != 'KUBERNETES' %}
 mon initial members = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 mon host = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 mon addr = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}:6789{% if not loop.last %}, {% endif %}{% endfor %}
-{% endif %}
 
 auth cluster required = cephx
 auth service required = cephx
@@ -32,10 +30,8 @@ mon cluster log file = /var/log/kolla/ceph/$cluster.log
 
 {% if service_name is defined and service_name == 'ceph-rgw' %}
 [client.radosgw.gateway]
-{% if orchestration_engine != 'KUBERNETES' %}
 host = {{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}
 rgw frontends = civetweb port={{ api_interface_address }}:{{ rgw_port }}
-{% endif %}
 {% if enable_ceph_rgw_keystone | bool %}
 rgw_keystone_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
 rgw_keystone_admin_user = {{ openstack_auth.username }}
