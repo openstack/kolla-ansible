@@ -34,7 +34,7 @@
               ceph_osd_wipe_disk: 'yes-i-really-really-mean-it' within globals.yml)
   with_items: "{{ osds_bootstrap|default([]) }}"
   when:
-    - item.external_journal | bool == False
+    - not item.external_journal | bool
     - item.device.split('/')[2] in ansible_devices  # if there is no device in setup (like loopback, we don't need to warn user
     - ansible_devices[item.device.split('/')[2]].partitions|count > 1
     - ceph_osd_wipe_disk != "yes-i-really-really-mean-it"
@@ -81,7 +81,7 @@
               ceph_osd_wipe_disk: 'yes-i-really-really-mean-it' within globals.yml)
   with_items: "{{ osds_cache_bootstrap|default([]) }}"
   when:
-    - item.external_journal | bool == False
+    - not item.external_journal | bool
     - ansible_devices[item.device.split('/')[2]].partitions|count > 1
     - ceph_osd_wipe_disk != "yes-i-really-really-mean-it"
 
