@@ -52,7 +52,7 @@ class ModuleArgsTest(base.BaseTestCase):
                          'stop_container']),
             api_version=dict(required=False, type='str', default='auto'),
             auth_email=dict(required=False, type='str'),
-            auth_password=dict(required=False, type='str'),
+            auth_password=dict(required=False, type='str', no_log=True),
             auth_registry=dict(required=False, type='str'),
             auth_username=dict(required=False, type='str'),
             detach=dict(required=False, type='bool', default=True),
