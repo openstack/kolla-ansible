@@ -29,7 +29,8 @@ Enable Ironic role in ``/etc/kolla/globals.yml``:
 
     enable_ironic: "yes"
 
-Beside that an additional network type 'flat' has to be added to a list of tenant network types:
+Beside that an additional network type 'flat' has to be added to a list of
+tenant network types:
 
 .. code-block:: console
 
