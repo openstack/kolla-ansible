@@ -76,7 +76,9 @@ function prep_work {
         exit 1
     fi
 
-    pip install --upgrade docker-py
+    # Workaround for https://github.com/docker/docker-py/issues/1353
+    pip uninstall docker docker-py
+    pip install docker
 }
 
 # Do some cleanup after the installation of kolla
