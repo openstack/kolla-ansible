@@ -1,4 +1,14 @@
 ---
+- name: Waiting for Keystone SSH port to be UP
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ keystone_ssh_port }}"
+    connect_timeout: 1
+  register: check_keystone_ssh_port
+  until: check_keystone_ssh_port | success
+  retries: 10
+  delay: 5
+
 - name: Initialise fernet key authentication
   command: "docker exec -t keystone_fernet kolla_keystone_bootstrap {{ keystone_username }} {{ keystone_groupname }}"
   register: fernet_create
