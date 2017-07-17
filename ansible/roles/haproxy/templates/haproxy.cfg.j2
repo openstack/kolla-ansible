@@ -7,7 +7,7 @@ global
   daemon
   log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_haproxy_facility }}
   maxconn 4000
-  stats socket /var/lib/kolla/haproxy/haproxy.sock
+  stats socket /var/lib/kolla/haproxy/haproxy.sock group kolla mode 660
 {% if kolla_enable_tls_external | bool %}
   ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
   ssl-default-bind-options no-sslv3 no-tlsv10
@@ -1194,6 +1194,18 @@ listen blazar_api_external
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ blazar_api_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
 {% endif %}
+{% endif %}
+
+{% if enable_prometheus | bool %}
+listen prometheus_server
+  bind {{ kolla_internal_vip_address }}:{{ prometheus_port }}
+  http-request del-header X-Forwarded-Proto
+{% for http_option in haproxy_listen_http_extra %}
+  {{ http_option }}
+{% endfor %}
+{% for host in groups['prometheus'] %}
+  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ prometheus_port }} check inter 2000 rise 2 fall 5
+{% endfor %}
 {% endif %}
 
 # (NOTE): This defaults section deletes forwardfor as recommended by:

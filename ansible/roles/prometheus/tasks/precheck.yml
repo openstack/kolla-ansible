@@ -1,0 +1,56 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - prometheus
+      - prometheus_node_exporter
+      - prometheus_haproxy_exporter
+      - prometheus_mysqld_exporter
+  register: container_facts
+
+- name: Checking free port for Prometheus
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ prometheus_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus'] is not defined
+    - inventory_hostname in groups['prometheus']
+
+- name: Checking free port for Prometheus node_exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ prometheus_node_exporter_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_node_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-node-exporter']
+    - enable_prometheus_node_exporter | bool
+
+- name: Checking free port for Prometheus mysqld_exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ prometheus_mysqld_exporter_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_mysqld_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-mysqld-exporter']
+    - enable_prometheus_mysqld_exporter | bool
+
+- name: Checking free port for Prometheus haproxy_exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ prometheus_haproxy_exporter_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_mysqld_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-haproxy-exporter']
+    - enable_prometheus_haproxy_exporter | bool
