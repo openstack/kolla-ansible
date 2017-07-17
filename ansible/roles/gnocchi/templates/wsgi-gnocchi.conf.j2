@@ -1,4 +1,5 @@
 {% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% set wsgi_path = '/usr/bin' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address }}:{{ gnocchi_api_port }}
 
 <VirtualHost *:{{ gnocchi_api_port }}>
@@ -8,9 +9,9 @@ Listen {{ api_interface_address }}:{{ gnocchi_api_port }}
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess gnocchi group=gnocchi processes={{ openstack_service_workers }} threads=1 user=gnocchi python-path={{ python_path }}
   WSGIProcessGroup gnocchi
-  WSGIScriptAlias / "{{ python_path }}/gnocchi/rest/app.wsgi"
+  WSGIScriptAlias / "{{ wsgi_path }}/gnocchi-api"
 
-  <Directory "{{ python_path }}/gnocchi/rest">
+  <Directory "{{ wsgi_path }}">
         Require all granted
   </Directory>
 
