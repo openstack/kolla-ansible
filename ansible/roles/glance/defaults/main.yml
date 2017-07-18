@@ -62,10 +62,16 @@ glance_api_image_full: "{{ glance_api_image }}:{{ glance_api_tag }}"
 # Glance
 ####################
 glance_backends:
-  - name: "rbd,http"
+  - name: file
+    enabled: true
+  - name: http
+    enabled: true
+  - name: "rbd"
     enabled: "{{ enable_ceph | bool and glance_backend_ceph | bool }}"
   - name: "vmware"
     enabled: "{{ glance_backend_vmware | bool }}"
+  - name: cinder
+    enabled: "{{ enable_cinder | bool }}"
 
 glance_store_backends: "{{ glance_backends|selectattr('enabled', 'equalto', true)|list }}"
 
