@@ -67,7 +67,7 @@
     - Restart ceilometer-collector container
     - Restart ceilometer-compute container
 
-- name: Copying over event and pipeline yaml for notification service
+- name: Copying over event yaml for notification service
   vars:
     service: "{{ ceilometer_services['ceilometer-notification'] }}"
   template:
@@ -80,9 +80,26 @@
   with_items:
     - "event_definitions.yaml"
     - "event_pipeline.yaml"
-    - "pipeline.yaml"
   notify:
     - Restart ceilometer-notification container
+
+- name: Copying over pipeline.yaml file
+  vars:
+    services_require_pipeline:
+      - ceilometer-compute
+      - ceilometer-central
+      - ceilometer-notification
+  template:
+    src: "pipeline.yaml.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/pipeline.yaml"
+  register: ceilometer_pipelines
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - item.key in services_require_pipeline
+  with_dict: "{{ ceilometer_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
 
 - name: Copying over panko.conf
   vars:
