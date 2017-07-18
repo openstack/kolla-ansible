@@ -1,35 +1,8 @@
 ---
-- name: Get container facts
-  kolla_container_facts:
-    name:
-      - ceilometer_api
-  register: container_facts
-
-- name: Checking free port for Ceilometer API
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ ceilometer_api_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts['ceilometer_api'] is not defined
-    - inventory_hostname in groups['ceilometer-api']
-
-- name: Checking mongodb backend for ceilometer
-  run_once: True
-  local_action: fail msg="ceilometer_database_type set to 'mongodb' but mongodb is not enabled"
-  changed_when: false
-  when:
-    - enable_ceilometer | bool
-    - not enable_mongodb | bool
-    - ceilometer_database_type == "mongodb"
-
 - name: Checking gnocchi backend for ceilometer
   run_once: True
-  local_action: fail msg="ceilometer_database_type or ceilometer_event_type set to 'gnocchi' but gnocchi is not enabled"
+  local_action: fail msg="gnocchi is required but not enabled"
   changed_when: false
   when:
     - enable_ceilometer | bool
     - not enable_gnocchi | bool
-    - (ceilometer_database_type == "gnocchi" or ceilometer_event_type == "gnocchi")

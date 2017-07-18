@@ -19,28 +19,9 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-api container
     - Restart ceilometer-notification container
     - Restart ceilometer-central container
-    - Restart ceilometer-collector container
     - Restart ceilometer-compute container
-
-- name: Copying over wsgi-ceilometer-api.conf
-  vars:
-    service: "{{ ceilometer_services['ceilometer-api'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ceilometer-api/wsgi-ceilometer-api.conf"
-  with_first_found:
-    - "{{ node_custom_config }}/ceilometer/{{ inventory_hostname }}/wsgi-ceilometer-api.conf"
-    - "{{ node_custom_config }}/ceilometer/wsgi-ceilometer-api.conf"
-    - "wsgi-ceilometer-api.conf.j2"
-  register: wsgi_ceilometer_api
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart ceilometer-api container
 
 - name: Copying over ceilometer.conf
   vars:
@@ -61,10 +42,8 @@
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-api container
     - Restart ceilometer-notification container
     - Restart ceilometer-central container
-    - Restart ceilometer-collector container
     - Restart ceilometer-compute container
 
 - name: Copying over event yaml for notification service
@@ -105,7 +84,6 @@
   vars:
     service_require_panko_conf:
       - ceilometer-notification
-      - ceilometer-collector
   merge_configs:
     sources:
       - "{{ role_path }}/../panko/templates/panko.conf.j2"
@@ -116,7 +94,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/panko.conf"
   register: panko_confs
   when:
-    - ceilometer_event_type == 'panko'
+    - enable_panko | bool
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
     - item.key in service_require_panko_conf
@@ -140,10 +118,8 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-api container
     - Restart ceilometer-notification container
     - Restart ceilometer-central container
-    - Restart ceilometer-collector container
     - Restart ceilometer-compute container
 
 # check whether the containers parameter is changed. If yes, trigger the handler.
@@ -162,8 +138,6 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-api container
     - Restart ceilometer-notification container
     - Restart ceilometer-central container
-    - Restart ceilometer-collector container
     - Restart ceilometer-compute container
