@@ -201,4 +201,4 @@ Run the deployment:
 
     kolla-ansible deploy -i <path/to/multinode/inventory/file>
 
-.. _Building Container Images: http://docs.openstack.org/developer/kolla/image-building.html
+.. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html

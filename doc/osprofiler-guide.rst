@@ -54,4 +54,4 @@ The previous command will output the command to retrieve OSprofiler trace.
 
 For more information about how OSprofiler works, see
 `OSProfiler – Cross-project profiling library
-<https://docs.openstack.org/developer/osprofiler/>`__.
+<https://docs.openstack.org/osprofiler/latest/>`__.

@@ -31,7 +31,7 @@ suit the operator's exact requirements.
 
 For information on building container images for use with Kolla-Ansible, please
 refer to the `Kolla image documentation
-<http://docs.openstack.org/developer/kolla>`_.
+<https://docs.openstack.org/kolla/latest/>`_.
 
 
 Overview

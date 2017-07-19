@@ -166,7 +166,7 @@ group.  In the ``all-in-one`` and ``multinode`` inventory files, a ``bifrost``
 group is defined which contains all hosts in the ``deployment`` group.  This
 top level ``deployment`` group is intended to represent the host running the
 ``bifrost_deploy`` container.  By default, this group contains ``localhost``.
-See `Multinode Deployment of Kolla <https://docs.openstack.org/developer/kolla-ansible/multinode.html>`_
+See `Multinode Deployment of Kolla <https://docs.openstack.org/kolla-ansible/latest/multinode.html>`_
 for details on how to modify the Ansible inventory in a multinode deployment.
 
 Bifrost does not currently support running on multiple hosts so the ``bifrost``
@@ -285,7 +285,7 @@ For example to use the ``debian`` Disk Image Builder OS element:
    dib_os_element: debian
 
 See the `diskimage-builder documentation
-<http://docs.openstack.org/developer/diskimage-builder/>`__ for more details.
+<https://docs.openstack.org/diskimage-builder/latest/>`__ for more details.
 
 Deploy Bifrost
 --------------
@@ -467,9 +467,9 @@ done remotely with ``ipmitool`` and Serial Over LAN. For example
 References
 ==========
 
-Bifrost documentation: http://docs.openstack.org/developer/bifrost/
+Bifrost documentation: https://docs.openstack.org/bifrost/latest/
 
-Bifrost troubleshooting guide: http://docs.openstack.org/developer/bifrost/troubleshooting.html
+Bifrost troubleshooting guide: https://docs.openstack.org/bifrost/latest/troubleshooting.html
 
 Bifrost code repository: https://github.com/openstack/bifrost
 

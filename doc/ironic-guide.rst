@@ -49,7 +49,7 @@ Set ironic_console_serial_speed in ``/etc/kolla/globals.yml``:
 
     ironic_console_serial_speed: 9600n8
 
-.. _web_console_documentation: https://docs.openstack.org/developer/ironic/deploy/console.html#node-web-console
+.. _web_console_documentation: https://docs.openstack.org/ironic/latest/admin/console.html#node-web-console
 
 Post-deployment configuration
 =============================
@@ -72,4 +72,4 @@ Create the flat network to launch the instances:
 And then the above ID is used to set cleaning_network_uuid in the neutron
 section of ironic.conf.
 
-.. _documentation: http://docs.openstack.org/developer/ironic/deploy/install-guide.html
+.. _documentation: https://docs.openstack.org/ironic/latest/install/index.html

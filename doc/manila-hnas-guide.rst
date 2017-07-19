@@ -327,4 +327,4 @@ For more information about how to manage shares, see the
 
 For more information about how HNAS driver works, see
 `Hitachi NAS Platform File Services Driver for OpenStack
-<http://docs.openstack.org/developer/manila/devref/hitachi_hnas_driver.html>`__.
+<https://docs.openstack.org/manila/latest/devref/hitachi_hnas_driver.html>`__.
