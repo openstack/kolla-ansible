@@ -163,12 +163,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-
-{% if orchestration_engine == 'KUBERNETES' %}
-        'LOCATION': '{{ memcached_servers }}'
-{% else %}
         'LOCATION': [{% for host in groups['memcached'] %}'{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}{% endfor %}]
-{%- endif %}
     }
 }
 {% endif %}
@@ -193,7 +188,7 @@ AVAILABLE_REGIONS = [
 ]
 {% endif %}
 
-OPENSTACK_HOST = "{% if orchestration_engine == 'KUBERNETES' %}{{ api_interface_address }}{% else %}{{ kolla_internal_fqdn }}{% endif %}"
+OPENSTACK_HOST = "{{ kolla_internal_fqdn }}"
 
 OPENSTACK_KEYSTONE_URL = "{{ keystone_internal_url }}"
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "{{ keystone_default_user_role }}"

@@ -2,7 +2,7 @@
 debug = {{ keystone_logging_debug }}
 {% if enable_cadf_notifications | bool %}
 notification_format = cadf
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
 # NOTE(elemoine) log_dir alone does not work for Keystone
@@ -37,17 +37,7 @@ max_active_keys = {{ (groups['keystone'] | length) + 1 }}
 [cache]
 backend = oslo_cache.memcache_pool
 enabled = True
-
-{# For Kolla-Ansible, generate the memcache servers based on the list of
-memcached servers in the inventory and memcached_servers should be un-set.
-For Kolla-Kubernetes,  it is necessary to define the memcached_servers
-variable in globals.yml to set it to the Kubernetes service for memcached. #}
-
-{% if orchestration_engine == 'KUBERNETES' %}
-memcache_servers = {{ memcached_servers }}
-{% else %}
 memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-{%- endif %}
 
 {% if enable_cadf_notifications | bool %}
 [oslo_messaging_notifications]

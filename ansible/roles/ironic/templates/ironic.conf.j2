@@ -8,25 +8,17 @@ admin_password = {{ keystone_admin_password }}
 
 enabled_drivers = pxe_ipmitool,pxe_ssh
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{% if orchestration_engine == 'KUBERNETES' %}rabbitmq{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 {% if service_name == 'ironic-api' %}
 [api]
-
-{% if orchestration_engine != 'KUBERNETES' %}
 host_ip = {{ api_interface_address }}
-{% else %}
-host_ip = 0.0.0.0
-{% endif %}
 api_workers = {{ openstack_service_workers }}
 {% endif %}
 
 {% if service_name == 'ironic-conductor' %}
 [conductor]
-{% if orchestration_engine != 'KUBERNETES' %}
 api_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ ironic_api_port }}
-{% else %}
-api_url = {{ internal_protocol }}://ironic-api:{{ ironic_api_port }}
 {% endif %}
 automated_clean=false
 {% endif %}
@@ -36,13 +28,8 @@ connection = mysql+pymysql://{{ ironic_database_user }}:{{ ironic_database_passw
 max_retries = -1
 
 [keystone_authtoken]
-{% if orchestration_engine == 'KUBERNETES' %}
-auth_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
-{% else %}
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
-{% endif %}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -52,11 +39,7 @@ password = {{ ironic_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-{% if orchestration_engine == 'KUBERNETES' %}
-memcache_servers = {{ memcached_servers }}
-{% else %}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-{%- endif %}
 
 [deploy]
 default_boot_option = netboot
