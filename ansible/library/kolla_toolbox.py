@@ -109,10 +109,7 @@ def gen_commandline(params):
 
 
 def get_docker_client():
-    try:
-        return docker.Client
-    except AttributeError:
-        return docker.APIClient
+    return docker.APIClient
 
 
 def main():

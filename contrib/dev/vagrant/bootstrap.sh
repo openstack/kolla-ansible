@@ -76,7 +76,7 @@ function prep_work {
         exit 1
     fi
 
-    pip install --upgrade docker-py
+    pip install --upgrade docker
 }
 
 # Do some cleanup after the installation of kolla

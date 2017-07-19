@@ -105,7 +105,7 @@ Component               Min Version  Max Version  Comment
 =====================   ===========  ===========  =========================
 Ansible                 2.2.0        none         On deployment host
 Docker                  1.10.0       none         On target nodes
-Docker Python           1.8.1        none         On target nodes
+Docker Python           2.0.0        none         On target nodes
 Python Jinja2           2.8.0        none         On deployment host
 =====================   ===========  ===========  =========================
 
@@ -242,7 +242,7 @@ Or using ``pip`` to install the latest version:
 
 ::
 
-    pip install -U docker-py
+    pip install -U docker
 
 
 OpenStack, RabbitMQ, and Ceph require all hosts to have matching times to
