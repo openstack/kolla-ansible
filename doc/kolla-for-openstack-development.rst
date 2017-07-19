@@ -22,7 +22,8 @@ Only source containers are supported.
 Enabling Kolla "dev mode"
 -------------------------
 
-To enable dev mode for all supported services, set in ``/etc/kolla/globals.yml``:
+To enable dev mode for all supported services, set in
+``/etc/kolla/globals.yml``:
 
 ::
 

@@ -66,8 +66,9 @@ Virtual Interface the following PowerShell may be used:
     -AllowManagementOS option is set on True, otherwise you will lose connectivity to the Hyper-V node.
 
 
-To prepare the Hyper-V node to be able to attach to volumes provided by cinder you must
-first make sure the Windows iSCSI initiator service is running and started automatically.
+To prepare the Hyper-V node to be able to attach to volumes provided by
+cinder you must first make sure the Windows iSCSI initiator service is
+running and started automatically.
 
 .. code-block:: console
 
@@ -94,15 +95,16 @@ Hyper-V options are also required in ``/etc/kolla/globals.yml``:
     vswitch_name: <HyperV virtual switch name>
     nova_msi_url: "https://www.cloudbase.it/downloads/HyperVNovaCompute_Beta.msi"
 
-If tenant networks are to be built using VLAN add corresponding type in ``/etc/kolla/globals.yml``:
+If tenant networks are to be built using VLAN add corresponding type in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
     neutron_tenant_network_types: 'flat,vlan'
 
 The virtual switch is the same one created on the HyperV setup part.
-For nova_msi_url, different Nova MSI (Mitaka/Newton/Ocata) versions can be found on
-`Cloudbase website
+For nova_msi_url, different Nova MSI (Mitaka/Newton/Ocata) versions can
+be found on `Cloudbase website
 <https://cloudbase.it/openstack-hyperv-driver/>`__.
 
 
@@ -120,7 +122,8 @@ Add the Hyper-V node in ``ansible/inventory`` file:
     ansible_connection=winrm
     ansible_winrm_server_cert_validation=ignore
 
-pywinrm package needs to be installed in order for Ansible to work on the HyperV node:
+``pywinrm`` package needs to be installed in order for Ansible to work
+on the HyperV node:
 
 .. code-block:: console
 
@@ -136,16 +139,18 @@ pywinrm package needs to be installed in order for Ansible to work on the HyperV
 
     Set-VMNetworkAdapterVlan -Trunk -AllowedVlanIdList <VLAN ID> -NativeVlanId 0 <VM name>
 
-networking-hyperv mechanism driver is needed for neutron-server to communicate with
-HyperV nova-compute. This can be built with source images by default. Manually it
-can be intalled in neutron-server container with pip:
+networking-hyperv mechanism driver is needed for neutron-server to
+communicate with HyperV nova-compute. This can be built with source
+images by default. Manually it can be intalled in neutron-server
+container with pip:
 
 .. code-block:: console
 
     pip install "networking-hyperv>=4.0.0"
 
-For neutron_extension_drivers, ``port_security`` and ``qos`` are currently supported by the networking-hyperv
-mechanism driver. By default only ``port_security`` is set.
+For neutron_extension_drivers, ``port_security`` and ``qos`` are
+currently supported by the networking-hyperv mechanism driver.
+By default only ``port_security`` is set.
 
 
 Verify Operations

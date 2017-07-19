@@ -79,8 +79,8 @@ triggered on the Docker host when the neutron-agents containers are launched.
 This can be useful when you want to do a new clean deployment, particularly one
 changing the network topology.
 
-``tools/cleanup-images --all`` is used to remove all Docker images built by Kolla
-from the local Docker cache.
+``tools/cleanup-images --all`` is used to remove all Docker images built by
+Kolla from the local Docker cache.
 
 ``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
 containers..
@@ -103,13 +103,15 @@ tests.
 .. note::
   In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
 
-``kolla-mergepwd --old OLD_PASSWORDS --new NEW_PASSWORDS --final FINAL_PASSWORDS``
-is used to merge passwords from old installation with newly generated passwords
-during upgrade of Kolla release. The workflow is:
+``kolla-mergepwd --old OLD_PASSWDS --new NEW_PASSWDS --final FINAL_PASSWDS``
+is used to merge passwords from old installation with newly generated
+passwords during upgrade of Kolla release. The workflow is:
 
-- save old passwords from ``/etc/kolla/passwords.yml`` into ``passwords.yml.old``
-- generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``
-- merge ``passwords.yml.old`` and ``passwords.yml.new`` into ``/etc/kolla/passwords.yml``
+- Save old passwords from ``/etc/kolla/passwords.yml`` into
+  ``passwords.yml.old``
+- Generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``
+- Merge ``passwords.yml.old`` and ``passwords.yml.new`` into
+  ``/etc/kolla/passwords.yml``
 
 For example::
 
