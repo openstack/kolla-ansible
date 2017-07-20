@@ -166,12 +166,13 @@ It is important that the files are named ceph.client*.
 Nova
 ------
 
-Put ceph.conf and keyring file into ``/etc/kolla/config/nova``:
+Put ceph.conf, nova client keyring file and cinder client keyring file into
+``/etc/kolla/config/nova``:
 
 ::
 
   $ ls /etc/kolla/config/nova
-  ceph.client.nova.keyring ceph.conf
+  ceph.client.cinder.keyring ceph.client.nova.keyring ceph.conf
 
 Configure nova-compute to use Ceph as the ephemeral back end by creating
 ``/etc/kolla/config/nova/nova-compute.conf`` and adding the following
