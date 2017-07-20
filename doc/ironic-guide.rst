@@ -29,12 +29,12 @@ Enable Ironic role in ``/etc/kolla/globals.yml``:
 
     enable_ironic: "yes"
 
-Beside that an additional network type 'flat' has to be added to a list of
+Beside that an additional network type 'vlan,flat' has to be added to a list of
 tenant network types:
 
 .. code-block:: console
 
-    neutron_tenant_network_types: "vxlan,flat"
+    neutron_tenant_network_types: "vxlan,vlan,flat"
 
 Configuring Web Console
 =======================
