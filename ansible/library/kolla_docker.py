@@ -197,6 +197,13 @@ import traceback
 import docker
 
 
+def get_docker_client():
+    try:
+        return docker.Client
+    except AttributeError:
+        return docker.APIClient
+
+
 class DockerWorker(object):
 
     def __init__(self, module):
@@ -211,7 +218,7 @@ class DockerWorker(object):
             'version': self.params.get('api_version')
         }
 
-        self.dc = docker.Client(**options)
+        self.dc = get_docker_client()(**options)
 
     def generate_tls(self):
         tls = {'verify': self.params.get('tls_verify')}
