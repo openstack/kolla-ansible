@@ -74,6 +74,10 @@ def check_json_j2():
     def hostvars():
         return collections.defaultdict(hostvars)
 
+    # Mock Ansible groups variable, which is a dict of lists.
+    def groups():
+        return collections.defaultdict(list)
+
     def validate_json_j2(root, filename):
         env = jinja2.Environment(  # nosec: not used to render HTML
             loader=jinja2.FileSystemLoader(root))
@@ -82,6 +86,7 @@ def check_json_j2():
         # Mock ansible variables.
         context = {
             'hostvars': hostvars(),
+            'groups': groups(),
             'cluster_interface': 'cluster_interface',
             'storage_interface': 'storage_interface',
             'inventory_hostname': 'hostname'

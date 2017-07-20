@@ -10,12 +10,13 @@
       name: "{{ item.database_name }}"
   register: database
   run_once: True
-  delegate_to: "{{ item.delegate_to }}"
+  delegate_to: "{{ groups[item.group][0] }}"
   with_items:
     - database_name: "{{ ironic_database_name }}"
-      delegate_to: "{{ groups['ironic-api'][0] }}"
+      group: "ironic-api"
     - database_name: "{{ ironic_inspector_database_name }}"
-      delegate_to: "{{ groups['ironic-inspector'][0] }}"
+      group: "ironic-inspector"
+  when: inventory_hostname in groups[item.group]
 
 - name: Creating Ironic database user and setting permissions
   kolla_toolbox:
@@ -31,16 +32,17 @@
       priv: "{{ item.database_name }}.*:ALL"
       append_privs: "yes"
   run_once: True
-  delegate_to: "{{ item.delegate_to }}"
+  delegate_to: "{{ groups[item.group][0] }}"
   with_items:
     - database_name: "{{ ironic_database_name }}"
       database_user: "{{ ironic_database_user }}"
       database_password: "{{ ironic_database_password }}"
-      delegate_to: "{{ groups['ironic-api'][0] }}"
+      group: "ironic-api"
     - database_name: "{{ ironic_inspector_database_name }}"
       database_user: "{{ ironic_inspector_database_user }}"
       database_password: "{{ ironic_inspector_database_password }}"
-      delegate_to: "{{ groups['ironic-inspector'][0] }}"
+      group: "ironic-inspector"
+  when: inventory_hostname in groups[item.group]
 
 - include: bootstrap_service.yml
   when: database.changed
@@ -62,4 +64,4 @@
       - "{{ node_config_directory }}/ironic-pxe/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "ironic_pxe:/tftpboot/"
-  when: "{{ inventory_hostname in groups['ironic-pxe'] }}"
+  when: inventory_hostname in groups['ironic-pxe']

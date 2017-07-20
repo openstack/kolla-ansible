@@ -52,6 +52,7 @@
       - "{{ node_custom_config }}/ironic-inspector/inspector.conf"
       - "{{ node_custom_config }}/ironic-inspector/{{ inventory_hostname }}/inspector.conf"
     dest: "{{ node_config_directory }}/ironic-inspector/inspector.conf"
+  when: inventory_hostname in groups['ironic-inspector']
 
 - name: Copying over dnsmasq.conf
   template:
@@ -71,6 +72,10 @@
     - "{{ node_custom_config }}/ironic/pxelinux.default"
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/pxelinux.default"
     - "pxelinux.default.j2"
+  when:
+    # Only required when Ironic inspector is in use.
+    - groups['ironic-inspector'] | length > 0
+    - inventory_hostname in groups['ironic-pxe']
 
 - name: Copying ironic-agent kernel and initramfs
   copy:
@@ -79,6 +84,10 @@
   with_items:
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
+  when:
+    # Only required when Ironic inspector is in use.
+    - groups['ironic-inspector'] | length > 0
+    - inventory_hostname in groups['ironic-pxe']
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/ironic/policy.json"
