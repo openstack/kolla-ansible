@@ -114,6 +114,10 @@ Edit /etc/kolla/config/cinder/cinder-volume.conf with the following content:
   volume_driver=cinder.volume.drivers.rbd.RBDDriver
   rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 
+.. note::
+
+    ``cinder_rbd_secret_uuid`` can be found in ``/etc/kolla/passwords.yml`` file.
+
 Edit /etc/kolla/config/cinder/cinder-backup.conf with the following content:
 
 ::
