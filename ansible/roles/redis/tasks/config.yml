@@ -1,0 +1,50 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ redis_services }}"
+
+- name: Copying over default config.json files
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: redis_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ redis_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over redis config files
+  template:
+    src: "{{ item.key }}.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/redis.conf"
+  register: redis_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ redis_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Check redis containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_redis_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ redis_services }}"
+  notify:
+    - Restart {{ item.key }} container

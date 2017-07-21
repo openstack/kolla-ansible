@@ -1,0 +1,34 @@
+---
+project_name: "redis"
+
+redis_services:
+  redis:
+    container_name: redis
+    group: redis
+    enabled: true
+    image: "{{ redis_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/redis/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ project_name }}:/var/lib/redis/"
+      - "kolla_logs:/var/log/kolla/"
+  redis-sentinel:
+    container_name: redis_sentinel
+    group: redis
+    enabled: true
+    image: "{{ redis_sentinel_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/redis-sentinel/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+# Docker
+####################
+redis_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-redis"
+redis_tag: "{{ openstack_release }}"
+redis_image_full: "{{ redis_image }}:{{ redis_tag }}"
+
+redis_sentinel_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-redis-sentinel"
+redis_sentinel_tag: "{{ openstack_release }}"
+redis_sentinel_image_full: "{{ redis_sentinel_image }}:{{ redis_tag }}"

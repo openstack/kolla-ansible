@@ -1,0 +1,11 @@
+{% set redis_master_address = hostvars[groups['redis'][0]]['ansible_' + hostvars[groups['redis'][0]]['api_interface']]['ipv4']['address'] %}
+daemonize no
+pidfile "/var/run/redis/redis-sentinel.pid"
+logfile "/var/log/kolla/redis/redis-sentinel.log"
+bind {{ api_interface_address }}
+port {{ redis_sentinel_port }}
+sentinel monitor kolla {{ redis_master_address }} {{ redis_port }} 2
+sentinel auth-pass kolla {{ redis_master_password }}
+sentinel down-after-milliseconds kolla 5000
+sentinel failover-timeout kolla 60000
+sentinel parallel-syncs kolla 1
