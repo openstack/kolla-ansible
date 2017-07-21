@@ -21,6 +21,13 @@
   percpu = true
   totalcpu = true
   fielddrop = ["time_*"]
+{% if enable_collectd | bool and inventory_hostname in groups['collectd'] %}
+[[inputs.socket_listener]]
+  service_address = "udp://{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ collectd_udp_port }}"
+  name_prefix = "collectd_"
+  data_format = "collectd"
+  collectd_typesdb = ["/usr/share/collectd/types.db"]
+{% endif %}
 [[inputs.disk]]
   ignore_fs = ["tmpfs", "devtmpfs"]
 [[inputs.diskio]]
