@@ -29,7 +29,7 @@ bare metal or a virtual machine with Kolla.
 
 If developing Kolla on a system that provides VirtualBox or Libvirt in addition
 to Vagrant, use the Vagrant virtual environment documented in
-`Development Environment with Vagrant <https://docs.openstack.org/developer/kolla-ansible/vagrant-dev-env.html>`_.
+`Development Environment with Vagrant <https://docs.openstack.org/kolla-ansible/latest/vagrant-dev-env.html>`_.
 
 Prerequisites
 =============
@@ -538,7 +538,7 @@ Deploy Kolla
 Kolla-Ansible is used to deploy containers by using images built by Kolla.
 There are two methods of deployment: *all-in-one* and *multinode*.  The
 *all-in-one* deployment is similar to `devstack
-<http://docs.openstack.org/developer/devstack/>`__ deploy which installs all
+<https://docs.openstack.org/devstack/latest/>`__ deploy which installs all
 OpenStack services on a single host. In the *multinode* deployment, OpenStack
 services can be run on specific hosts. This documentation describes deploying
 an *all-in-one* setup. To setup *multinode* see the
@@ -693,4 +693,4 @@ default to ``kolla_internal_vip_address``.
 
 .. _Docker Hub Image Registry: https://hub.docker.com/u/kolla/
 .. _launchpad bug: https://bugs.launchpad.net/kolla/+filebug
-.. _Building Container Images: http://docs.openstack.org/developer/kolla/image-building.html
+.. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html

@@ -119,4 +119,4 @@ Query instance DNS information to Designate ``dns_interface`` IP address:
 
 For more information about how Designate works, see
 `Designate, a DNSaaS component for OpenStack
-<http://docs.openstack.org/developer/designate>`__.
+<https://docs.openstack.org/designate/latest/>`__.

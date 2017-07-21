@@ -9,7 +9,7 @@ Preparation and Deployment
 --------------------------
 
 Zun requires kuryr and etcd services, for more information about how to
-configure kuryr refer to `Kuryr Guide <https://docs.openstack.org/developer/kolla-ansible/kuryr-guide.html>`_.
+configure kuryr refer to `Kuryr Guide <https://docs.openstack.org/kolla-ansible/latest/kuryr-guide.html>`_.
 
 To allow Zun Compute connect to the Docker Daemon, add the following in the
 ``docker.service`` file on each zun-compute node.
