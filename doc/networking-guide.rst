@@ -40,7 +40,7 @@ the following:
 
 ::
 
-    neutron_plugin_agent: "sfc"
+    enable_neutron_sfc: "yes"
 
 Networking-SFC is an additional Neutron plugin. For SFC to work, this plugin
 has to be installed in ``neutron-server`` container as well. Modify the
