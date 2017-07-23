@@ -23,3 +23,16 @@
     - {'interface': 'admin', 'url': '{{ swift_admin_endpoint }}'}
     - {'interface': 'internal', 'url': '{{ swift_internal_endpoint }}'}
     - {'interface': 'public', 'url': '{{ swift_public_endpoint }}'}
+
+- name: Registering keystone ceph_rgw user
+  kolla_toolbox:
+    module_name: kolla_keystone_user
+    module_args:
+      project: "service"
+      user: "{{ ceph_rgw_keystone_user }}"
+      password: "{{ ceph_rgw_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_ceph_rgw_auth }}' }}"
+    module_extra_vars:
+      openstack_ceph_rgw_auth: "{{ openstack_swift_auth }}"
