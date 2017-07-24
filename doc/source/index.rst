@@ -34,57 +34,26 @@ refer to the `Kolla image documentation
 <https://docs.openstack.org/kolla/latest/>`_.
 
 
-Overview
-========
+User Guides
+===========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   deployment-philosophy
-   production-architecture-guide
-   quickstart
-   multinode
-   multi-regions
-   advanced-configuration
-   operating-kolla
-   security
-   kolla-for-openstack-development
-   troubleshooting
+   user/index
 
-Services
-========
+Reference
+=========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   ceph-guide
-   central-logging-guide
-   external-ceph-guide
-   cinder-guide
-   cinder-guide-hnas
-   designate-guide
-   hyperv-guide
-   ironic-guide
-   manila-guide
-   manila-hnas-guide
-   nova-fake-driver
-   swift-guide
-   bifrost
-   networking-guide
-   kuryr-guide
-   zun-guide
-   osprofiler-guide
-   skydive-guide
-   vmware-guide
-   tacker-guide
+   reference/index
 
 Developer Docs
 ==============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   CONTRIBUTING
-   vagrant-dev-env
-   running-tests
-   bug-triage
+   contributor/index
