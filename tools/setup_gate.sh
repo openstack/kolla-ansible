@@ -132,9 +132,10 @@ function setup_ansible {
     setup_inventory
 
     sudo mkdir /etc/ansible
+    ara_location=$(python -c "import os,ara; print(os.path.dirname(ara.__file__))")
     sudo tee /etc/ansible/ansible.cfg<<EOF
 [defaults]
-callback_plugins = /usr/lib/python2.7/site-packages/ara/plugins/callbacks:\$VIRTUAL_ENV/lib/python2.7/site-packages/ara/plugins/callbacks
+callback_plugins = ${ara_location}/plugins/callbacks
 host_key_checking = False
 EOF
 
