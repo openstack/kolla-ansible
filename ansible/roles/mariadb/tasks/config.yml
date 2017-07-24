@@ -1,34 +1,73 @@
 ---
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
-  with_items:
-    - "mariadb"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mariadb_services }}"
 
 - name: Copying over config.json files for services
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  with_items:
-    - "mariadb"
+    src: "{{ service_name }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ service_name }}/config.json"
+  register: mariadb_config_json
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - restart slave mariadb
+    - restart master mariadb
 
 - name: Copying over galera.cnf
   vars:
-    service_name: "{{ item }}"
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/galera.cnf.j2"
       - "{{ node_custom_config }}/galera.cnf"
       - "{{ node_custom_config }}/mariadb/{{ inventory_hostname }}/galera.cnf"
-    dest: "{{ node_config_directory }}/{{ item }}/galera.cnf"
-  with_items:
-    - "mariadb"
+    dest: "{{ node_config_directory }}/{{ service_name }}/galera.cnf"
+  register: mariadb_galera_conf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - restart slave mariadb
+    - restart master mariadb
 
 - name: Copying over wsrep-notify.sh
   template:
     src: "{{ role_path }}/templates/wsrep-notify.sh.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/wsrep-notify.sh"
-  with_items:
-    - "mariadb"
+    dest: "{{ node_config_directory }}/{{ item.key }}/wsrep-notify.sh"
+  register: mariadb_wsrep_notify
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mariadb_services }}"
+  notify:
+    - restart slave mariadb
+    - restart master mariadb
+
+- name: Check mariadb containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_mariadb_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ mariadb_services }}"
+  notify:
+    - restart slave mariadb
+    - restart master mariadb

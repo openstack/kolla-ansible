@@ -1,9 +1,12 @@
 ---
+- set_fact:
+    master_host: "{{ groups['mariadb'][0] }}"
+
 - include: lookup_cluster.yml
 
 - include: bootstrap_cluster.yml
   when:
-    - delegate_host == 'None'
+    - not has_cluster | bool
     - inventory_hostname == groups['mariadb'][0]
 
 - include: recover_cluster.yml

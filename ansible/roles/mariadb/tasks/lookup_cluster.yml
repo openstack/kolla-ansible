@@ -6,7 +6,7 @@
   run_once: True
 
 - name: Creating temp file on localhost
-  local_action: copy content=None dest=/tmp/kolla_mariadb_cluster mode=0644
+  local_action: copy content='' dest=/tmp/kolla_mariadb_cluster mode=0644
   changed_when: False
   check_mode: no
   run_once: True
@@ -26,7 +26,7 @@
 
 - name: Registering host from temp file
   set_fact:
-    delegate_host: "{{ lookup('file', '/tmp/kolla_mariadb_cluster') }}"
+    has_cluster: "{{ lookup('file', '/tmp/kolla_mariadb_cluster') | length > 0 }}"
 
 - name: Cleaning up temp file on localhost
   local_action: file path=/tmp/kolla_mariadb_cluster state=absent

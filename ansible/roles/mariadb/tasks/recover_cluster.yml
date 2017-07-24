@@ -1,7 +1,7 @@
 ---
 - fail:
     msg: "MariaDB cluster was not found. Is your inventory correct?"
-  when: delegate_host == 'None'
+  when: not has_cluster | bool
 
 - name: Checking if and mariadb containers are running
   kolla_docker:
@@ -57,6 +57,15 @@
   when:
     - mariadb_recover_inventory_name is not defined
 
+- set_fact:
+    bootstrap_host: "{{ mariadb_recover_inventory_name }}"
+    master_host: "{{ mariadb_recover_inventory_name }}"
+  changed_when: true
+  notify:
+    - Starting first MariaDB container
+    - restart slave mariadb
+    - restart master mariadb
+
 - name: Cleaning up temp file on mariadb hosts
   file: path=/tmp/kolla_mariadb_grastate.dat state=absent
   changed_when: false
@@ -67,28 +76,3 @@
   changed_when: false
   check_mode: no
   run_once: true
-
-- name: Starting first MariaDB container
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    environment:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      BOOTSTRAP_ARGS: "--wsrep-new-cluster"
-    image: "{{ mariadb_image_full }}"
-    labels:
-      BOOTSTRAP:
-    name: "mariadb"
-    restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "mariadb:/var/lib/mysql"
-  when:
-    - (mariadb_recover_inventory_name is not defined and inventory_hostname == groups['mariadb'][0]) or
-      (mariadb_recover_inventory_name is defined and inventory_hostname == mariadb_recover_inventory_name)
-
-- name: Reset bootstrap fact
-  set_fact:
-    delegate_host: "None"
