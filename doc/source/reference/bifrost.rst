@@ -14,7 +14,7 @@ Clone kolla
     git clone https://github.com/openstack/kolla
     cd kolla
 
-set up kolla dependencies :doc:`quickstart`
+set up kolla dependencies :doc:`../user/quickstart`
 
 Fix hosts file
 --------------

@@ -41,48 +41,26 @@ example:
     http://docs.openstack.org/developer/kolla/mitaka/
 
 
-Kolla Overview
-==============
+User Guides
+===========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   deployment-philosophy
-   production-architecture-guide
-   quickstart
-   multinode
-   advanced-configuration
-   operating-kolla
-   security
-   troubleshooting
+   user/index
 
-Kolla Services
-==============
+Reference
+=========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   ceph-guide
-   central-logging-guide
-   external-ceph-guide
-   cinder-guide
-   cinder-guide-hnas
-   designate-guide
-   ironic-guide
-   manila-guide
-   manila-hnas-guide
-   swift-guide
-   bifrost
-   networking-guide
-   kuryr-guide
+   reference/index
 
 Developer Docs
 ==============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   CONTRIBUTING
-   vagrant-dev-env
-   running-tests
-   bug-triage
+   contributor/index
