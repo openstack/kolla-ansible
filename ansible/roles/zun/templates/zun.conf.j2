@@ -1,8 +1,15 @@
 [DEFAULT]
 debug = {{ zun_logging_debug }}
+
+{% if service_name == 'zun-api' %}
+# Force zun-api.log or will use app.wsgi
+log_file = /var/log/kolla/zun/zun-api.log
+{% endif %}
+
 log_dir = /var/log/kolla/zun
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
+state_path = /var/lib/zun
 container_driver = docker.driver.DockerDriver
 image_driver_list = glance
 db_type = sql
@@ -67,7 +74,6 @@ username = {{ zun_keystone_user }}
 password = {{ zun_keystone_password }}
 region_name = {{ openstack_region_name }}
 endpoint_type = internalURL
-api_version = 2
 
 [neutron_client]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
