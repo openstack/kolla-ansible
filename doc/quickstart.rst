@@ -470,11 +470,11 @@ Restart Docker and ensure that Docker is running.
     systemctl restart docker
 
 The Kolla community builds and pushes tested images for each tagged release of
-Kolla. Pull required images with appropriate tags.
+Kolla. Pull required images with appropriate tags in target nodes.
 
 ::
 
-    kolla-ansible pull
+    kolla-ansible pull -i /path/to/all-in-one
 
 View the images.
 
