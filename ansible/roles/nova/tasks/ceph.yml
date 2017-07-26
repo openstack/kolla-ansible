@@ -48,6 +48,9 @@
   command: docker exec ceph_mon ceph auth get-key client.cinder
   register: cinder_cephx_raw_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"
+  when:
+    - enable_cinder | bool
+    - cinder_backend_ceph | bool
   changed_when: False
   run_once: True
 
@@ -72,7 +75,7 @@
       enabled: true
     - uuid: "{{ cinder_rbd_secret_uuid }}"
       name: client.cinder secret
-      enabled: "{{ cinder_backend_ceph }}"
+      enabled: "{{ enable_cinder | bool and cinder_backend_ceph | bool}}"
 
 - name: Pushing secrets key for libvirt
   copy:
@@ -87,5 +90,5 @@
       content: "{{ nova_cephx_raw_key.stdout }}"
       enabled: true
     - uuid: "{{ cinder_rbd_secret_uuid }}"
-      content: "{{ cinder_cephx_raw_key.stdout }}"
-      enabled: "{{ cinder_backend_ceph }}"
+      content: "{{ cinder_cephx_raw_key.stdout|default('') }}"
+      enabled: "{{ enable_cinder | bool and cinder_backend_ceph | bool}}"
