@@ -6,7 +6,8 @@ TraceEnable off
 <VirtualHost *:{{ panko_api_port }}>
 
   ErrorLog "/var/log/kolla/panko/panko-api-error.log"
-  CustomLog "/var/log/kolla/panko/panko-api-access.log" combined
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+  CustomLog "/var/log/kolla/panko/panko-api-access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess panko group=panko processes={{ openstack_service_workers }} threads=1 user=panko python-path={{ python_path }}
   WSGIProcessGroup panko

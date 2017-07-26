@@ -7,7 +7,8 @@ TraceEnable off
 <VirtualHost *:{{ gnocchi_api_port }}>
 
   ErrorLog "/var/log/kolla/gnocchi/gnocchi-api-error.log"
-  CustomLog "/var/log/kolla/gnocchi/gnocchi-api-access.log" combined
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+  CustomLog "/var/log/kolla/gnocchi/gnocchi-api-access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess gnocchi group=gnocchi processes={{ openstack_service_workers }} threads=1 user=gnocchi python-path={{ python_path }}
   WSGIProcessGroup gnocchi

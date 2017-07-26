@@ -6,7 +6,8 @@ TraceEnable off
 <VirtualHost *:{{ horizon_port }}>
     LogLevel warn
     ErrorLog /var/log/kolla/horizon/horizon.log
-    CustomLog /var/log/kolla/horizon/horizon-access.log combined
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog /var/log/kolla/horizon/horizon-access.log logformat
 
     WSGIScriptReloading On
     WSGIDaemonProcess horizon-http processes={{ openstack_service_workers }} threads=1 user=horizon group=horizon display-name=%{GROUP} python-path={{ python_path }}
