@@ -122,7 +122,7 @@ bifrost_network_interface: "{{ network_interface }}"
 dns_interface: "{{ network_interface }}"
 tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] }}"
 
-# Valid options are [ openvswitch, linuxbridge ]
+# Valid options are [ openvswitch, linuxbridge, vmware_nsxv, vmware_dvs ]
 neutron_plugin_agent: "openvswitch"
 
 # The default ports used by each service.
@@ -515,14 +515,14 @@ designate_ns_record: "sample.openstack.org"
 # Neutron options
 #######################
 neutron_bgp_router_id: "1.1.1.1"
-neutron_bridge_name: "br-ex"
+neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br-ex' }}"
 # Comma-separated type of enabled ml2 type drivers
 neutron_type_drivers: "flat,vlan,vxlan"
 # Comma-separated types of tenant networks (should be listed in 'neutron_type_drivers')
 # NOTE: for ironic this list should also contain 'flat'
 neutron_tenant_network_types: "vxlan"
 
-computes_need_external_bridge: "{{ enable_neutron_dvr | bool or enable_neutron_provider_networks | bool }}"
+computes_need_external_bridge: "{{ enable_neutron_dvr | bool or enable_neutron_provider_networks | bool and neutron_plugin_agent != 'vmware_dvs' }}"
 
 #######################
 # Nova options
