@@ -75,6 +75,7 @@ Services
    zun-guide
    osprofiler-guide
    skydive-guide
+   vmware-guide
 
 Developer Docs
 ==============
