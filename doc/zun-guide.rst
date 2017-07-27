@@ -66,7 +66,7 @@ Create zun container.
 
 ::
 
-  $ zun create --name test cirros "ping -c 4 8.8.8.8"
+  $ zun create --name test cirros ping -c4 8.8.8.8
 
 Verify container is created.
 
