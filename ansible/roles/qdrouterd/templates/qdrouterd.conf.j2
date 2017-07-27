@@ -1,0 +1,58 @@
+
+router {
+    mode: standalone
+    id: Router.A
+    workerThreads: 4
+    saslConfigPath: /etc/sasl2
+    saslConfigName: qdrouterd
+}
+
+listener {
+    addr: {{ api_interface_address }}
+    port: {{ qdrouterd_port }}
+    role: normal
+    authenticatePeer: no
+}
+
+address {
+    prefix: unicast
+    distribution: closest
+}
+address {
+    prefix: exclusive
+    distribution: closest
+}
+address {
+    prefix: broadcast
+    distribution: multicast
+}
+address {
+    prefix: openstack.org/om/rpc/multicast
+    distribution: multicast
+}
+address {
+    prefix: openstack.org/om/rpc/unicast
+    distribution: closest
+}
+address {
+    prefix: openstack.org/om/rpc/anycast
+    distribution: balanced
+}
+address {
+    prefix: openstack.org/om/notify/multicast
+    distribution: multicast
+}
+address {
+    prefix: openstack.org/om/notify/unicast
+    distribution: closest
+}
+address {
+    prefix: openstack.org/om/notify/anycast
+    distribution: balanced
+}
+
+log {
+    module: DEFAULT
+    enable: info+
+    output: /var/log/kolla/qdrouterd/qdrouterd.log
+}

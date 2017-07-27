@@ -1,0 +1,21 @@
+---
+- name: Restart qdrouterd container
+  vars:
+    service_name: "qdrouterd"
+    service: "{{ qdrouterd_services[service_name] }}"
+    config_json: "{{ qdrouterd_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    qdrouterd_container: "{{ check_qdrouterd_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or qdrouterd_confs.changed | bool
+      or qdrouterd_sasl_confs.changed | bool
+      or qdrouterd_container.changed | bool
