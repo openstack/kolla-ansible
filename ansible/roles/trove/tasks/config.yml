@@ -27,20 +27,28 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying over trove conf files
-  template:
-    src: "{{ item.key }}.conf.j2"
+  vars:
+    services_need_confs:
+      - trove-conductor
+      - trove-taskmanager
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/{{ item.key }}.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/trove/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/{{ item.key }}.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
     mode: "0660"
   become: true
-  register: trove_conf_file
+  register: trove_confs
   when:
-    - item.key in [ "trove-conductor", "trove-taskmanager" ]
+    - item.key in services_need_confs
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ trove_services }}"
   notify:
-    - Restart trove-conductor container
-    - Restart trove-taskmanager container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over trove.conf
   vars:
