@@ -489,10 +489,18 @@ class DockerWorker(object):
     def remove_container(self):
         if self.check_container():
             self.changed = True
-            self.dc.remove_container(
-                container=self.params.get('name'),
-                force=True
-            )
+            # NOTE(jeffrey4l): in some case, docker failed to remove container
+            # filesystem and raise error.  But the container info is
+            # disappeared already. If this happens, assume the container is
+            # removed.
+            try:
+                self.dc.remove_container(
+                    container=self.params.get('name'),
+                    force=True
+                )
+            except docker.errors.APIError:
+                if self.check_container():
+                    raise
 
     def generate_volumes(self):
         volumes = self.params.get('volumes')
