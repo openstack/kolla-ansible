@@ -669,7 +669,8 @@ class DockerWorker(object):
                 msg="No such container: {}".format(name))
         else:
             self.changed = True
-            self.dc.restart(name, timeout=graceful_timeout)
+            self.dc.stop(name, timeout=graceful_timeout)
+            self.dc.start(name)
 
     def create_volume(self):
         if not self.check_volume():

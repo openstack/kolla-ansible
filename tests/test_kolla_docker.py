@@ -298,7 +298,8 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.dc.inspect_container.assert_called_once_with('my_container')
-        self.dw.dc.restart.assert_called_once_with('my_container', timeout=10)
+        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
+        self.dw.dc.start.assert_called_once_with('my_container')
 
     def test_restart_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake-container',
