@@ -36,9 +36,6 @@ kd = imp.load_source('kolla_docker', kolla_docker_file)
 
 class ModuleArgsTest(base.BaseTestCase):
 
-    def setUp(self):
-        super(ModuleArgsTest, self).setUp()
-
     def test_module_args(self):
         argument_spec = dict(
             common_options=dict(required=False, type='dict', default=dict()),
