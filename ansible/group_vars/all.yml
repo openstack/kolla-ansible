@@ -122,7 +122,7 @@ bifrost_network_interface: "{{ network_interface }}"
 dns_interface: "{{ network_interface }}"
 tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] }}"
 
-# Valid options are [ openvswitch, linuxbridge, vmware_nsxv, vmware_dvs ]
+# Valid options are [ openvswitch, linuxbridge, vmware_nsxv, vmware_dvs, opendaylight ]
 neutron_plugin_agent: "openvswitch"
 
 # The default ports used by each service.
@@ -260,6 +260,19 @@ watcher_api_port: "9322"
 
 zun_api_port: "9517"
 
+opendaylight_clustering_port: "2550"
+opendaylight_restconf_port: "8087"
+opendaylight_restconf_port_backup: "8182"
+opendaylight_haproxy_restconf_port: "8088"
+opendaylight_haproxy_restconf_port_backup: "8183"
+opendaylight_jetty_conf_port: "8543"
+opendaylight_jetty_conf2_port: "8443"
+opendaylight_tomcat_port: "8282"
+opendaylight_tomcat_redirect_port: "8663"
+opendaylight_karaf_ssh_port: "8101"
+opendaylight_openflow_port: "6653"
+opendaylight_ovsdb_port: "6641"
+opendaylight_haproxy_ovsdb_port: "6642"
 
 public_protocol: "{{ 'https' if kolla_enable_tls_external | bool else 'http' }}"
 internal_protocol: "http"
@@ -375,6 +388,7 @@ enable_neutron_provider_networks: "no"
 enable_neutron_sfc: "no"
 enable_nova_serialconsole_proxy: "no"
 enable_octavia: "no"
+enable_opendaylight: "no"
 enable_openvswitch: "{{ neutron_plugin_agent != 'linuxbridge' | bool }}"
 enable_osprofiler: "no"
 enable_panko: "no"
@@ -530,7 +544,7 @@ neutron_type_drivers: "flat,vlan,vxlan"
 # NOTE: for ironic this list should also contain 'flat'
 neutron_tenant_network_types: "vxlan"
 
-computes_need_external_bridge: "{{ enable_neutron_dvr | bool or enable_neutron_provider_networks | bool and neutron_plugin_agent != 'vmware_dvs' }}"
+computes_need_external_bridge: "{{ enable_neutron_dvr | bool or enable_neutron_provider_networks | bool or enable_opendaylight | bool and neutron_plugin_agent != 'vmware_dvs' }}"
 
 #######################
 # Nova options
@@ -612,3 +626,17 @@ vmware_vcenter_host_ip:
 vmware_vcenter_host_username:
 vmware_vcenter_host_password:
 vmware_vcenter_cluster_name:
+
+######################
+# OpenDaylight
+######################
+opendaylight_release: "0.6.1-Carbon"
+opendaylight_mechanism_driver: "opendaylight_v2"
+opendaylight_l3_service_plugin: "odl-router_v2"
+opendaylight_acl_impl: "learn"
+enable_opendaylight_qos: "no"
+enable_opendaylight_l3: "{{ enable_opendaylight }}"
+enable_opendaylight_legacy_netvirt_conntrack: "no"
+opendaylight_port_binding_type: "pseudo-agentdb-binding"
+opendaylight_features: "odl-mdsal-apidocs,odl-netvirt-openstack"
+opendaylight_allowed_network_types: '"flat", "vlan", "vxlan"'

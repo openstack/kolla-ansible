@@ -1,0 +1,178 @@
+---
+- name: Setting sysctl values
+  sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
+  with_items:
+    - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
+    - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1}
+    - { name: "net.ipv4.conf.all.rp_filter", value: 0}
+    - { name: "net.ipv4.conf.default.rp_filter", value: 0}
+  when:
+    - set_sysctl | bool
+    - inventory_hostname in groups['opendaylight']
+
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
+    - "opendaylight"
+
+- name: Copying over config.json files for services
+  register: opendaylight_config_json
+  template:
+    src: "{{ item }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over custom.properties
+  register: opendaylight_config_custom_props
+  template:
+    src: "{{ role_path }}/templates/custom.properties.j2"
+    dest: "{{ node_config_directory }}/opendaylight/custom.properties"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over start-odl
+  register: opendaylight_config_start_odl
+  template:
+    src: "{{ role_path }}/templates/start-odl.j2"
+    dest: "{{ node_config_directory }}/opendaylight/start-odl"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over jetty.xml
+  register: opendaylight_config_jetty
+  template:
+    src: "{{ role_path }}/templates/jetty.xml.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/jetty.xml"
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over org.apache.karaf.features.cfg
+  register: opendaylight_config_features
+  template:
+    src: "{{ role_path }}/templates/org.apache.karaf.features.cfg.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/org.apache.karaf.features.cfg"
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over org.opendaylight.ovsdb.library.cfg
+  register: opendaylight_config_ovsdb
+  template:
+    src: "{{ role_path }}/templates/org.opendaylight.ovsdb.library.cfg.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/org.opendaylight.ovsdb.library.cfg"
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over tomcat-server.xml
+  template:
+    src: "{{ role_path }}/templates/tomcat-server.xml.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/tomcat-server.xml"
+  register: opendaylight_config_tomcat
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over org.ops4j.pax.logging.cfg.j2
+  template:
+    src: "{{ role_path }}/templates/org.ops4j.pax.logging.cfg.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/org.ops4j.pax.logging.cfg"
+  register: opendaylight_config_logging
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over netvirt-impl-config_netvirt-impl-config.xml
+  template:
+    src: "{{ role_path }}/templates/netvirt-impl-config_netvirt-impl-config.xml.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/netvirt-impl-config_netvirt-impl-config.xml"
+  register: opendaylight_config_netvirt
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over netvirt-aclservice-config.xml
+  template:
+    src: "{{ role_path }}/templates/netvirt-aclservice-config.xml.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/netvirt-aclservice-config.xml"
+  register: opendaylight_config_netvirt_acl
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over setenv
+  template:
+    src: "{{ role_path }}/templates/setenv.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/setenv"
+  register: opendaylight_config_env
+  with_items:
+    - "opendaylight"
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over akka.conf
+  template:
+    src: "{{ role_path }}/templates/akka.conf.j2"
+    dest: "{{ node_config_directory }}/opendaylight/akka.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/akka.conf"
+    - "{{ node_custom_config }}/opendaylight/akka.conf"
+    - "akka.conf.j2"
+  register: opendaylight_config_akka
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over modules.conf
+  template:
+    src: "{{ role_path }}/templates/modules.conf.j2"
+    dest: "{{ node_config_directory }}/opendaylight/modules.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/modules.conf"
+    - "{{ node_custom_config }}/opendaylight/modules.conf"
+    - "modules.conf.j2"
+  register: opendaylight_config_modules
+  notify:
+    - Restart opendaylight container
+
+- name: Copying over module-shards.conf
+  template:
+    src: "{{ role_path }}/templates/module-shards.conf.j2"
+    dest: "{{ node_config_directory }}/opendaylight/module-shards.conf"
+  with_first_found:
+    - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/module-shards.conf"
+    - "{{ node_custom_config }}/opendaylight/module-shards.conf"
+    - "module-shards.conf.j2"
+  register: opendaylight_config_module_shards
+  notify:
+    - Restart opendaylight container
+
+- name: Check opendaylight containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_opendaylight_containers
+  when:
+    - action != "config"
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ opendaylight_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

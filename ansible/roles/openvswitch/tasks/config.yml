@@ -21,6 +21,32 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over start-ovs file for openvswitch-vswitchd
+  vars:
+    service: "{{ openvswitch_services['openvswitch-vswitchd'] }}"
+  template:
+    src: "{{ role_path }}/templates/start-ovs.j2"
+    dest: "{{ node_config_directory }}/openvswitch-vswitchd/start-ovs"
+  register: openvswitch_start_ovs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - "Restart openvswitch-vswitchd container"
+
+- name: Copying over start-ovsdb-server files for openvswitch-db-server
+  vars:
+    service: "{{ openvswitch_services['openvswitch-db-server'] }}"
+  template:
+    src: "{{ role_path }}/templates/start-ovsdb-server.j2"
+    dest: "{{ node_config_directory }}/openvswitch-db-server/start-ovsdb-server"
+  register: openvswitch_start_ovsdb_server
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - "Restart openvswitch-db-server container"
+
 - name: Check openvswitch containers
   kolla_docker:
     action: "compare_container"

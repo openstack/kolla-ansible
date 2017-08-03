@@ -81,7 +81,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ not enable_neutron_vpnaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
+    enabled: "{{ not enable_neutron_vpnaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
@@ -90,6 +90,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-l3-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
@@ -186,7 +187,7 @@ neutron_openvswitch_agent_image: "{{ docker_registry ~ '/' if docker_registry el
 neutron_openvswitch_agent_tag: "{{ neutron_tag }}"
 neutron_openvswitch_agent_image_full: "{{ neutron_openvswitch_agent_image }}:{{ neutron_openvswitch_agent_tag }}"
 
-neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-server"
+neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-server{{ '-opendaylight' if enable_opendaylight | bool else '' }}"
 neutron_server_tag: "{{ neutron_tag }}"
 neutron_server_image_full: "{{ neutron_server_image }}:{{ neutron_server_tag }}"
 
@@ -218,7 +219,7 @@ openstack_neutron_auth: "{{ openstack_auth }}"
 ####################
 extension_drivers:
   - name: "qos"
-    enabled: "{{ enable_neutron_qos | bool }}"
+    enabled: "{{ enable_neutron_qos | bool or enable_opendaylight_qos | bool }}"
   - name: "port_security"
     enabled: true
   - name: "dns"
@@ -241,13 +242,15 @@ service_plugins:
   - name: "vpnaas"
     enabled: "{{ enable_neutron_vpnaas | bool }}"
   - name: "qos"
-    enabled: "{{ enable_neutron_qos | bool }}"
+    enabled: "{{ enable_neutron_qos | bool or enable_opendaylight_qos | bool}}"
   - name: "router"
-    enabled: true
+    enabled: "{{ not enable_opendaylight_l3 | bool }}"
   - name: "sfc"
     enabled: "{{ enable_neutron_sfc | bool }}"
   - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"
     enabled: "{{ enable_neutron_bgp_dragent | bool }}"
+  - name: "{{ opendaylight_l3_service_plugin }}"
+    enabled: "{{ enable_opendaylight_l3 | bool and enable_opendaylight | bool }}"
 
 neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
 
@@ -302,3 +305,12 @@ vmware_dvs_host_password: "password"
 vmware_dvs_insecure: "True"
 vmware_dvs_dvs_name: "VDS-1"
 vmware_dvs_dhcp_override_mac: ""
+
+######################
+# Notification Drivers
+######################
+notification_drivers:
+  - name: "odl-qos-v2"
+    enabled: "{{ enable_opendaylight_qos | bool }}"
+
+neutron_notification_drivers: "{{ notification_drivers|selectattr('enabled', 'equalto', true)|list }}"

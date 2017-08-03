@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+{% if enable_opendaylight | bool %}
+/usr/bin/ovs-vsctl --no-wait -- set-manager ptcp:{{ ovsdb_port }}:{{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }} tcp:{{ kolla_internal_vip_address }}:{{ opendaylight_haproxy_ovsdb_port }}
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:local_ip={{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['tunnel_interface']]['ipv4']['address'] }}
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:provider_mappings=physnet1:{{ neutron_bridge_name }}
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:system-id=`cat /proc/sys/kernel/random/uuid`
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:odl_os_hostconfig_config_odl_l2='{"supported_vnic_types": [{"vnic_type": "normal", "vif_type": "ovs", "vif_details": {} }], "allowed_network_types": [{{ opendaylight_allowed_network_types }}], "datapath_types": ["netdev", "system"], "bridge_mappings": {"physnet1":"{{ neutron_bridge_name }}"} }'
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:odl_os_hostconfig_hostid="{{ hostvars[inventory_hostname]['ansible_hostname'] }}"
+{% endif %}
+/usr/sbin/ovs-vswitchd unix:/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --log-file=/var/log/kolla/openvswitch/ovs-vswitchd.log
