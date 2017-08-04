@@ -31,6 +31,8 @@ reserved_host_memory_mb = 0
 {% elif enable_nova_fake | bool %}
 host = {{ ansible_hostname }}_{{ service_name }}
 compute_driver = fake.FakeDriver
+{% elif nova_compute_virt_type == 'vmware' %}
+compute_driver = vmwareapi.VMwareVCDriver
 {% else %}
 compute_driver = libvirt.LibvirtDriver
 {% endif %}
@@ -159,7 +161,7 @@ memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-
+{% if nova_compute_virt_type in ['kvm', 'qemu'] %}
 [libvirt]
 connection_uri = "qemu+tcp://{{ api_interface_address }}/system"
 {% if enable_ceph | bool and nova_backend == "rbd" %}
@@ -175,7 +177,21 @@ hw_disk_discard = {{ nova_hw_disk_discard }}
 {% if nova_backend == "rbd" and external_ceph_cephx_enabled | bool %}
 rbd_secret_uuid = {{ rbd_secret_uuid }}
 {% endif %}
+virt_type = {{ nova_compute_virt_type }}
+{% endif %}
 
+{% if nova_compute_virt_type == "vmware" %}
+[vmware]
+host_ip = {{ vmware_vcenter_host_ip }}
+host_username = {{ vmware_vcenter_host_username }}
+host_password = {{ vmware_vcenter_host_password }}
+cluster_name = {{ vmware_vcenter_cluster_name }}
+datastore_regex = {{ vmware_vcenter_datastore_regex }}
+insecure = {{ vmware_vcenter_insecure }}
+{% if not vmware_vcenter_insecure | bool %}
+ca_file = /etc/nova/vmware_ca
+{% endif %}
+{% endif %}
 
 [upgrade_levels]
 compute = auto

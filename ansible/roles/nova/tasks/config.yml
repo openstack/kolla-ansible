@@ -112,6 +112,21 @@
   notify:
     - Restart nova-ssh container
 
+- name: Copying VMware vCenter CA file
+  vars:
+    service: "{{ nova_services['nova-compute'] }}"
+  copy:
+    src: "{{ node_custom_config }}/vmware_ca"
+    dest: "{{ node_config_directory }}/nova-compute/vmware_ca"
+  register: vcenter_ca_file
+  when:
+    - nova_compute_virt_type == "vmware"
+    - not vmware_vcenter_insecure | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart nova-compute container
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/nova/policy.json"
   run_once: True
