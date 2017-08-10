@@ -322,7 +322,15 @@
   roles:
     - { role: openvswitch,
         tags: openvswitch,
-        when: enable_openvswitch | bool }
+        when: "(enable_openvswitch | bool) and not (enable_ovs_dpdk | bool)"}
+
+- name: Apply role ovs-dpdk
+  hosts:
+    - openvswitch
+  roles:
+    - { role: ovs-dpdk,
+        tags: ovs-dpdk,
+        when: "(enable_openvswitch | bool) and (enable_ovs_dpdk | bool)"}
 
 - name: Apply nova-hyperv role
   gather_facts: false

@@ -1,0 +1,43 @@
+---
+prelude: >
+    The Data Plane Development Kit (DPDK) is a collection of userspace
+    libraries and tools that facilitate the development of high-performance
+    userspace networking applications. During the Pike cycle, kolla has been
+    extended to support deploying OpenvSwitch with the dpdk netdev dataplane.
+features:
+  - |
+    A new ovs-dpdk role has been introduced to support deploy OpenvSwitch with
+    the userspace DPDK dataplane. This playbook has been tested on Centos and
+    Ubuntu hosts and introduces a new enable_ovs_dpdk variable to control
+    deployment of OVS with DPDK instead of kernel ovs.
+  - |
+    The ovs-dpdkctl.sh tool has been enhanced to enable automatic loading of
+    DPDK compatible kernel modules.
+  - |
+    The ovs-dpdkctl.sh tool has been extended to configure per host
+    tunnel ip address to enable vxlan and other tunnel networking.
+issues:
+  - |
+    The ovs-dpdk role introduced this release has been tested on centos 7 and
+    ubuntu 16.04 hosts. While both host operating systems can be used to deploy
+    ovs-dpdk containers a conflict exists between the cgroups created by docker
+    and systemd on centos. These conflicts prevent restarting the ovs-dpdk
+    containers once deployed. This issue is not present on Ubuntu and is fixed
+    in newer versions of systemd. Deploying the ovs-dpdk role on centos is not
+    advised in production on CentOS hosts unless you have validated that this
+    issue has been addressed.
+upgrade:
+  - |
+    When upgrading ovs-dpdk it should be noted that this will alway invovle a
+    dataplane outage. Unlike kernel OVS the dataplane for ovs-dpdk executes in
+    the ovs-vswitchd process. As such it is recommended to always evacuate
+    all vm workloads from a node running ovs-dpdk prior to upgrading.
+other:
+  - |
+    Reconfiguring form kernel based OVS to OVS with DPDK has not been tested
+    in this release. Changing ovs datapaths on a deployed node requires
+    neutron config changes and libvirt xml changes for all running instances
+    including a hard reboot of the vm. VMs deployed to an node running ovs-dpdk
+    require hugepage backed memory to function correctly. As such it is not
+    advised to convert an existing compute node to use ovs-dpdk
+    if it currently has VMs deployed.
