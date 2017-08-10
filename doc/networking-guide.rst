@@ -1,8 +1,8 @@
 .. _networking-guide:
 
-============================
+==========================
 Enabling Provider Networks
-============================
+==========================
 Provider networks allow to connect compute instances directly to physical
 networks avoiding tunnels. This is necessary for example for some performance
 critical applications. Only administrators of OpenStack can create such
@@ -19,9 +19,9 @@ file ``/etc/kolla/globals.yml``:
 
     enable_neutron_provider_networks: "yes"
 
-============================
+===========================
 Enabling Neutron Extensions
-============================
+===========================
 
 Overview
 ========
