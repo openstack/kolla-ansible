@@ -69,7 +69,7 @@ Create the flat network to launch the instances:
     --ip-version=4 --gateway=$GATEWAY_IP --allocation-pool \
     start=$START_IP,end=$END_IP --enable-dhcp
 
-And then the above ID is used to set cleaning_network_uuid in the neutron
+And then the above ID is used to set cleaning_network in the neutron
 section of ironic.conf.
 
 .. _documentation: https://docs.openstack.org/ironic/latest/install/index.html
