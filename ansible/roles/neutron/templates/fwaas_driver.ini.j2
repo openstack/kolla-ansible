@@ -1,8 +1,12 @@
 {% if enable_neutron_fwaas | bool %}
+[fwaas]
+enabled = True
+{% if neutron_plugin_agent == 'vmware_nsxv' %}
+driver = vmware_nsxv_edge
+{% else %}
+driver = iptables
+
 [service_providers]
 service_provider = FIREWALL:Iptables:neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver:default
-
-[fwaas]
-driver = iptables
-enabled = True
+{% endif %}
 {% endif %}
