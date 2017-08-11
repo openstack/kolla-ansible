@@ -160,7 +160,7 @@ Ansible service:
 
 ::
 
-  kolla-ansible deploy
+  kolla-ansible deploy -i <path/to/inventory-file>
 
 Validation
 ==========
