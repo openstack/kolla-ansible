@@ -154,12 +154,21 @@ will be merged with /etc/kolla/config/cinder/ceph.conf.
 Ceph keyrings are deployed per service and placed into
 cinder-volume and cinder-backup directories:
 
+.. note::
+
+    ``cinder-backup`` requires two keyrings for accessing volumes
+    and backup pool.
+
 ::
 
   root@deploy:/etc/kolla/config# cat
   cinder/cinder-backup/ceph.client.cinder.keyring
   [client.cinder]
           key = AQAg5YRXpChaGRAAlTSCleesthCRmCYrfQVX1w==
+  root@deploy:/etc/kolla/config# cat
+  cinder/cinder-backup/ceph.client.cinder-backup.keyring
+  [client.cinder-backup]
+          key = AQC9wNBYrD8MOBAAwUlCdPKxWZlhkrWIDE1J/w==
   root@deploy:/etc/kolla/config# cat
   cinder/cinder-volume/ceph.client.cinder.keyring
   [client.cinder]
