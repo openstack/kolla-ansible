@@ -5,7 +5,7 @@ nova_services:
   nova-libvirt:
     container_name: nova_libvirt
     group: compute
-    enabled: True
+    enabled: "{{ nova_compute_virt_type in ['kvm', 'qemu'] }}"
     image: "{{ nova_libvirt_image_full }}"
     pid_mode: "host"
     privileged: True
@@ -249,3 +249,8 @@ nova_notification_topics:
     enabled: "{{ enable_designate | bool }}"
 
 nova_enabled_notification_topics: "{{ nova_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# VMware
+####################
+vmware_vcenter_datastore_regex: ".*"
