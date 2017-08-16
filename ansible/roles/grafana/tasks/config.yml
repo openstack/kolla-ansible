@@ -38,6 +38,20 @@
   notify:
     - Restart grafana container
 
+- name: Check if custom grafana home dashboard exists
+  local_action: "stat path={{ node_custom_config }}/grafana/grafana_home_dashboard.json"
+  register: grafana_custom_dashboard_file
+  run_once: True
+
+- name: Copying over grafana home dashboard if exists
+  template:
+    src: "{{ node_custom_config }}/grafana/grafana_home_dashboard.json"
+    dest: "{{ node_config_directory }}/grafana/grafana_home_dashboard.json"
+  register: grafana_home_dashboard
+  when: grafana_custom_dashboard_file.stat.exists
+  notify:
+    - Restart grafana container
+
 - name: Check grafana containers
   kolla_docker:
     action: "compare_container"
