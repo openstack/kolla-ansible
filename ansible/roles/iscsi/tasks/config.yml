@@ -4,8 +4,8 @@
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     recurse: yes
-  when: inventory_hostname in groups['compute'] or
-        inventory_hostname in groups['storage']
+  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder_backend_lvm | bool )
+         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
   with_items:
     - "iscsid"
 
@@ -13,8 +13,8 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
-  when: inventory_hostname in groups['compute'] or
-        inventory_hostname in groups['storage']
+  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder_backend_lvm | bool )
+         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
   with_items:
     - "iscsid"
 
