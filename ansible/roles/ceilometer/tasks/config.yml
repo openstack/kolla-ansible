@@ -102,6 +102,21 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying VMware vCenter CA file
+  vars:
+    service: "{{ ceilometer_services['ceilometer-compute'] }}"
+  copy:
+    src: "{{ node_custom_config }}/vmware_ca"
+    dest: "{{ node_config_directory }}/ceilometer-compute/vmware_ca"
+  register: vcenter_ca_file
+  when:
+    - nova_compute_virt_type == "vmware"
+    - not vmware_vcenter_insecure | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart ceilometer-compute container
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/ceilometer/policy.json"
   run_once: True
