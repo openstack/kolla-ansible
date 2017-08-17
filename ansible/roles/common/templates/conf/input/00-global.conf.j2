@@ -5,5 +5,10 @@
   exclude_path ["/var/log/kolla/rabbitmq/*.log", "/var/log/kolla/mariadb/mariadb.log", "/var/log/kolla/haproxy/*.log", "/var/log/kolla/swift/*.log"]
   pos_file /var/run/{{ fluentd_dir }}/kolla.pos
   tag kolla.*
-  format /^(?<message>.*)$/
+  format multiline
+  format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \d+ \S+ \S+ \[(req-\S+ \S+ \S+ \S+ \S+ \S+|-)\]/
+  format1 /^(?<Timestamp>\S+ \S+) (?<Pid>\d+) (?<log_level>\S+) (?<python_module>\S+) (\[(req-(?<request_id>\S+) (?<user_id>\S+) (?<tenant_id>\S+) (?<domain_id>\S+) (?<user_domain>\S+) (?<project_domain>\S+)|-)\])? (?<Payload>.*)?$/
+  time_key Timestamp
+  time_format %F %T.%L
+  ignore_repeated_permission_error true
 </source>
