@@ -49,6 +49,24 @@
   run_once: True
   register: glance_policy
 
+- name: Copying over glance-swift.conf for glance_api
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/glance-swift.conf.j2"
+      - "{{ node_custom_config }}/glance-swift.conf"
+      - "{{ node_custom_config }}/glance/glance-swift.conf"
+      - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/glance-swift.conf"
+    dest: "{{ node_config_directory }}/glance-api/glance-swift.conf"
+  register: glance_swift_conf
+  when:
+    - glance_api.enabled | bool
+    - inventory_hostname in groups[glance_api.group]
+    - glance_backend_swift | bool
+  notify:
+    - Restart glance-api container
+
 - name: Copying over existing policy.json
   template:
     src: "{{ node_custom_config }}/glance/policy.json"

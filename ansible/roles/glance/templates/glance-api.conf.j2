@@ -45,6 +45,8 @@ flavor = keystone
 default_store = vsphere
 {% elif enable_ceph | bool and glance_backend_ceph | bool %}
 default_store = rbd
+{% elif enable_swift | bool and glance_backend_swift | bool %}
+default_store = swift+http
 {% else %}
 default_store = file
 filesystem_store_datadir = /var/lib/glance/images/
@@ -58,6 +60,17 @@ stores = {{ glance_store_backends|map(attribute='name')|join(',') }}
 rbd_store_user = glance
 rbd_store_pool = {{ ceph_glance_pool_name }}
 rbd_store_chunk_size = 8
+{% endif %}
+
+{% if enable_swift | bool and glance_backend_swift | bool %}
+swift_store_container = glance
+swift_store_multiple_containers_seed = 0
+swift_store_multi_tenant = False
+swift_store_create_container_on_put = True
+swift_store_region = {{ openstack_region_name }}
+default_swift_reference = swift
+swift_store_config_file = /etc/glance/glance-swift.conf
+swift_store_auth_insecure = True
 {% endif %}
 
 {% if glance_backend_vmware | bool %}
