@@ -11,6 +11,7 @@ glance_services:
       - "{{ node_config_directory }}/glance-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ glance_file_datadir_volume }}:/var/lib/glance/"
+      - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python2.7/site-packages/glance' if glance_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   glance-registry:
     container_name: glance_registry
@@ -89,6 +90,13 @@ glance_logging_debug: "{{ openstack_logging_debug }}"
 glance_keystone_user: "glance"
 
 openstack_glance_auth: "{{ openstack_auth }}"
+
+###################
+# Kolla
+####################
+glance_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+glance_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+glance_dev_mode: "{{ kolla_dev_mode }}"
 
 ################################################
 # VMware - OpenStack VMware support
