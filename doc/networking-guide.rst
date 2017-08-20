@@ -183,13 +183,14 @@ the following:
 
     enable_opendaylight: "yes"
 
-Networking-ODL is an additional Neutron plugin that allows the OpenDaylight SDN Controller
-to utilize its networking virtualization features. For OpenDaylight to work, the
-Networking-ODL plugin has to be installed in the ``neutron-server`` container. In this case,
-one could use the neutron-server-opendaylight container and the opendaylight container by pulling
-from Kolla dockerhub or by building them locally.
+Networking-ODL is an additional Neutron plugin that allows the OpenDaylight
+SDN Controller to utilize its networking virtualization features.
+For OpenDaylight to work, the Networking-ODL plugin has to be installed in
+the ``neutron-server`` container. In this case, one could use the
+neutron-server-opendaylight container and the opendaylight container by
+pulling from Kolla dockerhub or by building them locally.
 
-Further OpenDaylight globals.yml configurable options with their defaults include:
+OpenDaylight globals.yml configurable options with their defaults include:
 ::
 
     opendaylight_release: "0.6.1-Carbon"
@@ -205,16 +206,17 @@ Further OpenDaylight globals.yml configurable options with their defaults includ
 
 Clustered OpenDaylight Deploy
 -----------------------------
-High availability clustered OpenDaylight requires modifying the inventory file and placing
-three or more hosts in the OpenDaylight or Networking groups. Note: The OpenDaylight role
-will allow deploy of one or three plus hosts for OpenDaylight/Networking role.
+High availability clustered OpenDaylight requires modifying the inventory file
+and placing three or more hosts in the OpenDaylight or Networking groups.
+Note: The OpenDaylight role will allow deploy of one or three plus hosts for
+OpenDaylight/Networking role.
 
 Verification
 ------------
 
 Verify the build and deploy operation of Networking-ODL containers. Successful
-deployment will bring up an Opendaylight container in the list of running containers on
-network/opendaylight node.
+deployment will bring up an Opendaylight container in the list of running
+containers on network/opendaylight node.
 
 For the source code, please refer to the following link:
 
