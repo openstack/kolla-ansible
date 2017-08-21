@@ -80,6 +80,12 @@ In Kolla operators should configure following network interfaces:
   with the bare metal cloud hosts in order to provide DHCP leases with
   PXE boot options. Defaults to ``network_interface``.
 
+.. WARNING::
+
+   Ansible facts does not recognize interface names containing dashes,
+   in example ``br-ex`` or ``bond-0`` cannot be used because ansible will read
+   them as ``br_ex`` and ``bond_0`` respectively.
+
 Docker configuration
 ====================
 
