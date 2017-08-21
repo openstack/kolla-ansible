@@ -62,3 +62,22 @@
   when:
     - container_facts['swift_proxy_server'] is not defined
     - inventory_hostname in groups['swift-proxy-server']
+
+- name: Checking Swift ring files
+  run_once: True
+  local_action: stat path="{{ node_custom_config }}/swift/{{ item }}"
+  register: swift_ring_files
+  with_items:
+    - "account.builder"
+    - "account.ring.gz"
+    - "container.builder"
+    - "container.ring.gz"
+    - "object.builder"
+    - "object.ring.gz"
+
+- name: Fail if ring files don't exist
+  run_once: True
+  local_action: fail msg="Swift ring files do not exist. Ensure .builder and .gz are available for each of account/container/object under {{ node_custom_config }}/swift before deploying Swift."
+  with_items: '{{ swift_ring_files.results }}'
+  when:
+    - item.stat.exists == false
