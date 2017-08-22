@@ -97,6 +97,14 @@ are meet before deploy for each of the OpenStack services.
 ``kolla-ansible -i INVENTORY post-deploy`` is used to do post deploy on deploy
 node to get the admin openrc file.
 
+``kolla-ansible -i INVENTORY pull`` is used to pull all images for containers.
+
+``kolla-ansible -i INVENTORY reconfigure`` is used to reconfigure OpenStack
+service.
+
+``kolla-ansible -i INVENTORY upgrade`` is used to upgrades existing OpenStack
+Environment.
+
 ``kolla-ansible -i INVENTORY check`` is used to do post-deployment smoke
 tests.
 
