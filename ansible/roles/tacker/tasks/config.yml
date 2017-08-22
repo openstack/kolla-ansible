@@ -19,7 +19,8 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled
   notify:
-    - Restart tacker container
+    - Restart tacker-server container
+    - Restart tacker-conductor container
 
 - name: Copying over tacker.conf
   vars:
@@ -40,7 +41,8 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   notify:
-    - Restart tacker container
+    - Restart tacker-server container
+    - Restart tacker-conductor container
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/tacker/policy.json"
@@ -58,7 +60,8 @@
     - tacker_policy.stat.exists
   with_dict: "{{ tacker_services }}"
   notify:
-    - Restart tacker container
+    - Restart tacker-server containers
+    - Restart tacker-conductor container
 
 - name: Check tacker container
   kolla_docker:
@@ -73,4 +76,5 @@
   register: check_tacker_containers
   with_dict: "{{ tacker_services }}"
   notify:
-    - Restart tacker container
+    - Restart tacker-server container
+    - Restart tacker-conductor container
