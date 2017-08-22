@@ -1,0 +1,42 @@
+---
+- name: Restart redis container
+  vars:
+    service_name: "redis"
+    service: "{{ redis_services[service_name] }}"
+    config_json: "{{ redis_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    redis_conf: "{{ redis_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    redis_container: "{{ check_redis_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or redis_confs.changed |bool
+      or redis_container.changed | bool
+
+- name: Restart redis-sentinel container
+  vars:
+    service_name: "redis-sentinel"
+    service: "{{ redis_services[service_name] }}"
+    config_json: "{{ redis_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    redis_conf: "{{ redis_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    redis_container: "{{ check_redis_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or redis_confs.changed |bool
+      or redis_container.changed | bool

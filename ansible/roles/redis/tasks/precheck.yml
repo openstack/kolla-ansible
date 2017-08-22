@@ -1,0 +1,20 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - redis
+  register: container_facts
+
+- name: Checking free port for Redis
+  vars:
+    redis: "{{ redis_services['redis'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ redis_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['redis'] is not defined
+    - inventory_hostname in groups[redis.group]
+    - redis.enabled | bool
