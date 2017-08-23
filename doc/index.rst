@@ -76,6 +76,7 @@ Services
    osprofiler-guide
    skydive-guide
    vmware-guide
+   tacker-guide
 
 Developer Docs
 ==============
