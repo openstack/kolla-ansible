@@ -26,17 +26,19 @@ Kolla can deploy the Glance and Cinder services using VMware datastore as their
 backend. Ceilometer metering for vSphere is also supported.
 
 Because the `vmware-nsx <https://github.com/openstack/vmware-nsx>`__ drivers for
-neutron use completely different architecture than other types of virtualization,
-vmware-nsx drivers cannot coexist with other type of virtualization in one region.
-In neutron vmware-nsx drivers, neutron-server acts like an agent to translate
-OpenStack actions into what vSphere/NSX Manager API can understand.
-Neutron does not directly takes control of the Open vSwitch inside the VMware
+neutron use completely different architecture than other types of
+virtualization, vmware-nsx drivers cannot coexist with other type
+of virtualization in one region. In neutron vmware-nsx drivers,
+neutron-server acts like an agent to translate OpenStack actions
+into what vSphere/NSX Manager API can understand. Neutron does
+not directly takes control of the Open vSwitch inside the VMware
 environment but through the API exposed by vSphere/NSX Manager.
 
 For VMware DVS, the Neutron DHCP agent does not attaches to Open vSwitch inside
-VMware environment, but attach to the Open vSwitch bridge called ``br-dvs`` on the
-OpenStack side and replies to/receives DHCP packets through VLAN. Similar to what the DHCP
-agent does, Neutron metadata agent attaches to ``br-dvs`` bridge and works through VLAN.
+VMware environment, but attach to the Open vSwitch bridge called ``br-dvs`` on
+the OpenStack side and replies to/receives DHCP packets through VLAN. Similar
+to what the DHCP agent does, Neutron metadata agent attaches to ``br-dvs``
+bridge and works through VLAN.
 
 .. note::
 
@@ -49,7 +51,8 @@ VMware NSX-V
 Preparation
 -----------
 
-You should have a working NSX-V environment, this part is out of scope of Kolla.
+You should have a working NSX-V environment, this part is out of scope
+of Kolla.
 For more information, please see `VMware NSX-V documentation <https://docs.vmware.com/en/VMware-NSX-for-vSphere/>`__.
 
 .. note::
@@ -120,7 +123,8 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
     * enable_neutron_lbaas: "yes"
     * enable_neutron_fwaas: "yes"
 
-If you want to set VMware datastore as cinder backend, enable it in ``/etc/kolla/globals.yml``:
+If you want to set VMware datastore as cinder backend, enable it in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
@@ -128,7 +132,8 @@ If you want to set VMware datastore as cinder backend, enable it in ``/etc/kolla
     cinder_backend_vmwarevc_vmdk: "yes"
     vmware_datastore_name: "TestDatastore"
 
-If you want to set VMware datastore as glance backend, enable it in ``/etc/kolla/globals.yml``:
+If you want to set VMware datastore as glance backend, enable it in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
@@ -136,8 +141,8 @@ If you want to set VMware datastore as glance backend, enable it in ``/etc/kolla
     vmware_vcenter_name: "TestDatacenter"
     vmware_datastore_name: "TestDatastore"
 
-VMware options are required in ``/etc/kolla/globals.yml``, these options should be
-configured correctly according to your NSX-V environment.
+VMware options are required in ``/etc/kolla/globals.yml``, these options should
+be configured correctly according to your NSX-V environment.
 
 Options for nova-compute and ceilometer:
 
@@ -187,23 +192,25 @@ VMware NSX-DVS
 Preparation
 -----------
 
-Before deployment, you should have a working VMware vSphere environment. Create a
-cluster and a vSphere Distributed Switch with all the host in the cluster attached
-to it.
+Before deployment, you should have a working VMware vSphere environment.
+Create a cluster and a vSphere Distributed Switch with all the host in the
+cluster attached to it.
 
 For more information, please see `Setting Up Networking with vSphere Distributed Switches <http://pubs.vmware.com/vsphere-51/index.jsp#com.vmware.vsphere.networking.doc/GUID-375B45C7-684C-4C51-BA3C-70E48DFABF04.html>`__.
 
 Deployment
 ----------
 
-Enable VMware nova-compute plugin and NSX-V neutron-server plugin in ``/etc/kolla/globals.yml``:
+Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
     nova_compute_virt_type: "vmware"
     neutron_plugin_agent: "vmware_dvs"
 
-If you want to set VMware datastore as Cinder backend, enable it in ``/etc/kolla/globals.yml``:
+If you want to set VMware datastore as Cinder backend, enable it in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
@@ -211,7 +218,8 @@ If you want to set VMware datastore as Cinder backend, enable it in ``/etc/kolla
     cinder_backend_vmwarevc_vmdk: "yes"
     vmware_datastore_name: "TestDatastore"
 
-If you want to set VMware datastore as Glance backend, enable it in ``/etc/kolla/globals.yml``:
+If you want to set VMware datastore as Glance backend, enable it in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
@@ -219,10 +227,10 @@ If you want to set VMware datastore as Glance backend, enable it in ``/etc/kolla
     vmware_vcenter_name: "TestDatacenter"
     vmware_datastore_name: "TestDatastore"
 
-VMware options are required in ``/etc/kolla/globals.yml``, these options should be
-configured correctly according to the vSphere environment you installed before.
-All option for nova, cinder, glance are the same as VMware-NSX, except the following
-options.
+VMware options are required in ``/etc/kolla/globals.yml``, these options should
+be configured correctly according to the vSphere environment you installed
+before. All option for nova, cinder, glance are the same as VMware-NSX, except
+the following options.
 
 Options for Neutron NSX-DVS support:
 
