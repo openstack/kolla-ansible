@@ -3,6 +3,11 @@ debug = {{ cloudkitty_logging_debug }}
 
 log_dir = /var/log/kolla/cloudkitty
 
+{% if service_name == 'cloudkitty-api' %}
+# Force cloudkitty-api.log or will use app.wsgi
+log_file = /var/log/kolla/cloudkitty/cloudkitty-api.log
+{% endif %}
+
 transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [database]

@@ -1,9 +1,17 @@
+{% set cloudkitty_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set cloudkitty_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "cloudkitty-api --config-file /etc/cloudkitty/cloudkitty.conf",
+    "command": "{{ cloudkitty_cmd }} -DFOREGROUND",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/cloudkitty.conf",
             "dest": "/etc/cloudkitty/cloudkitty.conf",
+            "owner": "cloudkitty",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/wsgi-cloudkitty.conf",
+            "dest": "/etc/{{ cloudkitty_dir }}/wsgi-cloudkitty.conf",
             "owner": "cloudkitty",
             "perm": "0600"
         },

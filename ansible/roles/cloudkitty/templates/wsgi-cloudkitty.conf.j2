@@ -1,0 +1,20 @@
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+Listen {{ api_interface_address }}:{{ cloudkitty_api_port }}
+
+TraceEnable off
+
+<VirtualHost *:{{ cloudkitty_api_port }}>
+
+  ErrorLog "/var/log/kolla/cloudkitty/cloudkitty-api-error.log"
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+  CustomLog "/var/log/kolla/cloudkitty/cloudkitty-api-access.log" logformat
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess cloudkitty group=cloudkitty processes={{ openstack_service_workers }} threads=1 user=cloudkitty python-path={{ python_path }}
+  WSGIProcessGroup cloudkitty
+  WSGIScriptAlias / "{{ python_path }}/cloudkitty/api/app.wsgi"
+
+  <Directory "{{ python_path }}/cloudkitty/api">
+        Require all granted
+  </Directory>
+
+</VirtualHost>
