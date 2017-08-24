@@ -113,8 +113,8 @@ Directories
 
 -  ``ansible`` - Contains Ansible playbooks to deploy OpenStack services and
    infrastructure components in Docker containers.
--  ``contrib`` - Contains demos scenarios for Heat and Murano and a development
-   environment for Vagrant
+-  ``contrib`` - Contains demos scenarios for Heat, Magnum and Tacker and a
+   development environment for Vagrant
 -  ``doc`` - Contains documentation.
 -  ``etc`` - Contains a reference etc directory structure which requires
    configuration of a small number of configuration variables to achieve
