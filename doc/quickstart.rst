@@ -228,17 +228,8 @@ Restart Docker by executing the following commands:
     systemctl daemon-reload
     systemctl restart docker
 
-On the target hosts you also need an updated version of the Docker python
-libraries:
-
-.. note:: The old docker-python is obsoleted by python-docker-py.
-
-::
-
-    yum install python-docker-py
-
-
-Or using ``pip`` to install the latest version:
+On the target hosts you also need to install the latest version of the Docker
+python libraries with pip:
 
 ::
 
