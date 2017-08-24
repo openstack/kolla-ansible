@@ -76,6 +76,13 @@ ceph_pool = {{ gnocchi_pool_name }}
 ceph_username = gnocchi
 ceph_keyring = /etc/ceph/ceph.client.gnocchi.keyring
 ceph_conffile = /etc/ceph/ceph.conf
+{% elif gnocchi_backend_storage == 'swift' %}
+driver = swift
+swift_authurl = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+swift_auth_version = 3
+swift_user = service:{{ swift_keystone_user }}
+swift_key = {{ swift_keystone_password }}
+swift_project_name = {{ swift_admin_tenant_name }}
 {% endif %}
 
 {% if enable_grafana | bool %}

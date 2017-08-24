@@ -658,8 +658,9 @@ panko_database_type: "mysql"
 #################
 # Gnocchi options
 #################
-# Valid options are [file, ceph]
-gnocchi_backend_storage: "{{ 'ceph' if enable_ceph|bool else 'file' }}"
+# Valid options are [ file, ceph, swift ]
+# Defaults to file if ceph and swift are enabled; explicitly set to either if required.
+gnocchi_backend_storage: "{% if enable_ceph | bool and not enable_swift | bool %}ceph{% elif enable_swift | bool and not enable_ceph | bool %}swift{% else %}file{% endif %}"
 
 # Valid options are [redis, '']
 gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
