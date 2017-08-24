@@ -1,0 +1,81 @@
+#!/bin/bash
+
+function create_servers {
+    echo "Creating SFC demo instances"
+    DEMO_NET=$(openstack network list | awk '/demo-net/ { print $2 }')
+    IMAGE_ID=$(openstack image list | awk '/cirros/ { print $2 }')
+    FLOATING_IP_CLIENT=$(openstack floating ip create public1 -c floating_ip_address -f value)
+    FLOATING_IP_SERVER=$(openstack floating ip create public1 -c floating_ip_address -f value)
+    openstack server create --wait --flavor m1.tiny --image $IMAGE_ID --nic net-id=$DEMO_NET kolla_sfc_server
+    openstack server create --wait --flavor m1.tiny --image $IMAGE_ID --nic net-id=$DEMO_NET kolla_sfc_client
+    openstack server add floating ip kolla_sfc_client $FLOATING_IP_CLIENT
+    openstack server add floating ip kolla_sfc_server $FLOATING_IP_SERVER
+    KOLLA_SFC_CLIENT_PORT=$(openstack port list --server kolla_sfc_client | awk '/ACTIVE/ {print $2}')
+}
+
+function sfc_gen_config {
+    echo "Tacker SFC config files"
+    cat > ./kolla-sample-vnffgd.yaml <<EOF
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0_0
+
+description: Sample VNFFG template
+
+topology_template:
+  description: Sample VNFFG template
+
+  node_templates:
+
+    Forwarding_path1:
+      type: tosca.nodes.nfv.FP.Tacker
+      description: creates path (CP12->CP12)
+      properties:
+        id: 51
+        policy:
+          type: ACL
+          criteria:
+            - network_src_port_id: ${KOLLA_SFC_CLIENT_PORT}
+            - network_id: ${DEMO_NET}
+            - ip_proto: 6
+            - destination_port_range: 80-80
+        path:
+          - forwarder: kolla-sample-vnfd
+            capability: CP11
+
+  groups:
+    VNFFG1:
+      type: tosca.groups.nfv.VNFFG
+      description: HTTP to Corporate Net
+      properties:
+        vendor: tacker
+        version: 1.0
+        number_of_endpoints: 1
+        dependent_virtual_link: [VL1]
+        connection_point: [CP11]
+        constituent_vnfs: [kolla-sample-vnfd]
+      members: [Forwarding_path1]
+EOF
+}
+
+function deploy_sfc {
+    sh ./deploy-tacker-demo
+    create_servers
+    sfc_gen_config
+    echo "Creating VNFFGD"
+    tacker vnffgd-create --vnffgd-file kolla-sample-vnffgd.yaml kolla-sample-vnffgd
+    echo "Creating VNFFG"
+    tacker vnffg-create --vnffgd-name kolla-sample-vnffgd kolla-sample-vnffg
+    echo "Tacker sfc client floating ip address: $FLOATING_IP_CLIENT"
+    echo "Tacker sfc server floating ip address: $FLOATING_IP_SERVER"
+    cat << EOF
+
+Done.
+
+To create simple HTTP server in tacker_sfc_server instance run:
+
+ssh cirros@$FLOATING_IP_SERVER 'while true; \\
+    do echo -e "HTTP/1.0 200 OK\r\n\r\nW00t from Kolla HTTP server!" | sudo nc -l -p 80 ; done &'
+
+EOF
+}
+
+deploy_sfc

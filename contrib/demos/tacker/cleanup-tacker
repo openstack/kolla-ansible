@@ -1,5 +1,12 @@
 #!/bin/bash
-
+if [[ -f kolla-sample-vnffgd.yaml ]]; then
+    echo "Deleting VNFFG"
+    tacker vnffg-delete kolla-sample-vnffg
+    echo "Deleting VNFFGD"
+    tacker vnffgd-delete kolla-sample-vnffgd
+    echo "Deleting sample sfc instances"
+    openstack server delete kolla_sfc_server kolla_sfc_client
+fi
 echo "Deleting sample VNF"
 tacker vnf-delete kolla-sample-vnf
 while tacker vnf-list | grep -q kolla-sample-vnf; do
@@ -10,4 +17,4 @@ tacker vnfd-delete kolla-sample-vnfd
 echo "Deleting sample VIM"
 tacker vim-delete kolla-sample-vim
 echo "Removing sample config"
-rm -rf ./kolla-sample-*.yaml
+rm -rf ./kolla-sample-*
