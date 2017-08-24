@@ -7,32 +7,23 @@ Cinder in Kolla
 Overview
 ========
 
-Currently Kolla can deploy the cinder services:
+Cinder can be deploying using Kolla and supports the following storage
+backends:
 
-  - cinder-api
-  - cinder-scheduler
-  - cinder-backup
-  - cinder-volume
+* ceph
+* hnas_iscsi
+* hnas_nfs
+* iscsi
+* lvm
+* nfs
 
-The cinder implementation defaults to using LVM storage. The default
-implementation requires a volume group be set up. This can either be
-a real physical volume or a loopback mounted file for development.
+LVM
+===
 
-.. note ::
-  The Cinder community has closed a bug as WontFix which makes it
-  impossible for LVM to be used at all in a multi-controller setup.
-  The only option for multi-controller storage to work correctly at
-  present is via a Ceph deployment. If community members disagree
-  with this decision, please report the specific use case in the
-  Cinder bug tracker here:
-  `_bug 1571211 <https://launchpad.net/bugs/1571211>`__.
-
-
-Create a Volume Group
-=====================
 When using the ``lvm`` backend, a volume group will need to be created on each
-storage node.  Use ``pvcreate`` and ``vgcreate`` to create the volume group.
-For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
+storage node. This can either be a real physical volume or a loopback mounted
+file for development.  Use ``pvcreate`` and ``vgcreate`` to create the volume
+group.  For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
 
 ::
 
@@ -57,6 +48,37 @@ Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 ::
 
     enable_cinder_backend_lvm: "yes"
+
+.. note ::
+  There are currently issues using the LVM backend in a multi-controller setup,
+  see `_bug 1571211 <https://launchpad.net/bugs/1571211>`__ for more info.
+
+NFS
+===
+
+To use the ``nfs`` backend, configure ``/etc/exports`` to contain the mount
+where the volumes are to be stored::
+
+    /kolla_nfs 192.168.5.0/24(rw,sync,no_root_squash)
+
+In this example, ``/kolla_nfs`` is the directory on the storage node which will
+be ``nfs`` mounted, ``192.168.5.0/24`` is the storage network, and
+``rw,sync,no_root_squash`` means make the share read-write, synchronous, and
+prevent remote root users from having access to all files.
+
+Then start ``nfsd``::
+
+    systemctl start nfsd
+
+On the deploy node, create ``/etc/kolla/config/nfs_shares`` with an entry for
+each storage node::
+
+    storage01:/kolla_nfs
+    storage02:/kolla_nfs
+
+Finally, enable the ``nfs`` backend in ``/etc/kolla/globals.yml``::
+
+    enable_cinder_backend_nfs: "yes"
 
 Validation
 ==========
