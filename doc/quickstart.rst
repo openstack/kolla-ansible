@@ -441,6 +441,12 @@ to include the MTU size to be used for Docker containers.
 
 .. note::
 
+    Depend of your Docker version and distro, ExecStart command may be different which may cause
+    Docker start failures. The default ExecStart command for your system can be obtained from
+    ``/usr/lib/systemd/system/docker.service``.
+
+.. note::
+
     The MTU size should be less than or equal to the MTU size allowed on the
     network interfaces of the host machine. If the MTU size allowed on the
     network interfaces of the host machine is 1500 then this step can be
