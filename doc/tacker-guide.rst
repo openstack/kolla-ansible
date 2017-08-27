@@ -83,7 +83,7 @@ Source credentials file.
 
 ::
 
-  $ source /etc/kolla/admin-openrc.sh
+  $ . /etc/kolla/admin-openrc.sh
 
 Create base neutron networks and glance images.
 

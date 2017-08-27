@@ -52,7 +52,7 @@ Source credentials file.
 
 ::
 
-  $ source /etc/kolla/admin-openrc.sh
+  $ . /etc/kolla/admin-openrc.sh
 
 Download and create a glance container image.
 
