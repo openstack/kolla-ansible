@@ -6,6 +6,7 @@
 # to be created.
 
 ARCH=$(uname -m)
+IMAGE_PATH=/opt/cache/files/
 IMAGE_URL=http://download.cirros-cloud.net/0.4.0/
 IMAGE=cirros-0.4.0-${ARCH}-disk.img
 IMAGE_NAME=cirros
@@ -45,9 +46,17 @@ if openstack image list | grep -q cirros; then
     exit
 fi
 
-echo Downloading glance image.
-if ! [ -f "${IMAGE}" ]; then
-    curl -L -o ./${IMAGE} ${IMAGE_URL}/${IMAGE}
+echo Checking for locally available cirros image.
+# Let's first try to see if the image is available locally
+# nodepool nodes caches them in $IMAGE_PATH
+if ! [ -f "${IMAGE_PATH}/${IMAGE}" ]; then
+    IMAGE_PATH='./'
+    if ! [ -f "${IMAGE_PATH}/${IMAGE}" ]; then
+        echo None found, downloading cirros image.
+        curl -L -o ${IMAGE_PATH}/${IMAGE} ${IMAGE_URL}/${IMAGE}
+    fi
+else
+    echo Using cached cirros image from the nodepool node.
 fi
 
 EXTRA_PROPERTIES=
@@ -57,7 +66,7 @@ fi
 
 echo Creating glance image.
 openstack image create --disk-format qcow2 --container-format bare --public \
-    --property os_type=${IMAGE_TYPE} ${EXTRA_PROPERTIES} --file ./${IMAGE} ${IMAGE_NAME}
+    --property os_type=${IMAGE_TYPE} ${EXTRA_PROPERTIES} --file ${IMAGE_PATH}/${IMAGE} ${IMAGE_NAME}
 
 echo Configuring neutron.
 openstack network create --external --provider-physical-network physnet1 \
