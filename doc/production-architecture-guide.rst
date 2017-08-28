@@ -14,7 +14,7 @@ Node types and services running on them
 A basic Kolla inventory consists of several types of nodes, known in Ansible as
 ``groups``.
 
-* Controller - Cloud controller nodes which host control services
+* Control - Cloud controller nodes which host control services
   like APIs and databases. This group should have odd number of nodes for
   quorum.
 
@@ -26,6 +26,8 @@ A basic Kolla inventory consists of several types of nodes, known in Ansible as
   live.
 
 * Storage - Storage nodes, for cinder-volume, LVM or ceph-osd.
+
+* Monitoring - Monitor nodes which host monitoring services.
 
 Network configuration
 =====================
@@ -68,6 +70,15 @@ In Kolla operators should configure following network interfaces:
 * ``neutron_external_interface`` - This interface is required by Neutron.
   Neutron will put br-ex on it. It will be used for flat networking as well as
   tagged vlan networks. Has to be set separately.
+
+* ``dns_interface`` - This interface is required by Designate and Bind9.
+  Is used by public facing DNS requests and queries to bind9 and designate
+  mDNS services. Defaults to ``network_interface``.
+
+* ``bifrost_network_interface`` - This interface is required by Bifrost.
+  Is used to provision bare metal cloud hosts, require L2 connectivity
+  with the bare metal cloud hosts in order to provide DHCP leases with
+  PXE boot options. Defaults to ``network_interface``.
 
 Docker configuration
 ====================
