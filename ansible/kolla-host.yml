@@ -1,4 +1,36 @@
 ---
+# NOTE(awiddersheim): Gather facts for all hosts as a
+# first step since several plays below require them when
+# building their configurations. The below 'gather_facts'
+# set to 'false' is a bit confusing but this is to avoid
+# Ansible gathering facts twice.
+- name: Gather facts for all hosts
+  hosts: all
+  serial: '{{ serial|default("0") }}'
+  gather_facts: false
+  tasks:
+    - setup:
+  tags: always
+
+# NOTE(pbourke): This case covers deploying subsets of hosts using --limit. The
+# limit arg will cause the first play to gather facts only about that node,
+# meaning facts such as IP addresses for rabbitmq nodes etc. will be undefined
+# in the case of adding a single compute node.
+# We don't want to add the delegate parameters to the above play as it will
+# result in ((num_nodes-1)^2) number of SSHs when running for all nodes
+# which can be very inefficient.
+- name: Gather facts for all hosts (if using --limit)
+  hosts: all
+  serial: '{{ serial|default("0") }}'
+  gather_facts: false
+  tasks:
+    - setup:
+      delegate_facts: True
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['all'] }}"
+      when:
+        - (ansible_play_batch | length) != (groups['all'] | length)
+
 - name: Apply role baremetal
   hosts: baremetal
   gather_facts: no
