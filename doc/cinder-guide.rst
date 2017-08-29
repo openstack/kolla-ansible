@@ -68,7 +68,7 @@ prevent remote root users from having access to all files.
 
 Then start ``nfsd``::
 
-    systemctl start nfsd
+    systemctl start nfs
 
 On the deploy node, create ``/etc/kolla/config/nfs_shares`` with an entry for
 each storage node::
