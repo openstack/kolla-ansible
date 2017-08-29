@@ -93,12 +93,5 @@ formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 topics = notifications_designate
 driver = messagingv2
 
-# TODO (egonzalez): Currently pool update fail when using transport_url.
-# Remove this section after bug https://bugs.launchpad.net/designate/+bug/1673403 is fixed
-[oslo_messaging_rabbit]
-rabbit_userid = {{ rabbitmq_user }}
-rabbit_password = {{ rabbitmq_password }}
-rabbit_hosts = {% for host in groups['rabbitmq'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
 [oslo_concurrency]
 lock_path = /var/lib/designate/tmp
