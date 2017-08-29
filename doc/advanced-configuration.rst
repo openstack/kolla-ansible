@@ -7,7 +7,7 @@ Advanced Configuration
 Endpoint Network Configuration
 ==============================
 
-When an OpenStack cloud is deployed, each services' REST API is presented
+When an OpenStack cloud is deployed, the REST API of each service is presented
 as a series of endpoints. These endpoints are the admin URL, the internal
 URL, and the external URL.
 
