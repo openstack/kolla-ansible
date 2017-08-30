@@ -50,7 +50,7 @@ Create designate-sink custom configuration folder:
 
 .. code-block:: console
 
-   $ mkdir -p /etc/kolla/config/designate/designate-sink/
+   $ mkdir -p /etc/kolla/config/designate/
 
 Append Designate Zone ID in ``/etc/kolla/config/designate/designate-sink.conf``
 
