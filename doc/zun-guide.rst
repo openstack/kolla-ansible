@@ -66,7 +66,16 @@ Create zun container.
 
 ::
 
-  $ zun create --name test cirros ping -c4 8.8.8.8
+  $ zun create --name test --net network=demo-net cirros ping -c4 8.8.8.8
+
+.. note::
+
+  Kuryr does not support networks with DHCP enabled, disable DHCP in the
+  subnet used for zun containers.
+
+  ::
+
+    openstack subnet set --no-dhcp <subnet>
 
 Verify container is created.
 
