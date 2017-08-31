@@ -50,7 +50,6 @@
   vars:
     service_name: "cinder-volume"
     service: "{{ cinder_services[service_name] }}"
-    ceph_config: "{{ cinder_ceph_configs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
@@ -71,13 +70,11 @@
       or cinder_conf.changed | bool
       or policy_json.changed | bool
       or cinder_volume_container.changed | bool
-      or ceph_config.changed | bool
 
 - name: Restart cinder-backup container
   vars:
     service_name: "cinder-backup"
     service: "{{ cinder_services[service_name] }}"
-    ceph_config: "{{ cinder_ceph_configs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
@@ -97,4 +94,3 @@
       or cinder_conf.changed | bool
       or policy_json.changed | bool
       or cinder_backup_container.changed | bool
-      or ceph_config.changed | bool
