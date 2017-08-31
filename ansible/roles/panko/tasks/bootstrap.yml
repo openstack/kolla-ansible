@@ -3,8 +3,8 @@
   command: docker exec -t mongodb mongo --host {{ panko_database_mongodb_address }} --eval 'db = db.getSiblingDB("{{ panko_database_name }}"); db.createUser({user':' "{{ panko_database_user }}", pwd':' "{{ panko_database_password }}", roles':' [ "readWrite", "dbAdmin" ]})'
   register: mongodb_panko_database
   run_once: true
-  changed_when: "{{ 'already' not in mongodb_panko_database.stdout }}"
-  failed_when: "{{ mongodb_panko_database.stdout.split()[4] != 'connecting' }}"
+  changed_when: mongodb_panko_database.stdout.find('already') == -1
+  failed_when: mongodb_panko_database.stdout.split()[4] != 'connecting'
   delegate_to: "{{ groups['mongodb'][0] }}"
   when:
     - panko_database_type == "mongodb"
