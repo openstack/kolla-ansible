@@ -44,6 +44,19 @@
     - Restart cloudkitty-api container
     - Restart cloudkitty-processor container
 
+- name: Copying over wsgi-cloudkitty.conf
+  vars:
+    service: "{{ cloudkitty_services['cloudkitty-api'] }}"
+  template:
+    src: "wsgi-cloudkitty.conf.j2"
+    dest: "{{ node_config_directory }}/cloudkitty-api/wsgi-cloudkitty.conf"
+  register: cloudkitty_conf_wsgi
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart cloudkitty-api container
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/cloudkitty/policy.json"
   run_once: True
