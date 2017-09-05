@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/kolla-ansible.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/tc/badges/kolla-ansible.svg
+    :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -130,7 +130,7 @@ Getting Involved
 
 Need a feature? Find a bug? Let us know! Contributions are much
 appreciated and should follow the standard `Gerrit
-workflow <http://docs.openstack.org/infra/manual/developers.html>`__.
+workflow <https://docs.openstack.org/infra/manual/developers.html>`__.
 
 -  We communicate using the #openstack-kolla irc channel.
 -  File bugs, blueprints, track releases, etc on
