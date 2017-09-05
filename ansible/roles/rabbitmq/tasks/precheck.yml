@@ -3,6 +3,7 @@
   kolla_container_facts:
     name:
       - rabbitmq
+      - outward_rabbitmq
   register: container_facts
 
 - name: Checking free port for RabbitMQ
@@ -69,6 +70,7 @@
   when:
     - enable_outward_rabbitmq | bool
     - inventory_hostname in groups['outward-rabbitmq']
+    - container_facts['outward_rabbitmq'] is not defined
 
 - name: Checking free port for outward RabbitMQ Management
   wait_for:
@@ -79,6 +81,7 @@
   when:
     - enable_outward_rabbitmq | bool
     - inventory_hostname in groups['outward-rabbitmq']
+    - container_facts['outward_rabbitmq'] is not defined
 
 - name: Checking free port for outward RabbitMQ Cluster
   wait_for:
@@ -89,6 +92,7 @@
   when:
     - enable_outward_rabbitmq | bool
     - inventory_hostname in groups['outward-rabbitmq']
+    - container_facts['outward_rabbitmq'] is not defined
 
 - name: Checking free port for outward RabbitMQ EPMD
   wait_for:
@@ -99,6 +103,7 @@
   when:
     - enable_outward_rabbitmq | bool
     - inventory_hostname in groups['outward-rabbitmq']
+    - container_facts['outward_rabbitmq'] is not defined
 
 - name: Check if all outward rabbit hostnames are resolvable
   command: "getent ahostsv4 {{ hostvars[item]['ansible_hostname'] }}"
