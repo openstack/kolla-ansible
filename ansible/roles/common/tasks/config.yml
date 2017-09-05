@@ -5,20 +5,29 @@
     state: "directory"
     recurse: yes
   with_items:
+    - "kolla-toolbox"
+    - "cron"
+    - "cron/logrotate"
+
+- name: Ensuring fluentd config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: "directory"
+    recurse: yes
+  with_items:
     - "fluentd"
     - "fluentd/input"
     - "fluentd/output"
     - "fluentd/format"
     - "fluentd/filter"
-    - "kolla-toolbox"
-    - "cron"
-    - "cron/logrotate"
+  when: enable_fluentd | bool
 
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
   register: common_config_jsons
+  when: item.value.enabled | bool
   with_dict: "{{ common_services }}"
   notify:
     - "Restart {{ item.key }} container"
@@ -28,6 +37,7 @@
     src: "conf/input/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
   register: fluentd_input
+  when: enable_fluentd | bool
   with_items:
     - "00-global"
     - "01-syslog"
@@ -43,7 +53,9 @@
     src: "conf/output/{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
   register: fluentd_output
-  when: item.enabled | bool
+  when:
+    - enable_fluentd | bool
+    - item.enabled | bool
   with_items:
     - name: "00-local"
       enabled: true
@@ -78,6 +90,7 @@
   with_items:
     - "apache_access"
     - "wsgi_access"
+  when: enable_fluentd | bool
   notify:
     - Restart fluentd container
 
@@ -89,6 +102,7 @@
   with_items:
     - "00-record_transformer"
     - "01-rewrite"
+  when: enable_fluentd | bool
   notify:
     - Restart fluentd container
 
@@ -99,6 +113,7 @@
   register: fluentd_td_agent
   with_items:
     - "fluentd"
+  when: enable_fluentd | bool
   notify:
     - Restart fluentd container
 
@@ -177,6 +192,7 @@
   register: check_common_containers
   when:
     - action != "config"
+    - item.value.enabled | bool
   with_dict: "{{ common_services }}"
   notify:
     - "Restart {{ item.key }} container"

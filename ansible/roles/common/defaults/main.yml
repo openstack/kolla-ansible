@@ -6,6 +6,7 @@ common_run: False
 common_services:
   fluentd:
     container_name: fluentd
+    enabled: "{{ enable_fluentd | bool }}"
     image: "{{ fluentd_image_full }}"
     environment:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
@@ -15,6 +16,7 @@ common_services:
       - "kolla_logs:/var/log/kolla/"
   kolla-toolbox:
     container_name: kolla_toolbox
+    enabled: True
     image: "{{ kolla_toolbox_image_full }}"
     environment:
       ANSIBLE_NOCOLOR: "1"
@@ -29,6 +31,7 @@ common_services:
 # DUMMY_ENVIRONMENT is needed because empty environment is not supported
   cron:
     container_name: cron
+    enabled: True
     image: "{{ cron_image_full }}"
     environment:
       DUMMY_ENVIRONMENT: kolla_useless_env
@@ -56,3 +59,6 @@ fluentd_image_full: "{{ fluentd_image }}:{{ fluentd_tag }}"
 kubetoolbox_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-kubetoolbox"
 kubetoolbox_tag: "{{ openstack_release }}"
 kubetoolbox_image_full: "{{ kubetoolbox_image }}:{{ kubetoolbox_tag }}"
+
+syslog_swift_facility: "local0"
+syslog_haproxy_facility: "local1"
