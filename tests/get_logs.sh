@@ -38,6 +38,13 @@ copy_logs() {
     # docker related information
     (docker info && docker images && docker ps -a) > ${LOG_DIR}/system_logs/docker-info.txt
 
+    # ceph related logs
+    if [[ $(docker ps --filter name=ceph_mon --format "{{.Names}}") ]]; then
+        docker exec ceph_mon ceph -s > ${LOG_DIR}/kolla/ceph/ceph_s.txt
+        docker exec ceph_mon ceph osd df > ${LOG_DIR}/kolla/ceph/ceph_osd_df.txt
+        docker exec ceph_mon ceph osd tree > ${LOG_DIR}/kolla/ceph/ceph_osd_tree.txt
+    fi
+
     # Rename files to .txt; this is so that when displayed via
     # logs.openstack.org clicking results in the browser shows the
     # files, rather than trying to send it to another app or make you
