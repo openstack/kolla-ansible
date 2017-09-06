@@ -39,7 +39,7 @@ Please use the existing sandbox repository, available at
 https://git.openstack.org/cgit/openstack-dev/sandbox, for learning, understanding
 and testing the `Gerrit Workflow`_.
 
-.. _Gerrit Workflow: http://docs.openstack.org/infra/manual/developers.html#development-workflow
+.. _Gerrit Workflow: https://docs.openstack.org/infra/manual/developers.html#development-workflow
 
 Adding a new service
 ====================

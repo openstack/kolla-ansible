@@ -224,8 +224,8 @@ Verify Operation.
 
 For more information about how to manage volumes, see the
 `OpenStack User Guide
-<http://docs.openstack.org/user-guide/index.html>`__.
+<https://docs.openstack.org/user-guide/index.html>`__.
 
 For more information about how HNAS driver works, see
 `Hitachi NAS Platform iSCSI and NFS drives for OpenStack
-<http://docs.openstack.org/newton/config-reference/block-storage/drivers/hds-hnas-driver.html>`__.
+<https://docs.openstack.org/newton/config-reference/block-storage/drivers/hds-hnas-driver.html>`__.
