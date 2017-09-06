@@ -188,6 +188,12 @@ Deploying Kolla
     ``keepalived_virtual_router_id``. The ``keepalived_virtual_router_id`` should
     be unique and belong to the range 0 to 255.
 
+.. note::
+
+   If glance is configured to use ``file`` as backend, only one ``glance_api``
+   container will be started. ``File`` is enabled by default when no other
+   backend is specified in globals.yml
+
 First, check that the deployment targets are in a state where Kolla may deploy
 to them:
 
