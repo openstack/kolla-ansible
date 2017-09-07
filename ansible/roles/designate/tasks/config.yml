@@ -92,7 +92,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/rndc.conf"
   register: designate_rndc_conf
   when:
-    - designate_backend == 'bind9'
+    - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -107,7 +107,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/rndc.key"
   register: designate_rndc_key_file
   when:
-    - designate_backend == 'bind9'
+    - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -115,6 +115,9 @@
   notify:
     - Restart designate-backend-bind9 container
     - Restart designate-worker container
+
+- include: backend_external.yml
+  when: designate_backend_external == 'bind9'
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/designate/policy.json"
