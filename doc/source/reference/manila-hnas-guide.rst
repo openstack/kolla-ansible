@@ -265,6 +265,8 @@ Verify Operation
     | metadata                    | {}                                                              |
     +-----------------------------+-----------------------------------------------------------------+
 
+.. _hnas_configure_multiple_back_ends:
+
 Configure multiple back ends
 ============================
 

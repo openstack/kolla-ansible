@@ -306,8 +306,7 @@ Modify the file ``/etc/kolla/config/manila.conf`` and add the contents:
 .. note::
 
     Share migration requires have more than one back end configured.
-    `Configure multiple back ends
-    <https://docs.openstack.org/kolla-ansible/latest/manila-hnas-guide.html#configure-multiple-back-ends>`__.
+    For details, see :ref:`hnas_configure_multiple_back_ends`.
 
 Use the manila migration command, as shown in the following example:
 

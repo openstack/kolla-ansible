@@ -30,10 +30,8 @@ Basics
 Development Environment
 =======================
 
-Please follow our `quickstart`_ to deploy your environment and test your
+Please follow our :doc:`/user/quickstart` to deploy your environment and test your
 changes.
-
-.. _quickstart: https://docs.openstack.org/kolla-ansible/latest/quickstart.html
 
 Please use the existing sandbox repository, available at
 https://git.openstack.org/cgit/openstack-dev/sandbox, for learning, understanding

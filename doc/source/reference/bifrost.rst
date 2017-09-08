@@ -166,7 +166,7 @@ group.  In the ``all-in-one`` and ``multinode`` inventory files, a ``bifrost``
 group is defined which contains all hosts in the ``deployment`` group.  This
 top level ``deployment`` group is intended to represent the host running the
 ``bifrost_deploy`` container.  By default, this group contains ``localhost``.
-See `Multinode Deployment of Kolla <https://docs.openstack.org/kolla-ansible/latest/multinode.html>`_
+See :doc:`/user/multinode`
 for details on how to modify the Ansible inventory in a multinode deployment.
 
 Bifrost does not currently support running on multiple hosts so the ``bifrost``
