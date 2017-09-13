@@ -59,7 +59,7 @@ def main():
     parser.add_argument(
         '-p', '--passwords', type=str,
         default=os.path.abspath('/etc/kolla/passwords.yml'),
-        help=('Path to the passwords yml file'))
+        help=('Path to the passwords.yml file'))
 
     args = parser.parse_args()
     passwords_file = os.path.expanduser(args.passwords)
