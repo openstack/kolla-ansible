@@ -35,11 +35,15 @@
       'ansible_' + hostvars[inventory_hostname]['api_interface'] in hostvars[inventory_hostname]
 
 - name: Ensure sudo group is present
-  group: name=sudo state=present
+  group:
+    name: sudo
+    state: present
   become: True
 
 - name: Ensure kolla group is present
-  group: name=kolla state=present
+  group:
+    name: kolla
+    state: present
   become: True
   when: create_kolla_user | bool
 
@@ -74,7 +78,9 @@
   when: ansible_os_family == 'Debian'
 
 - name: Install ubuntu ca certs
-  package: name={{item}} state=latest
+  package:
+    name: "{{ item }}"
+    state: latest
   become: True
   with_items:
     - ca-certificates
@@ -83,7 +89,10 @@
     - ansible_os_family == 'Debian'
 
 - name: Ensure apt sources list directory exists
-  file: path=/etc/apt/sources.list.d state=directory recurse=yes
+  file:
+    path: /etc/apt/sources.list.d
+    state: directory
+    recurse: yes
   become: True
   when: ansible_os_family == 'Debian'
 
@@ -105,7 +114,10 @@
     - ansible_distribution == 'Ubuntu'
 
 - name: Ensure yum repos directory exists
-  file: path=/etc/yum.repos.d/ state=directory recurse=yes
+  file:
+    path: /etc/yum.repos.d/
+    state: directory
+    recurse: yes
   become: True
   when: ansible_os_family == 'RedHat'
 
