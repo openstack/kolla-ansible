@@ -1,12 +1,13 @@
 stdio_handler = "file"
 
-{% if kolla_base_distro == "ubuntu" %}
+{% if kolla_base_distro in ['ubuntu', 'centos', 'oraclelinux']%}
 # TODO: this workaround need to be fixed in Pike
-# Ubuntu cloud archive released libvirt-bin version 2.5.0 which runs vms as
-# libvirt-qemu user. This locks access to nova created files for vms which
-# have permissions 722 for nova user. We need to force qemu to use this user
+# libvirt-bin latest version which runs vms as libvirt-qemu user.
+# This locks access to nova created files for vms which have
+# permissions 722 for nova user. We need to force qemu to use this user
 # to be able to access vm files.
 # see https://bugs.launchpad.net/kolla-ansible/+bug/1668654
+# see https://bugs.launchpad.net/kolla/+bug/1718541
 user = "nova"
 group = "nova"
 {% endif %}
