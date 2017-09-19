@@ -94,8 +94,7 @@ function gen_config {
     for nic in $(list_dpdk_nics); do
         set_value $nic driver ${dpdk_interface_driver:-"uio_pci_generic"}
     done
-    set_value ovs pci_whitelist "'${pci_whitelist:-$(generate_pciwhitelist)}'"
-
+    set_value ovs pci_whitelist "${pci_whitelist:-$(generate_pciwhitelist)}"
 }
 
 function bind_nic {
@@ -106,11 +105,10 @@ function bind_nic {
 function unbind_nic {
     echo $1 > /sys/bus/pci/drivers/$2/unbind
     echo > /sys/bus/pci/devices/$1/driver_override
-
 }
 
 function list_dpdk_nics {
-    for nic in $(crudini --get $CONFIG_FILE ovs port_mappings | cut -d : -f 1); do
+    for nic in $(get_value ovs port_mappings | tr ',' '\n' | cut -d : -f 1); do
         echo $nic;
     done
 }
@@ -152,7 +150,7 @@ function get_driver_by_address {
 }
 
 function get_port_bridge {
-    for pair in $(get_value ovs port_mappings); do
+    for pair in $(get_value ovs port_mappings | tr ',' '\n'); do
         nic=`echo $pair | cut -f 1 -d ":"`
         if [[ "$nic" == "$1" ]]; then
             bridge=`echo $pair | cut -f 2 -d ":"`
@@ -209,7 +207,6 @@ function init_ovs_interfaces {
 
         dpdk_port_number=$((dpdk_port_number+1))
     done
-
 }
 
 function init {
@@ -381,7 +378,6 @@ function uninstall {
     if [ -e "$CONFIG_FILE" ]; then
         rm -f "$CONFIG_FILE"
     fi
-
 }
 
 function usage {
