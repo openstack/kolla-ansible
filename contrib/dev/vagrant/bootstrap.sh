@@ -55,20 +55,24 @@ function is_centos {
 
 # Install common packages and do some prepwork.
 function prep_work {
-    if [[ "$(systemctl is-enabled firewalld)" == "enabled" ]]; then
-        systemctl stop firewalld
-        systemctl disable firewalld
-    fi
 
     # This removes the fqdn from /etc/hosts's 127.0.0.1. This name.local will
     # resolve to the public IP instead of localhost.
     sed -i -r "s,^127\.0\.0\.1\s+.*,127\.0\.0\.1   localhost localhost.localdomain localhost4 localhost4.localdomain4," /etc/hosts
 
     if is_centos; then
+        if [[ "$(systemctl is-enabled firewalld)" == "enabled" ]]; then
+            systemctl stop firewalld
+            systemctl disable firewalld
+        fi
         yum -y install epel-release
         rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
         yum -y install MySQL-python vim-enhanced python-pip python-devel gcc openssl-devel libffi-devel libxml2-devel libxslt-devel
     elif is_ubuntu; then
+        if [[ "$(systemctl is-enabled ufw)" == "enabled" ]]; then
+            systemctl stop ufw
+            systemctl disable ufw
+        fi
         apt-get update
         apt-get -y install python-mysqldb python-pip python-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt-dev
     else
