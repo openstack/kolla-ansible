@@ -53,6 +53,23 @@
   notify:
     - Restart fluentd container
 
+- name: Find custom fluentd output config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/output"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_outputs
+
+- name: Copying over custom fluentd output config files
+  template:
+    src: "{{ item.path }}"
+    dest: "{{ node_config_directory }}/fluentd/output/{{ item.path | basename }}"
+  register: fluentd_output_custom
+  with_items: "{{ find_custom_fluentd_outputs.files }}"
+  notify:
+    - Restart fluentd container
+
 - name: Copying over fluentd format config files
   template:
     src: "conf/format/{{ item }}.conf.j2"
