@@ -1,0 +1,28 @@
+---
+- name: Copying over rndc.conf (designate_backend_external)
+  template:
+    src: "{{ node_custom_config }}/designate/rndc.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/rndc.conf"
+  register: designate_rndc_conf
+  when:
+    - designate_backend_external == 'bind9'
+    - item.key in [ "designate-worker" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-worker container
+
+- name: Copying over rndc.key (designate_backend_external)
+  template:
+    src: "{{ node_custom_config }}/designate/rndc.key"
+    dest: "{{ node_config_directory }}/{{ item.key }}/rndc.key"
+  register: designate_rndc_key_file
+  when:
+    - designate_backend_external == 'bind9'
+    - item.key in [ "designate-worker" ]
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ designate_services }}"
+  notify:
+    - Restart designate-worker container
