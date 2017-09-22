@@ -1,9 +1,49 @@
+#jinja2: trim_blocks: False
 {% set fluentd_dir = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+{% set services = [
+    ( 'aodh', enable_aodh ),
+    ( 'barbican', enable_barbican ),
+    ( 'ceilometer', enable_ceilometer ),
+    ( 'cinder', enable_cinder ),
+    ( 'cloudkitty', enable_cloudkitty ),
+    ( 'congress', enable_congress ),
+    ( 'designate', enable_designate ),
+    ( 'freezer', enable_freezer ),
+    ( 'glance', enable_glance ),
+    ( 'gnocchi', enable_gnocchi ),
+    ( 'heat', enable_heat ),
+    ( 'horizon', enable_horizon ),
+    ( 'ironic', enable_ironic ),
+    ( 'karbor', enable_karbor ),
+    ( 'keystone', enable_keystone ),
+    ( 'kuryr', enable_kuryr ),
+    ( 'magnum', enable_magnum ),
+    ( 'manila', enable_manila ),
+    ( 'mistral', enable_mistral ),
+    ( 'mongodb', enable_mongodb ),
+    ( 'murano', enable_murano ),
+    ( 'neutron', enable_neutron ),
+    ( 'nova', enable_nova ),
+    ( 'octavia', enable_octavia ),
+    ( 'opendaylight', enable_opendaylight ),
+    ( 'panko', enable_panko ),
+    ( 'rally', enable_rally ),
+    ( 'sahara', enable_sahara ),
+    ( 'searchlight', enable_searchlight ),
+    ( 'senlin', enable_senlin ),
+    ( 'solum', enable_solum ),
+    ( 'tacker', enable_tacker ),
+    ( 'trove', enable_trove ),
+    ( 'watcher', enable_watcher ),
+    ( 'zun', enable_zun )
+] %}
 <source>
   @type tail
-  path /var/log/kolla/*/*.log
-  exclude_path ["/var/log/kolla/rabbitmq/*.log", "/var/log/kolla/mariadb/mariadb.log", "/var/log/kolla/haproxy/*.log", "/var/log/kolla/swift/*.log"]
-  pos_file /var/run/{{ fluentd_dir }}/kolla.pos
+  path {% for service, enabled in services if enabled | bool %}/var/log/kolla/{{ service }}/*.log{% if not loop.last %},{% endif %}{% endfor %}
+  exclude_path ["/var/log/kolla/neutron/dnsmasq.log",
+                "/var/log/kolla/*/*-access.log",
+                "/var/log/kolla/*/*-error.log"]
+  pos_file /var/run/{{ fluentd_dir }}/kolla-openstack.pos
   tag kolla.*
   format multiline
   format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \d+ \S+ \S+ \[(req-\S+ \S+ \S+ \S+ \S+ \S+|-)\]/
