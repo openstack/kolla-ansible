@@ -104,6 +104,15 @@
     - ansible_os_family == "RedHat"
     - enable_host_ntp | bool
 
+- name: Disable selinux
+  selinux:
+    policy: target
+    state: permissive
+  become: true
+  when:
+    - disable_selinux | bool
+    - ansible_os_family == "RedHat"
+
 - name: Reboot
   command: reboot -f
   become: True
