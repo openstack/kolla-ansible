@@ -30,8 +30,8 @@ Basics
 Development Environment
 =======================
 
-Please follow our :doc:`/user/quickstart` to deploy your environment and test your
-changes.
+Please follow our :doc:`/user/quickstart` to deploy your environment and test
+your changes.
 
 Please use the existing sandbox repository, available at
 https://git.openstack.org/cgit/openstack-dev/sandbox, for learning, understanding
