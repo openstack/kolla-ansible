@@ -1,33 +1,36 @@
 ---
 - name: Barbican sanity - storing a secret
-  shell: docker exec -t barbican_api openstack \
-      --os-auth-url={{ openstack_auth.auth_url }} \
-      --os-password={{ openstack_auth.password }} \
-      --os-username={{ openstack_auth.username }} \
-      --os-project-name={{ openstack_auth.project_name }} \
-      secret store -f value -p kolla | head -1
+  shell: >
+    docker exec -t barbican_api openstack \
+    --os-auth-url={{ openstack_auth.auth_url }} \
+    --os-password={{ openstack_auth.password }} \
+    --os-username={{ openstack_auth.username }} \
+    --os-project-name={{ openstack_auth.project_name }} \
+    secret store -f value -p kolla | head -1
   register: barbican_store_secret
   run_once: True
   when: kolla_enable_sanity_barbican | bool
 
 - name: Barbican sanity - fetch secret
-  shell: docker exec -t barbican_api openstack \
-      --os-auth-url={{ openstack_auth.auth_url }} \
-      --os-password={{ openstack_auth.password }} \
-      --os-username={{ openstack_auth.username }} \
-      --os-project-name={{ openstack_auth.project_name }} \
-      secret get -f value -p {{ barbican_store_secret.stdout }}
+  command: >
+    docker exec -t barbican_api openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    secret get -f value -p {{ barbican_store_secret.stdout }}
   register: barbican_get_secret
   failed_when: barbican_get_secret.stdout != 'kolla'
   run_once: True
   when: kolla_enable_sanity_barbican | bool
 
 - name: Barbican sanity - cleaning up
-  shell: docker exec -t barbican_api openstack \
-      --os-auth-url={{ openstack_auth.auth_url }} \
-      --os-password={{ openstack_auth.password }} \
-      --os-username={{ openstack_auth.username }} \
-      --os-project-name={{ openstack_auth.project_name }} \
-      secret delete {{ barbican_store_secret.stdout }}
+  command: >
+    docker exec -t barbican_api openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    secret delete {{ barbican_store_secret.stdout }}
   run_once: True
   when: kolla_enable_sanity_barbican | bool
