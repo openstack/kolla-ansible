@@ -20,7 +20,7 @@ Enabling External Ceph
 ======================
 
 Using external Ceph with Kolla means not to deploy Ceph via Kolla. Therefore,
-disable Ceph deployment in ``/etc/kolla/global.yml``
+disable Ceph deployment in ``/etc/kolla/globals.yml``
 
 ::
 
@@ -29,7 +29,7 @@ disable Ceph deployment in ``/etc/kolla/global.yml``
 There are flags indicating individual services to use ceph or not which default
 to the value of ``enable_ceph``. Those flags now need to be activated in order
 to activate external Ceph integration. This can be done individually per
-service in ``/etc/kolla/global.yml``:
+service in ``/etc/kolla/globals.yml``:
 
 ::
 
