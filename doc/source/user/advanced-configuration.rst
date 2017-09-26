@@ -181,6 +181,17 @@ on host myhost, the operator needs to create file
    [DEFAULT]
    ram_allocation_ratio = 5.0
 
+Kolla allows the operator to override configuration globally for all services.
+It will look for a file called ``/etc/kolla/config/global.conf``.
+
+For example to modify database pool size connection for all services, the
+operator needs to create ``/etc/kolla/config/global.conf`` with content:
+
+::
+
+   [database]
+   max_pool_size = 100
+
 The operator can make these changes after services were already deployed by
 using following command:
 
