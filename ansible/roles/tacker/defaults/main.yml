@@ -9,6 +9,7 @@ tacker_services:
     image: "{{ tacker_server_image_full }}"
     volumes:
       - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
+      - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
   tacker-conductor:
@@ -18,6 +19,7 @@ tacker_services:
     image: "{{ tacker_conductor_image_full }}"
     volumes:
       - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
+      - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
 
@@ -54,3 +56,10 @@ tacker_logging_debug: "{{ openstack_logging_debug }}"
 tacker_keystone_user: "tacker"
 
 openstack_tacker_auth: "{{ openstack_auth }}"
+
+###################
+# Kolla
+####################
+tacker_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+tacker_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+tacker_dev_mode: "{{ kolla_dev_mode }}"
