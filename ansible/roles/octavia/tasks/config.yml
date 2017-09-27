@@ -40,7 +40,7 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying certificate files
+- name: Copying certificate files for octavia-worker
   vars:
     service: "{{ octavia_services['octavia-worker'] }}"
   copy:
@@ -56,6 +56,40 @@
     - client.pem
   notify:
     - Restart octavia-worker container
+
+- name: Copying certificate files for octavia-housekeeping
+  vars:
+    service: "{{ octavia_services['octavia-housekeeping'] }}"
+  copy:
+    src: "{{ node_custom_config }}/octavia/{{ item }}"
+    dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
+  register: octavia_housekeeping_certificate
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - cakey.pem
+    - ca_01.pem
+    - client.pem
+  notify:
+    - Restart octavia-housekeeping container
+
+- name: Copying certificate files for octavia-health-manager
+  vars:
+    service: "{{ octavia_services['octavia-health-manager'] }}"
+  copy:
+    src: "{{ node_custom_config }}/octavia/{{ item }}"
+    dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
+  register: octavia_health_manager_certificate
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - cakey.pem
+    - ca_01.pem
+    - client.pem
+  notify:
+    - Restart octavia-health-manager container
 
 - name: Check octavia containers
   kolla_docker:
