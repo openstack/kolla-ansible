@@ -45,7 +45,7 @@ On CentOS::
 
   sudo yum install ruby-devel libvirt-devel zlib-devel libpng-devel gcc \
   qemu-kvm qemu-img libvirt libvirt-python libvirt-client virt-install \
-  bridge-utils
+  bridge-utils git
 
 On Ubuntu 16.04 or later::
 
