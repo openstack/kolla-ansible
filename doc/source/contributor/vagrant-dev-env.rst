@@ -4,12 +4,13 @@
 Development Environment with Vagrant
 ====================================
 
-This guide describes how to use `Vagrant <http://vagrantup.com>`__ to assist in
+This guide describes how to use `Vagrant <https://vagrantup.com>`__ to assist in
 developing for Kolla.
 
-Vagrant is a tool to assist in scripted creation of virtual machines. Vagrant
-takes care of setting up CentOS-based VMs for Kolla development, each with
-proper hardware like memory amount and number of network interfaces.
+Vagrant is a tool for building and managing virtual machine environments in
+a single workflow. Vagrant takes care of setting up CentOS-based VMs for Kolla
+development, each with proper hardware like memory amount and number of
+network interfaces.
 
 Getting Started
 ===============
@@ -185,6 +186,6 @@ Further Reading
 ===============
 
 All Vagrant documentation can be found at
-`docs.vagrantup.com <http://docs.vagrantup.com>`__.
+`Vagrant documentation` <https://www.vagrantup.com/docs/>`__.
 
 .. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html
