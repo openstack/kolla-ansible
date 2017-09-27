@@ -394,8 +394,8 @@ source of images. Reference the
 `Multinode Deployment of Kolla <https://docs.openstack.org/project-deploy-guide/kolla-ansible/ocata/multinode.html>`_
 for more information on using a local Docker registry.
 Otherwise, the Docker Hub Image Registry contains all
-images from each of Kolla’s major releases. The latest release tag is 3.0.2 for
-Newton.
+images from each of Kolla’s major releases. The latest release tag is 5.0.0 for
+Pike.
 
 Automatic host bootstrap
 ========================
