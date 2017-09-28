@@ -12,7 +12,7 @@ enable_v1_api=false
 osapi_volume_workers = {{ openstack_service_workers }}
 volume_name_template = volume-%s
 
-glance_api_servers = {% for host in groups['glance-api'] %}{{ internal_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}glance-api{% else %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}{% endif %}:{{ glance_api_port }}{% if not loop.last %},{% endif %}{% endfor %}
+glance_api_servers = {{ internal_protocol }}://{% if orchestration_engine == 'KUBERNETES' %}glance-api{% else %}{{ kolla_internal_vip_address }}{% endif %}:{{ glance_api_port }}
 
 glance_num_retries = {{ groups['glance-api'] | length }}
 glance_api_version = 2
