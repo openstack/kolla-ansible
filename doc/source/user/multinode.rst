@@ -112,6 +112,12 @@ section:
     ExecStart=
     ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 
+.. note::
+
+   If your docker version is >=1.13.0, the ``docker daemon`` should be replaced
+   with ``dockerd``.
+
+
 Restart Docker by executing the following commands:
 
 ::
