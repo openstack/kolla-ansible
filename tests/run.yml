@@ -1,0 +1,96 @@
+---
+- hosts: all
+  vars:
+    kolla_inventory_path: "/etc/kolla/inventory"
+    logs_dir: "/tmp/logs"
+    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
+  tasks:
+    - name: ensure /etc/kolla exists
+      file:
+        path: "/etc/kolla"
+        state: "directory"
+        mode: 0777
+      become: true
+
+    - set_fact:
+        nodes: |
+          {% for host in hostvars %}
+          {{ host }} ansible_host={{ hostvars[host]['nodepool']['private_ipv4'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
+          {% endfor %}
+
+    - name: copy default ansible kolla-ansible inventory
+      copy:
+        src: "{{ kolla_ansible_full_src_dir }}/ansible/inventory/all-in-one"
+        dest: "{{ kolla_inventory_path }}"
+      delegate_to: "primary"
+
+    - name: replace localhost with IPs
+      replace:
+        path: "{{ kolla_inventory_path }}"
+        regexp: "localhost.*$"
+        replace: "{{ nodes }}"
+      delegate_to: "primary"
+
+    # FIXME: in multi node env, api_interface may be different on each node.
+    - name: detect api_interface_name variable
+      vars:
+        ansible_interface_name: "ansible_{{ item.replace('-', '_') }}"
+        api_interface_address: "{{ hostvars[inventory_hostname]['nodepool']['private_ipv4'] }}"
+      set_fact:
+        api_interface_name: "{{ item }}"
+        api_interface_address: "{{ api_interface_address }}"
+      when:
+        - hostvars[inventory_hostname][ansible_interface_name]['ipv4'] is defined
+        - hostvars[inventory_hostname][ansible_interface_name]['ipv4']['address'] == api_interface_address
+      with_items: "{{ ansible_interfaces }}"
+      delegate_to: "primary"
+
+    - name: generate global.yml file
+      template:
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/globals-default.j2"
+        dest: /etc/kolla/globals.yml
+      delegate_to: "primary"
+
+    - name: ensure nova conf overrides dir exists
+      file:
+        path: "/etc/kolla/config/nova"
+        state: "directory"
+        mode: 0777
+      become: true
+      delegate_to: "primary"
+
+    - name: generate config overrides
+      template:
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/nova-compute-overrides.j2"
+        dest: /etc/kolla/config/nova/nova-compute.conf
+      delegate_to: "primary"
+
+    - name: copy passwords.yml file
+      copy:
+        src: "{{ kolla_ansible_full_src_dir }}/etc/kolla/passwords.yml"
+        dest: /etc/kolla/passwords.yml
+      delegate_to: "primary"
+
+    - name: install kolla-ansible requirements
+      pip:
+        requirements: "{{ ansible_env.HOME }}/{{ kolla_ansible_src_dir }}/requirements.txt"
+      become: true
+
+    - name: generate passwords
+      shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+      delegate_to: "primary"
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export BASE_DISTRO={{ base_distro }}
+          export INSTALL_TYPE={{ install_type }}
+          export NODEPOOL_TARBALLS_MIRROR=http://{{ zuul_site_mirror_fqdn }}:8080/tarballs
+
+          tools/setup_gate.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
+      delegate_to: "primary"
+      environment: '{{ zuul | zuul_legacy_vars }}'

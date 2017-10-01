@@ -6,19 +6,7 @@ set -o errexit
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-. /etc/nodepool/provider
-
-NODEPOOL_MIRROR_HOST=${NODEPOOL_MIRROR_HOST:-mirror.$NODEPOOL_REGION.$NODEPOOL_CLOUD.openstack.org}
-NODEPOOL_MIRROR_HOST=$(echo $NODEPOOL_MIRROR_HOST|tr '[:upper:]' '[:lower:]')
-NODEPOOL_PYPI_MIRROR=${NODEPOOL_PYPI_MIRROR:-http://$NODEPOOL_MIRROR_HOST/pypi/simple}
-NODEPOOL_TARBALLS_MIRROR=${NODEPOOL_TARBALLS_MIRROR:-http://$NODEPOOL_MIRROR_HOST:8080/tarballs}
-
 GIT_PROJECT_DIR=$(mktemp -d)
-
-# Just for mandre :)
-if [[ ! -f /etc/sudoers.d/jenkins ]]; then
-    echo "jenkins ALL=(:docker) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/jenkins
-fi
 
 function clone_repos {
     cat > /tmp/clonemap <<EOF
@@ -34,8 +22,6 @@ EOF
 }
 
 function setup_config {
-    sudo mkdir /etc/kolla
-    sudo chmod -R 777 /etc/kolla
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
     PIP_CONF=$(mktemp)
@@ -55,6 +41,7 @@ EOF
 
 GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
 
+# TODO(jeffrey4l): this doesn't work with zuulv3
 if echo $ACTION | grep -q "ceph"; then
 GATE_IMAGES+=",ceph,cinder"
 fi
@@ -97,39 +84,12 @@ function detect_distro {
     DISTRO=$(ansible all -i "localhost," -msetup -clocal | awk -F\" '/ansible_os_family/ {print $4}')
 }
 
-# NOTE(sdake): This works around broken nodepool on systems with only one
-#              private interface
-#              The big regex checks for IP addresses in the file
-function setup_workaround_broken_nodepool {
-    if [[ `grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" /etc/nodepool/node_private | wc -l` -eq 0 ]]; then
-        cp /etc/nodepool/node /etc/nodepool/node_private
-        cp /etc/nodepool/sub_nodes /etc/nodepool/sub_nodes_private
-    fi
-}
-
-function setup_ssh {
-    sudo chown jenkins /etc/nodepool/id_rsa
-    sudo chmod 600 /etc/nodepool/id_rsa
-}
-
-function setup_inventory {
-
-    echo -e "127.0.0.1\tlocalhost" > /tmp/hosts
-    ansible-playbook tests/ansible_generate_inventory.yml
-    sudo chown root: /tmp/hosts
-    sudo chmod 644 /tmp/hosts
-    sudo mv /tmp/hosts /etc/hosts
-}
-
 function setup_ansible {
-    RAW_INVENTORY=/tmp/kolla/raw_inventory
-    mkdir /tmp/kolla
+    RAW_INVENTORY=/etc/kolla/inventory
 
     # TODO(SamYaple): Move to virtualenv
     sudo -H pip install -U "ansible>=2,<2.4" "docker>=2.0.0" "python-openstackclient" "python-neutronclient" "ara"
     detect_distro
-
-    setup_inventory
 
     sudo mkdir /etc/ansible
     ara_location=$(python -c "import os,ara; print(os.path.dirname(ara.__file__))")
@@ -145,16 +105,6 @@ EOF
 
 function setup_node {
     ansible-playbook -i ${RAW_INVENTORY} tools/playbook-setup-nodes.yml
-}
-
-function setup_logging {
-    # This directory is the directory that is copied with the devstack-logs
-    # publisher. It must exist at /home/jenkins/workspace/<job-name>/logs
-    mkdir logs
-
-    # For ease of access we symlink that logs directory to a known path
-    ln -s $(pwd)/logs /tmp/logs
-    mkdir -p /tmp/logs/{ansible,build,kolla,kolla_configs,system_logs}
 }
 
 function prepare_images {
@@ -179,8 +129,6 @@ function prepare_images {
     fi
 }
 
-
-
 function sanity_check {
     # Wait for service ready
     sleep 15
@@ -203,29 +151,35 @@ function sanity_check {
     fi
 }
 
-function get_logs {
-    ansible-playbook -i ${RAW_INVENTORY} tests/ansible_get_logs.yml > /tmp/logs/ansible/get-logs
+check_failure() {
+    # All docker container's status are created, restarting, running, removing,
+    # paused, exited and dead. Containers without running status are treated as
+    # failure. removing is added in docker 1.13, just ignore it now.
+    failed_containers=$(sudo docker ps -a --format "{{.Names}}" \
+        --filter status=created \
+        --filter status=restarting \
+        --filter status=paused \
+        --filter status=exited \
+        --filter status=dead)
+
+    if [[ -n "$failed_containers" ]]; then
+        exit 1;
+    fi
 }
 
-setup_logging
-tools/dump_info.sh
+
+
 clone_repos
-setup_workaround_broken_nodepool
-setup_ssh
 setup_ansible
 setup_config
 setup_node
 
-ansible-playbook -e type=$INSTALL_TYPE -e base=$BASE_DISTRO -e action=$ACTION tests/ansible_generate_config.yml > /tmp/logs/ansible/generate_config
 tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
-sudo tools/generate_passwords.py
 prepare_images
 
 if echo $ACTION | grep -q "ceph"; then
     ansible-playbook -i ${RAW_INVENTORY} tests/ansible_setup_ceph_disks.yml > /tmp/logs/ansible/setup_ceph_disks
 fi
-
-trap get_logs EXIT
 
 # Create dummy interface for neutron
 ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
@@ -252,7 +206,7 @@ tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
 # run prechecks again
 tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
 
-get_logs
-
 ara generate html /tmp/logs/playbook_reports/
 gzip --recursive --best /tmp/logs/playbook_reports/
+
+check_failure

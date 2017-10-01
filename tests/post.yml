@@ -1,0 +1,28 @@
+---
+- hosts: all
+  vars:
+    logs_dir: "/tmp/logs"
+  tasks:
+    - name: Run diagnostics script
+      script: get_logs.sh
+      register: get_logs_result
+      become: true
+      failed_when: false
+
+    - name: Print get_logs output
+      debug:
+        msg: "{{ get_logs_result.stdout }}"
+
+    - name: Download logs to executor
+      synchronize:
+        dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}"
+        mode: pull
+        src: "{{ logs_dir }}/"
+      ignore_errors: yes
+
+    - name: Download /etc/hosts file to executor
+      synchronize:
+        src: "/etc/hosts"
+        dest: "{{ zuul.executor.log_root }}/{{inventory_hostname }}/"
+        mode: pull
+      ignore_errors: yes

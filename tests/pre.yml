@@ -1,0 +1,31 @@
+- hosts: all
+  vars:
+    logs_dir: "/tmp/logs"
+  tasks:
+    - name: Install dbus for debian system
+      apt: name=dbus
+      when:
+        - ansible_os_family == 'Debian'
+      become: true
+
+    - name: Ensure /tmp/logs/ dir
+      file:
+        path: "{{ logs_dir }}"
+        state: "directory"
+
+    - name: Ensure node directories
+      file:
+        path: "{{ logs_dir }}/{{ item }}"
+        state: "directory"
+        mode: 0777
+      with_items:
+        - "docker_logs"
+        - "kolla_configs"
+        - "system_logs"
+        - "kolla"
+        - "ansible"
+
+    - name: set new hostname based on ansible inventory file
+      hostname:
+        name: "{{ inventory_hostname }}"
+      become: true
