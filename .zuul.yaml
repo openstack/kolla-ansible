@@ -1,0 +1,57 @@
+- project:
+    name: openstack/kolla-ansible
+    check:
+      jobs:
+        - kolla-ansible-centos-source
+        - kolla-ansible-ubuntu-source
+        - kolla-ansible-oraclelinux-source
+
+- nodeset:
+    name: kolla-ansible-centos
+    nodes:
+      - name: primary
+        label: centos-7
+
+- nodeset:
+    name: kolla-ansible-xenial
+    nodes:
+      - name: primary
+        label: ubuntu-xenial
+
+- job:
+    name: kolla-ansible-base
+    pre-run: tests/pre
+    run: tests/run
+    post-run: tests/post
+    attempts: 1
+    timeout: 10800
+    required-projects:
+      - openstack/kolla
+      - openstack/requirements
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*
+
+- job:
+    name: kolla-ansible-centos-source
+    parent:  kolla-ansible-base
+    nodeset: kolla-ansible-centos
+    vars:
+      base_distro: centos
+      install_type: source
+
+- job:
+    name: kolla-ansible-ubuntu-source
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-xenial
+    vars:
+      base_distro: ubuntu
+      install_type: source
+
+- job:
+    name: kolla-ansible-oraclelinux-source
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-centos
+    vars:
+      base_distro: oraclelinux
+      install_type: source
