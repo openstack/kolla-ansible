@@ -1,5 +1,6 @@
 ---
 - name: Ensuring config directories exist
+  become: true
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
@@ -8,6 +9,7 @@
     - "certificates/private"
 
 - name: Creating SSL configuration file
+  become: true
   template:
     src: "{{ item }}.j2"
     dest: "{{ node_config_directory }}/certificates/{{ item }}"
@@ -15,11 +17,13 @@
     - "openssl-kolla.cnf"
 
 - name: Creating Key
+  become: true
   command: creates="{{ item }}" openssl genrsa -out {{ item }}
   with_items:
     - "{{ node_config_directory }}/certificates/private/haproxy.key"
 
 - name: Creating Server Certificate
+  become: true
   command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
     -subj "/C=US/ST=NC/L=RTP/O=kolla/CN={{ kolla_external_fqdn }}" \
     -config {{ node_config_directory }}/certificates/openssl-kolla.cnf \
@@ -31,11 +35,13 @@
     - "{{ node_config_directory }}/certificates/private/haproxy.crt"
 
 - name: Creating CA Certificate File
+  become: true
   copy:
     src: "{{ node_config_directory }}/certificates/private/haproxy.crt"
     dest: "{{ node_config_directory }}/certificates/haproxy-ca.crt"
 
 - name: Creating Server PEM File
+  become: true
   assemble:
     src: "{{ node_config_directory }}/certificates/private"
     dest: "{{ node_config_directory }}/certificates/haproxy.pem"

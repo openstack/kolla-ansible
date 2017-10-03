@@ -1,0 +1,19 @@
+---
+- name: Check if config_owner_user existed
+  getent:
+    database: passwd
+    key: "{{ config_owner_user }}"
+
+- name: Check if config_owner_group existed
+  getent:
+    database: group
+    key: "{{ config_owner_group }}"
+  register: getent_group
+
+#(duonghq) it's only a basic check, should be refined later
+- name: Check if ansible user can do passwordless sudo
+  shell: sudo -n true
+  register: result
+  failed_when: result | failed
+
+
