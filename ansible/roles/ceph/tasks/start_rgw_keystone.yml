@@ -2,6 +2,7 @@
 - name: Check whether the swift service is enabled
   local_action: fail msg='Ceph-rgw-keystone is conflicted with swift, you should only enable one of them'
   when: enable_swift | bool
+  run_once: True
 
 - name: Creating the Swift service and endpoint
   kolla_toolbox:
@@ -15,6 +16,7 @@
       interface: "{{ item.interface }}"
       region_name: "{{ openstack_region_name }}"
       auth: "{{ '{{ openstack_swift_auth }}' }}"
+      endpoint_type: "{{ openstack_interface }}"
     module_extra_vars:
       openstack_swift_auth: "{{ openstack_swift_auth }}"
   run_once: True
