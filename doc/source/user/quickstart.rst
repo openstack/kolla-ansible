@@ -500,8 +500,8 @@ please use the following parameters with kolla-build:
 
 .. note::
 
-    --base and --type can be added to the above kolla-build command if
-    different distributions or types are desired.
+   ``--base`` and ``--type`` can be added to the above kolla-build command if
+   different distributions or types are desired.
 
 It is also possible to build individual container images. As an example, if the
 glance images failed to build, all glance related images can be rebuilt as
