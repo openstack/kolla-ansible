@@ -441,9 +441,11 @@ to include the MTU size to be used for Docker containers.
 
 .. note::
 
-    Depend of your Docker version and distro, ExecStart command may be different which may cause
-    Docker start failures. The default ExecStart command for your system can be obtained from
-    ``/usr/lib/systemd/system/docker.service``.
+    Depend of your Docker version and distro, ExecStart command may be
+    different which may cause Docker start failures. If your docker version
+    is >= 1.13.0, the ``docker daemon`` is moved to ``dockerd``, and should
+    be used instead. The default ExecStart command for your system can be
+    obtained from ``/usr/lib/systemd/system/docker.service``.
 
 .. note::
 
