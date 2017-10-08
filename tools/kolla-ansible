@@ -43,6 +43,9 @@ Options:
     --extra, -e <ansible variables>    Set additional variables as key=value or YAML/JSON passed to ansible-playbook
     --passwords <passwords_path>       Specify path to the passwords file
     --limit <host>                     Specify host to run plays
+    --vault-id <@prompt or path>       Specify @prompt or password file (Ansible >=  2.4)
+    --ask-vault-pass                   Ask for vault password
+    --vault-password-file <path>       Specify password file for vault decrypt
     --verbose, -v                      Increase verbosity of ansible-playbook
 
 Commands:
@@ -77,6 +80,9 @@ cat <<EOF
 --extra -e
 --passwords
 --limit
+--vault-id
+--ask-vault-pass
+--vault-password-file
 --verbose -v
 prechecks
 check
@@ -97,7 +103,7 @@ EOF
 }
 
 SHORT_OPTS="hi:p:t:k:e:v"
-LONG_OPTS="help,inventory:,playbook:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,yes-i-really-really-mean-it,include-images,include-dev"
+LONG_OPTS="help,inventory:,playbook:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
 
 eval set -- "$ARGS"
@@ -170,12 +176,29 @@ while [ "$#" -gt 0 ]; do
             EXTRA_OPTS="$EXTRA_OPTS -e $2"
             shift 2
             ;;
+
     (--passwords)
             PASSWORDS_FILE="$2"
             shift 2
             ;;
+
     (--limit)
             EXTRA_OPTS="$EXTRA_OPTS --limit $2"
+            shift 2
+            ;;
+
+    (--vault-id)
+            EXTRA_OPTS="$EXTRA_OPTS --vault-id $2"
+            shift 2
+            ;;
+
+    (--ask-vault-pass)
+            VERBOSITY="$EXTRA_OPTS --ask-vault-pass"
+            shift 1
+            ;;
+
+    (--vault-password-file)
+            EXTRA_OPTS="$EXTRA_OPTS --vault-password-file $2"
             shift 2
             ;;
 
