@@ -144,7 +144,7 @@ listen glance_api
 {% for http_option in haproxy_listen_http_extra %}
   {{ http_option }}
 {% endfor %}
-{% for host in groups['glance-api'] %}
+{% for host in glance_api_hosts %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
 {% if haproxy_enable_external_vip | bool %}
@@ -158,7 +158,7 @@ listen glance_api_external
 {% endfor %}
   http-request del-header X-Forwarded-Proto
   http-request set-header X-Forwarded-Proto https if { ssl_fc }
-{% for host in groups['glance-api'] %}
+{% for host in glance_api_hosts %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
 {% endif %}
