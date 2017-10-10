@@ -150,17 +150,23 @@ Options for nova-compute and ceilometer:
 
     vmware_vcenter_host_ip: "127.0.0.1"
     vmware_vcenter_host_username: "admin"
-    vmware_vcenter_host_password: "admin"
     vmware_vcenter_cluster_name: "cluster-1"
     vmware_vcenter_insecure: "True"
     vmware_vcenter_datastore_regex: ".*"
+
+.. note::
+
+    The VMware vCenter password has to be set in ``/etc/kolla/passwords.yml``.
+
+    .. code-block:: console
+
+       vmware_vcenter_host_password: "admin"
 
 Options for Neutron NSX-V support:
 
 .. code-block:: console
 
     vmware_nsxv_user: "nsx_manager_user"
-    vmware_nsxv_password: "nsx_manager_password"
     vmware_nsxv_manager_uri: "https://127.0.0.1"
     vmware_nsxv_cluster_moid: "TestCluster"
     vmware_nsxv_datacenter_moid: "TestDataCeter"
@@ -174,7 +180,6 @@ Options for Neutron NSX-V support:
     vmware_nsxv_metadata_initializer: "false"
     vmware_nsxv_edge_ha: "false"
 
-
 .. note::
 
     If you want to set secure connections to VMware, set ``vmware_vcenter_insecure``
@@ -182,6 +187,13 @@ Options for Neutron NSX-V support:
     Secure connections to vCenter requires a CA file, copy the vCenter CA file to
     ``/etc/kolla/config/vmware_ca``.
 
+.. note::
+
+     The VMware NSX-V password has to be set in ``/etc/kolla/passwords.yml``.
+
+     .. code-block:: console
+
+        vmware_nsxv_password: "nsx_manager_password"
 
 Then you should start kolla-ansible deployment normally as KVM/QEMU deployment.
 
@@ -239,9 +251,16 @@ Options for Neutron NSX-DVS support:
     vmware_dvs_host_ip: "192.168.1.1"
     vmware_dvs_host_port: "443"
     vmware_dvs_host_username: "admin"
-    vmware_dvs_host_password: "password"
     vmware_dvs_dvs_name: "VDS-1"
     vmware_dvs_dhcp_override_mac: ""
+
+.. note::
+
+     The VMware NSX-DVS password has to be set in ``/etc/kolla/passwords.yml``.
+
+     .. code-block:: console
+
+        vmware_dvs_host_password: "password"
 
 Then you should start kolla-ansible deployment normally as KVM/QEMU deployment.
 
