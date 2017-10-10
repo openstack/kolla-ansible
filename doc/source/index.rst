@@ -33,6 +33,13 @@ For information on building container images for use with Kolla-Ansible, please
 refer to the `Kolla image documentation
 <https://docs.openstack.org/kolla/latest/>`_.
 
+Admin Guides
+============
+
+.. toctree::
+   :maxdepth: 2
+
+   admin/index
 
 User Guides
 ===========
