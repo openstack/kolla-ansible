@@ -192,6 +192,19 @@ operator needs to create ``/etc/kolla/config/global.conf`` with content:
    [database]
    max_pool_size = 100
 
+In case the operators want to customize ``policy.json`` file, they should
+create a full policy file for specific project in the same directory like above
+and Kolla will overwrite default policy file with it. Be aware, with some
+projects are keeping full policy file in source code, operators just need to
+copy it but with some others are defining default rules in codebase, they have
+to generate it.
+
+For example to overwrite ``policy.json`` file of Neutron project, the operator
+needs to grab ``policy.json`` from Neutron project source code, update rules
+and then put it to ``/etc/kolla/config/neutron/policy.json``.
+
+.. note:: Currently kolla-ansible only support JSON format for policy file.
+
 The operator can make these changes after services were already deployed by
 using following command:
 
