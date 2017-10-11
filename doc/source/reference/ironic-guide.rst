@@ -10,6 +10,7 @@ Currently Kolla can deploy the Ironic services:
 
 - ironic-api
 - ironic-conductor
+- ironic-dnsmasq
 - ironic-inspector
 
 As well as a required PXE service, deployed as ironic-pxe.
