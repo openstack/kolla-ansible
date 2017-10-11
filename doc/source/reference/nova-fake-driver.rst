@@ -24,8 +24,8 @@ with neutron-openvswitch-agent on the compute nodes. Therefore, in the
 inventory the network node must be different than the compute node.
 
 By default, Kolla uses libvirt driver on the compute node. To use nova-fake
-driver, edit the following parameters in ``ansible/group_vars`` or in the
-command line options.
+driver, edit the following parameters in ``/etc/kolla/globals.yml`` or in
+the command line options.
 
 ::
 
