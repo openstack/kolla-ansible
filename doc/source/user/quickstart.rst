@@ -666,6 +666,12 @@ Generate the ``admin-openrc.sh`` file. The file will be created in
 
     kolla-ansible post-deploy
 
+Install the python-openstackclient as per followed installation.
+
+::
+
+    pip install python-openstackclient
+
 To test your deployment, run the following commands to initialize the network
 with a glance image and neutron networks.
 
