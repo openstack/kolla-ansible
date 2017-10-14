@@ -206,6 +206,9 @@ neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_
 dhcp_agents_per_network: 2
 max_l3_agents_per_router: 3
 
+# valid value is: ["v1", "v2"]
+neutron_fwaas_version: "v1"
+
 neutron_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}"
 neutron_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}"
 neutron_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ neutron_server_port }}"
@@ -234,7 +237,9 @@ neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto'
 ####################
 service_plugins:
   - name: "firewall"
-    enabled: "{{ enable_neutron_fwaas | bool }}"
+    enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v1' }}"
+  - name: "firewall_v2"
+    enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v2' }}"
   - name: "flow_classifier"
     enabled: "{{ enable_neutron_sfc | bool }}"
   - name: "lbaasv2"
@@ -277,6 +282,14 @@ agent_extensions:
     enabled: "{{ enable_neutron_sfc | bool }}"
 
 neutron_agent_extensions: "{{ agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
+
+l3_agent_extensions:
+  - name: "fwaas"
+    enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v1' }}"
+  - name: "fwaas_v2"
+    enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v2' }}"
+
+neutron_l3_agent_extensions: "{{ l3_agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # VMware NSXV
