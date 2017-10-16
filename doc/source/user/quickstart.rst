@@ -698,4 +698,4 @@ default to ``kolla_internal_vip_address``.
 
 .. _Docker Hub Image Registry: https://hub.docker.com/u/kolla/
 .. _launchpad bug: https://bugs.launchpad.net/kolla/+filebug
-.. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html
+.. _Building Container Images: https://docs.openstack.org/kolla/latest/admin/image-building.html
