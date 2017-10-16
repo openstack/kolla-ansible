@@ -16,3 +16,18 @@
   register: result
   changed_when: false
   failed_when: result.stdout | regex_replace('(.*ssh_key.*)', '') | search(":")
+
+- name: Check if nscd is running
+  command: pgrep nscd
+  ignore_errors: yes
+  failed_when: false
+  changed_when: false
+  register: nscd_status
+
+- name: Fail if nscd is running
+  fail:
+    msg: |
+      Service nscd is running. This is known to cause issues with Docker's user namespaces in
+      Kolla. Please disable it before proceeding.
+  when:
+    - nscd_status.rc == 0
