@@ -352,5 +352,5 @@ Use the ``manila migration-complete shareID`` command to complete share
 migration process
 
 For more information about how to manage shares, see the
-`OpenStack User Guide
-<http://docs.openstack.org/user-guide/index.html>`__.
+`Manage shares
+<https://docs.openstack.org/manila/latest/user/create-and-manage-shares.html>`__.
