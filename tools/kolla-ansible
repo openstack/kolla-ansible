@@ -40,6 +40,7 @@ Options:
     --key -k <key_path>                Specify path to ansible vault keyfile
     --help, -h                         Show this usage information
     --tags, -t <tags>                  Only run plays and tasks tagged with these values
+    --skip-tags <tags>                 Only run plays and tasks whose tags do not match these values
     --extra, -e <ansible variables>    Set additional variables as key=value or YAML/JSON passed to ansible-playbook
     --passwords <passwords_path>       Specify path to the passwords file
     --limit <host>                     Specify host to run plays
@@ -76,6 +77,7 @@ cat <<EOF
 --configdir
 --key -k
 --help -h
+--skip-tags
 --tags -t
 --extra -e
 --passwords
@@ -103,7 +105,7 @@ EOF
 }
 
 SHORT_OPTS="hi:p:t:k:e:v"
-LONG_OPTS="help,inventory:,playbook:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev"
+LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
 
 eval set -- "$ARGS"
@@ -133,6 +135,11 @@ while [ "$#" -gt 0 ]; do
 
     (--playbook|-p)
             PLAYBOOK="$2"
+            shift 2
+            ;;
+
+    (--skip-tags)
+            EXTRA_OPTS="$EXTRA_OPTS --skip-tags $2"
             shift 2
             ;;
 
