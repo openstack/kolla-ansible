@@ -200,3 +200,24 @@ contents:
   rbd_user=nova
 
 .. note:: ``rbd_user`` might vary depending on your environment.
+
+Gnocchi
+-------
+
+Edit ``/etc/kolla/config/gnocchi/gnocchi.conf`` with the following content:
+
+::
+
+  [storage]
+  driver = ceph
+  ceph_username = gnocchi
+  ceph_keyring = /etc/ceph/ceph.client.gnocchi.keyring
+  ceph_conffile = /etc/ceph/ceph.conf
+
+Put ceph.conf and gnocchi client keyring file in
+``/etc/kolla/config/gnocchi``:
+
+::
+
+  $ ls /etc/kolla/config/gnocchi
+  ceph.client.gnocchi.keyring ceph.conf gnocchi.conf
