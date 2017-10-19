@@ -155,6 +155,18 @@ can also be exported at once by choosing *export everything* option.
 In the same tab (Settings - Objects) one can also import saved items by
 choosing *import* option.
 
+Custom log filtering
+====================
+
+In some scenarios it may be useful to apply custom filters to logs before
+forwarding them.  This may be useful to add additional tags to the messages
+or to modify the tags to conform to a log format that differs from the one
+defined by kolla-ansible.
+
+Configuration of custom fluentd filters is possible by placing filter
+configuration files in ``/etc/kolla/config/fluentd/filter/*.conf`` on the
+control host.
+
 Custom log forwarding
 =====================
 

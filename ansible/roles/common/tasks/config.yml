@@ -91,6 +91,23 @@
   notify:
     - Restart fluentd container
 
+- name: Find custom fluentd filter config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/filter"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_filters
+
+- name: Copying over custom fluentd filter config files
+  template:
+    src: "{{ item.path }}"
+    dest: "{{ node_config_directory }}/fluentd/filter/{{ item.path | basename }}"
+  register: fluentd_filter_custom
+  with_items: "{{ find_custom_fluentd_filter.files }}"
+  notify:
+    - Restart fluentd container
+
 - name: Copying over td-agent.conf
   template:
     src: "td-agent.conf.j2"
