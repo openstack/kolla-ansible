@@ -151,6 +151,23 @@ function sanity_check {
     fi
 }
 
+check_failure() {
+    # All docker container's status are created, restarting, running, removing,
+    # paused, exited and dead. Containers without running status are treated as
+    # failure. removing is added in docker 1.13, just ignore it now.
+    failed_containers=$(sudo docker ps -a --format "{{.Names}}" \
+        --filter status=created \
+        --filter status=restarting \
+        --filter status=paused \
+        --filter status=exited \
+        --filter status=dead)
+
+    if [[ -n "$failed_containers" ]]; then
+        exit 1;
+    fi
+}
+
+
 
 clone_repos
 setup_ansible
@@ -191,3 +208,5 @@ tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prech
 
 ara generate html /tmp/logs/playbook_reports/
 gzip --recursive --best /tmp/logs/playbook_reports/
+
+check_failure

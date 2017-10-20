@@ -3,6 +3,8 @@
   vars:
     kolla_inventory_path: "/etc/kolla/inventory"
     logs_dir: "/tmp/logs"
+    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
   tasks:
     - name: ensure /etc/kolla exists
       file:
@@ -14,12 +16,12 @@
     - set_fact:
         nodes: |
           {% for host in hostvars %}
-          {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
+          {{ host }} ansible_host={{ hostvars[host]['nodepool']['private_ipv4'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
           {% endfor %}
 
     - name: copy default ansible kolla-ansible inventory
       copy:
-        src: "{{ zuul.executor.work_root }}/{{ zuul.project.src_dir }}/ansible/inventory/all-in-one"
+        src: "{{ kolla_ansible_full_src_dir }}/ansible/inventory/all-in-one"
         dest: "{{ kolla_inventory_path }}"
       delegate_to: "primary"
 
@@ -30,12 +32,23 @@
         replace: "{{ nodes }}"
       delegate_to: "primary"
 
-    - name: generate global.yml file
+    # FIXME: in multi node env, api_interface may be different on each node.
+    - name: detect api_interface_name variable
       vars:
-        api_interface_name: "{{ hostvars['primary']['ansible_default_ipv4'].alias }}"
-        api_interface_address: "{{ hostvars['primary']['nodepool']['private_ipv4'] }}"
+        ansible_interface_name: "ansible_{{ item.replace('-', '_') }}"
+        api_interface_address: "{{ hostvars[inventory_hostname]['nodepool']['private_ipv4'] }}"
+      set_fact:
+        api_interface_name: "{{ item }}"
+        api_interface_address: "{{ api_interface_address }}"
+      when:
+        - hostvars[inventory_hostname][ansible_interface_name]['ipv4'] is defined
+        - hostvars[inventory_hostname][ansible_interface_name]['ipv4']['address'] == api_interface_address
+      with_items: "{{ ansible_interfaces }}"
+      delegate_to: "primary"
+
+    - name: generate global.yml file
       template:
-        src: "{{ zuul.executor.work_root }}/{{ zuul.project.src_dir }}/tests/templates/globals-default.j2"
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/globals-default.j2"
         dest: /etc/kolla/globals.yml
       delegate_to: "primary"
 
@@ -49,23 +62,23 @@
 
     - name: generate config overrides
       template:
-        src: "{{ zuul.executor.work_root }}/{{ zuul.project.src_dir }}/tests/templates/nova-compute-overrides.j2"
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/nova-compute-overrides.j2"
         dest: /etc/kolla/config/nova/nova-compute.conf
       delegate_to: "primary"
 
     - name: copy passwords.yml file
       copy:
-        src: "{{ zuul.executor.work_root }}/{{ zuul.project.src_dir }}/etc/kolla/passwords.yml"
+        src: "{{ kolla_ansible_full_src_dir }}/etc/kolla/passwords.yml"
         dest: /etc/kolla/passwords.yml
       delegate_to: "primary"
 
     - name: install kolla-ansible requirements
       pip:
-        requirements: "{{ ansible_env.HOME }}/{{ zuul.project.src_dir }}/requirements.txt"
+        requirements: "{{ ansible_env.HOME }}/{{ kolla_ansible_src_dir }}/requirements.txt"
       become: true
 
     - name: generate passwords
-      shell: "{{ zuul.project.src_dir }}/tools/generate_passwords.py"
+      shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
       delegate_to: "primary"
 
     - shell:
@@ -78,6 +91,6 @@
 
           tools/setup_gate.sh
         executable: /bin/bash
-        chdir: "{{ zuul.project.src_dir }}"
+        chdir: "{{ kolla_ansible_src_dir }}"
       delegate_to: "primary"
       environment: '{{ zuul | zuul_legacy_vars }}'
