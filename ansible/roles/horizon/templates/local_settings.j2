@@ -89,6 +89,22 @@ OPENSTACK_API_VERSIONS = {
 # for login.
 OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = {{ horizon_keystone_multidomain | bool }}
 
+# Set this to True if you want available domains displayed as a dropdown menu
+# on the login screen. It is strongly advised NOT to enable this for public
+# clouds, as advertising enabled domains to unauthenticated customers
+# irresponsibly exposes private information. This should only be used for
+# private clouds where the dashboard sits behind a corporate firewall.
+OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN = {{ 'True' if horizon_keystone_domain_choices|length > 1 else 'False' }}
+
+# If OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN is enabled, this option can be used to
+# set the available domains to choose from. This is a list of pairs whose first
+# value is the domain name and the second is the display name.
+OPENSTACK_KEYSTONE_DOMAIN_CHOICES = (
+{% for key, value in horizon_keystone_domain_choices.items() %}
+    ('{{ key }}', '{{ value }}'),
+{% endfor %}
+)
+
 # Overrides the default domain used when running on single-domain model
 # with Keystone V3. All entities will be created in the default domain.
 # NOTE: This value must be the ID of the default domain, NOT the name.
