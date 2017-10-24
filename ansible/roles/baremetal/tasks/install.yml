@@ -7,7 +7,9 @@
 # TODO(inc0): Gates don't seem to have ufw executable, check for it instead of ignore errors
 - name: Set firewall default policy
   become: True
-  ufw: state=disabled policy=allow
+  ufw:
+    state: disabled
+    policy: allow
   when: ansible_os_family == 'Debian'
   ignore_errors: yes
 
@@ -30,40 +32,53 @@
     - firewalld_check.rc == 0
 
 - name: Install apt packages
-  package: name={{item}} state=present
+  package:
+    name: "{{ item }}"
+    state: present
   become: True
   with_items: "{{ debian_pkg_install }}"
   when: ansible_os_family == 'Debian'
 
 - name: Install deltarpm packages
-  package: name={{item}} state=installed
+  package:
+    name: "{{ item }}"
+    state: installed
   become: True
   with_items:
     - deltarpm
   when: ansible_os_family == 'RedHat'
 
 - name: Install yum packages
-  package: name={{item}} state=present
+  package:
+    name: "{{ item }}"
+    state: present
   become: True
   with_items: "{{ redhat_pkg_install }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Install pip
-  easy_install: name=pip
+  easy_install:
+    name: pip
   become: True
 
 - name: Install docker SDK for python
-  pip: name=docker state=latest
+  pip:
+    name: docker
+    state: latest
   become: True
 
 - name: Remove packages
-  package: name={{item}} state=absent
+  package:
+    name: "{{ item }}"
+    state: absent
   with_items: "{{ ubuntu_pkg_removals }}"
   become: True
   when: ansible_distribution|lower == "ubuntu"
 
 - name: Remove packages
-  package: name={{item}} state=absent
+  package:
+    name: "{{ item }}"
+    state: absent
   with_items: "{{ redhat_pkg_removals }}"
   become: True
   when: ansible_os_family == 'RedHat'

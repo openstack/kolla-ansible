@@ -1,16 +1,16 @@
 ---
 - name: Ensure docker service directory exists
   file:
-    path=/etc/systemd/system/docker.service.d
-    state=directory
-    recurse=yes
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    recurse: yes
   become: True
 
 - name: Configure docker service
   become: True
   template:
-    src=docker_systemd_service.j2
-    dest=/etc/systemd/system/docker.service.d/kolla.conf
+    src: docker_systemd_service.j2
+    dest: /etc/systemd/system/docker.service.d/kolla.conf
   register: docker_configured
 
 - name: Reload docker service file
@@ -18,7 +18,8 @@
   command: systemctl daemon-reload
 
 - name: Get stat of libvirtd apparmor profile
-  stat: path=/etc/apparmor.d/usr.sbin.libvirtd
+  stat:
+    path: /etc/apparmor.d/usr.sbin.libvirtd
   register: apparmor_libvirtd_profile
   when: ansible_distribution == "Ubuntu"
 
