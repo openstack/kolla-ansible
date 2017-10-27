@@ -223,8 +223,8 @@ Verify Operation.
     +--------------------------------------+---------------+----------------+------+-------------------------------------------+
 
 For more information about how to manage volumes, see the
-`OpenStack User Guide
-<https://docs.openstack.org/user-guide/index.html>`__.
+`Manage volumes
+<https://docs.openstack.org/cinder/latest/cli/cli-manage-volumes.html>`__.
 
 For more information about how HNAS driver works, see
 `Hitachi NAS Platform iSCSI and NFS drives for OpenStack
