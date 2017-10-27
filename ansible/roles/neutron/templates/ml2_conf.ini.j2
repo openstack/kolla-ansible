@@ -44,11 +44,9 @@ flat_networks = *
 flat_networks = {% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
-{% if not enable_hyperv | bool %}
 [ml2_type_vxlan]
 vni_ranges = 1:1000
 vxlan_group = 239.1.1.1
-{% endif %}
 
 [securitygroup]
 {% if neutron_plugin_agent == "openvswitch" or neutron_plugin_agent == "opendaylight" %}
@@ -58,12 +56,10 @@ firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 {% endif %}
 
 {% if neutron_plugin_agent == "openvswitch" or neutron_plugin_agent == "opendaylight" %}
-{% if not enable_hyperv | bool %}
 [agent]
 tunnel_types = vxlan
 l2_population = true
 arp_responder = true
-{% endif %}
 
 {% if enable_neutron_dvr | bool %}
 enable_distributed_routing = True
@@ -86,10 +82,8 @@ integration_bridge = br-int-{{ item }}
 [linux_bridge]
 physical_interface_mappings = physnet1:{{ neutron_external_interface }}
 
-{% if not enable_hyperv | bool %}
 [vxlan]
 l2_population = true
-{% endif %}
 {% endif %}
 
 {% if inventory_hostname in groups["network"] or inventory_hostname in groups["compute"] %}
