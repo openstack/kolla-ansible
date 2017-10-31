@@ -1,7 +1,7 @@
 ---
 - name: Running Ceilometer bootstrap container
   vars:
-    ceilometer_api: "{{ ceilometer_services['ceilometer-api'] }}"
+    ceilometer_notification: "{{ ceilometer_services['ceilometer-notification'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -10,11 +10,11 @@
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       CEILOMETER_DATABASE_TYPE: "gnocchi"
-    image: "{{ ceilometer_api.image }}"
+    image: "{{ ceilometer_notification.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_ceilometer"
     restart_policy: "never"
-    volumes: "{{ ceilometer_api.volumes }}"
+    volumes: "{{ ceilometer_notification.volumes }}"
   run_once: True
-  delegate_to: "{{ groups[ceilometer_api.group][0] }}"
+  delegate_to: "{{ groups[ceilometer_notification.group][0] }}"
