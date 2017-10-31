@@ -1,5 +1,6 @@
 ---
 - name: Setting sysctl values
+  become: true
   sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
   with_items:
     - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
@@ -11,19 +12,24 @@
     - inventory_hostname in groups['compute']
 
 - name: Ensuring config directories exist
+  become: true
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ nova_services }}"
 
 - name: Copying over config.json files for services
+  become: true
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0770"
   register: config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -33,6 +39,7 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying over nova.conf
+  become: true
   vars:
     services_require_nova_conf:
       - placement-api
@@ -54,6 +61,7 @@
       - "{{ node_custom_config }}/nova/{{ item.key }}.conf"
       - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/nova.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/nova.conf"
+    mode: "0660"
   register: nova_confs
   when:
     - inventory_hostname in groups[item.value.group]
@@ -64,11 +72,13 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying over libvirt configuration
+  become: true
   vars:
     service: "{{ nova_services['nova-libvirt'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-libvirt/{{ item.dest }}"
+    mode: "0660"
   register: nova_libvirt_confs
   when:
     - inventory_hostname in groups[service.group]
@@ -80,6 +90,7 @@
     - Restart nova-libvirt container
 
 - name: Copying over placement-api wsgi configuration
+  become: true
   vars:
     service: "{{ nova_services['placement-api'] }}"
   template:
@@ -93,11 +104,13 @@
     - Restart placement-api container
 
 - name: Copying files for nova-ssh
+  become: true
   vars:
     service: "{{ nova_services['nova-ssh'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-ssh/{{ item.dest }}"
+    mode: "0660"
   register: nova_ssh_confs
   when:
     - inventory_hostname in groups[service.group]
@@ -131,6 +144,7 @@
   register: nova_policy
 
 - name: Copying over existing policy.json
+  become: true
   vars:
     services_require_policy_json:
       - placement-api
@@ -158,6 +172,7 @@
 
 # check whether the containers parameter is changed. If yes, trigger the handler
 - name: Check nova containers
+  become: true
   kolla_docker:
     action: "compare_container"
     common_options: "{{ docker_common_options }}"
@@ -175,3 +190,4 @@
   with_dict: "{{ nova_services }}"
   notify:
     - "Restart {{ item.key }} container"
+

@@ -3,11 +3,24 @@
   file:
     path: "{{ node_config_directory }}/glance-api"
     state: "directory"
+    mode: "0770"
   when: inventory_hostname in groups['glance-api']
 
 - name: Copy over ceph files
   copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/glance-api/"
+    mode: "0660"
   with_fileglob:
     - "{{ node_custom_config }}/glance/ceph*"
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  when: inventory_hostname in groups['glance-api']
+  with_items:
+    - "glance-api"
