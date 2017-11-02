@@ -5,12 +5,14 @@
     {% endif %}
   ],
   "users": [
-    {"name": "{{ role_rabbitmq_user }}", "password": "{{ role_rabbitmq_password }}", "tags": "administrator"}{% if project_name == 'outward_rabbitmq' %},
+    {"name": "{{ role_rabbitmq_user }}", "password": "{{ role_rabbitmq_password }}", "tags": "administrator"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
+    {"name": "{{ role_rabbitmq_monitoring_user }}", "password": "{{ role_rabbitmq_monitoring_password }}", "tags": "monitoring"}{% endif %}{% if project_name == 'outward_rabbitmq' %},
     {"name": "{{ murano_agent_rabbitmq_user }}", "password": "{{ murano_agent_rabbitmq_password }}", "tags": "management"}
     {% endif %}
   ],
   "permissions": [
-    {"user": "{{ role_rabbitmq_user }}", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}{% if project_name == 'outward_rabbitmq' %},
+    {"user": "{{ role_rabbitmq_user }}", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
+    {"user": "{{ role_rabbitmq_monitoring_user }}", "vhost": "/", "configure": "^$", "write": "^$", "read": ".*"}{% endif %}{% if project_name == 'outward_rabbitmq' %},
     {"user": "{{ murano_agent_rabbitmq_user }}", "vhost": "{{ murano_agent_rabbitmq_vhost }}", "configure": ".*", "write": ".*", "read": ".*"}
     {% endif %}
   ],
