@@ -19,8 +19,7 @@ function setup_site(){
 
 function get_external_ip(){
     local router_id=`neutron router-show $1 | awk '/ id /{print $4}'`
-    echo `neutron port-list -c fixed_ips -c device_id -c device_owner|grep router_gateway | awk
-'/'.$router_id.'/{print $5}' | sed 's/["}]//g'`
+    echo `neutron router-list | grep '$router_id' | awk -F '"' '{print $16}'`
 }
 
 function clean_site(){
@@ -42,11 +41,11 @@ function setup(){
     WEST_IP=$(get_external_ip router_west)
     setup_site east $EAST_SUBNET
     EAST_IP=$(get_external_ip router_east)
-    neutron ipsec-site-connection-create --name conn_east --vpnservice-id vpn_east --ikepolicy-id
-ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $WEST_IP --peer-id $WEST_IP --peer-cidr
+    neutron ipsec-site-connection-create --name conn_east --vpnservice-id vpn_east --ikepolicy-id \
+ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $WEST_IP --peer-id $WEST_IP --peer-cidr \
 $WEST_SUBNET --psk secret
-    neutron ipsec-site-connection-create --name conn_west --vpnservice-id vpn_west --ikepolicy-id
-ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $EAST_IP --peer-id $EAST_IP --peer-cidr
+    neutron ipsec-site-connection-create --name conn_west --vpnservice-id vpn_west --ikepolicy-id \
+ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $EAST_IP --peer-id $EAST_IP --peer-cidr \
 $EAST_SUBNET --psk secret
 }
 
