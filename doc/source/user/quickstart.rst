@@ -170,14 +170,15 @@ requirements it can be installed by:
 
 .. WARNING::
 
-   Kolla uses PBR in its implementation. PBR provides version information
-   to Kolla about the package in use. This information is later used when
-   building images to specify the Docker tag used in the image built. When
-   installing the Kolla package via pip, PBR will always use the PBR version
-   information. When obtaining a copy of the software via git, PBR will use
-   the git version information, but **ONLY** if Kolla has not been pip
-   installed via the pip package manager. This is why there is an operator
-   workflow and a developer workflow.
+   Kolla uses `Python Build Reasonableness (PBR) <https://docs.openstack.org/pbr/latest/>`_
+   in its implementation. ``PBR`` provides version information to Kolla about
+   the package in use. This information is later used when building images to
+   specify the Docker tag used in the image built. When installing the Kolla
+   package via pip, ``PBR`` will always use the ``PBR`` version information.
+   When obtaining a copy of the software via git, ``PBR`` will use the git
+   version information, but **ONLY** if Kolla has not been pip installed via
+   the pip package manager. This is why there is an operator workflow and a
+   developer workflow.
 
 The following dependencies can be installed by bootstraping the host machine
 as described in the `Automatic host bootstrap`_ section. For manual
