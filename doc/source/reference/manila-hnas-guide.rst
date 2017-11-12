@@ -324,9 +324,9 @@ Modify the file ``/etc/kolla/config/manila-share.conf`` and add the contents:
     hitachi_hnas_file_system_name = FS-Manila2
 
 For more information about how to manage shares, see the
-`OpenStack User Guide
-<http://docs.openstack.org/user-guide/index.html>`__.
+`Manage shares
+<https://docs.openstack.org/manila/latest/user/create-and-manage-shares.html>`__.
 
 For more information about how HNAS driver works, see
 `Hitachi NAS Platform File Services Driver for OpenStack
-<https://docs.openstack.org/manila/latest/devref/hitachi_hnas_driver.html>`__.
+<https://docs.openstack.org/manila/latest/admin/hitachi_hnas_driver.html>`__.
