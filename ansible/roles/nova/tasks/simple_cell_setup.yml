@@ -4,7 +4,7 @@
     docker exec nova_api nova-manage cell_v2 map_cell0
   register: map_cell0
   changed_when:
-    - map_cell0 | success
+    - map_cell0 is success
     - '"Cell0 is already setup" not in map_cell0.stdout'
   failed_when:
     - map_cell0.rc != 0
@@ -19,7 +19,7 @@
     docker exec nova_api nova-manage cell_v2 create_cell
   register: base_cell
   changed_when:
-    - base_cell | success
+    - base_cell is success
   failed_when:
     - base_cell.rc != 0
     - '"already exists" not in base_cell.stdout'
@@ -45,7 +45,7 @@
   retries: 20
   delay: 10
   until:
-    - nova_compute_services | success
+    - nova_compute_services is success
     - nova_compute_services.stdout | from_json | length != 0
 
 - name: Discovering nova hosts
