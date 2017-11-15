@@ -34,11 +34,6 @@ EOF
     echo "RUN echo $(base64 -w0 ${PIP_CONF}) | base64 -d > /etc/pip.conf" | sudo tee /etc/kolla/header
     rm ${PIP_CONF}
 
-    # Get base distro and install type from workspace. The full path looks like
-    #   /home/jenkins/workspace/gate-kolla-ansible-dsvm-deploy-centos-source-centos-7-nv
-
-    # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
-
 GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
 
 # TODO(jeffrey4l): this doesn't work with zuulv3
@@ -69,7 +64,7 @@ EOF
 apt_sources_list = /etc/kolla/sources.list
 EOF
         sudo cp /etc/apt/sources.list /etc/kolla/sources.list
-        sudo cat /etc/apt/sources.list.available.d/ubuntu-cloud-archive.list | sudo tee -a /etc/kolla/sources.list
+        sudo cat /etc/apt/sources.list.available.d/ubuntu-cloud-archive-pike.list | sudo tee -a /etc/kolla/sources.list
         # Append non-infra provided repos to list
         cat << EOF | sudo tee -a /etc/kolla/sources.list
 deb http://nyc2.mirrors.digitalocean.com/mariadb/repo/10.0/ubuntu xenial main
@@ -108,25 +103,13 @@ function setup_node {
 }
 
 function prepare_images {
-    sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
-
-    # NOTE(Jeffrey4l): Zuul adds all changes depend on to ZUUL_CHANGES
-    # variable. if find "openstack/kolla:" string, it means this patch depends
-    # on one of Kolla patch. Then build image by using Kolla's code.
-    # Otherwise, pull images from tarballs.openstack.org site.
-    # NOTE(inc0): Publisher variable is set when Kolla runs publisher jobs.
-    # When that happens we don't build images, we download them from temp location.
-    if echo "$ZUUL_CHANGES" | grep -i "openstack/kolla:" && ! [[ $PUBLISHER ]]; then
-        pushd "${GIT_PROJECT_DIR}/kolla"
-        sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
-        popd
-    else
-        BRANCH=$(echo "$ZUUL_BRANCH" | cut -d/ -f2)
-        filename=${BASE_DISTRO}-${INSTALL_TYPE}-registry-${BRANCH}.tar.gz
-        wget -q -c -O "/tmp/$filename" \
-            "${NODEPOOL_TARBALLS_MIRROR}/kolla/images/${TMP_REGISTRY}${filename}"
-        sudo tar xzf "/tmp/$filename" -C /opt/kolla_registry
+    if [[ "${BUILD_IMAGE}" == "False" ]]; then
+        return
     fi
+    sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
+    pushd "${KOLLA_SRC_DIR}"
+    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    popd
 }
 
 function sanity_check {
