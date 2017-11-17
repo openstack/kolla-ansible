@@ -106,14 +106,16 @@
 
 - name: Copying over fluentd filter config files
   template:
-    src: "conf/filter/{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/filter/{{ item }}.conf"
+    src: "conf/filter/{{ item.src }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/filter/{{ item.dest }}.conf"
     mode: "0660"
   become: true
   register: fluentd_filter
   with_items:
-    - "00-record_transformer"
-    - "01-rewrite"
+    - src: 00-record_transformer
+      dest: 00-record_transformer
+    - src: "{{ '01-rewrite-0.14' if kolla_base_distro in ['debian', 'ubuntu'] else '01-rewrite-0.12' }}"
+      dest: 01-rewrite
   when: enable_fluentd | bool
   notify:
     - Restart fluentd container
