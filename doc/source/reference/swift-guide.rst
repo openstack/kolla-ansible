@@ -168,25 +168,36 @@ A very basic smoke test:
 
 ::
 
-  $ swift stat
-                            Account: AUTH_4c19d363b9cf432a80e34f06b1fa5749
-                       Containers: 1
-                          Objects: 0
-                            Bytes: 0
-  Containers in policy "policy-0": 1
-     Objects in policy "policy-0": 0
-       Bytes in policy "policy-0": 0
-      X-Account-Project-Domain-Id: default
-                      X-Timestamp: 1440168098.28319
-                       X-Trans-Id: txf5a62b7d7fc541f087703-0055d73be7
-                     Content-Type: text/plain; charset=utf-8
-                    Accept-Ranges: bytes
+  $ openstack container create mycontainer
+  +---------------------------------------+--------------+------------------------------------+
+  | account                               | container    | x-trans-id                         |
+  +---------------------------------------+--------------+------------------------------------+
+  | AUTH_7b938156dba44de7891f311c751f91d8 | mycontainer  | txb7f05fa81f244117ac1b7-005a0e7803 |
+  +---------------------------------------+--------------+------------------------------------+
 
-  $ swift upload mycontainer README.rst
-  README.md
+  $ openstack object create mycontainer README.rst
+  +---------------+--------------+----------------------------------+
+  | object        | container    | etag                             |
+  +---------------+--------------+----------------------------------+
+  | README.rst    | mycontainer  | 2634ecee0b9a52ba403a503cc7d8e988 |
+  +---------------+--------------+----------------------------------+
 
-  $ swift list
-  mycontainer
+  $ openstack container show mycontainer
+  +--------------+---------------------------------------+
+  | Field        | Value                                 |
+  +--------------+---------------------------------------+
+  | account      | AUTH_7b938156dba44de7891f311c751f91d8 |
+  | bytes_used   | 6684                                  |
+  | container    | mycontainer                           |
+  | object_count | 1                                     |
+  +--------------+---------------------------------------+
 
-  $ swift download mycontainer README.md
-  README.md [auth 0.248s, headers 0.939s, total 0.939s, 0.006 MB/s]
+  $ openstack object store account show
+  +------------+---------------------------------------+
+  | Field      | Value                                 |
+  +------------+---------------------------------------+
+  | Account    | AUTH_7b938156dba44de7891f311c751f91d8 |
+  | Bytes      | 6684                                  |
+  | Containers | 1                                     |
+  | Objects    | 1                                     |
+  +------------+---------------------------------------+
