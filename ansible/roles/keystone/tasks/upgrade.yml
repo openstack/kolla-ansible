@@ -1,7 +1,42 @@
 ---
 - include: config.yml
 
-- include: bootstrap_service.yml
+- name: Enable log_bin_trust_function_creators function
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 1
+  run_once: True
+  when: inventory_hostname == groups['keystone'][0]
+
+- name: Init keystone database upgrade
+  command: /bin/true
+  notify: Init keystone database upgrade
+  when: inventory_hostname == groups['keystone'][0]
+
+- name: Finish keystone database upgrade
+  command: /bin/true
+  notify: Finish keystone database upgrade
+  when: inventory_hostname == groups['keystone'][-1]
 
 - name: Flush handlers
   meta: flush_handlers
+
+- name: Disable log_bin_trust_function_creators function
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 0
+  run_once: True
+  when: inventory_hostname == groups['keystone'][-1]
+
