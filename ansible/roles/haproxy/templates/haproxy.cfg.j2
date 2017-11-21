@@ -160,6 +160,12 @@ listen nova_spicehtml5proxy
 {% for host in groups['nova-spicehtml5proxy'] %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ nova_spicehtml5proxy_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
+{% elif nova_console == 'rdp' %}
+listen nova_rdp
+  bind {{ kolla_internal_vip_address }}:{{ rdp_port }}
+{% for host in groups['hyperv'] %}
+  server {{ hostvars[host]['ansible_hostname'] }} {% for ip in hostvars[host]['ansible_ip_addresses'] %}{% if host == ip %}{{ ip }}{% endif %}{% endfor %}:{{ rdp_port }} check inter 2000 rise 2 fall 5
+{% endfor %}
 {% endif %}
 
 {% if enable_nova_serialconsole_proxy | bool %}

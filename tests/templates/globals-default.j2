@@ -1,9 +1,8 @@
 ---
-disable_selinux: "yes"
-kolla_base_distro: "{{ base }}"
-kolla_install_type: "{{ type }}"
+kolla_base_distro: "{{ base_distro }}"
+kolla_install_type: "{{ install_type }}"
 
-{% if is_multinode %}
+{% if hostvars|length > 2 %}
 enable_haproxy: "no"
 kolla_internal_vip_address: "{{ api_interface_address }}"
 {% else %}
@@ -21,7 +20,9 @@ enable_heat: "no"
 openstack_logging_debug: "True"
 openstack_service_workers: "1"
 
-{% if 'ceph' in action %}
+{% if 'ceph' in zuul.job %}
 enable_ceph: "yes"
 enable_cinder: "yes"
 {% endif %}
+
+disable_selinux: "yes"
