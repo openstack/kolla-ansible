@@ -76,13 +76,18 @@ contents:
     volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
     volume_iscsi_backend = hnas_iscsi_backend
     hnas_iscsi_username = supervisor
-    hnas_iscsi_password = supervisor
     hnas_iscsi_mgmt_ip0 = <hnas_ip>
     hnas_chap_enabled = True
 
     hnas_iscsi_svc0_volume_type = iscsi_gold
     hnas_iscsi_svc0_hdp = FS-Baremetal1
     hnas_iscsi_svc0_iscsi_ip = <svc0_ip>
+
+Then set password for the backend in ``/etc/kolla/passwords.yml``:
+
+.. code-block:: console
+
+    hnas_iscsi_password: supervisor
 
 NFS backend
 -----------
@@ -105,12 +110,17 @@ add the contents:
     volume_driver = cinder.volume.drivers.hitachi.hnas_nfs.HNASNFSDriver
     volume_nfs_backend = hnas_nfs_backend
     hnas_nfs_username = supervisor
-    hnas_nfs_password = supervisor
     hnas_nfs_mgmt_ip0 = <hnas_ip>
     hnas_chap_enabled = True
 
     hnas_nfs_svc0_volume_type = nfs_gold
     hnas_nfs_svc0_hdp = <svc0_ip>/<export_name>
+
+Then set password for the backend in ``/etc/kolla/passwords.yml``:
+
+.. code-block:: console
+
+    hnas_nfs_password: supervisor
 
 Configuration on Kolla deployment
 ---------------------------------
