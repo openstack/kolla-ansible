@@ -64,16 +64,6 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
-  nuage-plugin:
-    container_name: "neutron_server"
-    image: "{{ neutron_server_image_full }}"
-    enabled: "{{ neutron_plugin_agent == "nuage" }}"
-    group: "neutron-server"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-server'] }}"
-    volumes:
-      - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
   neutron-dhcp-agent:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
@@ -239,8 +229,6 @@ extension_drivers:
     enabled: "{{ enable_designate | bool }}"
   - name: "sfc"
     enabled: "{{ enable_neutron_sfc | bool }}"
-  - name: "{{nuage_extension_drivers}}"
-    enabled: "{{ enable_nuage | bool }}"
 
 neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto', true)|list }}"
 
@@ -270,8 +258,6 @@ service_plugins:
     enabled: "{{ enable_neutron_vpnaas | bool }}"
   - name: "{{ opendaylight_l3_service_plugin }}"
     enabled: "{{ enable_opendaylight_l3 | bool and enable_opendaylight | bool }}"
-  - name: "{{ nuage_service_plugins }}"
-    enabled: "{{ enable_nuage | bool }}"
 
 neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
 

@@ -136,9 +136,9 @@ tunnel_interface: "{{ network_interface }}"
 bifrost_network_interface: "{{ network_interface }}"
 dns_interface: "{{ network_interface }}"
 tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] }}"
-enable_nuage: "yes"
+
 # Valid options are [ openvswitch, linuxbridge, vmware_nsxv, vmware_dvs, opendaylight ]
-neutron_plugin_agent: "{{ 'nuage' if enable_nuage | bool else 'openvswitch' }}"
+neutron_plugin_agent: "openvswitch"
 
 # The default ports used by each service.
 # The list should be in alphabetical order
@@ -575,8 +575,7 @@ designate_backend_external_bind9_nameservers: ""
 neutron_bgp_router_id: "1.1.1.1"
 neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br-ex' }}"
 # Comma-separated type of enabled ml2 type drivers
-# For Nuage it type_drivers is vxlan
-neutron_type_drivers: "vxlan"
+neutron_type_drivers: "flat,vlan,vxlan"
 # Comma-separated types of tenant networks (should be listed in 'neutron_type_drivers')
 # NOTE: for ironic this list should also contain 'flat'
 neutron_tenant_network_types: "vxlan"
@@ -683,19 +682,3 @@ enable_opendaylight_legacy_netvirt_conntrack: "no"
 opendaylight_port_binding_type: "pseudo-agentdb-binding"
 opendaylight_features: "odl-mdsal-apidocs,odl-netvirt-openstack"
 opendaylight_allowed_network_types: '"flat", "vlan", "vxlan"'
-
-######################
-# Nuage
-######################
-nuage_mechanism_driver: "nuage"
-nuage_service_plugin: "NuagePortAttributes,NuageAPI,NuageL3"
-nuage_extension_drivers: "nuage_subnet, nuage_port, port_security"
-nuage_integration_bridge: "alubr0"
-nuage_default_net_partition: "Nuage_Partition1"
-nuage_server_ip_port: ":8443"
-nuage_server_auth: "csproot:csproot"
-nuage_organization: "csp"
-nuage_auth_resource: "/me"
-nuage_serverssl: True
-nuage_base_uri: "/nuage/api/v5_0"
-nuage_cms_id: ""
