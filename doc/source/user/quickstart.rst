@@ -394,7 +394,7 @@ deploying multinode, a registry is strongly recommended to serve as a single
 source of images. Reference the
 `Multinode Deployment of Kolla <https://docs.openstack.org/project-deploy-guide/kolla-ansible/pike/multinode.html>`_
 for more information on using a local Docker registry.
-Otherwise, the Docker Hub Image Registry contains all
+Otherwise, the `Docker Hub Image Registry`_ contains all
 images from each of Kolla’s major releases. The latest release tag is 5.0.0 for
 Pike.
 
