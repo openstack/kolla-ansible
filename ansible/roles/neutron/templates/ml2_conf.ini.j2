@@ -14,12 +14,16 @@ mechanism_drivers = openvswitch,l2population
 mechanism_drivers = linuxbridge,l2population
 {% elif neutron_plugin_agent == "opendaylight" %}
 mechanism_drivers = {{ opendaylight_mechanism_driver }}
+{% elif neutron_plugin_agent == "nuage" %}
+mechanism_drivers = {{ nuage_mechanism_driver }}
 {% endif %}
 
 {% if neutron_extension_drivers %}
 extension_drivers = {{ neutron_extension_drivers|map(attribute='name')|join(',') }}
 {% elif enable_hyperv | bool %}
 extension_drivers = port_security
+{% elif enable_nuage %}
+extension_drivers = {{ nuage_extension_drivers }}
 {% endif %}
 
 {% if enable_opendaylight | bool %}

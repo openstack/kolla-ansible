@@ -141,6 +141,22 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over nuage_plugin.ini
+  become: true
+  vars:
+    service_name: "nuage-plugin"
+    nuage_plugin: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/nuage-plugin.ini.j2"
+    dest: "{{ node_config_directory }}/{{ service_name }}/nuage-plugin.ini
+    mode: "0660"
+  register: nuage_plugin_ini
+  when:
+    - nuage_plugin.enabled | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
 - name: Copying over dhcp_agent.ini
   become: true
   vars:

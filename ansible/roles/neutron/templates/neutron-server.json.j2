@@ -1,5 +1,5 @@
 {
-    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'opendaylight'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_lbaas.conf --config-file /etc/neutron/neutron_vpnaas.conf {% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %} --config-file /etc/neutron/fwaas_driver.ini",
+    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent == "nuage" %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/plugins/nuage/plugin.ini {% elif neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'opendaylight'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_lbaas.conf --config-file /etc/neutron/neutron_vpnaas.conf {% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %} #--config-file /etc/neutron/fwaas_driver.ini", # add nuage
     "config_files": [
         {
             "source": "{{ container_config_directory }}/neutron.conf",
@@ -28,6 +28,12 @@
         {
             "source": "{{ container_config_directory }}/ml2_conf.ini",
             "dest": "/etc/neutron/plugins/ml2/ml2_conf.ini",
+            "owner": "neutron",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/nauge-plugin.ini",
+            "dest": "/etc/neutron/plugins/nuage/plugin.ini",
             "owner": "neutron",
             "perm": "0600"
         },
