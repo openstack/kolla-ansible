@@ -110,4 +110,5 @@ Verify container.
   4 packets transmitted, 4 packets received, 0% packet loss
   round-trip min/avg/max = 95.884/96.376/96.721 ms
 
-[1] https://github.com/openstack/zun
+For more information about how zun works, see
+`zun, OpenStack Container service <https://docs.openstack.org/zun/latest/>`__.

@@ -59,5 +59,6 @@ The created network is also available from OpenStack CLI:
 
     openstack network list
 
-
-[1] https://github.com/openstack/kuryr
+For more information about how kuryr works, see
+`kuryr, OpenStack Containers Networking
+<https://docs.openstack.org/kuryr/latest/>`__.
