@@ -77,7 +77,7 @@
   become: True
   when: ansible_os_family == 'Debian'
 
-- name: Install ubuntu ca certs
+- name: Install ca certs
   package:
     name: "{{ item }}"
     state: latest
@@ -105,13 +105,11 @@
 
 - name: Install docker apt gpg key
   apt_key:
-    url: "{{ docker_apt_url }}/gpg"
+    url: "{{ docker_apt_url }}/{{ docker_apt_key_file }}"
     id: "{{ docker_apt_key_id }}"
     state: present
   become: True
-  when:
-    - ansible_os_family == 'Debian'
-    - ansible_distribution == 'Ubuntu'
+  when: ansible_os_family == 'Debian'
 
 - name: Ensure yum repos directory exists
   file:

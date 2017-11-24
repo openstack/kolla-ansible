@@ -6,6 +6,16 @@
     recurse: yes
   become: True
 
+- name: Check dockerd exists
+  stat: path=/usr/bin/dockerd
+  register: dockerd_exists
+
+- name: Setting docker daemon name
+  set_fact:
+    docker_binary_name: "dockerd"
+  when:
+    dockerd_exists.stat.exists == True
+
 - name: Configure docker service
   become: True
   template:
