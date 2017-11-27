@@ -16,6 +16,19 @@
     - container_facts['cinder_api'] is not defined
     - inventory_hostname in groups['cinder-api']
 
+- name: Checking at least one valid backend is enabled for Cinder
+  run_once: True
+  local_action: fail msg="Please enable at least one backend when enabling Cinder"
+  when:
+    - not enable_cinder_backend_hnas_iscsi | bool
+    - not enable_cinder_backend_hnas_nfs | bool
+    - not enable_cinder_backend_iscsi | bool
+    - not enable_cinder_backend_lvm | bool
+    - not enable_cinder_backend_nfs | bool
+    - not cinder_backend_ceph | bool
+    - not cinder_backend_vmwarevc_vmdk | bool
+    - not enable_cinder_backend_zfssa_iscsi | bool
+
 - name: Checking LVM volume group exists for Cinder
   command: "vgs {{ cinder_volume_group }}"
   register: result
