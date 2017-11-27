@@ -659,12 +659,10 @@ with a glance image and neutron networks.
     . /etc/kolla/admin-openrc.sh
 
     #centOS
-    cd /usr/share/kolla-ansible
-    ./init-runonce
+    /usr/share/kolla-ansible/init-runonce
 
     #ubuntu
-    cd /usr/local/share/kolla-ansible
-    ./init-runonce
+    /usr/local/share/kolla-ansible/init-runonce
 
 .. note::
 
