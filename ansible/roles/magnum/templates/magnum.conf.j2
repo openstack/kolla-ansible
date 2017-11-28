@@ -5,7 +5,7 @@ log_dir = /var/log/kolla/magnum
 
 host = {{ api_interface_address }}
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 {% if service_name == 'magnum-api' %}
 [api]
@@ -85,6 +85,7 @@ cert_manager_type = x509keypair
 {% endif %}
 
 [oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 {% if enable_ceilometer | bool %}
 driver = messaging
 topics = 'notifications'

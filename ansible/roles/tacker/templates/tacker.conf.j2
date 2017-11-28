@@ -2,7 +2,7 @@
 debug = {{ tacker_logging_debug }}
 log_dir = /var/log/kolla/tacker
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 bind_host = {{ api_interface_address }}
 bind_port = {{ tacker_server_port }}
@@ -55,6 +55,7 @@ port = {{ tacker_server_port }}
 
 
 [oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 {% if enable_ceilometer | bool %}
 driver = messagingv2
 topics = notifications

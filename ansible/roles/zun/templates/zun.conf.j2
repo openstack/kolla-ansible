@@ -7,7 +7,7 @@ log_file = /var/log/kolla/zun/zun-api.log
 {% endif %}
 
 log_dir = /var/log/kolla/zun
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 state_path = /var/lib/zun
 container_driver = docker.driver.DockerDriver
@@ -15,6 +15,9 @@ db_type = sql
 
 [network]
 driver = kuryr
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 
 [api]
 host_ip = {{ api_interface_address }}

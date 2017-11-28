@@ -3,7 +3,7 @@ debug = {{ octavia_logging_debug }}
 
 log_dir = /var/log/kolla/octavia
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 [api_settings]
 bind_host = {{ api_interface_address }}
@@ -71,3 +71,6 @@ loadbalancer_topology = {{ octavia_loadbalancer_topology }}
 [oslo_messaging]
 topic = octavia_prov
 rpc_thread_pool_size = 2
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}

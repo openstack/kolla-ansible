@@ -4,7 +4,7 @@ debug = {{ designate_logging_debug }}
 
 log_dir = /var/log/kolla/designate
 
-transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+transport_url = {{ rpc_transport_url }}
 
 [service:central]
 default_pool_id = {{ designate_pool_id }}
@@ -90,6 +90,7 @@ formatv6 = '%(hostname)s.%(zone)s'
 formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 
 [oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
 topics = notifications_designate
 driver = messagingv2
 
