@@ -8,7 +8,6 @@ auth:
 logging:
   level: INFO
   backends:
-    - stderr
     - file
   file:
     path: /var/log/kolla/skydive/skydive-agent.log
@@ -20,6 +19,7 @@ openstack:
   tenant_name: {{ openstack_auth['project_name'] }}
   region_name: {{ openstack_region_name }}
   domain_name: Default
+  endpoint_type: internal
 
 etcd:
   servers:
@@ -43,7 +43,7 @@ agent:
   flow:
     probes:
       - gopacket
-{% if neutron_plugin_agent == "openvswitch" %}
+{% if neutron_plugin_agent in ['openvswitch', 'opendaylight'] %}
       - ovssflow
 {% endif %}
   topology:
@@ -51,7 +51,7 @@ agent:
       - netlink
       - netns
       - neutron
-{% if neutron_plugin_agent == "openvswitch" %}
+{% if neutron_plugin_agent in ['openvswitch', 'opendaylight'] %}
       - ovsdb
 {% endif %}
 
@@ -61,3 +61,10 @@ netns:
 flow:
   expire: 600
   update: 60
+
+{% if neutron_plugin_agent in ['openvswitch', 'opendaylight'] %}
+ovs:
+  ovsdb: tcp://{{ api_interface_address }}:{{ ovsdb_port }}
+  oflow:
+    enable: true
+{% endif %}
