@@ -5,6 +5,7 @@
     logs_dir: "/tmp/logs"
     kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
+    need_build_image: false
   tasks:
     - name: ensure /etc/kolla exists
       file:
@@ -46,6 +47,13 @@
       with_items: "{{ ansible_interfaces }}"
       delegate_to: "primary"
 
+    - name: detect whether need build images
+      set_fact:
+        need_build_image: true
+      when:
+        - item.project.short_name == "kolla"
+      with_items: "{{ zuul['items'] }}"
+
     - name: generate global.yml file
       template:
         src: "{{ kolla_ansible_full_src_dir }}/tests/templates/globals-default.j2"
@@ -72,6 +80,22 @@
         dest: /etc/kolla/passwords.yml
       delegate_to: "primary"
 
+    - name: ensure /etc/docker exists
+      file:
+        path: "/etc/docker"
+        state: "directory"
+        mode: 0777
+      become: true
+
+    - name: create deamon.json for nodepool cache
+      vars:
+        infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8081/registry-1.docker/"
+      template:
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/docker_daemon.json.j2"
+        dest: "/etc/docker/daemon.json"
+      become: true
+
+
     - name: install kolla-ansible requirements
       pip:
         requirements: "{{ ansible_env.HOME }}/{{ kolla_ansible_src_dir }}/requirements.txt"
@@ -88,6 +112,9 @@
           export BASE_DISTRO={{ base_distro }}
           export INSTALL_TYPE={{ install_type }}
           export NODEPOOL_TARBALLS_MIRROR=http://{{ zuul_site_mirror_fqdn }}:8080/tarballs
+
+          export BUILD_IMAGE={{ need_build_image }}
+          export KOLLA_SRC_DIR={{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla
 
           tools/setup_gate.sh
         executable: /bin/bash

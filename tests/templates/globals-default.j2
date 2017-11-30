@@ -11,9 +11,15 @@ kolla_internal_vip_address: "169.254.169.10"
 
 network_interface: "{{ api_interface_name }}"
 docker_restart_policy: "never"
+{% if need_build_image %}
 # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
 docker_namespace: "lokolla"
 docker_registry: "{{ api_interface_address }}:4000"
+{% else %}
+# use docker hub images
+docker_namespace: "kolla"
+openstack_release: "{{ zuul.branch | basename }}"
+{% endif %}
 neutron_external_interface: "fake_interface"
 enable_horizon: "yes"
 enable_heat: "no"
