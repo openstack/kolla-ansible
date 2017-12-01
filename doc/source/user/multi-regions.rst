@@ -75,6 +75,7 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
        username: "admin"
        password: "{{ keystone_admin_password }}"
        project_name: "admin"
+       domain_name: "default"
 
 Configuration files of cinder,nova,neutron,glance... have to be updated to
 contact RegionOne's Keystone. Fortunately, Kolla offers to override all
