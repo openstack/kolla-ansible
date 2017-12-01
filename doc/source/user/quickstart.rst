@@ -22,10 +22,6 @@ The host machine must satisfy the following minimum requirements:
 - 8GB main memory
 - 40GB disk space
 
-.. note::
-
-   Root access to the deployment host machine is required.
-
 Install dependencies
 ~~~~~~~~~~~~~~~~~~~~
 
