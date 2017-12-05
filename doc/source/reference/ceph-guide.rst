@@ -124,6 +124,19 @@ copies for the pools before deployment. Modify the file
     osd pool default size = 1
     osd pool default min size = 1
 
+To build a high performance and secure Ceph Storage Cluster, the Ceph community
+recommend the use of two separate networks: public network and cluster network.
+Edit the ``/etc/kolla/globals.yml`` and configure the ``cluster_interface``:
+
+.. code-block:: ini
+
+   cluster_interface: "eth2"
+
+.. end
+
+For more details, see `NETWORK CONFIGURATION REFERENCE
+<http://docs.ceph.com/docs/master/rados/configuration/network-config-ref/#ceph-networks>`_
+of Ceph Documentation.
 
 Deployment
 ==========
