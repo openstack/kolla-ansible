@@ -1,0 +1,27 @@
+---
+- name: Getting ceph mgr keyring
+  command: docker exec ceph_mon ceph auth get-or-create mgr.{{ inventory_hostname }} mon 'allow profile mgr' osd 'allow *' mds 'allow *'
+  register: ceph_mgr_keyring
+  run_once: true
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: false
+  with_items: "{{ groups['ceph-mgr'] }}"
+
+- name: Pushing ceph mgr keyring to ceph-mgr
+  copy:
+    content: "{{ item.stdout }}\n"
+    dest: "{{ node_config_directory }}/ceph-mgr/ceph.mgr.{{ inventory_hostname }}.keyring"
+  when:
+    - inventory_hostname == item.item
+  with_items: "{{ ceph_mgr_keyring.results }}"
+
+- name: Starting ceph-mgr container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ ceph_mgr_image_full }}"
+    name: "ceph_mgr"
+    volumes:
+      - "{{ node_config_directory }}/ceph-mgr/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
