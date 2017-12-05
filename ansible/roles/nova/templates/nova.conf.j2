@@ -33,6 +33,8 @@ host = {{ ansible_hostname }}_{{ service_name }}
 compute_driver = fake.FakeDriver
 {% elif nova_compute_virt_type == 'vmware' %}
 compute_driver = vmwareapi.VMwareVCDriver
+{% elif nova_compute_virt_type == 'xenapi' %}
+compute_driver = xenapi.XenAPIDriver
 {% else %}
 compute_driver = libvirt.LibvirtDriver
 {% endif %}
@@ -261,4 +263,12 @@ connection_string = elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch
 {% if enable_barbican | bool %}
 [barbican]
 auth_endpoint = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+{% endif %}
+
+{% if nova_compute_virt_type == "xenapi" %}
+[xenserver]
+ovs_integration_bridge = br-int
+connection_password = {{ xenserver_password }}
+connection_username = {{ xenserver_username }}
+connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
 {% endif %}
