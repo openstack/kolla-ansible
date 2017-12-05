@@ -11,12 +11,17 @@
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    src: "{{ item.name }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.name }}/config.json"
+  when:
+    - inventory_hostname in groups[item.group]
   with_items:
-    - "ceph-mon"
-    - "ceph-osd"
-    - "ceph-rgw"
+    - name: "ceph-mon"
+      group: ceph-mon
+    - name: "ceph-osd"
+      group: ceph-osd
+    - name: "ceph-rgw"
+      group: ceph-rgw
 
 - name: Copying over ceph.conf
   vars:
