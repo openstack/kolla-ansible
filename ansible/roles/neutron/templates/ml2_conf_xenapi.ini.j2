@@ -1,0 +1,19 @@
+# ml2_conf.ini
+[DEFAULT]
+# Use service_name as the log file name for neutron-openvswitch-agent-xenapi,
+# so that it will use a different log file from neutron-openvswitch-agent.
+log_file = {{ service_name }}.log
+host = {{ os_xenapi_variables.dom0_hostname }}
+
+[agent]
+root_helper_daemon = xenapi_root_helper
+root_helper =
+
+[ovs]
+of_listen_address = {{ hostvars[inventory_hostname]['ansible_' + os_xenapi_variables.domu_himn_eth]["ipv4"]["address"] }}
+ovsdb_connection = tcp:{{ xenserver_himn_ip }}:{{ ovsdb_port }}
+
+[xenapi]
+connection_password = {{ xenserver_password }}
+connection_username = {{ xenserver_username }}
+connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}

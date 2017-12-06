@@ -51,6 +51,7 @@
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
       - "neutron-openvswitch-agent"
+      - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
@@ -130,6 +131,31 @@
       - "{{ role_path }}/templates/ml2_conf.ini.j2"
       - "{{ node_custom_config }}/neutron/ml2_conf.ini"
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/ml2_conf.ini"
+    mode: "0660"
+  register: neutron_ml2_confs
+  when:
+    - item.key in services_need_ml2_conf_ini
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ neutron_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Copying over ml2_conf.ini for XenAPI
+  become: true
+  vars:
+    service_name: "{{ item.key }}"
+    services_need_ml2_conf_ini:
+      - "neutron-openvswitch-agent-xenapi"
+    os_xenapi_variables: "{{ lookup('file', xenapi_facts_file) | from_json }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/ml2_conf.ini.j2"
+      - "{{ role_path }}/templates/ml2_conf_xenapi.ini.j2"
+      - "{{ node_custom_config }}/neutron/ml2_conf.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
+      - "{{ node_custom_config }}/neutron/{{ service_name }}/ml2_conf.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ml2_conf.ini"
     mode: "0660"
   register: neutron_ml2_confs
@@ -326,6 +352,7 @@
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
       - "neutron-openvswitch-agent"
+      - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
