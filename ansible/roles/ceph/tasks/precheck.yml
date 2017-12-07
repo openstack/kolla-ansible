@@ -15,3 +15,8 @@
   when:
     - container_facts['ceph_rgw'] is not defined
     - inventory_hostname in groups['ceph-rgw']
+
+- name: Check whether the swift service is enabled
+  local_action: fail msg='Ceph-rgw-keystone is conflicts with swift, you should only enable one of them'
+  when: enable_swift | bool
+  run_once: True
