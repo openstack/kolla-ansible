@@ -1,0 +1,20 @@
+---
+- name: Ensuring config directory exists
+  file:
+    path: "{{ node_config_directory }}/manila-share"
+    state: "directory"
+
+- name: Copying over ceph.conf for manila
+  merge_configs:
+    sources:
+      - "{{ node_custom_config }}/manila/ceph.conf"
+      - "{{ node_custom_config }}/manila/manila-share/ceph.conf"
+    dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+
+- name: Copy over Ceph keyring files for manila
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/manila-share/"
+  with_fileglob:
+    - "{{ node_custom_config }}/manila/ceph.client.manila.keyring"
+    - "{{ node_custom_config }}/manila/manila/ceph.client.manila.keyring"
