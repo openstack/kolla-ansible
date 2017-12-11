@@ -25,12 +25,16 @@
   vars:
     service: "{{ telegraf_services['telegraf'] }}"
   template:
-    src: "telegraf.conf.j2"
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/telegraf/telegraf.conf"
   register: telegraf_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/telegraf/{{ inventory_hostname }}/telegraf.conf"
+    - "{{ node_custom_config }}/telegraf/telegraf.conf"
+    - "telegraf.conf.j2"
   notify:
     - Restart telegraf container
 
