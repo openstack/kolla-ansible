@@ -1,6 +1,6 @@
 ---
 - name: Looking up disks to bootstrap for Ceph OSDs
-  command: docker exec -t kolla_toolbox sudo -E /usr/bin/ansible localhost
+  command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
     -a "partition_name='KOLLA_CEPH_OSD_BOOTSTRAP' match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
   register: osd_lookup
@@ -12,7 +12,7 @@
     osds_bootstrap: "{{ (osd_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).disks|from_json }}"
 
 - name: Looking up disks to bootstrap for Ceph Cache OSDs
-  command: docker exec -t kolla_toolbox sudo -E /usr/bin/ansible localhost
+  command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
     -a "partition_name='KOLLA_CEPH_OSD_CACHE_BOOTSTRAP' match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
   register: osd_cache_lookup
