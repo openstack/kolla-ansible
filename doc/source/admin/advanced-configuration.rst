@@ -172,13 +172,14 @@ needs to create ``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
    [DEFAULT]
    scheduler_max_attempts = 100
 
-If the operator wants to configure compute node ram allocation ratio
+If the operator wants to configure compute node cpu and ram allocation ratio
 on host myhost, the operator needs to create file
 ``/etc/kolla/config/nova/myhost/nova.conf`` with content:
 
 ::
 
    [DEFAULT]
+   cpu_allocation_ratio = 16.0
    ram_allocation_ratio = 5.0
 
 Kolla allows the operator to override configuration globally for all services.
