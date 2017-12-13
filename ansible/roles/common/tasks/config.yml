@@ -201,13 +201,14 @@
 - name: Ensuring config directories have correct owner and permission
   become: true
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  with_items:
-    - "fluentd"
-    - "cron"
+  when:
+    - item.value.enabled | bool
+    - item.key != "kolla-toolbox"
+  with_dict: "{{ common_services }}"
 
 - name: Check common containers
   kolla_docker:
