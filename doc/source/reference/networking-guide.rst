@@ -254,23 +254,6 @@ the future, a new config option will be introduced to allow systemd to be used
 on all host distros for those who do not wish to enable the network manager
 service on ubuntu.
 
-To manage ovs-dpdk the neutron ovs agent must be configured to use
-the netdev datapath_type in the ml2.conf. At present this is not automated
-and must be set via kolla's external config support. To set the datapath_type
-create a file with the following content at
-/etc/kolla/config/neutron/ml2_conf.ini
-
-::
-
-    [ovs]
-    datapath_type = netdev
-
-
-In the future, the requirement to use the external config will be removed by
-automatically computing the value of ovs_datapath based on the value of
-enable_ovs_dpdk and then using the ovs_datapath variable to template out this
-setting in the ml2_conf.ini automatically.
-
 Limitations
 -----------
 
