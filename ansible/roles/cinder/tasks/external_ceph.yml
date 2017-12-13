@@ -28,6 +28,9 @@
     - inventory_hostname in groups[item.value.group]
     - item.key in services_need_config
   with_dict: "{{ cinder_services }}"
+  notify:
+    - Restart cinder-volume container
+    - Restart cinder-backup container
 
 - name: Copy over Ceph keyring files for cinder-volume
   copy:
@@ -39,6 +42,8 @@
     - external_ceph_cephx_enabled | bool
     - inventory_hostname in groups['cinder-volume']
     - cinder_services['cinder-volume'].enabled | bool
+  notify:
+    - Restart cinder-volume container
 
 - name: Copy over Ceph keyring files for cinder-backup
   copy:
@@ -50,3 +55,5 @@
     - external_ceph_cephx_enabled | bool
     - inventory_hostname in groups['cinder-backup']
     - cinder_services['cinder-backup'].enabled | bool
+  notify:
+    - Restart cinder-backup container
