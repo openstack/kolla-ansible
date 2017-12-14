@@ -1,0 +1,140 @@
+.. _mariadb-backup-and-restore:
+
+===================================
+MariaDB database backup and restore
+===================================
+
+Kolla-Ansible can facilitate either full or incremental backups of data
+hosted in MariaDB. It achieves this using Percona's Xtrabackup, a tool
+designed to allow for 'hot backups' - an approach which means that consistent
+backups can be taken without any downtime for your database or your cloud.
+
+.. note::
+
+   By default, backups will be performed on the first node in your Galera cluster
+   or on the MariaDB node itself if you just have the one. Backup files are saved
+   to a dedicated Docker volume - ``mariadb_backup`` - and it's the contents of
+   this that you should target for transferring backups elsewhere.
+
+Enabling Backup Functionality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For backups to work, some reconfiguration of MariaDB is required - this is to
+enable appropriate permissions for the backup client, and also to create an
+additional database in order to store backup information.
+
+Firstly, enable backups via ``globals.yml``:
+
+.. code-block:: console
+
+   enable_xtrabackup: "yes"
+
+Then, kick off a reconfiguration of MariaDB:
+
+``kolla-ansible -i INVENTORY reconfigure -t mariadb``
+
+Once that has run successfully, you should then be able to take full and
+incremental backups as described below.
+
+Backup Procedure
+~~~~~~~~~~~~~~~~
+
+To perform a full backup, run the following command:
+
+``kolla-ansible -i INVENTORY mariadb_backup``
+
+Or to perform an incremental backup:
+
+``kolla-ansible -i INVENTORY mariadb_backup --incremental``
+
+Kolla doesn't currently manage the scheduling of these backups, so you'll
+need to configure an appropriate scheduler (i.e cron) to run these commands
+on your behalf should you require regular snapshots of your data. A suggested
+schedule would be:
+
+* Daily full, retained for two weeks
+* Hourly incremental, retained for one day
+
+Backups are performed on your behalf on the designated database node using
+permissions defined during the configuration step; no password is required to
+invoke these commands.
+
+Furthermore, backup actions can be triggered from a node with a minimal
+installation of Kolla-Ansible, specifically one which doesn't require a copy of
+``passwords.yml``.  This is of note if you're looking to implement automated
+backups scheduled via a cron job.
+
+Restoring backups
+~~~~~~~~~~~~~~~~~
+
+Owing to the way in which XtraBackup performs hot backups, there are some
+steps that must be performed in order to prepare your data before it can be
+copied into place for use by MariaDB. This process is currently manual, but
+the Kolla XtraBackup image includes the tooling necessary to successfully
+prepare backups. Two examples are given below.
+
+Full
+----
+
+For a full backup, start a new container using the XtraBackup image with the
+following options on the master database node:
+
+.. code-block:: console
+
+   docker run -it --volumes-from mariadb --name dbrestore \
+      -v mariadb_backup:/backup kolla/centos-binary-xtrabackup:rocky \
+      /bin/bash
+   cd /backup
+   mkdir -p /restore/full
+   cat mysqlbackup-04-10-2018.xbc.xbs | xbstream -x -C /restore/full/
+   innobackupex --decompress /restore/full
+   find /restore -name *.qp -exec rm {} \;
+   innobackupex --apply-log /restore/full
+
+Then stop the MariaDB instance, delete the old data files (or move
+them elsewhere), and copy the backup into place:
+
+.. code-block:: console
+
+   docker stop mariadb
+   rm -rf /var/lib/mysql/* /var/lib/mysql/.*
+   innobackupex --copy-back /restore/full
+
+Then you can restart MariaDB with the restored data in place:
+
+.. code-block:: console
+
+   docker start mariadb
+   docker logs mariadb
+   81004 15:48:27 mysqld_safe WSREP: Running position recovery with --log_error='/var/lib/mysql//wsrep_recovery.BDTAm8' --pid-file='/var/lib/mysql//scratch-recover.pid'
+   181004 15:48:30 mysqld_safe WSREP: Recovered position 9388319e-c7bd-11e8-b2ce-6e9ec70d9926:58
+
+Incremental
+-----------
+
+This starts off similar to the full backup restore procedure above, but we
+must apply the logs from the incremental backups first of all before doing
+the final preparation required prior to restore. In the example below, I have
+a full backup - ``mysqlbackup-06-11-2018-1541505206.qp.xbc.xbs``, and an
+incremental backup,
+``incremental-11-mysqlbackup-06-11-2018-1541505223.qp.xbc.xbs``.
+
+.. code-block:: console
+
+   docker run -it --volumes-from mariadb --name dbrestore \
+      -v mariadb_backup:/backup kolla/centos-binary-xtrabackup:rocky \
+      /bin/bash
+   cd /backup
+   mkdir -p /restore/full
+   mkdir -p /restore/inc/11
+   cat mysqlbackup-06-11-2018-1541505206.qp.xbc.xbs | xbstream -x -C /restore/full/
+   cat incremental-11-mysqlbackup-06-11-2018-1541505223.qp.xbc.xbs | xbstream -x -C /restore/inc/11
+   innobackupex --decompress /restore/full
+   innobackupex --decompress /restore/inc/11
+   find /restore -name *.qp -exec rm {} \;
+   innobackupex --apply-log --redo-only /restore/full
+   innobackupex --apply-log --redo-only --incremental-dir=/restore/inc/11 /restore/full
+   innobackupex --apply-log /restore/full
+
+At this point the backup is prepared and ready to be copied back into place,
+as per the previous example.

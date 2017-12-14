@@ -62,3 +62,16 @@ mariadb_dimensions: "{{ default_container_dimensions }}"
 # Vars used within recover_cluster.yml
 ########################################
 mariadb_service: "{{ mariadb_services['mariadb'] }}"
+
+####################
+# Backups
+####################
+xtrabackup_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-xtrabackup"
+xtrabackup_tag: "{{ openstack_release }}"
+xtrabackup_image_full: "{{ xtrabackup_image }}:{{ xtrabackup_tag }}"
+
+mariadb_backup_host: "{{ groups['mariadb'][0] }}"
+mariadb_backup_database_schema: "PERCONA_SCHEMA"
+mariadb_backup_database_user: "backup"
+mariadb_backup_database_address: "{{ database_address }}"
+mariadb_backup_type: "full"

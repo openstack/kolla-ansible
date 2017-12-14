@@ -12,6 +12,33 @@
     - item.value.enabled | bool
   with_dict: "{{ mariadb_services }}"
 
+- name: Ensuring database backup config directory exists
+  file:
+    path: "{{ node_config_directory }}xtrabackup"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - enable_xtrabackup | bool
+    - inventory_hostname == mariadb_backup_host
+
+- name: Copying over my.cnf for xtrabackup
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/backup.my.cnf.j2"
+      - "{{ node_custom_config }}/backup.my.cnf"
+      - "{{ node_custom_config }}/mariadb/{{ inventory_hostname }}/backup.my.cnf"
+    dest: "{{ node_config_directory }}xtrabackup/my.cnf"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0660"
+  become: true
+  when:
+    - enable_xtrabackup | bool
+    - inventory_hostname == mariadb_backup_host
+
 - name: Copying over config.json files for services
   vars:
     service_name: "mariadb"

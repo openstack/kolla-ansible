@@ -54,6 +54,9 @@ Commands:
     prechecks           Do pre-deployment checks for hosts
     check               Do post-deployment smoke tests
     mariadb_recovery    Recover a completely stopped mariadb cluster
+    mariadb_backup      Take a backup of MariaDB databases
+                            --full (default)
+                            --incremental
     bootstrap-servers   Bootstrap servers with kolla deploy dependencies
     destroy             Destroy Kolla containers, volumes and host configuration
                             --include-images to also destroy Kolla images
@@ -91,6 +94,7 @@ cat <<EOF
 prechecks
 check
 mariadb_recovery
+mariadb_backup
 bootstrap-servers
 destroy
 deploy
@@ -107,7 +111,7 @@ EOF
 }
 
 SHORT_OPTS="hi:p:t:k:e:v"
-LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev"
+LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
@@ -125,6 +129,7 @@ PASSWORDS_FILE="${CONFIG_DIR}/passwords.yml"
 DANGER_CONFIRM=
 INCLUDE_IMAGES=
 INCLUDE_DEV=
+BACKUP_TYPE="full"
 # Serial is not recommended and disabled by default. Users can enable it by
 # configuring ANSIBLE_SERIAL variable.
 ANSIBLE_SERIAL=${ANSIBLE_SERIAL:-0}
@@ -221,6 +226,16 @@ while [ "$#" -gt 0 ]; do
             shift 2
             ;;
 
+    (--full)
+            BACKUP_TYPE="full"
+            shift 1
+            ;;
+
+    (--incremental)
+            BACKUP_TYPE="incremental"
+            shift 1
+            ;;
+
     (--help|-h)
             usage
             shift
@@ -253,6 +268,11 @@ case "$1" in
         ACTION="Attempting to restart mariadb cluster"
         EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=deploy -e common_run=true"
         PLAYBOOK="${BASEDIR}/ansible/mariadb_recovery.yml"
+        ;;
+(mariadb_backup)
+        ACTION="Backup MariaDB databases"
+        EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=backup -e mariadb_backup_type=${BACKUP_TYPE} -e common_run=true"
+        PLAYBOOK="${BASEDIR}/ansible/mariadb_backup.yml"
         ;;
 (destroy)
         ACTION="Destroy Kolla containers, volumes and host configuration"

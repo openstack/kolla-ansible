@@ -13,6 +13,53 @@
       priv: "*.*:USAGE"
   run_once: True
 
+- name: Creating the Percona XtraBackup database
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ mariadb_backup_database_schema }}"
+  run_once: True
+  when:
+    - enable_xtrabackup | bool
+
+- name: Creating database backup user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ mariadb_backup_database_user }}"
+      password: "{{ mariadb_backup_database_password }}"
+      host: "%"
+      priv: "*.*:CREATE TABLESPACE,RELOAD,PROCESS,SUPER,LOCK TABLES,REPLICATION CLIENT"
+      append_privs: True
+  run_once: True
+  when:
+    - enable_xtrabackup | bool
+
+- name: Granting permissions on XtraBackup database to backup user
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ mariadb_backup_database_user }}"
+      password: "{{ mariadb_backup_database_password }}"
+      host: "%"
+      priv: "{{ mariadb_backup_database_schema }}.*:CREATE,INSERT,SELECT"
+      append_privs: True
+  run_once: True
+  when:
+    - enable_xtrabackup | bool
+
 - name: Cleaning up facts
   set_fact:
     delegate_host: "bootstraped"
