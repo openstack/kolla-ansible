@@ -49,12 +49,38 @@
   when: ansible_os_family == 'RedHat'
 
 - name: Install pip
-  easy_install: name=pip
+  easy_install:
+    name: pip
+    virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
+    virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
   become: True
 
-- name: Install docker SDK for python
-  pip: name=docker state=latest
+- name: Install latest pip in the virtualenv
+  pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ virtualenv }}"
+    virtualenv_site_packages: "{{ virtualenv_site_packages }}"
   become: True
+  when: virtualenv is not none
+
+- name: Install docker SDK for python
+  pip:
+    name: docker
+    state: latest
+    virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
+    virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
+  become: True
+
+- name: Ensure virtualenv has correct ownership
+  file:
+    path: "{{ virtualenv }}"
+    recurse: True
+    state: directory
+    owner: kolla
+    group: kolla
+  become: True
+  when: virtualenv is not none
 
 - name: Remove packages
   package: name={{item}} state=absent
