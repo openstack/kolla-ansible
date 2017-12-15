@@ -2,17 +2,6 @@
 project_name: "ceilometer"
 
 ceilometer_services:
-# TODO(jeffrey4l): ceilometer_api_image is still required for bootstrap service. Remove this after use ceilometer notification image instead
-  ceilometer-api:
-    container_name: ceilometer_api
-    group: ceilometer-api
-    enabled: True
-    image: "{{ ceilometer_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/ceilometer-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "ceilometer:/var/lib/ceilometer/"
-      - "kolla_logs:/var/log/kolla/"
   ceilometer-notification:
     container_name: ceilometer_notification
     group: ceilometer-notification
@@ -56,11 +45,6 @@ ceilometer_tag: "{{ openstack_release }}"
 ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-notification"
 ceilometer_notification_tag: "{{ ceilometer_tag }}"
 ceilometer_notification_image_full: "{{ ceilometer_notification_image }}:{{ ceilometer_notification_tag }}"
-
-# TODO(jeffrey4l): ceilometer_api_image is still required for bootstrap service. Remove this after use ceilometer notification image instead
-ceilometer_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-api"
-ceilometer_api_tag: "{{ ceilometer_tag }}"
-ceilometer_api_image_full: "{{ ceilometer_api_image }}:{{ ceilometer_api_tag }}"
 
 ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-central"
 ceilometer_central_tag: "{{ ceilometer_tag }}"
