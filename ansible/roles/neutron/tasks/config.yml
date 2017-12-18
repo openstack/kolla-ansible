@@ -274,6 +274,34 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copy neutron-l3-agent-wrapper script
+  vars:
+    service_name: "neutron-l3-agent"
+    service: "{{ neutron_services[service_name] }}"
+  template:
+    src: neutron-l3-agent-wrapper.sh.j2
+    dest: "{{ node_config_directory }}/{{ service_name }}/neutron-l3-agent-wrapper.sh"
+  register: neutron_l3_agent_wrapper
+  when:
+    - service.enabled | bool
+    - service.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copy neutron-vpnaas-agent-wrapper script
+  vars:
+    service_name: "neutron-vpnaas-agent"
+    service: "{{ neutron_services[service_name] }}"
+  template:
+    src: neutron-vpnaas-agent-wrapper.sh.j2
+    dest: "{{ node_config_directory }}/{{ service_name }}/neutron-vpnaas-agent-wrapper.sh"
+  register: neutron_vpnaas_agent_wrapper
+  when:
+    - service.enabled | bool
+    - service.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
 # TODO check the environment change
 - name: Check neutron containers
   kolla_docker:
