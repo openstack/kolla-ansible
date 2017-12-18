@@ -80,12 +80,16 @@
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_outputs
+  when:
+    - enable_fluentd | bool
 
 - name: Copying over custom fluentd output config files
   template:
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.path | basename }}"
   register: fluentd_output_custom
+  when:
+    - enable_fluentd | bool
   with_items: "{{ find_custom_fluentd_outputs.files }}"
   notify:
     - Restart fluentd container
