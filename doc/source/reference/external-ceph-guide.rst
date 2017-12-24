@@ -40,6 +40,19 @@ service in ``/etc/kolla/globals.yml``:
 The combination of ``enable_ceph: "no"`` and ``<service>_backend_ceph: "yes"``
 triggers the activation of external ceph mechanism in Kolla.
 
+Edit the Inventory File
+=======================
+
+When using external Ceph, there may be no nodes defined in the storage group.
+This will cause Cinder and related services relying on this group to fail.
+In this case, operator should add some nodes to the storage group, all the
+nodes where cinder-volume and cinder-backup will run:
+
+::
+
+  [storage]
+  compute01
+
 Configuring External Ceph
 =========================
 
