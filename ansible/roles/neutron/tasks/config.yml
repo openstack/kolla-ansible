@@ -3,7 +3,6 @@
   become: true
   vars:
     neutron_l3_agent: "{{ neutron_services['neutron-l3-agent'] }}"
-    neutron_vpnaas_agent: "{{ neutron_services['neutron-vpnaas-agent'] }}"
   sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
   with_items:
     - { name: "net.ipv4.ip_forward", value: 1}
@@ -12,7 +11,6 @@
   when:
     - set_sysctl | bool
     - (neutron_l3_agent.enabled | bool and neutron_l3_agent.host_in_groups | bool)
-      or (neutron_vpnaas_agent.enabled | bool and  neutron_vpnaas_agent.host_in_groups | bool)
 
 - name: Ensuring config directories exist
   become: true
@@ -60,7 +58,6 @@
       - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"
       - "neutron-lbaas-agent"
-      - "neutron-vpnaas-agent"
       - "neutron-bgp-dragent"
       - "neutron-infoblox-ipam-agent"
       - "neutron-sriov-agent"
@@ -110,7 +107,7 @@
     service_name: "{{ item.key }}"
     services_need_neutron_vpnaas_conf:
       - "neutron-server"
-      - "neutron-vpnaas-agent"
+      - "neutron-l3-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron_vpnaas.conf.j2"
@@ -234,7 +231,6 @@
     service_name: "{{ item.key }}"
     services_need_l3_agent_ini:
       - "neutron-l3-agent"
-      - "neutron-vpnaas-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/l3_agent.ini.j2"
@@ -258,7 +254,6 @@
     services_need_fwaas_driver_ini:
       - "neutron-server"
       - "neutron-l3-agent"
-      - "neutron-vpnaas-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/fwaas_driver.ini.j2"
@@ -307,24 +302,6 @@
   when:
     - neutron_lbaas_agent.enabled | bool
     - neutron_lbaas_agent.host_in_groups | bool
-  notify:
-    - "Restart {{ service_name }} container"
-
-- name: Copying over vpnaas_agent.ini
-  become: true
-  vars:
-    service_name: "neutron-vpnaas-agent"
-    neutron_vpnaas_agent: "{{ neutron_services[service_name] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/vpnaas_agent.ini.j2"
-      - "{{ node_custom_config }}/neutron/vpnaas_agent.ini"
-    dest: "{{ node_config_directory }}/{{ service_name }}/vpnaas_agent.ini"
-    mode: "0660"
-  register: neutron_vpnaas_agent_ini
-  when:
-    - neutron_vpnaas_agent.enabled | bool
-    - neutron_vpnaas_agent.host_in_groups | bool
   notify:
     - "Restart {{ service_name }} container"
 
@@ -381,7 +358,6 @@
       - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"
       - "neutron-lbaas-agent"
-      - "neutron-vpnaas-agent"
       - "neutron-bgp-dragent"
       - "neutron-sriov-agent"
   template:
@@ -406,21 +382,6 @@
     src: neutron-l3-agent-wrapper.sh.j2
     dest: "{{ node_config_directory }}/{{ service_name }}/neutron-l3-agent-wrapper.sh"
   register: neutron_l3_agent_wrapper
-  when:
-    - service.enabled | bool
-    - service.host_in_groups | bool
-  notify:
-    - "Restart {{ service_name }} container"
-
-- name: Copy neutron-vpnaas-agent-wrapper script
-  become: true
-  vars:
-    service_name: "neutron-vpnaas-agent"
-    service: "{{ neutron_services[service_name] }}"
-  template:
-    src: neutron-vpnaas-agent-wrapper.sh.j2
-    dest: "{{ node_config_directory }}/{{ service_name }}/neutron-vpnaas-agent-wrapper.sh"
-  register: neutron_vpnaas_agent_wrapper
   when:
     - service.enabled | bool
     - service.host_in_groups | bool
