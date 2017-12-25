@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 {% if enable_opendaylight | bool %}
-/usr/bin/ovs-vsctl --no-wait -- set-manager ptcp:{{ ovsdb_port }}:{{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }} tcp:{{ kolla_internal_vip_address }}:{{ opendaylight_haproxy_ovsdb_port }}
+/usr/bin/ovs-vsctl --no-wait -- set-manager {% for host in groups['opendaylight'] %}tcp:{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_ovsdb_port }} {% endfor %}
+
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:local_ip={{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['tunnel_interface']]['ipv4']['address'] }}
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:provider_mappings=physnet1:{{ neutron_bridge_name }}
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:system-id=`cat /proc/sys/kernel/random/uuid`
