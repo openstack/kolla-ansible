@@ -124,7 +124,7 @@ Edit /etc/kolla/config/cinder/cinder-backup.conf with the following content:
 
   [DEFAULT]
   backup_ceph_conf=/etc/ceph/ceph.conf
-  backup_ceph_user=cinder
+  backup_ceph_user=cinder-backup
   backup_ceph_chunk_size = 134217728
   backup_ceph_pool=backups
   backup_driver = cinder.backup.drivers.ceph
