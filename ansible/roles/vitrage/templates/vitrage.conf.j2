@@ -1,0 +1,72 @@
+[DEFAULT]
+debug = {{ vitrage_logging_debug }}
+log_dir = /var/log/kolla/vitrage
+
+{% if service_name == 'vitrage-api' %}
+# Force vitrage-api.log or will use app.wsgi
+log_file = /var/log/kolla/vitrage/vitrage-api.log
+{% endif %}
+
+{% if vitrage_notifiers %}
+notifiers = {{ vitrage_notifiers|map(attribute='name')|join(',') }}
+{% endif %}
+
+transport_url = rabbit://{% for host in groups['rabbitmq'] %}{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ rabbitmq_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[api]
+host = {{ api_interface_address }}
+port = {{ vitrage_api_port }}
+workers = {{ openstack_service_workers }}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+username = {{ vitrage_keystone_user }}
+password = {{ vitrage_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+[database]
+connection = mysql+pymysql://{{ vitrage_database_user }}:{{ vitrage_database_password }}@{{ vitrage_database_address }}/{{ vitrage_database_name }}
+
+{% if vitrage_datasources %}
+[datasources]
+types = {{ vitrage_datasources|map(attribute='name')|join(',') }}
+{% endif %}
+
+[machine_learning]
+plugins = jaccard_correlation
+
+[service_credentials]
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+region_name = {{ openstack_region_name }}
+auth_type = password
+project_domain_id = default
+user_domain_id = default
+project_name = service
+password = {{ vitrage_keystone_password }}
+username = {{ vitrage_keystone_user }}
+interface = internal
+
+[oslo_messaging_notifications]
+topics = notifications,vitrage_notifications
+driver = messagingv2
+
+[oslo_concurrency]
+lock_path = /var/lib/vitrage/tmp
+
+{% if enable_osprofiler | bool %}
+[profiler]
+enabled = true
+trace_sqlalchemy = true
+hmac_keys = {{ osprofiler_secret }}
+{% if enable_elasticsearch | bool %}
+connection_string = elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}
+{% endif %}
+{% endif %}

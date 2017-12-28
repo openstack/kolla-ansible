@@ -1,0 +1,34 @@
+{% set apache_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_file = '000-default.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'vitrage-api.conf' %}
+{
+    "command": "/usr/sbin/{{ apache_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/vitrage.conf",
+            "dest": "/etc/vitrage/vitrage.conf",
+            "owner": "vitrage",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/wsgi-vitrage.conf",
+            "dest": "/etc/{{ apache_dir }}/{{ apache_file }}",
+            "owner": "vitrage",
+            "perm": "0644"
+        },
+        {
+            "source": "{{ container_config_directory }}/policy.json",
+            "dest": "/etc/vitrage/policy.json",
+            "owner": "vitrage",
+            "perm": "0600",
+            "optional": true
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/vitrage",
+            "owner": "vitrage:vitrage",
+            "recurse": true
+        }
+    ]
+}

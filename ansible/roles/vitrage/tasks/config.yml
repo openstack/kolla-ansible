@@ -1,0 +1,100 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ vitrage_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: vitrage_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ vitrage_services }}"
+  notify:
+    - Restart vitrage-api container
+    - Restart vitrage-collector container
+    - Restart vitrage-notifier container
+    - Restart vitrage-graph container
+    - Restart vitrage-ml container
+
+- name: Copying over vitrage.conf
+  vars:
+    service_name: "{{ item.key }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/vitrage.conf.j2"
+      - "{{ node_config_directory }}/config/global.conf"
+      - "{{ node_config_directory }}/config/messaging.conf"
+      - "{{ node_config_directory }}/config/vitrage.conf"
+      - "{{ node_config_directory }}/config/vitrage/{{ item.key }}.conf"
+      - "{{ node_config_directory }}/config/vitrage/{{ inventory_hostname }}/vitrage.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/vitrage.conf"
+  register: vitrage_confs
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ vitrage_services }}"
+  notify:
+    - Restart vitrage-api container
+    - Restart vitrage-collector container
+    - Restart vitrage-notifier container
+    - Restart vitrage-graph container
+    - Restart vitrage-ml container
+
+- name: Copying over wsgi-vitrage files for services
+  template:
+    src: "wsgi-vitrage.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item }}/wsgi-vitrage.conf"
+  with_items:
+    - "vitrage-api"
+  notify:
+    - Restart vitrage-api container
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ node_custom_config }}/vitrage/policy.json"
+  register: vitrage_policy
+
+- name: Copying over existing policy.json
+  template:
+    src: "{{ node_custom_config }}/vitrage/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: vitrage_policy_jsons
+  when:
+    - vitrage_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ vitrage_services }}"
+  notify:
+    - Restart vitrage-api container
+    - Restart vitrage-collector container
+    - Restart vitrage-graph container
+    - Restart vitrage-notifier container
+    - Restart vitrage-ml container
+
+- name: Check vitrage containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_vitrage_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ vitrage_services }}"
+  notify:
+    - Restart vitrage-api container
+    - Restart vitrage-collector container
+    - Restart vitrage-graph container
+    - Restart vitrage-notifier container
+    - Restart vitrage-ml container

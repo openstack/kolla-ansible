@@ -1,0 +1,42 @@
+---
+- name: Creating the Vitrage service and endpoint
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "vitrage"
+      service_type: "rca"
+      description: "Root Cause Analysis Service"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_vitrage_auth }}' }}"
+    module_extra_vars:
+      openstack_vitrage_auth: "{{ openstack_vitrage_auth }}"
+  register: vitrage_endpoint
+  until: vitrage_endpoint|success
+  retries: 10
+  delay: 5
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ vitrage_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ vitrage_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ vitrage_public_endpoint }}'}
+
+- name: Creating the Vitrage project, user, and role
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "service"
+      user: "{{ vitrage_keystone_user }}"
+      password: "{{ vitrage_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ openstack_vitrage_auth }}' }}"
+    module_extra_vars:
+      openstack_vitrage_auth: "{{ openstack_vitrage_auth }}"
+  register: vitrage_user
+  until: vitrage_user|success
+  retries: 10
+  delay: 5
+  run_once: True

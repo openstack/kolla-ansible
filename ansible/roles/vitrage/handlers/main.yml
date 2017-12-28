@@ -1,0 +1,115 @@
+---
+- name: Restart vitrage-api container
+  vars:
+    service_name: "vitrage-api"
+    service: "{{ vitrage_services[service_name] }}"
+    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ vitrage_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_api_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or vitrage_conf.changed | bool
+      or policy_json.changed | bool
+      or vitrage_api_container.changed | bool
+
+- name: Restart vitrage-collector container
+  vars:
+    service_name: "vitrage-collector"
+    service: "{{ vitrage_services[service_name] }}"
+    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ vitrage_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_collector_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or vitrage_conf.changed | bool
+      or policy_json.changed | bool
+      or vitrage_collector_container.changed | bool
+
+- name: Restart vitrage-notifier container
+  vars:
+    service_name: "vitrage-notifier"
+    service: "{{ vitrage_services[service_name] }}"
+    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ vitrage_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_notifier_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or vitrage_conf.changed | bool
+      or policy_json.changed | bool
+      or vitrage_notifier_container.changed | bool
+
+- name: Restart vitrage-graph container
+  vars:
+    service_name: "vitrage-graph"
+    service: "{{ vitrage_services[service_name] }}"
+    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ vitrage_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_graph_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or vitrage_conf.changed | bool
+      or policy_json.changed | bool
+      or vitrage_graph_container.changed | bool
+
+- name: Restart vitrage-ml container
+  vars:
+    service_name: "vitrage-ml"
+    service: "{{ vitrage_services[service_name] }}"
+    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ vitrage_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    vitrage_ml_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or vitrage_conf.changed | bool
+      or policy_json.changed | bool
+      or vitrage_ml_container.changed | bool
