@@ -1,5 +1,6 @@
 ---
 project_name: "kuryr"
+libnetwork_project_name: "kuryr-libnetwork"
 
 # NOTE(huikang, apuimedo): when you request a driver in a docker operation, such
 # as docker network create, docker searches /usr/lib/docker or /etc/docker
@@ -22,6 +23,8 @@ kuryr_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "/usr/lib/docker:/usr/lib/docker"
+      - "{{ kolla_dev_repos_directory ~ '/kuryr/kuryr:/var/lib/kolla/venv/lib/python2.7/site-packages/kuryr' if kuryr_dev_mode | bool else '' }}"
+      - "{{ kolla_dev_repos_directory ~ '/kuryr-libnetwork/kuryr_libnetwork:/var/lib/kolla/venv/lib/python2.7/site-packages/kuryr_libnetwork' if kuryr_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
 
 
@@ -41,3 +44,12 @@ kuryr_logging_debug: "{{ openstack_logging_debug }}"
 kuryr_keystone_user: "kuryr"
 
 openstack_kuryr_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+kuryr_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+kuryr_libnetwork_git_repository: "{{ kolla_dev_repos_git }}/{{ libnetwork_project_name }}"
+kuryr_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+kuryr_dev_mode: "{{ kolla_dev_mode }}"
