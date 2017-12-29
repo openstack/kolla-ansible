@@ -75,6 +75,7 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Tacker <https://docs.openstack.org/tacker/latest/>`__
 - `Tempest <https://docs.openstack.org/tempest/latest/>`__
 - `Trove <https://docs.openstack.org/trove/latest/>`__
+- `Vitrage <https://docs.openstack.org/vitrage/latest/>`__
 - `Vmtp <https://vmtp.readthedocs.io/en/latest/>`__
 - `Watcher <https://docs.openstack.org/watcher/latest/>`__
 - `Zun <https://docs.openstack.org/zun/latest/>`__
