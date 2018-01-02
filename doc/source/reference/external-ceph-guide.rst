@@ -57,9 +57,6 @@ Step 1 is done by using Kolla's INI merge mechanism: Create a file in
 
 ::
 
-  [DEFAULT]
-  show_image_direct_url = True
-
   [glance_store]
   stores = rbd
   default_store = rbd
