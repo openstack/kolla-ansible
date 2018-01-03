@@ -49,9 +49,15 @@ echo Downloading glance image.
 if ! [ -f "${IMAGE}" ]; then
     curl -L -o ./${IMAGE} ${IMAGE_URL}/${IMAGE}
 fi
+
+EXTRA_PROPERTIES=
+if [ ${ARCH} == aarch64 ]; then
+    EXTRA_PROPERTIES="--property hw_firmware_type=uefi"
+fi
+
 echo Creating glance image.
 openstack image create --disk-format qcow2 --container-format bare --public \
-    --property os_type=${IMAGE_TYPE} --file ./${IMAGE} ${IMAGE_NAME}
+    --property os_type=${IMAGE_TYPE} ${EXTRA_PROPERTIES} --file ./${IMAGE} ${IMAGE_NAME}
 
 echo Configuring neutron.
 openstack network create --external --provider-physical-network physnet1 \
