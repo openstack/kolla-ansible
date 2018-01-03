@@ -5,6 +5,9 @@
         - kolla-ansible-centos-source
         - kolla-ansible-ubuntu-source
         - kolla-ansible-oraclelinux-source
+        - kolla-ansible-ubuntu-source-ceph
+        - kolla-ansible-centos-source-ceph
+        - kolla-ansible-oraclelinux-source-ceph
 
 - nodeset:
     name: kolla-ansible-centos
@@ -18,19 +21,57 @@
       - name: primary
         label: ubuntu-xenial
 
+- nodeset:
+    name: kolla-ansible-xenial-multi
+    nodes:
+      - name: primary
+        label: ubuntu-xenial
+      - name: secondary1
+        label: ubuntu-xenial
+      - name: secondary2
+        label: ubuntu-xenial
+    groups:
+      - name: switch
+        nodes:
+          - primary
+      - name: peers
+        nodes:
+          - secondary1
+          - secondary2
+
+- nodeset:
+    name: kolla-ansible-centos-multi
+    nodes:
+      - name: primary
+        label: centos-7
+      - name: secondary1
+        label: centos-7
+      - name: secondary2
+        label: centos-7
+    groups:
+      - name: switch
+        nodes:
+          - primary
+      - name: peers
+        nodes:
+          - secondary1
+          - secondary2
+
 - job:
     name: kolla-ansible-base
     pre-run: tests/pre.yml
     run: tests/run.yml
     post-run: tests/post.yml
     attempts: 1
-    timeout: 10800
+    timeout: 5400
     required-projects:
       - openstack/kolla
       - openstack/requirements
     irrelevant-files:
       - ^.*\.rst$
       - ^doc/.*
+    vars:
+      scenario: aio
 
 - job:
     name: kolla-ansible-centos-source
@@ -85,3 +126,33 @@
     vars:
       base_distro: oraclelinux
       install_type: binary
+
+- job:
+    name: kolla-ansible-ubuntu-source-ceph
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-xenial-multi
+    voting: false
+    vars:
+      base_distro: ubuntu
+      install_type: source
+      scenario: ceph
+
+- job:
+    name: kolla-ansible-centos-source-ceph
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-centos-multi
+    voting: false
+    vars:
+      base_distro: centos
+      install_type: source
+      scenario: ceph
+
+- job:
+    name: kolla-ansible-oraclelinux-source-ceph
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-centos-multi
+    voting: false
+    vars:
+      base_distro: oraclelinux
+      install_type: source
+      scenario: ceph

@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: primary
   vars:
     kolla_inventory_path: "/etc/kolla/inventory"
     logs_dir: "/tmp/logs"
@@ -7,6 +7,8 @@
     kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
     need_build_image: false
   tasks:
+    - setup:
+
     - name: ensure /etc/kolla exists
       file:
         path: "/etc/kolla"
@@ -14,23 +16,10 @@
         mode: 0777
       become: true
 
-    - set_fact:
-        nodes: |
-          {% for host in hostvars %}
-          {{ host }} ansible_host={{ hostvars[host]['nodepool']['private_ipv4'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
-          {% endfor %}
-
     - name: copy default ansible kolla-ansible inventory
-      copy:
-        src: "{{ kolla_ansible_full_src_dir }}/ansible/inventory/all-in-one"
+      template:
+        src: "{{ zuul.executor.work_root }}/{{ zuul.project.src_dir }}/tests/templates/inventory.j2"
         dest: "{{ kolla_inventory_path }}"
-      delegate_to: "primary"
-
-    - name: replace localhost with IPs
-      replace:
-        path: "{{ kolla_inventory_path }}"
-        regexp: "localhost.*$"
-        replace: "{{ nodes }}"
       delegate_to: "primary"
 
     # FIXME: in multi node env, api_interface may be different on each node.
@@ -68,7 +57,7 @@
       become: true
       delegate_to: "primary"
 
-    - name: generate config overrides
+    - name: generate nova config overrides
       template:
         src: "{{ kolla_ansible_full_src_dir }}/tests/templates/nova-compute-overrides.j2"
         dest: /etc/kolla/config/nova/nova-compute.conf
@@ -105,6 +94,18 @@
       shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
       delegate_to: "primary"
 
+    - name: Prepare ceph disks
+      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_ceph_disks.sh"
+      when: scenario == "ceph"
+      become: true
+
+    - name: generate ceph config overrides
+      template:
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/ceph-overrides.j2"
+        dest: /etc/kolla/config/ceph.conf
+      when: scenario == "ceph"
+      delegate_to: "primary"
+
     - shell:
         cmd: |
           set -e
@@ -112,7 +113,6 @@
           export BASE_DISTRO={{ base_distro }}
           export INSTALL_TYPE={{ install_type }}
           export NODEPOOL_TARBALLS_MIRROR=http://{{ zuul_site_mirror_fqdn }}:8080/tarballs
-
           export BUILD_IMAGE={{ need_build_image }}
           export KOLLA_SRC_DIR={{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla
 

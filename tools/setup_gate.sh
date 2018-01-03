@@ -178,6 +178,7 @@ tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/pos
 
 # Test OpenStack Environment
 # TODO: use kolla-ansible check when it's ready
+
 sanity_check
 
 # TODO(jeffrey4l): make some configure file change and

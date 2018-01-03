@@ -3,8 +3,8 @@ kolla_base_distro: "{{ base_distro }}"
 kolla_install_type: "{{ install_type }}"
 
 {% if hostvars|length > 2 %}
-enable_haproxy: "no"
 kolla_internal_vip_address: "{{ api_interface_address }}"
+enable_haproxy: "no"
 {% else %}
 kolla_internal_vip_address: "169.254.169.10"
 {% endif %}
@@ -18,7 +18,7 @@ docker_registry: "{{ api_interface_address }}:4000"
 {% else %}
 # use docker hub images
 docker_namespace: "kolla"
-openstack_release: "queens"
+openstack_release: "{{ zuul.branch | basename }}"
 {% endif %}
 neutron_external_interface: "fake_interface"
 enable_horizon: "yes"
@@ -26,7 +26,9 @@ enable_heat: "no"
 openstack_logging_debug: "True"
 openstack_service_workers: "1"
 
-{% if 'ceph' in zuul.job %}
+{% if scenario == "ceph" %}
 enable_ceph: "yes"
 enable_cinder: "yes"
+ceph_pool_pg_num: 64
+ceph_pool_pgp_num: 64
 {% endif %}
