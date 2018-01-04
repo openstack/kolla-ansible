@@ -12,6 +12,7 @@ magnum_services:
     volumes:
       - "{{ node_config_directory }}/magnum-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   magnum-conductor:
     container_name: magnum_conductor
@@ -23,6 +24,7 @@ magnum_services:
       - "{{ node_config_directory }}/magnum-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "magnum:/var/lib/magnum/"
+      - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
 
 
@@ -69,3 +71,11 @@ magnum_trustee_domain_admin: "magnum_trustee_domain_admin"
 magnum_trustee_domain: "magnum"
 
 openstack_magnum_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+magnum_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+magnum_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+magnum_dev_mode: "{{ kolla_dev_mode }}"
