@@ -7,6 +7,9 @@
   failed_when: result | failed
                or (result.stdout | from_yaml).Server.Version | regex_replace('(\\d+\\.\\d+\\.\\d+).*', '\\1') | version_compare(docker_version_min, '<')
 
+# NOTE(mgoddard): If passwords.yml is encrypted using ansible-vault, this check
+# will pass, but only because nothing in the vault file has the format of a
+# YAML dict item.
 - name: Checking empty passwords in passwords.yml. Run kolla-genpwd if this task fails
   local_action: command grep '^[^#].*:\s*$' "{{ CONFIG_DIR | default('/etc/kolla') }}/passwords.yml"
   run_once: True
