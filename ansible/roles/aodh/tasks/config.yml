@@ -9,6 +9,39 @@
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ aodh_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: aodh_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/aodh/"
+      skip: true
+
+- name: Set aodh polify file
+  set_fact:
+    aodh_policy_file: "{{ aodh_policy.results.0.stat.path | basename }}"
+    aodh_policy_file_path: "{{ aodh_policy.results.0.stat.path }}"
+  when:
+    - aodh_policy.results
+
+- name: Copying over existing policy file
+  template:
+    src: "{{ aodh_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ aodh_policy_file }}"
+  register: aodh_policy_overwriting
+  when:
+    - aodh_policy_file is defined
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ aodh_services }}"
+  notify:
+    - Restart aodh-api container
+    - Restart aodh-evaluator container
+    - Restart aodh-listener container
+    - Restart aodh-notifier container
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -58,27 +91,6 @@
     - service.enabled | bool
   notify:
     - Restart aodh-api container
-
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/aodh/policy.json"
-  run_once: True
-  register: aodh_policy
-
-- name: Copying over existing policy.json
-  template:
-    src: "{{ node_custom_config }}/aodh/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: aodh_policy_jsons
-  when:
-    - aodh_policy.stat.exists
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ aodh_services }}"
-  notify:
-    - Restart aodh-api container
-    - Restart aodh-evaluator container
-    - Restart aodh-listener container
-    - Restart aodh-notifier container
 
 - name: Check aodh containers
   kolla_docker:
