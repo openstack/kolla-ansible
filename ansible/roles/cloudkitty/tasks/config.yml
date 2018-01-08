@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ cloudkitty_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: cloudkitty_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/cloudkitty/"
+      skip: true
+
+- name: Set cloudkitty policy file
+  set_fact:
+    cloudkitty_policy_file: "{{ cloudkitty_policy.results.0.stat.path | basename }}"
+    cloudkitty_policy_file_path: "{{ cloudkitty_policy.results.0.stat.path }}"
+  when:
+    - cloudkitty_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -55,18 +72,13 @@
   notify:
     - Restart cloudkitty-api container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/cloudkitty/policy.json"
-  run_once: True
-  register: cloudkitty_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/cloudkitty/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: cloudkitty_policy_jsons
+    src: "{{ cloudkitty_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ cloudkitty_policy_file }}"
+  register: cloudkitty_policy_overwriting
   when:
-    - cloudkitty_policy.stat.exists
+    - cloudkitty_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ cloudkitty_services }}"
