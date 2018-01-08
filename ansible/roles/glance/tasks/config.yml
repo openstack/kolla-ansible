@@ -22,6 +22,23 @@
     - item.value.enabled | bool
   with_dict: "{{ glance_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: glance_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/glance/"
+      skip: true
+
+- name: Set glance policy file
+  set_fact:
+    glance_policy_file: "{{ glance_policy.results.0.stat.path | basename }}"
+    glance_policy_file_path: "{{ glance_policy.results.0.stat.path }}"
+  when:
+    - glance_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -59,11 +76,6 @@
     - Restart glance-api container
     - Restart glance-registry container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/glance/policy.json"
-  run_once: True
-  register: glance_policy
-
 - name: Copying over glance-swift.conf for glance_api
   vars:
     glance_api: "{{ glance_services['glance-api'] }}"
@@ -82,15 +94,15 @@
   notify:
     - Restart glance-api container
 
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/glance/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+    src: "{{ glance_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ glance_policy_file_path }}"
     mode: "0660"
   become: true
-  register: glance_policy_jsons
+  register: glance_policy_overwriting
   when:
-    - glance_policy.stat.exists
+    - glance_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ glance_services }}"
   notify:

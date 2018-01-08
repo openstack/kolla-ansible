@@ -31,7 +31,7 @@
     service: "{{ keystone_services[service_name] }}"
     config_json: "{{ keystone_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     keystone_conf: "{{ keystone_confs.results|selectattr('item.key', 'equalto', service_name)|first  }}"
-    policy_json: "{{ keystone_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ keystone_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     keystone_container: "{{ check_keystone_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -46,7 +46,7 @@
     - config_json.changed | bool
       or keystone_conf.changed | bool
       or keystone_domains.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or keystone_wsgi.changed | bool
       or keystone_paste_ini.changed | bool
       or keystone_container.changed | bool
@@ -57,7 +57,7 @@
     service: "{{ keystone_services[service_name] }}"
     config_json: "{{ keystone_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     keystone_conf: "{{ keystone_confs.results|selectattr('item.key', 'equalto', service_name)|first  }}"
-    policy_json: "{{ keystone_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ keystone_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     keystone_fernet_container: "{{ check_keystone_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -71,7 +71,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or keystone_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or keystone_fernet_confs.changed | bool
       or keystone_fernet_container.changed | bool
 

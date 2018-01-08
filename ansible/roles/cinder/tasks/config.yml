@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ cinder_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: cinder_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/cinder/"
+      skip: true
+
+- name: Set cinder policy file
+  set_fact:
+    cinder_policy_file: "{{ cinder_policy.results.0.stat.path | basename }}"
+    cinder_policy_file_path: "{{ cinder_policy.results.0.stat.path }}"
+  when:
+    - cinder_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -63,18 +80,13 @@
     - Restart cinder-volume container
     - Restart cinder-backup container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/cinder/policy.json"
-  run_once: True
-  register: cinder_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/cinder/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: cinder_policy_jsons
+    src: "{{ cinder_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ cinder_policy_file }}"
+  register: cinder_policy_overwriting
   when:
-    - cinder_policy.stat.exists
+    - cinder_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ cinder_services }}"
   notify:
