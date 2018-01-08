@@ -7,6 +7,23 @@
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ mistral_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: mistral_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/mistral/"
+      skip: true
+
+- name: Set mistral policy file
+  set_fact:
+    mistral_policy_file: "{{ mistral_policy.results.0.stat.path | basename }}"
+    mistral_policy_file_path: "{{ mistral_policy.results.0.stat.path }}"
+  when:
+    - mistral_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -38,18 +55,15 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/mistral/policy.json"
-  run_once: True
-  register: mistral_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/mistral/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: mistral_policy_jsons
+    src: "{{ mistral_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ mistral_policy_file }}"
+    mode: "0660"
+  become: true
+  register: mistral_policy_overwriting
   when:
-    - mistral_policy.stat.exists
+    - mistral_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ mistral_services }}"
