@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: ceilometer_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/ceilometer/"
+      skip: true
+
+- name: Set ceilometer policy file
+  set_fact:
+    ceilometer_policy_file: "{{ ceilometer_policy.results.0.stat.path | basename }}"
+    ceilometer_policy_file_path: "{{ ceilometer_policy.results.0.stat.path }}"
+  when:
+    - ceilometer_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -115,18 +132,13 @@
   notify:
     - Restart ceilometer-compute container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/ceilometer/policy.json"
-  run_once: True
-  register: ceilometer_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/ceilometer/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: ceilometer_policy_jsons
+    src: "{{ ceilometer_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ ceilometer_policy_file }}"
+  register: policy_jsons
   when:
-    - ceilometer_policy.stat.exists
+    - ceilometer_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"

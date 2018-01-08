@@ -14,14 +14,13 @@
             "dest": "/etc/{{ gnocchi_dir }}/wsgi-gnocchi.conf",
             "owner": "gnocchi",
             "perm": "0600"
-        },
+        }{% if gnocchi_policy_file is defined %},
         {
-            "source": "{{ container_config_directory }}/policy.json",
-            "dest": "/etc/gnocchi/policy.json",
+            "source": "{{ container_config_directory }}/{{ gnocchi_policy_file }}",
+            "dest": "/etc/gnocchi/{{ gnocchi_policy_file }}",
             "owner": "gnocchi",
-            "perm": "0600",
-            "optional": true
-        }{% if gnocchi_backend_storage == 'ceph' %},
+            "perm": "0600"
+        }{% endif %}{% if gnocchi_backend_storage == 'ceph' %},
         {
             "source": "{{ container_config_directory }}/ceph.conf",
             "dest": "/etc/ceph/ceph.conf",
