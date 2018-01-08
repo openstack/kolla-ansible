@@ -9,6 +9,23 @@
     - item.value.enabled
   with_dict: "{{ tacker_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: tacker_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/tacker/"
+      skip: true
+
+- name: Set tacker policy file
+  set_fact:
+    tacker_policy_file: "{{ tacker_policy.results.0.stat.path | basename }}"
+    tacker_policy_file_path: "{{ tacker_policy.results.0.stat.path }}"
+  when:
+    - tacker_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -42,20 +59,15 @@
     - Restart tacker-server container
     - Restart tacker-conductor container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/tacker/policy.json"
-  run_once: True
-  register: tacker_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/tacker/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: tacker_policy_jsons
+    src: "{{ tacker_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ tacker_policy_file }}"
+  register: tacker_policy_overwriting
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
-    - tacker_policy.stat.exists
+    - tacker_policy_file is defined
   with_dict: "{{ tacker_services }}"
   notify:
     - Restart tacker-server containers

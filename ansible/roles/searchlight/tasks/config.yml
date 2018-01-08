@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ searchlight_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: searchlight_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/searchlight/"
+      skip: true
+
+- name: Set searchlight policy file
+  set_fact:
+    searchlight_policy_file: "{{ searchlight_policy.results.0.stat.path | basename }}"
+    searchlight_policy_file_path: "{{ searchlight_policy.results.0.stat.path }}"
+  when:
+    - searchlight_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -38,18 +55,13 @@
     - Restart searchlight-api container
     - Restart searchlight-listener container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/searchlight/policy.json"
-  run_once: True
-  register: searchlight_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/searchlight/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: searchlight_policy_jsons
+    src: "{{ searchlight_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ searchlight_policy_file }}"
+  register: searchlight_policy_overwriting
   when:
-    - searchlight_policy.stat.exists
+    - searchlight_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ searchlight_services }}"
