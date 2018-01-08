@@ -5,7 +5,7 @@
     service: "{{ zun_services[service_name] }}"
     config_json: "{{ zun_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     zun_conf: "{{ zun_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ zun_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ zun_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     zun_api_container: "{{ check_zun_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -21,7 +21,7 @@
     - config_json.changed | bool
       or zun_conf.changed | bool
       or zun_conf_wsgi.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or zun_api_container.changed | bool
 
 - name: Restart zun-compute container
@@ -30,7 +30,7 @@
     service: "{{ zun_services[service_name] }}"
     config_json: "{{ zun_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     zun_conf: "{{ zun_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ zun_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ zun_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     zun_compute_container: "{{ check_zun_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -45,5 +45,5 @@
     - service.enabled | bool
     - config_json.changed | bool
       or zun_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or zun_compute_container.changed | bool

@@ -7,6 +7,23 @@
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ zun_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: zun_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/zun/"
+      skip: true
+
+- name: Set zun policy file
+  set_fact:
+    zun_policy_file: "{{ zun_policy.results.0.stat.path | basename }}"
+    zun_policy_file_path: "{{ zun_policy.results.0.stat.path }}"
+  when:
+    - zun_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -53,18 +70,13 @@
   notify:
     - Restart zun-api container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/zun/policy.json"
-  run_once: True
-  register: zun_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/zun/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: zun_policy_jsons
+    src: "{{ zun_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ zun_policy_file }}"
+  register: zun_policy_overwriting
   when:
-    - zun_policy.stat.exists
+    - zun_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ zun_services }}"
   notify:
