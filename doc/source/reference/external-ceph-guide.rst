@@ -14,7 +14,7 @@ Requirements
 * An existing installation of Ceph
 * Existing Ceph storage pools
 * Existing credentials in Ceph for OpenStack services to connect to Ceph
-  (Glance, Cinder, Nova)
+  (Glance, Cinder, Nova, Gnocchi)
 
 Enabling External Ceph
 ======================
@@ -36,6 +36,7 @@ service in ``/etc/kolla/globals.yml``:
   glance_backend_ceph: "yes"
   cinder_backend_ceph: "yes"
   nova_backend_ceph: "yes"
+  gnocchi_backend_storage: "ceph"
 
 The combination of ``enable_ceph: "no"`` and ``<service>_backend_ceph: "yes"``
 triggers the activation of external ceph mechanism in Kolla.
