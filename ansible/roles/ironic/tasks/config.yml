@@ -72,6 +72,19 @@
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
     - inventory_hostname in groups['ironic-pxe']
+    - not enable_ironic_pxe_uefi
+
+- name: Copying ironic_pxe_uefi.cfg default
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-pxe/default"
+  with_first_found:
+    - "{{ node_custom_config }}/ironic/ironic_pxe_uefi.default"
+    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ironic_pxe_uefi.default"
+    - "ironic_pxe_uefi.default.j2"
+  when:
+    - inventory_hostname in groups['ironic-pxe']
+    - enable_ironic_pxe_uefi | bool
 
 - name: Copying ironic-agent kernel and initramfs
   copy:
@@ -84,6 +97,7 @@
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
     - inventory_hostname in groups['ironic-pxe']
+    - not enable_ironic_pxe_uefi
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ node_custom_config }}/ironic/policy.json"
