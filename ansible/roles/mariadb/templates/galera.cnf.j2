@@ -1,4 +1,5 @@
 {%- set wsrep_driver = '/usr/lib/galera/libgalera_smm.so' if kolla_base_distro in ['debian', 'ubuntu'] else '/usr/lib64/galera/libgalera_smm.so' %}
+{% set sst_method = 'mariabackup' if kolla_base_distro in ['debian'] else 'xtrabackup-v2' %}
 
 [client]
 default-character-set=utf8
@@ -33,7 +34,7 @@ wsrep_sst_receive_address={{ api_interface_address }}:{{ mariadb_sst_port }}
 wsrep_provider={{ wsrep_driver }}
 wsrep_cluster_name="{{ database_cluster_name }}"
 wsrep_node_name={{ ansible_hostname }}
-wsrep_sst_method=xtrabackup-v2
+wsrep_sst_method={{ sst_method }}
 wsrep_sst_auth={{ database_user }}:{{ database_password }}
 wsrep_slave_threads=4
 wsrep_notify_cmd=/usr/local/bin/wsrep-notify.sh
