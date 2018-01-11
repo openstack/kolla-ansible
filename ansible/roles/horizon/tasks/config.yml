@@ -12,6 +12,39 @@
     - item.value.enabled | bool
   with_dict: "{{ horizon_services }}"
 
+- set_fact:
+   custom_policy: []
+
+- include: policy_item.yml
+  vars:
+    project_name: "{{ item.name }}"
+  when: item.enabled | bool
+  with_items:
+    - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
+    - { name: "cinder", enabled: "{{ enable_cinder }}" }
+    - { name: "congress", enabled: "{{ enable_congress }}" }
+    - { name: "cloudkitty", enabled: "{{ enable_horizon_cloudkitty }}" }
+    - { name: "designate", enabled: "{{ enable_horizon_designate }}" }
+    - { name: "freezer", enabled: "{{ enable_horizon_freezer }}" }
+    - { name: "glance", enabled: "{{ enable_glance }}" }
+    - { name: "heat", enabled: "{{ enable_heat }}" }
+    - { name: "ironic", enabled: "{{ enable_horizon_ironic }}" }
+    - { name: "keystone", enabled: "{{ enable_keystone }}" }
+    - { name: "karbor", enabled: "{{ enable_horizon_karbor }}" }
+    - { name: "magnum", enabled: "{{ enable_horizon_magnum }}" }
+    - { name: "manila", enabled: "{{ enable_horizon_manila }}" }
+    - { name: "mistral", enabled: "{{ enable_horizon_mistral }}" }
+    - { name: "murano", enabled: "{{ enable_horizon_murano }}" }
+    - { name: "neutron", enabled: "{{ enable_neutron }}" }
+    - { name: "nova", enabled: "{{ enable_nova }}" }
+    - { name: "sahara", enabled: "{{ enable_horizon_sahara }}" }
+    - { name: "searchlight", enabled: "{{ enable_horizon_searchlight }}" }
+    - { name: "senlin", enabled: "{{ enable_horizon_senlin }}" }
+    - { name: "solum", enabled: "{{ enable_horizon_solum }}" }
+    - { name: "tacker", enabled: "{{ enable_horizon_tacker }}" }
+    - { name: "trove", enabled: "{{ enable_horizon_trove }}" }
+    - { name: "watcher", enabled: "{{ enable_horizon_watcher }}" }
+
 - name: Copying over config.json files for services
   become: true
   vars:
@@ -65,51 +98,19 @@
   notify:
     - Restart horizon container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/horizon/{{ item.name }}_policy.json"
-  run_once: True
-  register: custom_policy
-  when: item.enabled | bool
-  with_items:
-    - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
-    - { name: "cinder", enabled: "{{ enable_cinder }}" }
-    - { name: "cloudkitty", enabled: "{{ enable_horizon_cloudkitty }}" }
-    - { name: "designate", enabled: "{{ enable_horizon_designate }}" }
-    - { name: "freezer", enabled: "{{ enable_horizon_freezer }}" }
-    - { name: "glance", enabled: "{{ enable_glance }}" }
-    - { name: "heat", enabled: "{{ enable_heat }}" }
-    - { name: "ironic", enabled: "{{ enable_horizon_ironic }}" }
-    - { name: "keystone", enabled: "{{ enable_keystone }}" }
-    - { name: "karbor", enabled: "{{ enable_horizon_karbor }}" }
-    - { name: "magnum", enabled: "{{ enable_horizon_magnum }}" }
-    - { name: "manila", enabled: "{{ enable_horizon_manila }}" }
-    - { name: "mistral", enabled: "{{ enable_horizon_mistral }}" }
-    - { name: "murano", enabled: "{{ enable_horizon_murano }}" }
-    - { name: "neutron", enabled: "{{ enable_neutron }}" }
-    - { name: "nova", enabled: "{{ enable_nova }}" }
-    - { name: "sahara", enabled: "{{ enable_horizon_sahara }}" }
-    - { name: "searchlight", enabled: "{{ enable_horizon_searchlight }}" }
-    - { name: "senlin", enabled: "{{ enable_horizon_senlin }}" }
-    - { name: "solum", enabled: "{{ enable_horizon_solum }}" }
-    - { name: "tacker", enabled: "{{ enable_horizon_tacker }}" }
-    - { name: "trove", enabled: "{{ enable_horizon_trove }}" }
-    - { name: "watcher", enabled: "{{ enable_horizon_watcher }}" }
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   become: true
   vars:
     horizon: "{{ horizon_services['horizon'] }}"
   template:
-    src: "{{ node_custom_config }}/horizon/{{ item.item.name }}_policy.json"
-    dest: "{{ node_config_directory }}/horizon/{{ item.item.name }}_policy.json"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/horizon/{{ item | basename }}"
     mode: "0660"
   register: policy_jsons
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
-    - item.item.enabled | bool
-    - item.stat.exists
-  with_items: "{{ custom_policy.results }}"
+  with_items: "{{ custom_policy }}"
   notify:
     - Restart horizon container
 

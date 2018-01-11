@@ -70,6 +70,9 @@ def check_json_j2():
     def bool_filter(value):
         return True
 
+    def basename_filter(text):
+        return text.split('\\')[-1]
+
     # Mock ansible hostvars variable, which is a nested dict
     def hostvars():
         return collections.defaultdict(hostvars)
@@ -82,6 +85,7 @@ def check_json_j2():
         env = jinja2.Environment(  # nosec: not used to render HTML
             loader=jinja2.FileSystemLoader(root))
         env.filters['bool'] = bool_filter
+        env.filters['basename'] = basename_filter
         template = env.get_template(filename)
         # Mock ansible variables.
         context = {
