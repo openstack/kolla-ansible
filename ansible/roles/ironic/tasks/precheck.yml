@@ -28,7 +28,7 @@
     - container_facts['ironic_inspector'] is not defined
     - inventory_hostname in groups['ironic-inspector']
 
-- name: Checking ironic-agent files exist for Ironic
+- name: Checking ironic-agent files exist for Ironic Inspector
   local_action: stat path="{{ node_custom_config }}/ironic/{{ item }}"
   run_once: True
   register: result
@@ -37,7 +37,7 @@
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
     - inventory_hostname in groups['ironic-pxe']
-    - not enable_ironic_pxe_uefi
+    - not enable_ironic_pxe_uefi | bool
   with_items:
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
