@@ -18,7 +18,7 @@
       - "/sys/kernel/config:/configfs"
       - "cinder:/var/lib/cinder"
       - "iscsi_info:/etc/iscsi"
-  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder_backend_iscsi | bool )
+  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool  )
          or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
 
 - name: Starting tgtd container
@@ -42,4 +42,5 @@
       - "iscsi_info:/etc/iscsi"
   when:
     - inventory_hostname in groups['tgtd']
+    - enable_cinder | bool
     - enable_cinder_backend_lvm | bool
