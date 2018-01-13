@@ -1,10 +1,10 @@
 ---
 - name: Checking Docker version
-  command: docker version
+  command: docker --version
   register: result
   changed_when: false
   failed_when: result | failed
-               or (result.stdout | from_yaml).Server.Version | regex_replace('(\\d+\\.\\d+\\.\\d+).*', '\\1') | version_compare(docker_version_min, '<')
+               or result.stdout | regex_replace('.*(\\d+\\.\\d+\\.\\d+).*', '\\1') | version_compare(docker_version_min, '<')
 
 - name: Checking empty passwords in passwords.yml. Run kolla-genpwd if this task fails
   local_action: command grep '^[^#].*:\s*$' "{{ CONFIG_DIR | default('/etc/kolla') }}/passwords.yml"
