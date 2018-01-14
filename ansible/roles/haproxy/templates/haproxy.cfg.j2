@@ -880,18 +880,24 @@ defaults
   timeout server {{ haproxy_server_timeout }}
   timeout check 10s
 
-{% if enable_mariadb | bool %}
+{% if enable_mariadb | bool or enable_external_mariadb_load_balancer | bool %}
 listen mariadb
   mode tcp
   timeout client 3600s
   timeout server 3600s
   option tcplog
   option tcpka
+{% if not enable_external_mariadb_load_balancer | bool %}
   option mysql-check user haproxy post-41
+{% endif %}
   bind {{ kolla_internal_vip_address }}:{{ mariadb_port }}
 {% for host in groups['mariadb'] %}
-  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5 {% if not loop.first %}backup{% endif %}
 
+{% if not enable_external_mariadb_load_balancer | bool %}
+  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5 {% if not loop.first %}backup{% endif %}
+{% else %}
+  server {{ host }} {{ host }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5 {% if not loop.first %}backup{% endif %}
+{% endif %}
 {% endfor %}
 {% endif %}
 

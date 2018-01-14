@@ -16,7 +16,9 @@
       group: "ironic-api"
     - database_name: "{{ ironic_inspector_database_name }}"
       group: "ironic-inspector"
-  when: inventory_hostname in groups[item.group]
+  when:
+    - not use_preconfigured_databases | bool
+    - inventory_hostname in groups[item.group]
 
 - name: Creating Ironic database user and setting permissions
   kolla_toolbox:
@@ -42,7 +44,9 @@
       database_user: "{{ ironic_inspector_database_user }}"
       database_password: "{{ ironic_inspector_database_password }}"
       group: "ironic-inspector"
-  when: inventory_hostname in groups[item.group]
+  when:
+    - not use_preconfigured_databases | bool
+    - inventory_hostname in groups[item.group]
 
 - include: bootstrap_service.yml
   when: database.changed

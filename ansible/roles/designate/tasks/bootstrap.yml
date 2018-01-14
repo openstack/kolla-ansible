@@ -14,6 +14,8 @@
   with_items:
     - "{{ designate_database_name }}"
     - "{{ designate_pool_manager_database_name }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 - name: Creating Designate databases user and setting permissions
   kolla_toolbox:
@@ -37,6 +39,8 @@
     - database_name: "{{ designate_pool_manager_database_name }}"
       database_user: "{{ designate_pool_manager_database_user }}"
       database_password: "{{ designate_pool_manager_database_password }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 - include: bootstrap_service.yml
-  when: database.changed
+  when: database.changed or use_preconfigured_databases | bool
