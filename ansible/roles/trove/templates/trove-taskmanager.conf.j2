@@ -3,9 +3,14 @@ debug = {{ trove_logging_debug }}
 
 log_dir = /var/log/kolla/trove
 
+{% if enable_trove_singletenant | bool %}
 nova_proxy_admin_pass = {{ trove_keystone_password }}
 nova_proxy_admin_tenant_name = services
 nova_proxy_admin_user = trove
+remote_nova_client = trove.common.single_tenant_remote.nova_client_trove_admin
+remote_cinder_client = trove.common.single_tenant_remote.cinder_client_trove_admin
+remote_neutron_client = trove.common.single_tenant_remote.neutron_client_trove_admin
+{% endif %}
 taskmanager_manager = trove.taskmanager.manager.Manager
 
 transport_url = {{ rpc_transport_url }}
