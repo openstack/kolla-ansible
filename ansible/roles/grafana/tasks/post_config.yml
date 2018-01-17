@@ -4,11 +4,10 @@
     url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ grafana_server_port }}/login"
     status_code: 200
   register: result
-  until: result.status == 200
+  until: result | failed or result.status == 200
   retries: 10
   delay: 2
   run_once: true
-  connection: local
 
 - name: Enable grafana datasources
   uri:
@@ -22,7 +21,6 @@
     status_code: 200, 409
   register: response
   run_once: True
-  connection: local
   changed_when: response.status == 200
   failed_when: response.status not in [200, 409] or
                response.status == 409 and ("Data source with same name already exists" not in response.json.message|default(""))
@@ -40,5 +38,4 @@
   register: grafana_response
   changed_when: grafana_response.status == 200
   run_once: true
-  connection: local
   when: grafana_custom_dashboard_file.stat.exists
