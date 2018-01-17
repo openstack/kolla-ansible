@@ -10,6 +10,7 @@ keystone_services:
     volumes:
       - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/keystone/keystone:/var/lib/kolla/venv/lib/python2.7/site-packages/keystone' if keystone_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{% if keystone_token_provider == 'fernet' %}keystone_fernet_tokens:/etc/keystone/fernet-keys{% endif %}"
   keystone-ssh:
@@ -74,3 +75,11 @@ keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 keystone_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_keystone_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+keystone_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+keystone_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+keystone_dev_mode: "{{ kolla_dev_mode }}"
