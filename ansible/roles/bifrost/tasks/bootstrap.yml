@@ -37,3 +37,17 @@
      chown ironic:ironic /home/ironic/.ssh/id_rsa &&
      chown ironic:ironic /home/ironic/.ssh/id_rsa.pub &&
      chown ironic:ironic /home/ironic/.ssh/config'
+
+# Ironic creates hardlinks between the TFTP master image store and the
+# HTTP root path when iPXE is enabled. With Docker volumes used for these
+# locations we run into https://bugs.launchpad.net/ironic/+bug/1507894
+# during deployment. If we use a directory under /httpboot to store the
+# master images this issue is avoided.
+- name: Configuring TFTP master image path
+  command: |
+    docker exec bifrost_deploy
+    bash -c 'cat >> /etc/ironic/ironic.conf << EOF
+    [pxe]
+    tftp_master_path = /httpboot/master_images
+    EOF
+    systemctl restart ironic-conductor'
