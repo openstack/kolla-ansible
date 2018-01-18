@@ -85,7 +85,7 @@ Ceph) into the same directory, for example:
 ::
 
   [client.glance]
-  key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
+          key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
 
 Kolla will pick up all files named ceph.* in this directory an copy them to the
 /etc/ceph/ directory of the container.
@@ -150,25 +150,32 @@ cinder-volume and cinder-backup by adding ceph.conf files to
 will be merged with /etc/kolla/config/cinder/ceph.conf.
 
 Ceph keyrings are deployed per service and placed into
-cinder-volume and cinder-backup directories:
+cinder-volume and cinder-backup directories, put the keyring files
+to these directories, for example:
 
 .. note::
 
     ``cinder-backup`` requires two keyrings for accessing volumes
     and backup pool.
 
+/etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring
+
 ::
 
-  root@deploy:/etc/kolla/config# cat
-  cinder/cinder-backup/ceph.client.cinder.keyring
   [client.cinder]
           key = AQAg5YRXpChaGRAAlTSCleesthCRmCYrfQVX1w==
-  root@deploy:/etc/kolla/config# cat
-  cinder/cinder-backup/ceph.client.cinder-backup.keyring
+
+/etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring
+
+::
+
   [client.cinder-backup]
           key = AQC9wNBYrD8MOBAAwUlCdPKxWZlhkrWIDE1J/w==
-  root@deploy:/etc/kolla/config# cat
-  cinder/cinder-volume/ceph.client.cinder.keyring
+
+/etc/kolla/config/cinder/cinder-volume/ceph.client.cinder.keyring
+
+::
+
   [client.cinder]
           key = AQAg5YRXpChaGRAAlTSCleesthCRmCYrfQVX1w==
 
