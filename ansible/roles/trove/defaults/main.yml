@@ -11,6 +11,7 @@ trove_services:
       - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
   trove-conductor:
     container_name: trove_conductor
@@ -21,6 +22,7 @@ trove_services:
       - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
   trove-taskmanager:
     container_name: trove_taskmanager
@@ -31,6 +33,7 @@ trove_services:
       - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
 
 
@@ -73,3 +76,11 @@ trove_logging_debug: "{{ openstack_logging_debug }}"
 trove_keystone_user: "trove"
 
 openstack_trove_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+trove_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+trove_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+trove_dev_mode: "{{ kolla_dev_mode }}"
