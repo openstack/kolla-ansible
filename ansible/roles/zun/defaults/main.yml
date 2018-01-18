@@ -10,6 +10,7 @@ zun_services:
     volumes:
       - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   zun-compute:
     container_name: zun_compute
@@ -21,6 +22,7 @@ zun_services:
       - "{{ node_config_directory }}/zun-compute/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "/run:/run:shared"
       - "/usr/lib/docker:/usr/lib/docker"
 
@@ -59,3 +61,11 @@ zun_logging_debug: "{{ openstack_logging_debug }}"
 zun_keystone_user: "zun"
 
 openstack_zun_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+zun_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+zun_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+zun_dev_mode: "{{ kolla_dev_mode }}"
