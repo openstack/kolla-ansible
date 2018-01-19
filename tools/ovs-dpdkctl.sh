@@ -384,7 +384,7 @@ function uninstall {
 
 }
 
-function useage {
+function usage {
     cat << "EOF"
 ovs-dpdkctl.sh: A tool to configure ovs with dpdk.
 
@@ -417,7 +417,7 @@ commands:
       ovs-dpdkctl config.
     - creates dpdk ports as defined by ovs port_mappings in
       ovs-dpdkctl config.
-  - useage:
+  - usage:
     - prints this message
 
 options:
@@ -495,7 +495,7 @@ if [ $# -ge  1 ]; then
     func=$1
     shift
 else
-    func="useage"
+    func="usage"
 fi
 
 #replace with switch later
