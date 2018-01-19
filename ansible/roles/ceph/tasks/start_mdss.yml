@@ -1,0 +1,58 @@
+---
+- include: ../../ceph_pools.yml
+  vars:
+    pool_name: "{{ item.pool_name }}"
+    pool_type: "{{ item.pool_type }}"
+    cache_mode: "{{ item.cache_mode }}"
+    pool_pg_num: "{{ item.pool_pg_num }}"
+    pool_pgp_num: "{{ item.pool_pgp_num }}"
+  with_items:
+    - pool_name: "{{ cephfs_data_pool_name }}"
+      pool_type: "{{ cephfs_data_pool_type }}"
+      cache_mode: "{{ cephfs_data_pool_cache_mode }}"
+      pool_pg_num: "{{ cephfs_data_pool_pg_num }}"
+      pool_pgp_num: "{{ cephfs_data_pool_pgp_num }}"
+    - pool_name: "{{ cephfs_metadata_pool_name }}"
+      pool_type: "{{ cephfs_metadata_pool_type }}"
+      cache_mode: "{{ cephfs_metadata_pool_cache_mode }}"
+      pool_pg_num: "{{ cephfs_metadata_pool_pg_num }}"
+      pool_pgp_num: "{{ cephfs_metadata_pool_pgp_num }}"
+
+- name: Geting ceph mds keyring
+  command: docker exec ceph_mon ceph auth get-or-create mds.{{ hostvars[item]['inventory_hostname'] }} mds 'allow ' osd 'allow *' mon 'allow rwx'
+  register: ceph_mds_auth
+  run_once: true
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: false
+  with_items: "{{ groups['ceph-mds'] }}"
+
+- name: Pushing ceph mds keyring to ceph-mds
+  copy:
+    content: "{{ item.stdout }}\n"
+    dest: "{{ node_config_directory }}/ceph-mds/ceph.mds.{{ inventory_hostname }}.keyring"
+  when:
+    - inventory_hostname == item.item
+  with_items: "{{ ceph_mds_auth.results }}"
+
+- name: Starting ceph-mds container
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ ceph_mds_image_full }}"
+    name: "ceph_mds"
+    volumes:
+      - "{{ node_config_directory }}/ceph-mds/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+
+- name: Checking whether cephfs is created
+  command: docker exec ceph_mon ceph fs get cephfs
+  register: cephfs_stat
+  failed_when: false
+  changed_when: false
+  run_once: true
+
+- name: Creating ceph new filesystem
+  command: docker exec ceph_mon ceph fs new cephfs cephfs_metadata cephfs_data
+  run_once: true
+  when: cephfs_stat.rc != 0
