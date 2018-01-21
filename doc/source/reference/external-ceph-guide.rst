@@ -37,6 +37,7 @@ service in ``/etc/kolla/globals.yml``:
   cinder_backend_ceph: "yes"
   nova_backend_ceph: "yes"
   gnocchi_backend_storage: "ceph"
+  enable_manila_backend_ceph_native: "yes"
 
 The combination of ``enable_ceph: "no"`` and ``<service>_backend_ceph: "yes"``
 triggers the activation of external ceph mechanism in Kolla.
@@ -226,3 +227,43 @@ Put ceph.conf and gnocchi client keyring file in
 
   $ ls /etc/kolla/config/gnocchi
   ceph.client.gnocchi.keyring ceph.conf gnocchi.conf
+
+Manila
+------
+
+Configuring Manila for Ceph includes four steps:
+
+1) Configure CephFS backend, setting enable_manila_backend_ceph_native
+2) Create Ceph configuration file in /etc/ceph/ceph.conf
+3) Create Ceph keyring file in /etc/ceph/ceph.client.<username>.keyring
+4) Setup Manila in the usual way
+
+Step 1 is done by using setting enable_manila_backend_ceph_native=true
+
+Now put ceph.conf and the keyring file (name depends on the username created
+in Ceph) into the same directory, for example:
+
+/etc/kolla/config/manila/ceph.conf
+
+::
+
+  [global]
+  fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
+  mon_host = 192.168.0.56
+  auth_cluster_required = cephx
+  auth_service_required = cephx
+  auth_client_required = cephx
+
+/etc/kolla/config/manila/ceph.client.manila.keyring
+
+::
+
+  [client.manila]
+  key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
+
+For more details on the rest of the Manila setup, such as creating the share
+type ``default_share_type``, please see:
+https://docs.openstack.org/kolla-ansible/latest/reference/manila-guide.html
+
+For more details on the CephFS Native driver, please see:
+https://docs.openstack.org/manila/latest/admin/cephfs_driver.html

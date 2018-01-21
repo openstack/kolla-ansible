@@ -1,4 +1,19 @@
 ---
+- include: ceph.yml
+  when:
+    - enable_ceph | bool
+    - enable_ceph_mds | bool
+    - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
+    - inventory_hostname in groups['manila-share']
+
+- include: external_ceph.yml
+  when:
+    - enable_ceph| bool == False
+    - enable_ceph_mds| bool == False
+    - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
+    - inventory_hostname in groups['manila-share']
+
+
 - include: register.yml
   when: inventory_hostname in groups['manila-api']
 

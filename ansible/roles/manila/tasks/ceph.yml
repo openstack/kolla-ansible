@@ -1,0 +1,26 @@
+---
+- name: Ensuring config directory exists
+  file:
+    path: "{{ node_config_directory }}/manila-share"
+    state: "directory"
+
+- name: Copying over ceph.conf for manila
+  merge_configs:
+    sources:
+      - "{{ role_path }}/../ceph/templates/ceph.conf.j2"
+      - "{{ node_custom_config }}/ceph.conf"
+      - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
+    dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+
+- name: Pulling cephx keyring for manila
+  command: docker exec ceph_mon ceph auth get-or-create client.manila mon 'allow r, allow command "auth del", allow command "auth caps", allow command "auth get", allow command "auth get-or-create"' osd 'allow rw' mds 'allow *'
+  register: cephx_key_manila
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  changed_when: False
+  run_once: True
+
+- name: Pushing cephx keyring
+  copy:
+    content: "{{ cephx_key_manila.stdout }}\n\r"
+    dest: "{{ node_config_directory }}/manila-share/ceph.client.manila.keyring"
+    mode: "0600"
