@@ -191,8 +191,8 @@ files. Difference between them is that the former is ready for deploying
 single node OpenStack on localhost. If you need to use separate host or more
 than one node, edit ``multinode`` inventory:
 
-Edit the first section of ``multinode`` with connection details of your environment,
-for example:
+Edit the first section of ``multinode`` with connection details of your
+environment, for example:
 
 ::
 
@@ -334,10 +334,10 @@ There are a few options that are required to deploy Kolla-Ansible:
 
       network_interface: "eth0"
 
-  Second interface required is dedicated for Neutron external (or public) networks,
-  can be vlan or flat, depends on how the networks are created. This interface
-  should be active without IP address. If not, instances won't be able to access
-  to the external networks.
+  Second interface required is dedicated for Neutron external (or public)
+  networks, can be vlan or flat, depends on how the networks are created.
+  This interface should be active without IP address. If not, instances
+  won't be able to access to the external networks.
 
   ::
 
