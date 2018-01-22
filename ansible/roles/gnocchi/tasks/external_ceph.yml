@@ -36,3 +36,16 @@
     - Restart gnocchi-api container
     - Restart gnocchi-metricd container
     - Restart gnocchi-statsd container
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  when: inventory_hostname in groups[item]
+  with_items:
+    - "gnocchi-api"
+    - "gnocchi-metricd"
+    - "gnocchi-statsd"
