@@ -19,7 +19,7 @@ neutron_services:
     privileged: True
     host_in_groups: >-
       {{
-      ( inventory_hostname in groups['compute']
+      ( (inventory_hostname in groups['compute'] and nova_compute_virt_type != 'xenapi')
       or (enable_manila | bool and inventory_hostname in groups['manila-share'])
       or inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
@@ -36,6 +36,21 @@ neutron_services:
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-openvswitch-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  neutron-openvswitch-agent-xenapi:
+    container_name: "neutron_openvswitch_agent_xenapi"
+    image: "{{ neutron_openvswitch_agent_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' and nova_compute_virt_type == 'xenapi' }}"
+    privileged: True
+    host_in_groups: >-
+      {{
+       inventory_hostname in groups['compute']
+      }}
+    volumes:
+      - "{{ node_config_directory }}/neutron-openvswitch-agent-xenapi/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
