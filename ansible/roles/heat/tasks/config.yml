@@ -13,6 +13,23 @@
     - item.value.enabled | bool
   with_dict: "{{ heat_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: heat_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/heat/"
+      skip: true
+
+- name: Set heat policy file
+  set_fact:
+    heat_policy_file: "{{ heat_policy.results.0.stat.path | basename }}"
+    heat_policy_file_path: "{{ heat_policy.results.0.stat.path }}"
+  when:
+    - heat_policy.results
+
 - name: Copying over config.json files for services
   become: true
   template:
@@ -61,20 +78,15 @@
     - Restart heat-api-cfn container
     - Restart heat-engine container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/heat/policy.json"
-  run_once: True
-  register: heat_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   become: true
   template:
-    src: "{{ node_custom_config }}/heat/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+    src: "{{ heat_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ heat_policy_file }}"
     mode: "0660"
-  register: heat_policy_jsons
+  register: heat_policy_overwriting
   when:
-    - heat_policy.stat.exists
+    - heat_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ heat_services }}"
   notify:

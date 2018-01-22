@@ -11,6 +11,23 @@
     - "ironic-pxe"
     - "ironic-dnsmasq"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: ironic_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/ironic/"
+      skip: true
+
+- name: Set ironic policy file
+  set_fact:
+    ironic_policy_file: "{{ ironic_policy.results.0.stat.path | basename }}"
+    ironic_policy_file_path: "{{ ironic_policy.results.0.stat.path }}"
+  when:
+    - ironic_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item }}.json.j2"
@@ -99,19 +116,14 @@
     - inventory_hostname in groups['ironic-pxe']
     - not enable_ironic_pxe_uefi
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/ironic/policy.json"
-  run_once: True
-  register: ironic_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/ironic/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
+    src: "{{ ironic_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item }}/{{ ironic_policy_file }}"
   with_items:
     - "ironic-api"
     - "ironic-conductor"
     - "ironic-inspector"
     - "ironic-pxe"
   when:
-    ironic_policy.stat.exists
+    ironic_policy_file is defined
