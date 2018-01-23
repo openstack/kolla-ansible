@@ -76,7 +76,7 @@ Note that most of the containers don't log to stdout so the above command will
 provide no information.
 
 To learn more about Docker command line operation please refer to `Docker
-documentation <https://docs.docker.com/reference/commandline/cli/>`__.
+documentation <https://docs.docker.com/reference/>`__.
 
 When ``enable_central_logging`` is enabled, to view the logs in a web browser
 using Kibana, go to:

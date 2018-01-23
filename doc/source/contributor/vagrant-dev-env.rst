@@ -188,4 +188,4 @@ Further Reading
 All Vagrant documentation can be found at
 `Vagrant documentation` <https://www.vagrantup.com/docs/>`__.
 
-.. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html
+.. _Building Container Images: https://docs.openstack.org/kolla/latest/admin/image-building.html

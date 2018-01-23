@@ -469,7 +469,7 @@ References
 
 Bifrost documentation: https://docs.openstack.org/bifrost/latest/
 
-Bifrost troubleshooting guide: https://docs.openstack.org/bifrost/latest/troubleshooting.html
+Bifrost troubleshooting guide: https://docs.openstack.org/bifrost/latest/user/troubleshooting.html
 
 Bifrost code repository: https://github.com/openstack/bifrost
 
