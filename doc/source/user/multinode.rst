@@ -209,7 +209,7 @@ to them:
 
 .. note::
 
-   RabbitMQ doesn’t work with IP addresses, hence the IP address of
+   RabbitMQ doesn't work with IP addresses, hence the IP address of
    ``api_interface`` should be resolvable by hostnames to make sure that all
    RabbitMQ Cluster hosts can resolve each others hostnames beforehand.
 
