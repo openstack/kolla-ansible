@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ kuryr_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: kuryr_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/kuryr/"
+      skip: true
+
+- name: Set kuryr policy file
+  set_fact:
+    kuryr_policy_file: "{{ kuryr_policy.results.0.stat.path | basename }}"
+    kuryr_policy_file_path: "{{ kuryr_policy.results.0.stat.path }}"
+  when:
+    - kuryr_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -55,18 +72,13 @@
   notify:
     - Restart kuryr container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/kuryr/policy.json"
-  run_once: True
-  register: kuryr_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/kuryr/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: kuryr_policy_jsons
+    src: "{{ kuryr_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ kuryr_policy_file }}"
+  register: kuryr_policy_overwriting
   when:
-    - kuryr_policy.stat.exists
+    - kuryr_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ kuryr_services }}"

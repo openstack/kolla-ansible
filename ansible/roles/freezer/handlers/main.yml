@@ -5,7 +5,7 @@
     service: "{{ freezer_services[service_name] }}"
     config_json: "{{ freezer_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     freezer_conf: "{{ freezer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ freezer_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ freezer_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     freezer_api_container: "{{ check_freezer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -20,5 +20,5 @@
     - config_json.changed | bool
       or wsgi_freezer_api.changed | bool
       or freezer_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or freezer_api_container.changed | bool

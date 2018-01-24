@@ -8,6 +8,23 @@
     - "murano-api"
     - "murano-engine"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: murano_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/murano/"
+      skip: true
+
+- name: Set murano policy file
+  set_fact:
+    murano_policy_file: "{{ murano_policy.results.0.stat.path | basename }}"
+    murano_policy_file_path: "{{ murano_policy.results.0.stat.path }}"
+  when:
+    - murano_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item }}.json.j2"
@@ -31,17 +48,13 @@
     - "murano-api"
     - "murano-engine"
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/murano/policy.json"
-  run_once: True
-  register: murano_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/murano/policy.json"
-    dest: "{{ node_config_directory }}/{{ item }}/policy.json"
+    src: "{{ murano_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ murano_policy_file }}"
+  register: murano_policy_overwriting
   with_items:
     - "murano-api"
     - "murano-engine"
   when:
-    murano_policy.stat.exists
+    murano_policy_file is defined
