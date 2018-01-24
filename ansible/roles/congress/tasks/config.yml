@@ -7,6 +7,23 @@
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ congress_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: congress_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/congress/"
+      skip: true
+
+- name: Set congress policy file
+  set_fact:
+    congress_policy_file: "{{ congress_policy.results.0.stat.path | basename }}"
+    congress_policy_file_path: "{{ congress_policy.results.0.stat.path }}"
+  when:
+    - congress_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -43,13 +60,13 @@
   run_once: True
   register: congress_policy
 
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/congress/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: congress_policy_jsons
+    src: "{{ congress_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ congress_policy_file }}"
+  register: congress_policy_overwriting
   when:
-    - congress_policy.stat.exists
+    - congress_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ congress_services }}"

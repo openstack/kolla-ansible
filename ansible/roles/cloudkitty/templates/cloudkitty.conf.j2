@@ -31,6 +31,11 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 [oslo_concurrency]
 lock_path = /var/lib/cloudkitty/tmp
 
+{% if cloudkitty_policy_file is defined %}
+[oslo_policy]
+policy_file = {{ cloudkitty_policy_file }}
+{% endif %}
+
 [collect]
 collector = {{ cloudkitty_collector_backend }}
 services = compute,image{% if enable_cinder | bool %},volume{% endif %},network.bw.out,network.bw.in,network.floating

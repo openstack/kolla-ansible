@@ -9,6 +9,23 @@
     - "barbican-keystone-listener"
     - "barbican-worker"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: barbican_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/barbican/"
+      skip: true
+
+- name: Set barbican policy file
+  set_fact:
+    barbican_policy_file: "{{ barbican_policy.results.0.stat.path | basename }}"
+    barbican_policy_file_path: "{{ barbican_policy.results.0.stat.path }}"
+  when:
+    - barbican_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -79,18 +96,13 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/barbican/policy.json"
-  run_once: True
-  register: barbican_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/barbican/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: barbican_policy_jsons
+    src: "{{ barbican_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ barbican_policy_file }}"
+  register: barbican_policy_overwriting
   when:
-    - barbican_policy.stat.exists
+    - barbican_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ barbican_services }}"
