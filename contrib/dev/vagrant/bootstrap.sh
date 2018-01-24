@@ -205,7 +205,8 @@ EOF
     mkdir -p /etc/kolla/config/nova/
     cat > /etc/kolla/config/nova/nova-compute.conf <<EOF
 [libvirt]
-virt_type=qemu
+virt_type = qemu
+cpu_mode = none
 EOF
 
     # Launch a local registry (and mirror) to speed up pulling images.
