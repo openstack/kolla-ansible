@@ -17,7 +17,7 @@ panko_services:
 # Database
 ####################
 panko_database_name: "panko"
-panko_database_user: "panko"
+panko_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}panko{% endif %}"
 panko_database_port: "{{ mongodb_port if panko_database_type == 'mongodb' else database_port }}"
 panko_database_mongodb_address: "{% for host in groups['mongodb'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ panko_database_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 panko_database_mysql_address: "{{ database_address }}:{{ database_port }}"

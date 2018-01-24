@@ -1,0 +1,20 @@
+---
+- name: "Check if external mariadb hosts are reachable from the load balancer"
+  wait_for:
+    msg: "The {{ item }} host is not accessible from {{ inventory_hostname }}"
+    host: "{{ item }}"
+    port: "{{ database_port }}"
+  with_items: "{{ groups['mariadb'] }}"
+  when:
+      - not enable_mariadb | bool
+      - enable_external_mariadb_load_balancer | bool
+      - inventory_hostname in groups['haproxy']
+
+- name: "Check if external database address is reachable from all hosts"
+  wait_for:
+    msg: "The {{ database_address }} host is not accessible from {{ inventory_hostname }}"
+    host: "{{ database_address }}"
+    port: "{{ database_port }}"
+  when:
+      - not enable_mariadb | bool
+      - not enable_external_mariadb_load_balancer | bool

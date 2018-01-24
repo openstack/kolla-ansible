@@ -7,6 +7,7 @@ Reference
    ceph-guide
    central-logging-guide
    external-ceph-guide
+   external-mariadb-guide
    cinder-guide
    cinder-guide-hnas
    designate-guide

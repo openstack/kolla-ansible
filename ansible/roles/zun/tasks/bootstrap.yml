@@ -11,6 +11,8 @@
   register: database
   run_once: True
   delegate_to: "{{ groups['zun-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 - name: Creating Zun database user and setting permissions
   kolla_toolbox:
@@ -27,6 +29,8 @@
       append_privs: "yes"
   run_once: True
   delegate_to: "{{ groups['zun-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 - include: bootstrap_service.yml
-  when: database.changed
+  when: database.changed or use_preconfigured_databases | bool
