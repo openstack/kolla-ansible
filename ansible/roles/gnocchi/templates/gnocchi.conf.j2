@@ -3,6 +3,10 @@ debug = {{ gnocchi_logging_debug }}
 
 log_dir = /var/log/kolla/gnocchi
 
+{% if enable_redis | bool %}
+coordination_url = redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&socket_timeout=60&retry_on_timeout=yes
+{% endif %}
+
 {% if service_name == 'gnocchi-api' %}
 # Force gnocchi-api.log or will use app.wsgi
 log_file = /var/log/kolla/gnocchi/gnocchi-api.log
@@ -52,6 +56,12 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 {% if gnocchi_policy_file is defined %}
 [oslo_policy]
 policy_file = {{ gnocchi_policy_file }}
+{% endif %}
+
+[incoming]
+{% if gnocchi_incoming_storage == 'redis' %}
+driver = redis
+redis_url =  redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&db=0&socket_timeout=60&retry_on_timeout=yes
 {% endif %}
 
 [storage]
