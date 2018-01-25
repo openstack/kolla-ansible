@@ -121,6 +121,17 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+  neutron-sriov-agent:
+    container_name: "neutron_sriov_agent"
+    image: "{{ neutron_sriov_agent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
+    host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
   neutron-metadata-agent:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
@@ -189,6 +200,10 @@ neutron_l3_agent_image_full: "{{ neutron_l3_agent_image }}:{{ neutron_l3_agent_t
 neutron_lbaas_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-lbaas-agent"
 neutron_lbaas_agent_tag: "{{ neutron_tag }}"
 neutron_lbaas_agent_image_full: "{{ neutron_lbaas_agent_image }}:{{ neutron_lbaas_agent_tag }}"
+
+neutron_sriov_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-sriov-agent"
+neutron_sriov_agent_tag: "{{ neutron_tag }}"
+neutron_sriov_agent_image_full: "{{ neutron_sriov_agent_image }}:{{ neutron_sriov_agent_tag }}"
 
 neutron_linuxbridge_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-linuxbridge-agent"
 neutron_linuxbridge_agent_tag: "{{ neutron_tag }}"

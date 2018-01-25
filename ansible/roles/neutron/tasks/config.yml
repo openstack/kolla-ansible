@@ -56,6 +56,7 @@
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
       - "neutron-bgp-dragent"
+      - "neutron-sriov-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron.conf.j2"
@@ -166,6 +167,23 @@
   with_dict: "{{ neutron_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over sriov_agent.ini
+  vars:
+    service_name: "neutron-sriov-agent"
+    neutron_sriov_agent: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/sriov_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/sriov_agent.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/sriov_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/sriov_agent.ini"
+  register: neutron_sriov_agent_ini
+  when:
+    - neutron_sriov_agent.enabled | bool
+    - neutron_sriov_agent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
 
 - name: Copying over dhcp_agent.ini
   become: true
@@ -357,6 +375,7 @@
       - "neutron-lbaas-agent"
       - "neutron-vpnaas-agent"
       - "neutron-bgp-dragent"
+      - "neutron-sriov-agent"
   template:
     src: "{{ node_custom_config }}/neutron/policy.json"
     dest: "{{ node_config_directory }}/{{ service_name }}/policy.json"
