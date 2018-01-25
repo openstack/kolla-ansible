@@ -160,10 +160,6 @@ setup_node
 tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
 prepare_images
 
-if echo $ACTION | grep -q "ceph"; then
-    ansible-playbook -i ${RAW_INVENTORY} tests/ansible_setup_ceph_disks.yml > /tmp/logs/ansible/setup_ceph_disks
-fi
-
 # Create dummy interface for neutron
 ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
 

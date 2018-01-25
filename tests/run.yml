@@ -1,4 +1,14 @@
 ---
+- hosts: all
+  vars:
+    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
+  tasks:
+    - name: Prepare ceph disks
+      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_ceph_disks.sh"
+      when: scenario == "ceph"
+      become: true
+
 - hosts: primary
   vars:
     kolla_inventory_path: "/etc/kolla/inventory"
@@ -92,11 +102,6 @@
       shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
       delegate_to: "primary"
 
-    - name: Prepare ceph disks
-      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_ceph_disks.sh"
-      when: scenario == "ceph"
-      become: true
-
     - name: generate ceph config overrides
       template:
         src: "{{ kolla_ansible_full_src_dir }}/tests/templates/ceph-overrides.j2"
@@ -113,6 +118,7 @@
           export NODEPOOL_TARBALLS_MIRROR=http://{{ zuul_site_mirror_fqdn }}:8080/tarballs
           export BUILD_IMAGE={{ need_build_image }}
           export KOLLA_SRC_DIR={{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla
+          export ACTION={{ scenario }}
 
           tools/setup_gate.sh
         executable: /bin/bash

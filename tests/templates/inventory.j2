@@ -10,10 +10,20 @@
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
 {% endfor %}
 
-[compute]
+# inner-compute is the groups of compute nodes which do not have
+# external reachability
+[inner-compute]
+
+# external-compute is the groups of compute nodes which can reach
+# outside
+[external-compute]
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_become=true ansible_user={{ hostvars[host]['ansible_user'] }}
 {% endfor %}
+
+[compute:children]
+inner-compute
+external-compute
 
 [storage]
 {% for host in hostvars %}
@@ -187,6 +197,9 @@ control
 [tacker:children]
 control
 
+[vitrage:children]
+control
+
 # Tempest
 [tempest:children]
 control
@@ -292,7 +305,13 @@ neutron
 neutron
 
 # Ceph
+[ceph-mds:children]
+ceph
+
 [ceph-mgr:children]
+ceph
+
+[ceph-nfs:children]
 ceph
 
 [ceph-mon:children]
@@ -488,16 +507,10 @@ sahara
 sahara
 
 # Ceilometer
-[ceilometer-api:children]
-ceilometer
-
 [ceilometer-central:children]
 ceilometer
 
 [ceilometer-notification:children]
-ceilometer
-
-[ceilometer-collector:children]
 ceilometer
 
 [ceilometer-compute:children]
@@ -561,6 +574,9 @@ designate
 [designate-central:children]
 designate
 
+[designate-producer:children]
+designate
+
 [designate-mdns:children]
 network
 
@@ -598,3 +614,19 @@ tacker
 
 [tacker-conductor:children]
 tacker
+
+# Vitrage
+[vitrage-api:children]
+vitrage
+
+[vitrage-notifier:children]
+vitrage
+
+[vitrage-graph:children]
+vitrage
+
+[vitrage-collector:children]
+vitrage
+
+[vitrage-ml:children]
+vitrage
