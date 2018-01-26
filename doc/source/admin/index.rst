@@ -1,8 +1,9 @@
+============
 Admin Guides
 ============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    advanced-configuration
    production-architecture-guide

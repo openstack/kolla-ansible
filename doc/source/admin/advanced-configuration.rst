@@ -5,91 +5,106 @@ Advanced Configuration
 ======================
 
 Endpoint Network Configuration
-==============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When an OpenStack cloud is deployed, the REST API of each service is presented
 as a series of endpoints. These endpoints are the admin URL, the internal
 URL, and the external URL.
 
 Kolla offers two options for assigning these endpoints to network addresses:
-  - Combined - Where all three endpoints share the same IP address
-  - Separate - Where the external URL is assigned to an IP address that is
-    different than the IP address shared by the internal and admin URLs
+- Combined - Where all three endpoints share the same IP address
+- Separate - Where the external URL is assigned to an IP address that is
+different than the IP address shared by the internal and admin URLs
 
 The configuration parameters related to these options are:
-  - kolla_internal_vip_address
-  - network_interface
-  - kolla_external_vip_address
-  - kolla_external_vip_interface
+- kolla_internal_vip_address
+- network_interface
+- kolla_external_vip_address
+- kolla_external_vip_interface
 
 For the combined option, set the two variables below, while allowing the
 other two to accept their default values. In this configuration all REST
-API requests, internal and external, will flow over the same network. ::
+API requests, internal and external, will flow over the same network.
 
-    kolla_internal_vip_address: "10.10.10.254"
-    network_interface: "eth0"
+.. code-block:: none
+
+   kolla_internal_vip_address: "10.10.10.254"
+   network_interface: "eth0"
+
+.. end
 
 For the separate option, set these four variables. In this configuration
 the internal and external REST API requests can flow over separate
-networks. ::
+networks.
 
-    kolla_internal_vip_address: "10.10.10.254"
-    network_interface: "eth0"
-    kolla_external_vip_address: "10.10.20.254"
-    kolla_external_vip_interface: "eth1"
+.. code-block:: none
+
+   kolla_internal_vip_address: "10.10.10.254"
+   network_interface: "eth0"
+   kolla_external_vip_address: "10.10.20.254"
+   kolla_external_vip_interface: "eth1"
+
+.. end
 
 Fully Qualified Domain Name Configuration
-=========================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When addressing a server on the internet, it is more common to use
-a name, like www.example.net, instead of an address like 10.10.10.254.
-If you prefer to use names to address the endpoints in your kolla
-deployment use the variables:
+a name, like ``www.example.net``, instead of an address like
+``10.10.10.254``. If you prefer to use names to address the endpoints
+in your kolla deployment use the variables:
 
-  - kolla_internal_fqdn
-  - kolla_external_fqdn
+- kolla_internal_fqdn
+- kolla_external_fqdn
 
-::
+.. code-block:: none
 
-    kolla_internal_fqdn: inside.mykolla.example.net
-    kolla_external_fqdn: mykolla.example.net
+   kolla_internal_fqdn: inside.mykolla.example.net
+   kolla_external_fqdn: mykolla.example.net
+
+.. end
 
 Provisions must be taken outside of kolla for these names to map to the
-configured IP addresses. Using a DNS server or the /etc/hosts file are
-two ways to create this mapping.
+configured IP addresses. Using a DNS server or the ``/etc/hosts`` file
+are two ways to create this mapping.
 
 RabbitMQ Hostname Resolution
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RabbitMQ doesn't work with IP address, hence the IP address of api_interface
-should be resolvable by hostnames to make sure that all RabbitMQ Cluster hosts
-can resolve each others hostname beforehand.
+RabbitMQ doesn't work with IP address, hence the IP address of
+``api_interface`` should be resolvable by hostnames to make sure that
+all RabbitMQ Cluster hosts can resolve each others hostname beforehand.
 
 TLS Configuration
-=================
+~~~~~~~~~~~~~~~~~
 
 An additional endpoint configuration option is to enable or disable
 TLS protection for the external VIP. TLS allows a client to authenticate
 the OpenStack service endpoint and allows for encryption of the requests
 and responses.
 
-.. note:: The kolla_internal_vip_address and kolla_external_vip_address must
+.. note::
+
+   The kolla_internal_vip_address and kolla_external_vip_address must
    be different to enable TLS on the external network.
 
 The configuration variables that control TLS networking are:
 
-  - kolla_enable_tls_external
-  - kolla_external_fqdn_cert
+- kolla_enable_tls_external
+- kolla_external_fqdn_cert
 
-The default for TLS is disabled; to enable TLS networking:
+The default for TLS is disabled, to enable TLS networking:
 
-::
+.. code-block:: none
 
-    kolla_enable_tls_external: "yes"
-    kolla_external_fqdn_cert: "{{ node_config_directory }}/certificates/mycert.pem"
+   kolla_enable_tls_external: "yes"
+   kolla_external_fqdn_cert: "{{ node_config_directory }}/certificates/mycert.pem"
 
+.. end
 
-.. note:: TLS authentication is based on certificates that have been
+.. note::
+
+   TLS authentication is based on certificates that have been
    signed by trusted Certificate Authorities. Examples of commercial
    CAs are Comodo, Symantec, GoDaddy, and GlobalSign. Letsencrypt.org
    is a CA that will provide trusted certificates at no charge. Many
@@ -97,8 +112,9 @@ The default for TLS is disabled; to enable TLS networking:
    company's domain. If using a trusted CA is not possible for your
    situation, you can use OpenSSL to create your own or see the section
    company's domain.  If using a trusted CA is not possible for your
-   situation, you can use `OpenSSL`_ to create your own or see the section
-   below about kolla generated self-signed certificates.
+   situation, you can use `OpenSSL <https://www.openssl.org>`__
+   to create your own or see the section below about kolla
+   generated self-signed certificates.
 
 Two certificate files are required to use TLS securely with authentication.
 These two files will be provided by your Certificate Authority. These
@@ -112,24 +128,26 @@ need to be distributed to the client.
 When using TLS to connect to a public endpoint, an OpenStack client will
 have settings similar to this:
 
-::
+.. code-block:: shell
 
-    export OS_PROJECT_DOMAIN_ID=default
-    export OS_USER_DOMAIN_ID=default
-    export OS_PROJECT_NAME=demo
-    export OS_USERNAME=demo
-    export OS_PASSWORD=demo-password
-    export OS_AUTH_URL=https://mykolla.example.net:5000
-    # os_cacert is optional for trusted certificates
-    export OS_CACERT=/etc/pki/mykolla-cacert.crt
-    export OS_IDENTITY_API_VERSION=3
+   export OS_PROJECT_DOMAIN_ID=default
+   export OS_USER_DOMAIN_ID=default
+   export OS_PROJECT_NAME=demo
+   export OS_USERNAME=demo
+   export OS_PASSWORD=demo-password
+   export OS_AUTH_URL=https://mykolla.example.net:5000
+   # os_cacert is optional for trusted certificates
+   export OS_CACERT=/etc/pki/mykolla-cacert.crt
+   export OS_IDENTITY_API_VERSION=3
 
-.. _OpenSSL: https://www.openssl.org/
+.. end
 
 Self-Signed Certificates
-========================
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note:: Self-signed certificates should never be used in production.
+.. note::
+
+   Self-signed certificates should never be used in production.
 
 It is not always practical to get a certificate signed by a well-known
 trust CA, for example a development or internal test kolla deployment. In
@@ -139,9 +157,9 @@ For convenience, the ``kolla-ansible`` command will generate the necessary
 certificate files based on the information in the ``globals.yml``
 configuration file:
 
- ::
+.. code-block:: console
 
-    kolla-ansible certificates
+   kolla-ansible certificates
 
 The files haproxy.pem and haproxy-ca.pem will be generated and stored
 in the ``/etc/kolla/certificates/`` directory.
@@ -149,14 +167,16 @@ in the ``/etc/kolla/certificates/`` directory.
 .. _service-config:
 
 OpenStack Service Configuration in Kolla
-========================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note:: As of now kolla only supports config overrides for ini based configs.
+.. note::
+
+   As of now kolla only supports config overrides for ini based configs.
 
 An operator can change the location where custom config files are read from by
 editing ``/etc/kolla/globals.yml`` and adding the following line.
 
-::
+.. code-block:: none
 
    # The directory to merge custom config files the kolla's config files
    node_custom_config: "/etc/kolla/config"
@@ -167,20 +187,26 @@ This can be done per-project, per-service or per-service-on-specified-host.
 For example to override scheduler_max_attempts in nova scheduler, the operator
 needs to create ``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
 
-::
+.. path /etc/kolla/config/nova/nova-scheduler.conf
+.. code-block:: ini
 
    [DEFAULT]
    scheduler_max_attempts = 100
+
+.. end
 
 If the operator wants to configure compute node cpu and ram allocation ratio
 on host myhost, the operator needs to create file
 ``/etc/kolla/config/nova/myhost/nova.conf`` with content:
 
-::
+.. path /etc/kolla/config/nova/myhost/nova.conf
+.. code-block:: ini
 
    [DEFAULT]
    cpu_allocation_ratio = 16.0
    ram_allocation_ratio = 5.0
+
+.. end
 
 Kolla allows the operator to override configuration globally for all services.
 It will look for a file called ``/etc/kolla/config/global.conf``.
@@ -188,10 +214,13 @@ It will look for a file called ``/etc/kolla/config/global.conf``.
 For example to modify database pool size connection for all services, the
 operator needs to create ``/etc/kolla/config/global.conf`` with content:
 
-::
+.. path /etc/kolla/config/global.conf
+.. code-block:: ini
 
    [database]
    max_pool_size = 100
+
+.. end
 
 In case the operators want to customize ``policy.json`` file, they should
 create a full policy file for specific project in the same directory like above
@@ -204,72 +233,87 @@ For example to overwrite ``policy.json`` file of Neutron project, the operator
 needs to grab ``policy.json`` from Neutron project source code, update rules
 and then put it to ``/etc/kolla/config/neutron/policy.json``.
 
-.. note:: Currently kolla-ansible only support JSON format for policy file.
+.. note::
+
+   Currently kolla-ansible only support JSON format for policy file.
 
 The operator can make these changes after services were already deployed by
 using following command:
 
-::
+.. code-block:: console
 
-    kolla-ansible reconfigure
+   kolla-ansible reconfigure
+
+.. end
 
 IP Address Constrained Environments
-===================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a development environment doesn't have a free IP address available for VIP
 configuration, the host's IP address may be used here by disabling HAProxy by
 adding:
 
-::
+.. code-block:: none
 
-    enable_haproxy: "no"
+   enable_haproxy: "no"
+
+.. end
 
 Note this method is not recommended and generally not tested by the
 Kolla community, but included since sometimes a free IP is not available
 in a testing environment.
 
 External Elasticsearch/Kibana environment
-=========================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to use an external Elasticsearch/Kibana environment. To do this
 first disable the deployment of the central logging.
 
-::
+.. code-block:: none
 
-    enable_central_logging: "no"
+   enable_central_logging: "no"
+
+.. end
 
 Now you can use the parameter ``elasticsearch_address`` to configure the
 address of the external Elasticsearch environment.
 
 Non-default <service> port
-==========================
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is sometimes required to use a different than default port
-for service(s) in Kolla. It is possible with setting <service>_port
-in ``globals.yml`` file.
-For example:
-::
+for service(s) in Kolla. It is possible with setting
+``<service>_port`` in ``globals.yml`` file. For example:
 
-    database_port: 3307
+.. code-block:: none
 
-As <service>_port value is saved in different services' configuration so
+   database_port: 3307
+
+.. end
+
+As ``<service>_port`` value is saved in different services' configuration so
 it's advised to make above change before deploying.
 
 Use an external Syslog server
-=============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, Fluentd is used as a syslog server to collect Swift and HAProxy
 logs. When Fluentd is disabled or you want to use an external syslog server,
-You can set syslog parameters in ``globals.yml`` file.
-For example:
-::
+You can set syslog parameters in ``globals.yml`` file. For example:
 
-    syslog_server: "172.29.9.145"
-    syslog_udp_port: "514"
+.. code-block:: none
 
-You can also set syslog facility names for Swift and HAProxy logs. By default,
-Swift and HAProxy use ``local0`` and ``local1``, respectively.
-::
+   syslog_server: "172.29.9.145"
+   syslog_udp_port: "514"
 
-    syslog_swift_facility: "local0"
-    syslog_haproxy_facility: "local1"
+.. end
+
+You can also set syslog facility names for Swift and HAProxy logs.
+By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
+
+.. code-block:: none
+
+   syslog_swift_facility: "local0"
+   syslog_haproxy_facility: "local1"
+
+.. end

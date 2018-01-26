@@ -5,7 +5,7 @@ Kolla's Deployment Philosophy
 =============================
 
 Overview
-========
+~~~~~~~~
 
 Kolla has an objective to replace the inflexible, painful, resource-intensive
 deployment process of OpenStack with a flexible, painless, inexpensive
@@ -23,7 +23,7 @@ OpenStack services increases, Kolla offers full capability to override every
 OpenStack service configuration option in the deployment.
 
 Why not Template Customization?
-===============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Kolla upstream community does not want to place key/value pairs in the
 Ansible playbook configuration options that are not essential to obtaining
@@ -39,7 +39,7 @@ Essentially templating in configuration options is not a scalable solution
 and would result in an inability of the project to execute its mission.
 
 Kolla's Solution to Customization
-=================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Rather than deal with the customization madness of templating configuration
 options in Kolla's Ansible playbooks, Kolla eliminates all the inefficiencies
@@ -56,11 +56,16 @@ configuration options documentation is extremely mature and well-formulated.
 As an example, consider running Kolla in a virtual machine. In order to
 launch virtual machines from Nova in a virtual environment, it is necessary
 to use the QEMU hypervisor, rather than the KVM hypervisor. To achieve this
-result, simply `mkdir -p /etc/kolla/config` and modify the file
-`/etc/kolla/config/nova.conf` with the contents::
+result, simply :command:`mkdir -p /etc/kolla/config` and modify the file
+`/etc/kolla/config/nova.conf` with the contents
 
-    [libvirt]
-    virt_type=qemu
+.. path /etc/kolla/config/nova.conf
+.. code-block:: ini
+
+   [libvirt]
+   virt_type=qemu
+
+.. end
 
 After this change Kolla will use an emulated hypervisor with lower performance.
 Kolla could have templated this commonly modified configuration option. If
