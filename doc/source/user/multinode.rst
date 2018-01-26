@@ -24,17 +24,21 @@ Edit the ``/etc/kolla/globals.yml`` and add the following where 192.168.1.100
 is the IP address of the machine and 5000 is the port where the registry is
 currently running:
 
-::
+.. code-block:: none
 
-    docker_registry = 192.168.1.100:5000
+   docker_registry = 192.168.1.100:5000
+
+.. end
 
 The Kolla community recommends using registry 2.3 or later. To deploy registry
 with version 2.3 or later, do the following:
 
-::
+.. code-block:: console
 
-    cd kolla
-    tools/start-registry
+   cd kolla
+   tools/start-registry
+
+.. end
 
 The Docker registry can be configured as a pull through cache to proxy the
 official Kolla images hosted in Docker Hub. In order to configure the local
@@ -42,75 +46,96 @@ registry as a pull through cache, in the host machine set the environment
 variable ``REGISTRY_PROXY_REMOTEURL`` to the URL for the repository on
 Docker Hub.
 
-::
+.. code-block:: console
 
-    export REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
+   export REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
+
+.. end
 
 .. note::
 
-    Pushing to a registry configured as a pull-through cache is unsupported.
-    For more information, Reference the `Docker Documentation
-    <https://docs.docker.com/registry/configuration/>`__.
+   Pushing to a registry configured as a pull-through cache is unsupported.
+   For more information, Reference the `Docker Documentation
+   <https://docs.docker.com/registry/configuration/>`__.
 
 .. _configure_docker_all_nodes:
 
 Configure Docker on all nodes
 =============================
 
-.. note:: As the subtitle for this section implies, these steps should be
-          applied to all nodes, not just the deployment node.
+.. note::
 
-After starting the registry, it is necessary to instruct Docker that it will
-be communicating with an insecure registry. To enable insecure registry
-communication on CentOS, modify the ``/etc/sysconfig/docker`` file to contain
-the following where 192.168.1.100 is the IP address of the machine where the
-registry is currently running:
+   As the subtitle for this section implies, these steps should be
+   applied to all nodes, not just the deployment node.
 
-::
+After starting the registry, it is necessary to instruct Docker that
+it will be communicating with an insecure registry.
+For example, To enable insecure registry communication on CentOS,
+modify the ``/etc/sysconfig/docker`` file to contain the following where
+``192.168.1.100`` is the IP address of the machine where the registry
+is currently running:
 
-    # CentOS
-    INSECURE_REGISTRY="--insecure-registry 192.168.1.100:5000"
+.. path /etc/sysconfig/docker
+.. code-block:: ini
+
+   INSECURE_REGISTRY="--insecure-registry 192.168.1.100:5000"
+
+.. end
 
 For Ubuntu, check whether its using upstart or systemd.
 
-::
+.. code-block:: console
 
-    # stat /proc/1/exe
-    File: '/proc/1/exe' -> '/lib/systemd/systemd'
+   # stat /proc/1/exe
+   File: '/proc/1/exe' -> '/lib/systemd/systemd'
 
-Edit ``/etc/default/docker`` and add:
+Edit ``/etc/default/docker`` and add the following configuration:
 
-::
+.. path /etc/default/docker
+.. code-block:: ini
 
-    # Ubuntu
-    DOCKER_OPTS="--insecure-registry 192.168.1.100:5000"
+   DOCKER_OPTS="--insecure-registry 192.168.1.100:5000"
+
+.. end
 
 If Ubuntu is using systemd, additional settings needs to be configured.
 Copy Docker's systemd unit file to ``/etc/systemd/system/`` directory:
 
-::
+.. code-block:: console
 
-    cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service
+   cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service
+
+.. end
 
 Next, modify ``/etc/systemd/system/docker.service``, add ``environmentFile``
 variable and add ``$DOCKER_OPTS`` to the end of ExecStart in ``[Service]``
-section:
+section.
 
-::
+For CentOS:
 
-    # CentOS
+.. path /etc/systemd/system/docker.service
+.. code-block:: ini
+
     [Service]
     MountFlags=shared
     EnvironmentFile=/etc/sysconfig/docker
     ExecStart=
     ExecStart=/usr/bin/docker daemon $INSECURE_REGISTRY
 
-    # Ubuntu
-    [Service]
-    MountFlags=shared
-    EnvironmentFile=-/etc/default/docker
-    ExecStart=
-    ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
+.. end
+
+For Ubuntu:
+
+.. path /etc/systemd/system/docker.service
+.. code-block:: ini
+
+   [Service]
+   MountFlags=shared
+   EnvironmentFile=-/etc/default/docker
+   ExecStart=
+   ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
+
+.. end
 
 .. note::
 
@@ -120,14 +145,22 @@ section:
 
 Restart Docker by executing the following commands:
 
-::
+For CentOS or Ubuntu with systemd:
 
-    # CentOS or Ubuntu with systemd
-    systemctl daemon-reload
-    systemctl restart docker
+.. code-block:: console
 
-    # Ubuntu with upstart or sysvinit
-    sudo service docker restart
+   systemctl daemon-reload
+   systemctl restart docker
+
+.. end
+
+For Ubuntu with upstart or sysvinit:
+
+.. code-block:: console
+
+   service docker restart
+
+.. end
 
 .. _edit-inventory:
 
@@ -152,7 +185,7 @@ controls how ansible interacts with remote hosts.
    information about SSH authentication please reference
    `Ansible documentation <http://docs.ansible.com/ansible/intro_inventory.html>`__.
 
-::
+.. code-block:: none
 
    # These initial groups are the only groups required to be modified. The
    # additional groups are for more control of the environment.
@@ -160,6 +193,8 @@ controls how ansible interacts with remote hosts.
    # These hostname must be resolvable from your deployment host
    control01      ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
    192.168.122.24 ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
+
+.. end
 
 .. note::
 
@@ -173,7 +208,7 @@ For more advanced roles, the operator can edit which services will be
 associated in with each group. Keep in mind that some services have to be
 grouped together and changing these around can break your deployment:
 
-::
+.. code-block:: none
 
    [kibana:children]
    control
@@ -183,6 +218,8 @@ grouped together and changing these around can break your deployment:
 
    [haproxy:children]
    network
+
+.. end
 
 Deploying Kolla
 ===============
@@ -203,9 +240,11 @@ Deploying Kolla
 First, check that the deployment targets are in a state where Kolla may deploy
 to them:
 
-::
+.. code-block:: console
 
-    kolla-ansible prechecks -i <path/to/multinode/inventory/file>
+   kolla-ansible prechecks -i <path/to/multinode/inventory/file>
+
+.. end
 
 .. note::
 
@@ -215,8 +254,8 @@ to them:
 
 Run the deployment:
 
-::
+.. code-block:: console
 
-    kolla-ansible deploy -i <path/to/multinode/inventory/file>
+   kolla-ansible deploy -i <path/to/multinode/inventory/file>
 
-.. _Building Container Images: https://docs.openstack.org/kolla/latest/image-building.html
+.. end
