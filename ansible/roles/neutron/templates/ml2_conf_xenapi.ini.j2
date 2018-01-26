@@ -10,13 +10,15 @@ root_helper_daemon = xenapi_root_helper
 root_helper =
 
 [ovs]
-of_listen_address = {{ hostvars[inventory_hostname]['ansible_' + os_xenapi_variables.domu_himn_eth]["ipv4"]["address"] }}
+of_listen_address = {{ os_xenapi_variables.domu_himn_ip }}
 ovsdb_connection = tcp:{{ xenserver_himn_ip }}:{{ ovsdb_port }}
 {% if computes_need_external_bridge %}
 bridge_mappings = {% for interface in neutron_external_interface.split(',') %}physnet{{ loop.index0 + 1 }}:{{ os_xenapi_variables.domu_vifs[interface]["bridge"] }}{% if not loop.last %},{% endif %}{% endfor %}
 {% else %}
 bridge_mappings =
 {% endif %}
+
+local_ip = {% for ip in os_xenapi_variables.dom0_ipv4s %}{% if ip.bridge == os_xenapi_variables.domu_vifs[tunnel_interface]['bridge'] %}{{ip.address}}{% endif %} {% endfor %}
 
 [xenapi]
 connection_password = {{ xenserver_password }}
