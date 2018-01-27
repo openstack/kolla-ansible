@@ -163,6 +163,15 @@ options:
       - Name or id of container(s) to use volumes from
     required: True
     type: list
+  state:
+    description:
+      - Check container status
+    required: False
+    type: str
+    choices:
+      - running
+      - exited
+      - paused
 author: Sam Yaple
 '''
 
@@ -291,7 +300,8 @@ class DockerWorker(object):
             self.compare_pid_mode(container_info) or
             self.compare_volumes(container_info) or
             self.compare_volumes_from(container_info) or
-            self.compare_environment(container_info)
+            self.compare_environment(container_info) or
+            self.compare_container_state(container_info)
         )
 
     def compare_ipc_mode(self, container_info):
@@ -419,6 +429,12 @@ class DockerWorker(object):
                     return True
                 if current_env[k] != v:
                     return True
+
+    def compare_container_state(self, container_info):
+        new_state = self.params.get('state')
+        current_state = container_info['State'].get('Status')
+        if new_state != current_state:
+            return True
 
     def parse_image(self):
         full_image = self.params.get('image')
@@ -738,6 +754,10 @@ def generate_module():
                             'always',
                             'unless-stopped']),
         restart_retries=dict(required=False, type='int', default=10),
+        state=dict(required=False, type='str', default='running',
+                   choices=['running',
+                            'exited',
+                            'paused']),
         tls_verify=dict(required=False, type='bool', default=False),
         tls_cert=dict(required=False, type='str'),
         tls_key=dict(required=False, type='str'),

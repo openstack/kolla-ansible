@@ -71,6 +71,10 @@ class ModuleArgsTest(base.BaseTestCase):
                                                      'always',
                                                      'unless-stopped']),
             restart_retries=dict(required=False, type='int', default=10),
+            state=dict(required=False, type='str', default='running',
+                       choices=['running',
+                                'exited',
+                                'paused']),
             tls_verify=dict(required=False, type='bool', default=False),
             tls_cert=dict(required=False, type='str'),
             tls_key=dict(required=False, type='str'),
@@ -772,3 +776,13 @@ class TestAttrComp(base.BaseTestCase):
                                 KOLLA_INSTALL_TYPE='binary')})
 
         self.assertTrue(self.dw.compare_environment(container_info))
+
+    def test_compare_container_state_neg(self):
+        container_info = {'State': dict(Status='running')}
+        self.dw = get_DockerWorker({'state': 'running'})
+        self.assertFalse(self.dw.compare_container_state(container_info))
+
+    def test_compare_container_state_pos(self):
+        container_info = {'State': dict(Status='running')}
+        self.dw = get_DockerWorker({'state': 'exited'})
+        self.assertTrue(self.dw.compare_container_state(container_info))
