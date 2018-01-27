@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ gnocchi_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: gnocchi_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/gnocchi/"
+      skip: true
+
+- name: Set gnocchi policy file
+  set_fact:
+    gnocchi_policy_file: "{{ gnocchi_policy.results.0.stat.path | basename }}"
+    gnocchi_policy_file_path: "{{ gnocchi_policy.results.0.stat.path }}"
+  when:
+    - gnocchi_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -59,18 +76,13 @@
   notify:
     - Restart gnocchi-api container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/gnocchi/policy.json"
-  run_once: True
-  register: gnocchi_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/gnocchi/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: gnocchi_policy_jsons
+    src: "{{ gnocchi_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ gnocchi_policy_file }}"
+  register: gnocchi_policy_overwriting
   when:
-    - gnocchi_policy.stat.exists
+    - gnocchi_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ gnocchi_services }}"
