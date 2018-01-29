@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: vitrage_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/vitrage/"
+      skip: true
+
+- name: Set vitrage policy file
+  set_fact:
+    vitrage_policy_file: "{{ vitrage_policy.results.0.stat.path | basename }}"
+    vitrage_policy_file_path: "{{ vitrage_policy.results.0.stat.path }}"
+  when:
+    - vitrage_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -58,17 +75,13 @@
   notify:
     - Restart vitrage-api container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/vitrage/policy.json"
-  register: vitrage_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/vitrage/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: vitrage_policy_jsons
+    src: "{{ vitrage_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ vitrage_policy_file }}"
+  register: vitrage_policy_overwriting
   when:
-    - vitrage_policy.stat.exists
+    - vitrage_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"

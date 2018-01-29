@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ watcher_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: watcher_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/watcher/"
+      skip: true
+
+- name: Set watcher policy file
+  set_fact:
+    watcher_policy_file: "{{ watcher_policy.results.0.stat.path | basename }}"
+    watcher_policy_file_path: "{{ watcher_policy.results.0.stat.path }}"
+  when:
+    - watcher_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -44,18 +61,13 @@
     - Restart watcher-engine container
     - Restart watcher-applier container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/watcher/policy.json"
-  run_once: True
-  register: watcher_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/watcher/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: watcher_policy_jsons
+    src: "{{ watcher_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ watcher_policy_file }}"
+  register: watcher_policy_overwriting
   when:
-    - watcher_policy.stat.exists
+    - watcher_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ watcher_services }}"
