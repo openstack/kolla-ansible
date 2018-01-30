@@ -3,6 +3,8 @@
   file:
     path: "{{ node_config_directory }}/manila-share"
     state: "directory"
+  when:
+    - inventory_hostname in groups['manila-share']
 
 - name: Copying over ceph.conf for manila
   merge_configs:
@@ -10,6 +12,10 @@
       - "{{ node_custom_config }}/manila/ceph.conf"
       - "{{ node_custom_config }}/manila/manila-share/ceph.conf"
     dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+  when:
+    - inventory_hostname in groups['manila-share']
+  notify:
+    - Restart manila-share container
 
 - name: Copy over Ceph keyring files for manila
   copy:
@@ -18,3 +24,7 @@
   with_fileglob:
     - "{{ node_custom_config }}/manila/ceph.client.manila.keyring"
     - "{{ node_custom_config }}/manila/manila/ceph.client.manila.keyring"
+  when:
+    - inventory_hostname in groups['manila-share']
+  notify:
+    - Restart manila-share container
