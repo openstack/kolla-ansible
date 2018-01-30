@@ -47,3 +47,15 @@
     module_extra_vars:
       openstack_octavia_auth: "{{ openstack_octavia_auth }}"
   run_once: True
+
+- name: Adding octavia related roles
+  kolla_toolbox:
+    module_name: "os_keystone_role"
+    module_args:
+      name: "{{ item }}"
+      auth: "{{ '{{ openstack_octavia_auth }}' }}"
+      endpoint_type: "{{ openstack_interface }}"
+    module_extra_vars:
+      openstack_octavia_auth: "{{ openstack_octavia_auth }}"
+  run_once: True
+  with_items: "{{ octavia_required_roles }}"
