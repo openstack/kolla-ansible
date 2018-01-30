@@ -12,12 +12,14 @@
   hostname = ""
   omit_hostname = false
 {% if enable_influxdb | bool %}
+{% for host in groups['influxdb'] %}
 [[outputs.influxdb]]
-  urls = [{% for host in groups['influxdb'] %}"{{ influxdb_proto }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address']}}:{{ influxdb_http_port }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  urls = ["{{ influxdb_proto }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address']}}:{{ influxdb_http_port }}"]
   database = "telegraf" # required
   retention_policy = "autogen"
   write_consistency = "any"
   timeout = "5s"
+{% endfor %}
 {% endif %}
 [[inputs.cpu]]
   percpu = true
