@@ -1,8 +1,20 @@
 ---
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/keystone/policy.json"
+  local_action: stat path="{{ item }}"
   run_once: True
   register: keystone_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/keystone/"
+      skip: true
+
+- name: Set keystone policy file
+  set_fact:
+    keystone_policy_file: "{{ keystone_policy.results.0.stat.path | basename }}"
+    keystone_policy_file_path: "{{ keystone_policy.results.0.stat.path }}"
+  when:
+    - keystone_policy.results
 
 - name: Check if Keystone Domain specific settings enabled
   local_action: stat path="{{ node_custom_config }}/keystone/domains"
@@ -107,18 +119,18 @@
   notify:
     - Restart keystone container
 
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/keystone/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+    src: "{{ keystone_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ keystone_policy_file }}"
     mode: "0660"
   become: true
-  register: keystone_policy_jsons
+  register: keystone_policy_overwriting
   when:
     - inventory_hostname in groups[item.value.group]
     - item.key in [ "keystone", "keystone-fernet" ]
     - item.value.enabled | bool
-    - keystone_policy.stat.exists
+    - keystone_policy_file is defined
   with_dict: "{{ keystone_services }}"
   notify:
     - Restart keystone container

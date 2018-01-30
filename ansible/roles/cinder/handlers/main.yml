@@ -5,7 +5,7 @@
     service: "{{ cinder_services[service_name] }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_api_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -20,7 +20,7 @@
     - config_json.changed | bool
       or cinder_conf.changed | bool
       or wsgi_cinder_api.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or cinder_api_container.changed | bool
 
 - name: Restart cinder-scheduler container
@@ -29,7 +29,7 @@
     service: "{{ cinder_services[service_name] }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_scheduler_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,7 +43,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or cinder_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or cinder_scheduler_container.changed | bool
 
 - name: Restart cinder-volume container
@@ -52,7 +52,7 @@
     service: "{{ cinder_services[service_name] }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_volume_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -68,7 +68,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or cinder_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or cinder_volume_container.changed | bool
 
 - name: Restart cinder-backup container
@@ -77,7 +77,7 @@
     service: "{{ cinder_services[service_name] }}"
     config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ cinder_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     cinder_backup_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -92,5 +92,5 @@
     - service.enabled | bool
     - config_json.changed | bool
       or cinder_conf.changed | bool
-      or policy_json.changed | bool
+      or policy_overwriting.changed | bool
       or cinder_backup_container.changed | bool
