@@ -10,13 +10,13 @@ tweaks to the Ceph cluster you can deploy a **healthy** cluster with a single
 host and a single block device.
 
 Requirements
-============
+~~~~~~~~~~~~
 
 * A minimum of 3 hosts for a vanilla deploy
 * A minimum of 1 block device per host
 
 Preparation
-===========
+~~~~~~~~~~~
 
 To prepare a disk for use as a
 `Ceph OSD <http://docs.ceph.com/docs/master/man/8/ceph-osd/>`_ you must add a
@@ -26,26 +26,31 @@ will be reformatted so use caution.
 
 To prepare an OSD as a storage drive, execute the following operations:
 
-::
+.. warning::
 
-    # <WARNING ALL DATA ON $DISK will be LOST!>
-    # where $DISK is /dev/sdb or something similar
-    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+   ALL DATA ON $DISK will be LOST! Where $DISK is /dev/sdb or something similar.
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+
+.. end
 
 The following shows an example of using parted to configure ``/dev/sdb`` for
 usage with Kolla.
 
-::
+.. code-block:: console
 
-    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
-    parted /dev/sdb print
-    Model: VMware, VMware Virtual S (scsi)
-    Disk /dev/sdb: 10.7GB
-    Sector size (logical/physical): 512B/512B
-    Partition Table: gpt
-    Number  Start   End     Size    File system  Name                      Flags
-         1      1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
+   parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+   parted /dev/sdb print
+   Model: VMware, VMware Virtual S (scsi)
+   Disk /dev/sdb: 10.7GB
+   Sector size (logical/physical): 512B/512B
+   Partition Table: gpt
+   Number  Start   End     Size    File system  Name                      Flags
+        1      1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
 
+.. end
 
 Using an external journal drive
 -------------------------------
@@ -59,19 +64,23 @@ journal drive. This section documents how to use an external journal drive.
 
 Prepare the storage drive in the same way as documented above:
 
-::
+.. warning::
 
-    # <WARNING ALL DATA ON $DISK will be LOST!>
-    # where $DISK is /dev/sdb or something similar
-    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO 1 -1
+   ALL DATA ON $DISK will be LOST! Where $DISK is /dev/sdb or something similar.
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO 1 -1
+
+.. end
 
 To prepare the journal external drive execute the following command:
 
-::
+.. code-block:: console
 
-    # <WARNING ALL DATA ON $DISK will be LOST!>
-    # where $DISK is /dev/sdc or something similar
-    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO_J 1 -1
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO_J 1 -1
+
+.. end
 
 .. note::
 
@@ -88,47 +97,57 @@ To prepare the journal external drive execute the following command:
 
 
 Configuration
-=============
+~~~~~~~~~~~~~
 
-Edit the [storage] group in the inventory which contains the hostname of the
+Edit the ``[storage]`` group in the inventory which contains the hostname of the
 hosts that have the block devices you have prepped as shown above.
 
-::
+.. code-block:: none
 
-    [storage]
-    controller
-    compute1
+   [storage]
+   controller
+   compute1
 
+.. end
 
 Enable Ceph in ``/etc/kolla/globals.yml``:
 
-::
+.. code-block:: yaml
 
-    enable_ceph: "yes"
+   enable_ceph: "yes"
 
+.. end
 
 RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
-::
+.. code-block:: yaml
 
-    enable_ceph_rgw: "yes"
+   enable_ceph_rgw: "yes"
+
+.. end
 
 RGW requires a healthy cluster in order to be successfully deployed. On initial
 start up, RGW will create several pools. The first pool should be in an
 operational state to proceed with the second one, and so on. So, in the case of
 an **all-in-one** deployment, it is necessary to change the default number of
 copies for the pools before deployment. Modify the file
-``/etc/kolla/config/ceph.conf`` and add the contents::
+``/etc/kolla/config/ceph.conf`` and add the contents:
 
-    [global]
-    osd pool default size = 1
-    osd pool default min size = 1
+.. path /etc/kolla/config/ceph.conf
+.. code-block:: ini
+
+   [global]
+   osd pool default size = 1
+   osd pool default min size = 1
+
+.. end
 
 To build a high performance and secure Ceph Storage Cluster, the Ceph community
 recommend the use of two separate networks: public network and cluster network.
 Edit the ``/etc/kolla/globals.yml`` and configure the ``cluster_interface``:
 
-.. code-block:: ini
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
 
    cluster_interface: "eth2"
 
@@ -139,46 +158,52 @@ For more details, see `NETWORK CONFIGURATION REFERENCE
 of Ceph Documentation.
 
 Deployment
-==========
+~~~~~~~~~~
 
 Finally deploy the Ceph-enabled OpenStack:
 
-::
+.. code-block:: console
 
-    kolla-ansible deploy -i path/to/inventory
+   kolla-ansible deploy -i path/to/inventory
 
-Using a Cache Tier
-==================
+.. end
 
-An optional `cache tier <http://docs.ceph.com/docs/jewel/rados/operations/cache-tiering/>`_
+Using a Cache Tiering
+~~~~~~~~~~~~~~~~~~~~~
+
+An optional `cache tiering <http://docs.ceph.com/docs/jewel/rados/operations/cache-tiering/>`_
 can be deployed by formatting at least one cache device and enabling cache.
 tiering in the globals.yml configuration file.
 
 To prepare an OSD as a cache device, execute the following operations:
 
-::
+.. code-block:: console
 
-    # <WARNING ALL DATA ON $DISK will be LOST!>
-    # where $DISK is /dev/sdb or something similar
-    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_CACHE_BOOTSTRAP 1 -1
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_CACHE_BOOTSTRAP 1 -1
+
+.. end
 
 Enable the Ceph cache tier in ``/etc/kolla/globals.yml``:
 
-::
+.. code-block:: yaml
 
-    enable_ceph: "yes"
-    ceph_enable_cache: "yes"
-    # Valid options are [ forward, none, writeback ]
-    ceph_cache_mode: "writeback"
+   enable_ceph: "yes"
+   ceph_enable_cache: "yes"
+   # Valid options are [ forward, none, writeback ]
+   ceph_cache_mode: "writeback"
 
-After this run the playbooks as you normally would. For example:
+.. end
 
-::
+After this run the playbooks as you normally would, for example:
 
-    kolla-ansible deploy -i path/to/inventory
+.. code-block:: console
+
+   kolla-ansible deploy -i path/to/inventory
+
+.. end
 
 Setting up an Erasure Coded Pool
-================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Erasure code <http://docs.ceph.com/docs/jewel/rados/operations/erasure-code/>`_
 is the new big thing from Ceph. Kolla has the ability to setup your Ceph pools
@@ -191,62 +216,73 @@ completely removing the pool and recreating it.
 To enable erasure coded pools add the following options to your
 ``/etc/kolla/globals.yml`` configuration file:
 
-::
+.. code-block:: yaml
 
-    # A requirement for using the erasure-coded pools is you must setup a cache tier
-    # Valid options are [ erasure, replicated ]
-    ceph_pool_type: "erasure"
-    # Optionally, you can change the profile
-    #ceph_erasure_profile: "k=4 m=2 ruleset-failure-domain=host"
+   # A requirement for using the erasure-coded pools is you must setup a cache tier
+   # Valid options are [ erasure, replicated ]
+   ceph_pool_type: "erasure"
+   # Optionally, you can change the profile
+   #ceph_erasure_profile: "k=4 m=2 ruleset-failure-domain=host"
+
+.. end
 
 Managing Ceph
-=============
+~~~~~~~~~~~~~
 
 Check the Ceph status for more diagnostic information. The sample output below
 indicates a healthy cluster:
 
-::
+.. code-block:: console
 
-    docker exec ceph_mon ceph -s
-    cluster 5fba2fbc-551d-11e5-a8ce-01ef4c5cf93c
-     health HEALTH_OK
-     monmap e1: 1 mons at {controller=10.0.0.128:6789/0}
-            election epoch 2, quorum 0 controller
-     osdmap e18: 2 osds: 2 up, 2 in
-      pgmap v27: 64 pgs, 1 pools, 0 bytes data, 0 objects
-            68676 kB used, 20390 MB / 20457 MB avail
-                  64 active+clean
+   docker exec ceph_mon ceph -s
+
+   cluster 5fba2fbc-551d-11e5-a8ce-01ef4c5cf93c
+    health HEALTH_OK
+    monmap e1: 1 mons at {controller=10.0.0.128:6789/0}
+           election epoch 2, quorum 0 controller
+    osdmap e18: 2 osds: 2 up, 2 in
+     pgmap v27: 64 pgs, 1 pools, 0 bytes data, 0 objects
+           68676 kB used, 20390 MB / 20457 MB avail
+                 64 active+clean
 
 If Ceph is run in an **all-in-one** deployment or with less than three storage
 nodes, further configuration is required. It is necessary to change the default
 number of copies for the pool. The following example demonstrates how to change
 the number of copies for the pool to 1:
 
-::
+.. code-block:: console
 
-    docker exec ceph_mon ceph osd pool set rbd size 1
+   docker exec ceph_mon ceph osd pool set rbd size 1
+
+.. end
 
 All the pools must be modified if Glance, Nova, and Cinder have been deployed.
 An example of modifying the pools to have 2 copies:
 
-::
+.. code-block:: console
 
-    for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p} size 2; done
+   for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p} size 2; done
+
+.. end
 
 If using a cache tier, these changes must be made as well:
 
-::
+.. code-block:: console
 
-    for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p}-cache size 2; done
+   for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p}-cache size 2; done
+
+.. end
 
 The default pool Ceph creates is named **rbd**. It is safe to remove this pool:
 
-::
+.. code-block:: console
 
-    docker exec ceph_mon ceph osd pool delete rbd rbd --yes-i-really-really-mean-it
+   docker exec ceph_mon ceph osd pool delete rbd rbd --yes-i-really-really-mean-it
+
+.. end
 
 Troubleshooting
-===============
+~~~~~~~~~~~~~~~
 
 Deploy fails with 'Fetching Ceph keyrings ... No JSON object could be decoded'
 ------------------------------------------------------------------------------
@@ -258,16 +294,14 @@ successful deploy.
 In order to do this the operator should remove the `ceph_mon_config` volume
 from each Ceph monitor node:
 
-::
+.. code-block:: console
 
-    ansible \
-        -i ansible/inventory/multinode \
-        -a 'docker volume rm ceph_mon_config' \
-        ceph-mon
+   ansible -i ansible/inventory/multinode \
+       -a 'docker volume rm ceph_mon_config' \
+       ceph-mon
 
-=====================
 Simple 3 Node Example
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 This example will show how to deploy Ceph in a very simple setup using 3
 storage nodes. 2 of those nodes (kolla1 and kolla2) will also provide other
@@ -288,86 +322,96 @@ implement caching.
 Here is the top part of the multinode inventory file used in the example
 environment before adding the 3rd node for Ceph:
 
-::
+.. code-block:: none
 
-    [control]
-    # These hostname must be resolvable from your deployment host
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [control]
+   # These hostname must be resolvable from your deployment host
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [network]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [network]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [compute]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [compute]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [monitoring]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [monitoring]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [storage]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [storage]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-
+.. end
 
 Configuration
-=============
+-------------
 
 To prepare the 2nd disk (/dev/sdb) of each nodes for use by Ceph you will need
 to add a partition label to it as shown below:
 
-::
+.. code-block:: console
 
-    # <WARNING ALL DATA ON /dev/sdb will be LOST!>
-    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+   parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
+
+.. end
 
 Make sure to run this command on each of the 3 nodes or the deployment will
 fail.
 
 Next, edit the multinode inventory file and make sure the 3 nodes are listed
-under [storage]. In this example I will add kolla3.ducourrier.com to the
+under ``[storage]``. In this example I will add kolla3.ducourrier.com to the
 existing inventory file:
 
-::
+.. code-block:: none
 
-    [control]
-    # These hostname must be resolvable from your deployment host
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [control]
+   # These hostname must be resolvable from your deployment host
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [network]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [network]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [compute]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [compute]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [monitoring]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
+   [monitoring]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
 
-    [storage]
-    kolla1.ducourrier.com
-    kolla2.ducourrier.com
-    kolla3.ducourrier.com
+   [storage]
+   kolla1.ducourrier.com
+   kolla2.ducourrier.com
+   kolla3.ducourrier.com
+
+.. end
 
 It is now time to enable Ceph in the environment by editing the
 ``/etc/kolla/globals.yml`` file:
 
-::
+.. code-block:: yaml
 
-    enable_ceph: "yes"
-    enable_ceph_rgw: "yes"
-    enable_cinder: "yes"
-    glance_backend_file: "no"
-    glance_backend_ceph: "yes"
+   enable_ceph: "yes"
+   enable_ceph_rgw: "yes"
+   enable_cinder: "yes"
+   glance_backend_file: "no"
+   glance_backend_ceph: "yes"
+
+.. end
+
+Deployment
+----------
 
 Finally deploy the Ceph-enabled configuration:
 
-::
+.. code-block:: console
 
-    kolla-ansible deploy -i path/to/inventory-file
+   kolla-ansible deploy -i path/to/inventory-file
+
+.. end
