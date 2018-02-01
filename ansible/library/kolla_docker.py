@@ -619,11 +619,15 @@ class DockerWorker(object):
         # We do not want to detach so we wait around for container to exit
         if not self.params.get('detach'):
             rc = self.dc.wait(self.params.get('name'))
+            # NOTE(jeffrey4l): since python docker package 3.0, wait return a
+            # dict all the time.
+            if isinstance(rc, dict):
+                rc = rc['StatusCode']
             if rc != 0:
                 self.module.fail_json(
                     failed=True,
                     changed=True,
-                    msg="Container exited with non-zero return code"
+                    msg="Container exited with non-zero return code %s" % rc
                 )
             if self.params.get('remove_on_exit'):
                 self.stop_container()
