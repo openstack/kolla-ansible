@@ -11,6 +11,8 @@ evaluation_interval = 300
 
 {% if nova_compute_virt_type == 'vmware' %}
 hypervisor_inspector = vsphere
+{% elif nova_compute_virt_type == 'xenapi' %}
+hypervisor_inspector = xenapi
 {% endif %}
 
 [keystone_authtoken]
@@ -56,4 +58,11 @@ transport_url = {{ notify_transport_url }}
 {% if ceilometer_policy_file is defined %}
 [oslo_policy]
 policy_file = {{ ceilometer_policy_file }}
+{% endif %}
+
+{% if nova_compute_virt_type == 'xenapi' %}
+[xenapi]
+connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
+connection_username = {{ xenserver_username }}
+connection_password = {{ xenserver_password }}
 {% endif %}
