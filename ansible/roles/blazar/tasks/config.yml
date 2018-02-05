@@ -1,0 +1,78 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    recurse: yes
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ blazar_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: blazar_config_jsons
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ blazar_services }}"
+  notify:
+    - Restart blazar-api container
+    - Restart blazar-manager container
+
+- name: Copying over blazar.conf
+  vars:
+    service_name: "{{ item.key }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/blazar.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/blazar.conf"
+      - "{{ node_custom_config }}/blazar/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/blazar/{{ inventory_hostname }}/blazar.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/blazar.conf"
+  register: blazar_confs
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ blazar_services }}"
+  notify:
+    - Restart blazar-api container
+    - Restart blazar-manager container
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ node_custom_config }}/blazar/policy.json"
+  register: blazar_policy
+
+- name: Copying over existing policy.json
+  template:
+    src: "{{ node_custom_config }}/blazar/policy.json"
+    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
+  register: blazar_policy_jsons
+  when:
+    - blazar_policy.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ blazar_services }}"
+  notify:
+    - Restart blazar-api container
+    - Restart blazar-manager container
+
+- name: Check blazar containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_blazar_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ blazar_services }}"
+  notify:
+    - Restart blazar-api container
+    - Restart blazar-manager container

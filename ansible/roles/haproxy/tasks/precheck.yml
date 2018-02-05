@@ -120,6 +120,18 @@
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('barbican_api') == -1
 
+- name: Checking free port for Blazar API HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ blazar_api_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_blazar | bool
+    - inventory_hostname in groups['haproxy']
+    - haproxy_stat.find('blazar_api') == -1
+
 - name: Checking free port for Cinder API HAProxy
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
