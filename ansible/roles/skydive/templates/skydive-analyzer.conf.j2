@@ -19,9 +19,14 @@ openstack:
   domain_name: Default
   endpoint_type: internal
 
+analyzers:
+{% for host in groups['skydive-analyzer'] %}
+  - {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ skydive_analyzer_port }}
+{% endfor %}
+
 etcd:
   client_timeout: 100
-{% if enable_etcd == "yes" %}
+{% if enable_etcd | bool %}
   embedded: false
   servers:
 {% for host in groups['etcd'] %}
