@@ -12,7 +12,9 @@
       variable: log_bin_trust_function_creators
       value: 1
   run_once: True
-  when: inventory_hostname == groups['keystone'][0]
+  when:
+    - inventory_hostname == groups['keystone'][0]
+    - not use_preconfigured_databases | bool
 
 - name: Init keystone database upgrade
   command: /bin/true
@@ -38,5 +40,6 @@
       variable: log_bin_trust_function_creators
       value: 0
   run_once: True
-  when: inventory_hostname == groups['keystone'][-1]
-
+  when:
+    - inventory_hostname == groups['keystone'][-1]
+    - not use_preconfigured_databases | bool

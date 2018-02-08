@@ -63,6 +63,10 @@ Then run the command to upgrade::
   does not work at all. This is acceptable because KVM is the recommended
   virtualization driver to use with Nova.
 
+.. note:: Please note that when the ``use_preconfigured_databases`` flag is
+  set to ``"yes"``, you need to have the ``log_bin_trust_function_creators``
+  set to ``1`` by your database administrator before performing the upgrade.
+
 
 Tips and Tricks
 ===============

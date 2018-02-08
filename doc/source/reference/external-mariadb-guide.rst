@@ -156,6 +156,11 @@ Within ``/etc/kolla/globals.yml``, set the following:
 
 .. end
 
+.. note:: Please note that when the ``use_preconfigured_databases`` flag
+  is set to ``"yes"``, you need to have the ``log_bin_trust_function_creators``
+  mysql variable set to ``1`` by your database administrator before running the
+  ``upgrade`` command.
+
 Using External MariaDB with separated, preconfigured users and databases
 ------------------------------------------------------------------------
 
