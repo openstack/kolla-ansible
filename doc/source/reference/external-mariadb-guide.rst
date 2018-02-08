@@ -206,6 +206,6 @@ all you need to do is the following:
 
 .. code-block:: console
 
-  sed -i -r -e 's/([a-z_]{0,}database_password:+)$/\1 mycommonpass/gi' /etc/kolla/passwords.yml
+  sed -i -r -e 's/([a-z_]{0,}database_password:+)(.*)$/\1 mycommonpass/gi' /etc/kolla/passwords.yml
 
 .. end
