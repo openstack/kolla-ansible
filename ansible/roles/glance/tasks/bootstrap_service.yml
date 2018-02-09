@@ -1,4 +1,19 @@
 ---
+- name: Enable log_bin_trust_function_creators function
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 1
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+
 - name: Running Glance bootstrap container
   vars:
     glance_api: "{{ glance_services['glance-api'] }}"
@@ -15,5 +30,20 @@
     name: "bootstrap_glance"
     restart_policy: "never"
     volumes: "{{ glance_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+
+- name: Disable log_bin_trust_function_creators function
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 0
   run_once: True
   delegate_to: "{{ groups[glance_api.group][0] }}"
