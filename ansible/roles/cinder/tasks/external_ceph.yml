@@ -57,3 +57,15 @@
     - cinder_services['cinder-backup'].enabled | bool
   notify:
     - Restart cinder-backup container
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  when: inventory_hostname in groups[item]
+  with_items:
+    - "cinder-volume"
+    - "cinder-backup"
