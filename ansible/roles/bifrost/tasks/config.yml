@@ -34,3 +34,16 @@
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
     - { src: "ssh_config", dest: "ssh_config" }
+
+# NOTE(mgoddard): The following two tasks were lifted from the Bifrost plays.
+# Because Bifrost cannot modify /etc/hosts from within the container we must
+# do it here.
+- name: "RabbitMQ - Testing if hostname is defined in /etc/hosts"
+  command: grep -i "{{ ansible_hostname }}" /etc/hosts
+  ignore_errors: yes
+  register: test_grep_fix_hostname
+
+- name: "RabbitMQ - Fixing /etc/hosts"
+  command: sed -i 's/localhost/{{ ansible_hostname }} localhost/' /etc/hosts
+  when: test_grep_fix_hostname.rc != 0
+  become: True
