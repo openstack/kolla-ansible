@@ -4,8 +4,30 @@
 Operating Kolla
 ===============
 
-Upgrading
-~~~~~~~~~
+Versioning
+~~~~~~~~~~
+
+Kolla uses the ``x.y.z`` `semver <https://semver.org/>`_ nomenclature for
+naming versions. Kolla's initial Pike release was ``5.0.0`` and the initial
+Queens release is ``6.0.0``. The Kolla community commits to release z-stream
+updates every 45 days that resolve defects in the stable version in use and
+publish those images to the Docker Hub registry.
+
+To prevent confusion, the Kolla community recommends using an alpha identifier
+``x.y.z.a`` where ``a`` represents any customization done on the part of the
+operator. For example, if an operator intends to modify one of the Docker files
+or the repos from the originals and build custom images for the Pike version,
+the operator should start with version 5.0.0.0 and increase alpha for each
+release. Alpha tag usage is at discretion of the operator. The alpha identifier
+could be a number as recommended or a string of the operator's choosing.
+
+To customize the version number uncomment ``openstack_release`` in globals.yml
+and specify the version number desired. If ``openstack_release`` is not
+specified, Kolla will deploy or upgrade using the version number information
+contained in the kolla-ansible package.
+
+Upgrade procedure
+~~~~~~~~~~~~~~~~~
 
 Kolla's strategy for upgrades is to never make a mess and to follow consistent
 patterns during deployment such that upgrades from one environment to the next
@@ -14,52 +36,109 @@ are simple to automate.
 Kolla implements a one command operation for upgrading an existing deployment
 consisting of a set of containers and configuration data to a new deployment.
 
-Kolla uses the ``x.y.z`` semver nomenclature for naming versions. Kolla's
-Liberty version is ``1.0.0`` and the Mitaka version is ``2.0.0``. The Kolla
-community commits to release z-stream updates every 45 days that resolve
-defects in the stable version in use and publish those images to the Docker Hub
-registry. To prevent confusion, the Kolla community recommends using an alpha
-identifier ``x.y.z.a`` where ``a`` represents any customization done on the
-part of the operator. For example, if an operator intends to modify one of the
-Docker files or the repos from the originals and build custom images for the
-Liberty version, the operator should start with version 1.0.0.0 and increase
-alpha for each release. Alpha tag usage is at discretion of the operator. The
-alpha identifier could be a number as recommended or a string of the operator's
-choosing.
+Limitations and Recommendations
+-------------------------------
 
-If the alpha identifier is not used, Kolla will deploy or upgrade using the
-version number information contained in the release. To customize the
-version number uncomment ``openstack_release`` in ``globals.yml`` and specify
-the version number desired.
+.. note::
 
-For example, to deploy a custom built ``Liberty`` version built with the
-:command:`kolla-build --tag 1.0.0.0` operation, configure the ``globals.yml``
-file:
+   Varying degrees of success have been reported with upgrading the libvirt
+   container with a running virtual machine in it. The libvirt upgrade still
+   needs a bit more validation, but the Kolla community feels confident this
+   mechanism can be used with the correct Docker graph driver.
 
-.. code-block:: none
+.. note::
 
-   openstack_release: 1.0.0.0
+   The Kolla community recommends the btrfs or aufs graph drivers for storing
+   data as sometimes the LVM graph driver loses track of its reference counting
+   and results in an unremovable container.
 
-.. end
+.. note::
 
-Then run the following command to deploy:
+   Because of system technical limitations, upgrade of a libvirt container when
+   using software emulation (``virt_type = qemu`` in nova.conf), does not work
+   at all. This is acceptable because KVM is the recommended virtualization
+   driver to use with Nova.
+
+.. note::
+
+   Please note that when the ``use_preconfigured_databases`` flag is set to
+   ``"yes"``, you need to have the ``log_bin_trust_function_creators`` set to
+   ``1`` by your database administrator before performing the upgrade.
+
+Preparation
+-----------
+
+While there may be some cases where it is possible to upgrade by skipping this
+step (i.e. by upgrading only the ``openstack_release`` version) - generally,
+when looking at a more comprehensive upgrade, the kolla-ansible package itself
+should be upgraded first. This will include reviewing some of the configuration
+and inventory files. On the operator/master node, a backup of the ``/etc/kolla``
+directory may be desirable.
+
+If upgrading from ``5.0.0`` to ``6.0.0``, upgrade the kolla-ansible package:
 
 .. code-block:: console
 
-   kolla-ansible deploy
+   pip install --upgrade kolla-ansible==6.0.0
 
 .. end
 
-If using Liberty and a custom alpha number of 0, and upgrading to 1,
-configure the ``globals.yml`` file:
+If this is a minor upgrade, and you do not wish to upgrade kolla-ansible itself,
+you may skip this step.
 
-.. code-block:: none
+The inventory file for the deployment should be updated, as the newer sample
+inventory files may have updated layout or other relevant changes.
+Use the newer ``6.0.0`` one as a starting template, and merge your existing
+inventory layout into a copy of the one from here::
 
-   openstack_release: 1.0.0.1
+    /usr/share/kolla-ansible/ansible/inventory/
+
+In addition the ``6.0.0`` sample configuration files should be taken from::
+
+    # CentOS
+    /usr/share/kolla-ansible/etc_examples/kolla
+
+    # Ubuntu
+    /usr/local/share/kolla-ansible/etc_examples/kolla
+
+At this stage, files that are still at the ``5.0.0`` version - which need manual
+updating are:
+
+- ``/etc/kolla/globals.yml``
+- ``/etc/kolla/passwords.yml``
+
+For ``globals.yml`` relevant changes should be merged into a copy of the new
+template, and then replace the file in ``/etc/kolla`` with the updated version.
+For ``passwords.yml``, see the ``kolla-mergepwd`` instructions in `Tips and Tricks`.
+
+For the kolla docker images, the ``openstack_release`` is updated to ``6.0.0``:
+
+.. code-block:: yaml
+
+   openstack_release: 6.0.0
 
 .. end
 
-Then run the command to upgrade:
+Once the kolla release, the inventory file, and the relevant configuration
+files have been updated in this way, the operator may first want to 'pull'
+down the images to stage the ``6.0.0`` versions. This can be done safely
+ahead of time, and does not impact the existing services. (optional)
+
+Run the command to pull the ``6.0.0`` images for staging:
+
+.. code-block:: console
+
+   kolla-ansible pull
+
+.. end
+
+At a convenient time, the upgrade can now be run (it will complete more
+quickly if the images have been staged ahead of time).
+
+Perform the Upgrade
+-------------------
+
+To perform the upgrade:
 
 .. code-block:: console
 
@@ -67,26 +146,8 @@ Then run the command to upgrade:
 
 .. end
 
-.. note::
-
-   Varying degrees of success have been reported with upgrading
-   the libvirt container with a running virtual machine in it. The libvirt
-   upgrade still needs a bit more validation, but the Kolla community feels
-   confident this mechanism can be used with the correct Docker graph driver.
-
-.. note::
-
-   The Kolla community recommends the btrfs or aufs graph drivers for
-   storing data as sometimes the LVM graph driver loses track of its reference
-   counting and results in an unremovable container.
-
-.. note::
-
-   Because of system technical limitations, upgrade of a libvirt
-   container when using software emulation (``virt_type = qemu`` in
-   ``nova.conf`` file), does not work at all. This is acceptable because
-   KVM is the recommended virtualization driver to use with Nova.
-
+After this command is complete the containers will have been recreated from the
+new images.
 
 Tips and Tricks
 ~~~~~~~~~~~~~~~
