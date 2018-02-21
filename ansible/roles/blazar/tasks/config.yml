@@ -9,6 +9,23 @@
     - item.value.enabled | bool
   with_dict: "{{ blazar_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: blazar_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/blazar/"
+      skip: true
+
+- name: Set blazar policy file
+  set_fact:
+    blazar_policy_file: "{{ blazar_policy.results.0.stat.path | basename }}"
+    blazar_policy_file_path: "{{ blazar_policy.results.0.stat.path }}"
+  when:
+    - blazar_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -42,19 +59,14 @@
     - Restart blazar-api container
     - Restart blazar-manager container
 
-- name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/blazar/policy.json"
-  register: blazar_policy
-
-- name: Copying over existing policy.json
+- name: Copying over existing policy file
   template:
-    src: "{{ node_custom_config }}/blazar/policy.json"
-    dest: "{{ node_config_directory }}/{{ item.key }}/policy.json"
-  register: blazar_policy_jsons
+    src: "{{ blazar_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ blazar_policy_file }}"
+  register: blazar_policy_overwriting
   when:
-    - blazar_policy.stat.exists
+    - blazar_policy_file is defined
     - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
   with_dict: "{{ blazar_services }}"
   notify:
     - Restart blazar-api container
