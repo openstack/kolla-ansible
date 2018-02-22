@@ -1,6 +1,15 @@
 ---
 - include: config.yml
 
+# NOTE(jeffrey4l): client.admin caps should be update when upgrade from Jewel
+# to Luminous
+- name: configuring client.admin caps
+  kolla_ceph_keyring:
+    name: client.admin
+    caps: "{{ ceph_client_admin_keyring_caps }}"
+  run_once: True
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+
 - include: start_mons.yml
   when: inventory_hostname in groups['ceph-mon']
 
