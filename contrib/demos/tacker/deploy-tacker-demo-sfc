@@ -26,17 +26,19 @@ topology_template:
   node_templates:
 
     Forwarding_path1:
-      type: tosca.nodes.nfv.FP.Tacker
+      type: tosca.nodes.nfv.FP.TackerV2
       description: creates path (CP12->CP12)
       properties:
         id: 51
         policy:
           type: ACL
           criteria:
-            - network_src_port_id: ${KOLLA_SFC_CLIENT_PORT}
-            - network_id: ${DEMO_NET}
-            - ip_proto: 6
-            - destination_port_range: 80-80
+            - name: block_http
+              classifier:
+                network_src_port_id: ${KOLLA_SFC_CLIENT_PORT}
+                network_id: ${DEMO_NET}
+                ip_proto: 6
+                destination_port_range: 80-80
         path:
           - forwarder: kolla-sample-vnfd
             capability: CP11
