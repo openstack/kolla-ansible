@@ -9,6 +9,10 @@
       endpoint_type: "{{ openstack_interface }}"
   delegate_to: "{{ groups['glance-api'][0] }}"
   run_once: True
+  register: img_create
+  retries: 10
+  delay: 3
+  until: img_create | success
   when: kolla_enable_sanity_glance | bool
 
 - name: Glance sanity check - cleanup
