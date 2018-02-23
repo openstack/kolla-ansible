@@ -1,0 +1,21 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - zookeeper
+  register: container_facts
+
+- name: Checking zookeeper ports are available
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  with_items:
+    - "{{ zookeeper_client_port }}"
+    - "{{ zookeeper_peer_port }}"
+    - "{{ zookeeper_quorum_port }}"
+  when:
+    - container_facts['zookeeper'] is not defined
+    - inventory_hostname in groups['zookeeper']
