@@ -1,0 +1,28 @@
+---
+zookeeper_services:
+  zookeeper:
+    container_name: zookeeper
+    group: zookeeper
+    enabled: true
+    image: "{{ zookeeper_image_full }}"
+    environment:
+      ZOO_LOG_DIR: /var/log/kolla/zookeeper
+      ZOO_LOG4J_PROP: "{{ zookeeper_log_settings }}"
+    volumes:
+      - "{{ node_config_directory }}/zookeeper/:{{ container_config_directory }}/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "zookeeper:/var/lib/zookeeper/data"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+# Zookeeper
+####################
+zookeeper_log_settings: 'INFO,ROLLINGFILE'
+
+####################
+# Docker
+####################
+zookeeper_install_type: "{{ kolla_install_type }}"
+zookeeper_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zookeeper_install_type }}-zookeeper"
+zookeeper_tag: "{{ openstack_release }}"
+zookeeper_image_full: "{{ zookeeper_image }}:{{ zookeeper_tag }}"

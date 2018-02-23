@@ -1,0 +1,11 @@
+{% set fluentd_dir = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+<source>
+  @type tail
+  path /var/log/kolla/zookeeper/zookeeper.log
+  pos_file /var/run/{{ fluentd_dir }}/zookeeper.pos
+  tag infra.*
+  format multiline
+  format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \S+ \S+ \S+ .*$/
+  format1 /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[(?<server_id>\S+)\] \S+ (?<log_level>\S+) (?<Payload>.*)$/
+  time_key Timestamp
+</source>
