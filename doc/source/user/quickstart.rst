@@ -109,11 +109,11 @@ configuration file ``/etc/ansible/ansible.cfg``:
     pipelining=True
     forks=100
 
-Install Kolla
-~~~~~~~~~~~~~
+Install Kolla-ansible
+~~~~~~~~~~~~~~~~~~~~~
 
-Install Kolla for deployment or evaluation
-------------------------------------------
+Install Kolla-ansible for deployment or evaluation
+--------------------------------------------------
 
 Install kolla-ansible and its dependencies using ``pip``.
 
