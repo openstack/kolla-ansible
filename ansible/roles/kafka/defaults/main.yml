@@ -1,0 +1,31 @@
+---
+kafka_services:
+  kafka:
+    container_name: kafka
+    group: kafka
+    enabled: true
+    image: "{{ kafka_image_full }}"
+    environment:
+      LOG_DIR: "{{ kafka_log_dir }}"
+      KAFKA_HEAP_OPTS: "{{ kafka_heap_opts }}"
+    volumes:
+      - "{{ node_config_directory }}/kafka/:{{ container_config_directory }}/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kafka:/var/lib/kafka/data"
+      - "kolla_logs:/var/log/kolla/"
+
+####################
+# Kafka
+####################
+kafka_cluster_name: "kolla_kafka"
+kafka_log_dir: "/var/log/kolla/kafka"
+kafka_heap_opts: "-Xmx1G -Xms1G"
+kafka_zookeeper: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+####################
+# Docker
+####################
+kafka_install_type: "{{ kolla_install_type }}"
+kafka_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kafka_install_type }}-kafka"
+kafka_tag: "{{ openstack_release }}"
+kafka_image_full: "{{ kafka_image }}:{{ kafka_tag }}"

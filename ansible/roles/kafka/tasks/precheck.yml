@@ -1,0 +1,17 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - kafka
+  register: container_facts
+
+- name: Checking free port for Kafka
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ kafka_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['kafka'] is not defined
+    - inventory_hostname in groups['kafka']
