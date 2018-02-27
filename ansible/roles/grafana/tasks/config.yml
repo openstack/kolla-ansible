@@ -9,6 +9,12 @@
     - item.value.enabled | bool
   with_dict: "{{ grafana_services }}"
 
+- name: Check if extra configuration file exists
+  local_action: find path="{{ node_custom_config }}/grafana/"
+  changed_when: False
+  run_once: True
+  register: check_extra_conf_grafana
+
 - name: Copying over config.json files
   template:
     src: "{{ item.key }}.json.j2"
@@ -35,6 +41,21 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ grafana_services }}"
+  notify:
+    - Restart grafana container
+
+- name: Copying over extra configuration file
+  become: true
+  vars:
+    service_name: "{{ item.0 }}"
+  template:
+    src: "{{ item.path }}"
+    dest: "{{ node_config_directory }}/grafana/{{ item.path | basename }}"
+    mode: "0660"
+  when:
+    - item is defined
+  with_items:
+    - "{{ check_extra_conf_grafana.files }}"
   notify:
     - Restart grafana container
 
