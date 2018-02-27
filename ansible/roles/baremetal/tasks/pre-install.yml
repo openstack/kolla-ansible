@@ -42,16 +42,16 @@
 
 - name: Ensure kolla group is present
   group:
-    name: kolla
+    name: "{{ kolla_group }}"
     state: present
   become: True
   when: create_kolla_user | bool
 
 - name: Create kolla user
   user:
-    name: kolla
+    name: "{{ kolla_user }}"
     state: present
-    group: kolla
+    group: "{{ kolla_group }}"
     groups: "sudo"
   become: True
   when: create_kolla_user | bool
@@ -60,14 +60,14 @@
   lineinfile:
     dest: /etc/sudoers
     state: present
-    regexp: '^kolla'
-    line: 'kolla ALL=(ALL) NOPASSWD: ALL'
+    regexp: '^{{ kolla_group }}'
+    line: '{{ kolla_group }} ALL=(ALL) NOPASSWD: ALL'
   become: True
   when: create_kolla_user | bool
 
 - name: Add public key to kolla user authorized keys
   authorized_key:
-    user: kolla
+    user: "{{ kolla_user }}"
     key: "{{ kolla_ssh_key.public_key }}"
   become: True
   when: create_kolla_user | bool
@@ -139,8 +139,8 @@
     path: "{{ node_config_directory }}"
     state: directory
     recurse: yes
-    owner: kolla
-    group: kolla
+    owner: "{{ kolla_user }}"
+    group: "{{ kolla_group }}"
     mode: 0755
   become: True
   when: create_kolla_user | bool
