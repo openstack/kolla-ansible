@@ -1,12 +1,12 @@
-Reference
-=========
+Projects Deployment References
+==============================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    ceph-guide
-   central-logging-guide
    external-ceph-guide
+   central-logging-guide
    external-mariadb-guide
    cinder-guide
    cinder-guide-hnas

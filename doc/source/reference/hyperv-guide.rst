@@ -5,7 +5,7 @@ Nova-HyperV in Kolla
 ====================
 
 Overview
-========
+~~~~~~~~
 Currently, Kolla can deploy the following OpenStack services for Hyper-V:
 
 * nova-compute
@@ -24,30 +24,28 @@ virtual machines from Horizon web interface.
 
 .. note::
 
-    HyperV services are not currently deployed as containers. This functionality
-    is in development. The current implementation installs OpenStack services
-    via MSIs.
+   HyperV services are not currently deployed as containers. This functionality
+   is in development. The current implementation installs OpenStack services
+   via MSIs.
 
 
 .. note::
 
-    HyperV services do not currently support outside the box upgrades. Manual
-    upgrades are required for this process. MSI release versions can be found
-    `here
-    <https://cloudbase.it/openstack-hyperv-driver/>`__.
-    To upgrade an existing MSI to a newer version, simply uninstall the current
-    MSI and install the newer one. This will not delete the configuration files.
-    To preserve the configuration files, check the Skip configuration checkbox
-    during installation.
+   HyperV services do not currently support outside the box upgrades. Manual
+   upgrades are required for this process. MSI release versions can be found
+   `here <https://cloudbase.it/openstack-hyperv-driver/>`__.
+   To upgrade an existing MSI to a newer version, simply uninstall the current
+   MSI and install the newer one. This will not delete the configuration files.
+   To preserve the configuration files, check the Skip configuration checkbox
+   during installation.
 
 
 Preparation for Hyper-V node
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ansible communicates with Hyper-V host via WinRM protocol. An HTTPS WinRM
 listener needs to be configured on the Hyper-V host, which can be easily
-created with
-`this PowerShell script
+created with `this PowerShell script
 <https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1>`__.
 
 
@@ -57,13 +55,16 @@ Virtual Interface the following PowerShell may be used:
 
 .. code-block:: console
 
-    PS C:\> $if = Get-NetIPAddress -IPAddress 192* | Get-NetIPInterface
-    PS C:\> New-VMSwitch -NetAdapterName $if.ifAlias -Name YOUR_BRIDGE_NAME -AllowManagementOS $false
+   PS C:\> $if = Get-NetIPAddress -IPAddress 192* | Get-NetIPInterface
+   PS C:\> New-VMSwitch -NetAdapterName $if.ifAlias -Name YOUR_BRIDGE_NAME -AllowManagementOS $false
+
+.. end
 
 .. note::
 
-    It is very important to make sure that when you are using a Hyper-V node with only 1 NIC the
-    -AllowManagementOS option is set on True, otherwise you will lose connectivity to the Hyper-V node.
+   It is very important to make sure that when you are using a Hyper-V node
+   with only 1 NIC the ``-AllowManagementOS`` option is set on ``True``,
+   otherwise you will lose connectivity to the Hyper-V node.
 
 
 To prepare the Hyper-V node to be able to attach to volumes provided by
@@ -72,72 +73,83 @@ running and started automatically.
 
 .. code-block:: console
 
-    PS C:\> Set-Service -Name MSiSCSI -StartupType Automatic
-    PS C:\> Start-Service MSiSCSI
+   PS C:\> Set-Service -Name MSiSCSI -StartupType Automatic
+   PS C:\> Start-Service MSiSCSI
 
-
+.. end
 
 Preparation for Kolla deployer node
-===================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hyper-V role is required, enable it in ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    enable_hyperv: "yes"
+   enable_hyperv: "yes"
+
+.. end
 
 Hyper-V options are also required in ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    hyperv_username: <HyperV username>
-    hyperv_password: <HyperV password>
-    vswitch_name: <HyperV virtual switch name>
-    nova_msi_url: "https://www.cloudbase.it/downloads/HyperVNovaCompute_Beta.msi"
+   hyperv_username: <HyperV username>
+   hyperv_password: <HyperV password>
+   vswitch_name: <HyperV virtual switch name>
+   nova_msi_url: "https://www.cloudbase.it/downloads/HyperVNovaCompute_Beta.msi"
+
+.. end
 
 If tenant networks are to be built using VLAN add corresponding type in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    neutron_tenant_network_types: 'flat,vlan'
+   neutron_tenant_network_types: 'flat,vlan'
+
+.. end
 
 The virtual switch is the same one created on the HyperV setup part.
 For nova_msi_url, different Nova MSI (Mitaka/Newton/Ocata) versions can
 be found on `Cloudbase website
 <https://cloudbase.it/openstack-hyperv-driver/>`__.
 
-
 Add the Hyper-V node in ``ansible/inventory`` file:
 
-.. code-block:: console
+.. code-block:: none
 
-    [hyperv]
-    <HyperV IP>
+   [hyperv]
+   <HyperV IP>
 
-    [hyperv:vars]
-    ansible_user=<HyperV user>
-    ansible_password=<HyperV password>
-    ansible_port=5986
-    ansible_connection=winrm
-    ansible_winrm_server_cert_validation=ignore
+   [hyperv:vars]
+   ansible_user=<HyperV user>
+   ansible_password=<HyperV password>
+   ansible_port=5986
+   ansible_connection=winrm
+   ansible_winrm_server_cert_validation=ignore
+
+.. end
 
 ``pywinrm`` package needs to be installed in order for Ansible to work
 on the HyperV node:
 
 .. code-block:: console
 
-    pip install "pywinrm>=0.2.2"
+   pip install "pywinrm>=0.2.2"
+
+.. end
 
 .. note::
 
-    In case of a test deployment with controller and compute nodes as virtual machines
-    on Hyper-V, if VLAN tenant networking is used, trunk mode has to be enabled on the
-    VMs:
+   In case of a test deployment with controller and compute nodes as
+   virtual machines on Hyper-V, if VLAN tenant networking is used,
+   trunk mode has to be enabled on the VMs:
 
 .. code-block:: console
 
-    Set-VMNetworkAdapterVlan -Trunk -AllowedVlanIdList <VLAN ID> -NativeVlanId 0 <VM name>
+   Set-VMNetworkAdapterVlan -Trunk -AllowedVlanIdList <VLAN ID> -NativeVlanId 0 <VM name>
+
+.. end
 
 networking-hyperv mechanism driver is needed for neutron-server to
 communicate with HyperV nova-compute. This can be built with source
@@ -146,7 +158,9 @@ container with pip:
 
 .. code-block:: console
 
-    pip install "networking-hyperv>=4.0.0"
+   pip install "networking-hyperv>=4.0.0"
+
+.. end
 
 For neutron_extension_drivers, ``port_security`` and ``qos`` are
 currently supported by the networking-hyperv mechanism driver.
@@ -154,20 +168,23 @@ By default only ``port_security`` is set.
 
 
 Verify Operations
-=================
+~~~~~~~~~~~~~~~~~
 
 OpenStack HyperV services can be inspected and managed from PowerShell:
 
 .. code-block:: console
 
-    PS C:\> Get-Service nova-compute
-    PS C:\> Get-Service neutron-hyperv-agent
+   PS C:\> Get-Service nova-compute
+   PS C:\> Get-Service neutron-hyperv-agent
+
+.. end
 
 .. code-block:: console
 
-    PS C:\> Restart-Service nova-compute
-    PS C:\> Restart-Service neutron-hyperv-agent
+   PS C:\> Restart-Service nova-compute
+   PS C:\> Restart-Service neutron-hyperv-agent
 
+.. end
 
 For more information on OpenStack HyperV, see
 `Hyper-V virtualization platform
