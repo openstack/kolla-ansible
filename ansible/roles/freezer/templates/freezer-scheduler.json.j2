@@ -1,17 +1,9 @@
-{% set apache_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
-{% set apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "{{ apache_cmd }} -DFOREGROUND",
+    "command": "freezer-scheduler --config-file /etc/freezer/freezer.conf start",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/freezer.conf",
             "dest": "/etc/freezer/freezer.conf",
-            "owner": "freezer",
-            "perm": "0600"
-        },
-        {
-            "source": "{{ container_config_directory }}/wsgi-freezer-api.conf",
-            "dest": "/etc/{{ apache_dir }}/wsgi-freezer.conf",
             "owner": "freezer",
             "perm": "0600"
         }{% if freezer_policy_file is defined %},
