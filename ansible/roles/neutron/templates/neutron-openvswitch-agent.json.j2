@@ -13,6 +13,14 @@
             "owner": "neutron",
             "perm": "0600"
         },
+{% if check_extra_ml2_plugins is defined and check_extra_ml2_plugins.matched > 0 %}{% for plugin in check_extra_ml2_plugins.files %}
+        {
+            "source": "{{ container_config_directory }}/{{ plugin.path | basename }}",
+            "dest": "/etc/neutron/plugins/ml2/{{ plugin.path | basename }}",
+            "owner": "neutron",
+            "perm": "0600"
+        },
+{% endfor %}{% endif %}
         {
             "source": "{{ container_config_directory }}/policy.json",
             "dest": "/etc/neutron/policy.json",
