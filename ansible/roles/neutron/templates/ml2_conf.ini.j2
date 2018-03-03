@@ -24,7 +24,11 @@ extension_drivers = port_security
 
 {% if enable_opendaylight | bool %}
 [ml2_odl]
+{% if enable_haproxy | bool %}
 url = {{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ opendaylight_haproxy_restconf_port }}/controller/nb/v2/neutron
+{% else %}
+url = {{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ opendaylight_restconf_port }}/controller/nb/v2/neutron
+{% endif %}
 username = admin
 password = {{ opendaylight_password }}
 port_binding_controller = {{ opendaylight_port_binding_type }}
