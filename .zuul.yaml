@@ -8,6 +8,7 @@
         - kolla-ansible-ubuntu-source-ceph
         - kolla-ansible-centos-source-ceph
         - kolla-ansible-oraclelinux-source-ceph
+        - kolla-ansible-bifrost-centos-source
 
         - openstack-tox-lower-constraints
     gate:
@@ -80,6 +81,13 @@
       scenario: aio
     roles:
       - zuul: openstack-infra/zuul-jobs
+
+- job:
+    name: kolla-ansible-bifrost-base
+    parent: kolla-ansible-base
+    vars:
+      scenario: bifrost
+      install_type: source
 
 - job:
     name: kolla-ansible-centos-source
@@ -164,3 +172,11 @@
       base_distro: oraclelinux
       install_type: source
       scenario: ceph
+
+- job:
+    name: kolla-ansible-bifrost-centos-source
+    parent: kolla-ansible-bifrost-base
+    nodeset: kolla-ansible-centos
+    voting: false
+    vars:
+      base_distro: centos

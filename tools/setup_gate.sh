@@ -34,12 +34,15 @@ EOF
     echo "RUN echo $(base64 -w0 ${PIP_CONF}) | base64 -d > /etc/pip.conf" | sudo tee /etc/kolla/header
     rm ${PIP_CONF}
 
-GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
+    if [[ $ACTION != "bifrost" ]]; then
+        GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
+    else
+        GATE_IMAGES="bifrost"
+    fi
 
-# TODO(jeffrey4l): this doesn't work with zuulv3
-if echo $ACTION | grep -q "ceph"; then
-GATE_IMAGES+=",ceph,cinder"
-fi
+    if [[ $ACTION == "ceph" ]]; then
+        GATE_IMAGES+=",ceph,cinder"
+    fi
 
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
@@ -134,6 +137,70 @@ function sanity_check {
     fi
 }
 
+function test_openstack {
+    # Create dummy interface for neutron
+    ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
+
+    #TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
+    sudo chmod -R 777 /etc/kolla
+    # Actually do the deployment
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks1
+    # TODO(jeffrey4l): add pull action when we have a local registry
+    # service in CI
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy > /tmp/logs/ansible/deploy
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/post-deploy
+
+    # Test OpenStack Environment
+    # TODO: use kolla-ansible check when it's ready
+
+    sanity_check
+
+    # TODO(jeffrey4l): make some configure file change and
+    # trigger a real reconfigure
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/post-deploy
+    # TODO(jeffrey4l): need run a real upgrade
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
+
+    # run prechecks again
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
+}
+
+function sanity_check_bifrost {
+    # TODO(mgoddard): More testing, deploy bare metal nodes.
+    # TODO(mgoddard): Use openstackclient when clouds.yaml works. See
+    # https://bugs.launchpad.net/bifrost/+bug/1754070.
+    attempts=0
+    while [[ $(sudo docker exec bifrost_deploy bash -c "source env-vars && ironic driver-list" | wc -l) -le 4 ]]; do
+        attempts=$((attempts + 1))
+        if [[ $attempts -gt 6 ]]; then
+            echo "Timed out waiting for ironic conductor to become active"
+            exit 1
+        fi
+        sleep 10
+    done
+    sudo docker exec bifrost_deploy bash -c "source env-vars && ironic node-list"
+    sudo docker exec bifrost_deploy bash -c "source env-vars && ironic node-create --driver ipmi --name test-node"
+    sudo docker exec bifrost_deploy bash -c "source env-vars && ironic node-delete test-node"
+}
+
+function test_bifrost {
+    # TODO(mgoddard): run prechecks.
+
+    # Deploy the bifrost container.
+    # TODO(mgoddard): add pull action when we have a local registry service in
+    # CI.
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy-bifrost > /tmp/logs/ansible/deploy-bifrost
+
+    # Test Bifrost Environment
+    sanity_check_bifrost
+
+    # TODO(mgoddard): make some configuration file changes and trigger a real
+    # reconfigure.
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy-bifrost >  /tmp/logs/ansible/deploy-bifrost2
+
+    # TODO(mgoddard): perform an upgrade.
+}
+
 check_failure() {
     # All docker container's status are created, restarting, running, removing,
     # paused, exited and dead. Containers without running status are treated as
@@ -160,30 +227,10 @@ setup_node
 tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
 prepare_images
 
-# Create dummy interface for neutron
-ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
-
-#TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
-sudo chmod -R 777 /etc/kolla
-# Actually do the deployment
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks1
-# TODO(jeffrey4l): add pull action when we have a local registry
-# service in CI
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy > /tmp/logs/ansible/deploy
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/post-deploy
-
-# Test OpenStack Environment
-# TODO: use kolla-ansible check when it's ready
-
-sanity_check
-
-# TODO(jeffrey4l): make some configure file change and
-# trigger a real reconfigure
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/post-deploy
-# TODO(jeffrey4l): need run a real upgrade
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
-
-# run prechecks again
-tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
+if [[ $ACTION != bifrost ]]; then
+    test_openstack
+else
+    test_bifrost
+fi
 
 check_failure
