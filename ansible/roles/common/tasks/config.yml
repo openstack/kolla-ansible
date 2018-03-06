@@ -58,6 +58,27 @@
   notify:
     - Restart fluentd container
 
+- name: Find custom fluentd input config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/input"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_inputs
+  when:
+    - enable_fluentd | bool
+
+- name: Copying over custom fluentd input config files
+  template:
+    src: "{{ item.path }}"
+    dest: "{{ node_config_directory }}/fluentd/input/{{ item.path | basename }}"
+  register: fluentd_input_custom
+  when:
+    - enable_fluentd | bool
+  with_items: "{{ find_custom_fluentd_inputs.files }}"
+  notify:
+    - Restart fluentd container
+
 - name: Copying over fluentd output config files
   template:
     src: "conf/output/{{ item.name }}.conf.j2"
