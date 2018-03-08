@@ -26,3 +26,4 @@ Projects Deployment References
    vmware-guide
    tacker-guide
    xenserver-guide
+   horizon-guide
