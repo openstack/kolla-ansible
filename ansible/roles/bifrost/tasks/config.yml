@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "bifrost"
 
@@ -14,6 +17,8 @@
       - "{{ node_custom_config }}/{{ item }}.yml"
       - "{{ node_custom_config }}/bifrost/{{ item }}.yml"
     dest: "{{ node_config_directory }}/bifrost/{{ item }}.yml"
+    mode: "0660"
+  become: true
   with_items:
     - "bifrost"
     - "dib"
@@ -23,6 +28,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/bifrost/{{ item }}"
+    mode: "0660"
+  become: true
   with_items:
      - "rabbitmq-env.conf"
 
@@ -30,6 +37,8 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/bifrost/{{ item.dest }}"
+    mode: "0660"
+  become: true
   with_items:
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }

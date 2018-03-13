@@ -7,6 +7,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -23,6 +27,8 @@
       - "{{ node_custom_config }}/cinder/ceph.conf"
       - "{{ node_custom_config }}/cinder/{{ item.key }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
+    mode: "0660"
+  become: true
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -36,6 +42,8 @@
   copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/cinder-volume/"
+    mode: "0660"
+  become: true
   with_fileglob:
     - "{{ node_custom_config }}/cinder/cinder-volume/ceph.client*"
   when:
@@ -49,6 +57,8 @@
   copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/cinder-backup/"
+    mode: "0660"
+  become: true
   with_fileglob:
     - "{{ node_custom_config }}/cinder/cinder-backup/ceph.client*"
   when:

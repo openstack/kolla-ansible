@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -30,6 +33,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: kuryr_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -49,6 +54,8 @@
       - "{{ node_custom_config }}/kuryr/{{ item.key }}.conf"
       - "{{ node_custom_config }}/kuryr/{{ inventory_hostname }}/{{ item.key }}.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/kuryr.conf"
+    mode: "0660"
+  become: true
   register: kuryr_confs
   when:
     - inventory_hostname in groups[item.value.group]
@@ -63,6 +70,8 @@
   template:
     src: "kuryr.spec.j2"
     dest: "{{ node_config_directory }}/{{ item }}/kuryr.spec"
+    mode: "0660"
+  become: true
   register: kuryr_spec
   when:
     - inventory_hostname in groups[service.group]
@@ -76,6 +85,8 @@
   template:
     src: "{{ kuryr_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ kuryr_policy_file }}"
+    mode: "0660"
+  become: true
   register: kuryr_policy_overwriting
   when:
     - kuryr_policy_file is defined

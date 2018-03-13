@@ -4,6 +4,8 @@
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     recurse: yes
+    mode: "0770"
+  become: true
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ mistral_services }}"
 
@@ -28,6 +30,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: mistral_config_jsons
   when:
     - item.value.enabled | bool
@@ -47,6 +51,8 @@
       - "{{ node_custom_config }}/mistral/{{ item.key }}.conf"
       - "{{ node_custom_config }}/mistral/{{ inventory_hostname }}/mistral.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/mistral.conf"
+    mode: "0660"
+  become: true
   register: mistral_confs
   when:
     - item.value.enabled | bool

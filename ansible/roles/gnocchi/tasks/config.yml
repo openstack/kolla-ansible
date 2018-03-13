@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -30,6 +33,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: gnocchi_config_jsons
   when:
     - item.value.enabled | bool
@@ -51,6 +56,8 @@
       - "{{ node_custom_config }}/gnocchi/{{ item.key }}.conf"
       - "{{ node_custom_config }}/gnocchi/{{ inventory_hostname }}/gnocchi.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/gnocchi.conf"
+    mode: "0660"
+  become: true
   register: gnocchi_confs
   when:
     - item.value.enabled | bool
@@ -67,6 +74,8 @@
   template:
     src: "wsgi-gnocchi.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-gnocchi.conf"
+    mode: "0660"
+  become: true
   register: gnocchi_wsgi_conf
   when:
     - inventory_hostname in groups['gnocchi-api']

@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when: inventory_hostname in groups[item.value.group]
   with_dict: "{{ congress_services }}"
 
@@ -28,6 +31,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: congress_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -47,6 +52,8 @@
       - "{{ node_custom_config }}/congress/{{ item.key }}.conf"
       - "{{ node_custom_config }}/congress/{{ inventory_hostname }}/congress.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/congress.conf"
+    mode: "0660"
+  become: true
   register: congress_confs
   when:
     - inventory_hostname in groups[item.value.group]
@@ -64,6 +71,8 @@
   template:
     src: "{{ congress_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ congress_policy_file }}"
+    mode: "0660"
+  become: true
   register: congress_policy_overwriting
   when:
     - congress_policy_file is defined

@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when: inventory_hostname in groups['compute']
   with_items:
     - "multipathd"
@@ -12,6 +15,8 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    mode: "0660"
+  become: true
   when: inventory_hostname in groups['compute']
   with_items:
     - "multipathd"
@@ -20,5 +25,7 @@
   template:
     src: "{{ role_path }}/templates/multipath.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/multipath.conf"
+    mode: "0660"
+  become: true
   with_items:
     - "multipathd"

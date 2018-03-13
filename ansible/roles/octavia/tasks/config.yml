@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -13,6 +16,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: octavia_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -32,6 +37,8 @@
       - "{{ node_custom_config }}/octavia/{{ item.key }}.conf"
       - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
+    mode: "0660"
+  become: true
   register: octavia_confs
   when:
     - inventory_hostname in groups[item.value.group]
@@ -46,6 +53,8 @@
   copy:
     src: "{{ node_custom_config }}/octavia/{{ item }}"
     dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
+    mode: "0660"
+  become: true
   register: octavia_worker_certificate
   when:
     - inventory_hostname in groups[service.group]

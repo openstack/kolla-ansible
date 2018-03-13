@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -13,6 +16,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: solum_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -35,6 +40,8 @@
       - "{{ node_custom_config }}/solum/{{ item.key }}.conf"
       - "{{ node_custom_config }}/solum/{{ inventory_hostname }}/solum.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/solum.conf"
+    mode: "0660"
+  become: true
   register: solum_confs
   when:
     - inventory_hostname in groups[item.value.group]

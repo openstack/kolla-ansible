@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "barbican-api/vassals"
     - "barbican-keystone-listener"
@@ -30,6 +33,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
   register: barbican_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -47,6 +52,8 @@
       - "{{ node_custom_config }}/barbican-api/barbican-api.ini"
       - "{{ node_custom_config }}/barbican-api/{{ inventory_hostname }}/barbican-api.ini"
     dest: "{{ node_config_directory }}/barbican-api/vassals/barbican-api.ini"
+    mode: "0660"
+  become: true
   register: barbican_api_ini
   when:
     - inventory_hostname in groups['barbican-api']
@@ -69,6 +76,8 @@
   template:
     src: "{{ node_custom_config }}/barbican/barbican-api-paste.ini"
     dest: "{{ node_config_directory }}/barbican-api/barbican-api-paste.ini"
+    mode: "0660"
+  become: true
   when:
     - inventory_hostname in groups['barbican-api']
     - service.enabled | bool
@@ -88,6 +97,8 @@
       - "{{ node_custom_config }}/barbican/{{ item.key }}.conf"
       - "{{ node_custom_config }}/barbican/{{ inventory_hostname }}/barbican.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/barbican.conf"
+    mode: "0660"
+  become: true
   register: barbican_confs
   when:
     - item.value.enabled | bool
@@ -100,6 +111,8 @@
   template:
     src: "{{ barbican_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ barbican_policy_file }}"
+    mode: "0660"
+  become: true
   register: barbican_policy_overwriting
   when:
     - barbican_policy_file is defined
