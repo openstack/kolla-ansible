@@ -1,5 +1,6 @@
 ---
 - name: Setting sysctl values
+  become: true
   sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
   with_items:
     - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
@@ -14,7 +15,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   with_items:
     - "opendaylight"
 
@@ -23,6 +27,8 @@
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    mode: "0660"
+  become: true
   with_items:
     - "opendaylight"
   notify:
@@ -33,6 +39,8 @@
   template:
     src: "{{ role_path }}/templates/custom.properties.j2"
     dest: "{{ node_config_directory }}/opendaylight/custom.properties"
+    mode: "0660"
+  become: true
   notify:
     - Restart opendaylight container
 
@@ -41,6 +49,8 @@
   template:
     src: "{{ role_path }}/templates/start-odl.j2"
     dest: "{{ node_config_directory }}/opendaylight/start-odl"
+    mode: "0660"
+  become: true
   notify:
     - Restart opendaylight container
 
@@ -49,6 +59,8 @@
   template:
     src: "{{ role_path }}/templates/jetty.xml.j2"
     dest: "{{ node_config_directory }}/{{ item }}/jetty.xml"
+    mode: "0660"
+  become: true
   with_items:
     - "opendaylight"
   notify:
@@ -59,6 +71,8 @@
   template:
     src: "{{ role_path }}/templates/org.apache.karaf.features.cfg.j2"
     dest: "{{ node_config_directory }}/{{ item }}/org.apache.karaf.features.cfg"
+    mode: "0660"
+  become: true
   with_items:
     - "opendaylight"
   notify:
@@ -69,6 +83,8 @@
   template:
     src: "{{ role_path }}/templates/org.opendaylight.ovsdb.library.cfg.j2"
     dest: "{{ node_config_directory }}/{{ item }}/org.opendaylight.ovsdb.library.cfg"
+    mode: "0660"
+  become: true
   with_items:
     - "opendaylight"
   notify:
@@ -78,6 +94,8 @@
   template:
     src: "{{ role_path }}/templates/tomcat-server.xml.j2"
     dest: "{{ node_config_directory }}/{{ item }}/tomcat-server.xml"
+    mode: "0660"
+  become: true
   register: opendaylight_config_tomcat
   with_items:
     - "opendaylight"
@@ -88,6 +106,8 @@
   template:
     src: "{{ role_path }}/templates/org.ops4j.pax.logging.cfg.j2"
     dest: "{{ node_config_directory }}/{{ item }}/org.ops4j.pax.logging.cfg"
+    mode: "0660"
+  become: true
   register: opendaylight_config_logging
   with_items:
     - "opendaylight"
@@ -98,6 +118,8 @@
   template:
     src: "{{ role_path }}/templates/netvirt-impl-config_netvirt-impl-config.xml.j2"
     dest: "{{ node_config_directory }}/{{ item }}/netvirt-impl-config_netvirt-impl-config.xml"
+    mode: "0660"
+  become: true
   register: opendaylight_config_netvirt
   with_items:
     - "opendaylight"
@@ -108,6 +130,8 @@
   template:
     src: "{{ role_path }}/templates/netvirt-aclservice-config.xml.j2"
     dest: "{{ node_config_directory }}/{{ item }}/netvirt-aclservice-config.xml"
+    mode: "0660"
+  become: true
   register: opendaylight_config_netvirt_acl
   with_items:
     - "opendaylight"
@@ -118,6 +142,8 @@
   template:
     src: "{{ role_path }}/templates/setenv.j2"
     dest: "{{ node_config_directory }}/{{ item }}/setenv"
+    mode: "0660"
+  become: true
   register: opendaylight_config_env
   with_items:
     - "opendaylight"
@@ -128,6 +154,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/opendaylight/akka.conf"
+    mode: "0660"
+  become: true
   with_first_found:
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/akka.conf"
     - "{{ node_custom_config }}/opendaylight/akka.conf"
@@ -140,6 +168,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/opendaylight/modules.conf"
+    mode: "0660"
+  become: true
   with_first_found:
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/modules.conf"
     - "{{ node_custom_config }}/opendaylight/modules.conf"
@@ -152,6 +182,8 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/opendaylight/module-shards.conf"
+    mode: "0660"
+  become: true
   with_first_found:
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/module-shards.conf"
     - "{{ node_custom_config }}/opendaylight/module-shards.conf"

@@ -3,7 +3,10 @@
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
-    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -30,6 +33,8 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0770"
+  become: true
   register: vitrage_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -54,6 +59,8 @@
       - "{{ node_config_directory }}/config/vitrage/{{ item.key }}.conf"
       - "{{ node_config_directory }}/config/vitrage/{{ inventory_hostname }}/vitrage.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/vitrage.conf"
+    mode: "0770"
+  become: true
   register: vitrage_confs
   when:
     - inventory_hostname in groups[item.value.group]
@@ -70,6 +77,8 @@
   template:
     src: "wsgi-vitrage.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-vitrage.conf"
+    mode: "0770"
+  become: true
   with_items:
     - "vitrage-api"
   notify:
@@ -79,6 +88,8 @@
   template:
     src: "{{ vitrage_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ vitrage_policy_file }}"
+    mode: "0770"
+  become: true
   register: vitrage_policy_overwriting
   when:
     - vitrage_policy_file is defined
