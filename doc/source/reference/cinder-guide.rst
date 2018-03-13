@@ -5,7 +5,7 @@ Cinder in Kolla
 ===============
 
 Overview
-========
+~~~~~~~~
 
 Cinder can be deploying using Kolla and supports the following storage
 backends:
@@ -18,106 +18,141 @@ backends:
 * nfs
 
 LVM
-===
+~~~
 
 When using the ``lvm`` backend, a volume group will need to be created on each
 storage node. This can either be a real physical volume or a loopback mounted
 file for development.  Use ``pvcreate`` and ``vgcreate`` to create the volume
 group.  For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
 
-::
+.. code-block:: console
 
-    <WARNING ALL DATA ON /dev/sdb and /dev/sdc will be LOST!>
+   <WARNING ALL DATA ON /dev/sdb and /dev/sdc will be LOST!>
 
-    pvcreate /dev/sdb /dev/sdc
-    vgcreate cinder-volumes /dev/sdb /dev/sdc
+   pvcreate /dev/sdb /dev/sdc
+   vgcreate cinder-volumes /dev/sdb /dev/sdc
+
+.. end
 
 During development, it may be desirable to use file backed block storage. It
 is possible to use a file and mount it as a block device via the loopback
-system. ::
+system.
 
+.. code-block:: none
 
-    free_device=$(losetup -f)
-    fallocate -l 20G /var/lib/cinder_data.img
-    losetup $free_device /var/lib/cinder_data.img
-    pvcreate $free_device
-    vgcreate cinder-volumes $free_device
+   free_device=$(losetup -f)
+   fallocate -l 20G /var/lib/cinder_data.img
+   losetup $free_device /var/lib/cinder_data.img
+   pvcreate $free_device
+   vgcreate cinder-volumes $free_device
+
+.. end
 
 Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 
-::
+.. code-block:: yaml
 
-    enable_cinder_backend_lvm: "yes"
+   enable_cinder_backend_lvm: "yes"
 
-.. note ::
-  There are currently issues using the LVM backend in a multi-controller setup,
-  see `_bug 1571211 <https://launchpad.net/bugs/1571211>`__ for more info.
+.. end
+
+.. note::
+
+   There are currently issues using the LVM backend in a multi-controller setup,
+   see `_bug 1571211 <https://launchpad.net/bugs/1571211>`__ for more info.
 
 NFS
-===
+~~~
 
 To use the ``nfs`` backend, configure ``/etc/exports`` to contain the mount
-where the volumes are to be stored::
+where the volumes are to be stored:
 
-    /kolla_nfs 192.168.5.0/24(rw,sync,no_root_squash)
+.. code-block:: none
+
+   /kolla_nfs 192.168.5.0/24(rw,sync,no_root_squash)
+
+.. end
 
 In this example, ``/kolla_nfs`` is the directory on the storage node which will
 be ``nfs`` mounted, ``192.168.5.0/24`` is the storage network, and
 ``rw,sync,no_root_squash`` means make the share read-write, synchronous, and
 prevent remote root users from having access to all files.
 
-Then start ``nfsd``::
+Then start ``nfsd``:
 
-    systemctl start nfs
+.. code-block:: console
+
+   systemctl start nfs
+
+.. end
 
 On the deploy node, create ``/etc/kolla/config/nfs_shares`` with an entry for
-each storage node::
+each storage node:
 
-    storage01:/kolla_nfs
-    storage02:/kolla_nfs
+.. code-block:: none
 
-Finally, enable the ``nfs`` backend in ``/etc/kolla/globals.yml``::
+   storage01:/kolla_nfs
+   storage02:/kolla_nfs
 
-    enable_cinder_backend_nfs: "yes"
+.. end
+
+Finally, enable the ``nfs`` backend in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_cinder_backend_nfs: "yes"
+
+.. end
 
 Validation
-==========
+~~~~~~~~~~
 
 Create a volume as follows:
 
-::
+.. code-block:: console
 
-    $ openstack volume create --size 1 steak_volume
-    <bunch of stuff printed>
+   openstack volume create --size 1 steak_volume
+   <bunch of stuff printed>
+
+.. end
 
 Verify it is available. If it says "error" here something went wrong during
-LVM creation of the volume. ::
+LVM creation of the volume.
 
-    $ openstack volume list
-    +--------------------------------------+--------------+-----------+------+-------------+
-    | ID                                   | Display Name | Status    | Size | Attached to |
-    +--------------------------------------+--------------+-----------+------+-------------+
-    | 0069c17e-8a60-445a-b7f0-383a8b89f87e | steak_volume | available |    1 |             |
-    +--------------------------------------+--------------+-----------+------+-------------+
+.. code-block:: console
+
+   openstack volume list
+
+   +--------------------------------------+--------------+-----------+------+-------------+
+   | ID                                   | Display Name | Status    | Size | Attached to |
+   +--------------------------------------+--------------+-----------+------+-------------+
+   | 0069c17e-8a60-445a-b7f0-383a8b89f87e | steak_volume | available |    1 |             |
+   +--------------------------------------+--------------+-----------+------+-------------+
+
+.. end
 
 Attach the volume to a server using:
 
-::
+.. code-block:: console
 
-    openstack server add volume steak_server 0069c17e-8a60-445a-b7f0-383a8b89f87e
+   openstack server add volume steak_server 0069c17e-8a60-445a-b7f0-383a8b89f87e
+
+.. end
 
 Check the console log added the disk:
 
-::
+.. code-block:: console
 
-    openstack console log show steak_server
+   openstack console log show steak_server
+
+.. end
 
 A ``/dev/vdb`` should appear in the console log, at least when booting cirros.
 If the disk stays in the available state, something went wrong during the
 iSCSI mounting of the volume to the guest VM.
 
 Cinder LVM2 back end with iSCSI
-===============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As of Newton-1 milestone, Kolla supports LVM2 as cinder back end. It is
 accomplished by introducing two new containers ``tgtd`` and ``iscsid``.
@@ -127,12 +162,16 @@ a bridge between nova-compute process and the server hosting LVG.
 
 In order to use Cinder's LVM back end, a LVG named ``cinder-volumes`` should
 exist on the server and following parameter must be specified in
-``globals.yml`` ::
+``globals.yml``:
 
-    enable_cinder_backend_lvm: "yes"
+.. code-block:: yaml
+
+   enable_cinder_backend_lvm: "yes"
+
+.. end
 
 For Ubuntu and LVM2/iSCSI
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 ``iscsd`` process uses configfs which is normally mounted at
 ``/sys/kernel/config`` to store discovered targets information, on centos/rhel
@@ -141,26 +180,33 @@ not the case on debian/ubuntu. Since ``iscsid`` container runs on every nova
 compute node, the following steps must be completed on every Ubuntu server
 targeted for nova compute role.
 
-  - Add configfs module to ``/etc/modules``
-  - Rebuild initramfs using: ``update-initramfs -u`` command
-  - Stop ``open-iscsi`` system service due to its conflicts
-    with iscsid container.
+- Add configfs module to ``/etc/modules``
+- Rebuild initramfs using: ``update-initramfs -u`` command
+- Stop ``open-iscsi`` system service due to its conflicts
+  with iscsid container.
 
-    Ubuntu 16.04 (systemd):
-    ``systemctl stop open-iscsi; systemctl stop iscsid``
+  Ubuntu 16.04 (systemd):
+  ``systemctl stop open-iscsi; systemctl stop iscsid``
 
-  - Make sure configfs gets mounted during a server boot up process. There are
-    multiple ways to accomplish it, one example:
-    ::
+- Make sure configfs gets mounted during a server boot up process. There are
+  multiple ways to accomplish it, one example:
 
-      mount -t configfs /etc/rc.local /sys/kernel/config
+  .. code-block:: console
+
+     mount -t configfs /etc/rc.local /sys/kernel/config
+
+  .. end
 
 Cinder back end with external iSCSI storage
-===========================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to use external storage system (like one from EMC or NetApp)
-the following parameter must be specified in ``globals.yml`` ::
+the following parameter must be specified in ``globals.yml``:
 
-    enable_cinder_backend_iscsi: "yes"
+.. code-block:: yaml
 
-Also ``enable_cinder_backend_lvm`` should be set to "no" in this case.
+   enable_cinder_backend_iscsi: "yes"
+
+.. end
+
+Also ``enable_cinder_backend_lvm`` should be set to ``no`` in this case.
