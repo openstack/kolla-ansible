@@ -10,10 +10,8 @@
       url: "{{ item.url }}"
       interface: "{{ item.interface }}"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_heat_auth }}' }}"
+      auth: "{{ openstack_heat_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_heat_auth: "{{ openstack_heat_auth }}"
   run_once: True
   with_items:
     - {'interface': 'admin', 'url': '{{ heat_admin_endpoint }}', 'service_name': 'heat', 'service_type': 'orchestration', 'description': 'OpenStack Orchestration'}
@@ -32,10 +30,8 @@
       password: "{{ heat_keystone_password }}"
       role: "admin"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_heat_auth }}' }}"
+      auth: "{{ openstack_heat_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_heat_auth: "{{ openstack_heat_auth }}"
   run_once: True
 
 - name: Creating the heat_stack_user role
@@ -43,10 +39,8 @@
     module_name: os_keystone_role
     module_args:
       name: "{{ heat_stack_user_role }}"
-      auth: "{{ '{{ openstack_heat_auth }}' }}"
+      auth: "{{ openstack_heat_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_heat_auth: "{{ openstack_heat_auth }}"
   run_once: True
 
 - name: Creating the heat_stack_owner role
@@ -54,10 +48,8 @@
     module_name: os_keystone_role
     module_args:
       name: "{{ heat_stack_owner_role }}"
-      auth: "{{ '{{ openstack_heat_auth }}' }}"
+      auth: "{{ openstack_heat_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_heat_auth: "{{ openstack_heat_auth }}"
   run_once: True
 
 - name: Add the heat_stack_owner role to the admin project
@@ -68,8 +60,6 @@
       user: "{{ openstack_auth.username }}"
       role: "{{ heat_stack_owner_role }}"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_heat_auth }}' }}"
+      auth: "{{ openstack_heat_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_heat_auth: "{{ openstack_heat_auth }}"
   run_once: True

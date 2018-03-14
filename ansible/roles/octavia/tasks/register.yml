@@ -10,10 +10,8 @@
       url: "{{ item.url }}"
       interface: "{{ item.interface }}"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_octavia_auth }}' }}"
+      auth: "{{ openstack_octavia_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_octavia_auth: "{{ openstack_octavia_auth }}"
   run_once: True
   with_items:
     - {'interface': 'admin', 'url': '{{ octavia_admin_endpoint }}'}
@@ -29,10 +27,8 @@
       password: "{{ octavia_keystone_password }}"
       role: "admin"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_octavia_auth }}' }}"
+      auth: "{{ openstack_octavia_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_octavia_auth: "{{ openstack_octavia_auth }}"
   run_once: True
 
 - name: Adding octavia user into admin project
@@ -42,10 +38,8 @@
       user: "{{ octavia_keystone_user }}"
       role: admin
       project: admin
-      auth: "{{ '{{ openstack_octavia_auth }}' }}"
+      auth: "{{ openstack_octavia_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_octavia_auth: "{{ openstack_octavia_auth }}"
   run_once: True
 
 - name: Adding octavia related roles
@@ -53,9 +47,7 @@
     module_name: "os_keystone_role"
     module_args:
       name: "{{ item }}"
-      auth: "{{ '{{ openstack_octavia_auth }}' }}"
+      auth: "{{ openstack_octavia_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_octavia_auth: "{{ openstack_octavia_auth }}"
   run_once: True
   with_items: "{{ octavia_required_roles }}"

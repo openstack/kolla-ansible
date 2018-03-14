@@ -10,10 +10,8 @@
       url: "{{ item.url }}"
       interface: "{{ item.interface }}"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_magnum_auth }}' }}"
+      auth: "{{ openstack_magnum_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_magnum_auth: "{{ openstack_magnum_auth }}"
   run_once: True
   with_items:
     - {'interface': 'admin', 'url': '{{ magnum_admin_endpoint }}'}
@@ -29,10 +27,8 @@
       password: "{{ magnum_keystone_password }}"
       role: "admin"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_magnum_auth }}' }}"
+      auth: "{{ openstack_magnum_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_magnum_auth: "{{ openstack_magnum_auth }}"
   run_once: True
 
 - name: Creating Magnum trustee domain
@@ -41,11 +37,8 @@
     module_args:
       name: "{{ magnum_trustee_domain }}"
       description: "Owns users and projects created by magnum"
-      auth: "{{ '{{ openstack_magnum_auth }}' }}"
+      auth: "{{ openstack_magnum_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_magnum_auth: "{{ openstack_magnum_auth }}"
-  register: trustee_domain
   run_once: True
 
 - name: Creating Magnum trustee user
@@ -55,10 +48,8 @@
       name: "{{ magnum_trustee_domain_admin }}"
       domain: "{{ magnum_trustee_domain }}"
       password: "{{ magnum_keystone_password }}"
-      auth: "{{ '{{ openstack_magnum_auth }}' }}"
+      auth: "{{ openstack_magnum_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_magnum_auth: "{{ openstack_magnum_auth }}"
   run_once: True
 
 - name: Creating Magnum trustee user role
@@ -68,8 +59,6 @@
       domain: "{{ trustee_domain.id }}"
       user: "{{ magnum_trustee_domain_admin }}"
       role: "admin"
-      auth: "{{ '{{ openstack_magnum_auth }}' }}"
+      auth: "{{ openstack_magnum_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_magnum_auth: "{{ openstack_magnum_auth }}"
   run_once: True
