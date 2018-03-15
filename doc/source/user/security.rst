@@ -60,3 +60,19 @@ and store its data in a named volume without the security risk and
 other downsides of host bind mounts. The downside to this is selinux
 blocks those sudo commands and it will do so until we make explicit
 policies to allow those operations.
+
+Kolla-ansible users
+===================
+
+Prior to Queens, when users want to connect using non-root user, they must add
+extra option ``ansible_become=True`` which is inconvenient and add security
+risk. In Queens, almost all services have support for escalation for only
+necessary tasks. In Rocky, all services have this capability, so users do not
+need to add ``ansible_become`` option if connection user has passwordless sudo
+capability.
+
+Prior to Rocky, ``ansible_user`` (the user which Ansible uses to connect via SSH)
+is default configuration owner and group in target nodes.
+From Rocky release, Kolla support connection using any user which has
+passwordless sudo capability. For setting custom owner user and group, user can
+set ``config_owner_user`` and ``config_owner_group`` in ``globals.yml``
