@@ -33,8 +33,9 @@ flavor = keystone
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool or enable_searchlight | bool %}
+{% if glance_enabled_notification_topics %}
 driver = messagingv2
+topics = {{ glance_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}

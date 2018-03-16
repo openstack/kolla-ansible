@@ -23,6 +23,14 @@ glance_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
 
+####################
+# Notification
+####################
+glance_notification_topics:
+  - name: notifications
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool }}"
+
+glance_enabled_notification_topics: "{{ glance_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Ceph
