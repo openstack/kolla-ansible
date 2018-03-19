@@ -1,5 +1,6 @@
 {% set keystone_log_dir = '/var/log/kolla/keystone' %}
 {% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% set binary_path = '/usr/bin' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address }}:{{ keystone_public_port }}
 Listen {{ api_interface_address }}:{{ keystone_admin_port }}
 
@@ -7,10 +8,19 @@ ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
+<Directory "{{ binary_path }}">
+    <FilesMatch "^keystone-wsgi-(public|admin)$">
+        AllowOverride None
+        Options None
+        Require all granted
+    </FilesMatch>
+</Directory>
+
+
 <VirtualHost *:{{ keystone_public_port }}>
     WSGIDaemonProcess keystone-public processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-public
-    WSGIScriptAlias / /var/www/cgi-bin/keystone/main
+    WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-public
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
     <IfVersion >= 2.4>
@@ -24,7 +34,7 @@ TraceEnable off
 <VirtualHost *:{{ keystone_admin_port }}>
     WSGIDaemonProcess keystone-admin processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-admin
-    WSGIScriptAlias / /var/www/cgi-bin/keystone/admin
+    WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-admin
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
     <IfVersion >= 2.4>
