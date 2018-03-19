@@ -1,11 +1,12 @@
 .. _vmware-guide:
 
-====================
+===============
 VMware in Kolla
-====================
+===============
 
 Overview
-========
+~~~~~~~~
+
 Kolla can deploy the Nova and Neutron Service(s) for VMware vSphere.
 Depending on the network architecture (NsxV or DVS) you choose, Kolla deploys
 the following OpenStack services for VMware vSphere:
@@ -42,11 +43,11 @@ bridge and works through VLAN.
 
 .. note::
 
-    VMware NSX-DVS plugin does not support tenant networks, so all VMs should
-    attach to Provider VLAN/Flat networks.
+   VMware NSX-DVS plugin does not support tenant networks, so all VMs should
+   attach to Provider VLAN/Flat networks.
 
 VMware NSX-V
-============
+~~~~~~~~~~~~
 
 Preparation
 -----------
@@ -57,51 +58,57 @@ For more information, please see `VMware NSX-V documentation <https://docs.vmwar
 
 .. note::
 
-    In addition, it is important to modify the firewall rule of vSphere to make
-    sure that VNC is accessible from outside VMware environment.
+   In addition, it is important to modify the firewall rule of vSphere to make
+   sure that VNC is accessible from outside VMware environment.
 
-    On every VMware host, edit /etc/vmware/firewall/vnc.xml as below:
+   On every VMware host, edit /etc/vmware/firewall/vnc.xml as below:
 
-.. code-block:: console
+.. code-block:: none
 
-    <!-- FirewallRule for VNC Console -->
-    <ConfigRoot>
-    <service>
-    <id>VNC</id>
-    <rule id = '0000'>
-    <direction>inbound</direction>
-    <protocol>tcp</protocol>
-    <porttype>dst</porttype>
-    <port>
-    <begin>5900</begin>
-    <end>5999</end>
-    </port>
-    </rule>
-    <rule id = '0001'>
-    <direction>outbound</direction>
-    <protocol>tcp</protocol>
-    <porttype>dst</porttype>
-    <port>
-    <begin>0</begin>
-    <end>65535</end>
-    </port>
-    </rule>
-    <enabled>true</enabled>
-    <required>false</required>
-    </service>
-    </ConfigRoot>
+   <!-- FirewallRule for VNC Console -->
+   <ConfigRoot>
+   <service>
+   <id>VNC</id>
+   <rule id = '0000'>
+   <direction>inbound</direction>
+   <protocol>tcp</protocol>
+   <porttype>dst</porttype>
+   <port>
+   <begin>5900</begin>
+   <end>5999</end>
+   </port>
+   </rule>
+   <rule id = '0001'>
+   <direction>outbound</direction>
+   <protocol>tcp</protocol>
+   <porttype>dst</porttype>
+   <port>
+   <begin>0</begin>
+   <end>65535</end>
+   </port>
+   </rule>
+   <enabled>true</enabled>
+   <required>false</required>
+   </service>
+   </ConfigRoot>
+
+.. end
 
 Then refresh the firewall config by:
 
 .. code-block:: console
 
-    esxcli network firewall refresh
+   # esxcli network firewall refresh
+
+.. end
 
 Verify that the firewall config is applied:
 
 .. code-block:: console
 
-    esxcli network firewall ruleset list
+   # esxcli network firewall ruleset list
+
+.. end
 
 Deployment
 ----------
@@ -109,97 +116,111 @@ Deployment
 Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    nova_compute_virt_type: "vmware"
-    neutron_plugin_agent: "vmware_nsxv"
+   nova_compute_virt_type: "vmware"
+   neutron_plugin_agent: "vmware_nsxv"
+
+.. end
 
 .. note::
 
-    VMware NSX-V also supports Neutron FWaaS, LBaaS and VPNaaS services, you can enable
-    them by setting these options in globals.yml:
+   VMware NSX-V also supports Neutron FWaaS, LBaaS and VPNaaS services, you can enable
+   them by setting these options in ``globals.yml``:
 
-    * enable_neutron_vpnaas: "yes"
-    * enable_neutron_lbaas: "yes"
-    * enable_neutron_fwaas: "yes"
+   * enable_neutron_vpnaas: "yes"
+   * enable_neutron_lbaas: "yes"
+   * enable_neutron_fwaas: "yes"
 
 If you want to set VMware datastore as cinder backend, enable it in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    enable_cinder: "yes"
-    cinder_backend_vmwarevc_vmdk: "yes"
-    vmware_datastore_name: "TestDatastore"
+   enable_cinder: "yes"
+   cinder_backend_vmwarevc_vmdk: "yes"
+   vmware_datastore_name: "TestDatastore"
+
+.. end
 
 If you want to set VMware datastore as glance backend, enable it in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    glance_backend_vmware: "yes"
-    vmware_vcenter_name: "TestDatacenter"
-    vmware_datastore_name: "TestDatastore"
+   glance_backend_vmware: "yes"
+   vmware_vcenter_name: "TestDatacenter"
+   vmware_datastore_name: "TestDatastore"
+
+.. end
 
 VMware options are required in ``/etc/kolla/globals.yml``, these options should
 be configured correctly according to your NSX-V environment.
 
-Options for nova-compute and ceilometer:
+Options for ``nova-compute`` and ``ceilometer``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    vmware_vcenter_host_ip: "127.0.0.1"
-    vmware_vcenter_host_username: "admin"
-    vmware_vcenter_cluster_name: "cluster-1"
-    vmware_vcenter_insecure: "True"
-    vmware_vcenter_datastore_regex: ".*"
+   vmware_vcenter_host_ip: "127.0.0.1"
+   vmware_vcenter_host_username: "admin"
+   vmware_vcenter_cluster_name: "cluster-1"
+   vmware_vcenter_insecure: "True"
+   vmware_vcenter_datastore_regex: ".*"
+
+.. end
 
 .. note::
 
-    The VMware vCenter password has to be set in ``/etc/kolla/passwords.yml``.
+   The VMware vCenter password has to be set in ``/etc/kolla/passwords.yml``.
 
-    .. code-block:: console
+   .. code-block:: yaml
 
-       vmware_vcenter_host_password: "admin"
+      vmware_vcenter_host_password: "admin"
+
+   .. end
 
 Options for Neutron NSX-V support:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    vmware_nsxv_user: "nsx_manager_user"
-    vmware_nsxv_manager_uri: "https://127.0.0.1"
-    vmware_nsxv_cluster_moid: "TestCluster"
-    vmware_nsxv_datacenter_moid: "TestDataCeter"
-    vmware_nsxv_resource_pool_id: "TestRSGroup"
-    vmware_nsxv_datastore_id: "TestDataStore"
-    vmware_nsxv_external_network: "TestDVSPort-Ext"
-    vmware_nsxv_vdn_scope_id: "TestVDNScope"
-    vmware_nsxv_dvs_id: "TestDVS"
-    vmware_nsxv_backup_edge_pool: "service:compact:1:2"
-    vmware_nsxv_spoofguard_enabled: "false"
-    vmware_nsxv_metadata_initializer: "false"
-    vmware_nsxv_edge_ha: "false"
+   vmware_nsxv_user: "nsx_manager_user"
+   vmware_nsxv_manager_uri: "https://127.0.0.1"
+   vmware_nsxv_cluster_moid: "TestCluster"
+   vmware_nsxv_datacenter_moid: "TestDataCeter"
+   vmware_nsxv_resource_pool_id: "TestRSGroup"
+   vmware_nsxv_datastore_id: "TestDataStore"
+   vmware_nsxv_external_network: "TestDVSPort-Ext"
+   vmware_nsxv_vdn_scope_id: "TestVDNScope"
+   vmware_nsxv_dvs_id: "TestDVS"
+   vmware_nsxv_backup_edge_pool: "service:compact:1:2"
+   vmware_nsxv_spoofguard_enabled: "false"
+   vmware_nsxv_metadata_initializer: "false"
+   vmware_nsxv_edge_ha: "false"
 
-.. note::
-
-    If you want to set secure connections to VMware, set ``vmware_vcenter_insecure``
-    to false.
-    Secure connections to vCenter requires a CA file, copy the vCenter CA file to
-    ``/etc/kolla/config/vmware_ca``.
+.. yaml
 
 .. note::
 
-     The VMware NSX-V password has to be set in ``/etc/kolla/passwords.yml``.
+   If you want to set secure connections to VMware, set ``vmware_vcenter_insecure``
+   to false.
+   Secure connections to vCenter requires a CA file, copy the vCenter CA file to
+   ``/etc/kolla/config/vmware_ca``.
 
-     .. code-block:: console
+.. note::
 
-        vmware_nsxv_password: "nsx_manager_password"
+   The VMware NSX-V password has to be set in ``/etc/kolla/passwords.yml``.
 
-Then you should start kolla-ansible deployment normally as KVM/QEMU deployment.
+   .. code-block:: yaml
+
+      vmware_nsxv_password: "nsx_manager_password"
+
+   .. end
+
+Then you should start :command:`kolla-ansible` deployment normally as KVM/QEMU deployment.
 
 
 VMware NSX-DVS
-==============
+~~~~~~~~~~~~~~
 
 Preparation
 -----------
@@ -216,28 +237,34 @@ Deployment
 Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    nova_compute_virt_type: "vmware"
-    neutron_plugin_agent: "vmware_dvs"
+   nova_compute_virt_type: "vmware"
+   neutron_plugin_agent: "vmware_dvs"
+
+.. end
 
 If you want to set VMware datastore as Cinder backend, enable it in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    enable_cinder: "yes"
-    cinder_backend_vmwarevc_vmdk: "yes"
-    vmware_datastore_name: "TestDatastore"
+   enable_cinder: "yes"
+   cinder_backend_vmwarevc_vmdk: "yes"
+   vmware_datastore_name: "TestDatastore"
+
+.. end
 
 If you want to set VMware datastore as Glance backend, enable it in
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    glance_backend_vmware: "yes"
-    vmware_vcenter_name: "TestDatacenter"
-    vmware_datastore_name: "TestDatastore"
+   glance_backend_vmware: "yes"
+   vmware_vcenter_name: "TestDatacenter"
+   vmware_datastore_name: "TestDatastore"
+
+.. end
 
 VMware options are required in ``/etc/kolla/globals.yml``, these options should
 be configured correctly according to the vSphere environment you installed
@@ -246,23 +273,27 @@ the following options.
 
 Options for Neutron NSX-DVS support:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    vmware_dvs_host_ip: "192.168.1.1"
-    vmware_dvs_host_port: "443"
-    vmware_dvs_host_username: "admin"
-    vmware_dvs_dvs_name: "VDS-1"
-    vmware_dvs_dhcp_override_mac: ""
+   vmware_dvs_host_ip: "192.168.1.1"
+   vmware_dvs_host_port: "443"
+   vmware_dvs_host_username: "admin"
+   vmware_dvs_dvs_name: "VDS-1"
+   vmware_dvs_dhcp_override_mac: ""
+
+.. end
 
 .. note::
 
-     The VMware NSX-DVS password has to be set in ``/etc/kolla/passwords.yml``.
+   The VMware NSX-DVS password has to be set in ``/etc/kolla/passwords.yml``.
 
-     .. code-block:: console
+   .. code-block:: yaml
 
-        vmware_dvs_host_password: "password"
+      vmware_dvs_host_password: "password"
 
-Then you should start kolla-ansible deployment normally as KVM/QEMU deployment.
+   .. end
+
+Then you should start :command:`kolla-ansible` deployment normally as KVM/QEMU deployment.
 
 For more information on OpenStack vSphere, see
 `VMware vSphere

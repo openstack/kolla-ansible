@@ -5,7 +5,7 @@ Skydive in Kolla
 ================
 
 Overview
-========
+~~~~~~~~
 Skydive is an open source real-time network topology and protocols analyzer.
 It aims to provide a comprehensive way of understanding what is happening in
 the network infrastructure.
@@ -16,12 +16,14 @@ All the information is stored in an Elasticsearch database.
 Configuration on Kolla deployment
 ---------------------------------
 
-Enable Skydive in ``/etc/kolla/globals.yml``
+Enable Skydive in ``/etc/kolla/globals.yml`` file:
 
-.. code-block:: console
+.. code-block:: yaml
 
-    enable_skydive: "yes"
-    enable_elasticsearch: "yes"
+   enable_skydive: "yes"
+   enable_elasticsearch: "yes"
+
+.. end
 
 Verify operation
 ----------------
