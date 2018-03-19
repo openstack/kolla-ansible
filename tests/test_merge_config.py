@@ -86,11 +86,68 @@ c_key2 = 1 2 3
 
 '''
 
+TESTA_NO_SECTIONS = '''key1 = a
+key2 = b
+
+'''
+
+TESTB_NO_SECTIONS = '''key3 = c
+
+'''
+
+# TESTA_NO_SECTIONS and TESTB_NO_SECTIONS combined
+TESTC_NO_SECTIONS = '''key1 = a
+key2 = b
+key3 = c
+
+'''
+
+TESTA_NO_DEFAULT_SECTION = '''key1 = a
+key2 = b
+
+[a]
+key1 = not_a
+
+[b]
+key3 = not_c
+
+'''
+
+TESTB_NO_DEFAULT_SECTION = '''key3 = c
+
+[b]
+key2 = not_b
+key3 = override
+
+'''
+
+# TESTA_NO_DEFAULT_SECTION and TESTB_NO_DEFAULT_SECTION combined
+TESTC_NO_DEFAULT_SECTION = '''key1 = a
+key2 = b
+key3 = c
+
+[a]
+key1 = not_a
+
+[b]
+key3 = override
+key2 = not_b
+
+'''
+
 
 class OverrideConfigParserTest(base.BaseTestCase):
 
     def test_read_write(self):
-        for ini in [TESTA, TESTB, TESTC]:
+        for ini in [TESTA,
+                    TESTB,
+                    TESTC,
+                    TESTA_NO_SECTIONS,
+                    TESTB_NO_SECTIONS,
+                    TESTC_NO_SECTIONS,
+                    TESTA_NO_DEFAULT_SECTION,
+                    TESTB_NO_DEFAULT_SECTION,
+                    TESTC_NO_DEFAULT_SECTION]:
             parser = merge_configs.OverrideConfigParser()
             parser.parse(StringIO(ini))
             output = StringIO()
@@ -105,4 +162,22 @@ class OverrideConfigParserTest(base.BaseTestCase):
         output = StringIO()
         parser.write(output)
         self.assertEqual(TESTC, output.getvalue())
+        output.close()
+
+    def test_merge_no_sections(self):
+        parser = merge_configs.OverrideConfigParser()
+        parser.parse(StringIO(TESTA_NO_SECTIONS))
+        parser.parse(StringIO(TESTB_NO_SECTIONS))
+        output = StringIO()
+        parser.write(output)
+        self.assertEqual(TESTC_NO_SECTIONS, output.getvalue())
+        output.close()
+
+    def test_merge_no_default_section(self):
+        parser = merge_configs.OverrideConfigParser()
+        parser.parse(StringIO(TESTA_NO_DEFAULT_SECTION))
+        parser.parse(StringIO(TESTB_NO_DEFAULT_SECTION))
+        output = StringIO()
+        parser.write(output)
+        self.assertEqual(TESTC_NO_DEFAULT_SECTION, output.getvalue())
         output.close()

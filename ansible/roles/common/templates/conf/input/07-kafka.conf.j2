@@ -1,0 +1,11 @@
+{% set fluentd_dir = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+<source>
+  @type tail
+  path /var/log/kolla/kafka/controller.log, /var/log/kolla/kafka/server.log, /var/log/kolla/kafka/state-change.log
+  pos_file /var/run/{{ fluentd_dir }}/kafka.pos
+  tag infra.*
+  format multiline
+  format_firstline /^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}\] \S+ .*$/
+  format1 /^\[(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\] (?<log_level>\S+) (?<Payload>.*)$/
+  time_key Timestamp
+</source>
