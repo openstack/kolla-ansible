@@ -28,13 +28,13 @@ choosing.
 
 If the alpha identifier is not used, Kolla will deploy or upgrade using the
 version number information contained in the release. To customize the
-version number uncomment openstack_version in globals.yml and specify
+version number uncomment openstack_release in globals.yml and specify
 the version number desired.
 
 For example, to deploy a custom built Liberty version built with the
 ``kolla-build --tag 1.0.0.0`` operation, change globals.yml::
 
-    openstack_version: 1.0.0.0
+    openstack_release: 1.0.0.0
 
 Then run the command to deploy::
 
@@ -43,7 +43,7 @@ Then run the command to deploy::
 If using Liberty and a custom alpha number of 0, and upgrading to 1, change
 globals.yml::
 
-    openstack_version: 1.0.0.1
+    openstack_release: 1.0.0.1
 
 Then run the command to upgrade::
 
