@@ -55,6 +55,13 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Set XenAPI facts
+  set_fact:
+    xenapi_facts: "{{ lookup('file', xenapi_facts_root + '/' + inventory_hostname + '/' + xenapi_facts_file) | from_json }}"
+  when:
+    - nova_compute_virt_type == 'xenapi'
+    - inventory_hostname in groups['compute']
+
 - name: Copying over nova.conf
   become: true
   vars:
