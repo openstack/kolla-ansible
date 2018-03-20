@@ -25,14 +25,16 @@
   vars:
     service: "{{ influxdb_services['influxdb']}}"
   template:
-    src: "{{ role_path }}/templates/{{ item }}.conf.j2"
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/influxdb/influxdb.conf"
   register: influxdb_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-  with_items:
-    - "influxdb"
+  with_first_found:
+    - "{{ node_custom_config }}/influxdb/{{ inventory_hostname }}/influxdb.conf"
+    - "{{ node_custom_config }}/influxdb.conf"
+    - "influxdb.conf.j2"
   notify:
     - Restart influxdb container
 
