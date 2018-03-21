@@ -9,7 +9,7 @@ it might be necessary to use an externally managed database.
 This use case can be achieved by simply taking some extra steps:
 
 Requirements
-============
+~~~~~~~~~~~~
 
 * An existing MariaDB cluster / server, reachable from all of your
   nodes.
@@ -23,7 +23,7 @@ Requirements
   user accounts for all enabled services.
 
 Enabling External MariaDB support
-=================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to enable external mariadb support,
 you will first need to disable mariadb deployment,
@@ -31,186 +31,163 @@ by ensuring the following line exists within ``/etc/kolla/globals.yml`` :
 
 .. code-block:: yaml
 
-  enable_mariadb: "no"
+   enable_mariadb: "no"
 
 .. end
 
-There are two ways in which you can use
-external MariaDB:
+There are two ways in which you can use external MariaDB:
+* Using an already load-balanced MariaDB address
+* Using an external MariaDB cluster
 
 Using an already load-balanced MariaDB address (recommended)
 ------------------------------------------------------------
 
-If your external database already has a
-load balancer, you will need to do the following:
+If your external database already has a load balancer, you will
+need to do the following:
 
-* Within your inventory file, just add the hostname
-  of the load balancer within the mariadb group,
-  described as below:
+#. Edit the inventory file, change ``control`` to the hostname of the load
+   balancer within the ``mariadb`` group as below:
 
-Change the following
+   .. code-block:: ini
 
-.. code-block:: ini
+      [mariadb:children]
+      myexternalmariadbloadbalancer.com
 
-  [mariadb:children]
-  control
+   .. end
 
-.. end
 
-so that it looks like below:
+#. Define ``database_address`` in ``/etc/kolla/globals.yml`` file:
 
-.. code-block:: ini
+   .. code-block:: yaml
 
-  [mariadb]
-  myexternalmariadbloadbalancer.com
+      database_address: myexternalloadbalancer.com
 
-.. end
+   .. end
 
-* Define **database_address** within ``/etc/kolla/globals.yml``
+.. note::
 
-.. code-block:: yaml
+   If ``enable_external_mariadb_load_balancer`` is set to ``no``
+   (default), the external DB load balancer should be accessible
+   from all nodes during your deployment.
 
-  database_address: myexternalloadbalancer.com
+Using an external MariaDB cluster
+---------------------------------
 
-.. end
-
-Please note that if **enable_external_mariadb_load_balancer** is
-set to "no" - **default**, the external DB load balancer will need to be
-accessible from all nodes within your deployment, which might
-connect to it.
-
-Using an external MariaDB cluster:
-----------------------------------
-
-Then, you will need to adjust your inventory file:
-
-Change the following
+Using this way, you need to adjust the inventory file:
 
 .. code-block:: ini
 
-  [mariadb:children]
-  control
-
-.. end
-
-so that it looks like below:
-
-.. code-block:: ini
-
-  [mariadb]
-  myexternaldbserver1.com
-  myexternaldbserver2.com
-  myexternaldbserver3.com
+   [mariadb:children]
+   myexternaldbserver1.com
+   myexternaldbserver2.com
+   myexternaldbserver3.com
 
 .. end
 
 If you choose to use haproxy for load balancing between the
 members of the cluster, every node within this group
-needs to be resolvable and reachable and resolvable from all
-the hosts within the **[haproxy:children]**  group
-of your inventory (defaults to **[network]**).
+needs to be resolvable and reachable from all
+the hosts within the ``[haproxy:children]``  group
+of your inventory (defaults to ``[network]``).
 
-In addition to that, you also need to set the following within
-``/etc/kolla/globals.yml``:
+In addition, configure the ``/etc/kolla/globals.yml`` file
+according to the following configuration:
 
 .. code-block:: yaml
 
-  enable_external_mariadb_load_balancer: yes
+   enable_external_mariadb_load_balancer: yes
 
 .. end
 
 Using External MariaDB with a privileged user
-=============================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In case your MariaDB user is root, just leave
 everything as it is within globals.yml (Except the
 internal mariadb deployment, which should be disabled),
-and set the **database_password** field within
-``/etc/kolla/passwords.yml``
+and set the ``database_password`` in ``/etc/kolla/passwords.yml`` file:
 
 .. code-block:: yaml
 
-  database_password: mySuperSecurePassword
+   database_password: mySuperSecurePassword
 
 .. end
 
-In case your username is other than **root**, you will
-need to also set it, within ``/etc/kolla/globals.yml``
+If the MariaDB ``username`` is not ``root``, set ``database_username`` in
+``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
-  database_username: "privillegeduser"
+   database_username: "privillegeduser"
 
 .. end
 
 Using preconfigured databases / users:
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The first step you need to take is the following:
-
-Within ``/etc/kolla/globals.yml``, set the following:
+The first step you need to take is to set ``use_preconfigured_databases`` to
+``yes`` in the ``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
-  use_preconfigured_databases: "yes"
+   use_preconfigured_databases: "yes"
 
 .. end
 
-.. note:: Please note that when the ``use_preconfigured_databases`` flag
-  is set to ``"yes"``, you need to have the ``log_bin_trust_function_creators``
-  mysql variable set to ``1`` by your database administrator before running the
-  ``upgrade`` command.
+.. note::
+
+   when the ``use_preconfigured_databases`` flag is set to ``"yes"``, you need
+   to make sure the mysql variable ``log_bin_trust_function_creators``
+   set to ``1`` by the database administrator before running the
+   :command:`upgrade` command.
 
 Using External MariaDB with separated, preconfigured users and databases
 ------------------------------------------------------------------------
 
-In order to achieve this, you will need to define the user names within
-``/etc/kolla/globals.yml``, as illustrated by the example below:
+In order to achieve this, you will need to define the user names in the
+``/etc/kolla/globals.yml`` file, as illustrated by the example below:
 
 
 .. code-block:: yaml
 
-  keystone_database_user: preconfigureduser1
-  nova_database_user: preconfigureduser2
+   keystone_database_user: preconfigureduser1
+   nova_database_user: preconfigureduser2
 
 .. end
 
-You will need to also set the passwords for all databases within
-``/etc/kolla/passwords.yml``
+Also, you will need to set the passwords for all databases in the
+``/etc/kolla/passwords.yml`` file
 
-
-However, fortunately, using a common user across
-all databases is also possible.
-
+However, fortunately, using a common user across all databases is possible.
 
 Using External MariaDB with a common user across databases
 ----------------------------------------------------------
 
 In order to use a common, preconfigured user across all databases,
-all you need to do is the following:
+all you need to do is the following steps:
 
-* Within ``/etc/kolla/globals.yml``, add the following:
+#. Edit the ``/etc/kolla/globals.yml`` file, add the following:
 
-.. code-block:: yaml
+   .. code-block:: yaml
 
-  use_common_mariadb_user: "yes"
+      use_common_mariadb_user: "yes"
 
-.. end
+   .. end
 
-* Set the database_user within ``/etc/kolla/globals.yml`` to
-  the one provided to you:
+#. Set the database_user within ``/etc/kolla/globals.yml`` to
+   the one provided to you:
 
-.. code-block:: yaml
+   .. code-block:: yaml
 
-  database_user: mycommondatabaseuser
+      database_user: mycommondatabaseuser
 
-.. end
+   .. end
 
-* Set the common password for all components within ``/etc/kolla/passwords.yml```.
-  In order to achieve that you could use the following command:
+#. Set the common password for all components within ``/etc/kolla/passwords.yml```.
+   In order to achieve that you could use the following command:
 
-.. code-block:: console
+   .. code-block:: console
 
-  sed -i -r -e 's/([a-z_]{0,}database_password:+)(.*)$/\1 mycommonpass/gi' /etc/kolla/passwords.yml
+      sed -i -r -e 's/([a-z_]{0,}database_password:+)(.*)$/\1 mycommonpass/gi' /etc/kolla/passwords.yml
 
-.. end
+   .. end
