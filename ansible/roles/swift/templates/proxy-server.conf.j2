@@ -10,7 +10,7 @@ log_level = INFO
 workers = {{ openstack_service_workers }}
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk tempurl ratelimit authtoken keystoneauth slo dlo {% if enable_ceilometer | bool %}ceilometer {% endif %}proxy-server
+pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk tempurl ratelimit authtoken keystoneauth container_quotas account_quotas slo dlo {% if enable_ceilometer | bool %}ceilometer {% endif %}proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -74,6 +74,12 @@ use = egg:swift#ratelimit
 
 [filter:gatekeeper]
 use = egg:swift#gatekeeper
+
+[filter:account_quotas]
+use = egg:swift#account_quotas
+
+[filter:container_quotas]
+use = egg:swift#container_quotas
 
 [filter:slo]
 use = egg:swift#slo
