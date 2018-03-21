@@ -5,7 +5,8 @@ Operating Kolla
 ===============
 
 Upgrading
-=========
+~~~~~~~~~
+
 Kolla's strategy for upgrades is to never make a mess and to follow consistent
 patterns during deployment such that upgrades from one environment to the next
 are simple to automate.
@@ -28,48 +29,68 @@ choosing.
 
 If the alpha identifier is not used, Kolla will deploy or upgrade using the
 version number information contained in the release. To customize the
-version number uncomment openstack_release in globals.yml and specify
+version number uncomment ``openstack_release`` in ``globals.yml`` and specify
 the version number desired.
 
-For example, to deploy a custom built Liberty version built with the
-``kolla-build --tag 1.0.0.0`` operation, change globals.yml::
+For example, to deploy a custom built ``Liberty`` version built with the
+:command:`kolla-build --tag 1.0.0.0` operation, configure the ``globals.yml``
+file:
 
-    openstack_release: 1.0.0.0
+.. code-block:: none
 
-Then run the command to deploy::
+   openstack_release: 1.0.0.0
 
-    kolla-ansible deploy
+.. end
 
-If using Liberty and a custom alpha number of 0, and upgrading to 1, change
-globals.yml::
+Then run the following command to deploy:
 
-    openstack_release: 1.0.0.1
+.. code-block:: console
 
-Then run the command to upgrade::
+   kolla-ansible deploy
 
-    kolla-ansible upgrade
+.. end
 
-.. note:: Varying degrees of success have been reported with upgrading
-  the libvirt container with a running virtual machine in it. The libvirt
-  upgrade still needs a bit more validation, but the Kolla community feels
-  confident this mechanism can be used with the correct Docker graph driver.
+If using Liberty and a custom alpha number of 0, and upgrading to 1,
+configure the ``globals.yml`` file:
 
-.. note:: The Kolla community recommends the btrfs or aufs graph drivers for
-  storing data as sometimes the LVM graph driver loses track of its reference
-  counting and results in an unremovable container.
+.. code-block:: none
 
-.. note:: Because of system technical limitations, upgrade of a libvirt
-  container when using software emulation (``virt_type = qemu`` in nova.conf),
-  does not work at all. This is acceptable because KVM is the recommended
-  virtualization driver to use with Nova.
+   openstack_release: 1.0.0.1
 
-.. note:: Please note that when the ``use_preconfigured_databases`` flag is
-  set to ``"yes"``, you need to have the ``log_bin_trust_function_creators``
-  set to ``1`` by your database administrator before performing the upgrade.
+.. end
+
+Then run the command to upgrade:
+
+.. code-block:: console
+
+   kolla-ansible upgrade
+
+.. end
+
+.. note::
+
+   Varying degrees of success have been reported with upgrading
+   the libvirt container with a running virtual machine in it. The libvirt
+   upgrade still needs a bit more validation, but the Kolla community feels
+   confident this mechanism can be used with the correct Docker graph driver.
+
+.. note::
+
+   The Kolla community recommends the btrfs or aufs graph drivers for
+   storing data as sometimes the LVM graph driver loses track of its reference
+   counting and results in an unremovable container.
+
+.. note::
+
+   Because of system technical limitations, upgrade of a libvirt
+   container when using software emulation (``virt_type = qemu`` in
+   ``nova.conf`` file), does not work at all. This is acceptable because
+   KVM is the recommended virtualization driver to use with Nova.
 
 
 Tips and Tricks
-===============
+~~~~~~~~~~~~~~~
+
 Kolla ships with several utilities intended to facilitate ease of operation.
 
 ``tools/cleanup-containers`` is used to remove deployed containers from the
@@ -113,21 +134,26 @@ Environment.
 tests.
 
 .. note::
-  In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
+
+   In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
 
 ``kolla-mergepwd --old OLD_PASSWDS --new NEW_PASSWDS --final FINAL_PASSWDS``
 is used to merge passwords from old installation with newly generated
 passwords during upgrade of Kolla release. The workflow is:
 
-- Save old passwords from ``/etc/kolla/passwords.yml`` into
-  ``passwords.yml.old``
-- Generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``
-- Merge ``passwords.yml.old`` and ``passwords.yml.new`` into
-  ``/etc/kolla/passwords.yml``
+#. Save old passwords from ``/etc/kolla/passwords.yml`` into
+   ``passwords.yml.old``.
+#. Generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``.
+#. Merge ``passwords.yml.old`` and ``passwords.yml.new`` into
+   ``/etc/kolla/passwords.yml``.
 
-For example::
+For example:
 
-  mv /etc/kolla/passwords.yml passwords.yml.old
-  cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
-  kolla-genpwd -p passwords.yml.new
-  kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
+.. code-block:: console
+
+   mv /etc/kolla/passwords.yml passwords.yml.old
+   cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
+   kolla-genpwd -p passwords.yml.new
+   kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
+
+.. end
