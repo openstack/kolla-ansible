@@ -9,7 +9,7 @@ meant to answer some questions regarding basic configuration options that Kolla
 requires. This document also contains other useful pointers.
 
 Node types and services running on them
-=======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A basic Kolla inventory consists of several types of nodes, known in Ansible as
 ``groups``.
@@ -30,12 +30,12 @@ A basic Kolla inventory consists of several types of nodes, known in Ansible as
 * Monitoring - Monitor nodes which host monitoring services.
 
 Network configuration
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 .. _interface-configuration:
 
 Interface configuration
-***********************
+-----------------------
 
 In Kolla operators should configure following network interfaces:
 
@@ -80,21 +80,21 @@ In Kolla operators should configure following network interfaces:
   with the bare metal cloud hosts in order to provide DHCP leases with
   PXE boot options. Defaults to ``network_interface``.
 
-.. WARNING::
+.. warning::
 
    Ansible facts does not recognize interface names containing dashes,
    in example ``br-ex`` or ``bond-0`` cannot be used because ansible will read
    them as ``br_ex`` and ``bond_0`` respectively.
 
 Docker configuration
-====================
+~~~~~~~~~~~~~~~~~~~~
 
 Because Docker is core dependency of Kolla, proper configuration of Docker can
 change the experience of Kolla significantly. Following section will highlight
 several Docker configuration details relevant to Kolla operators.
 
 Storage driver
-**************
+--------------
 
 In certain distributions Docker storage driver defaults to devicemapper, which
 can heavily hit performance of builds and deploys. We suggest to use btrfs or
@@ -102,14 +102,11 @@ aufs as driver. More details on which storage driver to use in
 `Docker documentation <https://docs.docker.com/engine/userguide/storagedriver/selectadriver/>`_.
 
 Volumes
-*******
+-------
 
 Kolla puts nearly all of persistent data in Docker volumes. These volumes are
-created in Docker working directory, which defaults to
-
-::
-
-    /var/lib/docker
+created in Docker working directory, which defaults to ``/var/lib/docker``
+directory.
 
 We recommend to ensure that this directory has enough space and is placed on
 fast disk as it will affect performance of builds, deploys as well as database
