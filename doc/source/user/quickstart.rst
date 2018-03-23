@@ -349,7 +349,7 @@ There are a few options that are required to deploy Kolla-Ansible:
 
   .. end
 
-  To use DockerHub images, the default image tag has to be overriden. Images are
+  To use DockerHub images, the default image tag has to be overridden. Images are
   tagged with release names. For example to use stable Pike images set
 
   .. code-block:: console
