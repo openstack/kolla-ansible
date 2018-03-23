@@ -52,6 +52,8 @@
   when: database.changed
 
 - name: Running Ironic-PXE bootstrap container
+  vars:
+    ironic_pxe: "{{ ironic_services['ironic-pxe'] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -59,13 +61,10 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ ironic_pxe_image_full }}"
+    image: "{{ ironic_pxe.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic_pxe"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/ironic-pxe/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "ironic_pxe:/tftpboot/"
-  when: inventory_hostname in groups['ironic-pxe']
+    volumes: "{{ ironic_pxe.volumes }}"
+  when: inventory_hostname in groups[ironic_pxe.group]
