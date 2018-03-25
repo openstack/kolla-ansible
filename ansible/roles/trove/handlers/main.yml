@@ -25,7 +25,7 @@
     service_name: "trove-conductor"
     service: "{{ trove_services[service_name] }}"
     config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    conf_file: "{{ trove_conf_file.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_conductor_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -38,7 +38,7 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - config_json.changed | bool
-      or conf_file.changed | bool
+      or trove_conf.changed | bool
       or trove_conductor_container.changed | bool
 
 - name: Restart trove-taskmanager container
@@ -46,7 +46,7 @@
     service_name: "trove-taskmanager"
     service: "{{ trove_services[service_name] }}"
     config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    conf_file: "{{ trove_conf_file.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_taskmanager_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -59,5 +59,5 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - config_json.changed | bool
-      or conf_file.changed | bool
+      or trove_conf.changed | bool
       or trove_taskmanager_container.changed | bool
