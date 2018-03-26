@@ -30,6 +30,12 @@
   changed_when: False
   run_once: True
 
+- name: enable application for ceph pool
+  command: docker exec ceph_mon ceph osd pool application enable {{ pool_name }} {{ pool_application }}
+  changed_when: False
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  run_once: True
+
 - name: Creating ceph ruleset for cache
   command: docker exec ceph_mon ceph osd crush rule create-simple cache {{ ceph_cache_rule }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
