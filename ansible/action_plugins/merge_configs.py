@@ -25,6 +25,8 @@ from six import StringIO
 
 from oslo_config import iniparser
 
+_ORPHAN_SECTION = 'TEMPORARY_ORPHAN_VARIABLE_SECTION'
+
 
 class OverrideConfigParser(iniparser.BaseParser):
 
@@ -34,6 +36,8 @@ class OverrideConfigParser(iniparser.BaseParser):
         self._cur_section = None
 
     def assignment(self, key, value):
+        if self._cur_section is None:
+            self.new_section(_ORPHAN_SECTION)
         cur_value = self._cur_section.get(key)
         if len(value) == 1 and value[0] == '':
             value = []
@@ -44,6 +48,7 @@ class OverrideConfigParser(iniparser.BaseParser):
 
     def parse(self, lineiter):
         self._cur_sections = collections.OrderedDict()
+        self._cur_section = None
         super(OverrideConfigParser, self).parse(lineiter)
 
         # merge _cur_sections into _sections
@@ -77,7 +82,8 @@ class OverrideConfigParser(iniparser.BaseParser):
                 write_key_value(key, values)
 
         for section in self._sections:
-            fp.write('[{}]\n'.format(section))
+            if section != _ORPHAN_SECTION:
+                fp.write('[{}]\n'.format(section))
             write_section(self._sections[section])
             fp.write('\n')
 
