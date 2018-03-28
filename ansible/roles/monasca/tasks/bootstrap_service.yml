@@ -1,0 +1,24 @@
+---
+- name: Running monasca bootstrap container
+  vars:
+    monasca_api: "{{ monasca_services['monasca-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      MONASCA_DATABASE_ADDRESS: "{{ database_address }}"
+      MONASCA_DATABASE_PORT: "{{ database_port }}"
+      MONASCA_DATABASE_USER: "{{ monasca_database_user }}"
+      MONASCA_DATABASE_PASSWORD: "{{ monasca_database_password }}"
+      MONASCA_DATABASE_NAME: "{{ monasca_database_name }}"
+    image: "{{ monasca_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_monasca"
+    restart_policy: "never"
+    volumes: "{{ monasca_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[monasca_api.group][0] }}"

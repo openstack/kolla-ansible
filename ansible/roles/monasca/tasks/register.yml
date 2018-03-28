@@ -1,0 +1,44 @@
+---
+- name: Creating monasca-api service and endpoints
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "monasca-api"
+      service_type: "monitoring"
+      description: "Monasca monitoring as a service"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ monasca_openstack_auth }}"
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ monasca_api_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ monasca_api_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ monasca_api_public_endpoint }}'}
+
+- name: Creating the monasca keystone user
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "service"
+      user: "{{ monasca_keystone_user }}"
+      password: "{{ monasca_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ '{{ monasca_openstack_auth }}' }}"
+  run_once: True
+
+- name: Creating monasca roles
+  kolla_toolbox:
+    module_name: os_keystone_role
+    module_args:
+      name: "{{ item }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ monasca_openstack_auth }}"
+  run_once: True
+  with_items:
+    - "{{ monasca_default_authorized_roles }}"
+    - "{{ monasca_agent_authorized_roles }}"
+    - "{{ monasca_read_only_authorized_roles }}"
+    - "{{ monasca_delegate_authorized_roles }}"
