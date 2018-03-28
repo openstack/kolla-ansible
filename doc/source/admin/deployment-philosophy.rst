@@ -64,6 +64,7 @@ result, simply :command:`mkdir -p /etc/kolla/config` and modify the file
 
    [libvirt]
    virt_type=qemu
+   cpu_mode = none
 
 .. end
 
