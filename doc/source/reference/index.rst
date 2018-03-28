@@ -25,3 +25,4 @@ Projects Deployment References
    skydive-guide
    vmware-guide
    tacker-guide
+   xenserver-guide
