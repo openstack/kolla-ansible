@@ -33,20 +33,12 @@
     pool_pgp_num: "{{ nova_pool_pgp_num }}"
     pool_application: "rbd"
 
-# TODO(SamYaple): Improve changed_when tests
 - name: Pulling cephx keyring for nova
-  command: docker exec ceph_mon ceph auth get-or-create client.nova mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool={{ ceph_cinder_pool_name }}, allow rwx pool={{ ceph_cinder_pool_name }}-cache, allow rwx pool={{ ceph_nova_pool_name }}, allow rwx pool={{ ceph_nova_pool_name }}-cache, allow rwx pool={{ ceph_glance_pool_name }}, allow rwx pool={{ ceph_glance_pool_name }}-cache'
-  register: cephx_key
+  kolla_ceph_keyring:
+    name: client.nova
+    caps: "{{ ceph_client_nova_keyring_caps }}"
+  register: nova_cephx_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
-  run_once: True
-
-# TODO(SamYaple): Improve failed_when and changed_when tests
-- name: Pulling nova cephx keyring for libvirt
-  command: docker exec ceph_mon ceph auth get-key client.nova
-  register: nova_cephx_raw_key
-  delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
   run_once: True
 
 - name: Pulling cinder cephx keyring for libvirt
@@ -61,7 +53,9 @@
 
 - name: Pushing cephx keyring for nova
   copy:
-    content: "{{ cephx_key.stdout }}\n\r"
+    content: |
+      [client.nova]
+          key = {{ nova_cephx_key.keyring.key }}
     dest: "{{ node_config_directory }}/nova-compute/ceph.client.nova.keyring"
     mode: "0600"
   when: inventory_hostname in groups['compute']
@@ -92,7 +86,7 @@
     - item.enabled | bool
   with_items:
     - uuid: "{{ rbd_secret_uuid }}"
-      content: "{{ nova_cephx_raw_key.stdout }}"
+      content: "{{ nova_cephx_key.keyring.key }}"
       enabled: true
     - uuid: "{{ cinder_rbd_secret_uuid }}"
       content: "{{ cinder_cephx_raw_key.stdout|default('') }}"

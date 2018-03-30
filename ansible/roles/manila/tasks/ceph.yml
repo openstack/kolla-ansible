@@ -15,15 +15,18 @@
   become: true
 
 - name: Pulling cephx keyring for manila
-  command: docker exec ceph_mon ceph auth get-or-create client.manila mon 'allow r, allow command "auth del", allow command "auth caps", allow command "auth get", allow command "auth get-or-create"' osd 'allow rw' mds 'allow *'
+  kolla_ceph_keyring:
+    name: client.manila
+    caps: "{{ ceph_client_manila_keyring_caps }}"
   register: cephx_key_manila
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
   run_once: True
 
 - name: Pushing cephx keyring
   copy:
-    content: "{{ cephx_key_manila.stdout }}\n\r"
+    content: |
+      [client.manila]
+          key = {{ cephx_key_manila.keyring.key }}
     dest: "{{ node_config_directory }}/manila-share/ceph.client.manila.keyring"
     mode: "0600"
   become: true

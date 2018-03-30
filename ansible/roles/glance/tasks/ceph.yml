@@ -25,17 +25,19 @@
     pool_pgp_num: "{{ glance_pool_pgp_num }}"
     pool_application: "rbd"
 
-# TODO(SamYaple): Improve changed_when tests
 - name: Pulling cephx keyring
-  command: docker exec ceph_mon ceph auth get-or-create client.glance mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool={{ ceph_glance_pool_name }}, allow rwx pool={{ ceph_glance_pool_name }}-cache'
+  kolla_ceph_keyring:
+    name: client.glance
+    caps: "{{ ceph_client_glance_keyring_caps }}"
   register: cephx_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
   run_once: True
 
 - name: Pushing cephx keyring
   copy:
-    content: "{{ cephx_key.stdout }}\n\r"
+    content: |
+      [client.glance]
+          key = {{ cephx_key.keyring.key }}
     dest: "{{ node_config_directory }}/glance-api/ceph.client.glance.keyring"
     mode: "0600"
   when: inventory_hostname in groups['glance-api']
