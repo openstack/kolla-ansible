@@ -150,6 +150,7 @@ listen nova_novncproxy
   bind {{ kolla_internal_vip_address }}:{{ nova_novncproxy_port }}
   http-request del-header X-Forwarded-Proto if { ssl_fc }
   http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  timeout tunnel 1h
 {% for host in groups['nova-novncproxy'] %}
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ nova_novncproxy_port }} check inter 2000 rise 2 fall 5
 {% endfor %}
