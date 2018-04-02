@@ -631,7 +631,9 @@ neutron_type_drivers: "flat,vlan,vxlan"
 # NOTE: for ironic this list should also contain 'flat'
 neutron_tenant_network_types: "vxlan"
 
-computes_need_external_bridge: "{{ enable_neutron_dvr | bool or enable_neutron_provider_networks | bool or enable_opendaylight | bool and neutron_plugin_agent != 'vmware_dvs' }}"
+# valid values: ["dvr", "dvr_no_external"]
+neutron_compute_dvr_mode: "dvr"
+computes_need_external_bridge: "{{ enable_neutron_dvr | bool and (neutron_compute_dvr_mode == 'dvr' or inventory_hostname in groups['external-compute']) or enable_neutron_provider_networks | bool or enable_opendaylight | bool and neutron_plugin_agent != 'vmware_dvs' }}"
 
 #######################
 # Nova options
