@@ -34,3 +34,18 @@
         src: "/tmp/logs"
         dest: "{{ zuul.executor.log_root }}/{{inventory_hostname }}/"
         mode: pull
+
+- hosts: primary
+  tasks:
+    - name: ensure ara-report folder existence
+      file:
+        path: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
+        state: directory
+      delegate_to: localhost
+      run_once: true
+
+    - name: download ara sqlite
+      synchronize:
+        src: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
+        dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report/"
+        mode: pull
