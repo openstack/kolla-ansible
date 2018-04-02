@@ -18,16 +18,35 @@
       debug:
         msg: "{{ get_logs_result.stdout }}"
 
-    - name: Download logs to executor
-      synchronize:
-        dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}"
-        mode: pull
-        src: "{{ logs_dir }}/"
-      ignore_errors: yes
-
     - name: Download /etc/hosts file to executor
       synchronize:
         src: "/etc/hosts"
         dest: "{{ zuul.executor.log_root }}/{{inventory_hostname }}/"
         mode: pull
       ignore_errors: yes
+
+    - name: dump all iptables rules
+      shell: "iptables-save > /tmp/logs/iptables"
+      become: true
+
+    - name: Download /tmp/logs file to executor
+      synchronize:
+        src: "/tmp/logs"
+        dest: "{{ zuul.executor.log_root }}/{{inventory_hostname }}/"
+        mode: pull
+      ignore_errors: yes
+
+- hosts: primary
+  tasks:
+    - name: ensure ara-report folder existence
+      file:
+        path: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
+        state: directory
+      delegate_to: localhost
+      run_once: true
+
+    - name: download ara sqlite
+      synchronize:
+        src: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
+        dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report/"
+        mode: pull
