@@ -186,7 +186,4 @@ tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
 # run prechecks again
 tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
 
-ara generate html /tmp/logs/playbook_reports/
-gzip --recursive --best /tmp/logs/playbook_reports/
-
 check_failure
