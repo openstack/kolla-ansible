@@ -12,6 +12,8 @@
       - "{{ node_custom_config }}/manila/ceph.conf"
       - "{{ node_custom_config }}/manila/manila-share/ceph.conf"
     dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+    mode: "0660"
+  become: true
   when:
     - inventory_hostname in groups['manila-share']
   notify:
@@ -21,6 +23,8 @@
   copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/manila-share/"
+    mode: "0600"
+  become: true
   with_fileglob:
     - "{{ node_custom_config }}/manila/ceph.client.manila.keyring"
     - "{{ node_custom_config }}/manila/manila/ceph.client.manila.keyring"

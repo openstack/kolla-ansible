@@ -11,6 +11,8 @@
       - "{{ node_custom_config }}/ceph.conf"
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+    mode: "0660"
+  become: true
 
 - name: Pulling cephx keyring for manila
   command: docker exec ceph_mon ceph auth get-or-create client.manila mon 'allow r, allow command "auth del", allow command "auth caps", allow command "auth get", allow command "auth get-or-create"' osd 'allow rw' mds 'allow *'
@@ -24,3 +26,4 @@
     content: "{{ cephx_key_manila.stdout }}\n\r"
     dest: "{{ node_config_directory }}/manila-share/ceph.client.manila.keyring"
     mode: "0600"
+  become: true
