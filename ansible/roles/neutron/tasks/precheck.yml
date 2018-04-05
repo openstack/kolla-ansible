@@ -47,3 +47,13 @@
   when: item not in type_drivers
   run_once: true
   with_items: "{{ tenant_network_types }}"
+
+- name: Checking for deprecated inner- and external-compute groups
+  local_action:
+    module: debug
+    msg: "WARNING: inner- and external-compute groups are DEPRECATED"
+  changed_when: false
+  run_once: True
+  when:
+    - (groups['inner-compute'] | default([]) | length > 0
+       or groups['external-compute'] | default([]) | length > 0)
