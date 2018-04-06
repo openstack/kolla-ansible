@@ -26,7 +26,7 @@ For the combined option, set the two variables below, while allowing the
 other two to accept their default values. In this configuration all REST
 API requests, internal and external, will flow over the same network.
 
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_internal_vip_address: "10.10.10.254"
    network_interface: "eth0"
@@ -37,7 +37,7 @@ For the separate option, set these four variables. In this configuration
 the internal and external REST API requests can flow over separate
 networks.
 
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_internal_vip_address: "10.10.10.254"
    network_interface: "eth0"
@@ -57,7 +57,7 @@ in your kolla deployment use the variables:
 - kolla_internal_fqdn
 - kolla_external_fqdn
 
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_internal_fqdn: inside.mykolla.example.net
    kolla_external_fqdn: mykolla.example.net
@@ -95,7 +95,7 @@ The configuration variables that control TLS networking are:
 
 The default for TLS is disabled, to enable TLS networking:
 
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_enable_tls_external: "yes"
    kolla_external_fqdn_cert: "{{ node_config_directory }}/certificates/mycert.pem"
@@ -176,7 +176,7 @@ OpenStack Service Configuration in Kolla
 An operator can change the location where custom config files are read from by
 editing ``/etc/kolla/globals.yml`` and adding the following line.
 
-.. code-block:: none
+.. code-block:: yaml
 
    # The directory to merge custom config files the kolla's config files
    node_custom_config: "/etc/kolla/config"
@@ -253,7 +253,7 @@ If a development environment doesn't have a free IP address available for VIP
 configuration, the host's IP address may be used here by disabling HAProxy by
 adding:
 
-.. code-block:: none
+.. code-block:: yaml
 
    enable_haproxy: "no"
 
@@ -269,7 +269,7 @@ External Elasticsearch/Kibana environment
 It is possible to use an external Elasticsearch/Kibana environment. To do this
 first disable the deployment of the central logging.
 
-.. code-block:: none
+.. code-block:: yaml
 
    enable_central_logging: "no"
 
@@ -285,7 +285,7 @@ It is sometimes required to use a different than default port
 for service(s) in Kolla. It is possible with setting
 ``<service>_port`` in ``globals.yml`` file. For example:
 
-.. code-block:: none
+.. code-block:: yaml
 
    database_port: 3307
 
@@ -301,7 +301,7 @@ By default, Fluentd is used as a syslog server to collect Swift and HAProxy
 logs. When Fluentd is disabled or you want to use an external syslog server,
 You can set syslog parameters in ``globals.yml`` file. For example:
 
-.. code-block:: none
+.. code-block:: yaml
 
    syslog_server: "172.29.9.145"
    syslog_udp_port: "514"
@@ -311,7 +311,7 @@ You can set syslog parameters in ``globals.yml`` file. For example:
 You can also set syslog facility names for Swift and HAProxy logs.
 By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
 
-.. code-block:: none
+.. code-block:: yaml
 
    syslog_swift_facility: "local0"
    syslog_haproxy_facility: "local1"

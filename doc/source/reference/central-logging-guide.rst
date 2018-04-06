@@ -95,7 +95,7 @@ In this output, look for the key ``X-Compute-Request-Id``. This is a unique
 identifier that can be used to track the request through the system. An
 example ID looks like this:
 
-.. code-block:: none
+.. code-block:: console
 
    X-Compute-Request-Id: req-c076b50a-6a22-48bf-8810-b9f41176a6d5
 

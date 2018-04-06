@@ -116,7 +116,7 @@ be found on `Cloudbase website
 
 Add the Hyper-V node in ``ansible/inventory`` file:
 
-.. code-block:: none
+.. code-block:: ini
 
    [hyperv]
    <HyperV IP>

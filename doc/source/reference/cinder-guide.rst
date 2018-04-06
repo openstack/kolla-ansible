@@ -38,7 +38,7 @@ During development, it may be desirable to use file backed block storage. It
 is possible to use a file and mount it as a block device via the loopback
 system.
 
-.. code-block:: none
+.. code-block:: console
 
    free_device=$(losetup -f)
    fallocate -l 20G /var/lib/cinder_data.img
@@ -67,7 +67,7 @@ NFS
 To use the ``nfs`` backend, configure ``/etc/exports`` to contain the mount
 where the volumes are to be stored:
 
-.. code-block:: none
+.. code-block:: console
 
    /kolla_nfs 192.168.5.0/24(rw,sync,no_root_squash)
 
@@ -89,7 +89,7 @@ Then start ``nfsd``:
 On the deploy node, create ``/etc/kolla/config/nfs_shares`` with an entry for
 each storage node:
 
-.. code-block:: none
+.. code-block:: console
 
    storage01:/kolla_nfs
    storage02:/kolla_nfs

@@ -82,7 +82,7 @@ table** example listed above. Please modify accordingly if your setup is
 different.
 
 Prepare for Rings generating
----------------------------- 
+----------------------------
 
 To perpare for Swift Rings generating, run the following commands to initialize
 the environment variable and create ``/etc/kolla/config/swift`` directory:

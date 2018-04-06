@@ -204,8 +204,8 @@ Install Kolla for development
    .. end
 
 #. Copy the inventory files to the current directory. ``kolla-ansible`` holds
-   inventory files ( ``all-in-one`` and ``multinode``) in the ``ansible/inventory``
-   directory.
+   inventory files ( ``all-in-one`` and ``multinode``) in the
+   ``ansible/inventory`` directory.
 
    .. code-block:: console
 
@@ -230,7 +230,7 @@ than one node, edit ``multinode`` inventory:
 #. Edit the first section of ``multinode`` with connection details of your
    environment, for example:
 
-   .. code-block:: none
+   .. code-block:: ini
 
       [control]
       10.0.0.[10:12] ansible_user=ubuntu ansible_password=foobar ansible_become=true

@@ -71,8 +71,8 @@ necessary tasks. In Rocky, all services have this capability, so users do not
 need to add ``ansible_become`` option if connection user has passwordless sudo
 capability.
 
-Prior to Rocky, ``ansible_user`` (the user which Ansible uses to connect via SSH)
-is default configuration owner and group in target nodes.
+Prior to Rocky, ``ansible_user`` (the user which Ansible uses to connect
+via SSH) is default configuration owner and group in target nodes.
 From Rocky release, Kolla support connection using any user which has
-passwordless sudo capability. For setting custom owner user and group, user can
-set ``config_owner_user`` and ``config_owner_group`` in ``globals.yml``
+passwordless sudo capability. For setting custom owner user and group, user
+can set ``config_owner_user`` and ``config_owner_group`` in ``globals.yml``.

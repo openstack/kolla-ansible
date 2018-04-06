@@ -72,8 +72,8 @@ While there may be some cases where it is possible to upgrade by skipping this
 step (i.e. by upgrading only the ``openstack_release`` version) - generally,
 when looking at a more comprehensive upgrade, the kolla-ansible package itself
 should be upgraded first. This will include reviewing some of the configuration
-and inventory files. On the operator/master node, a backup of the ``/etc/kolla``
-directory may be desirable.
+and inventory files. On the operator/master node, a backup of the
+``/etc/kolla`` directory may be desirable.
 
 If upgrading from ``5.0.0`` to ``6.0.0``, upgrade the kolla-ansible package:
 
@@ -83,8 +83,8 @@ If upgrading from ``5.0.0`` to ``6.0.0``, upgrade the kolla-ansible package:
 
 .. end
 
-If this is a minor upgrade, and you do not wish to upgrade kolla-ansible itself,
-you may skip this step.
+If this is a minor upgrade, and you do not wish to upgrade kolla-ansible
+itself, you may skip this step.
 
 The inventory file for the deployment should be updated, as the newer sample
 inventory files may have updated layout or other relevant changes.
@@ -101,15 +101,16 @@ In addition the ``6.0.0`` sample configuration files should be taken from::
     # Ubuntu
     /usr/local/share/kolla-ansible/etc_examples/kolla
 
-At this stage, files that are still at the ``5.0.0`` version - which need manual
-updating are:
+At this stage, files that are still at the ``5.0.0`` version - which need
+manual updating are:
 
 - ``/etc/kolla/globals.yml``
 - ``/etc/kolla/passwords.yml``
 
 For ``globals.yml`` relevant changes should be merged into a copy of the new
 template, and then replace the file in ``/etc/kolla`` with the updated version.
-For ``passwords.yml``, see the ``kolla-mergepwd`` instructions in `Tips and Tricks`.
+For ``passwords.yml``, see the ``kolla-mergepwd`` instructions in
+`Tips and Tricks`.
 
 For the kolla docker images, the ``openstack_release`` is updated to ``6.0.0``:
 

@@ -87,7 +87,7 @@ that Kolla uses throughout that should be followed.
     content:
 
     .. path ansible/roles/common/templates/cron-logrotate-PROJECT.conf.j2
-    .. code-block:: none
+    .. code-block:: console
 
        "/var/log/kolla/PROJECT/*.log"
        {

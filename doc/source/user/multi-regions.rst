@@ -39,7 +39,7 @@ regions. In this example, we consider two regions. The current one,
 formerly knows as RegionOne, that is hided behind
 ``openstack_region_name`` variable, and the RegionTwo:
 
-.. code-block:: none
+.. code-block:: yaml
 
    openstack_region_name: "RegionOne"
    multiple_regions_names:
@@ -69,7 +69,7 @@ update the ``/etc/kolla/globals.yml`` configuration file to tell Kolla how
 to reach Keystone. In the following, ``kolla_internal_fqdn_r1`` refers to
 the value of ``kolla_internal_fqdn`` in RegionOne:
 
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_internal_fqdn_r1: 10.10.10.254
 
@@ -142,7 +142,7 @@ directory, a ``ceilometer.conf`` file with below content:
 And link the directory that contains these files into the
 ``/etc/kolla/globals.yml``:
 
-.. code-block:: none
+.. code-block:: yaml
 
    node_custom_config: path/to/the/directory/of/global&nova_conf/
 
@@ -150,7 +150,7 @@ And link the directory that contains these files into the
 
 Also, change the name of the current region. For instance, RegionTwo:
 
-.. code-block:: none
+.. code-block:: yaml
 
    openstack_region_name: "RegionTwo"
 
@@ -159,7 +159,7 @@ Also, change the name of the current region. For instance, RegionTwo:
 Finally, disable the deployment of Keystone and Horizon that are
 unnecessary in this region and run ``kolla-ansible``:
 
-.. code-block:: none
+.. code-block:: yaml
 
    enable_keystone: "no"
    enable_horizon: "no"

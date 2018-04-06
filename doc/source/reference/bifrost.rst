@@ -91,7 +91,7 @@ resolving the deployment host's hostname to ``127.0.0.1``, for example:
 
 The following lines are desirable for IPv6 capable hosts:
 
-.. code-block:: none
+.. code-block:: console
 
     ::1 ip6-localhost ip6-loopback
     fe00::0 ip6-localnet
@@ -109,12 +109,14 @@ Build a Bifrost Container Image
 This section provides instructions on how to build a container image for
 bifrost using kolla.
 
-Currently kolla only supports the ``source`` install type for the bifrost image.
+Currently kolla only supports the ``source`` install type for the
+bifrost image.
 
 #. To generate kolla-build.conf configuration File
 
 
-   * If required, generate a default configuration file for :command:`kolla-build`:
+   * If required, generate a default configuration file for
+     :command:`kolla-build`:
 
      .. code-block:: console
 
