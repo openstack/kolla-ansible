@@ -55,3 +55,9 @@
   changed_when: False
   run_once: True
   delegate_to: "{{ groups['nova-api'][0] }}"
+
+- name: Refresh cell cache in nova scheduler
+  command: docker kill --signal HUP nova_scheduler
+  changed_when: False
+  when:
+    - inventory_hostname in groups['nova-scheduler']
