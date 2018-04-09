@@ -94,7 +94,7 @@ implies to create a ``global.conf`` file with the following content:
 .. code-block:: ini
 
    [keystone_authtoken]
-   auth_uri = {{ keystone_internal_url }}
+   www_authenticate_uri = {{ keystone_internal_url }}
    auth_url = {{ keystone_admin_url }}
 
 .. end
@@ -117,14 +117,14 @@ directory, a ``heat.conf`` file with below content:
 .. code-block:: ini
 
    [trustee]
-   auth_uri = {{ keystone_internal_url }}
+   www_authenticate_uri = {{ keystone_internal_url }}
    auth_url = {{ keystone_internal_url }}
 
    [ec2authtoken]
-   auth_uri = {{ keystone_internal_url }}
+   www_authenticate_uri = {{ keystone_internal_url }}
 
    [clients_keystone]
-   auth_uri = {{ keystone_internal_url }}
+   www_authenticate_uri = {{ keystone_internal_url }}
 
 .. end
 
