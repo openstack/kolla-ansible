@@ -29,102 +29,97 @@ The host machine must satisfy the following minimum requirements:
 Install dependencies
 ~~~~~~~~~~~~~~~~~~~~
 
-Make sure the ``pip`` package manager is installed and upgraded to the latest
-before proceeding.
+#. Install and upgrad ``pip`` to the latest before proceeding.
 
-For CentOS, run:
+   For CentOS, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   yum install epel-release
-   yum install python-pip
-   pip install -U pip
+      yum install epel-release
+      yum install python-pip
+      pip install -U pip
 
-.. end
+   .. end
 
-For Ubuntu, run:
+   For Ubuntu, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   apt-get update
-   apt-get install python-pip
-   pip install -U pip
+      apt-get update
+      apt-get install python-pip
+      pip install -U pip
 
-.. end
+   .. end
 
-To build the code with ``pip`` package manager, install the following
-dependencies:
+#. Install the following dependencies:
 
-For CentOS, run:
+   For CentOS, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   yum install python-devel libffi-devel gcc openssl-devel libselinux-python
+      yum install python-devel libffi-devel gcc openssl-devel libselinux-python
 
-.. end
+   .. end
 
-For Ubuntu, run:
+   For Ubuntu, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   apt-get install python-dev libffi-dev gcc libssl-dev python-selinux
+      apt-get install python-dev libffi-dev gcc libssl-dev python-selinux
 
-.. end
+   .. end
 
-Kolla deploys OpenStack using `Ansible <http://www.ansible.com>`__. Install
-Ansible from distribution packaging if the distro packaging has recommended
-version available.
+#. Install `Ansible <http://www.ansible.com>`__ from distribution packaging:
 
-Some implemented distro versions of Ansible are too old to use distro
-packaging. Currently, CentOS and RHEL package Ansible >2.0 which is suitable
-for use with Kolla. Note that you will need to enable access to the EPEL
-repository to install via yum -- to do so, take a look at Fedora's EPEL `docs
-<https://fedoraproject.org/wiki/EPEL>`__ and `FAQ
-<https://fedoraproject.org/wiki/EPEL/FAQ>`__.
+   .. note::
 
-On CentOS or RHEL systems, this can be done using:
+      Some implemented distro versions of Ansible are too old to use distro
+      packaging. Currently, CentOS and RHEL package Ansible >2.0 which is suitable
+      for use with Kolla. Note that you will need to enable access to the EPEL
+      repository to install via :command:`yum` to do so, take a look at `Fedora's EPEL docs
+      <https://fedoraproject.org/wiki/EPEL>`__ and `FAQ
+      <https://fedoraproject.org/wiki/EPEL/FAQ>`__.
 
-.. code-block:: console
+   For CentOS or RHEL, this can be done using:
 
-   yum install ansible
+   .. code-block:: console
 
-.. end
+      yum install ansible
 
-Many DEB based systems do not meet Kolla's Ansible version requirements. It is
-recommended to use pip to install Ansible >2.0. Finally Ansible >2.0 may be
-installed using:
+   .. end
 
-.. code-block:: console
+   For Ubuntu, it can be installed by:
 
-   pip install -U ansible
+   .. code-block:: console
 
-.. end
+      apt-get install ansible
 
-.. note::
+   .. end
 
-   It is recommended to use virtualenv to install non-system packages.
+#. Use ``pip`` to install or upgrade Ansible to latest version:
 
-If DEB based systems include a version of Ansible that meets Kolla's version
-requirements it can be installed by:
+   .. code-block:: console
 
-.. code-block:: console
+      pip install -U ansible
 
-   apt-get install ansible
+   .. end
 
-.. end
+   .. note::
 
-It's beneficial to add the following options to ansible
-configuration file ``/etc/ansible/ansible.cfg``:
+      It is recommended to use virtualenv to install non-system packages.
 
-.. path /etc/ansible/ansible.cfg
-.. code-block:: ini
+#. (optional) Add the following options to ansible configuration file
+   ``/etc/ansible/ansible.cfg``:
 
-   [defaults]
-   host_key_checking=False
-   pipelining=True
-   forks=100
+   .. path /etc/ansible/ansible.cfg
+   .. code-block:: ini
 
-.. end
+      [defaults]
+      host_key_checking=False
+      pipelining=True
+      forks=100
+
+   .. end
 
 Install Kolla-ansible
 ~~~~~~~~~~~~~~~~~~~~~
@@ -132,82 +127,91 @@ Install Kolla-ansible
 Install Kolla-ansible for deployment or evaluation
 --------------------------------------------------
 
-Install kolla-ansible and its dependencies using ``pip``.
+#. Install kolla-ansible and its dependencies using ``pip``.
 
-.. code-block:: console
+   .. code-block:: console
 
-   pip install kolla-ansible
+      pip install kolla-ansible
 
-.. end
+   .. end
 
-Copy ``globals.yml`` and ``passwords.yml`` to ``/etc/kolla`` directory.
+#. Copy ``globals.yml`` and ``passwords.yml`` to ``/etc/kolla`` directory.
 
-For CentOS, run:
+   For CentOS, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp -r /usr/share/kolla-ansible/etc_examples/kolla /etc/kolla/
+      cp -r /usr/share/kolla-ansible/etc_examples/kolla /etc/kolla/
 
-.. end
+   .. end
 
-For Ubuntu, run:
+   For Ubuntu, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/kolla/
+      cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/kolla/
 
-.. end
+   .. end
 
-Copy the ``all-in-one`` and ``multinode`` inventory files to
-the current directory.
+#. Copy ``all-in-one`` and ``multinode`` inventory files to
+   the current directory.
 
-For CentOS, run:
+   For CentOS, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp /usr/share/kolla-ansible/ansible/inventory/* .
+      cp /usr/share/kolla-ansible/ansible/inventory/* .
 
-.. end
+   .. end
 
-For Ubuntu, run:
+   For Ubuntu, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp /usr/local/share/kolla-ansible/ansible/inventory/* .
+      cp /usr/local/share/kolla-ansible/ansible/inventory/* .
 
-.. end
+   .. end
 
 Install Kolla for development
 -----------------------------
 
-Clone the Kolla and Kolla-Ansible repositories from git.
+#. Clone ``kolla`` and ``kolla-ansible`` repositories from git.
 
-.. code-block:: console
+   .. code-block:: console
 
-   git clone https://github.com/openstack/kolla
-   git clone https://github.com/openstack/kolla-ansible
+      git clone https://github.com/openstack/kolla
+      git clone https://github.com/openstack/kolla-ansible
 
-.. end
+   .. end
 
-Kolla-ansible holds the configuration files (``globals.yml`` and
-``passwords.yml``) in ``etc/kolla``. Copy the configuration
-files to ``/etc/kolla`` directory.
+#. Install requirements of ``kolla`` and ``kolla-ansible``:
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp -r kolla-ansible/etc/kolla /etc/kolla/
+      pip install -r kolla/requirements.txt
+      pip install -r kolla-ansible/requirements.txt
 
-.. end
+   .. end
 
-Kolla-ansible holds the inventory files (``all-in-one`` and ``multinode``)
-in ``ansible/inventory``. Copy the inventory files to the current
-directory.
+#. Copy the configuration files to ``/etc/kolla`` directory.
+   ``kolla-ansible`` holds the configuration files ( ``globals.yml`` and
+   ``passwords.yml``) in ``etc/kolla``.
 
-.. code-block:: console
+   .. code-block:: console
 
-   cp kolla-ansible/ansible/inventory/* .
+      cp -r kolla-ansible/etc/kolla /etc/kolla
 
-.. end
+   .. end
+
+#. Copy the inventory files to the current directory. ``kolla-ansible`` holds
+   inventory files ( ``all-in-one`` and ``multinode``) in the ``ansible/inventory``
+   directory.
+
+   .. code-block:: console
+
+      cp kolla-ansible/ansible/inventory/* .
+
+   .. end
 
 Prepare initial configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,53 +227,53 @@ files. Difference between them is that the former is ready for deploying
 single node OpenStack on localhost. If you need to use separate host or more
 than one node, edit ``multinode`` inventory:
 
-Edit the first section of ``multinode`` with connection details of your
-environment, for example:
+#. Edit the first section of ``multinode`` with connection details of your
+   environment, for example:
 
-.. code-block:: none
+   .. code-block:: none
 
-   [control]
-   10.0.0.[10:12] ansible_user=ubuntu ansible_password=foobar ansible_become=true
-   # Ansible supports syntax like [10:12] - that means 10, 11 and 12.
-   # Become clausule means "use sudo".
+      [control]
+      10.0.0.[10:12] ansible_user=ubuntu ansible_password=foobar ansible_become=true
+      # Ansible supports syntax like [10:12] - that means 10, 11 and 12.
+      # Become clausule means "use sudo".
 
-   [network:children]
-   control
-   # when you specify group_name:children, it will use contents of group specified.
+      [network:children]
+      control
+      # when you specify group_name:children, it will use contents of group specified.
 
-   [compute]
-   10.0.0.[13:14] ansible_user=ubuntu ansible_password=foobar ansible_become=true
+      [compute]
+      10.0.0.[13:14] ansible_user=ubuntu ansible_password=foobar ansible_become=true
 
-   [monitoring]
-   10.0.0.10
-   # This group is for monitoring node.
-   # Fill it with one of the controllers' IP address or some others.
+      [monitoring]
+      10.0.0.10
+      # This group is for monitoring node.
+      # Fill it with one of the controllers' IP address or some others.
 
-   [storage:children]
-   compute
+      [storage:children]
+      compute
 
-   [deployment]
-   localhost       ansible_connection=local become=true
-   # use localhost and sudo
+      [deployment]
+      localhost       ansible_connection=local become=true
+      # use localhost and sudo
 
-.. end
+   .. end
 
-To learn more about inventory files, check
-`Ansible documentation <http://docs.ansible.com/ansible/latest/intro_inventory.html>`_.
+   To learn more about inventory files, check
+   `Ansible documentation <http://docs.ansible.com/ansible/latest/intro_inventory.html>`_.
 
-To confirm that our inventory is correct, run:
+#. Check whether the configuration of inventory is correct or not, run:
 
-.. code-block:: console
+   .. code-block:: console
 
-   ansible -m ping all
+      ansible -m ping all
 
-.. end
+   .. end
 
-.. note::
+   .. note::
 
-   Ubuntu might not come with python pre-installed. That will cause
-   errors in ping module. To quickly install python with ansible you
-   can run ``ansible -m raw -a "apt-get -y install python-dev all"``
+      Ubuntu might not come with python pre-installed. That will cause
+      errors in ping module. To quickly install python with ansible you
+      can run ``ansible -m raw -a "apt-get -y install python-dev all"``
 
 Kolla passwords
 ---------------
