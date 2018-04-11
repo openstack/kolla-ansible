@@ -8,6 +8,19 @@ bind_host = {{ api_interface_address }}
 bind_port = {{ freezer_api_port }}
 {% endif %}
 
+{% if service_name == 'freezer-scheduler' %}
+client_id = {{ inventory_hostname }}
+jobs_dir = /etc/freezer/scheduler/conf.d
+
+os_username = {{ openstack_auth.username }}
+os_password = {{ openstack_auth.password }}
+os_auth_url = {{ openstack_auth.auth_url }}/v3
+os_project_name = {{ openstack_auth.project_name }}
+os_project_domain_name = {{ openstack_auth.domain_name }}
+os_user_domain_name = {{ openstack_auth.user_domain_name }}
+{% endif %}
+
+{% if service_name == 'freezer-api' %}
 [keystone_authtoken]
 auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
@@ -38,3 +51,4 @@ driver = freezer_api.storage.elasticv2.ElasticSearchEngineV2
 hosts = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ elasticsearch_port }}
 number_of_replicas = 0
 index = freezer
+{% endif %}

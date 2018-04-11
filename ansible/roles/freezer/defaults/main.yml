@@ -12,6 +12,16 @@ freezer_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "freezer:/var/lib/freezer/"
       - "kolla_logs:/var/log/kolla/"
+  freezer-scheduler:
+    container_name: freezer_scheduler
+    group: freezer-scheduler
+    enabled: true
+    image: "{{ freezer_scheduler_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/freezer-scheduler/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "freezer:/var/lib/freezer/"
+      - "kolla_logs:/var/log/kolla/"
 
 
 ####################
@@ -20,6 +30,9 @@ freezer_services:
 freezer_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-freezer-api"
 freezer_api_tag: "{{ openstack_release }}"
 freezer_api_image_full: "{{ freezer_api_image }}:{{ freezer_api_tag }}"
+freezer_scheduler_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-freezer-scheduler"
+freezer_scheduler_tag: "{{ openstack_release }}"
+freezer_scheduler_image_full: "{{ freezer_scheduler_image }}:{{ freezer_scheduler_tag }}"
 
 
 ####################

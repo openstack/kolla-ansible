@@ -41,33 +41,34 @@
     - item.value.enabled | bool
   with_dict: "{{ freezer_services }}"
   notify:
-    - Restart freezer-api container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over wsgi-freezer-api.conf
+  vars:
+    service: "{{ freezer_services['freezer-api'] }}"
   template:
     src: "wsgi-freezer-api.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/wsgi-freezer-api.conf"
+    dest: "{{ node_config_directory }}/freezer-api/wsgi-freezer-api.conf"
     mode: "0660"
   become: true
   register: wsgi_freezer_api
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ freezer_services }}"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   notify:
     - Restart freezer-api container
 
-- name: Copying over freezer-api.conf
+- name: Copying over freezer confs
   vars:
     service_name: "{{ item.key }}"
   merge_configs:
     sources:
-      - "{{ role_path }}/templates/freezer-api.conf.j2"
+      - "{{ role_path }}/templates/freezer.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/freezer.conf"
       - "{{ node_custom_config }}/freezer/{{ item.key }}.conf"
       - "{{ node_custom_config }}/freezer/{{ inventory_hostname }}/{{ item.key }}.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/freezer-api.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/freezer.conf"
     mode: "0660"
   become: true
   register: freezer_confs
@@ -76,7 +77,7 @@
     - item.value.enabled | bool
   with_dict: "{{ freezer_services }}"
   notify:
-    - Restart freezer-api container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over existing policy file
   template:
@@ -91,7 +92,7 @@
     - item.value.enabled | bool
   with_dict: "{{ freezer_services }}"
   notify:
-    - Restart freezer-api container
+    - "Restart {{ item.key }} container"
 
 - name: Check freezer containers
   kolla_docker:
@@ -107,4 +108,4 @@
     - item.value.enabled | bool
   with_dict: "{{ freezer_services }}"
   notify:
-    - Restart freezer-api container
+    - "Restart {{ item.key }} container"
