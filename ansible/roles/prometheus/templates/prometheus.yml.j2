@@ -48,3 +48,12 @@ scrape_configs:
         - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
 {% endfor %}
 {% endif %}
+
+{% if enable_prometheus_cadvisor | bool %}
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-cadvisor"] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
+{% endfor %}
+{% endif %}

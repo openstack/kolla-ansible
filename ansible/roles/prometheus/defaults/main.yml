@@ -52,6 +52,20 @@ prometheus_services:
       - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+  prometheus-cadvisor:
+    container_name: "prometheus_cadvisor"
+    group: "prometheus-cadvisor"
+    enabled: "{{ enable_prometheus_cadvisor | bool }}"
+    image: "{{ prometheus_cadvisor_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/varlib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
 
 ####################
 # Database
@@ -83,3 +97,7 @@ prometheus_node_exporter_image_full: "{{ prometheus_node_exporter_image }}:{{ pr
 prometheus_memcached_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-memcached-exporter"
 prometheus_memcached_exporter_tag: "{{ prometheus_tag }}"
 prometheus_memcached_exporter_image_full: "{{ prometheus_memcached_exporter_image }}:{{ prometheus_memcached_exporter_tag }}"
+
+prometheus_cadvisor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-prometheus-cadvisor"
+prometheus_cadvisor_tag: "{{ openstack_release }}"
+prometheus_cadvisor_image_full: "{{ prometheus_cadvisor_image }}:{{ prometheus_cadvisor_tag }}"
