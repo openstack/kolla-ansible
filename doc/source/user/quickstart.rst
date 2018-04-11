@@ -265,7 +265,7 @@ than one node, edit ``multinode`` inventory:
 
    .. code-block:: console
 
-      ansible -m ping all
+      ansible -i multinode all -m ping
 
    .. end
 
