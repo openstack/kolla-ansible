@@ -141,7 +141,7 @@ Install Kolla-ansible for deployment or evaluation
 
    .. code-block:: console
 
-      cp -r /usr/share/kolla-ansible/etc_examples/kolla /etc/kolla/
+      cp -r /usr/share/kolla-ansible/etc_examples/kolla /etc/
 
    .. end
 
@@ -149,7 +149,7 @@ Install Kolla-ansible for deployment or evaluation
 
    .. code-block:: console
 
-      cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/kolla/
+      cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/
 
    .. end
 
