@@ -300,8 +300,10 @@ class DockerWorker(object):
         if not current_ipc_mode:
             current_ipc_mode = None
 
-        if new_ipc_mode != current_ipc_mode:
+        # only check IPC mode if it is specified
+        if new_ipc_mode is not None and new_ipc_mode != current_ipc_mode:
             return True
+        return False
 
     def compare_cap_add(self, container_info):
         new_cap_add = self.params.get('cap_add', list())
@@ -728,7 +730,10 @@ def generate_module():
         name=dict(required=False, type='str'),
         environment=dict(required=False, type='dict'),
         image=dict(required=False, type='str'),
-        ipc_mode=dict(required=False, type='str', choices=['host', '']),
+        ipc_mode=dict(required=False, type='str', choices=['',
+                                                           'host',
+                                                           'private',
+                                                           'shareable']),
         cap_add=dict(required=False, type='list', default=list()),
         security_opt=dict(required=False, type='list', default=list()),
         pid_mode=dict(required=False, type='str', choices=['host', '']),
