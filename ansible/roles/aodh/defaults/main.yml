@@ -12,6 +12,7 @@ aodh_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "aodh:/var/lib/aodh/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
   aodh-evaluator:
     container_name: aodh_evaluator
     group: aodh-evaluator
@@ -21,6 +22,7 @@ aodh_services:
       - "{{ node_config_directory }}/aodh-evaluator/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
   aodh-listener:
     container_name: aodh_listener
     group: aodh-listener
@@ -30,6 +32,7 @@ aodh_services:
       - "{{ node_config_directory }}/aodh-listener/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
   aodh-notifier:
     container_name: aodh_notifier
     group: aodh-notifier
@@ -39,6 +42,7 @@ aodh_services:
       - "{{ node_config_directory }}/aodh-notifier/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
 
 
 ####################
@@ -83,3 +87,11 @@ aodh_logging_debug: "{{ openstack_logging_debug }}"
 aodh_keystone_user: "aodh"
 
 openstack_aodh_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+aodh_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+aodh_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+aodh_dev_mode: "{{ kolla_dev_mode }}"
