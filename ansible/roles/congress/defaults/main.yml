@@ -11,6 +11,7 @@ congress_services:
       - "{{ node_config_directory }}/congress-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
   congress-policy-engine:
     container_name: congress_policy_engine
     group: congress-policy-engine
@@ -20,6 +21,7 @@ congress_services:
       - "{{ node_config_directory }}/congress-policy-engine/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
   congress-datasource:
     container_name: congress_datasource
     group: congress-datasource
@@ -29,6 +31,7 @@ congress_services:
       - "{{ node_config_directory }}/congress-datasource/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
 
 
 ####################
@@ -70,3 +73,11 @@ congress_logging_debug: "{{ openstack_logging_debug }}"
 congress_keystone_user: "congress"
 
 openstack_congress_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+congress_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+congress_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+congress_dev_mode: "{{ kolla_dev_mode }}"
