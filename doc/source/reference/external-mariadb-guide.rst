@@ -183,7 +183,7 @@ all you need to do is the following steps:
 
    .. end
 
-#. Set the common password for all components within ``/etc/kolla/passwords.yml```.
+#. Set the common password for all components within ``/etc/kolla/passwords.yml``.
    In order to achieve that you could use the following command:
 
    .. code-block:: console
