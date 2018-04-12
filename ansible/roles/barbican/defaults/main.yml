@@ -12,6 +12,7 @@ barbican_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "barbican:/var/lib/barbican/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
   barbican-keystone-listener:
     container_name: barbican_keystone_listener
     group: barbican-keystone-listener
@@ -21,6 +22,7 @@ barbican_services:
       - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
   barbican-worker:
     container_name: barbican_worker
     group: barbican-worker
@@ -30,6 +32,8 @@ barbican_services:
       - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+
 
 ####################
 # Database
@@ -74,3 +78,11 @@ barbican_observer_role: "observer"
 barbican_audit_role: "audit"
 
 openstack_barbican_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+barbican_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+barbican_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+barbican_dev_mode: "{{ kolla_dev_mode }}"
