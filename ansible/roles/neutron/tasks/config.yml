@@ -27,6 +27,12 @@
     - item.value.host_in_groups | bool
   with_dict: "{{ neutron_services }}"
 
+- name: Check if extra ml2 plugins exists
+  local_action: find path="{{ node_custom_config }}/neutron/plugins/"
+  run_once: True
+  changed_when: False
+  register: check_extra_ml2_plugins
+
 - name: Copying over config.json files for services
   become: true
   template:
@@ -418,6 +424,30 @@
     - service.host_in_groups | bool
   notify:
     - "Restart {{ service_name }} container"
+
+- name: Copying over extra ml2 plugins
+  become: true
+  vars:
+    service_name: "{{ item.0 }}"
+    services_need_ml2_conf_ini:
+      - "neutron-linuxbridge-agent"
+      - "neutron-openvswitch-agent"
+      - "neutron-server"
+  template:
+    src: "{{ item.2.path }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item.2.path | basename }}"
+    mode: "0660"
+  register: extra_ml2_plugins
+  when:
+    - item.2 is defined
+    - item.1.enabled | bool
+    - item.1.host_in_groups | bool
+    - service_name in services_need_ml2_conf_ini
+  with_nested:
+    - "{{ neutron_services | dictsort }}"
+    - "{{ check_extra_ml2_plugins.files }}"
+  notify:
+    - "Restart {{ item.0 }} container"
 
 # TODO check the environment change
 - name: Check neutron containers
