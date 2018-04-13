@@ -14,7 +14,7 @@ Requirements
 * An existing installation of Ceph
 * Existing Ceph storage pools
 * Existing credentials in Ceph for OpenStack services to connect to Ceph
-  (Glance, Cinder, Nova, Gnocchi)
+  (Glance, Cinder, Nova, Gnocchi, Manila)
 
 Enabling External Ceph
 ~~~~~~~~~~~~~~~~~~~~~~
