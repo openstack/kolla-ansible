@@ -12,6 +12,7 @@ freezer_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "freezer:/var/lib/freezer/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/freezer-api/freezer_api:/var/lib/kolla/venv/lib/python2.7/site-packages/freezer_api' if freezer_dev_mode | bool else '' }}"
     dimensions: "{{ freezer_api_dimensions }}"
   freezer-scheduler:
     container_name: freezer_scheduler
@@ -23,6 +24,7 @@ freezer_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "freezer:/var/lib/freezer/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/freezer/freezer:/var/lib/kolla/venv/lib/python2.7/site-packages/freezer' if freezer_dev_mode | bool else '' }}"
     dimensions: "{{ freezer_scheduler_dimensions }}"
 
 
@@ -55,3 +57,12 @@ freezer_logging_debug: "{{ openstack_logging_debug }}"
 freezer_keystone_user: "freezer"
 
 openstack_freezer_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+freezer_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+freezer_api_git_repository: "{{ kolla_dev_repos_git }}/freezer-api"
+freezer_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+freezer_dev_mode: "{{ kolla_dev_mode }}"
