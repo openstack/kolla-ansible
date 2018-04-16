@@ -1,0 +1,24 @@
+{% set python_path = '/usr/lib/python2.7/site-packages' if kolla_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% set wsgi_path = '/usr/bin' if monasca_install_type == 'binary' else '/monasca-log/monasca_log_api/app' %}
+
+Listen {{ api_interface_address }}:{{ monasca_log_api_port }}
+
+TraceEnable off
+
+<VirtualHost *:{{ monasca_log_api_port }}>
+
+    ErrorLog "/var/log/kolla/monasca/monasca-log-api-error.log"
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "/var/log/kolla/monasca/monasca-log-api-access.log" logformat
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIDaemonProcess monasca-log-api group=monasca processes={{ openstack_service_workers }} threads=1 user=monasca python-path={{ python_path }}
+    WSGIProcessGroup  monasca-log-api
+    WSGIScriptAlias / {{ wsgi_path }}/wsgi.py
+    WSGIPassAuthorization On
+    SetEnv no-gzip 1
+
+    <Directory "{{ wsgi_path }}">
+        Require all granted
+    </Directory>
+
+</VirtualHost>

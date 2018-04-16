@@ -1,0 +1,35 @@
+[DEFAULT]
+log_file = monasca-log-api.log
+log_dir = /var/log/kolla/monasca
+debug = {{ monasca_logging_debug }}
+
+[kafka_healthcheck]
+kafka_url = {{ monasca_kafka }}
+
+[log_publisher]
+kafka_url = {{ monasca_kafka }}
+
+[monitoring]
+# TODO(dszumski): Deploy statsd to use this
+enable = false
+
+[roles_middleware]
+path = /v2.0/log, /v3.0/logs
+default_roles = {{ monasca_default_authorized_roles|join(', ') }}
+agent_roles = {{ monasca_agent_authorized_roles|join(', ') }}
+delegate_roles = {{ monasca_delegate_authorized_roles|join(', ') }}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id =  {{ default_project_domain_id }}
+user_domain_id =  {{ default_user_domain_id }}
+project_name = service
+username = {{ monasca_keystone_user }}
+password = {{ monasca_keystone_password }}
+service_token_roles_required=True
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {{ monasca_memcached_servers }}

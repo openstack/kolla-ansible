@@ -9,6 +9,15 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+  monasca-log-api:
+    container_name: monasca_log_api
+    group: monasca-log-api
+    enabled: true
+    image: "{{ monasca_log_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
 
 ####################
 # Databases
@@ -37,6 +46,10 @@ monasca_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 monasca_api_tag: "{{ monasca_tag }}"
 monasca_api_image_full: "{{ monasca_api_image }}:{{ monasca_api_tag }}"
 
+monasca_log_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-log-api"
+monasca_log_api_tag: "{{ monasca_tag }}"
+monasca_log_api_image_full: "{{ monasca_log_api_image }}:{{ monasca_log_api_tag }}"
+
 ####################
 # OpenStack
 ####################
@@ -55,5 +68,9 @@ monasca_delegate_authorized_roles:
 monasca_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
 monasca_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
 monasca_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_api_port }}/v2.0"
+
+monasca_log_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}"
+monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}"
+monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_log_api_port }}"
 
 monasca_logging_debug: "{{ openstack_logging_debug }}"

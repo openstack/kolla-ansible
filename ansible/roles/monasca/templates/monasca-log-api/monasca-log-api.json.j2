@@ -1,0 +1,32 @@
+{% set monasca_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set wsgi_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "/usr/sbin/{{ monasca_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/log-api.conf",
+            "dest": "/etc/monasca/log-api.conf",
+            "owner": "monasca",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/log-api-paste.ini",
+            "dest": "/etc/monasca/log-api-paste.ini",
+            "owner": "monasca",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/wsgi-log-api.conf",
+            "dest": "/etc/{{ wsgi_conf_dir }}/wsgi-config.conf",
+            "owner": "monasca",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/monasca",
+            "owner": "monasca:kolla",
+            "recurse": true
+        }
+    ]
+}
