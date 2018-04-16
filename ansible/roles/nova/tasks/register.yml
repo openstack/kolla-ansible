@@ -10,10 +10,8 @@
       url: "{{ item.url }}"
       interface: "{{ item.interface }}"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_nova_auth }}' }}"
+      auth: "{{ openstack_nova_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_nova_auth: "{{ openstack_nova_auth }}"
   run_once: True
   with_items:
     - {'name': 'nova_legacy', 'service_type': 'compute_legacy', 'interface': 'admin', 'url': '{{ nova_legacy_admin_endpoint }}', 'description': 'OpenStack Compute Service (Legacy 2.0)'}
@@ -36,10 +34,8 @@
       password: "{{ nova_keystone_password }}"
       role: "admin"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_nova_auth }}' }}"
+      auth: "{{ openstack_nova_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_nova_auth: "{{ openstack_nova_auth }}"
   run_once: True
 
 - name: Creating the placement project, user, and role
@@ -51,12 +47,6 @@
       password: "{{ placement_keystone_password }}"
       role: "admin"
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ '{{ openstack_placement_auth }}' }}"
+      auth: "{{ openstack_placement_auth }}"
       endpoint_type: "{{ openstack_interface }}"
-    module_extra_vars:
-      openstack_placement_auth: "{{ openstack_placement_auth }}"
-  register: placement_user
-  until: placement_user|success
-  retries: 10
-  delay: 5
   run_once: True
