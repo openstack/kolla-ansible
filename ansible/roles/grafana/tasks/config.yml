@@ -80,6 +80,26 @@
   notify:
     - Restart grafana container
 
+- name: Configuring Prometheus as data source for Grafana
+  vars:
+    service: "{{ grafana_services['grafana'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/grafana/prometheus.yaml"
+    mode: "0660"
+  become: true
+  register: grafana_prometheus_data_source
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - enable_prometheus | bool
+  with_first_found:
+    - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/prometheus.yaml"
+    - "{{ node_custom_config }}/grafana/prometheus.yaml"
+    - "prometheus.yaml.j2"
+  notify:
+    - Restart grafana container
+
 - name: Check grafana containers
   kolla_docker:
     action: "compare_container"
