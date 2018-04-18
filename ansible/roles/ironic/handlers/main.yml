@@ -91,6 +91,28 @@
       or ironic_kernel.changed | bool
       or ironic_pxe_container.changed | bool
 
+- name: Restart ironic-ipxe container
+  vars:
+    service_name: "ironic-ipxe"
+    service: "{{ ironic_services[service_name] }}"
+    config_json: "{{ ironic_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ironic_ipxe_container: "{{ check_ironic_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ironic_ipxe_inspector_boot_script.changed | bool
+      or ironic_ipxe_apache_confs.changed | bool
+      or ironic_kernel_ipxe.changed | bool
+      or ironic_ipxe_container.changed | bool
+
 - name: Restart ironic-dnsmasq container
   vars:
     service_name: "ironic-dnsmasq"

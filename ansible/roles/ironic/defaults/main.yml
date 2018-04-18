@@ -27,6 +27,7 @@ ironic_services:
       - "kolla_logs:/var/log/kolla"
       - "ironic:/var/lib/ironic"
       - "ironic_pxe:/tftpboot/"
+      - "ironic_ipxe:/httpboot/"
   ironic-inspector:
     container_name: ironic_inspector
     group: ironic-inspector
@@ -46,6 +47,16 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-pxe/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "ironic_pxe:/tftpboot/"
+      - "kolla_logs:/var/log/kolla"
+  ironic-ipxe:
+    container_name: ironic_ipxe
+    group: ironic-ipxe
+    enabled: "{{ enable_ironic_ipxe | bool }}"
+    image: "{{ ironic_pxe_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ironic-ipxe/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ironic_ipxe:/httpboot/"
       - "kolla_logs:/var/log/kolla"
   ironic-dnsmasq:
     container_name: ironic_dnsmasq
@@ -125,6 +136,7 @@ openstack_ironic_inspector_auth: "{{ openstack_auth }}"
 
 ironic_dnsmasq_interface: "{{ api_interface }}"
 ironic_dnsmasq_dhcp_range:
-ironic_dnsmasq_boot_file: "pxelinux.0"
+ironic_dnsmasq_boot_file: "{% if enable_ironic_ipxe | bool %}undionly.kpxe{% else %}pxelinux.0{% endif %}"
 ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
+ironic_ipxe_url: http://{{ api_interface_address }}:{{ ironic_ipxe_port }}

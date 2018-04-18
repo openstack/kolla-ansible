@@ -4,6 +4,7 @@
     name:
       - ironic_api
       - ironic_inspector
+      - ironic_ipxe
   register: container_facts
 
 - name: Checking free port for Ironic API
@@ -28,6 +29,18 @@
     - container_facts['ironic_inspector'] is not defined
     - inventory_hostname in groups['ironic-inspector']
 
+- name: Checking free port for Ironic iPXE
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ironic_ipxe_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_ironic_ipxe | bool
+    - container_facts['ironic_ipxe'] is not defined
+    - inventory_hostname in groups['ironic-ipxe']
+
 - name: Checking ironic-agent files exist for Ironic Inspector
   local_action: stat path="{{ node_custom_config }}/ironic/{{ item }}"
   run_once: True
@@ -36,7 +49,8 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups['ironic-pxe']
+    - (not enable_ironic_ipxe | bool and inventory_hostname in groups['ironic-pxe']) or
+        (enable_ironic_ipxe | bool and inventory_hostname in groups['ironic-ipxe'])
     - not enable_ironic_pxe_uefi | bool
   with_items:
     - "ironic-agent.kernel"

@@ -97,6 +97,20 @@ deploy_logs_collect = always
 
 [pxe]
 pxe_append_params = nofb nomodeset vga=normal console=tty0 console=ttyS0,{{ ironic_console_serial_speed }}
+{% if enable_ironic_ipxe | bool %}
+ipxe_enabled = True
+pxe_bootfile_name = undionly.kpxe
+uefi_pxe_bootfile_name = ipxe.efi
+pxe_config_template = $pybasedir/drivers/modules/ipxe_config.template
+uefi_pxe_config_template = $pybasedir/drivers/modules/ipxe_config.template
+tftp_root = /httpboot
+tftp_master_path = /httpboot/master_images
+{% endif %}
+
+{% if enable_ironic_ipxe | bool %}
+[deploy]
+http_url = {{ ironic_ipxe_url }}
+{% endif %}
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True

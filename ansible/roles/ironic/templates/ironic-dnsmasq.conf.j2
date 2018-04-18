@@ -5,5 +5,16 @@ dhcp-option=option:tftp-server,{{ api_interface_address }}
 dhcp-option=option:server-ip-address,{{ api_interface_address }}
 bind-interfaces
 dhcp-sequential-ip
-dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
 dhcp-option=210,/tftpboot/
+{% if enable_ironic_ipxe | bool %}
+dhcp-match=ipxe,175
+dhcp-match=set:efi,option:client-arch,7
+dhcp-match=set:efi,option:client-arch,9
+# Client is already running iPXE; move to next stage of chainloading
+dhcp-option=tag:ipxe,option:bootfile-name,{{ ironic_ipxe_url }}/inspector.ipxe
+# Client is PXE booting over EFI without iPXE ROM,
+# send EFI version of iPXE chainloader
+dhcp-option=tag:efi,tag:!ipxe,option:bootfile-name,ipxe.efi
+{% endif %}
+dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
+
