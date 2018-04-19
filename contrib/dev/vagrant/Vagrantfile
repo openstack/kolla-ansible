@@ -15,10 +15,11 @@ end
 
 vagrant_dir = File.expand_path(File.dirname(__FILE__))
 
-# get kolla and kolla-ansibe repos path relative to current directory
+# get kolla, kolla-ansibe and kolla-cli repos path relative to current directory
 # they will be used by the bootstrap script to configure the nodes
 kolla_ansible_repo_path = File.expand_path(File.join(vagrant_dir, '..', '..', '..'))
 kolla_repo_path = File.expand_path(File.join(vagrant_dir, '..', '..', '..', '..', 'kolla'))
+kolla_cli_repo_path = File.expand_path(File.join(vagrant_dir, '..', '..', '..', '..', 'kolla-cli'))
 
 # Vagrantfile.custom contains user customization for the Vagrantfile
 # You shouldn't have to edit the Vagrantfile, ever.
@@ -181,6 +182,7 @@ Vagrant.configure(2) do |config|
   vagrant_shared_folder = "#{user_home}/sync"
   kolla_path = "#{user_home}/kolla"
   kolla_ansible_path = "#{user_home}/kolla-ansible"
+  kolla_cli_path = "#{user_home}/kolla-cli"
 
   # Next to the hostonly NAT-network there is a host-only network with all
   # nodes attached. Plus, each node receives a 3rd adapter connected to the
@@ -230,9 +232,10 @@ Vagrant.configure(2) do |config|
   # The operator controls the deployment
   config.vm.define "operator", primary: true do |admin|
     admin.vm.hostname = "operator.local"
-    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{kolla_path} #{kolla_ansible_path}"
+    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path}"
     admin.vm.synced_folder kolla_ansible_repo_path, kolla_ansible_path, create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder kolla_repo_path, kolla_path, create:"True", type: get_default(:sync_method)
+    admin.vm.synced_folder kolla_cli_repo_path, kolla_cli_path, create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder File.join(vagrant_dir, 'storage', 'operator'), "/data/host", create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder File.join(vagrant_dir, 'storage', 'shared'), "/data/shared", create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder ".", vagrant_shared_folder, disabled: true
@@ -253,7 +256,7 @@ Vagrant.configure(2) do |config|
         hostname = "#{node_type}0#{i}"
         config.vm.define hostname do |node|
           node.vm.hostname = "#{hostname}.local"
-          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{kolla_path} #{kolla_ansible_path}"
+          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path}"
           node.vm.synced_folder File.join(vagrant_dir, 'storage', node_type), "/data/host", create:"True", type: get_default(:sync_method)
           node.vm.synced_folder File.join(vagrant_dir, 'storage', 'shared'), "/data/shared", create:"True", type: get_default(:sync_method)
           node.vm.synced_folder ".", vagrant_shared_folder, disabled: true

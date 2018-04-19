@@ -167,12 +167,13 @@ Find a location in the system's home directory and checkout Kolla repos:
 
 .. code-block:: console
 
+   git clone https://git.openstack.org/openstack/kolla-cli
    git clone https://git.openstack.org/openstack/kolla-ansible
    git clone https://git.openstack.org/openstack/kolla
 
 .. end
 
-Both repos must share the same parent directory so the bootstrap code can
+All repos must share the same parent directory so the bootstrap code can
 locate them.
 
 Developers can now tweak the Vagrantfile or bring up the default **all-in-one**
