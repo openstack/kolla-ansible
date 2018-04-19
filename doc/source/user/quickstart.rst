@@ -364,7 +364,7 @@ There are a few options that are required to deploy Kolla-Ansible:
 
   It's important to use same version of images as kolla-ansible. That
   means if pip was used to install kolla-ansible, that means it's latest stable
-  version so ``openstack release`` should be set to pike. If git was used with
+  version so ``openstack release`` should be set to queens. If git was used with
   master branch, DockerHub also provides daily builds of master branch (which is
   tagged as ``master``):
 
