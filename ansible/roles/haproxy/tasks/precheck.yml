@@ -37,6 +37,20 @@
   check_mode: no
   run_once: true
 
+- name: Checking if haproxy certificate exists
+  run_once: true
+  local_action: stat path={{ kolla_external_fqdn_cert }}
+  register: haproxy_cert_file
+  changed_when: false
+  when: kolla_enable_tls_external | bool
+
+- name: Fail if haproxy certificate is absent
+  run_once: true
+  local_action: fail msg="haproxy certificate file is not found. Ensure it exists as {{ kolla_external_fqdn_cert }}"
+  when:
+    - kolla_enable_tls_external | bool
+    - haproxy_cert_file.stat.exists == false
+
 - name: Checking the kolla_external_vip_interface is present
   fail: "msg='Please check the kolla_external_vip_interface property - interface {{ kolla_external_vip_interface }} not found'"
   when:
