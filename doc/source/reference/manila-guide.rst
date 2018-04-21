@@ -9,6 +9,7 @@ Overview
 Currently, Kolla can deploy following manila services:
 
 * manila-api
+* manila-data
 * manila-scheduler
 * manila-share
 
