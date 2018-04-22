@@ -179,7 +179,8 @@ function configure_operator {
     fi
 
     tox -c ${KOLLA_PATH}/tox.ini -e genconfig
-    cp -r ${KOLLA_ANSIBLE_PATH}/etc/kolla/ /etc/kolla
+    mkdir -p /etc/kolla
+    cp -r ${KOLLA_ANSIBLE_PATH}/etc/kolla/* /etc/kolla
     cp -r ${KOLLA_PATH}/etc/kolla/* /etc/kolla
     ${KOLLA_ANSIBLE_PATH}/tools/generate_passwords.py
     mkdir -p /usr/share/kolla
