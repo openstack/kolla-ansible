@@ -206,7 +206,7 @@ template for Keystone is:
     log_dir = {{ keystone_log_dir }}
 
     [database]
-    connection = mysql://{{ keystone_db_user }}:{{ database_keystone_password }}@{{ keystone_service_ip }}/keystone
+    connection = mysql+pymysql://{{ keystone_db_user }}:{{ database_keystone_password }}@{{ keystone_database_address }}/keystone
 
     [revoke]
     driver = keystone.contrib.revoke.backends.sql.Revoke
