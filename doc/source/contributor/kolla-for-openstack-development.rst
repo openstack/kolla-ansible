@@ -87,4 +87,4 @@ Once you run the code(restart the container), pdb can be accessed using
 .. end
 
 Learn more information about `remote_pdb
-<https://pypi.python.org/pypi/remote-pdb>`_.
+<https://pypi.org/project/remote-pdb/>`_.
