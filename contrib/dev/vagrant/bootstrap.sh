@@ -10,6 +10,7 @@ VM=$1
 MODE=$2
 KOLLA_PATH=$3
 KOLLA_ANSIBLE_PATH=$4
+KOLLA_CLI_PATH=$5
 
 export http_proxy=
 export https_proxy=
@@ -175,6 +176,7 @@ function configure_operator {
 
     pip install ${KOLLA_ANSIBLE_PATH}
     pip install ${KOLLA_PATH}
+    pip install ${KOLLA_CLI_PATH}
 
     # Set selinux to permissive
     if [[ "$(getenforce)" == "Enforcing" ]]; then
