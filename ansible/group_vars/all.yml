@@ -542,6 +542,20 @@ enable_elasticsearch: "{{ 'yes' if enable_central_logging | bool or enable_freez
 enable_kibana: "{{ 'yes' if enable_central_logging | bool else 'no' }}"
 
 ####################
+# Redis options
+####################
+redis_address: "{{ kolla_internal_fqdn }}"
+
+####################
+# Osprofiler options
+####################
+# valid values: ["elasticsearch", "redis"]
+osprofiler_backend: "elasticsearch"
+elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}"
+redis_connection_string: "redis://:{{ redis_master_password }}@{{ redis_address }}:{{ redis_port }}"
+osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else elasticsearch_connection_string }}"
+
+####################
 # RabbitMQ options
 ####################
 rabbitmq_hipe_compile: "no"
