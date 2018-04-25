@@ -552,6 +552,18 @@ class DockerWorker(object):
             'volumes_from': self.params.get('volumes_from')
         }
 
+        if self.params.get('dimensions'):
+            supported = {'cpu_period', 'cpu_quota', 'cpu_shares',
+                         'cpuset_cpus', 'cpuset_mems', 'mem_limit',
+                         'mem_reservation', 'memswap_limit',
+                         'kernel_memory', 'blkio_weight'}
+            unsupported = set(self.params.get('dimensions')) - supported
+            if unsupported:
+                self.module.exit_json(failed=True,
+                                      msg=repr("Unsupported dimensions"),
+                                      unsupported_dimensions=unsupported)
+            options.update(self.params.get('dimensions'))
+
         if self.params.get('restart_policy') in ['on-failure',
                                                  'always',
                                                  'unless-stopped']:
@@ -772,7 +784,8 @@ def generate_module():
         tls_key=dict(required=False, type='str'),
         tls_cacert=dict(required=False, type='str'),
         volumes=dict(required=False, type='list'),
-        volumes_from=dict(required=False, type='list')
+        volumes_from=dict(required=False, type='list'),
+        dimensions=dict(required=False, type='dict', default=dict())
     )
     required_if = [
         ['action', 'pull_image', ['image']],
