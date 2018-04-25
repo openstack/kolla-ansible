@@ -1,0 +1,41 @@
+global:
+  scrape_interval: 60s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'kolla'
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+{% for host in groups['prometheus'] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ prometheus_port }}'
+{% endfor %}
+
+{% if enable_prometheus_node_exporter | bool %}
+  - job_name: node
+    static_configs:
+      - targets:
+{% for host in groups['prometheus-node-exporter'] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
+{% endfor %}
+{% endif %}
+
+{% if enable_prometheus_mysqld_exporter | bool %}
+  - job_name: mysqld
+    static_configs:
+      - targets:
+{% for host in groups['prometheus-mysqld-exporter'] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
+{% endfor %}
+{% endif %}
+
+{% if enable_prometheus_haproxy_exporter | bool %}
+  - job_name: haproxy
+    static_configs:
+      - targets:
+{% for host in groups['prometheus-haproxy-exporter'] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
+{% endfor %}
+{% endif %}

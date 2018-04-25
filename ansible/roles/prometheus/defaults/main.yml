@@ -1,0 +1,72 @@
+---
+project_name: "prometheus"
+
+prometheus_services:
+  prometheus-server:
+    container_name: prometheus_server
+    group: prometheus
+    enabled: true
+    image: "{{ prometheus_server_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "prometheus:/var/lib/prometheus"
+      - "kolla_logs:/var/log/kolla/"
+  prometheus-node-exporter:
+    container_name: prometheus_node_exporter
+    group: prometheus-node-exporter
+    enabled: "{{ enable_prometheus_node_exporter | bool }}"
+    image: "{{ prometheus_node_exporter_image_full }}"
+    pid_mode: "host"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+  prometheus-mysqld-exporter:
+    container_name: prometheus_mysqld_exporter
+    group: prometheus-mysqld-exporter
+    enabled: "{{ enable_prometheus_mysqld_exporter | bool }}"
+    image: "{{ prometheus_mysqld_exporter_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-mysqld-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+  prometheus-haproxy-exporter:
+    container_name: prometheus_haproxy_exporter
+    group: prometheus-haproxy-exporter
+    enabled: "{{ enable_prometheus_haproxy_exporter | bool }}"
+    image: "{{ prometheus_haproxy_exporter_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-haproxy-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "haproxy_socket:/var/lib/kolla/haproxy"
+
+####################
+# Database
+####################
+prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}prometheus{% endif %}"
+
+####################
+# Docker
+####################
+prometheus_install_type: "{{ kolla_install_type }}"
+prometheus_tag: "{{ openstack_release }}"
+
+prometheus_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-server"
+prometheus_server_tag: "{{ prometheus_tag }}"
+prometheus_server_image_full: "{{ prometheus_server_image }}:{{ prometheus_server_tag }}"
+
+prometheus_haproxy_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-haproxy-exporter"
+prometheus_haproxy_exporter_tag: "{{ prometheus_tag }}"
+prometheus_haproxy_exporter_image_full: "{{ prometheus_haproxy_exporter_image }}:{{ prometheus_haproxy_exporter_tag }}"
+
+prometheus_mysqld_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-mysqld-exporter"
+prometheus_mysqld_exporter_tag: "{{ prometheus_tag }}"
+prometheus_mysqld_exporter_image_full: "{{ prometheus_mysqld_exporter_image }}:{{ prometheus_mysqld_exporter_tag }}"
+
+prometheus_node_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-node-exporter"
+prometheus_node_exporter_tag: "{{ prometheus_tag }}"
+prometheus_node_exporter_image_full: "{{ prometheus_node_exporter_image }}:{{ prometheus_node_exporter_tag }}"

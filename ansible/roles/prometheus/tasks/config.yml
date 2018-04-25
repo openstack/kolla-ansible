@@ -1,0 +1,74 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ prometheus_services }}"
+
+- name: Copying over config.json files
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+  register: prometheus_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ prometheus_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over prometheus config file
+  vars:
+    service: "{{ prometheus_services['prometheus-server']}}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
+  register: prometheus_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus.yml"
+    - "{{ node_custom_config }}/prometheus/prometheus.yml"
+    - "{{ role_path }}/templates/prometheus.yml.j2"
+  notify:
+    - Restart prometheus-server container
+
+- name: Copying over my.cnf for mysqld_exporter
+  vars:
+    service: "{{ prometheus_services['prometheus-mysqld-exporter']}}"
+  merge_configs:
+    sources:
+      - "{{ node_custom_config }}/prometheus-mysqld-exporter/{{ inventory_hostname }}/my.cnf"
+      - "{{ node_custom_config }}/prometheus-mysqld-exporter/my.cnf"
+      - "{{ role_path }}/templates/my.cnf.j2"
+    dest: "{{ node_config_directory }}/prometheus-mysqld-exporter/my.cnf"
+  register: prometheus_conf_mycnf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart prometheus-mysqld-exporter container
+
+- name: Check prometheus containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+  register: check_prometheus_containers
+  when:
+    - action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ prometheus_services }}"
+  notify:
+    - Restart {{ item.key }} container

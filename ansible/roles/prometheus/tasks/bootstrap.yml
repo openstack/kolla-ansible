@@ -1,0 +1,19 @@
+---
+- name: Creating prometheus database user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ prometheus_mysql_exporter_database_user }}"
+      password: "{{ prometheus_mysql_exporter_database_password }}"
+      host: "%"
+      priv: "*.*:PROCESS,REPLICATION CLIENT,SELECT"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['prometheus-mysqld-exporter'][0] }}"
+  when:
+    - enable_prometheus_mysqld_exporter | bool
+    - not use_preconfigured_databases | bool
