@@ -63,6 +63,19 @@
   notify:
     - Restart cinder-api container
 
+- name: Copying over storage configuration files
+  vars:
+    service: "{{ cinder_services['cinder-volume'] }}"
+  template:
+    src: "{{ node_custom_config }}/cinder/{{ item }}"
+    dest: "{{ node_config_directory }}/cinder-volume/{{ item }}"
+  register: cinder_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - storage_conf_files is defined
+  with_items: "{{ storage_conf_files }}"
+
 - name: Copying over cinder.conf
   vars:
     service_name: "{{ item.key }}"
