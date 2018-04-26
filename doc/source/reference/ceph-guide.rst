@@ -126,6 +126,18 @@ RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
 .. end
 
+.. note::
+
+    Regarding number of placement groups (PGs)
+
+    Kolla sets very conservative values for the number of PGs per pool
+    (`ceph_pool_pg_num` and `ceph_pool_pgp_num`). This is in order to ensure
+    the majority of users will be able to deploy Ceph out of the box. It is
+    *highly* recommended to consult the official Ceph documentation regarding
+    these values before running Ceph in any kind of production scenario.
+
+.. end
+
 RGW requires a healthy cluster in order to be successfully deployed. On initial
 start up, RGW will create several pools. The first pool should be in an
 operational state to proceed with the second one, and so on. So, in the case of
