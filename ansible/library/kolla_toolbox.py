@@ -44,6 +44,12 @@ options:
     required: False
     type: str
     default: auto
+  timeout:
+    description:
+      - The default timeout for docker-py client when contacting Docker API
+    required: False
+    type: int
+    default: 180
 author: Jeffrey Zhang
 '''
 
@@ -117,11 +123,13 @@ def main():
         module_name=dict(type='str'),
         module_args=dict(type='str'),
         module_extra_vars=dict(type='json'),
-        api_version=dict(required=False, type='str', default='auto')
+        api_version=dict(required=False, type='str', default='auto'),
+        timeout=dict(required=False, type='int', default=180),
     )
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
     client = get_docker_client()(
-        version=module.params.get('api_version'))
+        version=module.params.get('api_version'),
+        timeout=module.params.get('timeout'))
     command_line = gen_commandline(module.params)
     kolla_toolbox = client.containers(filters=dict(name='kolla_toolbox',
                                                    status='running'))
