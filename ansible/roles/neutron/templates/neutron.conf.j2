@@ -68,6 +68,8 @@ nsx_extension_drivers = vmware_dvs_dns
 {% endif %}
 {% endif %}
 
+ipam_driver = {{ neutron_ipam_driver }}
+
 [nova]
 auth_url = {{ keystone_admin_url }}
 auth_type = password
@@ -173,3 +175,23 @@ os_interface = internal
 
 [privsep]
 helper_command=sudo neutron-rootwrap /etc/neutron/rootwrap.conf privsep-helper
+
+{% if enable_neutron_infoblox_ipam_agent | bool %}
+[infoblox]
+keystone_admin_project_domain_id = {{ default_project_domain_id }}
+keystone_admin_user_domain_id = {{ default_user_domain_id }}
+keystone_admin_project_name = service
+keystone_admin_username = {{ neutron_keystone_user }}
+keystone_admin_password = {{ neutron_keystone_password }}
+keystone_auth_uri = {{ keystone_internal_url }}
+keystone_auth_version = v3
+cloud_data_center_id = {{ infoblox_cloud_data_center_id }}
+
+[infoblox-dc:{{ infoblox_cloud_data_center_id }}]
+grid_master_host = {{ infoblox_grid_master_host }}
+grid_master_name = {{ infoblox_grid_master_name }}
+admin_user_name = {{ infoblox_admin_user_name }}
+admin_password = {{ infoblox_admin_password }}
+wapi_version = {{ infoblox_wapi_version }}
+wapi_max_results = {{ infoblox_wapi_max_results }}
+{% endif %}

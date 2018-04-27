@@ -173,6 +173,18 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+  neutron-infoblox-ipam-agent:
+    container_name: "neutron_infoblox_ipam_agent"
+    image: "{{ neutron_infoblox_ipam_agent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_infoblox_ipam_agent | bool }}"
+    group: "neutron-infoblox-ipam-agent"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-infoblox-ipam-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-infoblox-ipam-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
 
 
 ####################
@@ -229,6 +241,9 @@ neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' 
 neutron_bgp_dragent_tag: "{{ neutron_tag }}"
 neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_dragent_tag }}"
 
+neutron_infoblox_ipam_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-infoblox-ipam-agent"
+neutron_infoblox_ipam_agent_tag: "{{ neutron_tag }}"
+neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}:{{ neutron_infoblox_ipam_agent_tag }}"
 
 ####################
 # OpenStack
@@ -296,7 +311,7 @@ neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', tr
 ####################
 neutron_notification_topics:
   - name: notifications
-    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool }}"
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool or enable_neutron_infoblox_ipam_agent | bool }}"
   - name: notifications_designate
     enabled: "{{ enable_designate | bool }}"
 
@@ -348,6 +363,16 @@ vmware_dvs_host_username: "admin"
 vmware_dvs_insecure: "True"
 vmware_dvs_dvs_name: "VDS-1"
 vmware_dvs_dhcp_override_mac: ""
+
+####################
+# Infoblox IPAM
+####################
+infoblox_cloud_data_center_id: "1"
+infoblox_grid_master_host: "192.168.1.1"
+infoblox_grid_master_name: "infoblox.localdomain"
+infoblox_admin_user_name: "admin"
+infoblox_wapi_version: "2.3"
+infoblox_wapi_max_results: "-50000"
 
 ######################
 # Notification Drivers
