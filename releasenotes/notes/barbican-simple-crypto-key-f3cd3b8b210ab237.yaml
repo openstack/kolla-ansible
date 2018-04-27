@@ -1,0 +1,21 @@
+---
+upgrade:
+  - |
+    Fixes an issue with the barbican service when using the ``simple_crypto``
+    plugin whereby an invalid value is generated and used as the plugin's
+    encryption key.
+
+    The encryption key is configured via the ``[simple_crypto_plugin]: kek``
+    configuration option in ``barbican.conf``.  This option was previously
+    configured using the kolla-ansible variable ``barbican_crypto_password``,
+    but is now configured using ``barbican_crypto_key`` which uses the correct
+    format.
+
+    Operators that have set ``barbican_crypto_password`` to a valid value
+    to work around this issue should ensure that ``barbican_crypto_key``
+    is configured in ``passwords.yml`` with the same value that was used for
+    ``barbican_crypto_password``. This will ensure that existing barbican
+    secrets can be decrypted.
+
+    The variable ``barbican_crypto_password`` may safely be removed from
+    ``passwords.yml``.
