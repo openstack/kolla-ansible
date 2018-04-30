@@ -44,6 +44,10 @@ fi
     # Use the kolla-ansible tag rather than the kolla tag, since this is what
     # kolla-ansible will use by default.
     TAG=$(python -c "import pbr.version; print(pbr.version.VersionInfo('kolla-ansible'))")
+    if [[ $ACTION == "zun" ]]; then
+        GATE_IMAGES+=",zun,kuryr"
+    fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
@@ -91,6 +95,9 @@ function setup_ansible {
 
     # TODO(SamYaple): Move to virtualenv
     sudo -H pip install -U "ansible>=2,<2.4" "docker>=2.0.0" "python-openstackclient" "ara<0.16" "cmd2<0.9.0"
+    if [[ $ACTION == "zun" ]]; then
+        sudo -H pip install -U "python-zunclient"
+    fi
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -138,6 +145,12 @@ function sanity_check {
     if echo $ACTION | grep -q "ceph"; then
         openstack volume create --size 2 test_volume
         openstack server add volume kolla_boot_test test_volume --device /dev/vdb
+    fi
+    if echo $ACTION | grep -q "zun"; then
+        openstack --debug appcontainer service list
+        openstack --debug appcontainer host list
+        # TODO(hongbin): Run a Zun container and assert the container becomes
+        # Running
     fi
 }
 
