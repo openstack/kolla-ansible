@@ -2,13 +2,13 @@
 - name: Get container facts
   kolla_container_facts:
     name:
-      - prometheus
+      - prometheus_server
       - prometheus_node_exporter
       - prometheus_haproxy_exporter
       - prometheus_mysqld_exporter
   register: container_facts
 
-- name: Checking free port for Prometheus
+- name: Checking free port for Prometheus server
   wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
     port: "{{ prometheus_port }}"
@@ -16,7 +16,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['prometheus'] is not defined
+    - container_facts['prometheus_server'] is not defined
     - inventory_hostname in groups['prometheus']
 
 - name: Checking free port for Prometheus node_exporter
