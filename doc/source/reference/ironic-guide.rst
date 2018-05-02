@@ -93,7 +93,6 @@ Create a baremetal flavor:
 Create the baremetal node and associate a port. (Ensure to substitute correct
 values for the kernel, ramdisk, and MAC address for your baremetal node)
 
-
 .. code-block:: console
 
   openstack baremetal node create --driver ipmi --name baremetal-node \
@@ -107,6 +106,25 @@ values for the kernel, ramdisk, and MAC address for your baremetal node)
     --driver-info deploy_ramdisk=9b1e1ced-d84d-440a-b681-39c216f24121
 
   openstack baremetal port create 52:54:00:ff:15:55 --node 57aa574a-5fea-4468-afcf-e2551d464412
+
+.. end
+
+Make the baremetal node available to nova:
+
+.. code-block:: console
+
+  openstack baremetal node manage 57aa574a-5fea-4468-afcf-e2551d464412
+  openstack baremetal node provide 57aa574a-5fea-4468-afcf-e2551d464412
+
+.. end
+
+It may take some time for the node to become available for scheduling in nova.
+Use the following commands to wait for the resources to become available:
+
+.. code-block:: console
+
+  openstack hypervisor stats show
+  openstack hypervisor show 57aa574a-5fea-4468-afcf-e2551d464412
 
 .. end
 
