@@ -43,7 +43,7 @@
     shell: "docker cp {{ mariadb_service.container_name }}:/var/log/kolla/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
   - name: Get MariaDB wsrep recovery seqno
-    shell: "tail -n 200 /tmp/mariadb_tmp.log | grep  Recovered | tail -1 | awk '{print $7}' | awk -F'\n' '{print $1}' | awk -F':' '{print $2}'"
+    shell: tail -n 200 /tmp/mariadb_tmp.log | awk -F" " '$0~/Recovered position/{print $NF;exit;}' | awk -F":" '{print $1}'
     register: wsrep_recovery_seqno
 
   - name: Removing MariaDB log file from /tmp
