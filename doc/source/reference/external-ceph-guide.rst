@@ -39,7 +39,7 @@ service in ``/etc/kolla/globals.yml``:
    cinder_backend_ceph: "yes"
    nova_backend_ceph: "yes"
    gnocchi_backend_storage: "ceph"
-   enable_manila_backend_ceph_native: "yes"
+   enable_manila_backend_cephfs_native: "yes"
 
 .. end
 
@@ -281,12 +281,12 @@ Manila
 
 Configuring Manila for Ceph includes four steps:
 
-#. Configure CephFS backend, setting ``enable_manila_backend_ceph_native``
+#. Configure CephFS backend, setting ``enable_manila_backend_cephfs_native``
 #. Create Ceph configuration file in ``/etc/ceph/ceph.conf``
 #. Create Ceph keyring file in ``/etc/ceph/ceph.client.<username>.keyring``
 #. Setup Manila in the usual way
 
-Step 1 is done by using setting ``enable_manila_backend_ceph_native=true``
+Step 1 is done by using setting ``enable_manila_backend_cephfs_native=true``
 
 Now put ceph.conf and the keyring file (name depends on the username created
 in Ceph) into the same directory, for example:
