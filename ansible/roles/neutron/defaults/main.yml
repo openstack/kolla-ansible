@@ -24,13 +24,11 @@ neutron_services:
       or inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
-      or inventory_hostname in groups['neutron-vpnaas-agent']
       and not enable_nova_fake | bool
       ) or
       ( inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
-      or inventory_hostname in groups['neutron-vpnaas-agent']
       and enable_nova_fake | bool
       )
       }}
@@ -71,7 +69,6 @@ neutron_services:
       or inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
-      or inventory_hostname in groups['neutron-vpnaas-agent']
       }}
     volumes:
       - "{{ node_config_directory }}/neutron-linuxbridge-agent/:{{ container_config_directory }}/:ro"
@@ -96,7 +93,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ not enable_neutron_vpnaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
+    enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
@@ -147,19 +144,6 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run/:/run/:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
-      - "kolla_logs:/var/log/kolla/"
-  neutron-vpnaas-agent:
-    container_name: "neutron_vpnaas_agent"
-    image: "{{ neutron_vpnaas_agent_image_full }}"
-    privileged: True
-    enabled: "{{ enable_neutron_vpnaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
-    group: "neutron-vpnaas-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-vpnaas-agent'] }}"
-    volumes:
-      - "{{ node_config_directory }}/neutron-vpnaas-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
-      - "/lib/modules:/lib/modules:ro"
       - "kolla_logs:/var/log/kolla/"
   neutron-bgp-dragent:
     container_name: "neutron_bgp_dragent"
@@ -232,10 +216,6 @@ neutron_openvswitch_agent_image_full: "{{ neutron_openvswitch_agent_image }}:{{ 
 neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-server{{ '-opendaylight' if enable_opendaylight | bool else '' }}"
 neutron_server_tag: "{{ neutron_tag }}"
 neutron_server_image_full: "{{ neutron_server_image }}:{{ neutron_server_tag }}"
-
-neutron_vpnaas_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-vpnaas-agent"
-neutron_vpnaas_agent_tag: "{{ neutron_tag }}"
-neutron_vpnaas_agent_image_full: "{{ neutron_vpnaas_agent_image }}:{{ neutron_vpnaas_agent_tag }}"
 
 neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-bgp-dragent"
 neutron_bgp_dragent_tag: "{{ neutron_tag }}"
@@ -333,6 +313,8 @@ l3_agent_extensions:
     enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v1' }}"
   - name: "fwaas_v2"
     enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v2' }}"
+  - name: "vpnaas"
+    enabled: "{{ enable_neutron_vpnaas | bool }}"
 
 neutron_l3_agent_extensions: "{{ l3_agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
 

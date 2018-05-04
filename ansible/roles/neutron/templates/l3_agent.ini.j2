@@ -1,4 +1,5 @@
 #jinja2: trim_blocks: False
+{% set vpn_device_driver = 'neutron_vpnaas.services.vpn.device_drivers.strongswan_ipsec.StrongSwanDriver' if kolla_base_distro in ['ubuntu', 'debian'] else 'neutron_vpnaas.services.vpn.device_drivers.libreswan_ipsec.LibreSwanDriver'%}
 [DEFAULT]
 {% if enable_neutron_dvr | bool %}
 {% if inventory_hostname in groups['network'] %}
@@ -19,6 +20,14 @@ ha_vrrp_health_check_interval = 5
 [agent]
 {% if neutron_l3_agent_extensions %}
 extensions = "{{ neutron_l3_agent_extensions|map(attribute='name')|join(',') }}"
+{% endif %}
+
+{% if enable_neutron_vpnaas | bool %}
+[ipsec]
+enable_detailed_logging = {{ neutron_logging_debug }}
+
+[vpnagent]
+vpn_device_driver = {{ vpn_device_driver }}
 {% endif %}
 
 [ovs]
