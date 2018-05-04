@@ -1330,4 +1330,11 @@ listen opendaylight_api_backup
   server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_restconf_port_backup }} check fall 5 inter 2000 rise 2
 {% endfor %}
 
+listen opendaylight_websocket
+  bind {{ kolla_internal_vip_address }}:{{ opendaylight_websocket_port }}
+  balance source
+{% for host in groups['opendaylight'] %}
+  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_websocket_port }} check fall 5 inter 2000 rise 2
+{% endfor %}
+
 {% endif %}

@@ -192,6 +192,18 @@
   notify:
     - Restart opendaylight container
 
+- name: Copying over 10-rest-connector.xml
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/opendaylight/10-rest-connector.xml"
+  with_first_found:
+    - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/10-rest-connector.xml"
+    - "{{ node_custom_config }}/opendaylight/10-rest-connector.xml"
+    - "10-rest-connector.xml.j2"
+  register: opendaylight_config_10_rest_connector
+  notify:
+    - Restart opendaylight container
+
 - name: Check opendaylight containers
   kolla_docker:
     action: "compare_container"
