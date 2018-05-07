@@ -80,7 +80,7 @@ neutron_services:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent != 'vmware_nsxv' }}"
+    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] }}"
     group: "neutron-dhcp-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes:
@@ -93,7 +93,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
+    enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
@@ -110,7 +110,7 @@ neutron_services:
     container_name: "neutron_lbaas_agent"
     image: "{{ neutron_lbaas_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_lbaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
+    enabled: "{{ enable_neutron_lbaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] }}"
     group: "neutron-lbaas-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-lbaas-agent'] }}"
     volumes:
@@ -122,7 +122,7 @@ neutron_services:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent != 'vmware_nsxv' }}"
+    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes:
       - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
@@ -133,7 +133,7 @@ neutron_services:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent != 'vmware_nsxv' }}"
+    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-metadata-agent']
@@ -149,7 +149,7 @@ neutron_services:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_bgp_dragent | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
+    enabled: "{{ enable_neutron_bgp_dragent | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] }}"
     group: "neutron-bgp-dragent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-bgp-dragent'] }}"
     volumes:
@@ -335,6 +335,18 @@ vmware_nsxv_backup_edge_pool: "service:compact:1:2"
 vmware_nsxv_spoofguard_enabled: "false"
 vmware_nsxv_metadata_initializer: "false"
 vmware_nsxv_edge_ha: "false"
+
+####################
+# VMware NSXV3
+####################
+nsxv3_metadata_proxy: "metadata proxy uuid"
+nsxv3_dhcp_profile: "dhcp service uuid"
+nsxv3_native_dhcp_metadata: "true"
+nsxv3_api_user: "user"
+nsxv3_api_managers: "127.0.0.1"
+nsxv3_default_tier0_router: "tier0 router uuid"
+nsxv3_default_vlan_tz: "vlan TZ uuid"
+nsxv3_default_overlay_tz: "overlay TZ uuid"
 
 ####################
 # VMware DVS
