@@ -137,6 +137,7 @@
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_filters
+  when: enable_fluentd | bool
 
 - name: Copying over custom fluentd filter config files
   template:
@@ -146,6 +147,7 @@
   become: true
   register: fluentd_filter_custom
   with_items: "{{ find_custom_fluentd_filters.files }}"
+  when: enable_fluentd | bool
   notify:
     - Restart fluentd container
 
