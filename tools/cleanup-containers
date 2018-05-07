@@ -35,6 +35,11 @@ echo "Stopping containers..."
 echo "Removing containers..."
 (docker rm -v -f ${containers_to_kill} 2>&1) > /dev/null
 
+echo "Disconnecting containers from docker host network"
+for container in ${containers_to_kill}; do
+(docker network disconnect -f host $container 2>&1) > /dev/null
+done
+
 echo "Removing volumes..."
 (docker volume rm ${volumes_to_remove} 2>&1) > /dev/null
 
