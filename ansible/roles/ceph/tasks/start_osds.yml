@@ -2,7 +2,7 @@
 - name: Looking up OSDs for Ceph
   command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
-    -a "partition_name='KOLLA_CEPH_DATA' match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
+    -a "partition_name={{ partition_name_osd_data }} match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
   register: osd_lookup
   changed_when: osd_lookup.stdout.find('localhost | SUCCESS => ') != -1 and (osd_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed
   failed_when: osd_lookup.stdout.split()[2] != 'SUCCESS'
@@ -40,6 +40,8 @@
       OSD_ID: "{{ item.0.stdout }}"
       JOURNAL_PARTITION: "{{ item.1.journal }}"
       TCMALLOC_MAX_TOTAL_THREAD_CACHE_BYTES: "{{ ceph_tcmalloc_tc_bytes }}"
+      OSD_STORETYPE: "{{ ceph_osd_store_type }}"
+      OSD_BS_FSUUID: "{{ item.1['fs_uuid'] }}"
     image: "{{ ceph_osd_image_full }}"
     name: "ceph_osd_{{ item.0.stdout }}"
     pid_mode: "host"

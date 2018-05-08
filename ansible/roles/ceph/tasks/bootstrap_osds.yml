@@ -2,7 +2,7 @@
 - name: Looking up disks to bootstrap for Ceph OSDs
   command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
-    -a "partition_name='KOLLA_CEPH_OSD_BOOTSTRAP' match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
+    -a "partition_name={{ partition_name_osd_bootstrap }} match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
   register: osd_lookup
   changed_when: osd_lookup.stdout.find('localhost | SUCCESS => ') != -1 and (osd_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed
   failed_when: osd_lookup.stdout.split()[2] != 'SUCCESS'
@@ -14,7 +14,7 @@
 - name: Looking up disks to bootstrap for Ceph Cache OSDs
   command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
-    -a "partition_name='KOLLA_CEPH_OSD_CACHE_BOOTSTRAP' match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
+    -a "partition_name={{ partition_name_cache_bootstrap }} match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
   register: osd_cache_lookup
   changed_when: osd_cache_lookup.stdout.find('localhost | SUCCESS => ') != -1 and (osd_cache_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed
   failed_when: osd_cache_lookup.stdout.split()[2] != 'SUCCESS'
@@ -58,6 +58,19 @@
       OSD_FILESYSTEM: "{{ ceph_osd_filesystem }}"
       OSD_INITIAL_WEIGHT: "{{ osd_initial_weight }}"
       HOSTNAME: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+      OSD_STORETYPE: "{{ ceph_osd_store_type }}"
+      OSD_BS_DEV: "{{ item.1.device | default('') }}"
+      OSD_BS_LABEL: "{{ item.1.partition_label | default('') }}"
+      OSD_BS_PARTNUM: "{{ item.1.partition_num | default('') }}"
+      OSD_BS_BLK_DEV: "{{ item.1.bs_blk_device | default('') }}"
+      OSD_BS_BLK_LABEL: "{{ item.1.bs_blk_label | default('') }}"
+      OSD_BS_BLK_PARTNUM: "{{ item.1.bs_blk_partition_num | default('') }}"
+      OSD_BS_WAL_DEV: "{{ item.1.bs_wal_device | default('') }}"
+      OSD_BS_WAL_LABEL: "{{ item.1.bs_wal_label | default('') }}"
+      OSD_BS_WAL_PARTNUM: "{{ item.1.bs_wal_partition_num | default('') }}"
+      OSD_BS_DB_DEV: "{{ item.1.bs_db_device | default('') }}"
+      OSD_BS_DB_LABEL: "{{ item.1.bs_db_label | default('') }}"
+      OSD_BS_DB_PARTNUM: "{{ item.1.bs_db_partition_num | default('') }}"
     image: "{{ ceph_osd_image_full }}"
     labels:
       BOOTSTRAP:
@@ -106,6 +119,19 @@
       OSD_FILESYSTEM: "{{ ceph_osd_filesystem }}"
       OSD_INITIAL_WEIGHT: "{{ osd_initial_weight }}"
       HOSTNAME: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+      OSD_STORETYPE: "{{ ceph_osd_store_type }}"
+      OSD_BS_DEV: "{{ item.1.device | default('') }}"
+      OSD_BS_LABEL: "{{ item.1.partition_label | default('') }}"
+      OSD_BS_PARTNUM: "{{ item.1.partition_num | default('') }}"
+      OSD_BS_BLK_DEV: "{{ item.1.bs_blk_device | default('') }}"
+      OSD_BS_BLK_LABEL: "{{ item.1.bs_blk_label | default('') }}"
+      OSD_BS_BLK_PARTNUM: "{{ item.1.bs_blk_partition_num | default('') }}"
+      OSD_BS_WAL_DEV: "{{ item.1.bs_wal_device | default('') }}"
+      OSD_BS_WAL_LABEL: "{{ item.1.bs_wal_label|default('') }}"
+      OSD_BS_WAL_PARTNUM: "{{ item.1.bs_wal_partition_num | default('') }}"
+      OSD_BS_DB_DEV: "{{ item.1.bs_db_device | default('') }}"
+      OSD_BS_DB_LABEL: "{{ item.1.bs_db_label | default('') }}"
+      OSD_BS_DB_PARTNUM: "{{ item.1.bs_db_partition_num | default('') }}"
     image: "{{ ceph_osd_image_full }}"
     labels:
       BOOTSTRAP:
