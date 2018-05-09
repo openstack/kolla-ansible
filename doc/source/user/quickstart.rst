@@ -29,7 +29,7 @@ bare metal or a virtual machine with Kolla.
 
 If developing Kolla on a system that provides VirtualBox or Libvirt in addition
 to Vagrant, use the Vagrant virtual environment documented in
-`Development Environment with Vagrant <https://docs.openstack.org/kolla-ansible/latest/vagrant-dev-env.html>`_.
+`Development Environment with Vagrant <https://docs.openstack.org/kolla-ansible/pike/contributor/vagrant-dev-env.html>`_.
 
 Prerequisites
 =============

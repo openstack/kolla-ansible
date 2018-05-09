@@ -1,2 +1,3 @@
 .. quickstart:
-.. include:: ../../doc/quickstart.rst
+
+.. include:: ../../doc/source/user/quickstart.rst
