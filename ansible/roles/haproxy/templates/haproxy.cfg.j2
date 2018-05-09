@@ -6,8 +6,14 @@ global
   group haproxy
   daemon
   log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_haproxy_facility }}
-  maxconn 4000
-  stats socket /var/lib/kolla/haproxy/haproxy.sock
+  maxconn {{ haproxy_max_connections }}
+  nbproc {{ haproxy_processes }}
+{% if haproxy_processes > 1 and haproxy_process_cpu_map | bool %}
+{% for cpu_idx in range(0, haproxy_processes) %}
+  cpu-map {{cpu_idx+1}} {{cpu_idx}}
+{% endfor %}
+{% endif %}
+  stats socket /var/lib/kolla/haproxy/haproxy.sock group kolla mode 660
 {% if kolla_enable_tls_external | bool %}
   ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
   ssl-default-bind-options no-sslv3 no-tlsv10
