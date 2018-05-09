@@ -30,8 +30,8 @@ Basics
 Development Environment
 =======================
 
-Please follow our `quickstart`_ to deploy your environment and test your
-changes.
+Please follow our `quickstart`_ to deploy your environment and test
+your changes.
 
 .. _quickstart: http://docs.openstack.org/developer/kolla-ansible/quickstart.html
 
