@@ -501,47 +501,60 @@ If error occurs during execution, refer to
 Using OpenStack
 ~~~~~~~~~~~~~~~
 
-OpenStack requires an openrc file where credentials for admin user etc are set.
-To generate this file run
+#. Install basic OpenStack CLI clients:
 
-.. code-block:: console
+   .. code-block:: console
 
-   kolla-ansible post-deploy
-   . /etc/kolla/admin-openrc.sh
+      pip install python-openstackclient python-glanceclient python-neutronclient
 
-.. end
+   .. end
 
-Install basic OpenStack CLI clients:
+#. OpenStack requires an openrc file where credentials for admin user
+   are set. To generate this file:
 
-.. code-block:: console
+   * For deployment or evaluation, run:
 
-   pip install python-openstackclient python-glanceclient python-neutronclient
+     .. code-block:: console
 
-.. end
+        kolla-ansible post-deploy
+        . /etc/kolla/admin-openrc.sh
 
-Depending on how you installed Kolla-Ansible, there is script that will create
-example networks, images, and so on.
+     .. end
 
-For pip install and CentOS host:
+   * For development, run:
 
-.. code-block:: console
+     .. code-block:: console
 
-   . /usr/share/kolla-ansible/init-runonce
+        cd kolla-ansible/tools
+        ./kolla-ansible post-deploy
+        . /etc/kolla/admin-openrc.sh
 
-.. end
+     .. end
 
-For pip install and Ubuntu host:
+#. Depending on how you installed Kolla-Ansible, there is a script that will
+   create example networks, images, and so on.
 
-.. code-block:: console
+   * For deployment or evaluation,
+     run ``init-runonce`` script on CentOS:
 
-   . /usr/local/share/kolla-ansible/init-runonce
+     .. code-block:: console
 
-.. end
+        . /usr/share/kolla-ansible/init-runonce
 
-For git pulled source:
+     .. end
 
-.. code-block:: console
+     Run ``init-runonce`` script on Ubuntu:
 
-   . kolla-ansible/tools/init-runonce
+     .. code-block:: console
 
-.. end
+        . /usr/local/share/kolla-ansible/init-runonce
+
+     .. end
+
+   * For development, run:
+
+     .. code-block:: console
+
+        . kolla-ansible/tools/init-runonce
+
+     .. end
