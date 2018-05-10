@@ -22,6 +22,13 @@
   with_items:
     - "{{ node_config_directory }}/certificates/private/haproxy.key"
 
+- name: Setting permissions on key
+  become: true
+  file:
+    path: "{{ node_config_directory }}/certificates/private/haproxy.key"
+    mode: 0600
+    state: file
+
 - name: Creating Server Certificate
   become: true
   command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
@@ -45,3 +52,4 @@
   assemble:
     src: "{{ node_config_directory }}/certificates/private"
     dest: "{{ node_config_directory }}/certificates/haproxy.pem"
+    mode: 0600
