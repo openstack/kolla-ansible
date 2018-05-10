@@ -248,14 +248,20 @@ indicates a healthy cluster:
 
    docker exec ceph_mon ceph -s
 
-   cluster 5fba2fbc-551d-11e5-a8ce-01ef4c5cf93c
-    health HEALTH_OK
-    monmap e1: 1 mons at {controller=10.0.0.128:6789/0}
-           election epoch 2, quorum 0 controller
-    osdmap e18: 2 osds: 2 up, 2 in
-     pgmap v27: 64 pgs, 1 pools, 0 bytes data, 0 objects
-           68676 kB used, 20390 MB / 20457 MB avail
-                 64 active+clean
+   cluster:
+     id:     f2ed6c00-c043-4e1c-81b6-07c512db26b1
+     health: HEALTH_OK
+
+   services:
+     mon: 1 daemons, quorum 172.16.31.121
+     mgr: poc12-01(active)
+     osd: 4 osds: 4 up, 4 in; 5 remapped pgs
+
+   data:
+     pools:   4 pools, 512 pgs
+     objects: 0 objects, 0 bytes
+     usage:   432 MB used, 60963 MB / 61395 MB avail
+     pgs:     512 active+clean
 
 If Ceph is run in an **all-in-one** deployment or with less than three storage
 nodes, further configuration is required. It is necessary to change the default
