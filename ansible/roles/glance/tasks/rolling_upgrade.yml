@@ -1,0 +1,122 @@
+---
+- set_fact:
+    glance_upgrading: True
+
+# Upgrade first node (NEW NODE in the Glance documentation)
+- include: pull.yml
+  when: inventory_hostname == groups["glance-api"][0]
+
+- include: config.yml
+  when: inventory_hostname == groups["glance-api"][0]
+
+- include: stop_service.yml
+  when: inventory_hostname == groups["glance-api"][0]
+
+- name: Enable log_bin_trust_function_creators function
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 1
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- name: Running Glance database expand container
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE:
+      GLANCE_DB_EXPAND:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ glance_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_glance"
+    restart_policy: "never"
+    volumes: "{{ glance_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+
+- name: Running Glance database migrate container
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE:
+      GLANCE_DB_MIGRATE:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ glance_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_glance"
+    restart_policy: "never"
+    volumes: "{{ glance_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+  notify:
+    - Restart glance-api container
+
+# Upgrade remaining node
+- include: pull.yml
+  when: inventory_hostname != groups["glance-api"][0]
+
+- include: config.yml
+  when: inventory_hostname != groups["glance-api"][0]
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Running Glance database contract container
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE:
+      GLANCE_DB_CONTRACT:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ glance_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_glance"
+    restart_policy: "never"
+    volumes: "{{ glance_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+
+- name: Disable log_bin_trust_function_creators function
+  vars:
+    glance_api: "{{ glance_services['glance-api'] }}"
+  kolla_toolbox:
+    module_name: mysql_variables
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      variable: log_bin_trust_function_creators
+      value: 0
+  run_once: True
+  delegate_to: "{{ groups[glance_api.group][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- set_fact:
+    glance_upgrading: False
