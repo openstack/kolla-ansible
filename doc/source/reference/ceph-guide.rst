@@ -24,7 +24,8 @@ special partition label to the disk. This partition label is how Kolla detects
 the disks to format and bootstrap. Any disk with a matching partition label
 will be reformatted so use caution.
 
-To prepare an OSD as a storage drive, execute the following operations:
+To prepare a filestore OSD as a storage drive, execute the following
+operations:
 
 .. warning::
 
@@ -52,8 +53,68 @@ usage with Kolla.
 
 .. end
 
+To prepare a bluestore OSD partition, execute the following operations:
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS 1 -1
+
+.. end
+
+If only one device is offered, Kolla Ceph will create the bluestore OSD on the
+device. Kolla Ceph will create two partitions for OSD and block separately.
+
+If more than one devices are offered for one bluestore OSD, Kolla Ceph will
+create partitions for block, block.wal and block.db according to the partition
+labels.
+
+To prepare a bluestore OSD block partition, execute the following operations:
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_B 1 -1
+
+.. end
+
+To prepare a bluestore OSD block.wal partition, execute the following
+operations:
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_W 1 -1
+
+.. end
+
+To prepare a bluestore OSD block.db partition, execute the following
+operations:
+
+.. code-block:: console
+
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_D 1 -1
+
+.. end
+
+Kolla Ceph will handle the bluestore OSD according to the above up to four
+partition labels. In Ceph bluestore OSD, the block.wal and block.db partitions
+are not mandatory.
+
+.. note::
+
+   In the case there are more than one devices in one bluestore OSD and there
+   are more than one bluestore OSD in one node, it is required to use suffixes
+   (``_42``, ``_FOO``, ``_FOO42``, ..). Kolla Ceph will gather all the
+   partition labels and deploy bluestore OSD on top of the devices which have
+   the same suffix in the partition label.
+
+
 Using an external journal drive
 -------------------------------
+
+.. note::
+
+   The section is only meaningful for Ceph filestore OSD.
+
+.. end
 
 The steps documented above created a journal partition of 5 GByte
 and a data partition with the remaining storage capacity on the same tagged
@@ -126,6 +187,15 @@ RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
 .. end
 
+Configure the Ceph store type in ``ansible/group_vars/all.yml``, the default
+value is ``bluestore`` in Rocky:
+
+.. code-block:: yaml
+
+   ceph_osd_store_type: "bluestore"
+
+.. end
+
 .. note::
 
     Regarding number of placement groups (PGs)
@@ -187,11 +257,20 @@ An optional `cache tiering <http://docs.ceph.com/docs/jewel/rados/operations/cac
 can be deployed by formatting at least one cache device and enabling cache.
 tiering in the globals.yml configuration file.
 
-To prepare an OSD as a cache device, execute the following operations:
+To prepare a filestore OSD as a cache device, execute the following
+operations:
 
 .. code-block:: console
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_CACHE_BOOTSTRAP 1 -1
+
+.. end
+
+.. note::
+
+   To prepare a bluestore OSD as a cache device, change the partition name in
+   the above command to "KOLLA_CEPH_OSD_CACHE_BOOTSTRAP_BS". The deployment of
+   bluestore cache OSD is the same as bluestore OSD.
 
 .. end
 
