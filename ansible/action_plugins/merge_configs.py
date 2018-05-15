@@ -19,7 +19,10 @@
 import collections
 import inspect
 import os
+import shutil
+import tempfile
 
+from ansible import constants
 from ansible.plugins import action
 from six import StringIO
 
@@ -131,22 +134,34 @@ class ActionModule(action.ActionBase):
 
         fakefile = StringIO()
         config.write(fakefile)
-
-        remote_path = self._connection._shell.join_path(tmp, 'src')
-        xfered = self._transfer_data(remote_path, fakefile.getvalue())
+        full_source = fakefile.getvalue()
         fakefile.close()
 
-        new_module_args = self._task.args.copy()
-        new_module_args.pop('sources', None)
+        local_tempdir = tempfile.mkdtemp(dir=constants.DEFAULT_LOCAL_TMP)
 
-        new_module_args.update(
-            dict(
-                src=xfered
+        try:
+            result_file = os.path.join(local_tempdir, 'source')
+            with open(result_file, 'wb') as f:
+                f.write(full_source)
+
+            new_task = self._task.copy()
+            new_task.args.pop('sources', None)
+
+            new_task.args.update(
+                dict(
+                    src=result_file
+                )
             )
-        )
 
-        result.update(self._execute_module(module_name='copy',
-                                           module_args=new_module_args,
-                                           task_vars=task_vars,
-                                           tmp=tmp))
+            copy_action = self._shared_loader_obj.action_loader.get(
+                'copy',
+                task=new_task,
+                connection=self._connection,
+                play_context=self._play_context,
+                loader=self._loader,
+                templar=self._templar,
+                shared_loader_obj=self._shared_loader_obj)
+            result.update(copy_action.run(task_vars=task_vars))
+        finally:
+            shutil.rmtree(local_tempdir)
         return result

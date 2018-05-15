@@ -17,6 +17,8 @@
 
 import inspect
 import os
+import shutil
+import tempfile
 
 from yaml import dump
 from yaml import safe_load
@@ -28,6 +30,7 @@ except ImportError:
     from yaml import Loader  # noqa: F401
 
 
+from ansible import constants
 from ansible.plugins import action
 
 
@@ -78,19 +81,31 @@ class ActionModule(action.ActionBase):
         # restore original vars
         self._templar.set_available_variables(old_vars)
 
-        remote_path = self._connection._shell.join_path(tmp, 'src')
-        xfered = self._transfer_data(remote_path,
-                                     dump(output,
-                                          default_flow_style=False))
-        new_module_args = self._task.args.copy()
-        new_module_args.update(
-            dict(
-                src=xfered
+        local_tempdir = tempfile.mkdtemp(dir=constants.DEFAULT_LOCAL_TMP)
+
+        try:
+            result_file = os.path.join(local_tempdir, 'source')
+            with open(result_file, 'wb') as f:
+                f.write(dump(output, default_flow_style=False))
+
+            new_task = self._task.copy()
+            new_task.args.pop('sources', None)
+
+            new_task.args.update(
+                dict(
+                    src=result_file
+                )
             )
-        )
-        del new_module_args['sources']
-        result.update(self._execute_module(module_name='copy',
-                                           module_args=new_module_args,
-                                           task_vars=task_vars,
-                                           tmp=tmp))
+
+            copy_action = self._shared_loader_obj.action_loader.get(
+                'copy',
+                task=new_task,
+                connection=self._connection,
+                play_context=self._play_context,
+                loader=self._loader,
+                templar=self._templar,
+                shared_loader_obj=self._shared_loader_obj)
+            result.update(copy_action.run(task_vars=task_vars))
+        finally:
+            shutil.rmtree(local_tempdir)
         return result
