@@ -11,6 +11,7 @@ senlin_services:
       - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
   senlin-engine:
     container_name: senlin_engine
     group: senlin-engine
@@ -20,6 +21,7 @@ senlin_services:
       - "{{ node_config_directory }}/senlin-engine/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
 
 ####################
 # Database
@@ -56,3 +58,11 @@ senlin_logging_debug: "{{ openstack_logging_debug }}"
 senlin_keystone_user: "senlin"
 
 openstack_senlin_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+senlin_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+senlin_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+senlin_dev_mode: "{{ kolla_dev_mode }}"
