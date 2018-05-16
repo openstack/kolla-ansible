@@ -6,7 +6,6 @@ set -o errexit
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-
 function test_openstack_logged {
     . /etc/kolla/admin-openrc.sh
 
