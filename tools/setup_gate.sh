@@ -42,6 +42,9 @@ EOF
     if [[ $ACTION == "scenario_nfv" ]]; then
         GATE_IMAGES+=",tacker,mistral,redis,barbican"
     fi
+    if [[ $ACTION == "ironic" ]]; then
+        GATE_IMAGES+=",dnsmasq,ironic,iscsid"
+    fi
 
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
@@ -100,6 +103,13 @@ function setup_ansible {
     if [[ $ACTION == "zun" ]]; then
         sudo -H pip install -U "python-zunclient"
     fi
+    if [[ $ACTION == ironic ]]; then
+        # NOTE(mgoddard): Installing python-ironicclient to site-packages fails
+        # due to pip 10 distutils issue with ipaddress package.
+        virtualenv ~/ironic-venv
+        ~/ironic-venv/bin/pip install -U pip
+        ~/ironic-venv/bin/pip install python-openstackclient python-ironicclient
+    fi
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -127,7 +137,6 @@ function prepare_images {
     sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
     popd
 }
-
 
 setup_ansible
 setup_config
