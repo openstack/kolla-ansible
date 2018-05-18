@@ -4,5 +4,8 @@
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ multipathd_image_full }}"
-  when: inventory_hostname in groups['multipathd']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ multipathd_services }}"
