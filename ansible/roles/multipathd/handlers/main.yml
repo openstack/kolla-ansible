@@ -1,0 +1,24 @@
+---
+- name: Restart multipathd container
+  vars:
+    service_name: "multipathd"
+    service: "{{ multipathd_services[service_name] }}"
+    config_json: "{{ multipathd_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    multipathd_conf: "{{ multipathd_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    multipathd_container: "{{ check_multipathd_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    privileged: "{{ service.privileged }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or multipathd_conf.changed | bool
+      or multipathd_container.changed | bool
