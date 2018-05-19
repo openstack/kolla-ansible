@@ -1,6 +1,47 @@
 ---
 project_name: "iscsi"
 
+iscsi_services:
+  iscsid:
+    container_name: iscsid
+    group: iscsid
+    enabled: "{{ enable_iscsid_for_cinder or enable_iscsid_for_ironic }}"
+    image: "{{ iscsid_image_full }}"
+    ipc_mode: "host"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/iscsid/:{{ container_config_directory }}/:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/dev/:/dev/"
+      - "/run/:/run/:shared"
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/sys/kernel/config:/configfs"
+      - "cinder:/var/lib/cinder"
+      - "iscsi_info:/etc/iscsi"
+    dimensions: "{{ iscsid_dimensions }}"
+  tgtd:
+    container_name: tgtd
+    group: tgtd
+    enabled: "{{ enable_tgtd }}"
+    image: "{{ tgtd_image_full }}"
+    ipc_mode: "host"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/tgtd/:{{ container_config_directory }}/:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/dev/:/dev/"
+      - "/run/:/run/:shared"
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/sys/kernel/config:/configfs"
+      - "cinder:/var/lib/cinder"
+      - "iscsi_info:/etc/iscsi"
+    dimensions: "{{ tgtd_dimensions }}"
+
+
 ####################
 # Docker
 ####################
@@ -14,3 +55,18 @@ iscsid_image_full: "{{ iscsid_image }}:{{ iscsid_tag }}"
 tgtd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ iscsi_install_type }}-tgtd"
 tgtd_tag: "{{ iscsi_tag }}"
 tgtd_image_full: "{{ tgtd_image }}:{{ tgtd_tag }}"
+
+iscsid_dimensions: "{{ default_container_dimensions }}"
+tgtd_dimensions: "{{ default_container_dimensions }}"
+
+enable_iscsid_for_cinder: >-
+  {{ (inventory_hostname in groups['compute']
+      or inventory_hostname in groups['cinder-volume'])
+     and enable_cinder | bool
+     and enable_cinder_backend_iscsi | bool }}
+enable_iscsid_for_ironic: >-
+  {{ inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool }}
+enable_tgtd: >-
+  {{ enable_cinder | bool and
+     enable_cinder_backend_lvm | bool and
+     cinder_iscsi_helper == "tgtadm" }}
