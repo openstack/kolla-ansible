@@ -1,17 +1,40 @@
 #!/bin/bash
 #
 # This script is meant to be run once after running start for the first
-# time.  This script downloads a cirros image and registers it.  Then it
+# time.  This script do a cirros image and registers it.  Then it
 # configures networking and nova quotas to allow 40 m1.small instances
 # to be created.
 
-IMAGE_URL=http://download.cirros-cloud.net/0.3.5/
-IMAGE=cirros-0.3.5-x86_64-disk.img
+ARCH=$(uname -m)
+IMAGE_PATH=/opt/cache/files/
+IMAGE_URL=http://download.cirros-cloud.net/0.4.0/
+IMAGE=cirros-0.4.0-${ARCH}-disk.img
 IMAGE_NAME=cirros
 IMAGE_TYPE=linux
-EXT_NET_CIDR='10.0.2.0/24'
-EXT_NET_RANGE='start=10.0.2.150,end=10.0.2.199'
-EXT_NET_GATEWAY='10.0.2.1'
+
+source $(dirname "$0")/init-runonce.config
+
+# Sanity Check
+[[ -z "$" ]] && echo " undefined"  && exit -1
+[[ -z "$" ]] && echo " undefined"  && exit -1
+[[ -z "$" ]] && echo " undefined"  && exit -1
+[[ -z "$" ]] && echo " undefined"  && exit -1
+[[ -z "$" ]] && echo " undefined"  && exit -1
+
+[[ -z "$EXT_PHYSNET_NAME" ]] && echo "EXT_PHYSNET_NAME undefined"  && exit -1
+[[ -z "$EXT_NET_NAME" ]] && echo "EXT_NET_NAME undefined"  && exit -1
+[[ -z "$EXT_NET_SUBNET" ]] && echo "EXT_NET_SUBNET undefined"  && exit -1
+[[ -z "$EXT_NET_CIDR" ]] && echo "EXT_NET_CIDR undefined"  && exit -1
+[[ -z "$EXT_NET_RANGE" ]] && echo "EXT_NET_RANGE undefined"  && exit -1
+[[ -z "$EXT_NET_GATEWAY" ]] && echo "EXT_NET_GATEWAY undefined"  && exit -1
+
+[[ -z "$PRIV_NET_NAME" ]] && echo "PRIV_NET_NAME undefined"  && exit -1
+[[ -z "$PRIV_NET_SUBNET" ]] && echo "PRIV_NET_SUBNET undefined"  && exit -1
+[[ -z "$PRIV_NET_ROUTER" ]] && echo "PRIV_NET_ROUTER undefined"  && exit -1
+[[ -z "$PRIV_NET_CIDR" ]] && echo "PRIV_NET_CIDR undefined"  && exit -1
+[[ -z "$PRIV_NET_GATEWAY" ]] && echo "PRIV_NET_GATEWAY undefined"  && exit -1
+
+[[ -z "$SSH_KEY_NAME" ]] && echo "SSH_KEY_NAME undefined"  && exit -1
 
 # Sanitize language settings to avoid commands bailing out
 # with "unsupported locale setting" errors.
@@ -29,9 +52,6 @@ for i in curl openstack; do
         exit
     fi
 done
-# Move to top level directory
-REAL_PATH=$(python -c "import os,sys;print os.path.realpath('$0')")
-cd "$(dirname "$REAL_PATH")/.."
 
 # Test for credentials set
 if [[ "${OS_USERNAME}" == "" ]]; then
@@ -45,28 +65,42 @@ if openstack image list | grep -q cirros; then
     exit
 fi
 
-echo Downloading glance image.
-if ! [ -f "${IMAGE}" ]; then
-    curl -L -o ./${IMAGE} ${IMAGE_URL}/${IMAGE}
+echo Checking for locally available cirros image.
+# Let's first try to see if the image is available locally
+# nodepool nodes caches them in $IMAGE_PATH
+if ! [ -f "${IMAGE_PATH}/${IMAGE}" ]; then
+    IMAGE_PATH='./'
+    if ! [ -f "${IMAGE_PATH}/${IMAGE}" ]; then
+        echo None found, downloading cirros image.
+        curl -L -o ${IMAGE_PATH}/${IMAGE} ${IMAGE_URL}/${IMAGE}
+    fi
+else
+    echo Using cached cirros image from the nodepool node.
 fi
+
+EXTRA_PROPERTIES=
+if [ ${ARCH} == aarch64 ]; then
+    EXTRA_PROPERTIES="--property hw_firmware_type=uefi"
+fi
+
 echo Creating glance image.
 openstack image create --disk-format qcow2 --container-format bare --public \
-    --property os_type=${IMAGE_TYPE} --file ./${IMAGE} ${IMAGE_NAME}
+    --property os_type=${IMAGE_TYPE} ${EXTRA_PROPERTIES} --file ${IMAGE_PATH}/${IMAGE} ${IMAGE_NAME}
 
 echo Configuring neutron.
-openstack network create --external --provider-physical-network physnet1 \
-    --provider-network-type flat public1
+openstack network create --external --provider-physical-network ${EXT_PHYSNET_NAME} \
+    --provider-network-type flat ${EXT_NET_NAME}
 openstack subnet create --no-dhcp \
-    --allocation-pool ${EXT_NET_RANGE} --network public1 \
-    --subnet-range ${EXT_NET_CIDR} --gateway ${EXT_NET_GATEWAY} public1-subnet
+    --allocation-pool ${EXT_NET_RANGE} --network ${EXT_NET_NAME} \
+    --subnet-range ${EXT_NET_CIDR} --gateway ${EXT_NET_GATEWAY} ${EXT_NET_SUBNET}
 
-openstack network create --provider-network-type vxlan demo-net
-openstack subnet create --subnet-range 10.0.0.0/24 --network demo-net \
-    --gateway 10.0.0.1 --dns-nameserver 8.8.8.8 demo-subnet
+openstack network create --provider-network-type vxlan ${PRIV_NET_NAME}
+openstack subnet create --subnet-range ${PRIV_NET_CIDR} --network ${PRIV_NET_NAME} \
+    --gateway ${PRIV_NET_GATEWAY} --dns-nameserver 8.8.8.8 ${PRIV_NET_SUBNET}
 
-openstack router create demo-router
-openstack router add subnet demo-router demo-subnet
-openstack router set --external-gateway public1 demo-router
+openstack router create ${PRIV_NET_ROUTER}
+openstack router add subnet demo-router ${PRIV_NET_SUBNET}
+openstack router set --external-gateway ${EXT_NET_NAME} ${PRIV_NET_ROUTER}
 
 # Get admin user and tenant IDs
 ADMIN_USER_ID=$(openstack user list | awk '/ admin / {print $2}')
@@ -75,7 +109,7 @@ ADMIN_SEC_GROUP=$(openstack security group list --project ${ADMIN_PROJECT_ID} | 
 
 # Sec Group Config
 openstack security group rule create --ingress --ethertype IPv4 \
-    --protocol icmp ${ADMIN_SEC_GROUP} 
+    --protocol icmp ${ADMIN_SEC_GROUP}
 openstack security group rule create --ingress --ethertype IPv4 \
     --protocol tcp --dst-port 22 ${ADMIN_SEC_GROUP}
 # Open heat-cfn so it can run on a different host
@@ -90,7 +124,7 @@ if [ ! -f ~/.ssh/id_rsa.pub ]; then
 fi
 if [ -r ~/.ssh/id_rsa.pub ]; then
     echo Configuring nova public key and quotas.
-    openstack keypair create --public-key ~/.ssh/id_rsa.pub mykey
+    openstack keypair create --public-key ~/.ssh/id_rsa.pub ${SSH_KEY_NAME}
 fi
 
 # Increase the quota to allow 40 m1.small instances to be created
@@ -113,8 +147,6 @@ if ! openstack flavor list | grep -q m1.tiny; then
     openstack flavor create --id 5 --ram 16384 --disk 160 --vcpus 8 m1.xlarge
 fi
 
-DEMO_NET_ID=$(openstack network list | awk '/ demo-net / {print $2}')
-
 cat << EOF
 
 Done.
@@ -125,6 +157,6 @@ openstack server create \\
     --image ${IMAGE_NAME} \\
     --flavor m1.tiny \\
     --key-name mykey \\
-    --nic net-id=${DEMO_NET_ID} \\
+    --network ${PRIV_NET_NAME} \\
     demo1
 EOF
