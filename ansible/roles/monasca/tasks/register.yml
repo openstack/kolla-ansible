@@ -17,6 +17,24 @@
     - {'interface': 'internal', 'url': '{{ monasca_api_internal_endpoint }}'}
     - {'interface': 'public', 'url': '{{ monasca_api_public_endpoint }}'}
 
+- name: Creating monasca-log-api service and endpoints
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "monasca-log-api"
+      service_type: "logging"
+      description: "Monasca logging as a service"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ monasca_openstack_auth }}"
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ monasca_log_api_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ monasca_log_api_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ monasca_log_api_public_endpoint }}'}
+
 - name: Creating the monasca keystone user
   kolla_toolbox:
     module_name: "kolla_keystone_user"

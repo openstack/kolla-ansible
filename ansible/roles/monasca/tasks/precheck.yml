@@ -14,3 +14,14 @@
   when:
     - inventory_hostname in groups[monasca_services['monasca-api']['group']]
     - container_facts['monasca_api'] is not defined
+
+- name: Checking free port for monasca-log-api
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ monasca_log_api_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - inventory_hostname in groups[monasca_services['monasca-log-api']['group']]
+    - container_facts['monasca_log_api'] is not defined
