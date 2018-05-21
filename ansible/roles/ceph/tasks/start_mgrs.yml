@@ -8,9 +8,11 @@
   with_items: "{{ groups['ceph-mgr'] }}"
 
 - name: Pushing ceph mgr keyring to ceph-mgr
+  become: true
   copy:
     content: "{{ item.stdout }}\n"
     dest: "{{ node_config_directory }}/ceph-mgr/ceph.mgr.{{ inventory_hostname }}.keyring"
+    mode: 0600
   when:
     - inventory_hostname == item.item
   with_items: "{{ ceph_mgr_keyring.results }}"

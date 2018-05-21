@@ -28,9 +28,11 @@
   with_items: "{{ groups['ceph-mds'] }}"
 
 - name: Pushing ceph mds keyring to ceph-mds
+  become: true
   copy:
     content: "{{ item.stdout }}\n"
     dest: "{{ node_config_directory }}/ceph-mds/ceph.mds.{{ inventory_hostname }}.keyring"
+    mode: 0600
   when:
     - inventory_hostname == item.item
   with_items: "{{ ceph_mds_auth.results }}"
