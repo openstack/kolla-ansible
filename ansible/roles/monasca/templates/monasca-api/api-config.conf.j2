@@ -1,0 +1,59 @@
+[DEFAULT]
+log_file = monasca-api.log
+log_dir = /var/log/kolla/monasca
+debug = {{ monasca_logging_debug }}
+region = {{ openstack_region_name }}
+
+[database]
+database = {{ monasca_database_name }}
+connection = mysql+pymysql://{{ monasca_database_user }}:{{ monasca_database_password }}@{{ monasca_database_address }}/{{ monasca_database_name }}
+
+[influxdb]
+database_name = {{ monasca_influxdb_name }}
+ip_address = {{ monasca_influxdb_address }}
+port = {{ monasca_influxdb_http_port }}
+
+[kafka]
+partitions = 0
+uri = {{ monasca_kafka }}
+
+[messaging]
+driver = monasca_api.common.messaging.kafka_publisher:KafkaPublisher
+
+[security]
+default_authorized_roles = {{ monasca_default_authorized_roles|join(', ') }}
+agent_authorized_roles = {{ monasca_agent_authorized_roles|join(', ') }}
+read_only_authorized_roles = {{ monasca_read_only_authorized_roles|join(', ') }}
+delegate_authorized_roles = {{ monasca_delegate_authorized_roles|join(', ') }}
+
+[keystone_authtoken]
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+project_domain_id = {{ default_project_domain_id }}
+user_domain_id = {{ default_user_domain_id }}
+project_name = service
+username = {{ monasca_keystone_user }}
+password = {{ monasca_keystone_password }}
+service_token_roles_required=True
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {{ monasca_memcached_servers }}
+
+[dispatcher]
+versions = monasca_api.v2.reference.versions:Versions
+version_2_0 = monasca_api.v2.reference.version_2_0:Version2
+metrics = monasca_api.v2.reference.metrics:Metrics
+metrics_measurements = monasca_api.v2.reference.metrics:MetricsMeasurements
+metrics_statistics = monasca_api.v2.reference.metrics:MetricsStatistics
+metrics_names = monasca_api.v2.reference.metrics:MetricsNames
+alarm_definitions = monasca_api.v2.reference.alarm_definitions:AlarmDefinitions
+alarms = monasca_api.v2.reference.alarms:Alarms
+alarms_count = monasca_api.v2.reference.alarms:AlarmsCount
+alarms_state_history = monasca_api.v2.reference.alarms:AlarmsStateHistory
+notification_methods = monasca_api.v2.reference.notifications:Notifications
+dimension_values = monasca_api.v2.reference.metrics:DimensionValues
+dimension_names = monasca_api.v2.reference.metrics:DimensionNames
+notification_method_types = monasca_api.v2.reference.notificationstype:NotificationsType
+healthchecks = monasca_api.healthchecks:HealthChecks

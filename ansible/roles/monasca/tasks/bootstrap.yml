@@ -1,0 +1,51 @@
+---
+- name: Creating monasca database
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ monasca_database_name }}"
+  register: database
+  run_once: True
+  delegate_to: "{{ groups['monasca-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- name: Creating monasca database user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ monasca_database_user }}"
+      password: "{{ monasca_database_password }}"
+      host: "%"
+      priv: "{{ monasca_database_name }}.*:ALL"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['monasca-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+    - database.changed
+
+- include: bootstrap_service.yml
+  when: database.changed or use_preconfigured_databases | bool
+
+- name: Creating monasca influxdb database
+  kolla_toolbox:
+    module_name: influxdb_database
+    module_args:
+      hostname: "{{ monasca_influxdb_address }}"
+      port: "{{ monasca_influxdb_http_port }}"
+      database_name: "{{ monasca_influxdb_name }}"
+  run_once: True
+  delegate_to: "{{ groups['monasca-api'][0] }}"
+
+# NOTE(dszumski): The Monasca APIs write logs and messages to Kafka. Since
+# Kafka has automatic topic generation enabled by default we don't need to
+# create topics here.

@@ -1,0 +1,59 @@
+---
+monasca_services:
+  monasca-api:
+    container_name: monasca_api
+    group: monasca-api
+    enabled: true
+    image: "{{ monasca_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+
+####################
+# Databases
+####################
+monasca_database_name: "monasca"
+monasca_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}monasca{% endif %}"
+monasca_database_address: "{{ database_address }}:{{ database_port }}"
+
+monasca_influxdb_name: "monasca"
+monasca_influxdb_address: "{{ kolla_internal_fqdn }}"
+monasca_influxdb_http_port: "{{ influxdb_http_port }}"
+
+####################
+# Monasca
+####################
+monasca_kafka: "{% for host in groups['kafka'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+####################
+# Docker
+####################
+monasca_install_type: "{{ kolla_install_type }}"
+monasca_tag: "{{ openstack_release }}"
+
+monasca_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-api"
+monasca_api_tag: "{{ monasca_tag }}"
+monasca_api_image_full: "{{ monasca_api_image }}:{{ monasca_api_tag }}"
+
+####################
+# OpenStack
+####################
+monasca_openstack_auth: "{{ openstack_auth }}"
+
+monasca_keystone_user: "monasca"
+monasca_default_authorized_roles:
+  - admin
+monasca_read_only_authorized_roles:
+  - monasca-read-only-user
+monasca_agent_authorized_roles:
+  - agent
+monasca_delegate_authorized_roles:
+  - admin
+
+monasca_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
+monasca_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
+monasca_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_api_port }}/v2.0"
+
+monasca_logging_debug: "{{ openstack_logging_debug }}"

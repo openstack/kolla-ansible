@@ -1,0 +1,21 @@
+---
+- name: Restart monasca-api container
+  vars:
+    service_name: "monasca-api"
+    service: "{{ monasca_services[service_name] }}"
+    config_json: "{{ monasca_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    monasca_api_container: "{{ check_monasca_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or monasca_api_confs.changed | bool
+      or monasca_api_wsgi_confs.changed | bool
+      or monasca_api_container.changed | bool
