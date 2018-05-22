@@ -116,7 +116,7 @@ neutron_services:
     container_name: "neutron_lbaas_agent"
     image: "{{ neutron_lbaas_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_lbaas | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] }}"
+    enabled: "{{ enable_neutron_lbaas | bool and not enable_octavia | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
     group: "neutron-lbaas-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-lbaas-agent'] }}"
     volumes:
@@ -310,7 +310,9 @@ service_plugins:
   - name: "flow_classifier"
     enabled: "{{ enable_neutron_sfc | bool }}"
   - name: "lbaasv2"
-    enabled: "{{ enable_neutron_lbaas | bool }}"
+    enabled: "{{ enable_neutron_lbaas | bool and not enable_octavia | bool }}"
+  - name: "lbaasv2-proxy"
+    enabled: "{{ enable_neutron_lbaas | bool and enable_octavia | bool }}"
   - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"
     enabled: "{{ enable_neutron_bgp_dragent | bool }}"
   - name: "qos"
