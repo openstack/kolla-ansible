@@ -18,20 +18,6 @@ host = {{ api_interface_address }}
 port = {{ vitrage_api_port }}
 workers = {{ openstack_service_workers }}
 
-[keystone_authtoken]
-auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
-auth_type = password
-project_domain_id = default
-user_domain_id = default
-project_name = service
-username = {{ vitrage_keystone_user }}
-password = {{ vitrage_keystone_password }}
-
-memcache_security_strategy = ENCRYPT
-memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
 [database]
 connection = mysql+pymysql://{{ vitrage_database_user }}:{{ vitrage_database_password }}@{{ vitrage_database_address }}/{{ vitrage_database_name }}
 
@@ -53,6 +39,10 @@ project_name = service
 password = {{ vitrage_keystone_password }}
 username = {{ vitrage_keystone_user }}
 interface = internal
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [oslo_messaging_notifications]
 topics = notifications,vitrage_notifications
