@@ -98,6 +98,25 @@
   notify:
     - Restart horizon container
 
+- name: Copying over custom_local_settings
+  become: true
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/horizon/custom_local_settings"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/custom_local_settings"
+    - "{{ node_custom_config }}/horizon/custom_local_settings"
+    - "custom_local_settings.j2"
+  register: horizon_custom_local_settings
+  when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
+  notify:
+    - Restart horizon container
+
 - name: Copying over existing policy file
   become: true
   vars:
