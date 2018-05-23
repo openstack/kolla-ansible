@@ -46,11 +46,11 @@ def generate_RSA(bits=4096):
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
-    )
+    ).decode()
     public_key = new_key.public_key().public_bytes(
         encoding=serialization.Encoding.OpenSSH,
         format=serialization.PublicFormat.OpenSSH
-    )
+    ).decode()
     return private_key, public_key
 
 
@@ -112,12 +112,12 @@ def main():
                 passwords[k] = uuidutils.generate_uuid()
             elif k in hmac_md5_keys:
                 passwords[k] = (hmac.new(
-                    uuidutils.generate_uuid(), '', md5)
-                    .digest().encode('base64')[:-1])
+                    uuidutils.generate_uuid().encode(), ''.encode(), md5)
+                    .hexdigest())
             elif k in hmac_sha256_keys:
                 passwords[k] = (hmac.new(
-                    uuidutils.generate_uuid(), '', sha256)
-                    .digest().encode('base64')[:-1])
+                    uuidutils.generate_uuid().encode(), ''.encode(), sha256)
+                    .hexdigest())
             else:
                 passwords[k] = ''.join([
                     random.SystemRandom().choice(
