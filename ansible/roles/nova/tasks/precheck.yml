@@ -105,6 +105,20 @@
     - nova_ssh.enabled | bool
     - inventory_hostname in groups[nova_ssh.group]
 
+- name: Checking free port for Nova Libvirt
+  vars:
+    nova_libvirt: "{{ nova_services['nova-libvirt'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ nova_libvirt_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_libvirt'] is not defined
+    - nova_libvirt.enabled | bool
+    - inventory_hostname in groups[nova_libvirt.group]
+
 - name: Checking free port for Nova Placement API
   vars:
     placement_api: "{{ nova_services['placement-api'] }}"
