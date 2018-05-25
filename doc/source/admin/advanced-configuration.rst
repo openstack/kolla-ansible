@@ -110,11 +110,9 @@ The default for TLS is disabled, to enable TLS networking:
    is a CA that will provide trusted certificates at no charge. Many
    company's IT departments will provide certificates within that
    company's domain. If using a trusted CA is not possible for your
-   situation, you can use OpenSSL to create your own or see the section
-   company's domain.  If using a trusted CA is not possible for your
    situation, you can use `OpenSSL <https://www.openssl.org>`__
-   to create your own or see the section below about kolla
-   generated self-signed certificates.
+   to create your own company's domain or see the section below about
+   kolla generated self-signed certificates.
 
 Two certificate files are required to use TLS securely with authentication.
 These two files will be provided by your Certificate Authority. These
