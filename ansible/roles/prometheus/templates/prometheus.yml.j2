@@ -39,3 +39,12 @@ scrape_configs:
         - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
 {% endfor %}
 {% endif %}
+
+{% if enable_prometheus_memcached_exporter | bool %}
+  - job_name: memcached
+    static_configs:
+      - targets:
+{% for host in groups['prometheus-memcached-exporter'] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
+{% endfor %}
+{% endif %}

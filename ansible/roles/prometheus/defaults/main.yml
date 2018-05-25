@@ -43,6 +43,15 @@ prometheus_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "haproxy_socket:/var/lib/kolla/haproxy"
+  prometheus-memcached-exporter:
+    container_name: prometheus_memcached_exporter
+    group: prometheus-memcached-exporter
+    enabled: "{{ enable_prometheus_memcached_exporter | bool }}"
+    image: "{{ prometheus_memcached_exporter_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
 
 ####################
 # Database
@@ -70,3 +79,7 @@ prometheus_mysqld_exporter_image_full: "{{ prometheus_mysqld_exporter_image }}:{
 prometheus_node_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-node-exporter"
 prometheus_node_exporter_tag: "{{ prometheus_tag }}"
 prometheus_node_exporter_image_full: "{{ prometheus_node_exporter_image }}:{{ prometheus_node_exporter_tag }}"
+
+prometheus_memcached_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-memcached-exporter"
+prometheus_memcached_exporter_tag: "{{ prometheus_tag }}"
+prometheus_memcached_exporter_image_full: "{{ prometheus_memcached_exporter_image }}:{{ prometheus_memcached_exporter_tag }}"
