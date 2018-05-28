@@ -51,7 +51,7 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `CloudKitty <https://docs.openstack.org/cloudkitty/latest/>`__
 - `Congress <https://docs.openstack.org/congress/latest/>`__
 - `Designate <https://docs.openstack.org/designate/latest/>`__
-- `Freezer <https://wiki.openstack.org/wiki/Freezer-docs>`__
+- `Freezer <https://docs.openstack.org/freezer/latest/>`__
 - `Glance <https://docs.openstack.org/glance/latest/>`__
 - `Heat <https://docs.openstack.org/heat/latest/>`__
 - `Horizon <https://docs.openstack.org/horizon/latest/>`__
