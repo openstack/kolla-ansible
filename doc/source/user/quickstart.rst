@@ -235,7 +235,7 @@ than one node, edit ``multinode`` inventory:
       [control]
       10.0.0.[10:12] ansible_user=ubuntu ansible_password=foobar ansible_become=true
       # Ansible supports syntax like [10:12] - that means 10, 11 and 12.
-      # Become clausule means "use sudo".
+      # Become clause means "use sudo".
 
       [network:children]
       control
