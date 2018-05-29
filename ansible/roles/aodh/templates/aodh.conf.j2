@@ -14,19 +14,6 @@ host = {{ api_interface_address }}
 [database]
 connection = mysql+pymysql://{{ aodh_database_user }}:{{ aodh_database_password }}@{{ aodh_database_address }}/{{ aodh_database_name }}
 
-[keystone_authtoken]
-memcache_security_strategy = ENCRYPT
-memcache_secret_key = {{ memcache_secret_key }}
-memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
-project_domain_name = {{ default_project_domain_name }}
-project_name = service
-user_domain_name = {{ default_user_domain_name }}
-username = {{ aodh_keystone_user }}
-password = {{ aodh_keystone_password }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
-auth_type = password
-
 [oslo_middleware]
 enable_proxy_headers_parsing = True
 
