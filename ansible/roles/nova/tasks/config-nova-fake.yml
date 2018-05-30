@@ -46,6 +46,7 @@
     - Restart nova-compute-fake containers
 
 - name: Check nova-compute-fake containers
+  become: true
   kolla_docker:
     action: "compare_container"
     common_options: "{{ docker_common_options }}"
@@ -58,7 +59,6 @@
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
-  become: true
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - kolla_action != "config"
