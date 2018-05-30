@@ -1,5 +1,8 @@
 ---
 - name: Running MariaDB bootstrap container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -9,16 +12,12 @@
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       DB_ROOT_PASSWORD: "{{ database_password }}"
       DB_MAX_TIMEOUT: "{{ database_max_timeout }}"
-    image: "{{ mariadb_image_full }}"
+    image: "{{ service.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_mariadb"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "mariadb:/var/lib/mysql"
+    volumes: "{{ service.volumes }}"
   notify:
     - Starting first MariaDB container
 
