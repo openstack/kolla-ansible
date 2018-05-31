@@ -142,7 +142,6 @@ OpenDaylight ``globals.yml`` configurable options with their defaults include:
 
 .. code-block:: yaml
 
-   opendaylight_release: "0.6.1-Carbon"
    opendaylight_mechanism_driver: "opendaylight_v2"
    opendaylight_l3_service_plugin: "odl-router_v2"
    opendaylight_acl_impl: "learn"
@@ -537,4 +536,3 @@ Verify VF devices were created and the instance starts successfully as in
 the Neutron SRIOV case.
 
 For more information see `OpenStack PCI passthrough documentation <https://docs.openstack.org/nova/pike/admin/pci-passthrough.html>`_.
-
