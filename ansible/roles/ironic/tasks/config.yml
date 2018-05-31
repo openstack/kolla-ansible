@@ -123,6 +123,7 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - not enable_ironic_pxe_uefi | bool
+    - not enable_ironic_ipxe | bool
   notify:
     - Restart ironic-pxe container
 
@@ -146,7 +147,7 @@
   notify:
     - Restart ironic-pxe container
 
-- name: Copying ironic-agent kernel and initramfs
+- name: Copying ironic-agent kernel and initramfs (PXE)
   vars:
     service: "{{ ironic_services['ironic-pxe'] }}"
   copy:
@@ -165,8 +166,68 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - not enable_ironic_pxe_uefi | bool
+    - not enable_ironic_ipxe | bool
   notify:
     - Restart ironic-pxe container
+
+- name: Copying ironic-agent kernel and initramfs (iPXE)
+  vars:
+    service: "{{ ironic_services['ironic-ipxe'] }}"
+  copy:
+    src: "{{ node_custom_config }}/ironic/{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-ipxe/{{ item }}"
+    mode: "0660"
+  become: true
+  register: ironic_kernel_ipxe
+  with_items:
+    - "ironic-agent.kernel"
+    - "ironic-agent.initramfs"
+  when:
+    # Only required when Ironic inspector is in use.
+    - groups['ironic-inspector'] | length > 0
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart ironic-ipxe container
+
+- name: Copying inspector.ipxe
+  vars:
+    service: "{{ ironic_services['ironic-ipxe'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-ipxe/inspector.ipxe"
+    mode: "0660"
+  become: true
+  register: ironic_ipxe_inspector_boot_script
+  with_first_found:
+    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/inspector.ipxe"
+    - "{{ node_custom_config }}/ironic/inspector.ipxe"
+    - "inspector.ipxe.j2"
+  when:
+    # Only required when Ironic inspector is in use.
+    - groups['ironic-inspector'] | length > 0
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart ironic-ipxe container
+
+- name: Copying iPXE apache config
+  vars:
+    service: "{{ ironic_services['ironic-ipxe'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-ipxe/httpd.conf"
+    mode: "0660"
+  become: true
+  register: ironic_ipxe_apache_confs
+  with_first_found:
+    - "{{ node_custom_config }}/ironic/ironic-ipxe-httpd.conf"
+    - "ironic-ipxe-httpd.conf.j2"
+  when:
+    - service.enabled | bool
+    - inventory_hostname in groups[service.group]
+  notify:
+    - Restart ironic-ipxe container
 
 - name: Copying over existing policy file
   vars:

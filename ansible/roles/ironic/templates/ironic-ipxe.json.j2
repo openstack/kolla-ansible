@@ -1,0 +1,33 @@
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{
+    "command": "{{ apache_cmd }} -DFOREGROUND",
+    "config_files": [
+{% if groups['ironic-inspector'] | length > 0 %}
+        {
+            "source": "{{ container_config_directory }}/ironic-agent.kernel",
+            "dest": "/httpboot/ironic-agent.kernel",
+            "owner": "root",
+            "perm": "0644"
+        },
+        {
+            "source": "{{ container_config_directory }}/ironic-agent.initramfs",
+            "dest": "/httpboot/ironic-agent.initramfs",
+            "owner": "root",
+            "perm": "0644"
+        },
+        {
+            "source": "{{ container_config_directory }}/inspector.ipxe",
+            "dest": "/httpboot/inspector.ipxe",
+            "owner": "root",
+            "perm": "0644"
+        },
+{% endif %}
+        {
+            "source": "{{ container_config_directory }}/httpd.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/httpboot.conf",
+            "owner": "root",
+            "perm": "0644"
+        }
+    ]
+}

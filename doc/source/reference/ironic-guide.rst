@@ -57,6 +57,39 @@ be used:
 
 .. end
 
+Enable iPXE booting (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can optionally enable booting via iPXE by setting ``enable_ironic_ipxe`` to
+true in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+    enable_ironic_ipxe: "yes"
+
+.. end
+
+This will enable deployment of a docker container, called ironic_ipxe, running
+the web server which iPXE uses to obtain it's boot images.
+
+The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+    ironic_ipxe_port: "8089"
+
+.. end
+
+The following changes will occur if iPXE booting is enabled:
+
+- Ironic will be configured with the ``ipxe_enabled`` configuration option set
+  to true
+- The inspection ramdisk and kernel will be loaded via iPXE
+- The DHCP servers will be configured to chainload iPXE from an existing PXE
+  environment. You may also boot directly to iPXE by some other means e.g by
+  burning it to the option rom of your ethernet card.
+
 Deployment
 ~~~~~~~~~~
 Run the deploy as usual:

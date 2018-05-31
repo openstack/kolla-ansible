@@ -1,0 +1,16 @@
+Listen {{ api_interface_address }}:{{ ironic_ipxe_port }}
+
+TraceEnable off
+
+<VirtualHost *:{{ ironic_ipxe_port }}>
+    LogLevel warn
+    ErrorLog "/var/log/kolla/ironic/ironic-ipxe-error.log"
+    LogFormat "%h %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "/var/log/kolla/ironic/ironic-ipxe-access.log" logformat
+    DocumentRoot "/httpboot"
+    <Directory /httpboot>
+        Options FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+</VirtualHost>
