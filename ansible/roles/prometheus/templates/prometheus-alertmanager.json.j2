@@ -1,0 +1,23 @@
+{
+    "command": "/opt/prometheus_alertmanager/alertmanager --config.file=/etc/prometheus/alertmanager.yml --web.listen-address={{ api_interface_address }}:{{ prometheus_alertmanager_port }}{% if groups["prometheus-alertmanager"] | length > 1 %} --mesh.listen-address={{ api_interface_address }}:{{ prometheus_alertmanager_cluster_port }} {% for host in groups["prometheus-alertmanager"] %} --mesh.peer={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_alertmanager_cluster_port'] }}{% endfor %}{% endif %} --storage.path /var/lib/prometheus",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/prometheus-alertmanager.yml",
+            "dest": "/etc/prometheus/alertmanager.yml",
+            "owner": "prometheus",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/data",
+            "owner": "prometheus:kolla",
+            "recurse": true
+        },
+        {
+            "path": "/var/log/kolla/prometheus",
+            "owner": "prometheus:kolla",
+            "recurse": true
+        }
+    ]
+}

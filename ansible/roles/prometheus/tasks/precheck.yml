@@ -7,6 +7,7 @@
       - prometheus_haproxy_exporter
       - prometheus_mysqld_exporter
       - prometheus_cadvisor
+      - prometheus_alertmanager
   register: container_facts
 
 - name: Checking free port for Prometheus server
@@ -79,3 +80,18 @@
     - container_facts['prometheus_cadvisor'] is not defined
     - inventory_hostname in groups['prometheus-cadvisor']
     - enable_prometheus_cadvisor | bool
+
+- name: Checking free ports for Prometheus Alertmanager
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_alertmanager'] is not defined
+    - inventory_hostname in groups['prometheus-alertmanager']
+    - enable_prometheus_alertmanager | bool
+  with_items:
+    - "{{ prometheus_alertmanager_port }}"
+    - "{{ prometheus_alertmanager_cluster_port }}"
