@@ -7,22 +7,18 @@
   register: rabbitmq_volume
 
 - name: Running RabbitMQ bootstrap container
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
-    environment:
-      KOLLA_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      RABBITMQ_CLUSTER_COOKIE: "{{ role_rabbitmq_cluster_cookie }}"
-      RABBITMQ_LOG_DIR: "/var/log/kolla/{{ project_name }}"
-    image: "{{ rabbitmq_image_full }}"
+    environment: "{{ service.bootstrap_environment }}"
+    image: "{{ service.image }}"
     labels:
       BOOTSTRAP:
     name: "{{ project_name }}_bootstrap"
     restart_policy: "never"
-    volumes:
-      - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ project_name }}:/var/lib/rabbitmq/"
+    volumes: "{{ service.volumes }}"
   when: rabbitmq_volume | changed
