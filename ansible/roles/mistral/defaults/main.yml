@@ -11,6 +11,7 @@ mistral_services:
       - "{{ node_config_directory }}/mistral-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
   mistral-engine:
     container_name: mistral_engine
     group: mistral-engine
@@ -20,6 +21,7 @@ mistral_services:
       - "{{ node_config_directory }}/mistral-engine/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
   mistral-executor:
     container_name: mistral_executor
     group: mistral-executor
@@ -29,6 +31,7 @@ mistral_services:
       - "{{ node_config_directory }}/mistral-executor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
 
 
 ####################
@@ -70,3 +73,10 @@ mistral_logging_debug: "{{ openstack_logging_debug }}"
 mistral_keystone_user: "mistral"
 
 openstack_mistral_auth: "{{ openstack_auth }}"
+
+####################
+# Kolla
+####################
+mistral_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+mistral_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+mistral_dev_mode: "{{ kolla_dev_mode }}"
