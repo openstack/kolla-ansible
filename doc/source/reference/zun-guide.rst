@@ -17,7 +17,7 @@ configure kuryr refer to :doc:`kuryr-guide`.
 To allow Zun Compute connect to the Docker Daemon, add the following in the
 ``docker.service`` file on each zun-compute node.
 
-.. code-block:: none
+.. code-block:: ini
 
    ExecStart= -H tcp://<DOCKER_SERVICE_IP>:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://<DOCKER_SERVICE_IP>:2379 --cluster-advertise=<DOCKER_SERVICE_IP>:2375
 

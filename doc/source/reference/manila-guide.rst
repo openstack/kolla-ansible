@@ -369,7 +369,8 @@ Use the manila migration command, as shown in the following example:
 Checking share migration progress
 ---------------------------------
 
-Use the :command:`manila migration-get-progress shareID` command to check progress.
+Use the :command:`manila migration-get-progress shareID` command to
+check progress.
 
 .. code-block:: console
 

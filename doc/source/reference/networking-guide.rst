@@ -4,9 +4,9 @@
 Networking in Kolla
 ===================
 
-Kolla deploys Neutron by default as OpenStack networking component. This section
-describes configuring and running Neutron extensions like LBaaS, Networking-SFC,
-QoS, and so on.
+Kolla deploys Neutron by default as OpenStack networking component.
+This section describes configuring and running Neutron extensions like
+LBaaS, Networking-SFC, QoS, and so on.
 
 Enabling Provider Networks
 ==========================
@@ -218,7 +218,7 @@ it is advised to allocate them via the kernel command line instead to prevent
 memory fragmentation. This can be achieved by adding the following to the grub
 config and regenerating your grub file.
 
-.. code-block:: none
+.. code-block:: console
 
    default_hugepagesz=2M hugepagesz=2M hugepages=25000
 
@@ -233,16 +233,17 @@ While it is technically possible to use all 3 only ``uio_pci_generic`` and
 and distributed as part of the dpdk library. While it has some advantages over
 ``uio_pci_generic`` loading the ``igb_uio`` module will taint the kernel and
 possibly invalidate distro support. To successfully deploy ``ovs-dpdk``,
-``vfio_pci`` or ``uio_pci_generic`` kernel module must be present on the platform.
-Most distros include ``vfio_pci`` or ``uio_pci_generic`` as part of the default
-kernel though on some distros you may need to install ``kernel-modules-extra`` or
-the distro equivalent prior to running :command:`kolla-ansible deploy`.
+``vfio_pci`` or ``uio_pci_generic`` kernel module must be present on the
+platform. Most distros include ``vfio_pci`` or ``uio_pci_generic`` as part of
+the default kernel though on some distros you may need to install
+``kernel-modules-extra`` or the distro equivalent prior to running
+:command:`kolla-ansible deploy`.
 
 Installation
 ------------
 
-To enable ovs-dpdk, add the following configuration to ``/etc/kolla/globals.yml``
-file:
+To enable ovs-dpdk, add the following configuration to
+``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
@@ -308,9 +309,10 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. end
 
-Modify the ``/etc/kolla/config/neutron/ml2_conf.ini`` file and add ``sriovnicswitch``
-to the ``mechanism_drivers``. Also, the provider networks used by SRIOV should be configured.
-Both flat and VLAN are configured with the same physical network name in this example:
+Modify the ``/etc/kolla/config/neutron/ml2_conf.ini`` file and add
+``sriovnicswitch`` to the ``mechanism_drivers``. Also, the provider
+networks used by SRIOV should be configured. Both flat and VLAN are configured
+with the same physical network name in this example:
 
 .. path /etc/kolla/config/neutron/ml2_conf.ini
 .. code-block:: ini
@@ -331,9 +333,9 @@ Add ``PciPassthroughFilter`` to scheduler_default_filters
 The ``PciPassthroughFilter``, which is required by Nova Scheduler service
 on the Controller, should be added to ``scheduler_default_filters``
 
-Modify the ``/etc/kolla/config/nova.conf`` file and add ``PciPassthroughFilter``
-to ``scheduler_default_filters``. this filter is required by The Nova Scheduler
-service on the controller node.
+Modify the ``/etc/kolla/config/nova.conf`` file and add
+``PciPassthroughFilter`` to ``scheduler_default_filters``. this filter is
+required by The Nova Scheduler service on the controller node.
 
 .. path /etc/kolla/config/nova.conf
 .. code-block:: ini
@@ -489,12 +491,12 @@ so in environments that have NICs with multiple ports configured for SRIOV,
 it is impossible to specify a specific NIC port to pull VFs from.
 
 Modify the file ``/etc/kolla/config/nova.conf``.  The Nova Scheduler service
-on the control node requires the ``PciPassthroughFilter`` to be added to the list
-of filters and the Nova Compute service(s) on the compute node(s) need PCI
-device whitelisting.  The Nova API service on the control node and the Nova
+on the control node requires the ``PciPassthroughFilter`` to be added to the
+list of filters and the Nova Compute service(s) on the compute node(s) need
+PCI device whitelisting.  The Nova API service on the control node and the Nova
 Compute service on the compute node also require the ``alias`` option under the
-``[pci]`` section.  The alias can be configured as 'type-VF' to pass VFs or 'type-PF'
-to pass the PF. Type-VF is shown in this example:
+``[pci]`` section.  The alias can be configured as 'type-VF' to pass VFs or
+'type-PF' to pass the PF. Type-VF is shown in this example:
 
 .. path /etc/kolla/config/nova.conf
 .. code-block:: ini
@@ -514,8 +516,8 @@ Run deployment.
 Verification
 ------------
 
-Create (or use an existing) flavor, and then configure it to request one PCI device
-from the PCI alias:
+Create (or use an existing) flavor, and then configure it to request one PCI
+device from the PCI alias:
 
 .. code-block:: console
 
@@ -535,3 +537,4 @@ Verify VF devices were created and the instance starts successfully as in
 the Neutron SRIOV case.
 
 For more information see `OpenStack PCI passthrough documentation <https://docs.openstack.org/nova/pike/admin/pci-passthrough.html>`_.
+

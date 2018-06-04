@@ -99,10 +99,10 @@ To prepare the journal external drive execute the following command:
 Configuration
 ~~~~~~~~~~~~~
 
-Edit the ``[storage]`` group in the inventory which contains the hostname of the
-hosts that have the block devices you have prepped as shown above.
+Edit the ``[storage]`` group in the inventory which contains the hostname
+of the hosts that have the block devices you have prepped as shown above.
 
-.. code-block:: none
+.. code-block:: ini
 
    [storage]
    controller
@@ -340,7 +340,7 @@ implement caching.
 Here is the top part of the multinode inventory file used in the example
 environment before adding the 3rd node for Ceph:
 
-.. code-block:: none
+.. code-block:: ini
 
    [control]
    # These hostname must be resolvable from your deployment host
@@ -384,7 +384,7 @@ Next, edit the multinode inventory file and make sure the 3 nodes are listed
 under ``[storage]``. In this example I will add kolla3.ducourrier.com to the
 existing inventory file:
 
-.. code-block:: none
+.. code-block:: ini
 
    [control]
    # These hostname must be resolvable from your deployment host

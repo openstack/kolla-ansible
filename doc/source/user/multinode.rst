@@ -24,9 +24,9 @@ Edit the ``/etc/kolla/globals.yml`` and add the following where 192.168.1.100
 is the IP address of the machine and 5000 is the port where the registry is
 currently running:
 
-.. code-block:: none
+.. code-block:: yaml
 
-   docker_registry = 192.168.1.100:5000
+   docker_registry: 192.168.1.100:5000
 
 .. end
 
@@ -185,7 +185,7 @@ controls how ansible interacts with remote hosts.
    information about SSH authentication please reference
    `Ansible documentation <http://docs.ansible.com/ansible/intro_inventory.html>`__.
 
-.. code-block:: none
+.. code-block:: ini
 
    # These initial groups are the only groups required to be modified. The
    # additional groups are for more control of the environment.
@@ -208,7 +208,7 @@ For more advanced roles, the operator can edit which services will be
 associated in with each group. Keep in mind that some services have to be
 grouped together and changing these around can break your deployment:
 
-.. code-block:: none
+.. code-block:: ini
 
    [kibana:children]
    control

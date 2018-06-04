@@ -26,7 +26,7 @@ To enable dev mode for all supported services, set in
 ``/etc/kolla/globals.yml``:
 
 .. path /etc/kolla/globals.yml
-.. code-block:: none
+.. code-block:: yaml
 
    kolla_dev_mode: true
 
@@ -35,7 +35,7 @@ To enable dev mode for all supported services, set in
 To enable it just for heat, set:
 
 .. path /etc/kolla/globals.yml
-.. code-block:: none
+.. code-block:: yaml
 
    heat_dev_mode: true
 
@@ -70,7 +70,7 @@ make sure it is installed in the container in question:
 
 Then, set your breakpoint as follows:
 
-.. code-block:: none
+.. code-block:: python
 
    from remote_pdb import RemotePdb
    RemotePdb('127.0.0.1', 4444).set_trace()

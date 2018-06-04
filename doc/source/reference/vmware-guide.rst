@@ -61,9 +61,9 @@ For more information, please see `VMware NSX-V documentation <https://docs.vmwar
    In addition, it is important to modify the firewall rule of vSphere to make
    sure that VNC is accessible from outside VMware environment.
 
-   On every VMware host, edit /etc/vmware/firewall/vnc.xml as below:
+   On every VMware host, edit ``/etc/vmware/firewall/vnc.xml`` as below:
 
-.. code-block:: none
+.. code-block:: xml
 
    <!-- FirewallRule for VNC Console -->
    <ConfigRoot>
@@ -216,7 +216,8 @@ Options for Neutron NSX-V support:
 
    .. end
 
-Then you should start :command:`kolla-ansible` deployment normally as KVM/QEMU deployment.
+Then you should start :command:`kolla-ansible` deployment normally as
+KVM/QEMU deployment.
 
 
 VMware NSX-DVS
@@ -293,7 +294,8 @@ Options for Neutron NSX-DVS support:
 
    .. end
 
-Then you should start :command:`kolla-ansible` deployment normally as KVM/QEMU deployment.
+Then you should start :command:`kolla-ansible` deployment normally as
+KVM/QEMU deployment.
 
 For more information on OpenStack vSphere, see
 `VMware vSphere

@@ -18,7 +18,7 @@ Preparation and Deployment
 To allow Docker daemon connect to the etcd, add the following in the
 ``docker.service`` file.
 
-.. code-block:: none
+.. code-block:: ini
 
    ExecStart= -H tcp://172.16.1.13:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://172.16.1.13:2379 --cluster-advertise=172.16.1.13:2375
 

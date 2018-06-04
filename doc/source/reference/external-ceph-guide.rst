@@ -103,7 +103,7 @@ Ceph) into the same directory, for example:
 
 .. end
 
-.. code-block:: none
+.. code-block:: console
 
    $ cat /etc/kolla/config/glance/ceph.client.glance.keyring
 
