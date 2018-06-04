@@ -25,8 +25,7 @@
     - item.value.enabled | bool
   with_dict: "{{ monasca_services }}"
   notify:
-    - Restart monasca-api container
-    - Restart monasca-log-api container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over monasca-api config
   vars:
@@ -100,6 +99,25 @@
   notify:
     - Restart monasca-log-api container
 
+- name: Copying over monasca-log-transformer config
+  vars:
+    service: "{{ monasca_services['monasca-log-transformer'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-log-transformer/log-transformer.conf"
+    mode: "0660"
+  become: true
+  register: monasca_log_transformer_confs
+  with_first_found:
+    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-transformer.conf"
+    - "{{ node_custom_config }}/monasca/log-transformer.conf"
+    - "{{ role_path }}/templates/monasca-log-transformer/log-transformer.conf.j2"
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-log-transformer container
+
 - name: Check monasca containers
   become: true
   kolla_docker:
@@ -115,5 +133,4 @@
     - item.value.enabled | bool
   with_dict: "{{ monasca_services }}"
   notify:
-    - Restart monasca-api container
-    - Restart monasca-log-api container
+    - "Restart {{ item.key }} container"
