@@ -11,6 +11,7 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+      - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
   ironic-conductor:
     container_name: ironic_conductor
     group: ironic-conductor
@@ -28,6 +29,7 @@ ironic_services:
       - "ironic:/var/lib/ironic"
       - "ironic_pxe:/tftpboot/"
       - "ironic_ipxe:/httpboot/"
+      - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
   ironic-inspector:
     container_name: ironic_inspector
     group: ironic-inspector
@@ -38,6 +40,7 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-inspector/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+      - "{{ kolla_dev_repos_directory ~ '/ironic-inspector/ironic_inspector:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic_inspector' if ironic_dev_mode | bool else '' }}"
   ironic-pxe:
     container_name: ironic_pxe
     group: ironic-pxe
@@ -140,3 +143,12 @@ ironic_dnsmasq_boot_file: "{% if enable_ironic_ipxe | bool %}undionly.kpxe{% els
 ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
 ironic_ipxe_url: http://{{ api_interface_address }}:{{ ironic_ipxe_port }}
+
+
+####################
+## Kolla
+#####################
+ironic_inspector_git_repository: "{{ kolla_dev_repos_git }}/ironic-inspector"
+ironic_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+ironic_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+ironic_dev_mode: "{{ kolla_dev_mode }}"
