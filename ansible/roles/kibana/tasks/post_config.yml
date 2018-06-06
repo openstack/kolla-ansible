@@ -5,6 +5,15 @@
     port: "{{ kibana_server_port }}"
   run_once: true
 
+- name: Register the kibana index in elasticsearch
+  uri:
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
+    method: PUT
+    body: "{{ kibana_default_index_options | to_json }}"
+    body_format: json
+    status_code: 200, 201
+  run_once: true
+
 - name: Wait for kibana to register in elasticsearch
   uri:
     url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
@@ -13,6 +22,16 @@
   until: result.status == 200
   retries: 20
   delay: 2
+  run_once: true
+
+- name: Change kibana config to set index as defaultIndex
+  uri:
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana/config/*"
+    method: PUT
+    body:
+      defaultIndex: "{{ kibana_default_index_pattern }}"
+    body_format: json
+    status_code: 200, 201
   run_once: true
 
 - name: Get kibana default indexes
@@ -39,39 +58,6 @@
     body: "{{ kibana_default_index | to_json }}"
     body_format: json
     status_code: 201
-  run_once: true
-  when:
-    - kibana_default_index is defined
-    - kibana_default_indexes is defined
-    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
-
-- name: Find kibana version
-  command: docker exec -t kibana /opt/kibana/bin/kibana --version
-  register: kibana_version
-  run_once: true
-  changed_when: true
-  when:
-    - kibana_default_index is defined
-    - kibana_default_indexes is defined
-    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
-
-- set_fact:
-    kibana_version: "{{ kibana_version.stdout }}"
-  run_once: true
-  connection: local
-  when:
-    - kibana_default_index is defined
-    - kibana_default_indexes is defined
-    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
-
-- name: Change kibana config to set index as defaultIndex
-  uri:
-    url: "http://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana/config/{{ kibana_version }}"
-    method: PUT
-    body:
-      defaultIndex: "{{ kibana_default_index_pattern }}"
-    body_format: json
-    status_code: 200
   run_once: true
   when:
     - kibana_default_index is defined
