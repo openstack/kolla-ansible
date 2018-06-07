@@ -12,6 +12,7 @@ sahara_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "sahara:/var/lib/sahara/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
   sahara-engine:
     container_name: sahara_engine
     group: sahara-engine
@@ -24,6 +25,7 @@ sahara_services:
       - "sahara:/var/lib/sahara/"
       - "kolla_logs:/var/log/kolla/"
       - "/run:/run:shared"
+      - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
 
 
 ####################
@@ -61,3 +63,11 @@ sahara_logging_debug: "{{ openstack_logging_debug }}"
 sahara_keystone_user: "sahara"
 
 openstack_sahara_auth: "{{ openstack_auth }}"
+
+
+####################
+## Kolla
+#####################
+sahara_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+sahara_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+sahara_dev_mode: "{{ kolla_dev_mode }}"
