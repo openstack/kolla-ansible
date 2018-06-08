@@ -40,6 +40,16 @@ monasca_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
     dimensions: "{{ monasca_log_persister_dimensions }}"
+  monasca-log-metrics:
+    container_name: monasca_log_metrics
+    group: monasca-log-metrics
+    enabled: true
+    image: "{{ monasca_logstash_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-log-metrics/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_log_metrics_dimensions }}"
 
 ####################
 # Databases
@@ -94,6 +104,7 @@ monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_transformer_dimensions: "{{ default_container_dimensions }}"
 monasca_log_persister_dimensions: "{{ default_container_dimensions }}"
+monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################
