@@ -175,7 +175,7 @@ function configure_kolla_cli {
     if [ "$MODE" == 'aio' ]; then
         kolla-cli setdeploy local
         kolla-cli host add localhost
-        for group in control deployment monitoring network storage; do
+        for group in control deployment external-compute monitoring network storage; do
             kolla-cli group addhost $group localhost
         done
     else
@@ -201,6 +201,12 @@ function configure_kolla_cli {
             node_name="control0${node_num}"
             kolla-cli host add $node_name
             kolla-cli group addhost control $node_name
+        done
+
+        for node_num in $(seq 1 ${NUMBER_OF_MONITOR_NODES}); do
+            node_name="monitor0${node_num}"
+            kolla-cli host add $node_name
+            kolla-cli group addhost monitoring $node_name
         done
     fi
 }
