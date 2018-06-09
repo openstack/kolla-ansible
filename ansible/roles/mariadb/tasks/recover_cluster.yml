@@ -16,11 +16,13 @@
 
 - block:
     - name: Stop MariaDB containers
+      become: true
       kolla_docker:
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
 
     - name: Run MariaDB wsrep recovery
+      become: true
       kolla_docker:
         action: "start_container"
         common_options: "{{ docker_common_options }}"
@@ -35,6 +37,7 @@
         volumes: "{{ mariadb_service.volumes }}"
 
     - name: Stop MariaDB containers
+      become: true
       kolla_docker:
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
@@ -109,6 +112,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Starting first MariaDB container
+  become: true
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
@@ -148,6 +152,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Restart slave MariaDB container
+  become: true
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"

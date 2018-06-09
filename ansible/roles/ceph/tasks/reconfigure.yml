@@ -1,5 +1,6 @@
 ---
 - name: Ensuring the ceph_mon container is up
+  become: true
   kolla_docker:
     name: "{{ item.name }}"
     action: "get_container_state"
@@ -32,6 +33,7 @@
   when: inventory_hostname in groups['ceph-osd']
 
 - name: Ensuring the ceph_osd container is up
+  become: true
   kolla_docker:
     name: "ceph_osd_{{ item.stdout }}"
     action: "get_container_state"
@@ -41,6 +43,7 @@
   with_items: "{{ osd_ids.results|default({}) }}"
 
 - name: Ensuring the ceph_rgw container is up
+  become: true
   kolla_docker:
     name: "{{ item.name }}"
     action: "get_container_state"
@@ -83,6 +86,7 @@
     - { name: ceph_rgw, group: ceph-rgw }
 
 - name: Containers config strategy for ceph_mon container
+  become: true
   kolla_docker:
     name: "{{ item.name }}"
     action: "get_container_env"
@@ -92,6 +96,7 @@
     - { name: ceph_mon, group: ceph-mon }
 
 - name: Containers config strategy for the ceph_osd containers
+  become: true
   kolla_docker:
     name: "ceph_osd_{{ item.stdout }}"
     action: "get_container_env"
@@ -102,6 +107,7 @@
     - osds
 
 - name: Containers config strategy for ceph_rgw container
+  become: true
   kolla_docker:
     name: "{{ item.name }}"
     action: "get_container_env"
@@ -113,6 +119,7 @@
     - { name: ceph_rgw, group: ceph-rgw }
 
 - name: Remove the ceph_mon container
+  become: true
   kolla_docker:
     name: "{{ item[0]['name'] }}"
     action: "remove_container"
@@ -127,6 +134,7 @@
     - "{{ ceph_mon_check_results.results }}"
 
 - name: Remove the ceph_osd containers
+  become: true
   kolla_docker:
     name: "ceph_osd_{{ item.0.stdout }}"
     action: "remove_container"
@@ -142,6 +150,7 @@
     - "{{ ceph_osd_check_results.results }}"
 
 - name: Remove the ceph_rgw container
+  become: true
   kolla_docker:
     name: "{{ item[0]['name'] }}"
     action: "remove_container"
@@ -172,6 +181,7 @@
     - remove_ceph_rgw_container.changed
 
 - name: Restart the ceph_mon container
+  become: true
   kolla_docker:
     name: "ceph_mon"
     action: "restart_container"
@@ -185,6 +195,7 @@
     - "{{ ceph_mon_check_results.results }}"
 
 - name: Restart the ceph_osd container
+  become: true
   kolla_docker:
     name: "ceph_osd_{{ item.0.stdout }}"
     action: "restart_container"
@@ -200,6 +211,7 @@
     - "{{ ceph_osd_check_results.results }}"
 
 - name: Restart the ceph_rgw container
+  become: true
   kolla_docker:
     name: "ceph_rgw"
     action: "restart_container"
