@@ -12,6 +12,32 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
 
+- name: Check custom polling.yaml exists
+  local_action: stat path="{{ node_custom_config }}/ceilometer/polling.yaml"
+  register: ceilometer_polling_file
+
+- name: Copying over polling.yaml
+  copy:
+    src: "{{ node_custom_config }}/ceilometer/polling.yaml"
+    dest: "{{ node_config_directory }}/{{ item.key }}/polling.yaml"
+    force: True
+    mode: "0600"
+  become: true
+  register: ceilometer_polling_overwriting
+  when:
+    - ceilometer_polling_file.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ceilometer_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Set ceilometer polling file's path
+  set_fact:
+    ceilometer_polling_file_path: "{{ ceilometer_polling_file.stat.path }}"
+  when:
+    - ceilometer_polling_file.stat.exists
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ item }}"
   run_once: True
