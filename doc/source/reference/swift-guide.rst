@@ -84,7 +84,7 @@ different.
 Prepare for Rings generating
 ----------------------------
 
-To perpare for Swift Rings generating, run the following commands to initialize
+To prepare for Swift Rings generating, run the following commands to initialize
 the environment variable and create ``/etc/kolla/config/swift`` directory:
 
 .. code-block:: console
