@@ -1,0 +1,14 @@
+storm.local.dir: "/var/lib/storm/data"
+storm.log.dir: "/var/log/kolla/storm"
+nimbus.seeds: [{{ storm_nimbus_servers }}]
+storm.zookeeper.port: {{ zookeeper_client_port }}
+storm.zookeeper.servers:
+{% for host in groups['zookeeper'] %}
+  - "{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}"
+{% endfor %}
+supervisor.slots.ports:
+{% for port in range(storm_worker_port_range.start|int, storm_worker_port_range.end|int + 1) %}
+  - {{ port }}
+{% endfor %}
+supervisor.thrift.port: {{ storm_supervisor_thrift_port }}
+nimbus.thrift.port: {{ storm_nimbus_thrift_port }}
