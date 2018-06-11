@@ -199,7 +199,8 @@ Install Kolla for development
 
    .. code-block:: console
 
-      cp -r kolla-ansible/etc/kolla /etc/kolla
+      mkdir -p /etc/kolla
+      cp -r kolla-ansible/etc/kolla/* /etc/kolla
 
    .. end
 
