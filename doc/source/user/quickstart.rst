@@ -474,7 +474,7 @@ the correct versions.
      .. code-block:: console
 
         cd kolla-ansible/tools
-        ./kolla-ansible -i ./multinode bootstrap-servers
+        ./kolla-ansible -i ../ansible/inventory/multinode bootstrap-servers
 
      .. end
 
@@ -482,7 +482,7 @@ the correct versions.
 
      .. code-block:: console
 
-        ./kolla-ansible -i ./multinode prechecks
+        ./kolla-ansible -i ../ansible/inventory/multinode prechecks
 
      .. end
 
@@ -490,7 +490,7 @@ the correct versions.
 
      .. code-block:: console
 
-        ./kolla-ansible -i ./multinode deploy
+        ./kolla-ansible -i ../ansible/inventory/multinode deploy
 
      .. end
 
