@@ -1,0 +1,44 @@
+---
+- name: Restart storm-worker container
+  vars:
+    service_name: "storm-worker"
+    service: "{{ storm_services[service_name] }}"
+    config_json: "{{ storm_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    worker_container: "{{ check_storm_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or storm_worker_conf.changed | bool
+      or worker_container.changed | bool
+
+- name: Restart storm-nimbus container
+  vars:
+    service_name: "storm-nimbus"
+    service: "{{ storm_services[service_name] }}"
+    config_json: "{{ storm_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    nimbus_container: "{{ check_storm_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or storm_nimbus_conf.changed | bool
+      or nimbus_container.changed | bool

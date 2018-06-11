@@ -1,0 +1,47 @@
+---
+storm_services:
+  storm-worker:
+    container_name: storm_worker
+    group: storm-worker
+    enabled: true
+    image: "{{ storm_image_full }}"
+    environment:
+      STORM_LOG_DIR: /var/log/kolla/storm
+      STORM_LOG4J_PROP: "{{ storm_log_settings }}"
+    volumes:
+      - "{{ node_config_directory }}/storm-worker/:{{ container_config_directory }}/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storm:/var/lib/storm/data"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ storm_worker_dimensions }}"
+  storm-nimbus:
+    container_name: storm_nimbus
+    group: storm-nimbus
+    enabled: true
+    image: "{{ storm_image_full }}"
+    environment:
+      STORM_LOG_DIR: /var/log/kolla/storm
+      STORM_LOG4J_PROP: "{{ storm_log_settings }}"
+    volumes:
+      - "{{ node_config_directory }}/storm-nimbus/:{{ container_config_directory }}/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storm:/var/lib/storm/data"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ storm_nimbus_dimensions }}"
+
+####################
+# Storm
+####################
+storm_log_settings: 'INFO,ROLLINGFILE'
+storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}'{% if not loop.last %},{% endif %}{% endfor %}"
+
+####################
+# Docker
+####################
+storm_install_type: "{{ kolla_install_type }}"
+storm_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ storm_install_type }}-storm"
+storm_tag: "{{ openstack_release }}"
+storm_image_full: "{{ storm_image }}:{{ storm_tag }}"
+
+storm_worker_dimensions: "{{ default_container_dimensions }}"
+storm_nimbus_dimensions: "{{ default_container_dimensions }}"
