@@ -238,7 +238,7 @@ function install_network_manager_conf {
         fi
         [[ "$octet" < 3 ]] && mask+=.
     done
-    if  [[ is_redhat_family == 0 ]]; then
+    if  [[ $(is_redhat_family) == 0 ]]; then
         cat << EOF | tee "/etc/sysconfig/network-scripts/ifcfg-$bridge"
 DEVICE=$bridge
 BOOTPROTO=static
@@ -262,7 +262,7 @@ EOF
 function uninstall_network_manager_conf {
     pair=$(get_value ovs cidr_mappings)
     bridge=`echo $pair | cut -f 1 -d ":"`
-    if  [[ is_redhat_family == 0 ]]; then
+    if  [[ $(is_redhat_family) == 0 ]]; then
         rm -f /etc/sysconfig/network-scripts/ifcfg-$bridge
     else
         rm -f /etc/network/interfaces.d/$bridge.cfg
@@ -332,7 +332,7 @@ function uninstall_service {
 function configure_kernel_modules {
     driver="$(get_value ovs dpdk_interface_driver)"
     lsmod | grep -ws $driver > /dev/null || modprobe $driver
-    if  [[ is_redhat_family == 0 ]]; then
+    if  [[ $(is_redhat_family) == 0 ]]; then
         [[ ! -e /etc/modules-load.d/${driver}.conf ]] && echo $driver | tee /etc/modules-load.d/${driver}.conf
     else
         grep -ws $driver /etc/modules > /dev/null || echo $driver | tee -a /etc/modules
@@ -342,7 +342,7 @@ function configure_kernel_modules {
 function unconfigure_kernel_modules {
     driver="$(get_value ovs dpdk_interface_driver)"
     lsmod | grep -ws $driver > /dev/null && rmmod $driver
-    if [[ is_redhat_family == 0 ]] ; then
+    if [[ $(is_redhat_family) == 0 ]] ; then
         [[ -e /etc/modules-load.d/${driver}.conf ]] && rm -f /etc/modules-load.d/${driver}.conf
     else
         grep  -ws $driver /etc/modules > /dev/null && sed -e "s/$driver//" -i /etc/modules
@@ -363,7 +363,7 @@ function install {
     fi
     systemctl start ovs-dpdkctl
     install_network_manager_conf
-    if  [[ is_redhat_family == 0 ]]; then
+    if  [[ $(is_redhat_family) == 0 ]]; then
         systemctl start ovs-dpdk-bridge
     fi
 }
