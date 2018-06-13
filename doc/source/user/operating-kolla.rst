@@ -170,7 +170,7 @@ changing the network topology.
 Kolla from the local Docker cache.
 
 ``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
-containers..
+containers.
 
 ``kolla-ansible -i INVENTORY destroy`` is used to clean up containers and
 volumes in the cluster.
