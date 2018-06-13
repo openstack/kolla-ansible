@@ -50,6 +50,17 @@ monasca_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
     dimensions: "{{ monasca_log_metrics_dimensions }}"
+  monasca-thresh:
+    container_name: monasca_thresh
+    group: monasca-thresh
+    enabled: true
+    image: "{{ monasca_thresh_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-thresh/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "monasca_thresh:/var/lib/monasca-thresh/"
+      - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_thresh_dimensions }}"
 
 ####################
 # Databases
@@ -69,10 +80,14 @@ monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ hostvars[host]['ansi
 monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}'{% if not loop.last %},{% endif %}{% endfor %}"
 
+# Kafka topics used by Monasca services
 monasca_metrics_topic: "metrics"
 monasca_raw_logs_topic: "logs"
 monasca_transformed_logs_topic: "transformed-logs"
+monasca_events_topic: "events"
+monasca_alarm_state_transitions_topic: "alarm-state-transitions"
 
 # Processing pipeline threads. In a large scale deployment you will likely
 # want to tune these with finer precision. For example, if you have a very
@@ -100,11 +115,16 @@ monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 monasca_logstash_tag: "{{ monasca_tag }}"
 monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
 
+monasca_thresh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-thresh"
+monasca_thresh_tag: "{{ monasca_tag }}"
+monasca_thresh_image_full: "{{ monasca_thresh_image }}:{{ monasca_thresh_tag }}"
+
 monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_transformer_dimensions: "{{ default_container_dimensions }}"
 monasca_log_persister_dimensions: "{{ default_container_dimensions }}"
 monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
+monasca_thresh_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################
