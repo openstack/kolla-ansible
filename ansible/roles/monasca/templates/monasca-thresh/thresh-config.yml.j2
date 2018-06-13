@@ -1,0 +1,132 @@
+#
+# (C) Copyright 2015 Hewlett Packard Enterprise Development Company LP
+# Copyright 2017 Fujitsu LIMITED
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+metricSpoutThreads: 2
+metricSpoutTasks: 2
+
+#statsdConfig:
+#  host: "127.0.0.1"
+#  port: %MONASCA_STATSD_PORT%
+#  prefix: monasca.storm.
+#  dimensions: !!map
+#    service : monitoring
+#    component : storm
+
+
+metricSpoutConfig:
+  kafkaConsumerConfiguration:
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+    topic: "{{ monasca_metrics_topic }}"
+    numThreads: 1
+    groupId: "thresh-metric"
+    zookeeperConnect: "{{ monasca_zookeeper_servers }}"
+    consumerId: 1
+    socketTimeoutMs: 30000
+    socketReceiveBufferBytes: 65536
+    fetchMessageMaxBytes: 1048576
+    autoCommitEnable: true
+    autoCommitIntervalMs: 60000
+    queuedMaxMessageChunks: 10
+    rebalanceMaxRetries: 4
+    fetchMinBytes: 1
+    fetchWaitMaxMs: 100
+    rebalanceBackoffMs: 2000
+    refreshLeaderBackoffMs: 200
+    autoOffsetReset: largest
+    consumerTimeoutMs: -1
+    clientId: 1
+    zookeeperSessionTimeoutMs: 60000
+    zookeeperConnectionTimeoutMs: 60000
+    zookeeperSyncTimeMs: 2000
+
+
+eventSpoutConfig:
+  kafkaConsumerConfiguration:
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+    topic: "{{ monasca_events_topic }}"
+    numThreads: 1
+    groupId: "thresh-event"
+    zookeeperConnect: "{{ monasca_zookeeper_servers }}"
+    consumerId: 1
+    socketTimeoutMs: 30000
+    socketReceiveBufferBytes: 65536
+    fetchMessageMaxBytes: 1048576
+    autoCommitEnable: true
+    autoCommitIntervalMs: 60000
+    queuedMaxMessageChunks: 10
+    rebalanceMaxRetries: 4
+    fetchMinBytes: 1
+    fetchWaitMaxMs: 100
+    rebalanceBackoffMs: 2000
+    refreshLeaderBackoffMs: 200
+    autoOffsetReset: largest
+    consumerTimeoutMs: -1
+    clientId: 1
+    zookeeperSessionTimeoutMs: 60000
+    zookeeperConnectionTimeoutMs: 60000
+    zookeeperSyncTimeMs: 2000
+
+
+kafkaProducerConfig:
+  # See http://kafka.apache.org/documentation.html#api for semantics and defaults.
+  topic: "{{ monasca_alarm_state_transitions_topic }}"
+  metadataBrokerList: "{{ monasca_kafka_servers }}"
+  serializerClass: kafka.serializer.StringEncoder
+  partitionerClass:
+  requestRequiredAcks: 1
+  requestTimeoutMs: 10000
+  producerType: sync
+  keySerializerClass:
+  compressionCodec: none
+  compressedTopics:
+  messageSendMaxRetries: 3
+  retryBackoffMs: 100
+  topicMetadataRefreshIntervalMs: 600000
+  queueBufferingMaxMs: 5000
+  queueBufferingMaxMessages: 10000
+  queueEnqueueTimeoutMs: -1
+  batchNumMessages: 200
+  sendBufferBytes: 102400
+  clientId: Threshold_Engine
+
+
+sporadicMetricNamespaces:
+  - foo
+
+database:
+  driverClass: org.drizzle.jdbc.DrizzleDriver
+  url: "jdbc:drizzle://{{ monasca_database_address }}/{{ monasca_database_name }}"
+  user: "{{ monasca_database_user }}"
+  password: "{{ monasca_database_password }}"
+  properties:
+      ssl: false
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+  # the SQL query to run when validating a connection's liveness TODO FIXME
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+  # the minimum number of connections to keep open
+  minSize: 8
+  # the maximum number of connections to keep open
+  maxSize: 41
+  hibernateSupport: false
+  # hibernate provider class
+  providerClass: com.zaxxer.hikari.hibernate.HikariConnectionProvider
+  databaseName: "{{ monasca_database_name }}"
+  serverName: "{{ database_address }}"
+  portNumber: "{{ database_port }}"
+  # hibernate auto configuration parameter
+  autoConfig: validate
