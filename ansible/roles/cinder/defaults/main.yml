@@ -11,6 +11,7 @@ cinder_services:
       - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
   cinder-scheduler:
     container_name: cinder_scheduler
     group: cinder-scheduler
@@ -20,6 +21,7 @@ cinder_services:
       - "{{ node_config_directory }}/cinder-scheduler/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
   cinder-volume:
     container_name: cinder_volume
     group: cinder-volume
@@ -36,6 +38,7 @@ cinder_services:
       - "cinder:/var/lib/cinder"
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
   cinder-backup:
     container_name: cinder_backup
     group: cinder-backup
@@ -50,6 +53,7 @@ cinder_services:
       - "cinder:/var/lib/cinder"
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
 
 ####################
 # Ceph
@@ -179,3 +183,11 @@ zfssa_iscsi_project:
 zfssa_iscsi_initiator_group:
 zfssa_iscsi_target_portal:
 zfssa_iscsi_target_interfaces:
+
+
+####################
+# Kolla
+####################
+cinder_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+cinder_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+cinder_dev_mode: "{{ kolla_dev_mode }}"
