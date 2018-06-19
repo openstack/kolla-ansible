@@ -13,6 +13,12 @@ prometheus_services:
       - "prometheus:/var/lib/prometheus"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ prometheus_server_dimensions }}"
+    haproxy:
+      prometheus_server:
+        enabled: "{{ enable_prometheus }}"
+        mode: "http"
+        external: false
+        port: "{{ prometheus_port }}"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -83,6 +89,21 @@ prometheus_services:
       - "kolla_logs:/var/log/kolla/"
       - "prometheus:/var/lib/prometheus"
     dimensions: "{{ prometheus_alertmanager_dimensions }}"
+    haproxy:
+      prometheus_alertmanager:
+        enabled: "{{ enable_prometheus_alertmanager }}"
+        mode: "http"
+        external: false
+        port: "{{ prometheus_alertmanager_port }}"
+        auth_user: "{{ prometheus_alertmanager_user }}"
+        auth_pass: "{{ prometheus_alertmanager_password }}"
+      prometheus_alertmanager_external:
+        enabled: "{{ enable_prometheus_alertmanager }}"
+        mode: "http"
+        external: true
+        port: "{{ prometheus_alertmanager_port }}"
+        auth_user: "{{ prometheus_alertmanager_user }}"
+        auth_pass: "{{ prometheus_alertmanager_password }}"
 
 ####################
 # Database

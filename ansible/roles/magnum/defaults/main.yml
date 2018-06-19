@@ -15,6 +15,17 @@ magnum_services:
       - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ magnum_api_dimensions }}"
+    haproxy:
+      magnum_api:
+        enabled: "{{ enable_magnum }}"
+        mode: "http"
+        external: false
+        port: "{{ magnum_api_port }}"
+      magnum_api_external:
+        enabled: "{{ enable_magnum }}"
+        mode: "http"
+        external: true
+        port: "{{ magnum_api_port }}"
   magnum-conductor:
     container_name: magnum_conductor
     group: magnum-conductor

@@ -14,6 +14,17 @@ aodh_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
     dimensions: "{{ aodh_api_dimensions }}"
+    haproxy:
+      aodh_api:
+        enabled: "{{ enable_aodh }}"
+        mode: "http"
+        external: false
+        port: "{{ aodh_api_port }}"
+      aodh_api_external:
+        enabled: "{{ enable_aodh }}"
+        mode: "http"
+        external: true
+        port: "{{ aodh_api_port }}"
   aodh-evaluator:
     container_name: aodh_evaluator
     group: aodh-evaluator

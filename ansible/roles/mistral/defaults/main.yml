@@ -13,6 +13,17 @@ mistral_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
     dimensions: "{{ mistral_api_dimensions }}"
+    haproxy:
+      mistral_api:
+        enabled: "{{ enable_mistral }}"
+        mode: "http"
+        external: false
+        port: "{{ mistral_api_port }}"
+      mistral_api_external:
+        enabled: "{{ enable_mistral }}"
+        mode: "http"
+        external: true
+        port: "{{ mistral_api_port }}"
   mistral-engine:
     container_name: mistral_engine
     group: mistral-engine

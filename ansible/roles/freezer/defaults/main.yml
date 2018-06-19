@@ -14,6 +14,17 @@ freezer_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/freezer-api/freezer_api:/var/lib/kolla/venv/lib/python2.7/site-packages/freezer_api' if freezer_dev_mode | bool else '' }}"
     dimensions: "{{ freezer_api_dimensions }}"
+    haproxy:
+      freezer_api:
+        enabled: "{{ enable_freezer }}"
+        mode: "http"
+        external: false
+        port: "{{ freezer_api_port }}"
+      freezer_api_external:
+        enabled: "{{ enable_freezer }}"
+        mode: "http"
+        external: true
+        port: "{{ freezer_api_port }}"
   freezer-scheduler:
     container_name: freezer_scheduler
     group: freezer-scheduler

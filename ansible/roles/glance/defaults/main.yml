@@ -15,6 +15,27 @@ glance_services:
       - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python2.7/site-packages/glance' if glance_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ glance_api_dimensions }}"
+    haproxy:
+      glance_api:
+        enabled: "{{ enable_glance }}"
+        mode: "http"
+        external: false
+        port: "{{ glance_api_port }}"
+        frontend_http_extra:
+          - "timeout client {{ haproxy_glance_api_client_timeout }}"
+        backend_http_extra:
+          - "timeout server {{ haproxy_glance_api_server_timeout }}"
+        custom_member_list: "{{ haproxy_members.split(';') }}"
+      glance_api_external:
+        enabled: "{{ enable_glance }}"
+        mode: "http"
+        external: true
+        port: "{{ glance_api_port }}"
+        frontend_http_extra:
+          - "timeout client {{ haproxy_glance_api_client_timeout }}"
+        backend_http_extra:
+          - "timeout server {{ haproxy_glance_api_server_timeout }}"
+        custom_member_list: "{{ haproxy_members.split(';') }}"
   glance-registry:
     container_name: glance_registry
     group: glance-registry
@@ -26,6 +47,11 @@ glance_services:
       - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python2.7/site-packages/glance' if glance_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ glance_registry_dimensions }}"
+
+####################
+# HAProxy
+####################
+haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
 
 ####################
 # Notification
@@ -64,6 +90,13 @@ ceph_client_glance_keyring_caps:
 glance_database_name: "glance"
 glance_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}glance{% endif %}"
 glance_database_address: "{{ database_address }}:{{ database_port }}"
+
+
+####################
+# HAProxy
+####################
+haproxy_glance_api_client_timeout: "6h"
+haproxy_glance_api_server_timeout: "6h"
 
 
 ####################

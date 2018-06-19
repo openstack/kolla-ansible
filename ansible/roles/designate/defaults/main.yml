@@ -13,6 +13,17 @@ designate_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
     dimensions: "{{ designate_api_dimensions }}"
+    haproxy:
+      designate_api:
+        enabled: "{{ enable_designate }}"
+        mode: "http"
+        external: false
+        port: "{{ designate_api_port }}"
+      designate_api_external:
+        enabled: "{{ enable_designate }}"
+        mode: "http"
+        external: true
+        port: "{{ designate_api_port }}"
   designate-backend-bind9:
     container_name: designate_backend_bind9
     group: designate-backend-bind9

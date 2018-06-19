@@ -108,7 +108,7 @@
 
 - name: Checking free port for HAProxy stats
   wait_for:
-    host: "{{ kolla_internal_vip_address }}"
+    host: "{{ api_interface_address }}"
     port: "{{ haproxy_stats_port }}"
     connect_timeout: 1
     timeout: 1
@@ -117,6 +117,31 @@
     - enable_haproxy | bool
     - container_facts['haproxy'] is not defined
     - inventory_hostname in groups['haproxy']
+
+- name: Checking free port for HAProxy monitor (api interface)
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ haproxy_monitor_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_haproxy | bool
+    - container_facts['haproxy'] is not defined
+    - inventory_hostname in groups['haproxy']
+
+- name: Checking free port for HAProxy monitor (vip interface)
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ haproxy_monitor_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_haproxy | bool
+    - container_facts['haproxy'] is not defined
+    - inventory_hostname in groups['haproxy']
+    - api_interface_address != kolla_internal_vip_address
 
 - name: Checking if kolla_internal_vip_address is in the same network as api_interface on all nodes
   command: ip -4 -o addr show dev {{ api_interface }}

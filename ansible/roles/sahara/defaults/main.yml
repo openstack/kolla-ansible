@@ -14,6 +14,17 @@ sahara_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
     dimensions: "{{ sahara_api_dimensions }}"
+    haproxy:
+      sahara_api:
+        enabled: "{{ enable_sahara }}"
+        mode: "http"
+        external: false
+        port: "{{ sahara_api_port }}"
+      sahara_api_external:
+        enabled: "{{ enable_sahara }}"
+        mode: "http"
+        external: true
+        port: "{{ sahara_api_port }}"
   sahara-engine:
     container_name: sahara_engine
     group: sahara-engine

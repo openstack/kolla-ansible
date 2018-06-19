@@ -13,6 +13,17 @@ heat_services:
       - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ heat_api_dimensions }}"
+    haproxy:
+      heat_api:
+        enabled: "{{ enable_heat }}"
+        mode: "http"
+        external: false
+        port: "{{ heat_api_port }}"
+      heat_api_external:
+        enabled: "{{ enable_heat }}"
+        mode: "http"
+        external: true
+        port: "{{ heat_api_port }}"
   heat-api-cfn:
     container_name: heat_api_cfn
     group: heat-api-cfn
@@ -24,6 +35,17 @@ heat_services:
       - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ heat_api_cfn_dimensions }}"
+    haproxy:
+      heat_api_cfn:
+        enabled: "{{ enable_heat }}"
+        mode: "http"
+        external: false
+        port: "{{ heat_api_cfn_port }}"
+      heat_api_cfn_external:
+        enabled: "{{ enable_heat }}"
+        mode: "http"
+        external: true
+        port: "{{ heat_api_cfn_port }}"
   heat-engine:
     container_name: heat_engine
     group: heat-engine

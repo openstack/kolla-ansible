@@ -13,13 +13,42 @@ mariadb_services:
       - "mariadb:/var/lib/mysql"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ mariadb_dimensions }}"
-
+    haproxy:
+      mariadb:
+        enabled: "{{ enable_mariadb|bool and not enable_external_mariadb_load_balancer|bool }}"
+        mode: "tcp"
+        port: "{{ mariadb_port }}"
+        frontend_tcp_extra:
+          - "option clitcpka"
+          - "timeout client 3600s"
+        backend_tcp_extra:
+          - "option srvtcpka"
+          - "timeout server 3600s"
+          - "option mysql-check user haproxy post-41"
+        custom_member_list: "{{ internal_haproxy_members.split(';') }}"
+      mariadb_external_lb:
+        enabled: "{{ enable_mariadb|bool and enable_external_mariadb_load_balancer|bool }}"
+        mode: "tcp"
+        port: "{{ mariadb_port }}"
+        frontend_tcp_extra:
+          - "option clitcpka"
+          - "timeout client 3600s"
+        backend_tcp_extra:
+          - "option srvtcpka"
+          - "timeout server 3600s"
+        custom_member_list: "{{ external_haproxy_members.split(';') }}"
 
 ####################
 # Database
 ####################
 database_cluster_name: "openstack"
 database_max_timeout: 120
+
+####################
+# HAProxy
+####################
+internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker

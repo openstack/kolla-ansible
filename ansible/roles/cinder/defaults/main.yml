@@ -13,6 +13,17 @@ cinder_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
     dimensions: "{{ cinder_api_dimensions }}"
+    haproxy:
+      cinder_api:
+        enabled: "{{ enable_cinder }}"
+        mode: "http"
+        external: false
+        port: "{{ cinder_api_port }}"
+      cinder_api_external:
+        enabled: "{{ enable_cinder }}"
+        mode: "http"
+        external: true
+        port: "{{ cinder_api_port }}"
   cinder-scheduler:
     container_name: cinder_scheduler
     group: cinder-scheduler

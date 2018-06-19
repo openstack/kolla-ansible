@@ -11,7 +11,23 @@ memcached_services:
       - "{{ node_config_directory }}/memcached/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
     dimensions: "{{ memcached_dimensions }}"
+    haproxy:
+      memcached:
+        enabled: "{{ enable_memcached|bool and enable_haproxy_memcached|bool }}"
+        mode: "tcp"
+        port: "{{ memcached_port }}"
+        frontend_tcp_extra:
+          - "option clitcpka"
+          - "timeout client 3600s"
+        backend_tcp_extra:
+          - "option srvtcpka"
+          - "timeout server 3600s"
+        custom_member_list: "{{ haproxy_members.split(';') }}"
 
+####################
+# HAProxy
+####################
+haproxy_members: "{% for host in groups['memcached'] %}server {{ host }} {{ host }}:{{ memcached_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker

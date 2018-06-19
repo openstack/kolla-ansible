@@ -14,6 +14,17 @@ trove_services:
       - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
     dimensions: "{{ trove_api_dimensions }}"
+    haproxy:
+      trove_api:
+        enabled: "{{ enable_trove }}"
+        mode: "http"
+        external: false
+        port: "{{ trove_api_port }}"
+      trove_api_external:
+        enabled: "{{ enable_trove }}"
+        mode: "http"
+        external: true
+        port: "{{ trove_api_port }}"
   trove-conductor:
     container_name: trove_conductor
     group: trove-conductor

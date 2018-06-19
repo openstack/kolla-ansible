@@ -1,6 +1,22 @@
 ---
 project_name: "ceph"
 
+ceph_services:
+  ceph-rgw:
+    group: ceph-rgw
+    enabled: "{{ enable_ceph_rgw|bool }}"
+    haproxy:
+      radosgw:
+        enabled: "{{ enable_ceph|bool and enable_ceph_rgw|bool }}"
+        mode: "http"
+        external: false
+        port: "{{ rgw_port }}"
+      radosgw_external:
+        enabled: "{{ enable_ceph|bool and enable_ceph_rgw|bool }}"
+        mode: "http"
+        external: true
+        port: "{{ rgw_port }}"
+
 
 ####################
 # Docker

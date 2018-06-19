@@ -13,6 +13,17 @@ senlin_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
     dimensions: "{{ senlin_api_dimensions }}"
+    haproxy:
+      senlin_api:
+        enabled: "{{ enable_senlin }}"
+        mode: "http"
+        external: false
+        port: "{{ senlin_api_port }}"
+      senlin_api_external:
+        enabled: "{{ enable_senlin }}"
+        mode: "http"
+        external: true
+        port: "{{ senlin_api_port }}"
   senlin-engine:
     container_name: senlin_engine
     group: senlin-engine

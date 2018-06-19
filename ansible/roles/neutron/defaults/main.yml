@@ -13,6 +13,19 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_server_dimensions }}"
+    haproxy:
+      neutron_server:
+        enabled: "{{ enable_neutron }}"
+        mode: "http"
+        external: false
+        port: "{{ neutron_server_port }}"
+        frontend_http_extra:
+          - "option http-tunnel"
+      neutron_server_external:
+        enabled: "{{ enable_neutron }}"
+        mode: "http"
+        external: true
+        port: "{{ neutron_server_port }}"
   neutron-openvswitch-agent:
     container_name: "neutron_openvswitch_agent"
     image: "{{ neutron_openvswitch_agent_image_full }}"

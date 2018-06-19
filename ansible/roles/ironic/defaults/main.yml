@@ -13,6 +13,17 @@ ironic_services:
       - "kolla_logs:/var/log/kolla"
       - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
     dimensions: "{{ ironic_api_dimensions }}"
+    haproxy:
+      ironic_api:
+        enabled: "{{ enable_ironic }}"
+        mode: "http"
+        external: false
+        port: "{{ ironic_api_port }}"
+      ironic_api_external:
+        enabled: "{{ enable_ironic }}"
+        mode: "http"
+        external: true
+        port: "{{ ironic_api_port }}"
   ironic-conductor:
     container_name: ironic_conductor
     group: ironic-conductor
@@ -44,6 +55,17 @@ ironic_services:
       - "kolla_logs:/var/log/kolla"
       - "{{ kolla_dev_repos_directory ~ '/ironic-inspector/ironic_inspector:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic_inspector' if ironic_dev_mode | bool else '' }}"
     dimensions: "{{ ironic_inspector_dimensions }}"
+    haproxy:
+      ironic_inspector:
+        enabled: "{{ enable_ironic }}"
+        mode: "http"
+        external: false
+        port: "{{ ironic_inspector_port }}"
+      ironic_inspector_external:
+        enabled: "{{ enable_ironic }}"
+        mode: "http"
+        external: true
+        port: "{{ ironic_inspector_port }}"
   ironic-pxe:
     container_name: ironic_pxe
     group: ironic-pxe

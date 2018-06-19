@@ -1,12 +1,23 @@
-{% set haproxy_cmd='/usr/sbin/haproxy -W -db' if kolla_base_distro in ['ubuntu']  else '/usr/sbin/haproxy-systemd-wrapper' %}
 {
-    "command": "{{ haproxy_cmd }} -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid",
+    "command": "/etc/haproxy/haproxy_run.sh",
     "config_files": [
+        {
+            "source": "{{ container_config_directory }}/haproxy_run.sh",
+            "dest": "/etc/haproxy/haproxy_run.sh",
+            "owner": "root",
+            "perm": "0700"
+        },
         {
             "source": "{{ container_config_directory }}/haproxy.cfg",
             "dest": "/etc/haproxy/haproxy.cfg",
             "owner": "root",
             "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/services.d/",
+            "dest": "/etc/haproxy/services.d",
+            "owner": "root",
+            "perm": "0700"
         },
         {
             "source": "{{ container_config_directory }}/haproxy.pem",

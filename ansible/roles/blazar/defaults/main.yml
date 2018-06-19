@@ -13,6 +13,17 @@ blazar_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
     dimensions: "{{ blazar_api_dimensions }}"
+    haproxy:
+      blazar_api:
+        enabled: "{{ enable_blazar }}"
+        mode: "http"
+        external: false
+        port: "{{ blazar_api_port }}"
+      blazar_api_external:
+        enabled: "{{ enable_blazar }}"
+        mode: "http"
+        external: true
+        port: "{{ blazar_api_port }}"
   blazar-manager:
     container_name: blazar_manager
     group: blazar-manager

@@ -47,6 +47,17 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ placement_api_dimensions }}"
+    haproxy:
+      placement_api:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: false
+        port: "{{ placement_api_port }}"
+      placement_api_external:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: true
+        port: "{{ placement_api_port }}"
   nova-api:
     container_name: "nova_api"
     group: "nova-api"
@@ -60,6 +71,33 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_api_dimensions }}"
+    haproxy:
+      nova_api:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: false
+        port: "{{ nova_api_port }}"
+      nova_api_external:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: true
+        port: "{{ nova_api_port }}"
+      nova_metadata:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: false
+        port: "{{ nova_metadata_port }}"
+      nova_metadata_external:
+        enabled: "{{ enable_nova }}"
+        mode: "http"
+        external: true
+        port: "{{ nova_metadata_port }}"
+      nova_rdp:
+        enabled: "{{ enable_nova|bool and nova_console == 'rdp' }}"
+        mode: "http"
+        external: false
+        port: "{{ rdp_port }}"
+        host_group: "hyperv"
   nova-consoleauth:
     container_name: "nova_consoleauth"
     group: "nova-consoleauth"
@@ -82,6 +120,19 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_novncproxy_dimensions }}"
+    haproxy:
+      nova_novncproxy:
+        enabled: "{{ enable_nova|bool and nova_console == 'novnc' }}"
+        mode: "http"
+        external: false
+        port: "{{ nova_novncproxy_port }}"
+        backend_http_extra:
+          - "timeout tunnel 1h"
+      nova_novncproxy_external:
+        enabled: "{{ enable_nova|bool and nova_console == 'novnc' }}"
+        mode: "http"
+        external: true
+        port: "{{ nova_novncproxy_port }}"
   nova-scheduler:
     container_name: "nova_scheduler"
     group: "nova-scheduler"
@@ -104,6 +155,17 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_spicehtml5proxy_dimensions }}"
+    haproxy:
+      nova_spicehtml5proxy:
+        enabled: "{{ enable_nova|bool and nova_console == 'spice' }}"
+        mode: "http"
+        external: false
+        port: "{{ nova_spicehtml5proxy_port }}"
+      nova_spicehtml5proxy_external:
+        enabled: "{{ enable_nova|bool and nova_console == 'spice' }}"
+        mode: "http"
+        external: true
+        port: "{{ nova_spicehtml5proxy_port }}"
   nova-serialproxy:
     container_name: "nova_serialproxy"
     group: "nova-serialproxy"
@@ -115,6 +177,17 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_serialproxy_dimensions }}"
+    haproxy:
+      nova_serialconsole_proxy:
+        enabled: "{{ enable_nova|bool and enable_nova_serialconsole_proxy|bool }}"
+        mode: "http"
+        external: false
+        port: "{{ nova_serialproxy_port }}"
+      nova_serialconsole_proxy_external:
+        enabled: "{{ enable_nova|bool and enable_nova_serialconsole_proxy|bool }}"
+        mode: "http"
+        external: true
+        port: "{{ nova_serialproxy_port }}"
   nova-conductor:
     container_name: "nova_conductor"
     group: "nova-conductor"

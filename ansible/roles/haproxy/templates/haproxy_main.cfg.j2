@@ -1,0 +1,49 @@
+#jinja2: lstrip_blocks: True
+global
+    chroot /var/lib/haproxy
+    user haproxy
+    group haproxy
+    daemon
+    log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_haproxy_facility }}
+    maxconn {{ haproxy_max_connections }}
+    nbproc {{ haproxy_processes }}
+    {% if haproxy_processes > 1 and haproxy_process_cpu_map | bool %}
+        {% for cpu_idx in range(0, haproxy_processes) %}
+    cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
+        {% endfor %}
+    {% endif %}
+    stats socket /var/lib/kolla/haproxy/haproxy.sock group kolla mode 660
+    {% if kolla_enable_tls_external | bool %}
+    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
+    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    tune.ssl.default-dh-param 4096
+    {% endif %}
+
+defaults
+    log global
+    option redispatch
+    retries 3
+    timeout http-request {{ haproxy_http_request_timeout }}
+    timeout queue {{ haproxy_queue_timeout }}
+    timeout connect {{ haproxy_connect_timeout }}
+    timeout client {{ haproxy_client_timeout }}
+    timeout server {{ haproxy_server_timeout }}
+    timeout check {{ haproxy_check_timeout }}
+    balance {{ haproxy_defaults_balance }}
+
+listen stats
+   bind {{ api_interface_address }}:{{ haproxy_stats_port }}
+   mode http
+   stats enable
+   stats uri /
+   stats refresh 15s
+   stats realm Haproxy\ Stats
+   stats auth {{ haproxy_user }}:{{ haproxy_password }}
+
+frontend status
+    bind {{ api_interface_address }}:{{ haproxy_monitor_port }}
+    {% if api_interface_address != kolla_internal_vip_address %}
+    bind {{ kolla_internal_vip_address }}:{{ haproxy_monitor_port }}
+    {% endif %}
+    mode http
+    monitor-uri /

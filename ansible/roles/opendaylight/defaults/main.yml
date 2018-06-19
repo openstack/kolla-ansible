@@ -14,6 +14,33 @@ opendaylight_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ opendaylight_dimensions }}"
+    haproxy:
+      opendaylight_api:
+        enabled: "{{ enable_opendaylight }}"
+        mode: "http"
+        port: "{{ opendaylight_haproxy_restconf_port }}"
+        backend_http_extra:
+          - "balance source"
+        custom_member_list: "{{ api_haproxy_members.split(';') }}"
+      opendaylight_api_backup:
+        enabled: "{{ enable_opendaylight }}"
+        mode: "http"
+        port: "{{ opendaylight_haproxy_restconf_port_backup }}"
+        backend_http_extra:
+          - "balance source"
+        custom_member_list: "{{ backup_api_haproxy_members.split(';') }}"
+      opendaylight_websocket:
+        enabled: "{{ enable_opendaylight }}"
+        mode: "http"
+        port: "{{ opendaylight_websocket_port }}"
+        backend_http_extra:
+          - "balance source"
+
+####################
+# HAProxy
+####################
+api_haproxy_members: "{% for host in groups['opendaylight'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_restconf_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
+backup_api_haproxy_members: "{% for host in groups['opendaylight'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_restconf_port_backup }} check inter 2000 rise 2 fall 5;{% endfor %}"
 
 ####################
 # Docker

@@ -13,6 +13,17 @@ manila_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
     dimensions: "{{ manila_api_dimensions }}"
+    haproxy:
+      manila_api:
+        enabled: "{{ enable_manila }}"
+        mode: "http"
+        external: false
+        port: "{{ manila_api_port }}"
+      manila_api_external:
+        enabled: "{{ enable_manila }}"
+        mode: "http"
+        external: true
+        port: "{{ manila_api_port }}"
   manila-scheduler:
     container_name: "manila_scheduler"
     group: "manila-scheduler"

@@ -13,6 +13,17 @@ cloudkitty_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python2.7/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
     dimensions: "{{ cloudkitty_api_dimensions }}"
+    haproxy:
+      cloudkitty_api:
+        enabled: "{{ enable_cloudkitty }}"
+        mode: "http"
+        external: false
+        port: "{{ cloudkitty_api_port }}"
+      cloudkitty_api_external:
+        enabled: "{{ enable_cloudkitty }}"
+        mode: "http"
+        external: true
+        port: "{{ cloudkitty_api_port }}"
   cloudkitty-processor:
     container_name: "cloudkitty_processor"
     group: "cloudkitty-processor"

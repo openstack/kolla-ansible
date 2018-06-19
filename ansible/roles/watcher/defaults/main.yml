@@ -13,6 +13,17 @@ watcher_services:
       - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ watcher_api_dimensions }}"
+    haproxy:
+      watcher_api:
+        enabled: "{{ enable_watcher }}"
+        mode: "http"
+        external: false
+        port: "{{ watcher_api_port }}"
+      watcher_api_external:
+        enabled: "{{ enable_watcher }}"
+        mode: "http"
+        external: true
+        port: "{{ watcher_api_port }}"
   watcher-applier:
     container_name: watcher_applier
     group: watcher-applier

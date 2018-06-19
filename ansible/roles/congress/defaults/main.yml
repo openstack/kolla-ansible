@@ -13,6 +13,17 @@ congress_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
     dimensions: "{{ congress_api_dimensions }}"
+    haproxy:
+      congress_api:
+        enabled: "{{ enable_congress }}"
+        mode: "http"
+        external: false
+        port: "{{ congress_api_port }}"
+      congress_api_external:
+        enabled: "{{ enable_congress }}"
+        mode: "http"
+        external: true
+        port: "{{ congress_api_port }}"
   congress-policy-engine:
     container_name: congress_policy_engine
     group: congress-policy-engine

@@ -14,6 +14,17 @@ barbican_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
     dimensions: "{{ barbican_api_dimensions }}"
+    haproxy:
+      barbican_api:
+        enabled: "{{ enable_barbican }}"
+        mode: "http"
+        external: false
+        port: "{{ barbican_api_port }}"
+      barbican_api_external:
+        enabled: "{{ enable_barbican }}"
+        mode: "http"
+        external: true
+        port: "{{ barbican_api_port }}"
   barbican-keystone-listener:
     container_name: barbican_keystone_listener
     group: barbican-keystone-listener

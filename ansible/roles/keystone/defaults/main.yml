@@ -14,6 +14,22 @@ keystone_services:
       - "kolla_logs:/var/log/kolla/"
       - "{% if keystone_token_provider == 'fernet' %}keystone_fernet_tokens:/etc/keystone/fernet-keys{% endif %}"
     dimensions: "{{ keystone_dimensions }}"
+    haproxy:
+      keystone_internal:
+        enabled: "{{ enable_keystone }}"
+        mode: "http"
+        external: false
+        port: "{{ keystone_public_port }}"
+      keystone_external:
+        enabled: "{{ enable_keystone }}"
+        mode: "http"
+        external: true
+        port: "{{ keystone_public_port }}"
+      keystone_admin:
+        enabled: "{{ enable_keystone }}"
+        mode: "http"
+        external: false
+        port: "{{ keystone_admin_port }}"
   keystone-ssh:
     container_name: "keystone_ssh"
     group: "keystone"

@@ -43,6 +43,26 @@ horizon_services:
       - "kolla_logs:/var/log/kolla/"
       - "/tmp:/tmp"
     dimensions: "{{ horizon_dimensions }}"
+    haproxy:
+      horizon:
+        enabled: "{{ enable_horizon }}"
+        mode: "http"
+        external: false
+        port: "{{ horizon_port }}"
+        frontend_http_extra:
+          - "balance source"
+      horizon_external:
+        enabled: "{{ enable_horizon }}"
+        mode: "http"
+        external: true
+        port: "{% if kolla_enable_tls_external|bool %}443{% else %}{{ horizon_port }}{% endif %}"
+        frontend_http_extra:
+          - "balance source"
+      horizon_external_redirect:
+        enabled: "{{ enable_horizon|bool and kolla_enable_tls_external|bool }}"
+        mode: "redirect"
+        external: true
+        port: "{{ horizon_port }}"
 horizon_keystone_domain_choices:
   Default: default
 

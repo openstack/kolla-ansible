@@ -1,0 +1,21 @@
+---
+- name: "Copying over {{ project_name }} haproxy config"
+  vars:
+    service: "{{ item.value }}"
+    haproxy_templates:
+      - "{{ node_custom_config }}/haproxy-config/{{ inventory_hostname }}/{{ haproxy_service_template }}"
+      - "{{ node_custom_config }}/haproxy-config/{{ haproxy_service_template }}"
+      - "templates/{{ haproxy_service_template }}"
+    template_file: "{{ query('first_found', haproxy_templates) | first }}"
+  template:
+    src: "{{ template_file }}"
+    dest: "{{ node_config_directory }}/haproxy/services.d/{{ item.key }}.cfg"
+    mode: "0660"
+  become: true
+  when:
+    - service.enabled | bool
+    - service.haproxy is defined
+    - enable_haproxy | bool
+  with_dict: "{{ project_services }}"
+  notify:
+    - Restart haproxy container

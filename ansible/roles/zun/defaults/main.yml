@@ -13,6 +13,17 @@ zun_services:
       - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ zun_api_dimensions }}"
+    haproxy:
+      zun_api:
+        enabled: "{{ enable_zun }}"
+        mode: "http"
+        external: false
+        port: "{{ zun_api_port }}"
+      zun_api_external:
+        enabled: "{{ enable_zun }}"
+        mode: "http"
+        external: true
+        port: "{{ zun_api_port }}"
   zun-wsproxy:
     container_name: zun_wsproxy
     group: zun-wsproxy
@@ -24,6 +35,17 @@ zun_services:
       - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ zun_wsproxy_dimensions }}"
+    haproxy:
+      zun_wsproxy:
+        enabled: "{{ enable_zun }}"
+        mode: "http"
+        external: false
+        port: "{{ zun_wsproxy_port }}"
+      zun_wsproxy_external:
+        enabled: "{{ enable_zun }}"
+        mode: "http"
+        external: true
+        port: "{{ zun_wsproxy_port }}"
   zun-compute:
     container_name: zun_compute
     group: zun-compute

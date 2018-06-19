@@ -13,6 +13,17 @@ vitrage_services:
       - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ vitrage_api_dimensions }}"
+    haproxy:
+      vitrage_api:
+        enabled: "{{ enable_vitrage }}"
+        mode: "http"
+        external: false
+        port: "{{ vitrage_api_port }}"
+      vitrage_api_external:
+        enabled: "{{ enable_vitrage }}"
+        mode: "http"
+        external: true
+        port: "{{ vitrage_api_port }}"
   vitrage-collector:
     container_name: vitrage_collector
     group: vitrage-collector
