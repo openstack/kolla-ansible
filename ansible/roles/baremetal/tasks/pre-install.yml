@@ -47,31 +47,6 @@
   become: True
   when: create_kolla_user | bool
 
-- name: Create kolla user
-  user:
-    name: "{{ kolla_user }}"
-    state: present
-    group: "{{ kolla_group }}"
-    groups: "sudo"
-  become: True
-  when: create_kolla_user | bool
-
-- name: Grant kolla user passwordless sudo
-  lineinfile:
-    dest: /etc/sudoers
-    state: present
-    regexp: '^{{ kolla_group }}'
-    line: '{{ kolla_group }} ALL=(ALL) NOPASSWD: ALL'
-  become: True
-  when: create_kolla_user | bool
-
-- name: Add public key to kolla user authorized keys
-  authorized_key:
-    user: "{{ kolla_user }}"
-    key: "{{ kolla_ssh_key.public_key }}"
-  become: True
-  when: create_kolla_user | bool
-
 - name: Install apt packages
   apt:
     update_cache: yes
@@ -133,23 +108,3 @@
     key: "{{ docker_yum_url }}/gpg"
   become: True
   when: ansible_os_family == 'RedHat'
-
-- name: Ensure node_config_directory directory exists
-  file:
-    path: "{{ node_config_directory }}"
-    state: directory
-    recurse: yes
-    owner: "{{ kolla_user }}"
-    group: "{{ kolla_group }}"
-    mode: 0755
-  become: True
-  when: create_kolla_user | bool
-
-- name: Ensure node_config_directory directory exists
-  file:
-    path: "{{ node_config_directory }}"
-    state: directory
-    recurse: yes
-    mode: 0644
-  become: True
-  when: not create_kolla_user | bool
