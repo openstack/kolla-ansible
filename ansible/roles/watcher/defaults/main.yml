@@ -10,6 +10,7 @@ watcher_services:
     volumes:
       - "{{ node_config_directory }}/watcher-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   watcher-applier:
     container_name: watcher_applier
@@ -19,6 +20,7 @@ watcher_services:
     volumes:
       - "{{ node_config_directory }}/watcher-applier/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   watcher-engine:
     container_name: watcher_engine
@@ -28,6 +30,7 @@ watcher_services:
     volumes:
       - "{{ node_config_directory }}/watcher-engine/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
 
 
@@ -69,3 +72,11 @@ watcher_logging_debug: "{{ openstack_logging_debug }}"
 watcher_keystone_user: "watcher"
 
 openstack_watcher_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+watcher_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+watcher_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+watcher_dev_mode: "{{ kolla_dev_mode }}"
