@@ -65,7 +65,7 @@ Install dependencies
 
    .. code-block:: console
 
-      apt-get install python-dev libffi-dev gcc libssl-dev python-selinux
+      apt-get install python-dev libffi-dev gcc libssl-dev python-selinux python-setuptools
 
    .. end
 
