@@ -236,6 +236,26 @@
   notify:
     - Restart monasca-notification container
 
+- name: Copying over monasca-persister config
+  vars:
+    service: "{{ monasca_services['monasca-persister'] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/monasca-persister/{{ item }}.j2"
+      - "{{ node_custom_config }}/monasca/{{ item }}"
+      - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-persister/{{ item }}"
+    mode: "0660"
+  become: true
+  register: monasca_persister_confs
+  with_items:
+    - persister.conf
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-persister container
+
 - name: Check monasca containers
   become: true
   kolla_docker:
