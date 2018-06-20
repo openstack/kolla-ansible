@@ -10,6 +10,7 @@ vitrage_services:
     volumes:
       - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   vitrage-collector:
     container_name: vitrage_collector
@@ -19,6 +20,7 @@ vitrage_services:
     volumes:
       - "{{ node_config_directory }}/vitrage-collector/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   vitrage-notifier:
     container_name: vitrage_notifier
@@ -28,6 +30,7 @@ vitrage_services:
     volumes:
       - "{{ node_config_directory }}/vitrage-notifier/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   vitrage-graph:
     container_name: vitrage_graph
@@ -37,6 +40,7 @@ vitrage_services:
     volumes:
       - "{{ node_config_directory }}/vitrage-graph/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
   vitrage-ml:
     container_name: vitrage_ml
@@ -46,6 +50,7 @@ vitrage_services:
     volumes:
       - "{{ node_config_directory }}/vitrage-ml/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
 
 ####################
@@ -127,3 +132,11 @@ vitrage_datasource:
     enabled: "no"
 
 vitrage_datasources: "{{ vitrage_datasource | selectattr('enabled', 'equalto', true) | list }}"
+
+
+####################
+# Kolla
+####################
+vitrage_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+vitrage_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+vitrage_dev_mode: "{{ kolla_dev_mode }}"
