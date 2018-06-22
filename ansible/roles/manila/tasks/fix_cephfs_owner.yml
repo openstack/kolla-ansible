@@ -11,14 +11,25 @@
   run_once: True
   when: check_cephfs.rc != 0
 
-- name: Get cephfs addr
-  set_fact: cephfs_addr={% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}{% if loop.last %}:6789:/{% else %},{% endif %}{% endfor %}
+- name: Get monitor dump
+  command: docker exec manila_share ceph mon dump -c /etc/ceph/ceph.conf --name client.manila -f json
+  register: ceph_monitor_dump
+  changed_when: False
   run_once: True
 
-- name: Pulling cephx keyring for manila
-  command: docker exec ceph_mon ceph auth get-key client.manila
+- name: Get cephfs addr
+  vars:
+    query: mons[*].public_addr
+    # take only ip and port from public_addr, e.g from public_addr: 10.66.1.5:6789/0
+    # use 10.66.1.5:6789
+    regex: "[^/]*"
+  set_fact:
+    cephfs_addr: "{{ ceph_monitor_dump.stdout | from_json | json_query(query) | map('regex_search', regex) | join(',') }}"
+  run_once: true
+
+- name: Get cephfs secret
+  command: docker exec manila_share ceph-authtool -p /etc/ceph/ceph.client.manila.keyring -n client.manila
   register: manila_keyring
-  delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
   run_once: True
 
