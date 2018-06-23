@@ -234,8 +234,8 @@ Deploying Kolla
 .. note::
 
    If glance is configured to use ``file`` as backend, only one ``glance_api``
-   container will be started. ``File`` is enabled by default when no other
-   backend is specified in globals.yml
+   container will be started. ``file`` is enabled by default when no other
+   backend is specified in ``/etc/kolla/globals.yml``.
 
 First, check that the deployment targets are in a state where Kolla may deploy
 to them:
