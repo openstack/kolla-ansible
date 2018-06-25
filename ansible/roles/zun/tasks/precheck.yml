@@ -27,3 +27,11 @@
   when:
     - container_facts['zun_wsproxy'] is not defined
     - inventory_hostname in groups['zun-wsproxy']
+
+- name: Ensure kuryr enabled for zun
+  run_once: True
+  local_action: fail msg="kuryr is required but not enabled"
+  changed_when: false
+  when:
+    - enable_zun | bool
+    - not enable_kuryr | bool
