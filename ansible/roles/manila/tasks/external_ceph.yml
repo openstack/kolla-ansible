@@ -7,10 +7,8 @@
     - inventory_hostname in groups['manila-share']
 
 - name: Copying over ceph.conf for manila
-  merge_configs:
-    sources:
-      - "{{ node_custom_config }}/manila/ceph.conf"
-      - "{{ node_custom_config }}/manila/manila-share/ceph.conf"
+  template:
+    src: "{{ node_custom_config }}/manila/ceph.conf"
     dest: "{{ node_config_directory }}/manila-share/ceph.conf"
     mode: "0660"
   become: true
@@ -26,8 +24,7 @@
     mode: "0600"
   become: true
   with_fileglob:
-    - "{{ node_custom_config }}/manila/ceph.client.manila.keyring"
-    - "{{ node_custom_config }}/manila/manila/ceph.client.manila.keyring"
+    - "{{ node_custom_config }}/manila/ceph.client*"
   when:
     - inventory_hostname in groups['manila-share']
   notify:
