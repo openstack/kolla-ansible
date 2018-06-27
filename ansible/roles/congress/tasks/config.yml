@@ -7,7 +7,9 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when: inventory_hostname in groups[item.value.group]
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
   with_dict: "{{ congress_services }}"
 
 - name: Check if policies shall be overwritten
