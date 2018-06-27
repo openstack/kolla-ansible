@@ -237,7 +237,7 @@ used to populate Ironic.  See the `bifrost dynamic inventory examples
 further details.
 
 For example, the following inventory defines a single node managed via the
-Ironic ``agent_ipmitool`` driver.  The inventory contains credentials required
+Ironic ``ipmi`` driver.  The inventory contains credentials required
 to access the node's BMC via IPMI, the MAC addresses of the node's NICs, an IP
 address to configure the node's configdrive with, a set of scheduling
 properties and a logical name.
@@ -257,7 +257,7 @@ properties and a logical name.
          mac: "1c:c1:de:1c:aa:53"
        -
          mac: "1c:c1:de:1c:aa:52"
-     driver: "agent_ipmitool"
+     driver: "ipmi"
      ipv4_address: "192.168.1.10"
      properties:
        cpu_arch: "x86_64"
@@ -281,7 +281,7 @@ For details on bifrost's variables see the bifrost documentation. For example:
 
    mysql_service_name: mysql
    ansible_python_interpreter: /var/lib/kolla/venv/bin/python
-   enabled_drivers: agent_ipmitool,agent_ipminative
+   enabled_hardware_types: ipmi
    # uncomment below if needed
    # dhcp_pool_start: 192.168.2.200
    # dhcp_pool_end: 192.168.2.250
