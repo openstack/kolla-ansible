@@ -616,10 +616,11 @@ openstack_auth:
 # Using glance_backend_ceph rather than enable_ceph to determine whether to
 # use the file backend, as this allows for the external ceph case, where
 # enable_ceph is False.
-glance_backend_file: "{{ not glance_backend_ceph | bool }}"
+glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_swift | bool or glance_backend_vmware | bool) }}"
 glance_backend_ceph: "{{ enable_ceph }}"
 glance_backend_vmware: "no"
-glance_backend_swift: "no"
+# ceph backend has priority over swift in all-ceph clusters
+glance_backend_swift: "{{ not (enable_ceph | bool) and enable_swift | bool }}"
 glance_file_datadir_volume: "glance"
 glance_enable_rolling_upgrade: "no"
 
