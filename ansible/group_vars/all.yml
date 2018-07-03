@@ -370,16 +370,6 @@ set_sysctl: "yes"
 # Valid options are [ none, novnc, spice, rdp ]
 nova_console: "novnc"
 
-# OpenStack authentication string. You should only need to override these if you
-# are changing the admin tenant/project or user.
-openstack_auth:
-  auth_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}"
-  username: "admin"
-  password: "{{ keystone_admin_password }}"
-  project_name: "admin"
-  domain_name: "default"
-  user_domain_name: "default"
-
 # Endpoint type used to connect with OpenStack services with ansible modules.
 # Valid options are [ public, internal, admin ]
 openstack_interface: "admin"
@@ -595,6 +585,9 @@ keystone_admin_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keyston
 keystone_internal_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}"
 keystone_public_url: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ keystone_public_port }}"
 
+keystone_admin_user: "admin"
+keystone_admin_project: "admin"
+
 default_project_domain_name: "Default"
 default_project_domain_id: "default"
 
@@ -606,6 +599,16 @@ keystone_token_provider: "fernet"
 fernet_token_expiry: 86400
 
 keystone_default_user_role: "_member_"
+
+# OpenStack authentication string. You should only need to override these if you
+# are changing the admin tenant/project or user.
+openstack_auth:
+  auth_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}"
+  username: "{{ keystone_admin_user }}"
+  password: "{{ keystone_admin_password }}"
+  project_name: "{{ keystone_admin_project }}"
+  domain_name: "default"
+  user_domain_name: "default"
 
 #######################
 # Glance options
