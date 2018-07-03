@@ -3,6 +3,7 @@
   kolla_container_facts:
     name:
       - zun_api
+      - zun_wsproxy
   register: container_facts
 
 - name: Checking free port for Zun API
@@ -15,3 +16,14 @@
   when:
     - container_facts['zun_api'] is not defined
     - inventory_hostname in groups['zun-api']
+
+- name: Checking free port for Zun WSproxy
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ zun_wsproxy_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['zun_wsproxy'] is not defined
+    - inventory_hostname in groups['zun-wsproxy']
