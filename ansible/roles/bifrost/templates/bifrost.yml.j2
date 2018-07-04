@@ -10,3 +10,10 @@ nginx_log_dir: "/var/log/kolla/nginx"
 
 ansible_python_interpreter: /var/lib/kolla/venv/bin/python
 network_interface: "{{ bifrost_network_interface }}"
+
+# Ironic creates hardlinks between the TFTP master image store and the
+# HTTP root path when iPXE is enabled. With Docker volumes used for these
+# locations we run into https://bugs.launchpad.net/ironic/+bug/1507894
+# during deployment. If we use a directory under /httpboot to store the
+# master images this issue is avoided.
+ironic_tftp_master_path: "/httpboot/master_images"
