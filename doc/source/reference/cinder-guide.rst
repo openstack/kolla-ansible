@@ -7,7 +7,7 @@ Cinder in Kolla
 Overview
 ~~~~~~~~
 
-Cinder can be deploying using Kolla and supports the following storage
+Cinder can be deployed using Kolla and supports the following storage
 backends:
 
 * ceph
@@ -20,7 +20,7 @@ backends:
 LVM
 ~~~
 
-When using the ``lvm`` backend, a volume group will need to be created on each
+When using the ``lvm`` backend, a volume group should be created on each
 storage node. This can either be a real physical volume or a loopback mounted
 file for development.  Use ``pvcreate`` and ``vgcreate`` to create the volume
 group.  For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
@@ -116,7 +116,7 @@ Create a volume as follows:
 
 .. end
 
-Verify it is available. If it says "error" here something went wrong during
+Verify it is available. If it says "error", then something went wrong during
 LVM creation of the volume.
 
 .. code-block:: console
@@ -139,7 +139,7 @@ Attach the volume to a server using:
 
 .. end
 
-Check the console log added the disk:
+Check the console log to verify the disk addition:
 
 .. code-block:: console
 
@@ -151,16 +151,16 @@ A ``/dev/vdb`` should appear in the console log, at least when booting cirros.
 If the disk stays in the available state, something went wrong during the
 iSCSI mounting of the volume to the guest VM.
 
-Cinder LVM2 back end with iSCSI
+Cinder LVM2 backend with iSCSI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of Newton-1 milestone, Kolla supports LVM2 as cinder back end. It is
+As of Newton-1 milestone, Kolla supports LVM2 as cinder backend. It is
 accomplished by introducing two new containers ``tgtd`` and ``iscsid``.
 ``tgtd`` container serves as a bridge between cinder-volume process and a
 server hosting Logical Volume Groups (LVG). ``iscsid`` container serves as
 a bridge between nova-compute process and the server hosting LVG.
 
-In order to use Cinder's LVM back end, a LVG named ``cinder-volumes`` should
+In order to use Cinder's LVM backend, a LVG named ``cinder-volumes`` should
 exist on the server and following parameter must be specified in
 ``globals.yml``:
 
@@ -197,10 +197,10 @@ targeted for nova compute role.
 
   .. end
 
-Cinder back end with external iSCSI storage
+Cinder backend with external iSCSI storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to use external storage system (like one from EMC or NetApp)
+In order to use external storage system (like the ones from EMC or NetApp)
 the following parameter must be specified in ``globals.yml``:
 
 .. code-block:: yaml
