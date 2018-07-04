@@ -46,6 +46,16 @@ copy_logs() {
         docker exec ceph_mon ceph osd tree > ${LOG_DIR}/kolla/ceph/ceph_osd_tree.txt
     fi
 
+    # bifrost related logs
+    if [[ $(docker ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
+        for service in dnsmasq ironic-api ironic-conductor ironic-inspector mariadb nginx rabbitmq-server; do
+            mkdir -p ${LOG_DIR}/kolla/$service
+            docker exec bifrost_deploy systemctl status $service > ${LOG_DIR}/kolla/$service/systemd-status-$service.txt
+        done
+        docker exec bifrost_deploy journalctl -u mariadb > ${LOG_DIR}/kolla/mariadb/mariadb.txt
+        docker exec bifrost_deploy journalctl -u rabbitmq-server > ${LOG_DIR}/kolla/rabbitmq-server/rabbitmq.txt
+    fi
+
     for container in $(docker ps -a --format "{{.Names}}"); do
         docker logs --tail all ${container} > ${LOG_DIR}/docker_logs/${container}.txt
     done

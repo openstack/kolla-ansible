@@ -62,6 +62,7 @@
         path: "/etc/kolla/config/nova"
         state: "directory"
         mode: 0777
+      when: scenario != "bifrost"
       become: true
       delegate_to: "primary"
 
@@ -69,6 +70,23 @@
       template:
         src: "{{ kolla_ansible_full_src_dir }}/tests/templates/nova-compute-overrides.j2"
         dest: /etc/kolla/config/nova/nova-compute.conf
+      when: scenario != "bifrost"
+      delegate_to: "primary"
+
+    - name: ensure bifrost conf overrides dir exists
+      file:
+        path: "/etc/kolla/config/bifrost"
+        state: "directory"
+        mode: 0777
+      when: scenario == "bifrost"
+      become: true
+      delegate_to: "primary"
+
+    - name: generate bifrost DIB config overrides
+      template:
+        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/bifrost-dib-overrides.j2"
+        dest: /etc/kolla/config/bifrost/dib.yml
+      when: scenario == "bifrost"
       delegate_to: "primary"
 
     - name: copy passwords.yml file
