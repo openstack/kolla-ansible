@@ -20,17 +20,20 @@
       pool_pgp_num: "{{ cephfs_metadata_pool_pgp_num }}"
 
 - name: Geting ceph mds keyring
-  command: docker exec ceph_mon ceph auth get-or-create mds.{{ hostvars[item]['inventory_hostname'] }} mds 'allow ' osd 'allow *' mon 'allow rwx'
+  kolla_ceph_keyring:
+    name: "mds.{{ hostvars[item]['inventory_hostname'] }}"
+    caps: "{{ ceph_client_mds_keyring_caps }}"
   register: ceph_mds_auth
   run_once: true
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: false
   with_items: "{{ groups['ceph-mds'] }}"
 
 - name: Pushing ceph mds keyring to ceph-mds
   become: true
   copy:
-    content: "{{ item.stdout }}\n"
+    content: |
+      [mds.{{ item.item }}]
+          key = {{ item.keyring.key }}
     dest: "{{ node_config_directory }}/ceph-mds/ceph.mds.{{ inventory_hostname }}.keyring"
     mode: 0600
   when:

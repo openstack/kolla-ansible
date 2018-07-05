@@ -31,17 +31,19 @@
     pool_pgp_num: "{{ gnocchi_pool_pgp_num }}"
     pool_application: "rgw"
 
-# TODO(SamYaple): Improve changed_when tests
 - name: Pulling cephx keyring
-  command: docker exec ceph_mon ceph auth get-or-create client.gnocchi mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool={{ ceph_gnocchi_pool_name }}, allow rwx pool={{ ceph_gnocchi_pool_name }}-cache'
+  kolla_ceph_keyring:
+    name: client.gnocchi
+    caps: "{{ ceph_client_gnocchi_keyring_caps }}"
   register: cephx_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
   run_once: True
 
 - name: Pushing cephx keyring
   copy:
-    content: "{{ cephx_key.stdout }}\n\r"
+    content: |
+      [client.gnocchi]
+          key = {{ cephx_key.keyring.key }}
     dest: "{{ node_config_directory }}/{{ item }}/ceph.client.gnocchi.keyring"
     mode: "0600"
   when: inventory_hostname in groups[item]
