@@ -1,7 +1,6 @@
 ### Skydive agent config file
 
 auth:
-  type: keystone
   analyzer_username: {{ openstack_auth['username'] }}
   analyzer_password: {{ openstack_auth['password'] }}
 
@@ -11,15 +10,6 @@ logging:
     - file
   file:
     path: /var/log/kolla/skydive/skydive-agent.log
-
-openstack:
-  auth_url: {{ keystone_internal_url }}/v3
-  username: {{ openstack_auth['username'] }}
-  password: {{ openstack_auth['password'] }}
-  tenant_name: {{ openstack_auth['project_name'] }}
-  region_name: {{ openstack_region_name }}
-  domain_name: Default
-  endpoint_type: internal
 
 etcd:
   servers:
@@ -54,6 +44,15 @@ agent:
 {% if neutron_plugin_agent in ['openvswitch', 'opendaylight'] %}
       - ovsdb
 {% endif %}
+
+    neutron:
+      auth_url: {{ keystone_internal_url }}/v3
+      username: {{ openstack_auth['username'] }}
+      password: {{ openstack_auth['password'] }}
+      tenant_name: {{ openstack_auth['project_name'] }}
+      region_name: {{ openstack_region_name }}
+      domain_name: Default
+      endpoint_type: internal
 
 netns:
   run_path: /host/run
