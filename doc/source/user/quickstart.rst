@@ -274,7 +274,7 @@ than one node, edit ``multinode`` inventory:
 
       Ubuntu might not come with python pre-installed. That will cause
       errors in ping module. To quickly install python with ansible you
-      can run ``ansible -m raw -a "apt-get -y install python-dev all"``
+      can run ``ansible -i multinode all -m raw -a "apt-get -y install python-dev"``
 
 Kolla passwords
 ---------------
