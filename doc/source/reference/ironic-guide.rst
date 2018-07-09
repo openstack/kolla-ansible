@@ -30,6 +30,15 @@ network:
 
 .. end
 
+In the same file, optionally a default gateway to be used for the Ironic
+Inspector inspection network:
+
+.. code-block:: yaml
+
+   ironic_dnsmasq_default_gateway: 192.168.5.1
+
+.. end
+
 In the same file, specify the PXE bootloader file for Ironic Inspector. The
 file is relative to the ``/tftpboot`` directory. The default is ``pxelinux.0``,
 and should be correct for x86 systems. Other platforms may require a different
