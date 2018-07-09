@@ -31,6 +31,16 @@
   become: True
   when: create_kolla_user | bool
 
+- name: Ensure virtualenv has correct ownership
+  file:
+    path: "{{ virtualenv }}"
+    recurse: True
+    state: directory
+    owner: "{{ kolla_user }}"
+    group: "{{ kolla_group }}"
+  become: True
+  when: virtualenv is not none
+
 - name: Ensure node_config_directory directory exists for user kolla
   file:
     path: "{{ node_config_directory }}"
