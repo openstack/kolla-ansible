@@ -74,7 +74,7 @@ Install dependencies
    .. note::
 
       Some implemented distro versions of Ansible are too old to use distro
-      packaging. Currently, CentOS and RHEL package Ansible >2.0 which is suitable
+      packaging. Currently, CentOS and RHEL package Ansible >=2.2 which is suitable
       for use with Kolla. Note that you will need to enable access to the EPEL
       repository to install via :command:`yum` to do so, take a look at `Fedora's EPEL docs
       <https://fedoraproject.org/wiki/EPEL>`__ and `FAQ
