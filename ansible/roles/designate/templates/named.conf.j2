@@ -3,10 +3,11 @@ options {
         listen-on port {{ designate_bind_port }} { {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}; };
         directory       "/var/lib/named";
         allow-new-zones yes;
-        dnssec-validation auto;
+        dnssec-validation {{ designate_dnssec_validation }};
         auth-nxdomain no;
         request-ixfr no;
-        recursion no;
+        recursion {{ designate_recursion }};
+        forwarders { {{ designate_forwarders_addresses }}; };
         minimal-responses yes;
         allow-notify { {% for host in groups['designate-worker'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }};{% endfor %} };
 };
