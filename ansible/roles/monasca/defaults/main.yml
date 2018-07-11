@@ -18,6 +18,15 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+  monasca-log-transformer:
+    container_name: monasca_log_transformer
+    group: monasca-log-transformer
+    enabled: true
+    image: "{{ monasca_logstash_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
 
 ####################
 # Databases
@@ -34,10 +43,12 @@ monasca_influxdb_http_port: "{{ influxdb_http_port }}"
 # Monasca
 ####################
 monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 
 monasca_metrics_topic: "metrics"
 monasca_raw_logs_topic: "logs"
+monasca_transformed_logs_topic: "transformed-logs"
 
 ####################
 # Docker
@@ -52,6 +63,10 @@ monasca_api_image_full: "{{ monasca_api_image }}:{{ monasca_api_tag }}"
 monasca_log_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-log-api"
 monasca_log_api_tag: "{{ monasca_tag }}"
 monasca_log_api_image_full: "{{ monasca_log_api_image }}:{{ monasca_log_api_tag }}"
+
+monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-logstash"
+monasca_logstash_tag: "{{ monasca_tag }}"
+monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
 
 ####################
 # OpenStack

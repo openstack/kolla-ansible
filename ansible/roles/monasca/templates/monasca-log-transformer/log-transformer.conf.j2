@@ -1,0 +1,25 @@
+# Provide input/output streams for transforming Monasca logs.
+# Filters should be provided in other configuration files.
+
+input {
+    kafka {
+        zk_connect => "{{ monasca_zookeeper_servers }}"
+        topic_id => "{{ monasca_raw_logs_topic }}"
+        group_id => "transformer-logstash-consumer"
+    }
+}
+
+filter {
+    # Update the timestamp of the event based on the time in the message.
+    date {
+        match => [ "[log][dimensions][timestamp]", "yyyy-MM-dd HH:mm:ss +0000", "ISO8601"]
+        remove_field => [ "[log][dimensions][timestamp]", "[log][dimensions][Timestamp]" ]
+    }
+}
+
+output {
+    kafka {
+        bootstrap_servers => "{{ monasca_kafka_servers }}"
+        topic_id => "{{ monasca_transformed_logs_topic }}"
+    }
+}
