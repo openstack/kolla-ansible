@@ -57,3 +57,13 @@ scrape_configs:
         - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
 {% endfor %}
 {% endif %}
+
+{% if enable_prometheus_alertmanager | bool %}
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+{% for host in groups["prometheus-alertmanager"] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+{% endfor %}
+{% endif %}

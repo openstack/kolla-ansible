@@ -66,6 +66,16 @@ prometheus_services:
       - "/sys:/sys:ro"
       - "/varlib/docker/:/var/lib/docker:ro"
       - "/dev/disk/:/dev/disk:ro"
+  prometheus-alertmanager:
+    container_name: "prometheus_alertmanager"
+    group: "prometheus-alertmanager"
+    enabled: "{{ enable_prometheus_alertmanager | bool }}"
+    image: "{{ prometheus_alertmanager_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-alertmanager/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "prometheus:/var/lib/prometheus"
 
 ####################
 # Database
@@ -101,3 +111,7 @@ prometheus_memcached_exporter_image_full: "{{ prometheus_memcached_exporter_imag
 prometheus_cadvisor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-prometheus-cadvisor"
 prometheus_cadvisor_tag: "{{ openstack_release }}"
 prometheus_cadvisor_image_full: "{{ prometheus_cadvisor_image }}:{{ prometheus_cadvisor_tag }}"
+
+prometheus_alertmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-prometheus-alertmanager"
+prometheus_alertmanager_tag: "{{ openstack_release }}"
+prometheus_alertmanager_image_full: "{{ prometheus_alertmanager_image }}:{{ prometheus_alertmanager_tag }}"

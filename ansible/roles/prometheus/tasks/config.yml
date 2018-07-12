@@ -41,6 +41,22 @@
   notify:
     - Restart prometheus-server container
 
+- name: Copying over prometheus alertmanager config file
+  vars:
+    service: "{{ prometheus_services['prometheus-alertmanager']}}"
+  merge_yaml:
+    sources:
+      - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-alertmanager.yml"
+      - "{{ node_custom_config }}/prometheus/prometheus-alertmanager.yml"
+      - "{{ role_path }}/templates/prometheus-alertmanager.yml.j2"
+    dest: "{{ node_config_directory }}/prometheus-alertmanager/prometheus-alertmanager.yml"
+  register: prometheus_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart prometheus-alertmanager container
+
 - name: Copying over my.cnf for mysqld_exporter
   vars:
     service: "{{ prometheus_services['prometheus-mysqld-exporter']}}"
