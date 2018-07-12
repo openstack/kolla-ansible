@@ -1,0 +1,63 @@
+---
+- include_tasks: pull.yml
+
+# Upgrade swift storage nodes first
+- include_tasks: config.yml
+  when: inventory_hostname in groups['swift-account-server'] or
+        inventory_hostname in groups['swift-container-server'] or
+        inventory_hostname in groups['swift-object-server']
+
+# TODO(donghm): Below tasks should be run in serial nodes to
+# decrease downtime. Update once the module ansible strategy for
+# rolling upgrade will be finished.
+- name: Gracefully shutdown swift services in storage nodes
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    name: "{{ item }}"
+  with_items:
+    - "swift_rsyncd"
+    - "swift_account_server"
+    - "swift_account_auditor"
+    - "swift_account_replicator"
+    - "swift_account_reaper"
+    - "swift_container_server"
+    - "swift_container_auditor"
+    - "swift_container_replicator"
+    - "swift_container_updater"
+    - "swift_object_server"
+    - "swift_object_auditor"
+    - "swift_object_replicator"
+    - "swift_object_updater"
+    - "swift_object_expirer"
+  when: inventory_hostname in groups['swift-account-server'] or
+        inventory_hostname in groups['swift-container-server'] or
+        inventory_hostname in groups['swift-object-server']
+
+- include_tasks: start.yml
+  vars:
+    run_start_swift_proxy_server: "no"
+
+# Upgrade swift proxy nodes
+- include_tasks: config.yml
+  when: inventory_hostname in groups['swift-proxy-server']
+
+- name: Gracefully shutdown swift proxy services in proxy nodes
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    name: "swift_proxy_server"
+  when: inventory_hostname in groups['swift-proxy-server']
+
+- name: Start new swift proxy server container
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ swift_proxy_server_image_full }}"
+    name: "swift_proxy_server"
+    volumes:
+      - "{{ node_config_directory }}/swift/:/var/lib/kolla/swift/:ro"
+      - "{{ node_config_directory }}/swift-proxy-server/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+  when: inventory_hostname in groups['swift-proxy-server']
