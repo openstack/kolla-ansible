@@ -188,6 +188,7 @@
 - name: Save the returned from cron jobs for building the crontab
   set_fact:
     cron_jobs: "{{ (cron_jobs_json.stdout | from_json).cron_jobs }}"
+  ignore_errors: "{{ ansible_check_mode }}"
   when: keystone_token_provider == 'fernet'
 
 - name: Copying files for keystone-fernet
@@ -199,6 +200,7 @@
     mode: "0660"
   become: true
   register: keystone_fernet_confs
+  ignore_errors: "{{ ansible_check_mode }}"
   with_items:
     - { src: "crontab.j2", dest: "crontab" }
     - { src: "fernet-rotate.sh.j2", dest: "fernet-rotate.sh" }
