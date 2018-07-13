@@ -27,3 +27,4 @@ Projects Deployment References
    tacker-guide
    xenserver-guide
    horizon-guide
+   resource-constraints

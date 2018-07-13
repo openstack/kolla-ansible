@@ -83,7 +83,8 @@ class ModuleArgsTest(base.BaseTestCase):
             tls_key=dict(required=False, type='str'),
             tls_cacert=dict(required=False, type='str'),
             volumes=dict(required=False, type='list'),
-            volumes_from=dict(required=False, type='list')
+            volumes_from=dict(required=False, type='list'),
+            dimensions=dict(required=False, type='dict', default=dict())
             )
         required_if = [
             ['action', 'pull_image', ['image']],
@@ -191,14 +192,38 @@ class TestContainer(base.BaseTestCase):
         super(TestContainer, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
 
-    def test_create_container(self):
+    def test_create_container_without_dimensions(self):
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.create_host_config = mock.MagicMock(
             return_value=self.fake_data['params']['host_config'])
         self.dw.create_container()
         self.assertTrue(self.dw.changed)
+
+    def test_create_container_with_dimensions(self):
+        self.fake_data['params']['dimensions'] = {'blkio_weight': 10}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertTrue(self.dw.changed)
+        self.fake_data['params'].pop('dimensions')
+        self.fake_data['params']['host_config']['blkio_weight'] = '10'
         self.dw.dc.create_container.assert_called_once_with(
             **self.fake_data['params'])
+        self.dw.dc.create_host_config.assert_called_with(
+            cap_add=None, network_mode='host', ipc_mode=None,
+            pid_mode=None, volumes_from=None, blkio_weight=10,
+            security_opt=None, privileged=None)
+
+    def test_create_container_wrong_dimensions(self):
+        self.fake_data['params']['dimensions'] = {'random': 10}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.dw.module.exit_json.assert_called_once_with(
+            failed=True, msg=repr("Unsupported dimensions"),
+            unsupported_dimensions=set(['random']))
 
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',

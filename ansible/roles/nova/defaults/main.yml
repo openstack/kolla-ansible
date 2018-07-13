@@ -21,6 +21,7 @@ nova_services:
       - "nova_compute:/var/lib/nova/"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "nova_libvirt_qemu:/etc/libvirt/qemu"
+    dimensions: "{{ nova_libvirt_dimensions }}"
   nova-ssh:
     container_name: "nova_ssh"
     group: "compute"
@@ -32,6 +33,7 @@ nova_services:
       - "kolla_logs:/var/log/kolla"
       - "nova_compute:/var/lib/nova"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+    dimensions: "{{ nova_ssh_dimensions }}"
   placement-api:
     container_name: "placement_api"
     group: "placement-api"
@@ -41,6 +43,7 @@ nova_services:
       - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ placement_api_dimensions }}"
   nova-api:
     container_name: "nova_api"
     group: "nova-api"
@@ -52,6 +55,7 @@ nova_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/lib/modules:/lib/modules:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_api_dimensions }}"
   nova-consoleauth:
     container_name: "nova_consoleauth"
     group: "nova-consoleauth"
@@ -61,6 +65,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-consoleauth/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_consoleauth_dimensions }}"
   nova-novncproxy:
     container_name: "nova_novncproxy"
     group: "nova-novncproxy"
@@ -70,6 +75,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-novncproxy/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_novncproxy_dimensions }}"
   nova-scheduler:
     container_name: "nova_scheduler"
     group: "nova-scheduler"
@@ -79,6 +85,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_scheduler_dimensions }}"
   nova-spicehtml5proxy:
     container_name: "nova_spicehtml5proxy"
     group: "nova-spicehtml5proxy"
@@ -88,6 +95,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-spicehtml5proxy/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_spicehtml5proxy_dimensions }}"
   nova-serialproxy:
     container_name: "nova_serialproxy"
     group: "nova-serialproxy"
@@ -97,6 +105,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_serialproxy_dimensions }}"
   nova-conductor:
     container_name: "nova_conductor"
     group: "nova-conductor"
@@ -106,6 +115,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_conductor_dimensions }}"
   nova-compute:
     container_name: "nova_compute"
     group: "compute"
@@ -126,6 +136,7 @@ nova_services:
       - "libvirtd:/var/lib/libvirt"
       - "nova_compute:/var/lib/nova/"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+    dimensions: "{{ nova_compute_dimensions }}"
   nova-compute-ironic:
     container_name: "nova_compute_ironic"
     group: "nova-compute-ironic"
@@ -135,6 +146,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ nova_compute_ironic_dimensions }}"
 
 ####################
 # Ceph
@@ -231,6 +243,19 @@ nova_serialproxy_image_full: "{{ nova_serialproxy_image }}:{{ nova_serialproxy_t
 placement_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-placement-api"
 placement_api_tag: "{{ nova_tag }}"
 placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
+
+nova_libvirt_dimensions: "{{ default_container_dimensions }}"
+nova_ssh_dimensions: "{{ default_container_dimensions }}"
+placement_api_dimensions: "{{ default_container_dimensions }}"
+nova_api_dimensions: "{{ default_container_dimensions }}"
+nova_consoleauth_dimensions: "{{ default_container_dimensions }}"
+nova_novncproxy_dimensions: "{{ default_container_dimensions }}"
+nova_scheduler_dimensions: "{{ default_container_dimensions }}"
+nova_spicehtml5proxy_dimensions: "{{ default_container_dimensions }}"
+nova_serialproxy_dimensions: "{{ default_container_dimensions }}"
+nova_conductor_dimensions: "{{ default_container_dimensions }}"
+nova_compute_dimensions: "{{ default_container_dimensions }}"
+nova_compute_ironic_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack
