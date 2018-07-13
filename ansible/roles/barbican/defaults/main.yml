@@ -13,6 +13,7 @@ barbican_services:
       - "barbican:/var/lib/barbican/"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    dimensions: "{{ barbican_api_dimensions }}"
   barbican-keystone-listener:
     container_name: barbican_keystone_listener
     group: barbican-keystone-listener
@@ -23,6 +24,7 @@ barbican_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    dimensions: "{{ barbican_keystone_listener_dimensions }}"
   barbican-worker:
     container_name: barbican_worker
     group: barbican-worker
@@ -33,6 +35,7 @@ barbican_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    dimensions: "{{ barbican_worker_dimensions }}"
 
 
 ####################
@@ -61,6 +64,9 @@ barbican_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{
 barbican_worker_tag: "{{ barbican_tag }}"
 barbican_worker_image_full: "{{ barbican_worker_image }}:{{ barbican_worker_tag }}"
 
+barbican_api_dimensions: "{{ default_container_dimensions }}"
+barbican_keystone_listener_dimensions: "{{ default_container_dimensions }}"
+barbican_worker_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

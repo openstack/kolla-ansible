@@ -12,6 +12,7 @@ heat_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ heat_api_dimensions }}"
   heat-api-cfn:
     container_name: heat_api_cfn
     group: heat-api-cfn
@@ -22,6 +23,7 @@ heat_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ heat_api_cfn_dimensions }}"
   heat-engine:
     container_name: heat_engine
     group: heat-engine
@@ -32,6 +34,7 @@ heat_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ heat_engine_dimensions }}"
 
 ####################
 # Database
@@ -58,6 +61,10 @@ heat_api_cfn_image_full: "{{ heat_api_cfn_image }}:{{ heat_api_cfn_tag }}"
 heat_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ heat_install_type }}-heat-engine"
 heat_engine_tag: "{{ heat_tag }}"
 heat_engine_image_full: "{{ heat_engine_image }}:{{ heat_engine_tag }}"
+
+heat_api_dimensions: "{{ default_container_dimensions }}"
+heat_api_cfn_dimensions: "{{ default_container_dimensions }}"
+heat_engine_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

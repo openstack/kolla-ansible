@@ -12,6 +12,7 @@ gnocchi_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "gnocchi:/var/lib/gnocchi/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ gnocchi_api_dimensions }}"
   gnocchi-metricd:
     container_name: gnocchi_metricd
     group: gnocchi-metricd
@@ -22,6 +23,7 @@ gnocchi_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "gnocchi:/var/lib/gnocchi/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ gnocchi_metricd_dimensions }}"
   gnocchi-statsd:
     container_name: gnocchi_statsd
     group: gnocchi-statsd
@@ -32,6 +34,7 @@ gnocchi_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "gnocchi:/var/lib/gnocchi/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ gnocchi_statsd_dimensions }}"
 
 
 ####################
@@ -81,6 +84,10 @@ gnocchi_statsd_image_full: "{{ gnocchi_statsd_image }}:{{ gnocchi_statsd_tag }}"
 gnocchi_metricd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ gnocchi_install_type }}-gnocchi-metricd"
 gnocchi_metricd_tag: "{{ gnocchi_tag }}"
 gnocchi_metricd_image_full: "{{ gnocchi_metricd_image }}:{{ gnocchi_metricd_tag }}"
+
+gnocchi_api_dimensions: "{{ default_container_dimensions }}"
+gnocchi_metricd_dimensions: "{{ default_container_dimensions }}"
+gnocchi_statsd_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

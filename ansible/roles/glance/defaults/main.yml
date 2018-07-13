@@ -14,6 +14,7 @@ glance_services:
       - "{{ glance_file_datadir_volume }}:/var/lib/glance/"
       - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python2.7/site-packages/glance' if glance_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ glance_api_dimensions }}"
   glance-registry:
     container_name: glance_registry
     group: glance-registry
@@ -24,6 +25,7 @@ glance_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python2.7/site-packages/glance' if glance_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ glance_registry_dimensions }}"
 
 ####################
 # Notification
@@ -77,6 +79,10 @@ glance_registry_image_full: "{{ glance_registry_image }}:{{ glance_registry_tag 
 glance_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ glance_install_type }}-glance-api"
 glance_api_tag: "{{ glance_tag }}"
 glance_api_image_full: "{{ glance_api_image }}:{{ glance_api_tag }}"
+
+glance_api_dimensions: "{{ default_container_dimensions }}"
+glance_registry_dimensions: "{{ default_container_dimensions }}"
+
 
 ####################
 # Glance

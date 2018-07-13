@@ -14,6 +14,7 @@ common_services:
       - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ fluentd_dimensions }}"
   kolla-toolbox:
     container_name: kolla_toolbox
     enabled: True
@@ -28,6 +29,7 @@ common_services:
       - "/dev/:/dev/"
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ kolla_toolbox_dimensions }}"
   # DUMMY_ENVIRONMENT is needed because empty environment is not supported
   cron:
     container_name: cron
@@ -39,6 +41,7 @@ common_services:
       - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ cron_dimensions }}"
 
 
 ####################
@@ -46,6 +49,10 @@ common_services:
 ####################
 common_install_type: "{{ kolla_install_type }}"
 common_tag: "{{ openstack_release }}"
+
+cron_dimensions: "{{ default_container_dimensions }}"
+kolla_toolbox_dimensions: "{{ default_container_dimensions }}"
+fluentd_dimensions: "{{ default_container_dimensions }}"
 
 kolla_toolbox_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ common_install_type }}-kolla-toolbox"
 kolla_toolbox_tag: "{{ common_tag }}"

@@ -12,6 +12,7 @@ blazar_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+    dimensions: "{{ blazar_api_dimensions }}"
   blazar-manager:
     container_name: blazar_manager
     group: blazar-manager
@@ -22,6 +23,7 @@ blazar_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+    dimensions: "{{ blazar_manager_dimensions }}"
 
 
 ####################
@@ -51,6 +53,8 @@ blazar_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ dock
 blazar_api_tag: "{{ blazar_tag }}"
 blazar_api_image_full: "{{ blazar_api_image }}:{{ blazar_api_tag }}"
 
+blazar_api_dimensions: "{{ default_container_dimensions }}"
+blazar_manager_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

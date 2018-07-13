@@ -8,12 +8,7 @@ Overview
 ~~~~~~~~
 
 Since the Rocky release it is possible to restrict
-the resource usage of deployed containers.
-The following components support this feature:
-
-* Nova
-
-In Kolla Ansible,
+the resource usage of deployed containers. In Kolla Ansible,
 container resources to be constrained are referred to as dimensions.
 
 The `Docker documentation <https://docs.docker.com/config/containers/resource_constraints/>`__
@@ -39,7 +34,42 @@ Pre-deployment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Dimensions are defined as a mapping from a Docker resource name
-(e.g. ``cpu_period``) to a string constraint value.
+
+.. list-table:: Resource Constraints
+   :widths: 25 25 25
+   :header-rows: 1
+
+   * - Resource
+     - Data Type
+     - Default Value
+   * - cpu_period
+     - Integer
+     - 0
+   * - blkio_weight
+     - Integer
+     - 0
+   * - cpu_quota
+     - Integer
+     - 0
+   * - cpu_shares
+     - Integer
+     - 0
+   * - mem_limit
+     - Integer
+     - 0
+   * - memswap_limit
+     - Integer
+     - 0
+   * - mem_reservation
+     - Integer
+     - 0
+   * - cpuset_cpus
+     - String
+     - ''(Empty String)
+   * - cpuset_mems
+     - String
+     - ''(Empty String)
+
 
 The variable ``default_container_dimensions`` sets the default dimensions
 for all supported containers, and by default these are unconstrained.
