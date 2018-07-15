@@ -11,6 +11,7 @@ cloudkitty_services:
       - "{{ node_config_directory }}/cloudkitty-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python2.7/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
   cloudkitty-processor:
     container_name: "cloudkitty_processor"
     group: "cloudkitty-processor"
@@ -20,6 +21,7 @@ cloudkitty_services:
       - "{{ node_config_directory }}/cloudkitty-processor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python2.7/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
 
 
 ####################
@@ -62,3 +64,11 @@ openstack_cloudkitty_auth: "{{ openstack_auth }}"
 # Cloudkitty
 ####################
 cloudkitty_openstack_keystone_default_role: "rating"
+
+
+####################
+# Kolla
+####################
+cloudkitty_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+cloudkitty_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+cloudkitty_dev_mode: "{{ kolla_dev_mode }}"
