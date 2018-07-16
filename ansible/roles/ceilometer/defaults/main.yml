@@ -11,6 +11,7 @@ ceilometer_services:
       - "{{ node_config_directory }}/ceilometer-notification/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python2.7/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
   ceilometer-central:
     container_name: ceilometer_central
     group: ceilometer-central
@@ -21,6 +22,7 @@ ceilometer_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "ceilometer:/var/lib/ceilometer/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python2.7/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
   ceilometer-compute:
     container_name: ceilometer_compute
     group: ceilometer-compute
@@ -34,6 +36,7 @@ ceilometer_services:
       - "ceilometer:/var/lib/ceilometer/"
       - "kolla_logs:/var/log/kolla/"
       - "nova_libvirt:/var/lib/libvirt"
+      - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python2.7/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 
 
 ####################
@@ -63,3 +66,11 @@ ceilometer_logging_debug: "{{ openstack_logging_debug }}"
 ceilometer_keystone_user: "ceilometer"
 
 openstack_ceilometer_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+ceilometer_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+ceilometer_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+ceilometer_dev_mode: "{{ kolla_dev_mode }}"
