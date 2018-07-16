@@ -11,6 +11,7 @@ solum_services:
       - "{{ node_config_directory }}/solum-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
   solum-worker:
     container_name: solum_worker
     group: solum-worker
@@ -20,6 +21,7 @@ solum_services:
       - "{{ node_config_directory }}/solum-worker/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
   solum-deployer:
     container_name: solum_deployer
     group: solum-deployer
@@ -29,6 +31,7 @@ solum_services:
       - "{{ node_config_directory }}/solum-deployer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
   solum-conductor:
     container_name: solum_conductor
     group: solum-conductor
@@ -38,6 +41,7 @@ solum_services:
       - "{{ node_config_directory }}/solum-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
 
 
 ####################
@@ -87,3 +91,11 @@ solum_logging_debug: "{{ openstack_logging_debug }}"
 solum_keystone_user: "solum"
 
 openstack_solum_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+solum_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+solum_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+solum_dev_mode: "{{ kolla_dev_mode }}"
