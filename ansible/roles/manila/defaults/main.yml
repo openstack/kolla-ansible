@@ -11,6 +11,7 @@ manila_services:
       - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
   manila-scheduler:
     container_name: "manila_scheduler"
     group: "manila-scheduler"
@@ -20,6 +21,7 @@ manila_services:
       - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
   manila-share:
     container_name: "manila_share"
     group: "manila-share"
@@ -31,6 +33,7 @@ manila_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
   manila-data:
     container_name: "manila_data"
     group: "manila-data"
@@ -42,6 +45,7 @@ manila_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
 
 
 #####################
@@ -138,3 +142,11 @@ manila_backends:
       - "CIFS"
 
 manila_enabled_backends: "{{ manila_backends|selectattr('enabled', 'equalto', true)|list }}"
+
+
+####################
+# Kolla
+####################
+manila_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+manila_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+manila_dev_mode: "{{ kolla_dev_mode }}"
