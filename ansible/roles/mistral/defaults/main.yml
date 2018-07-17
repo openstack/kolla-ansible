@@ -12,6 +12,7 @@ mistral_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+    dimensions: "{{ mistral_api_dimensions }}"
   mistral-engine:
     container_name: mistral_engine
     group: mistral-engine
@@ -22,6 +23,7 @@ mistral_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+    dimensions: "{{ mistral_engine_dimensions }}"
   mistral-executor:
     container_name: mistral_executor
     group: mistral-executor
@@ -32,6 +34,7 @@ mistral_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+    dimensions: "{{ mistral_executor_dimensions }}"
 
 
 ####################
@@ -59,6 +62,10 @@ mistral_executor_image_full: "{{ mistral_executor_image }}:{{ mistral_executor_t
 mistral_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mistral_install_type }}-mistral-api"
 mistral_api_tag: "{{ mistral_tag }}"
 mistral_api_image_full: "{{ mistral_api_image }}:{{ mistral_api_tag }}"
+
+mistral_engine_dimensions: "{{ default_container_dimensions }}"
+mistral_executor_dimensions: "{{ default_container_dimensions }}"
+mistral_api_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

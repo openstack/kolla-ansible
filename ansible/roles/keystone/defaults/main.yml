@@ -13,6 +13,7 @@ keystone_services:
       - "{{ kolla_dev_repos_directory ~ '/keystone/keystone:/var/lib/kolla/venv/lib/python2.7/site-packages/keystone' if keystone_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{% if keystone_token_provider == 'fernet' %}keystone_fernet_tokens:/etc/keystone/fernet-keys{% endif %}"
+    dimensions: "{{ keystone_dimensions }}"
   keystone-ssh:
     container_name: "keystone_ssh"
     group: "keystone"
@@ -23,6 +24,7 @@ keystone_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+    dimensions: "{{ keystone_ssh_dimensions }}"
   keystone-fernet:
     container_name: "keystone_fernet"
     group: "keystone"
@@ -33,6 +35,7 @@ keystone_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+    dimensions: "{{ keystone_fernet_dimensions }}"
 
 
 ####################
@@ -68,6 +71,9 @@ keystone_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ do
 keystone_ssh_tag: "{{ keystone_tag }}"
 keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 
+keystone_dimensions: "{{ default_container_dimensions }}"
+keystone_fernet_dimensions: "{{ default_container_dimensions }}"
+keystone_ssh_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

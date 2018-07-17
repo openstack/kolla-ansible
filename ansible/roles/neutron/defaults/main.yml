@@ -12,6 +12,7 @@ neutron_services:
       - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_server_dimensions }}"
   neutron-openvswitch-agent:
     container_name: "neutron_openvswitch_agent"
     image: "{{ neutron_openvswitch_agent_image_full }}"
@@ -38,6 +39,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
   neutron-openvswitch-agent-xenapi:
     container_name: "neutron_openvswitch_agent_xenapi"
     image: "{{ neutron_openvswitch_agent_image_full }}"
@@ -53,6 +55,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_openvswitch_agent_xenapi_dimensions }}"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
     image: "{{  neutron_linuxbridge_agent_image_full }}"
@@ -76,6 +79,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
   neutron-dhcp-agent:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
@@ -89,6 +93,7 @@ neutron_services:
       - "/run/:/run/:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_dhcp_agent_dimensions }}"
   neutron-l3-agent:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
@@ -106,6 +111,7 @@ neutron_services:
       - "/run:/run:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_l3_agent_dimensions }}"
   neutron-lbaas-agent:
     container_name: "neutron_lbaas_agent"
     image: "{{ neutron_lbaas_agent_image_full }}"
@@ -118,6 +124,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_lbaas_agent_dimensions }}"
   neutron-sriov-agent:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
@@ -129,6 +136,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_sriov_agent_dimensions }}"
   neutron-metadata-agent:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
@@ -145,6 +153,7 @@ neutron_services:
       - "/run/:/run/:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_metadata_agent_dimensions }}"
   neutron-bgp-dragent:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
@@ -157,6 +166,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_bgp_dragent_dimensions }}"
   neutron-infoblox-ipam-agent:
     container_name: "neutron_infoblox_ipam_agent"
     image: "{{ neutron_infoblox_ipam_agent_image_full }}"
@@ -169,6 +179,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_infoblox_ipam_agent_dimensions }}"
   ironic-neutron-agent:
     container_name: "ironic_neutron_agent"
     image: "{{ ironic_neutron_agent_image_full }}"
@@ -180,7 +191,7 @@ neutron_services:
       - "{{ node_config_directory }}/ironic-neutron-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
-
+    dimensions: "{{ ironic_neutron_agent_dimensions }}"
 
 ####################
 # Database
@@ -239,6 +250,20 @@ neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}
 ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-ironic-neutron-agent"
 ironic_neutron_agent_tag: "{{ neutron_tag }}"
 ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
+
+neutron_dhcp_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_l3_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_lbaas_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_sriov_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_linuxbridge_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_metadata_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_openvswitch_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_server_dimensions: "{{ default_container_dimensions }}"
+neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
+neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_openvswitch_agent_xenapi_dimensions: "{{ default_container_dimensions }}"
+ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
+
 
 ####################
 # OpenStack

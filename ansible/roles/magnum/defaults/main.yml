@@ -14,6 +14,7 @@ magnum_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ magnum_api }}"
   magnum-conductor:
     container_name: magnum_conductor
     group: magnum-conductor
@@ -26,6 +27,7 @@ magnum_services:
       - "magnum:/var/lib/magnum/"
       - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ magnum_conductor_dimensions }}"
 
 
 ####################
@@ -55,6 +57,9 @@ magnum_api_image_full: "{{ magnum_api_image }}:{{ magnum_api_tag }}"
 magnum_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ magnum_install_type }}-magnum-conductor"
 magnum_conductor_tag: "{{ magnum_tag }}"
 magnum_conductor_image_full: "{{ magnum_conductor_image }}:{{ magnum_conductor_tag }}"
+
+magnum_api_dimensions: "{{ default_container_dimensions }}"
+magnum_conductor_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################
