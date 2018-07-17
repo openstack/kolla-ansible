@@ -1,0 +1,19 @@
+# Persist transformed logs to Elasticsearch
+
+input {
+    kafka {
+        zk_connect => "{{ monasca_zookeeper_servers }}"
+        topic_id => "{{ monasca_transformed_logs_topic }}"
+        group_id => "transformer-logstash-consumer"
+    }
+}
+
+output {
+    elasticsearch {
+        index => "monasca-%{[meta][tenantId]}-%{+YYYY.MM.dd}"
+        hosts => [{{ monasca_elasticsearch_servers }}]
+        document_type => "log"
+        template_name => "monasca"
+        template => "/etc/logstash/elasticsearch-template.json"
+    }
+}

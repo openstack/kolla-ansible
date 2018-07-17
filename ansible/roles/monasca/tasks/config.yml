@@ -118,6 +118,45 @@
   notify:
     - Restart monasca-log-transformer container
 
+- name: Copying over monasca-log-persister config
+  vars:
+    service: "{{ monasca_services['monasca-log-persister'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-log-persister/log-persister.conf"
+    mode: "0660"
+  become: true
+  register: monasca_log_persister_confs
+  with_first_found:
+    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-persister.conf"
+    - "{{ node_custom_config }}/monasca/log-persister.conf"
+    - "{{ role_path }}/templates/monasca-log-persister/log-persister.conf.j2"
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-log-persister container
+
+- name: Copying over monasca-log-persister elasticsearch template
+  vars:
+    service: "{{ monasca_services['monasca-log-persister'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-log-persister/elasticsearch-template.json"
+    mode: "0660"
+  become: true
+  register: monasca_log_persister_elasticsearch_template
+  with_first_found:
+    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/elasticsearch-template.json"
+    - "{{ node_custom_config }}/monasca/elasticsearch-template.json"
+    - "{{ role_path }}/templates/monasca-log-persister/elasticsearch-template.json"
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-log-persister container
+
+
 - name: Check monasca containers
   become: true
   kolla_docker:

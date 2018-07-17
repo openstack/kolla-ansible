@@ -27,6 +27,15 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+  monasca-log-persister:
+    container_name: monasca_log_persister
+    group: monasca-log-persister
+    enabled: true
+    image: "{{ monasca_logstash_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
 
 ####################
 # Databases
@@ -45,6 +54,7 @@ monasca_influxdb_http_port: "{{ influxdb_http_port }}"
 monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
 
 monasca_metrics_topic: "metrics"
 monasca_raw_logs_topic: "logs"
