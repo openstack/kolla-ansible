@@ -11,6 +11,7 @@ skydive_services:
       - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ skydive_analyzer_dimensions }}"
   skydive-agent:
     container_name: skydive_agent
     group: skydive-agent
@@ -23,6 +24,7 @@ skydive_services:
       - "/var/run/openvswitch:/var/run/openvswitch:ro"
       - "/var/run/netns:/host/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ skydive_agent_dimensions }}"
 
 ####################
 # Docker
@@ -34,3 +36,5 @@ skydive_analyzer_image_full: "{{ skydive_analyzer_image }}:{{ skydive_analyzer_t
 skydive_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-skydive-agent"
 skydive_agent_tag: "{{ openstack_release }}"
 skydive_agent_image_full: "{{ skydive_agent_image }}:{{ skydive_agent_tag }}"
+skydive_analyzer_dimensions: "{{ default_container_dimensions }}"
+skydive_agent_dimensions: "{{ default_container_dimensions }}"

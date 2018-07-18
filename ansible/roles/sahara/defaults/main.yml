@@ -13,6 +13,7 @@ sahara_services:
       - "sahara:/var/lib/sahara/"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+    dimensions: "{{ sahara_api_dimensions }}"
   sahara-engine:
     container_name: sahara_engine
     group: sahara-engine
@@ -26,6 +27,7 @@ sahara_services:
       - "kolla_logs:/var/log/kolla/"
       - "/run:/run:shared"
       - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+    dimensions: "{{ sahara_engine_dimensions }}"
 
 
 ####################
@@ -50,6 +52,8 @@ sahara_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ dock
 sahara_api_tag: "{{ sahara_tag }}"
 sahara_api_image_full: "{{ sahara_api_image }}:{{ sahara_api_tag }}"
 
+sahara_api_dimensions: "{{ default_container_dimensions }}"
+sahara_engine_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

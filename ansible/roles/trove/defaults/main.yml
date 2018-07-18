@@ -13,6 +13,7 @@ trove_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
+    dimensions: "{{ trove_api_dimensions }}"
   trove-conductor:
     container_name: trove_conductor
     group: trove-conductor
@@ -24,6 +25,7 @@ trove_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
+    dimensions: "{{ trove_conductor_dimensions }}"
   trove-taskmanager:
     container_name: trove_taskmanager
     group: trove-taskmanager
@@ -35,6 +37,7 @@ trove_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
       - "trove:/var/lib/trove/"
+    dimensions: "{{ trove_taskmanager_dimensions }}"
 
 
 ####################
@@ -62,6 +65,10 @@ trove_api_image_full: "{{ trove_api_image }}:{{ trove_api_tag }}"
 trove_taskmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ trove_install_type }}-trove-taskmanager"
 trove_taskmanager_tag: "{{ trove_tag }}"
 trove_taskmanager_image_full: "{{ trove_taskmanager_image }}:{{ trove_taskmanager_tag }}"
+
+trove_api_dimensions: "{{ default_container_dimensions }}"
+trove_conductor_dimensions: "{{ default_container_dimensions }}"
+trove_taskmanager_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

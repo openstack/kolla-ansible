@@ -11,6 +11,7 @@ searchlight_services:
       - "{{ node_config_directory }}/searchlight-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ searchlight_api_dimensions }}"
   searchlight-listener:
     container_name: searchlight_listener
     group: searchlight-listener
@@ -20,6 +21,7 @@ searchlight_services:
       - "{{ node_config_directory }}/searchlight-listener/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ searchlight_listener_dimensions }}"
 
 ####################
 # Elasticsearch
@@ -39,6 +41,9 @@ searchlight_listener_image_full: "{{ searchlight_listener_image }}:{{ searchligh
 searchlight_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ searchlight_install_type }}-searchlight-api"
 searchlight_api_tag: "{{ searchlight_tag }}"
 searchlight_api_image_full: "{{ searchlight_api_image }}:{{ searchlight_api_tag }}"
+
+searchlight_api_dimensions: "{{ default_container_dimensions }}"
+searchlight_listener_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

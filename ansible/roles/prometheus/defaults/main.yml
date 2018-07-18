@@ -12,6 +12,7 @@ prometheus_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "prometheus:/var/lib/prometheus"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ prometheus_server_dimensions }}"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -24,6 +25,7 @@ prometheus_services:
       - "kolla_logs:/var/log/kolla/"
       - "/proc:/host/proc:ro"
       - "/sys:/host/sys:ro"
+    dimensions: "{{ prometheus_node_exporter_dimensions }}"
   prometheus-mysqld-exporter:
     container_name: prometheus_mysqld_exporter
     group: prometheus-mysqld-exporter
@@ -33,6 +35,7 @@ prometheus_services:
       - "{{ node_config_directory }}/prometheus-mysqld-exporter/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ prometheus_mysqld_exporter_dimensions }}"
   prometheus-haproxy-exporter:
     container_name: prometheus_haproxy_exporter
     group: prometheus-haproxy-exporter
@@ -43,6 +46,7 @@ prometheus_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "haproxy_socket:/var/lib/kolla/haproxy"
+    dimensions: "{{ prometheus_haproxy_exporter_dimensions }}"
   prometheus-memcached-exporter:
     container_name: prometheus_memcached_exporter
     group: prometheus-memcached-exporter
@@ -52,6 +56,7 @@ prometheus_services:
       - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ prometheus_memcached_exporter_dimensions }}"
   prometheus-cadvisor:
     container_name: "prometheus_cadvisor"
     group: "prometheus-cadvisor"
@@ -66,6 +71,7 @@ prometheus_services:
       - "/sys:/sys:ro"
       - "/varlib/docker/:/var/lib/docker:ro"
       - "/dev/disk/:/dev/disk:ro"
+    dimensions: "{{ prometheus_cadvisor_dimensions }}"
   prometheus-alertmanager:
     container_name: "prometheus_alertmanager"
     group: "prometheus-alertmanager"
@@ -76,6 +82,7 @@ prometheus_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "prometheus:/var/lib/prometheus"
+    dimensions: "{{ prometheus_alertmanager_dimensions }}"
 
 ####################
 # Database
@@ -115,3 +122,11 @@ prometheus_cadvisor_image_full: "{{ prometheus_cadvisor_image }}:{{ prometheus_c
 prometheus_alertmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-prometheus-alertmanager"
 prometheus_alertmanager_tag: "{{ openstack_release }}"
 prometheus_alertmanager_image_full: "{{ prometheus_alertmanager_image }}:{{ prometheus_alertmanager_tag }}"
+
+prometheus_server_dimensions: "{{ default_container_dimensions }}"
+prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_node_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_memcached_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
+prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"

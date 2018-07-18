@@ -12,6 +12,7 @@ solum_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    dimensions: "{{ solum_api_dimensions }}"
   solum-worker:
     container_name: solum_worker
     group: solum-worker
@@ -22,6 +23,7 @@ solum_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    dimensions: "{{ solum_worker_dimensions }}"
   solum-deployer:
     container_name: solum_deployer
     group: solum-deployer
@@ -32,6 +34,7 @@ solum_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    dimensions: "{{ solum_deployer_dimensions }}"
   solum-conductor:
     container_name: solum_conductor
     group: solum-conductor
@@ -42,6 +45,7 @@ solum_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    dimensions: "{{ solum_conductor_dimensions }}"
 
 
 ####################
@@ -74,6 +78,10 @@ solum_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 solum_api_tag: "{{ solum_tag }}"
 solum_api_image_full: "{{ solum_api_image }}:{{ solum_api_tag }}"
 
+solum_api_dimensions: "{{ default_container_dimensions }}"
+solum_worker_dimensions: "{{ default_container_dimensions }}"
+solum_deployer_dimensions: "{{ default_container_dimensions }}"
+solum_conductor_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack
