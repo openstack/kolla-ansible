@@ -169,6 +169,17 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+  ironic-neutron-agent:
+    container_name: "ironic_neutron_agent"
+    image: "{{ ironic_neutron_agent_image_full }}"
+    privileged: False
+    enabled: "{{ enable_ironic_neutron_agent | bool }}"
+    group: "ironic-neutron-agent"
+    host_in_groups: "{{ inventory_hostname in groups['ironic-neutron-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/ironic-neutron-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
 
 
 ####################
@@ -224,6 +235,10 @@ neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_
 neutron_infoblox_ipam_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-infoblox-ipam-agent"
 neutron_infoblox_ipam_agent_tag: "{{ neutron_tag }}"
 neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}:{{ neutron_infoblox_ipam_agent_tag }}"
+
+ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-ironic-neutron-agent"
+ironic_neutron_agent_tag: "{{ neutron_tag }}"
+ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
 
 ####################
 # OpenStack
