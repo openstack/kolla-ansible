@@ -18,7 +18,7 @@ nova_services:
       - "/sys/fs/cgroup:/sys/fs/cgroup"
       - "kolla_logs:/var/log/kolla/"
       - "libvirtd:/var/lib/libvirt"
-      - "nova_compute:/var/lib/nova/"
+      - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "nova_libvirt_qemu:/etc/libvirt/qemu"
     dimensions: "{{ nova_libvirt_dimensions }}"
@@ -31,7 +31,7 @@ nova_services:
       - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
-      - "nova_compute:/var/lib/nova"
+      - "{{ nova_instance_datadir_volume }}:/var/lib/nova"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
     dimensions: "{{ nova_ssh_dimensions }}"
   placement-api:
@@ -134,7 +134,7 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "libvirtd:/var/lib/libvirt"
-      - "nova_compute:/var/lib/nova/"
+      - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
       - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
     dimensions: "{{ nova_compute_dimensions }}"
   nova-compute-ironic:
