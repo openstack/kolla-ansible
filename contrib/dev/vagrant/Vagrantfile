@@ -85,6 +85,7 @@ NUMBER_OF_CONTROL_NODES ||= 3
 NUMBER_OF_COMPUTE_NODES ||= 1
 NUMBER_OF_STORAGE_NODES ||= 1
 NUMBER_OF_NETWORK_NODES ||= 1
+NUMBER_OF_MONITOR_NODES ||= 1
 
 NODE_SETTINGS ||= {
   aio: {
@@ -108,6 +109,10 @@ NODE_SETTINGS ||= {
     memory: 1024
   },
   network: {
+    cpus: 1,
+    memory: 1024
+  },
+  monitor: {
     cpus: 1,
     memory: 1024
   }
@@ -232,7 +237,7 @@ Vagrant.configure(2) do |config|
   # The operator controls the deployment
   config.vm.define "operator", primary: true do |admin|
     admin.vm.hostname = "operator.local"
-    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path} #{NUMBER_OF_COMPUTE_NODES} #{NUMBER_OF_STORAGE_NODES} #{NUMBER_OF_NETWORK_NODES} #{NUMBER_OF_CONTROL_NODES}"
+    admin.vm.provision :shell, path: PROVISION_SCRIPT, args: "operator #{MULTINODE ? 'multinode' : 'aio'} #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path} #{NUMBER_OF_COMPUTE_NODES} #{NUMBER_OF_STORAGE_NODES} #{NUMBER_OF_NETWORK_NODES} #{NUMBER_OF_CONTROL_NODES} #{NUMBER_OF_MONITOR_NODES}"
     admin.vm.synced_folder kolla_ansible_repo_path, kolla_ansible_path, create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder kolla_repo_path, kolla_path, create:"True", type: get_default(:sync_method)
     admin.vm.synced_folder kolla_cli_repo_path, kolla_cli_path, create:"True", type: get_default(:sync_method)
@@ -256,7 +261,7 @@ Vagrant.configure(2) do |config|
         hostname = "#{node_type}0#{i}"
         config.vm.define hostname do |node|
           node.vm.hostname = "#{hostname}.local"
-          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path} #{NUMBER_OF_COMPUTE_NODES} #{NUMBER_OF_STORAGE_NODES} #{NUMBER_OF_NETWORK_NODES} #{NUMBER_OF_CONTROL_NODES}"
+          node.vm.provision :shell, path: PROVISION_SCRIPT, args: "#{hostname} multinode #{kolla_path} #{kolla_ansible_path} #{kolla_cli_path} #{NUMBER_OF_COMPUTE_NODES} #{NUMBER_OF_STORAGE_NODES} #{NUMBER_OF_NETWORK_NODES} #{NUMBER_OF_CONTROL_NODES} #{NUMBER_OF_MONITOR_NODES}"
           node.vm.synced_folder File.join(vagrant_dir, 'storage', node_type), "/data/host", create:"True", type: get_default(:sync_method)
           node.vm.synced_folder File.join(vagrant_dir, 'storage', 'shared'), "/data/shared", create:"True", type: get_default(:sync_method)
           node.vm.synced_folder ".", vagrant_shared_folder, disabled: true
