@@ -2,14 +2,18 @@
 - name: Running Ironic bootstrap container
   vars:
     ironic_api: "{{ ironic_services['ironic-api'] }}"
+    bootstrap_environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    upgrade_environment:
+      KOLLA_UPGRADE:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
   become: true
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
-    environment:
-      KOLLA_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    environment: "{{ upgrade_environment if ironic_enable_rolling_upgrade|bool else bootstrap_environment }}"
     image: "{{ ironic_api.image }}"
     labels:
       BOOTSTRAP:

@@ -1,28 +1,4 @@
 ---
-- name: Restart ironic-api container
-  vars:
-    service_name: "ironic-api"
-    service: "{{ ironic_services[service_name] }}"
-    config_json: "{{ ironic_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ironic_conf: "{{ ironic_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ ironic_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ironic_api_container: "{{ check_ironic_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
-  become: true
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
-  when:
-    - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or ironic_conf.changed | bool
-      or policy_json.changed | bool
-      or ironic_api_container.changed | bool
-
 - name: Restart ironic-conductor container
   vars:
     service_name: "ironic-conductor"
@@ -47,6 +23,30 @@
       or ironic_conf.changed | bool
       or policy_json.changed | bool
       or ironic_conductor_container.changed | bool
+
+- name: Restart ironic-api container
+  vars:
+    service_name: "ironic-api"
+    service: "{{ ironic_services[service_name] }}"
+    config_json: "{{ ironic_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ironic_conf: "{{ ironic_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_json: "{{ ironic_policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    ironic_api_container: "{{ check_ironic_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or ironic_conf.changed | bool
+      or policy_json.changed | bool
+      or ironic_api_container.changed | bool
 
 - name: Restart ironic-inspector container
   vars:
