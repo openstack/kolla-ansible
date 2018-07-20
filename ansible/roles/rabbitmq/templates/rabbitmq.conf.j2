@@ -1,0 +1,14 @@
+listeners.tcp.1 = {{ api_interface_address }}:{{ role_rabbitmq_port }}
+{% if rabbitmq_hipe_compile|bool %}
+hipe_compile = true
+{% endif %}
+cluster_partition_handling = autoheal
+
+management.listener.ip = {{ api_interface_address }}
+management.listener.port = {{ role_rabbitmq_management_port }}
+management.load_definitions = /etc/rabbitmq/definitions.json
+
+cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
+{% for host in groups[role_rabbitmq_groups] %}
+cluster_formation.classic_config.nodes.{{ loop.index0 }} = rabbit@{{ hostvars[host]['ansible_hostname'] }}
+{% endfor %}

@@ -24,7 +24,8 @@
     - item.value.enabled | bool
   with_dict: "{{ rabbitmq_services }}"
   notify:
-    - Restart rabbitmq container
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
 
 - name: Copying over rabbitmq configs
   vars:
@@ -40,10 +41,11 @@
     - service.enabled | bool
   with_items:
     - "rabbitmq-env.conf"
-    - "rabbitmq.config"
+    - "rabbitmq.conf"
     - "definitions.json"
   notify:
-    - Restart rabbitmq container
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
 
 - name: Check rabbitmq containers
   become: true
@@ -62,4 +64,5 @@
     - item.value.enabled | bool
   with_dict: "{{ rabbitmq_services }}"
   notify:
-    - Restart rabbitmq container
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
