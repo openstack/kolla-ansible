@@ -1,0 +1,24 @@
+# This playbook modifies the system shutdown sequence to ensure that
+# nova-compute is shutdown safely, including guests, when used in
+# conjunction with systemd-machined and libvirt.
+---
+- name: Set up compute libvirts to shutdown guests safely
+  hosts: compute
+  become: true
+  vars:
+    systemd_artifacts:
+      - kolla-libvirt-guests.service
+      - virt-guest-shutdown.target
+  tasks:
+    - name: Install systemd artifacts
+      copy:
+        src: "{{ item }}"
+        dest: "/usr/lib/systemd/system/{{ item }}"
+      with_items: "{{ systemd_artifacts }}"
+
+    - name: Enable/start systemd artifacts
+      systemd:
+        enabled: yes
+        state: started
+        name: "{{ item }}"
+      with_items: "{{ systemd_artifacts }}"
