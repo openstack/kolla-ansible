@@ -1,23 +1,23 @@
 ---
-- include: ceph.yml
+- include_tasks: ceph.yml
   when:
     - enable_ceph | bool
     - gnocchi_backend_storage == 'ceph'
 
-- include: external_ceph.yml
+- include_tasks: external_ceph.yml
   when:
     - enable_ceph | bool == False
     - gnocchi_backend_storage == 'ceph'
 
-- include: register.yml
+- include_tasks: register.yml
   when: inventory_hostname in groups['gnocchi-api']
 
-- include: config.yml
+- include_tasks: config.yml
   when: inventory_hostname in groups['gnocchi-statsd'] or
         inventory_hostname in groups['gnocchi-api'] or
         inventory_hostname in groups['gnocchi-metricd']
 
-- include: bootstrap.yml
+- include_tasks: bootstrap.yml
   when: inventory_hostname in groups['gnocchi-api']
 
 - name: Flush handlers

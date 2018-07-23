@@ -1,5 +1,5 @@
 ---
-- include: ceph.yml
+- include_tasks: ceph.yml
   when:
     - (enable_ceph | bool) and (cinder_backend_ceph | bool)
     - inventory_hostname in groups['ceph-mon'] or
@@ -8,31 +8,31 @@
         inventory_hostname in groups['cinder-scheduler'] or
         inventory_hostname in groups['cinder-backup']
 
-- include: external_ceph.yml
+- include_tasks: external_ceph.yml
   when:
     - (enable_ceph | bool == False) and (cinder_backend_ceph | bool)
     - inventory_hostname in groups['cinder-volume'] or
       inventory_hostname in groups['cinder-backup']
 
-- include: register.yml
+- include_tasks: register.yml
   when: inventory_hostname in groups['cinder-api']
 
-- include: config.yml
+- include_tasks: config.yml
   when: inventory_hostname in groups['cinder-api'] or
         inventory_hostname in groups['cinder-volume'] or
         inventory_hostname in groups['cinder-scheduler'] or
         inventory_hostname in groups['cinder-backup']
 
-- include: clone.yml
+- include_tasks: clone.yml
   when: cinder_dev_mode | bool
 
-- include: bootstrap.yml
+- include_tasks: bootstrap.yml
   when: inventory_hostname in groups['cinder-api']
 
 - name: Flush handlers
   meta: flush_handlers
 
-- include: check.yml
+- include_tasks: check.yml
   when: inventory_hostname in groups['cinder-api'] or
         inventory_hostname in groups['cinder-volume'] or
         inventory_hostname in groups['cinder-scheduler'] or

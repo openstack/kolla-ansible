@@ -55,7 +55,7 @@
   with_items:
     - { name: ceph_rgw, group: ceph-rgw }
 
-- include: config.yml
+- include_tasks: config.yml
 
 - name: Check the configs in ceph_mon container
   command: docker exec {{ item.name }} /usr/local/bin/kolla_set_configs --check
@@ -165,17 +165,17 @@
     - "{{ ceph_rgw_container_envs.results }}"
     - "{{ ceph_rgw_check_results.results }}"
 
-- include: start_mons.yml
+- include_tasks: start_mons.yml
   when:
     - inventory_hostname in groups['ceph-mon']
     - remove_ceph_mon_container.changed
 
-- include: start_osds.yml
+- include_tasks: start_osds.yml
   when:
     - inventory_hostname in groups['ceph-osd']
     - remove_ceph_osd_containers.changed
 
-- include: start_rgws.yml
+- include_tasks: start_rgws.yml
   when:
     - inventory_hostname in groups['ceph-rgw']
     - remove_ceph_rgw_container.changed

@@ -1,8 +1,8 @@
 ---
-- include: register.yml
+- include_tasks: register.yml
   when: inventory_hostname in groups['designate-api']
 
-- include: config.yml
+- include_tasks: config.yml
   when: inventory_hostname in groups['designate-api'] or
         inventory_hostname in groups['designate-central'] or
         inventory_hostname in groups['designate-producer'] or
@@ -11,14 +11,14 @@
         inventory_hostname in groups['designate-sink'] or
         inventory_hostname in groups['designate-backend-bind9']
 
-- include: clone.yml
+- include_tasks: clone.yml
   when: designate_dev_mode | bool
 
-- include: bootstrap.yml
+- include_tasks: bootstrap.yml
   when: inventory_hostname in groups['designate-central']
 
 - name: Flush handlers
   meta: flush_handlers
 
-- include: update_pools.yml
+- include_tasks: update_pools.yml
   when: inventory_hostname in groups['designate-worker'][0]
