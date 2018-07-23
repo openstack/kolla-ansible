@@ -1,0 +1,19 @@
+[Unit]
+Description=Manage libvirt guests in kolla safely
+After=docker.service
+After=systemd-machined.service
+After=virt-guest-shutdown.target
+Requires=docker.service
+Requires=virt-guest-shutdown.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=610
+ExecStart=-/usr/bin/docker exec nova_libvirt /bin/rm -f /var/lib/libvirt/libvirt-guests
+ExecStart=-/usr/bin/docker start nova_compute
+ExecStop=/usr/bin/docker stop nova_compute
+ExecStop=/usr/bin/docker exec nova_libvirt /bin/sh -x /usr/libexec/libvirt-guests.sh shutdown
