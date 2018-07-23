@@ -15,7 +15,7 @@ neutron_services:
   neutron-openvswitch-agent:
     container_name: "neutron_openvswitch_agent"
     image: "{{ neutron_openvswitch_agent_image_full }}"
-    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' and not enable_onos | bool }}"
     privileged: True
     host_in_groups: >-
       {{
@@ -80,7 +80,7 @@ neutron_services:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] and not enable_onos | bool }}"
     group: "neutron-dhcp-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes:
@@ -93,7 +93,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] and not enable_opendaylight_l3 | bool }}"
+    enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] and not enable_opendaylight_l3 | bool and not enable_onos | bool }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
@@ -133,7 +133,7 @@ neutron_services:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ neutron_plugin_agent not in [ 'vmware_nsxv', 'vmware_nsxv3' ] and not enable_onos | bool }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-metadata-agent']
@@ -376,3 +376,9 @@ notification_drivers:
     enabled: "{{ enable_opendaylight_qos | bool }}"
 
 neutron_notification_drivers: "{{ notification_drivers|selectattr('enabled', 'equalto', true)|list }}"
+
+############
+# Onos
+############
+onos_url: "127.0.0.1"
+onos_username: "username"

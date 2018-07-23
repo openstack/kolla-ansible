@@ -7,6 +7,8 @@ tenant_network_types = {{ neutron_tenant_network_types }}
 {% if neutron_plugin_agent == "openvswitch" %}
 {% if enable_hyperv | bool %}
 mechanism_drivers = openvswitch,hyperv
+{% elif enable_onos | bool %}
+mechanism_drivers = onos_ml2
 {% else %}
 mechanism_drivers = openvswitch,l2population
 {% endif %}
@@ -32,6 +34,13 @@ url = {{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ opendaylight
 username = admin
 password = {{ opendaylight_password }}
 port_binding_controller = {{ opendaylight_port_binding_type }}
+{% endif %}
+
+{% if enable_onos | bool %}
+[onos]
+url_path = {{ onos_url }}
+username = {{ onos_username }}
+password = {{ onos_password }}
 {% endif %}
 
 [ml2_type_vlan]
