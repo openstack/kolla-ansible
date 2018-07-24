@@ -99,7 +99,7 @@ Create base neutron networks and glance images.
 
 .. code-block:: console
 
-   $ sh tools/init-runonce
+   $ ./tools/init-runonce
 
 .. end
 
@@ -129,7 +129,7 @@ Execute ``deploy-tacker-demo`` script to initialize the VNF creation.
 
 .. code-block:: console
 
-   $ sh deploy-tacker-demo
+   $ ./deploy-tacker-demo
 
 .. end
 
@@ -145,10 +145,10 @@ Verify tacker VNF status is ACTIVE.
 
 .. code-block:: console
 
-   $ tacker vnf-list
+   $ openstack vnf list
 
    +--------------------------------------+------------------+-----------------------+--------+--------------------------------------+--------------------------------------+
-   | id                                   | name             | mgmt_url              | status | vim_id                               | vnfd_id                              |
+   | ID                                   | Name             | Mgmt Url              | Status | VIM ID                               | VNFD ID                              |
    +--------------------------------------+------------------+-----------------------+--------+--------------------------------------+--------------------------------------+
    | c52fcf99-101d-427b-8a2d-c9ef54af8b1d | kolla-sample-vnf | {"VDU1": "10.0.0.10"} | ACTIVE | eb3aa497-192c-4557-a9d7-1dff6874a8e6 | 27e8ea98-f1ff-4a40-a45c-e829e53b3c41 |
    +--------------------------------------+------------------+-----------------------+--------+--------------------------------------+--------------------------------------+
@@ -188,6 +188,6 @@ can be cleaned up executing ``cleanup-tacker`` script.
 
 .. code-block:: console
 
-   $ sh cleanup-tacker
+   $ ./cleanup-tacker
 
 .. end
