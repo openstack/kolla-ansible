@@ -187,6 +187,16 @@ RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
 .. end
 
+.. note::
+
+    By default RadosGW supports both Swift and S3 API, and it is not
+    completely compatible with Swift API. The option `ceph_rgw_compatibility`
+    in ``ansible/group_vars/all.yml`` can enable/disable the RadosGW
+    compatibility with Swift API completely. After changing the value, run the
+    "reconfigure“ command to enable.
+
+.. end
+
 Configure the Ceph store type in ``ansible/group_vars/all.yml``, the default
 value is ``bluestore`` in Rocky:
 
