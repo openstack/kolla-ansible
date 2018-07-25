@@ -1,9 +1,13 @@
 ---
 - include: register.yml
+  when: inventory_hostname in groups['freezer-api']
 
 - include: config.yml
+  when: inventory_hostname in groups['freezer-api'] or
+        inventory_hostname in groups['freezer-scheduler']
 
 - include: bootstrap_service.yml
+  when: inventory_hostname in groups['freezer-api']
 
 - name: Flush handlers
   meta: flush_handlers
