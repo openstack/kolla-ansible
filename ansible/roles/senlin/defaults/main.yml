@@ -12,6 +12,7 @@ senlin_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+    dimensions: "{{ senlin_api_dimensions }}"
   senlin-engine:
     container_name: senlin_engine
     group: senlin-engine
@@ -22,6 +23,7 @@ senlin_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+    dimensions: "{{ senlin_engine_dimensions }}"
 
 ####################
 # Database
@@ -44,6 +46,9 @@ senlin_engine_image_full: "{{ senlin_engine_image }}:{{ senlin_engine_tag }}"
 senlin_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-api"
 senlin_api_tag: "{{ senlin_tag }}"
 senlin_api_image_full: "{{ senlin_api_image }}:{{ senlin_api_tag }}"
+
+senlin_api_dimensions: "{{ default_container_dimensions }}"
+senlin_engine_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

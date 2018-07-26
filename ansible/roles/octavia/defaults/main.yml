@@ -11,6 +11,7 @@ octavia_services:
       - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ octavia_api_dimensions }}"
   octavia-health-manager:
     container_name: octavia_health_manager
     group: octavia-health-manager
@@ -20,6 +21,7 @@ octavia_services:
       - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ octavia_health_manager_dimensions }}"
   octavia-housekeeping:
     container_name: octavia_housekeeping
     group: octavia-housekeeping
@@ -29,6 +31,7 @@ octavia_services:
       - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ octavia_housekeeping_dimensions }}"
   octavia-worker:
     container_name: octavia_worker
     group: octavia-worker
@@ -38,6 +41,7 @@ octavia_services:
       - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ octavia_worker_dimensions }}"
 
 octavia_required_roles:
   - load-balancer_observer
@@ -76,6 +80,11 @@ octavia_housekeeping_image_full: "{{ octavia_housekeeping_image }}:{{ octavia_ho
 octavia_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ octavia_install_type }}-octavia-worker"
 octavia_worker_tag: "{{ octavia_tag }}"
 octavia_worker_image_full: "{{ octavia_worker_image }}:{{ octavia_worker_tag }}"
+
+octavia_api_dimensions: "{{ default_container_dimensions }}"
+octavia_health_manager_dimensions: "{{ default_container_dimensions }}"
+octavia_housekeeping_dimensions: "{{ default_container_dimensions }}"
+octavia_worker_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

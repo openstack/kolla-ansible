@@ -12,6 +12,7 @@ zun_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ zun_api_dimensions }}"
   zun-wsproxy:
     container_name: zun_wsproxy
     group: zun-wsproxy
@@ -22,6 +23,7 @@ zun_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ zun_wsproxy_dimensions }}"
   zun-compute:
     container_name: zun_compute
     group: zun-compute
@@ -35,6 +37,7 @@ zun_services:
       - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
       - "/run:/run:shared"
       - "/usr/lib/docker:/usr/lib/docker"
+    dimensions: "{{ zun_compute_dimensions }}"
 
 ####################
 ## Database
@@ -61,6 +64,10 @@ zun_wsproxy_image_full: "{{ zun_wsproxy_image }}:{{ zun_wsproxy_tag }}"
 zun_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-compute"
 zun_compute_tag: "{{ zun_tag }}"
 zun_compute_image_full: "{{ zun_compute_image }}:{{ zun_compute_tag }}"
+
+zun_api_dimensions: "{{ default_container_dimensions }}"
+zun_wsproxy_dimensions: "{{ default_container_dimensions }}"
+zun_compute_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################

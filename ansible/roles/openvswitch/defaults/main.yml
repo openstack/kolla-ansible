@@ -22,6 +22,7 @@ openvswitch_services:
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
       - "openvswitch_db:/var/lib/openvswitch/"
+    dimensions: "{{ openvswitch_db_dimensions }}"
   openvswitch-vswitchd:
     container_name: "openvswitch_vswitchd"
     image: "{{ openvswitch_vswitchd_image_full }}"
@@ -42,6 +43,7 @@ openvswitch_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ openvswitch_vswitchd_dimensions }}"
 
 ####################
 # Docker
@@ -56,3 +58,6 @@ openvswitch_db_image_full: "{{ openvswitch_db_image }}:{{ openvswitch_db_tag }}"
 openvswitch_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ openvswitch_install_type }}-openvswitch-vswitchd"
 openvswitch_vswitchd_tag: "{{ openvswitch_tag }}"
 openvswitch_vswitchd_image_full: "{{ openvswitch_vswitchd_image }}:{{ openvswitch_vswitchd_tag }}"
+
+openvswitch_db_dimensions: "{{ default_container_dimensions }}"
+openvswitch_vswitchd_dimensions: "{{ default_container_dimensions }}"
