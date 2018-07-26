@@ -301,7 +301,8 @@ class DockerWorker(object):
             self.compare_volumes(container_info) or
             self.compare_volumes_from(container_info) or
             self.compare_environment(container_info) or
-            self.compare_container_state(container_info)
+            self.compare_container_state(container_info) or
+            self.compare_dimensions(container_info)
         )
 
     def compare_ipc_mode(self, container_info):
@@ -437,6 +438,36 @@ class DockerWorker(object):
         current_state = container_info['State'].get('Status')
         if new_state != current_state:
             return True
+
+    def compare_dimensions(self, container_info):
+        new_dimensions = self.params.get('dimensions')
+        # NOTE(mgoddard): The names used by Docker are inconsisent between
+        # configuration of a container's resources and the resources in
+        # container_info['HostConfig']. This provides a mapping between the
+        # two.
+        dimension_map = {
+            'mem_limit': 'Memory', 'mem_reservation': 'MemoryReservation',
+            'memswap_limit': 'MemorySwap', 'cpu_period': 'CpuPeriod',
+            'cpu_quota': 'CpuQuota', 'cpu_shares': 'CpuShares',
+            'cpuset_cpus': 'CpusetCpus', 'cpuset_mems': 'CpusetMems',
+            'kernel_memory': 'KernelMemory', 'blkio_weight': 'BlkioWeight'}
+        unsupported = set(new_dimensions.keys()) - \
+            set(dimension_map.keys())
+        if unsupported:
+            self.module.exit_json(
+                failed=True, msg=repr("Unsupported dimensions"),
+                unsupported_dimensions=unsupported)
+        current_dimensions = container_info['HostConfig']
+        for key1, key2 in dimension_map.items():
+            # NOTE(mgoddard): If a resource has been explicitly requested,
+            # check for a match. Otherwise, ensure is is set to the default.
+            if key1 in new_dimensions:
+                if new_dimensions[key1] != current_dimensions[key2]:
+                    return True
+            elif current_dimensions[key2]:
+                # The default values of all currently supported resources are
+                # '' or 0 - both falsey.
+                return True
 
     def parse_image(self):
         full_image = self.params.get('image')

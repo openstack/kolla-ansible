@@ -13,6 +13,7 @@ aodh_services:
       - "aodh:/var/lib/aodh/"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
+    dimensions: "{{ aodh_api_dimensions }}"
   aodh-evaluator:
     container_name: aodh_evaluator
     group: aodh-evaluator
@@ -23,6 +24,7 @@ aodh_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
+    dimensions: "{{ aodh_evaluator_dimensions }}"
   aodh-listener:
     container_name: aodh_listener
     group: aodh-listener
@@ -33,6 +35,7 @@ aodh_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
+    dimensions: "{{ aodh_listener_dimensions }}"
   aodh-notifier:
     container_name: aodh_notifier
     group: aodh-notifier
@@ -43,6 +46,7 @@ aodh_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/aodh/aodh:/var/lib/kolla/venv/lib/python2.7/site-packages/aodh' if aodh_dev_mode | bool else '' }}"
+    dimensions: "{{ aodh_notifier_dimensions }}"
 
 
 ####################
@@ -74,6 +78,10 @@ aodh_notifier_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ d
 aodh_notifier_tag: "{{ aodh_tag }}"
 aodh_notifier_image_full: "{{ aodh_notifier_image }}:{{ aodh_notifier_tag }}"
 
+aodh_api_dimensions: "{{ default_container_dimensions }}"
+aodh_evaluator_dimensions: "{{ default_container_dimensions }}"
+aodh_listener_dimensions: "{{ default_container_dimensions }}"
+aodh_notifier_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

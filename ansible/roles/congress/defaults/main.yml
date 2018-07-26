@@ -12,6 +12,7 @@ congress_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
+    dimensions: "{{ congress_api_dimensions }}"
   congress-policy-engine:
     container_name: congress_policy_engine
     group: congress-policy-engine
@@ -22,6 +23,7 @@ congress_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
+    dimensions: "{{ congress_policy_engine_dimensions }}"
   congress-datasource:
     container_name: congress_datasource
     group: congress-datasource
@@ -32,6 +34,7 @@ congress_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/congress/congress:/var/lib/kolla/venv/lib/python2.7/site-packages/congress' if congress_dev_mode | bool else '' }}"
+    dimensions: "{{ congress_datasource_dimensions }}"
 
 
 ####################
@@ -60,6 +63,9 @@ congress_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ do
 congress_api_tag: "{{ congress_tag }}"
 congress_api_image_full: "{{ congress_api_image }}:{{ congress_api_tag }}"
 
+congress_api_dimensions: "{{ default_container_dimensions }}"
+congress_policy_engine_dimensions: "{{ default_container_dimensions }}"
+congress_datasource_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

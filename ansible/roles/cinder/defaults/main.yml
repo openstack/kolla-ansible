@@ -12,6 +12,7 @@ cinder_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    dimensions: "{{ cinder_api_dimensions }}"
   cinder-scheduler:
     container_name: cinder_scheduler
     group: cinder-scheduler
@@ -22,6 +23,7 @@ cinder_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    dimensions: "{{ cinder_scheduler_dimensions }}"
   cinder-volume:
     container_name: cinder_volume
     group: cinder-volume
@@ -39,6 +41,7 @@ cinder_services:
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    dimensions: "{{ cinder_volume_dimensions }}"
   cinder-backup:
     container_name: cinder_backup
     group: cinder-backup
@@ -54,6 +57,7 @@ cinder_services:
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    dimensions: "{{ cinder_backup_dimensions }}"
 
 ####################
 # Ceph
@@ -129,6 +133,10 @@ cinder_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ dock
 cinder_api_tag: "{{ cinder_tag }}"
 cinder_api_image_full: "{{ cinder_api_image }}:{{ cinder_api_tag }}"
 
+cinder_api_dimensions: "{{ default_container_dimensions }}"
+cinder_backup_dimensions: "{{ default_container_dimensions }}"
+cinder_scheduler_dimensions: "{{ default_container_dimensions }}"
+cinder_volume_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

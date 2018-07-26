@@ -12,6 +12,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_api_dimensions }}"
   designate-backend-bind9:
     container_name: designate_backend_bind9
     group: designate-backend-bind9
@@ -22,6 +23,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "designate_backend_bind9:/var/lib/named/"
+    dimensions: "{{ designate_backend_bind9_dimensions }}"
   designate-central:
     container_name: designate_central
     group: designate-central
@@ -32,6 +34,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_central_dimensions }}"
   designate-mdns:
     container_name: designate_mdns
     group: designate-mdns
@@ -42,6 +45,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_mdns_dimensions }}"
   designate-producer:
     container_name: designate_producer
     group: designate-producer
@@ -52,6 +56,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_producer_dimensions }}"
   designate-worker:
     container_name: designate_worker
     group: designate-worker
@@ -62,6 +67,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_worker_dimensions }}"
   designate-sink:
     container_name: designate_sink
     group: designate-sink
@@ -72,6 +78,7 @@ designate_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python2.7/site-packages/designate' if designate_dev_mode | bool else '' }}"
+    dimensions: "{{ designate_sink_dimensions }}"
 
 
 ####################
@@ -119,6 +126,14 @@ designate_sink_image_full: "{{ designate_sink_image }}:{{ designate_sink_tag }}"
 designate_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-worker"
 designate_worker_tag: "{{ designate_tag }}"
 designate_worker_image_full: "{{ designate_worker_image }}:{{ designate_worker_tag }}"
+
+designate_api_dimensions: "{{ default_container_dimensions }}"
+designate_backend_bind9_dimensions: "{{ default_container_dimensions }}"
+designate_central_dimensions: "{{ default_container_dimensions }}"
+designate_mdns_dimensions: "{{ default_container_dimensions }}"
+designate_producer_dimensions: "{{ default_container_dimensions }}"
+designate_worker_dimensions: "{{ default_container_dimensions }}"
+designate_sink_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack
