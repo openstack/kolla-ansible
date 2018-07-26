@@ -64,3 +64,15 @@
     - "{{ monasca_agent_authorized_roles }}"
     - "{{ monasca_read_only_authorized_roles }}"
     - "{{ monasca_delegate_authorized_roles }}"
+
+- name: Creating the monasca agent user
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "{{ monasca_control_plane_project }}"
+      user: "{{ monasca_agent_user }}"
+      password: "{{ monasca_agent_password }}"
+      role: "{{ monasca_agent_authorized_roles | first }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ monasca_openstack_auth }}"
+  run_once: True
