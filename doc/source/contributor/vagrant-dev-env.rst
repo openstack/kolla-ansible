@@ -57,7 +57,8 @@ For Ubuntu 16.04 or later:
 .. code-block:: console
 
    sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt \
-   libvirt-dev nfs-kernel-server zlib1g-dev libpng12-dev gcc git
+   qemu-utils qemu-kvm libvirt-dev nfs-kernel-server zlib1g-dev libpng12-dev \
+   gcc git
 
 .. end
 
@@ -115,6 +116,10 @@ a password, add the user to the libvirt group:
 
 .. end
 
+.. note::
+
+   In Ubuntu 16.04 and later, libvirtd group is used.
+
 Setup NFS to permit file sharing between host and VMs. Contrary to the rsync
 method, NFS allows both way synchronization and offers much better performance
 than VirtualBox shared folders. For CentOS:
@@ -142,6 +147,11 @@ than VirtualBox shared folders. For CentOS:
    sudo firewall-cmd --reload
 
 .. end
+
+.. note::
+
+   You may not have to do this because Ubuntu uses Uncomplicated Firewall (ufw)
+   and ufw is disabled by default.
 
 #. Start required services for NFS:
 
