@@ -12,6 +12,7 @@ ironic_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
       - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
+    dimensions: "{{ ironic_api_dimensions }}"
   ironic-conductor:
     container_name: ironic_conductor
     group: ironic-conductor
@@ -30,6 +31,7 @@ ironic_services:
       - "ironic_pxe:/tftpboot/"
       - "ironic_ipxe:/httpboot/"
       - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
+    dimensions: "{{ ironic_conductor_dimensions }}"
   ironic-inspector:
     container_name: ironic_inspector
     group: ironic-inspector
@@ -41,6 +43,7 @@ ironic_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
       - "{{ kolla_dev_repos_directory ~ '/ironic-inspector/ironic_inspector:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic_inspector' if ironic_dev_mode | bool else '' }}"
+    dimensions: "{{ ironic_inspector_dimensions }}"
   ironic-pxe:
     container_name: ironic_pxe
     group: ironic-pxe
@@ -51,6 +54,7 @@ ironic_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "ironic_pxe:/tftpboot/"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ ironic_pxe_dimensions }}"
   ironic-ipxe:
     container_name: ironic_ipxe
     group: ironic-ipxe
@@ -61,6 +65,7 @@ ironic_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "ironic_ipxe:/httpboot/"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ ironic_ipxe_dimensions }}"
   ironic-dnsmasq:
     container_name: ironic_dnsmasq
     group: ironic-inspector
@@ -72,6 +77,7 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ ironic_dnsmasq_dimensions }}"
 
 
 ####################
@@ -112,6 +118,12 @@ ironic_dnsmasq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ 
 ironic_dnsmasq_tag: "{{ ironic_tag }}"
 ironic_dnsmasq_image_full: "{{ ironic_dnsmasq_image }}:{{ ironic_dnsmasq_tag }}"
 
+ironic_api_dimensions: "{{ default_container_dimensions }}"
+ironic_conductor_dimensions: "{{ default_container_dimensions }}"
+ironic_pxe_dimensions: "{{ default_container_dimensions }}"
+ironic_ipxe_dimensions: "{{ default_container_dimensions }}"
+ironic_inspector_dimensions: "{{ default_container_dimensions }}"
+ironic_dnsmasq_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack

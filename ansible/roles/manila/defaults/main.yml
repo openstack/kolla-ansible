@@ -12,6 +12,7 @@ manila_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    dimensions: "{{ manila_api_dimensions }}"
   manila-scheduler:
     container_name: "manila_scheduler"
     group: "manila-scheduler"
@@ -22,6 +23,7 @@ manila_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    dimensions: "{{ manila_scheduler_dimensions }}"
   manila-share:
     container_name: "manila_share"
     group: "manila-share"
@@ -34,6 +36,7 @@ manila_services:
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    dimensions: "{{ manila_share_dimensions }}"
   manila-data:
     container_name: "manila_data"
     group: "manila-data"
@@ -46,6 +49,7 @@ manila_services:
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    dimensions: "{{ manila_data_dimensions }}"
 
 
 #####################
@@ -92,6 +96,11 @@ manila_api_image_full: "{{ manila_api_image }}:{{ manila_api_tag }}"
 manila_data_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ manila_install_type }}-manila-data"
 manila_data_tag: "{{ manila_tag }}"
 manila_data_image_full: "{{ manila_data_image }}:{{ manila_data_tag }}"
+
+manila_share_dimensions: "{{ default_container_dimensions }}"
+manila_scheduler_dimensions: "{{ default_container_dimensions }}"
+manila_api_dimensions: "{{ default_container_dimensions }}"
+manila_data_dimensions: "{{ default_container_dimensions }}"
 
 
 #####################

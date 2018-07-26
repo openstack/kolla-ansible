@@ -9,6 +9,7 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_api_dimensions }}"
   monasca-log-api:
     container_name: monasca_log_api
     group: monasca-log-api
@@ -18,6 +19,7 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_log_api_dimensions }}"
   monasca-log-transformer:
     container_name: monasca_log_transformer
     group: monasca-log-transformer
@@ -27,6 +29,7 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_log_transformer_dimensions }}"
   monasca-log-persister:
     container_name: monasca_log_persister
     group: monasca-log-persister
@@ -36,6 +39,7 @@ monasca_services:
       - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_log_persister_dimensions }}"
 
 ####################
 # Databases
@@ -77,6 +81,12 @@ monasca_log_api_image_full: "{{ monasca_log_api_image }}:{{ monasca_log_api_tag 
 monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-logstash"
 monasca_logstash_tag: "{{ monasca_tag }}"
 monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
+
+monasca_api_dimensions: "{{ default_container_dimensions }}"
+monasca_log_api_dimensions: "{{ default_container_dimensions }}"
+monasca_log_transformer_dimensions: "{{ default_container_dimensions }}"
+monasca_log_persister_dimensions: "{{ default_container_dimensions }}"
+
 
 ####################
 # OpenStack
