@@ -19,11 +19,11 @@ import random
 import string
 import sys
 
+from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from hashlib import md5
-from hashlib import sha256
 from oslo_utils import uuidutils
 import yaml
 
@@ -85,8 +85,8 @@ def main():
     hmac_md5_keys = ['designate_rndc_key',
                      'osprofiler_secret']
 
-    # HMAC-SHA256 keys
-    hmac_sha256_keys = ['barbican_crypto_key']
+    # Fernet keys
+    fernet_keys = ['barbican_crypto_key']
 
     # length of password
     length = 40
@@ -114,10 +114,8 @@ def main():
                 passwords[k] = (hmac.new(
                     uuidutils.generate_uuid().encode(), ''.encode(), md5)
                     .hexdigest())
-            elif k in hmac_sha256_keys:
-                passwords[k] = (hmac.new(
-                    uuidutils.generate_uuid().encode(), ''.encode(), sha256)
-                    .hexdigest())
+            elif k in fernet_keys:
+                passwords[k] = fernet.Fernet.generate_key()
             else:
                 passwords[k] = ''.join([
                     random.SystemRandom().choice(
