@@ -35,7 +35,7 @@ EOF
     rm ${PIP_CONF}
 
     if [[ $ACTION != "bifrost" ]]; then
-        GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon"
+        GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon,chrony"
     else
         GATE_IMAGES="bifrost"
     fi
