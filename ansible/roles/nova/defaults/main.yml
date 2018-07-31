@@ -385,6 +385,31 @@ nova_services_require_nova_conf:
 nova_compute_startup_delay: 30
 
 ####################
+# Keystone
+####################
+nova_ks_services:
+  - name: "nova_legacy"
+    type: "compute_legacy"
+    description: "OpenStack Compute Service (Legacy 2.0)"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ nova_legacy_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ nova_legacy_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ nova_legacy_public_endpoint }}'}
+  - name: "nova"
+    type: "compute"
+    description: "OpenStack Compute Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ nova_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ nova_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ nova_public_endpoint }}'}
+
+nova_ks_users:
+  - project: "service"
+    user: "{{ nova_keystone_user }}"
+    password: "{{ nova_keystone_password }}"
+    role: "admin"
+
+####################
 # Notification
 ####################
 nova_notification_topics:

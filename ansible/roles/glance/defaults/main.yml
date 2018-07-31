@@ -40,6 +40,24 @@ glance_services:
 haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
 
 ####################
+# Keystone
+####################
+glance_ks_services:
+  - name: "glance"
+    type: "image"
+    description: "Openstack Image"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ glance_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ glance_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ glance_public_endpoint }}'}
+
+glance_ks_users:
+  - project: "service"
+    user: "{{ glance_keystone_user }}"
+    password: "{{ glance_keystone_password }}"
+    role: "admin"
+
+####################
 # Notification
 ####################
 glance_notification_topics:

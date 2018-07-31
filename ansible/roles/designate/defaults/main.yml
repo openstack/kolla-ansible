@@ -218,3 +218,21 @@ designate_notification_topics:
     enabled: True
 
 designate_enabled_notification_topics: "{{ designate_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+designate_ks_services:
+  - name: "designate"
+    type: "dns"
+    description: "Designate DNS Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ designate_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ designate_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ designate_public_endpoint }}'}
+
+designate_ks_users:
+  - project: "service"
+    user: "{{ designate_keystone_user }}"
+    password: "{{ designate_keystone_password }}"
+    role: "admin"

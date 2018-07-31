@@ -1,36 +1,8 @@
 ---
-- name: Creating the Watcher service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "watcher"
-      service_type: "infra-optim"
-      description: "Infrastructure Optimization service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_watcher_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ watcher_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ watcher_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ watcher_public_endpoint }}'}
-
-- name: Creating the Watcher project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ watcher_keystone_user }}"
-      password: "{{ watcher_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_watcher_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_watcher_auth }}"
+    service_ks_register_services: "{{ watcher_ks_services }}"
+    service_ks_register_users: "{{ watcher_ks_users }}"
+  tags: always

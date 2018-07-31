@@ -1,36 +1,8 @@
 ---
-- name: Creating the Searchlight service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "searchlight"
-      service_type: "search"
-      description: "Openstack Index Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_searchlight_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ searchlight_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ searchlight_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ searchlight_public_endpoint }}'}
-
-- name: Creating the Searchlight project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ searchlight_keystone_user }}"
-      password: "{{ searchlight_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_searchlight_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_searchlight_auth }}"
+    service_ks_register_services: "{{ searchlight_ks_services }}"
+    service_ks_register_users: "{{ searchlight_ks_users }}"
+  tags: always

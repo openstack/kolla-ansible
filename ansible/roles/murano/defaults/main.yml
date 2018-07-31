@@ -98,3 +98,21 @@ murano_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 murano_enabled_notification_topics: "{{ murano_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+murano_ks_services:
+  - name: "murano"
+    type: "application-catalog"
+    description: "Openstack Application Catalogue"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ murano_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ murano_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ murano_public_endpoint }}'}
+
+murano_ks_users:
+  - project: "service"
+    user: "{{ murano_keystone_user }}"
+    password: "{{ murano_keystone_password }}"
+    role: "admin"

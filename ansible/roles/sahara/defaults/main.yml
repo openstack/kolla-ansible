@@ -103,3 +103,21 @@ sahara_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 sahara_enabled_notification_topics: "{{ sahara_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+sahara_ks_services:
+  - name: "sahara"
+    type: "data-processing"
+    description: "Sahara Data Processing"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ sahara_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ sahara_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ sahara_public_endpoint }}'}
+
+sahara_ks_users:
+  - project: "service"
+    user: "{{ sahara_keystone_user }}"
+    password: "{{ sahara_keystone_password }}"
+    role: "admin"

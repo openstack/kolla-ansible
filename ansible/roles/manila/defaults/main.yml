@@ -193,3 +193,29 @@ manila_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 manila_enabled_notification_topics: "{{ manila_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+
+####################
+# Keystone
+####################
+manila_ks_services:
+  - name: "manila"
+    type: "share"
+    description: "Openstack Shared Filesystems"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ manila_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ manila_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ manila_public_endpoint }}'}
+  - name: "manilav2"
+    type: "sharev2"
+    description: "Openstack Shared Filesystems"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ manila_v2_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ manila_v2_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ manila_v2_public_endpoint }}'}
+
+manila_ks_users:
+  - project: "service"
+    user: "{{ manila_keystone_user }}"
+    password: "{{ manila_keystone_password }}"
+    role: "admin"

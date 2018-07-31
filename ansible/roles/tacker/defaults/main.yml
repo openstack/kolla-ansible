@@ -96,3 +96,21 @@ tacker_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 tacker_enabled_notification_topics: "{{ tacker_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+tacker_ks_services:
+  - name: "tacker"
+    type: "nfv-orchestration"
+    description: "Tacker Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ tacker_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ tacker_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ tacker_public_endpoint }}'}
+
+tacker_ks_users:
+  - project: "service"
+    user: "{{ tacker_keystone_user }}"
+    password: "{{ tacker_keystone_password }}"
+    role: "admin"

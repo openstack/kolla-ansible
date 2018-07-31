@@ -1,39 +1,8 @@
 ---
-- name: Creating the Nova service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "{{ item.name }}"
-      service_type: "{{ item.service_type }}"
-      description: "{{ item.description }}"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_nova_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'name': 'nova_legacy', 'service_type': 'compute_legacy', 'interface': 'admin', 'url': '{{ nova_legacy_admin_endpoint }}', 'description': 'OpenStack Compute Service (Legacy 2.0)'}
-    - {'name': 'nova_legacy', 'service_type': 'compute_legacy', 'interface': 'internal', 'url': '{{ nova_legacy_internal_endpoint }}', 'description': 'OpenStack Compute Service (Legacy 2.0)'}
-    - {'name': 'nova_legacy', 'service_type': 'compute_legacy', 'interface': 'public', 'url': '{{ nova_legacy_public_endpoint }}', 'description': 'OpenStack Compute Service (Legacy 2.0)'}
-    - {'name': 'nova', 'service_type': 'compute', 'interface': 'admin', 'url': '{{ nova_admin_endpoint }}', 'description': 'OpenStack Compute Service'}
-    - {'name': 'nova', 'service_type': 'compute', 'interface': 'internal', 'url': '{{ nova_internal_endpoint }}', 'description': 'OpenStack Compute Service'}
-    - {'name': 'nova', 'service_type': 'compute', 'interface': 'public', 'url': '{{ nova_public_endpoint }}', 'description': 'OpenStack Compute Service'}
-
-- name: Creating the Nova project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ nova_keystone_user }}"
-      password: "{{ nova_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_nova_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_nova_auth }}"
+    service_ks_register_services: "{{ nova_ks_services }}"
+    service_ks_register_users: "{{ nova_ks_users }}"
+  tags: always

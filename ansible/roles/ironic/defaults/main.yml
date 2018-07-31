@@ -221,3 +221,32 @@ ironic_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 ironic_enabled_notification_topics: "{{ ironic_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+ironic_ks_services:
+  - name: "ironic"
+    type: "baremetal"
+    description: "Ironic baremetal provisioning service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ ironic_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ ironic_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ ironic_public_endpoint }}'}
+  - name: "ironic-inspector"
+    type: "baremetal-introspection"
+    description: "Ironic Inspector baremetal introspection service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ ironic_inspector_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ ironic_inspector_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ ironic_inspector_public_endpoint }}'}
+
+ironic_ks_users:
+  - project: "service"
+    user: "{{ ironic_keystone_user }}"
+    password: "{{ ironic_keystone_password }}"
+    role: "admin"
+  - project: "service"
+    user: "{{ ironic_inspector_keystone_user }}"
+    password: "{{ ironic_inspector_keystone_password }}"
+    role: "admin"
