@@ -132,7 +132,9 @@ function sanity_check {
     # If the status is not ACTIVE, print info and exit 1
     nova --debug show kolla_boot_test | awk '{buf=buf"\n"$0} $2=="status" && $4!="ACTIVE" {failed="yes"}; END {if (failed=="yes") {print buf; exit 1}}'
     if echo $ACTION | grep -q "ceph"; then
-        openstack volume create --size 2 test_volume
+#TODO(egonzalez): Recover openstack cli command once volume calls are fixed.
+#        openstack volume create --size 2 test_volume
+        cinder create --name test_volume 2
         openstack server add volume kolla_boot_test test_volume --device /dev/vdb
     fi
 }
