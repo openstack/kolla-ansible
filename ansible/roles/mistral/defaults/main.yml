@@ -35,6 +35,17 @@ mistral_services:
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
     dimensions: "{{ mistral_engine_dimensions }}"
+  mistral-event-engine:
+    container_name: mistral_event_engine
+    group: mistral-event-engine
+    enabled: true
+    image: "{{ mistral_event_engine_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/mistral-event-engine/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python2.7/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+    dimensions: "{{ mistral_event_engine_dimensions }}"
   mistral-executor:
     container_name: mistral_executor
     group: mistral-executor
@@ -66,6 +77,10 @@ mistral_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ 
 mistral_engine_tag: "{{ mistral_tag }}"
 mistral_engine_image_full: "{{ mistral_engine_image }}:{{ mistral_engine_tag }}"
 
+mistral_event_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mistral_install_type }}-mistral-event-engine"
+mistral_event_engine_tag: "{{ mistral_tag }}"
+mistral_event_engine_image_full: "{{ mistral_event_engine_image }}:{{ mistral_event_engine_tag }}"
+
 mistral_executor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mistral_install_type }}-mistral-executor"
 mistral_executor_tag: "{{ mistral_tag }}"
 mistral_executor_image_full: "{{ mistral_executor_image }}:{{ mistral_executor_tag }}"
@@ -75,6 +90,7 @@ mistral_api_tag: "{{ mistral_tag }}"
 mistral_api_image_full: "{{ mistral_api_image }}:{{ mistral_api_tag }}"
 
 mistral_engine_dimensions: "{{ default_container_dimensions }}"
+mistral_event_engine_dimensions: "{{ default_container_dimensions }}"
 mistral_executor_dimensions: "{{ default_container_dimensions }}"
 mistral_api_dimensions: "{{ default_container_dimensions }}"
 

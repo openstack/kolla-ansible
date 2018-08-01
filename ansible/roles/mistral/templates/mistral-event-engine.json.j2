@@ -1,0 +1,30 @@
+{
+    "command": "mistral-server --server event-engine --config-file /etc/mistral/mistral.conf",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/mistral.conf",
+            "dest": "/etc/mistral/mistral.conf",
+            "owner": "mistral",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/event_definitions.yaml",
+            "dest": "/etc/mistral/event_definitions.yaml",
+            "owner": "mistral",
+            "perm": "0600"
+        }{% if mistral_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ mistral_policy_file }}",
+            "dest": "/etc/mistral/{{ mistral_policy_file }}",
+            "owner": "mistral",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/mistral",
+            "owner": "mistral:mistral",
+            "recurse": true
+        }
+    ]
+}

@@ -79,6 +79,24 @@
   notify:
     - Restart {{ item.key }} container
 
+- name: Copying over event_definitions.yaml
+  become: true
+  vars:
+    service: "{{ mistral_services['mistral-event-engine'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/mistral-event-engine/event_definitions.yaml"
+  register: mistral_event_definitions_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/mistral/{{ inventory_hostname }}/event_definitions.yaml"
+    - "{{ node_custom_config }}/mistral/event_definitions.yaml"
+    - "{{ role_path }}/templates/event_definitions.yaml.j2"
+  notify:
+    - "Restart mistral-event-engine container"
+
 - name: Check mistral containers
   become: true
   kolla_docker:
