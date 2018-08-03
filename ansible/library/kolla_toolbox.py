@@ -120,7 +120,7 @@ def get_docker_client():
 
 def main():
     specs = dict(
-        module_name=dict(type='str'),
+        module_name=dict(required=True, type='str'),
         module_args=dict(type='str'),
         module_extra_vars=dict(type='json'),
         api_version=dict(required=False, type='str', default='auto'),
