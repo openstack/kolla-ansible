@@ -159,7 +159,7 @@ function test_openstack {
 
     # TODO(jeffrey4l): make some configure file change and
     # trigger a real reconfigure
-    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/post-deploy
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/reconfigure
     # TODO(jeffrey4l): need run a real upgrade
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
 
