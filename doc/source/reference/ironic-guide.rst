@@ -66,6 +66,16 @@ be used:
 
 .. end
 
+You may optionally pass extra kernel parameters to the inspection kernel using:
+
+.. code-block:: yaml
+
+   ironic_inspector_kernel_cmdline_extras: ['ipa-lldp-timeout=90.0', 'ipa-collect-lldp=1']
+
+.. end
+
+in ``/etc/kolla/globals.yml``.
+
 Enable iPXE booting (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
