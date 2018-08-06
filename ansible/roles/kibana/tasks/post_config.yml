@@ -11,7 +11,13 @@
     method: PUT
     body: "{{ kibana_default_index_options | to_json }}"
     body_format: json
-    status_code: 200, 201
+    status_code: 200, 201, 400
+  register: result
+  failed_when:
+    # If the index already exists, Elasticsearch will respond with a 400 error.
+    - result.status == 400
+    # Format: {"json": {"error": {"type": "index_already_exists_exception"}}}
+    - result.get('json', {}).get('error', {}).get('type') != 'index_already_exists_exception'
   run_once: true
 
 - name: Wait for kibana to register in elasticsearch
