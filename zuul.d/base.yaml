@@ -1,0 +1,27 @@
+---
+- job:
+    name: kolla-ansible-base
+    pre-run: tests/pre.yml
+    run: tests/run.yml
+    post-run: tests/post.yml
+    attempts: 1
+    timeout: 5400
+    required-projects:
+      - openstack/kolla
+      - openstack/requirements
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*
+      - ^test-requirements.txt$
+      - ^releasenotes/.*$
+    vars:
+      scenario: aio
+    roles:
+      - zuul: openstack-infra/zuul-jobs
+
+- job:
+    name: kolla-ansible-bifrost-base
+    parent: kolla-ansible-base
+    vars:
+      scenario: bifrost
+      install_type: source
