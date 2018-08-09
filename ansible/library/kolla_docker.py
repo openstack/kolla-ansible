@@ -40,6 +40,7 @@ options:
       - get_container_state
       - pull_image
       - remove_container
+      - remove_image
       - remove_volume
       - recreate_or_restart_container
       - restart_container
@@ -199,6 +200,10 @@ EXAMPLES = '''
       kolla_docker:
         action: remove_volume
         name: name_of_volume
+    - name: Remove image
+      kolla_docker:
+        action: remove_image
+        image: name_of_image
 '''
 
 import json
@@ -767,6 +772,26 @@ class DockerWorker(object):
                     )
                 raise
 
+    def remove_image(self):
+        if self.check_image():
+            self.changed = True
+            try:
+                self.dc.remove_image(image=self.params.get('image'))
+            except docker.errors.APIError as e:
+                if e.response.status_code == 409:
+                    self.module.fail_json(
+                        failed=True,
+                        msg="Image '{}' is currently in-use".format(
+                            self.params.get('image')
+                        )
+                    )
+                elif e.response.status_code == 500:
+                    self.module.fail_json(
+                        failed=True,
+                        msg="Server error"
+                    )
+                raise
+
 
 def generate_module():
     # NOTE(jeffrey4l): add empty string '' to choices let us use
@@ -778,9 +803,9 @@ def generate_module():
                              'create_volume', 'get_container_env',
                              'get_container_state', 'pull_image',
                              'recreate_or_restart_container',
-                             'remove_container', 'remove_volume',
-                             'restart_container', 'start_container',
-                             'stop_container']),
+                             'remove_container', 'remove_image',
+                             'remove_volume', 'restart_container',
+                             'start_container', 'stop_container']),
         api_version=dict(required=False, type='str', default='auto'),
         auth_email=dict(required=False, type='str'),
         auth_password=dict(required=False, type='str', no_log=True),
@@ -830,6 +855,7 @@ def generate_module():
         ['action', 'get_container_state', ['name']],
         ['action', 'recreate_or_restart_container', ['name']],
         ['action', 'remove_container', ['name']],
+        ['action', 'remove_image', ['image']],
         ['action', 'remove_volume', ['name']],
         ['action', 'restart_container', ['name']],
         ['action', 'stop_container', ['name']]
