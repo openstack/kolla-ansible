@@ -192,9 +192,11 @@ EXAMPLES = '''
         action: pull_image
         image: private-registry.example.com:5000/ubuntu
     - name: Create named volume
+      kolla_docker:
         action: create_volume
         name: name_of_volume
     - name: Remove named volume
+      kolla_docker:
         action: remove_volume
         name: name_of_volume
 '''
