@@ -12,6 +12,23 @@
     - item.value.enabled | bool
   with_dict: "{{ trove_services }}"
 
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: trove_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/trove/"
+      skip: true
+
+- name: Set trove policy file
+  set_fact:
+    trove_policy_file: "{{ trove_policy.results.0.stat.path | basename }}"
+    trove_policy_file_path: "{{ trove_policy.results.0.stat.path }}"
+  when:
+    - trove_policy.results
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -70,6 +87,20 @@
   with_dict: "{{ trove_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over existing policy file
+  template:
+    src: "{{ trove_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ trove_policy_file }}"
+  register: trove_policy_overwriting
+  when:
+    - trove_policy_file is defined
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ trove_services }}"
+  notify:
+    - Restart trove-api container
+    - Restart trove-conductor container
+    - Restart trove-taskmanager container
 
 - name: Check trove containers
   become: true

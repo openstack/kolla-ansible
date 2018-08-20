@@ -5,6 +5,7 @@
     service: "{{ trove_services[service_name] }}"
     config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_api_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
@@ -20,6 +21,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or trove_conf.changed | bool
+      or policy_overwriting.changed | bool
       or trove_api_container.changed | bool
 
 - name: Restart trove-conductor container
@@ -28,6 +30,7 @@
     service: "{{ trove_services[service_name] }}"
     config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_conductor_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
@@ -43,6 +46,7 @@
     - service.enabled | bool
     - config_json.changed | bool
       or trove_conf.changed | bool
+      or policy_overwriting.changed | bool
       or trove_conductor_container.changed | bool
 
 - name: Restart trove-taskmanager container
@@ -51,6 +55,7 @@
     service: "{{ trove_services[service_name] }}"
     config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     trove_taskmanager_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
@@ -66,4 +71,5 @@
     - service.enabled | bool
     - config_json.changed | bool
       or trove_conf.changed | bool
+      or policy_overwriting.changed | bool
       or trove_taskmanager_container.changed | bool
