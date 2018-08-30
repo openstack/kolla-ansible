@@ -31,3 +31,9 @@
       - "{{ node_config_directory }}/ceph-mgr/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+
+- name: Enable the ceph mgr prometheus module
+  command: docker exec ceph_mgr ceph mgr module enable prometheus
+  when:
+    - inventory_hostname in groups['ceph-mgr']
+    - enable_prometheus_ceph_mgr_exporter | bool
