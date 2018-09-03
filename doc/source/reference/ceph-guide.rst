@@ -72,7 +72,7 @@ To prepare a bluestore OSD block partition, execute the following operations:
 
 .. code-block:: console
 
-   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_B 1 -1
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_B 1 -1
 
 .. end
 
@@ -81,7 +81,7 @@ operations:
 
 .. code-block:: console
 
-   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_W 1 -1
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_W 1 -1
 
 .. end
 
@@ -90,7 +90,7 @@ operations:
 
 .. code-block:: console
 
-   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_D 1 -1
+   parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_D 1 -1
 
 .. end
 
