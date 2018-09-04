@@ -469,3 +469,17 @@ class NovaLibvirtCleanup(KollaAnsibleMixin, Command):
         playbooks = _choose_playbooks(parsed_args, "nova-libvirt-cleanup")
 
         self.run_playbooks(parsed_args, playbooks)
+
+
+class Check(KollaAnsibleMixin, Command):
+    """Check container status"""
+
+    def take_action(self, parsed_args):
+        self.app.LOG.info("Checking container status")
+
+        extra_vars = {}
+        extra_vars["kolla_action"] = "check"
+
+        playbooks = _choose_playbooks(parsed_args)
+
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
