@@ -151,6 +151,7 @@ function test_openstack {
     # service in CI
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy > /tmp/logs/ansible/deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/post-deploy
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check > /tmp/logs/ansible/check-deploy
 
     # Test OpenStack Environment
     # TODO: use kolla-ansible check when it's ready
@@ -160,8 +161,10 @@ function test_openstack {
     # TODO(jeffrey4l): make some configure file change and
     # trigger a real reconfigure
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure >  /tmp/logs/ansible/reconfigure
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check > /tmp/logs/ansible/check-reconfigure
     # TODO(jeffrey4l): need run a real upgrade
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade > /tmp/logs/ansible/upgrade
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check > /tmp/logs/ansible/check-upgrade
 
     # run prechecks again
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks2
