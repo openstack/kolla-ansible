@@ -140,13 +140,15 @@
 
 - name: Copying over setenv
   template:
-    src: "{{ role_path }}/templates/setenv.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/setenv"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/opendaylight/setenv"
     mode: "0660"
   become: true
   register: opendaylight_config_env
-  with_items:
-    - "opendaylight"
+  with_first_found:
+    - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/setenv"
+    - "{{ node_custom_config }}/opendaylight/setenv"
+    - "{{ role_path }}/templates/setenv.j2"
   notify:
     - Restart opendaylight container
 
