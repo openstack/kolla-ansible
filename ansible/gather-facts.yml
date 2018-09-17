@@ -1,0 +1,44 @@
+---
+# NOTE(awiddersheim): Gather facts for all hosts as a
+# first step since several plays below require them when
+# building their configurations. The below 'gather_facts'
+# set to 'false' is a bit confusing but this is to avoid
+# Ansible gathering facts twice.
+- name: Gather facts for all hosts
+  hosts: all
+  serial: '{{ kolla_serial|default("0") }}'
+  gather_facts: false
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Group hosts to determine when using --limit
+      group_by:
+        key: "all_using_limit_{{ (ansible_play_batch | length) != (groups['all'] | length) }}"
+  tags: always
+
+# NOTE(pbourke): This case covers deploying subsets of hosts using --limit. The
+# limit arg will cause the first play to gather facts only about that node,
+# meaning facts such as IP addresses for rabbitmq nodes etc. will be undefined
+# in the case of adding a single compute node.
+# NOTE(mgoddard): Divide all hosts to be queried between the hosts selected via
+# the limit.
+- name: Gather facts for all hosts (if using --limit)
+  hosts: all_using_limit_True
+  serial: '{{ kolla_serial|default("0") }}'
+  gather_facts: false
+  vars:
+    batch_index: "{{ ansible_play_batch.index(inventory_hostname) }}"
+    batch_size: "{{ ansible_play_batch | length }}"
+    # Use a python list slice to divide the group up.
+    # Syntax: [<start index>:<end index>:<step size>]
+    delegate_hosts: "{{ groups['all'][batch_index | int::batch_size | int] }}"
+  tasks:
+    - name: Gather facts
+      setup:
+      delegate_facts: True
+      delegate_to: "{{ item }}"
+      with_items: "{{ delegate_hosts }}"
+      # We gathered facts for all hosts in the batch during the first play.
+      when: item not in ansible_play_batch
+  tags: always
