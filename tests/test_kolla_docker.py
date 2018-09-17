@@ -44,7 +44,7 @@ class ModuleArgsTest(base.BaseTestCase):
                 choices=['compare_container', 'compare_image', 'create_volume',
                          'get_container_env', 'get_container_state',
                          'pull_image', 'recreate_or_restart_container',
-                         'remove_container', 'remove_volume',
+                         'remove_container', 'remove_image', 'remove_volume',
                          'restart_container', 'start_container',
                          'stop_container']),
             api_version=dict(required=False, type='str', default='auto'),
@@ -96,6 +96,7 @@ class ModuleArgsTest(base.BaseTestCase):
             ['action', 'get_container_state', ['name']],
             ['action', 'recreate_or_restart_container', ['name']],
             ['action', 'remove_container', ['name']],
+            ['action', 'remove_image', ['image']],
             ['action', 'remove_volume', ['name']],
             ['action', 'restart_container', ['name']],
             ['action', 'stop_container', ['name']]
@@ -605,6 +606,61 @@ class TestImage(base.BaseTestCase):
         self.dw.module.fail_json.assert_called_once_with(
             msg="Unknown error message: unexpected error",
             failed=True)
+
+    def test_remove_image(self):
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
+             'action': 'remove_image'})
+        self.dw.dc.images.return_value = self.fake_data['images']
+
+        self.dw.remove_image()
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.remove_image.assert_called_once_with(
+            image='myregistrydomain.com:5000/ubuntu:16.04')
+
+    def test_remove_image_not_exists(self):
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/non_existing:16.04',
+             'action': 'remove_image'})
+        self.dw.dc.images.return_value = self.fake_data['images']
+
+        self.dw.remove_image()
+        self.assertFalse(self.dw.changed)
+
+    def test_remove_image_exception_409(self):
+        resp = mock.MagicMock()
+        resp.status_code = 409
+        docker_except = docker_error.APIError('test error', resp)
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
+             'action': 'remove_image'})
+        self.dw.dc.images.return_value = self.fake_data['images']
+        self.dw.dc.remove_image.side_effect = docker_except
+
+        self.assertRaises(docker_error.APIError, self.dw.remove_image)
+        self.assertTrue(self.dw.changed)
+        self.dw.module.fail_json.assert_called_once_with(
+            failed=True,
+            msg=("Image 'myregistrydomain.com:5000/ubuntu:16.04' "
+                 "is currently in-use")
+        )
+
+    def test_remove_image_exception_500(self):
+        resp = mock.MagicMock()
+        resp.status_code = 500
+        docker_except = docker_error.APIError('test error', resp)
+        self.dw = get_DockerWorker(
+            {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
+             'action': 'remove_image'})
+        self.dw.dc.images.return_value = self.fake_data['images']
+        self.dw.dc.remove_image.side_effect = docker_except
+
+        self.assertRaises(docker_error.APIError, self.dw.remove_image)
+        self.assertTrue(self.dw.changed)
+        self.dw.module.fail_json.assert_called_once_with(
+            failed=True,
+            msg=("Server error")
+        )
 
 
 class TestVolume(base.BaseTestCase):
