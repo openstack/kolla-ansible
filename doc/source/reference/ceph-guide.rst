@@ -4,25 +4,35 @@
 Ceph in Kolla
 =============
 
-The out-of-the-box Ceph deployment requires 3 hosts with at least one block
-device on each host that can be dedicated for sole use by Ceph. However, with
-tweaks to the Ceph cluster you can deploy a **healthy** cluster with a single
-host and a single block device.
+.. note::
+   The out-of-the-box Ceph deployment requires 3 hosts with at least one block
+   device on each host that can be dedicated for sole use by Ceph.
+
+   However, with tweaks to the Ceph cluster you can deploy a **healthy** cluster
+   with a single host and a single block device.
 
 Requirements
-~~~~~~~~~~~~
+------------
 
 * A minimum of 3 hosts for a vanilla deploy
 * A minimum of 1 block device per host
 
 Preparation
-~~~~~~~~~~~
+-----------
 
 To prepare a disk for use as a
 `Ceph OSD <http://docs.ceph.com/docs/master/man/8/ceph-osd/>`_ you must add a
 special partition label to the disk. This partition label is how Kolla detects
 the disks to format and bootstrap. Any disk with a matching partition label
 will be reformatted so use caution.
+
+Filestore
+~~~~~~~~~
+
+.. note::
+
+   From Rocky release - kolla-ansible by default creates Bluestore OSDs.
+   Please see Configuration section to change that behaviour.
 
 To prepare a filestore OSD as a storage drive, execute the following
 operations:
@@ -52,6 +62,9 @@ usage with Kolla.
         1      1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
 
 .. end
+
+Bluestore
+~~~~~~~~~
 
 To prepare a bluestore OSD partition, execute the following operations:
 
@@ -158,7 +171,7 @@ To prepare the journal external drive execute the following command:
 
 
 Configuration
-~~~~~~~~~~~~~
+-------------
 
 Edit the ``[storage]`` group in the inventory which contains the hostname
 of the hosts that have the block devices you have prepped as shown above.
@@ -250,7 +263,7 @@ For more details, see `NETWORK CONFIGURATION REFERENCE
 of Ceph Documentation.
 
 Deployment
-~~~~~~~~~~
+----------
 
 Finally deploy the Ceph-enabled OpenStack:
 
@@ -260,8 +273,8 @@ Finally deploy the Ceph-enabled OpenStack:
 
 .. end
 
-Using a Cache Tiering
-~~~~~~~~~~~~~~~~~~~~~
+Using Cache Tiering
+-------------------
 
 An optional `cache tiering <http://docs.ceph.com/docs/jewel/rados/operations/cache-tiering/>`_
 can be deployed by formatting at least one cache device and enabling cache.
@@ -304,7 +317,7 @@ After this run the playbooks as you normally would, for example:
 .. end
 
 Setting up an Erasure Coded Pool
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 `Erasure code <http://docs.ceph.com/docs/jewel/rados/operations/erasure-code/>`_
 is the new big thing from Ceph. Kolla has the ability to setup your Ceph pools
@@ -328,7 +341,7 @@ To enable erasure coded pools add the following options to your
 .. end
 
 Managing Ceph
-~~~~~~~~~~~~~
+-------------
 
 Check the Ceph status for more diagnostic information. The sample output below
 indicates a healthy cluster:
@@ -389,10 +402,10 @@ The default pool Ceph creates is named **rbd**. It is safe to remove this pool:
 .. end
 
 Troubleshooting
-~~~~~~~~~~~~~~~
+---------------
 
 Deploy fails with 'Fetching Ceph keyrings ... No JSON object could be decoded'
-------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If an initial deploy of Ceph fails, perhaps due to improper configuration or
 similar, the cluster will be partially formed and will need to be reset for a
@@ -408,7 +421,7 @@ from each Ceph monitor node:
        ceph-mon
 
 Simple 3 Node Example
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 This example will show how to deploy Ceph in a very simple setup using 3
 storage nodes. 2 of those nodes (kolla1 and kolla2) will also provide other
@@ -455,7 +468,7 @@ environment before adding the 3rd node for Ceph:
 .. end
 
 Configuration
--------------
+~~~~~~~~~~~~~
 
 To prepare the 2nd disk (/dev/sdb) of each nodes for use by Ceph you will need
 to add a partition label to it as shown below:
@@ -513,7 +526,7 @@ It is now time to enable Ceph in the environment by editing the
 .. end
 
 Deployment
-----------
+~~~~~~~~~~
 
 Finally deploy the Ceph-enabled configuration:
 
