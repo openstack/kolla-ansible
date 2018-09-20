@@ -15,23 +15,6 @@
 
 - include_tasks: config.yml
 
-- name: Find gospel node
-  command: docker exec -t {{ project_name }} /usr/local/bin/rabbitmq_get_gospel_node
-  changed_when: gospel_node.stdout | from_json | changed
-  failed_when: gospel_node.stdout | from_json | failed
-  register: gospel_node
-  run_once: True
-
-- name: Stopping non-gospel nodes
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ project_name }}"
-  when:
-    - rabbitmq_hostname != (gospel_node.stdout | from_json).hostname
-    - rabbitmq_differs['result']
-
 - name: Flush handlers
   meta: flush_handlers
   when:

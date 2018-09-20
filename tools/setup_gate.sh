@@ -149,7 +149,8 @@ function test_openstack {
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks > /tmp/logs/ansible/prechecks1
     # TODO(jeffrey4l): add pull action when we have a local registry
     # service in CI
-    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy > /tmp/logs/ansible/deploy
+    # TODO(pbourke): remove '-e rabbitmq_password=password' once https://review.openstack.org/#/c/584427/ is merged
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy -e rabbitmq_password=password > /tmp/logs/ansible/deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy > /tmp/logs/ansible/post-deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check > /tmp/logs/ansible/check-deploy
 
