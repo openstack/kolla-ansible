@@ -7,8 +7,7 @@
     append true
     compress gzip
   </store>
-{% if enable_elasticsearch | bool or
-      elasticsearch_address != kolla_internal_vip_address %}
+{% if log_direct_to_elasticsearch %}
   <store>
        type elasticsearch
        host {{ elasticsearch_address }}
@@ -17,6 +16,18 @@
        logstash_prefix {{ kibana_log_prefix }}
        flush_interval 15s
   </store>
+{% elif enable_monasca | bool %}
+    type copy
+    <store>
+       @type monasca
+       keystone_url {{ keystone_internal_url }}
+       monasca_log_api {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}
+       monasca_log_api_version v3.0
+       username {{ monasca_agent_user }}
+       password {{ monasca_agent_password }}
+       domain_id default
+       project_name {{ monasca_control_plane_project }}
+    </store>
 {% endif %}
 </match>
 
@@ -31,8 +42,7 @@
     append true
     compress gzip
   </store>
-{% if enable_elasticsearch | bool or
-      elasticsearch_address != kolla_internal_vip_address %}
+{% if log_direct_to_elasticsearch %}
   <store>
        type elasticsearch
        host {{ elasticsearch_address }}
@@ -41,5 +51,17 @@
        logstash_prefix {{ kibana_log_prefix }}
        flush_interval 15s
   </store>
+{% elif enable_monasca | bool %}
+    type copy
+    <store>
+       @type monasca
+       keystone_url {{ keystone_internal_url }}
+       monasca_log_api {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}
+       monasca_log_api_version v3.0
+       username {{ monasca_agent_user }}
+       password {{ monasca_agent_password }}
+       domain_id default
+       project_name {{ monasca_control_plane_project }}
+    </store>
 {% endif %}
 </match>
