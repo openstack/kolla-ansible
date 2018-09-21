@@ -164,8 +164,16 @@ can also be exported at once by choosing *export everything* option.
 In the same tab (Settings - Objects) one can also import saved items by
 choosing *import* option.
 
+Custom log rules
+~~~~~~~~~~~~~~~~
+
+Kolla-Ansible automatically deploys Fluentd for forwarding OpenStack logs
+from across the control plane to a central logging repository. The Fluentd
+configuration is split into four parts: Input, forwarding, filtering and
+formatting. The following can be customised:
+
 Custom log filtering
-====================
+--------------------
 
 In some scenarios it may be useful to apply custom filters to logs before
 forwarding them.  This may be useful to add additional tags to the messages
@@ -177,11 +185,21 @@ configuration files in ``/etc/kolla/config/fluentd/filter/*.conf`` on the
 control host.
 
 Custom log forwarding
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 In some scenarios it may be useful to forward logs to a logging service other
 than elasticsearch.  This can be done by configuring custom fluentd outputs.
 
 Configuration of custom fluentd outputs is possible by placing output
 configuration files in ``/etc/kolla/config/fluentd/output/*.conf`` on the
+control host.
+
+Custom log inputs
+-----------------
+
+In some scenarios it may be useful to input logs from other services, e.g.
+network equipment. This can be done by configuring custom fluentd inputs.
+
+Configuration of custom fluentd inputs is possible by placing input
+configuration files in ``/etc/kolla/config/fluentd/input/*.conf`` on the
 control host.
