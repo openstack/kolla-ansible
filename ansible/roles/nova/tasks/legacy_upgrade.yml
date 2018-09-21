@@ -1,0 +1,30 @@
+---
+- include_tasks: config.yml
+
+- include_tasks: bootstrap_service.yml
+
+- name: Checking if conductor container needs upgrading
+  become: true
+  kolla_docker:
+    action: "compare_image"
+    common_options: "{{ docker_common_options }}"
+    name: "nova_conductor"
+    image: "{{ nova_conductor_image_full }}"
+  when: inventory_hostname in groups['nova-conductor']
+  register: conductor_differs
+
+# Short downtime here, but from user perspective his call will just timeout or execute later
+- name: Stopping all nova_conductor containers
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "nova_conductor"
+  when:
+    - inventory_hostname in groups['nova-conductor']
+    - conductor_differs['result']
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- include_tasks: reload.yml

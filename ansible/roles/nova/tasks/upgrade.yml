@@ -1,31 +1,21 @@
 ---
-# Create new set of configs on nodes
-- include_tasks: config.yml
-
-- include_tasks: bootstrap_service.yml
-
-- name: Checking if conductor container needs upgrading
+- name: Check nova upgrade status
   become: true
-  kolla_docker:
-    action: "compare_image"
-    common_options: "{{ docker_common_options }}"
-    name: "nova_conductor"
-    image: "{{ nova_conductor_image_full }}"
-  when: inventory_hostname in groups['nova-conductor']
-  register: conductor_differs
+  command: docker exec -t nova_api nova-status upgrade check
+  register: nova_upgrade_check_stdout
+  when: inventory_hostname == groups['nova-api'][0]
 
-# Short downtime here, but from user perspective his call will just timeout or execute later
-- name: Stopping all nova_conductor containers
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "nova_conductor"
-  when:
-    - inventory_hostname in groups['nova-conductor']
-    - conductor_differs['result']
+- name: Upgrade status check result
+  fail:
+    msg:
+      - "There was an upgrade status check warning or failure!"
+      - "See the detail at https://docs.openstack.org/nova/latest/cli/nova-status.html#nova-status-checks"
+  vars:
+    first_nova_api_host: "{{ groups['nova-api'][0] }}"
+  when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] != 0
 
-- name: Flush handlers
-  meta: flush_handlers
+- include_tasks: legacy_upgrade.yml
+  when: not nova_enable_rolling_upgrade | bool
 
-- include_tasks: reload.yml
+- include_tasks: rolling_upgrade.yml
+  when: nova_enable_rolling_upgrade | bool

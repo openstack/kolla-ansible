@@ -1,0 +1,50 @@
+---
+# Create new set of configs on nodes
+- include_tasks: pull.yml
+
+- include_tasks: config.yml
+
+- include_tasks: bootstrap_service.yml
+
+- name: Stopping all nova services except nova-compute
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+  with_dict: "{{ nova_services }}"
+  when:
+    - "'nova-compute' not in item.key"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - nova_safety_upgrade | bool
+
+# TODO(donghm): Flush_handlers to restart nova services
+# should be run in serial nodes to decrease downtime if
+# the previous task did not run. Update when the
+# Ansible strategy module for rolling upgrade is finished.
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- include_tasks: reload.yml
+
+- name: Migrate Nova database
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_OSM:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_nova"
+    restart_policy: "never"
+    volumes: "{{ nova_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
