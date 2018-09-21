@@ -57,3 +57,11 @@
   when:
     - (groups['inner-compute'] | default([]) | length > 0
        or groups['external-compute'] | default([]) | length > 0)
+
+- name: Checking whether Ironic enabled
+  local_action: fail msg="Ironic must be enabled when using networking-baremetal/ironic-neutron-agent"
+  changed_when: false
+  run_once: True
+  when:
+    - enable_ironic_neutron_agent | bool
+    - not (enable_ironic | bool)
