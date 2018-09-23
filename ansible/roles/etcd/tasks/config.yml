@@ -9,7 +9,7 @@
   become: true
   when:
     - item.value.enabled | bool
-    - item.value.host_in_groups | bool
+    - inventory_hostname in groups[item.value.group]
   with_dict: "{{ etcd_services }}"
 
 - name: Copying over config.json files for services
@@ -21,7 +21,7 @@
   register: etcd_config_jsons
   when:
     - item.value.enabled | bool
-    - item.value.host_in_groups | bool
+    - inventory_hostname in groups[item.value.group]
   with_dict: "{{ etcd_services }}"
   notify:
     - Restart etcd container
@@ -40,7 +40,7 @@
   when:
     - kolla_action != "config"
     - item.value.enabled | bool
-    - item.value.host_in_groups | bool
+    - inventory_hostname in groups[item.value.group]
   with_dict: "{{ etcd_services }}"
   notify:
     - Restart etcd container

@@ -14,12 +14,11 @@ etcd_services:
       ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ internal_protocol }}://{{ api_interface_address }}:{{ etcd_peer_port }}"
       ETCD_LISTEN_PEER_URLS: "{{ internal_protocol }}://{{ api_interface_address }}:{{ etcd_peer_port }}"
       ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
-      ETCD_INITIAL_CLUSTER: "{% for host in etcd_hosts %}{{ hostvars[host]['ansible_hostname'] }}={{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+      ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host]['ansible_hostname'] }}={{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
       ETCD_INITIAL_CLUSTER_STATE: "new"
       ETCD_OUT_FILE: "/var/log/kolla/etcd/etcd.log"
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
     image: "{{ etcd_image_full }}"
-    host_in_groups: "{{ inventory_hostname in etcd_hosts }}"
     volumes:
       - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
@@ -35,6 +34,3 @@ etcd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_nam
 etcd_tag: "{{ openstack_release }}"
 etcd_image_full: "{{ etcd_image }}:{{ etcd_tag }}"
 etcd_dimensions: "{{ default_container_dimensions }}"
-
-# List of hosts running etcd.
-etcd_hosts: "{{ groups['control'] }}"
