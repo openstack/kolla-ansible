@@ -1,5 +1,5 @@
 ---
-- name: Restart rabbitmq container
+- name: Restart rabbitmq container (first node)
   vars:
     service_name: "rabbitmq"
     service: "{{ rabbitmq_services[service_name] }}"
@@ -16,7 +16,40 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
+    - inventory_hostname == groups[service.group]|first
+    - service.enabled | bool
+    - config_json.changed | bool
+      or rabbitmq_confs.changed | bool
+      or rabbitmq_container.changed | bool
+  notify:
+    - Waiting for rabbitmq to start on first node
+
+- name: Waiting for rabbitmq to start on first node
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  shell: "docker exec {{ service.container_name }} rabbitmqctl wait {{ rabbitmq_pid_file }}"
+  when:
+    - inventory_hostname == groups[service.group]|first
+
+- name: Restart rabbitmq container (rest of nodes)
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+    config_json: "{{ rabbitmq_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    rabbitmq_container: "{{ check_rabbitmq_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    environment: "{{ service.environment }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname != groups[service.group]|first
     - service.enabled | bool
     - config_json.changed | bool
       or rabbitmq_confs.changed | bool

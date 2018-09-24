@@ -1,4 +1,7 @@
 ---
+# NOTE(pbourke): These tasks perform a 'full stop upgrade', which is necessary when moving between
+# major releases. In future kolla-ansible releases we may be able to change this to a rolling
+# restart. For info on this process see https://www.rabbitmq.com/upgrade.html
 - name: Checking if rabbitmq container needs upgrading
   vars:
     service_name: "rabbitmq"
@@ -15,14 +18,25 @@
 
 - include_tasks: config.yml
 
-- name: Flush handlers
-  meta: flush_handlers
+- name: Stopping all rabbitmq instances but the first node
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ project_name }}"
   when:
-    - rabbitmq_hostname == (gospel_node.stdout | from_json).hostname
+    - inventory_hostname != groups[role_rabbitmq_groups]|first
+    - rabbitmq_differs['result']
+
+- name: Stopping rabbitmq on the first node
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ project_name }}"
+  when:
+    - inventory_hostname == groups[role_rabbitmq_groups]|first
     - rabbitmq_differs['result']
 
 - name: Flush handlers
   meta: flush_handlers
-  when:
-    - rabbitmq_hostname != (gospel_node.stdout | from_json).hostname
-    - rabbitmq_differs['result']
