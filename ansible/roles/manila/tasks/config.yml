@@ -12,6 +12,20 @@
     - item.value.enabled | bool
   with_dict: "{{ manila_services }}"
 
+- include_tasks: ceph.yml
+  when:
+    - enable_ceph | bool
+    - enable_ceph_mds | bool
+    - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
+    - inventory_hostname in groups['manila-share']
+
+- include_tasks: external_ceph.yml
+  when:
+    - enable_ceph| bool == False
+    - enable_ceph_mds| bool == False
+    - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
+    - inventory_hostname in groups['manila-share']
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ item }}"
   run_once: True

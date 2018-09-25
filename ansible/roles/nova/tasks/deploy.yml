@@ -1,20 +1,4 @@
 ---
-- include_tasks: ceph.yml
-  when:
-    - enable_ceph | bool and nova_backend == "rbd"
-    - inventory_hostname in groups['ceph-mon'] or
-        inventory_hostname in groups['compute'] or
-        inventory_hostname in groups['nova-api'] or
-        inventory_hostname in groups['nova-conductor'] or
-        inventory_hostname in groups['nova-consoleauth'] or
-        inventory_hostname in groups['nova-novncproxy'] or
-        inventory_hostname in groups['nova-scheduler']
-
-- include_tasks: external_ceph.yml
-  when:
-    - not enable_ceph | bool and (nova_backend == "rbd" or cinder_backend_ceph | bool)
-    - inventory_hostname in groups['compute']
-
 - include_tasks: register.yml
   when: inventory_hostname in groups['nova-api']
 
