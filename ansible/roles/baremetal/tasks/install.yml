@@ -57,6 +57,16 @@
   with_items: "{{ redhat_pkg_install }}"
   when: ansible_os_family == 'RedHat'
 
+- name: Ensure ansible user has Docker access
+  user:
+    name: "{{ hostvars[inventory_hostname]['ansible_user'] }}"
+    groups: docker
+    append: yes
+    system: yes
+    update_password: on_create
+  become: True
+  when: hostvars[inventory_hostname]['ansible_user'] != "" and hostvars[inventory_hostname]['ansible_user'] != "root"
+
 - name: Install virtualenv packages
   package:
     name: python-virtualenv
@@ -65,10 +75,11 @@
   when: virtualenv is not none
 
 - name: Install pip
-  easy_install:
-    name: pip
-    virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
-    virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
+  package:
+    name: python-pip
+    state: present
+    #    virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
+    #    virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
   become: True
 
 - name: Install latest pip in the virtualenv

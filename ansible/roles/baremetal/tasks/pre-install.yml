@@ -2,7 +2,7 @@
 # NOTE: raw install is required to support cloud images which do not have python installed
 - name: "Install python2 and python-simplejson"
   become: True
-  raw: "yum install -y python python-simplejson || (apt-get update && apt-get install -y python2.7 python-simplejson)"
+  raw: "( apt update && apt install -y python2.7 python-simplejson ) || (yum install -y python python-simplejson)"
 
 - name: Gather facts
   setup:
@@ -106,7 +106,7 @@
 
 - name: Install docker apt gpg key
   apt_key:
-    url: "{{ docker_apt_url }}/{{ docker_apt_key_file }}"
+    url: "{{ docker_apt_url }}/{{ansible_distribution | lower}}/{{ docker_apt_key_file }}"
     id: "{{ docker_apt_key_id }}"
     state: present
   become: True
