@@ -98,11 +98,11 @@ host_key_checking = False
 EOF
 
     # Record the running state of the environment as seen by the setup module
-    ansible all -i ${RAW_INVENTORY} -m setup > /tmp/logs/ansible/initial-setup
+    ansible all -i ${RAW_INVENTORY} -e ansible_user=$USER -m setup > /tmp/logs/ansible/initial-setup
 }
 
 function setup_node {
-    ansible-playbook -i ${RAW_INVENTORY} tools/playbook-setup-nodes.yml
+    ansible-playbook -i ${RAW_INVENTORY} -e ansible_user=$USER tools/playbook-setup-nodes.yml
 }
 
 function prepare_images {
@@ -141,7 +141,7 @@ function sanity_check {
 
 function test_openstack {
     # Create dummy interface for neutron
-    ansible -m shell -i ${RAW_INVENTORY} -a "ip l a fake_interface type dummy" all
+    ansible -m shell -i ${RAW_INVENTORY} -b -a "ip l a fake_interface type dummy" all
 
     #TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
     sudo chmod -R 777 /etc/kolla
@@ -229,7 +229,7 @@ setup_ansible
 setup_config
 setup_node
 
-tools/kolla-ansible -i ${RAW_INVENTORY} bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
+tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
 prepare_images
 
 if [[ $ACTION != bifrost ]]; then
