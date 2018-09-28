@@ -92,23 +92,17 @@ For more information, please see `VMware NSX-V documentation <https://docs.vmwar
    </service>
    </ConfigRoot>
 
-.. end
-
 Then refresh the firewall config by:
 
 .. code-block:: console
 
    # esxcli network firewall refresh
 
-.. end
-
 Verify that the firewall config is applied:
 
 .. code-block:: console
 
    # esxcli network firewall ruleset list
-
-.. end
 
 Deployment
 ----------
@@ -120,8 +114,6 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
 
    nova_compute_virt_type: "vmware"
    neutron_plugin_agent: "vmware_nsxv"
-
-.. end
 
 .. note::
 
@@ -141,8 +133,6 @@ If you want to set VMware datastore as cinder backend, enable it in
    cinder_backend_vmwarevc_vmdk: "yes"
    vmware_datastore_name: "TestDatastore"
 
-.. end
-
 If you want to set VMware datastore as glance backend, enable it in
 ``/etc/kolla/globals.yml``:
 
@@ -151,8 +141,6 @@ If you want to set VMware datastore as glance backend, enable it in
    glance_backend_vmware: "yes"
    vmware_vcenter_name: "TestDatacenter"
    vmware_datastore_name: "TestDatastore"
-
-.. end
 
 VMware options are required in ``/etc/kolla/globals.yml``, these options should
 be configured correctly according to your NSX-V environment.
@@ -167,8 +155,6 @@ Options for ``nova-compute`` and ``ceilometer``:
    vmware_vcenter_insecure: "True"
    vmware_vcenter_datastore_regex: ".*"
 
-.. end
-
 .. note::
 
    The VMware vCenter password has to be set in ``/etc/kolla/passwords.yml``.
@@ -176,8 +162,6 @@ Options for ``nova-compute`` and ``ceilometer``:
    .. code-block:: yaml
 
       vmware_vcenter_host_password: "admin"
-
-   .. end
 
 Options for Neutron NSX-V support:
 
@@ -214,8 +198,6 @@ Options for Neutron NSX-V support:
 
       vmware_nsxv_password: "nsx_manager_password"
 
-   .. end
-
 Then you should start :command:`kolla-ansible` deployment normally as
 KVM/QEMU deployment.
 
@@ -243,8 +225,6 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
    nova_compute_virt_type: "vmware"
    neutron_plugin_agent: "vmware_dvs"
 
-.. end
-
 If you want to set VMware datastore as Cinder backend, enable it in
 ``/etc/kolla/globals.yml``:
 
@@ -254,8 +234,6 @@ If you want to set VMware datastore as Cinder backend, enable it in
    cinder_backend_vmwarevc_vmdk: "yes"
    vmware_datastore_name: "TestDatastore"
 
-.. end
-
 If you want to set VMware datastore as Glance backend, enable it in
 ``/etc/kolla/globals.yml``:
 
@@ -264,8 +242,6 @@ If you want to set VMware datastore as Glance backend, enable it in
    glance_backend_vmware: "yes"
    vmware_vcenter_name: "TestDatacenter"
    vmware_datastore_name: "TestDatastore"
-
-.. end
 
 VMware options are required in ``/etc/kolla/globals.yml``, these options should
 be configured correctly according to the vSphere environment you installed
@@ -282,8 +258,6 @@ Options for Neutron NSX-DVS support:
    vmware_dvs_dvs_name: "VDS-1"
    vmware_dvs_dhcp_override_mac: ""
 
-.. end
-
 .. note::
 
    The VMware NSX-DVS password has to be set in ``/etc/kolla/passwords.yml``.
@@ -291,8 +265,6 @@ Options for Neutron NSX-DVS support:
    .. code-block:: yaml
 
       vmware_dvs_host_password: "password"
-
-   .. end
 
 Then you should start :command:`kolla-ansible` deployment normally as
 KVM/QEMU deployment.

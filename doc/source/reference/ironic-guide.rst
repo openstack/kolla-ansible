@@ -17,8 +17,6 @@ Enable Ironic in ``/etc/kolla/globals.yml``:
 
    enable_ironic: "yes"
 
-.. end
-
 In the same file, define a range of IP addresses that will be available for use
 by Ironic inspector, as well as a network to be used for the Ironic cleaning
 network:
@@ -28,16 +26,12 @@ network:
    ironic_dnsmasq_dhcp_range: "192.168.5.100,192.168.5.110"
    ironic_cleaning_network: "public1"
 
-.. end
-
 In the same file, optionally a default gateway to be used for the Ironic
 Inspector inspection network:
 
 .. code-block:: yaml
 
    ironic_dnsmasq_default_gateway: 192.168.5.1
-
-.. end
 
 In the same file, specify the PXE bootloader file for Ironic Inspector. The
 file is relative to the ``/tftpboot`` directory. The default is ``pxelinux.0``,
@@ -48,8 +42,6 @@ value, for example aarch64 on Debian requires
 .. code-block:: yaml
 
    ironic_dnsmasq_boot_file: pxelinux.0
-
-.. end
 
 Ironic inspector also requires a deploy kernel and ramdisk to be placed in
 ``/etc/kolla/config/ironic/``. The following example uses coreos which is
@@ -64,15 +56,11 @@ be used:
    $ curl https://tarballs.openstack.org/ironic-python-agent/coreos/files/coreos_production_pxe_image-oem.cpio.gz \
      -o /etc/kolla/config/ironic/ironic-agent.initramfs
 
-.. end
-
 You may optionally pass extra kernel parameters to the inspection kernel using:
 
 .. code-block:: yaml
 
    ironic_inspector_kernel_cmdline_extras: ['ipa-lldp-timeout=90.0', 'ipa-collect-lldp=1']
-
-.. end
 
 in ``/etc/kolla/globals.yml``.
 
@@ -86,8 +74,6 @@ true in ``/etc/kolla/globals.yml``:
 
     enable_ironic_ipxe: "yes"
 
-.. end
-
 This will enable deployment of a docker container, called ironic_ipxe, running
 the web server which iPXE uses to obtain it's boot images.
 
@@ -97,8 +83,6 @@ The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
 .. code-block:: yaml
 
     ironic_ipxe_port: "8089"
-
-.. end
 
 The following changes will occur if iPXE booting is enabled:
 
@@ -117,8 +101,6 @@ Run the deploy as usual:
 
   $ kolla-ansible deploy
 
-.. end
-
 
 Post-deployment configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,8 +110,6 @@ initialise the cloud with some defaults (only to be used for demo purposes):
 .. code-block:: console
 
   tools/init-runonce
-
-.. end
 
 Add the deploy kernel and ramdisk to Glance. Here we're reusing the same images
 that were fetched for the Inspector:
@@ -142,8 +122,6 @@ that were fetched for the Inspector:
   openstack image create --disk-format ari --container-format ari --public \
     --file /etc/kolla/config/ironic/ironic-agent.initramfs deploy-initrd
 
-.. end
-
 Create a baremetal flavor:
 
 .. code-block:: console
@@ -151,8 +129,6 @@ Create a baremetal flavor:
   openstack flavor create --ram 512 --disk 1 --vcpus 1 my-baremetal-flavor
   openstack flavor set my-baremetal-flavor --property \
     resources:CUSTOM_BAREMETAL_RESOURCE_CLASS=1
-
-.. end
 
 Create the baremetal node and associate a port. (Ensure to substitute correct
 values for the kernel, ramdisk, and MAC address for your baremetal node)
@@ -171,16 +147,12 @@ values for the kernel, ramdisk, and MAC address for your baremetal node)
 
   openstack baremetal port create 52:54:00:ff:15:55 --node 57aa574a-5fea-4468-afcf-e2551d464412
 
-.. end
-
 Make the baremetal node available to nova:
 
 .. code-block:: console
 
   openstack baremetal node manage 57aa574a-5fea-4468-afcf-e2551d464412
   openstack baremetal node provide 57aa574a-5fea-4468-afcf-e2551d464412
-
-.. end
 
 It may take some time for the node to become available for scheduling in nova.
 Use the following commands to wait for the resources to become available:
@@ -190,8 +162,6 @@ Use the following commands to wait for the resources to become available:
   openstack hypervisor stats show
   openstack hypervisor show 57aa574a-5fea-4468-afcf-e2551d464412
 
-.. end
-
 Booting the baremetal
 ~~~~~~~~~~~~~~~~~~~~~
 You can now use the following sample command to boot the baremetal instance:
@@ -200,8 +170,6 @@ You can now use the following sample command to boot the baremetal instance:
 
   openstack server create --image cirros --flavor my-baremetal-flavor \
     --key-name mykey --network public1 demo1
-
-.. end
 
 Notes
 ~~~~~
@@ -214,8 +182,6 @@ requests may not be hitting various pieces of the process:
 .. code-block:: console
 
   tcpdump -i <interface> port 67 or port 68 or port 69 -e -n
-
-.. end
 
 Configuring the Web Console
 ---------------------------
@@ -230,8 +196,6 @@ Set ironic_console_serial_speed in ``/etc/kolla/globals.yml``:
 .. code-block:: yaml
 
    ironic_console_serial_speed: 9600n8
-
-.. end
 
 Deploying using virtual baremetal (vbmc + libvirt)
 --------------------------------------------------

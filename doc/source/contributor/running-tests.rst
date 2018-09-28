@@ -25,8 +25,6 @@ so the only package you install is ``tox`` itself:
 
    pip install tox
 
-.. end
-
 For more information, see `the unit testing section of the Testing wiki page
 <https://wiki.openstack.org/wiki/Testing#Unit_Tests>`_. For example:
 
@@ -36,23 +34,17 @@ To run the Python 2.7 tests:
 
    tox -e py27
 
-.. end
-
 To run the style tests:
 
 .. code-block:: console
 
    tox -e pep8
 
-.. end
-
 To run multiple tests separate items by commas:
 
 .. code-block:: console
 
    tox -e py27,py35,pep8
-
-.. end
 
 Running a subset of tests
 -------------------------
@@ -68,16 +60,12 @@ directory use:
 
    tox -e py27 kolla-ansible.tests
 
-.. end
-
 To run the tests of a specific file
 ``kolla-ansible/tests/test_kolla_docker.py``:
 
 .. code-block:: console
 
    tox -e py27 test_kolla_docker
-
-.. end
 
 To run the tests in the ``ModuleArgsTest`` class in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
@@ -86,16 +74,12 @@ the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
    tox -e py27 test_kolla_docker.ModuleArgsTest
 
-.. end
-
 To run the ``ModuleArgsTest.test_module_args`` test method in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
    tox -e py27 test_kolla_docker.ModuleArgsTest.test_module_args
-
-.. end
 
 Debugging unit tests
 --------------------
@@ -107,16 +91,12 @@ a breaking point to the code:
 
    import pdb; pdb.set_trace()
 
-.. end
-
 Then run ``tox`` with the debug environment as one of the following:
 
 .. code-block:: console
 
    tox -e debug
    tox -e debug test_file_name.TestClass.test_name
-
-.. end
 
 For more information, see the `oslotest documentation
 <https://docs.openstack.org/oslotest/latest/user/features.html#debugging-with-oslo-debug-helper>`_.

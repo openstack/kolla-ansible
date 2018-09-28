@@ -18,8 +18,6 @@ the following:
 
    enable_central_logging: "yes"
 
-.. end
-
 Elasticsearch
 ~~~~~~~~~~~~~
 
@@ -89,8 +87,6 @@ First, re-run the server creation with ``--debug``:
    --key-name mykey --nic net-id=00af016f-dffe-4e3c-a9b8-ec52ccd8ea65 \
    demo1
 
-.. end
-
 In this output, look for the key ``X-Compute-Request-Id``. This is a unique
 identifier that can be used to track the request through the system. An
 example ID looks like this:
@@ -98,8 +94,6 @@ example ID looks like this:
 .. code-block:: console
 
    X-Compute-Request-Id: req-c076b50a-6a22-48bf-8810-b9f41176a6d5
-
-.. end
 
 Taking the value of ``X-Compute-Request-Id``, enter the value into the Kibana
 search bar, minus the leading ``req-``. Assuming some basic filters have been

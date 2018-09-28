@@ -33,8 +33,6 @@ for three disks:
        (( index++ ))
    done
 
-.. end
-
 For evaluation, loopback devices can be used in lieu of real disks:
 
 .. code-block:: console
@@ -48,8 +46,6 @@ For evaluation, loopback devices can be used in lieu of real disks:
        sudo mkfs.xfs -f -L d${index} ${free_device}p1
        (( index++ ))
    done
-
-.. end
 
 Disks without a partition table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,8 +62,6 @@ Given hard disks with labels swd1, swd2, swd3, use the following settings in
 
    swift_devices_match_mode: "prefix"
    swift_devices_name: "swd"
-
-.. end
 
 Rings
 ~~~~~
@@ -92,8 +86,6 @@ the environment variable and create ``/etc/kolla/config/swift`` directory:
    STORAGE_NODES=(192.168.0.2 192.168.0.3 192.168.0.4)
    KOLLA_SWIFT_BASE_IMAGE="kolla/oraclelinux-source-swift-base:4.0.0"
    mkdir -p /etc/kolla/config/swift
-
-.. end
 
 Generate Object Ring
 --------------------
@@ -120,8 +112,6 @@ To generate Swift object ring, run the following commands:
        done
    done
 
-.. end
-
 Generate Account Ring
 ---------------------
 
@@ -146,8 +136,6 @@ To generate Swift account ring, run the following commands:
              /etc/kolla/config/swift/account.builder add r1z1-${node}:6001/d${i} 1;
        done
    done
-
-.. end
 
 Generate Container Ring
 -----------------------
@@ -183,8 +171,6 @@ To generate Swift container ring, run the following commands:
          /etc/kolla/config/swift/${ring}.builder rebalance;
    done
 
-.. end
-
 For more information, see
 https://docs.openstack.org/project-install-guide/object-storage/ocata/initial-rings.html
 
@@ -197,16 +183,12 @@ Enable Swift in ``/etc/kolla/globals.yml``:
 
    enable_swift : "yes"
 
-.. end
-
 Once the rings are in place, deploying Swift is the same as any other Kolla
 Ansible service:
 
 .. code-block:: console
 
    # kolla-ansible deploy -i <path/to/inventory-file>
-
-.. end
 
 Verification
 ~~~~~~~~~~~~

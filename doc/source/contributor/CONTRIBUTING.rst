@@ -93,8 +93,6 @@ that Kolla uses throughout that should be followed.
        {
        }
 
-    .. end
-
   - For OpenStack services there should be an entry in the ``services`` list
     in the ``cron.json.j2`` template file in ``ansible/roles/common/templates``.
 

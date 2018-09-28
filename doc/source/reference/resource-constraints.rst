@@ -28,8 +28,6 @@ The resources currently supported by Kolla Ansible are:
     kernel_memory
     blkio_weight
 
-.. end
-
 Pre-deployment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -89,8 +87,6 @@ add the following to the dimensions options section in
    default_container_dimensions:
      cpuset_cpus: "1"
 
-.. end
-
 For example, to constrain the number of CPUs that may be used by
 the ``nova_libvirt`` container, add the following to the dimensions
 options section in ``/etc/kolla/globals.yml``:
@@ -99,8 +95,6 @@ options section in ``/etc/kolla/globals.yml``:
 
    nova_libvirt_dimensions:
      cpuset_cpus: "2"
-
-.. end
 
 Deployment
 ~~~~~~~~~~
@@ -111,4 +105,3 @@ To deploy resource constrained containers, run the deployment as usual:
 
   $ kolla-ansible deploy -i /path/to/inventory
 
-.. end

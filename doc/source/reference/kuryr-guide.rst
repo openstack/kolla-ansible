@@ -22,8 +22,6 @@ To allow Docker daemon connect to the etcd, add the following in the
 
    ExecStart= -H tcp://172.16.1.13:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://172.16.1.13:2379 --cluster-advertise=172.16.1.13:2375
 
-.. end
-
 The IP address is host running the etcd service. ```2375``` is port that
 allows Docker daemon to be accessed remotely. ```2379``` is the etcd listening
 port.
@@ -37,15 +35,11 @@ following variables
    enable_etcd: "yes"
    enable_kuryr: "yes"
 
-.. end
-
 Deploy the OpenStack cloud and kuryr network plugin
 
 .. code-block:: console
 
    kolla-ansible deploy
-
-.. end
 
 Create a Virtual Network
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,23 +48,17 @@ Create a Virtual Network
 
    docker network create -d kuryr --ipam-driver=kuryr --subnet=10.1.0.0/24 --gateway=10.1.0.1 docker-net1
 
-.. end
-
 To list the created network:
 
 .. code-block:: console
 
    docker network ls
 
-.. end
-
 The created network is also available from OpenStack CLI:
 
 .. code-block:: console
 
    openstack network list
-
-.. end
 
 For more information about how kuryr works, see
 `kuryr (OpenStack Containers Networking)

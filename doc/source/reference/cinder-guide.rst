@@ -32,8 +32,6 @@ group.  For example with the devices ``/dev/sdb`` and ``/dev/sdc``:
    pvcreate /dev/sdb /dev/sdc
    vgcreate cinder-volumes /dev/sdb /dev/sdc
 
-.. end
-
 During development, it may be desirable to use file backed block storage. It
 is possible to use a file and mount it as a block device via the loopback
 system.
@@ -46,15 +44,11 @@ system.
    pvcreate $free_device
    vgcreate cinder-volumes $free_device
 
-.. end
-
 Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_cinder_backend_lvm: "yes"
-
-.. end
 
 .. note::
 
@@ -71,8 +65,6 @@ where the volumes are to be stored:
 
    /kolla_nfs 192.168.5.0/24(rw,sync,no_root_squash)
 
-.. end
-
 In this example, ``/kolla_nfs`` is the directory on the storage node which will
 be ``nfs`` mounted, ``192.168.5.0/24`` is the storage network, and
 ``rw,sync,no_root_squash`` means make the share read-write, synchronous, and
@@ -84,8 +76,6 @@ Then start ``nfsd``:
 
    systemctl start nfs
 
-.. end
-
 On the deploy node, create ``/etc/kolla/config/nfs_shares`` with an entry for
 each storage node:
 
@@ -94,15 +84,11 @@ each storage node:
    storage01:/kolla_nfs
    storage02:/kolla_nfs
 
-.. end
-
 Finally, enable the ``nfs`` backend in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_cinder_backend_nfs: "yes"
-
-.. end
 
 Validation
 ~~~~~~~~~~
@@ -113,8 +99,6 @@ Create a volume as follows:
 
    openstack volume create --size 1 steak_volume
    <bunch of stuff printed>
-
-.. end
 
 Verify it is available. If it says "error", then something went wrong during
 LVM creation of the volume.
@@ -129,23 +113,17 @@ LVM creation of the volume.
    | 0069c17e-8a60-445a-b7f0-383a8b89f87e | steak_volume | available |    1 |             |
    +--------------------------------------+--------------+-----------+------+-------------+
 
-.. end
-
 Attach the volume to a server using:
 
 .. code-block:: console
 
    openstack server add volume steak_server 0069c17e-8a60-445a-b7f0-383a8b89f87e
 
-.. end
-
 Check the console log to verify the disk addition:
 
 .. code-block:: console
 
    openstack console log show steak_server
-
-.. end
 
 A ``/dev/vdb`` should appear in the console log, at least when booting cirros.
 If the disk stays in the available state, something went wrong during the
@@ -167,8 +145,6 @@ exist on the server and following parameter must be specified in
 .. code-block:: yaml
 
    enable_cinder_backend_lvm: "yes"
-
-.. end
 
 For Ubuntu and LVM2/iSCSI
 -------------------------
@@ -195,8 +171,6 @@ targeted for nova compute role.
 
      mount -t configfs /etc/rc.local /sys/kernel/config
 
-  .. end
-
 Cinder backend with external iSCSI storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -206,7 +180,5 @@ the following parameter must be specified in ``globals.yml``:
 .. code-block:: yaml
 
    enable_cinder_backend_iscsi: "yes"
-
-.. end
 
 Also ``enable_cinder_backend_lvm`` should be set to ``no`` in this case.

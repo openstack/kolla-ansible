@@ -23,8 +23,6 @@ Enable Skydive in ``/etc/kolla/globals.yml`` file:
    enable_skydive: "yes"
    enable_elasticsearch: "yes"
 
-.. end
-
 Verify operation
 ----------------
 

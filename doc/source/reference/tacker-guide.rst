@@ -59,8 +59,6 @@ In order to enable them, you need to edit the file
    enable_mistral: "yes"
    enable_redis: "yes"
 
-.. end
-
 .. warning::
 
    Barbican is required in multinode deployments to share VIM fernet_keys.
@@ -74,8 +72,6 @@ Deploy tacker and related services.
 
    $ kolla-ansible deploy
 
-.. end
-
 Verification
 ~~~~~~~~~~~~
 
@@ -85,23 +81,17 @@ Generate the credentials file.
 
    $ kolla-ansible post-deploy
 
-.. end
-
 Source credentials file.
 
 .. code-block:: console
 
    $ . /etc/kolla/admin-openrc.sh
 
-.. end
-
 Create base neutron networks and glance images.
 
 .. code-block:: console
 
    $ ./tools/init-runonce
-
-.. end
 
 .. note::
 
@@ -123,15 +113,11 @@ Install python-tackerclient.
 
    $ pip install python-tackerclient
 
-.. end
-
 Execute ``deploy-tacker-demo`` script to initialize the VNF creation.
 
 .. code-block:: console
 
    $ ./deploy-tacker-demo
-
-.. end
 
 Tacker demo script will create sample VNF Descriptor (VNFD) file,
 then register a default VIM, create a tacker VNFD and finally
@@ -153,8 +139,6 @@ Verify tacker VNF status is ACTIVE.
    | c52fcf99-101d-427b-8a2d-c9ef54af8b1d | kolla-sample-vnf | {"VDU1": "10.0.0.10"} | ACTIVE | eb3aa497-192c-4557-a9d7-1dff6874a8e6 | 27e8ea98-f1ff-4a40-a45c-e829e53b3c41 |
    +--------------------------------------+------------------+-----------------------+--------+--------------------------------------+--------------------------------------+
 
-.. end
-
 Verify nova instance status is ACTIVE.
 
 .. code-block:: console
@@ -166,8 +150,6 @@ Verify nova instance status is ACTIVE.
    +--------------------------------------+-------------------------------------------------------+--------+--------------------+--------+-----------------------------------------------------------------------------------------------------------------------+
    | d2d59eeb-8526-4826-8f1b-c50b571395e2 | ta-cf99-101d-427b-8a2d-c9ef54af8b1d-VDU1-fchiv6saay7p | ACTIVE | demo-net=10.0.0.10 | cirros | tacker.vnfm.infra_drivers.openstack.openstack_OpenStack-c52fcf99-101d-427b-8a2d-c9ef54af8b1d-VDU1_flavor-yl4bzskwxdkn |
    +--------------------------------------+-------------------------------------------------------+--------+--------------------+--------+-----------------------------------------------------------------------------------------------------------------------+
-
-.. end
 
 Verify Heat stack status is CREATE_COMPLETE.
 
@@ -181,8 +163,6 @@ Verify Heat stack status is CREATE_COMPLETE.
    | 289a6686-70f6-4db7-aa10-ed169fe547a6 | tacker.vnfm.infra_drivers.openstack.openstack_OpenStack-c52fcf99-101d-427b-8a2d-c9ef54af8b1d | 1243948e59054aab83dbf2803e109b3f | CREATE_COMPLETE | 2017-08-23T09:49:50Z | None         |
    +--------------------------------------+----------------------------------------------------------------------------------------------+----------------------------------+-----------------+----------------------+--------------+
 
-.. end
-
 After the correct functionality of tacker is verified, tacker demo
 can be cleaned up executing ``cleanup-tacker`` script.
 
@@ -190,4 +170,3 @@ can be cleaned up executing ``cleanup-tacker`` script.
 
    $ ./cleanup-tacker
 
-.. end

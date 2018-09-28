@@ -27,8 +27,6 @@ as the following example shows:
 
    enable_neutron_provider_networks: "yes"
 
-.. end
-
 Enabling Neutron Extensions
 ===========================
 
@@ -43,8 +41,6 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 .. code-block:: yaml
 
    enable_neutron_sfc: "yes"
-
-.. end
 
 Verification
 ------------
@@ -65,8 +61,6 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
    enable_neutron_vpnaas: "yes"
 
-.. end
-
 Verification
 ------------
 
@@ -83,8 +77,6 @@ and versioning may differ depending on deploy configuration):
    CONTAINER ID   IMAGE                                                               COMMAND         CREATED          STATUS        PORTS  NAMES
    97d25657d55e   operator:5000/kolla/oraclelinux-source-neutron-vpnaas-agent:4.0.0   "kolla_start"   44 minutes ago   Up 44 minutes        neutron_vpnaas_agent
 
-.. end
-
 Kolla-Ansible includes a small script that can be used in tandem with
 ``tools/init-runonce`` to verify the VPN using two routers and two Nova VMs:
 
@@ -92,8 +84,6 @@ Kolla-Ansible includes a small script that can be used in tandem with
 
    tools/init-runonce
    tools/init-vpn
-
-.. end
 
 Verify both VPN services are active:
 
@@ -107,8 +97,6 @@ Verify both VPN services are active:
    | ad941ec4-5f3d-4a30-aae2-1ab3f4347eb1 | vpn_west | 051f7ce3-4301-43cc-bfbd-7ffd59af539e | ACTIVE |
    | edce15db-696f-46d8-9bad-03d087f1f682 | vpn_east | 058842e0-1d01-4230-af8d-0ba6d0da8b1f | ACTIVE |
    +--------------------------------------+----------+--------------------------------------+--------+
-
-.. end
 
 Two VMs can now be booted, one on vpn_east, the other on vpn_west, and
 encrypted ping packets observed being sent from one to the other.
@@ -128,8 +116,6 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 .. code-block:: yaml
 
    enable_opendaylight: "yes"
-
-.. end
 
 Networking-ODL is an additional Neutron plugin that allows the OpenDaylight
 SDN Controller to utilize its networking virtualization features.
@@ -151,8 +137,6 @@ OpenDaylight ``globals.yml`` configurable options with their defaults include:
    opendaylight_port_binding_type: "pseudo-agentdb-binding"
    opendaylight_features: "odl-mdsal-apidocs,odl-netvirt-openstack"
    opendaylight_allowed_network_types: '"flat", "vlan", "vxlan"'
-
-.. end
 
 Clustered OpenDaylight Deploy
 -----------------------------
@@ -221,8 +205,6 @@ config and regenerating your grub file.
 
    default_hugepagesz=2M hugepagesz=2M hugepages=25000
 
-.. end
-
 As dpdk is a userspace networking library it requires userspace compatible
 drivers to be able to control the physical interfaces on the platform.
 dpdk technically support 3 kernel drivers ``igb_uio``,``uio_pci_generic``, and
@@ -251,8 +233,6 @@ To enable ovs-dpdk, add the following configuration to
    enable_openvswitch: yes
    tunnel_interface: "dpdk_bridge"
    neutron_bridge_name: "dpdk_bridge"
-
-.. end
 
 Unlike standard Open vSwitch deployments, the interface specified by
 neutron_external_interface should have an ip address assigned.
@@ -306,8 +286,6 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
    enable_neutron_sriov: "yes"
 
-.. end
-
 Modify the ``/etc/kolla/config/neutron/ml2_conf.ini`` file and add
 ``sriovnicswitch`` to the ``mechanism_drivers``. Also, the provider
 networks used by SRIOV should be configured. Both flat and VLAN are configured
@@ -325,8 +303,6 @@ with the same physical network name in this example:
    [ml2_type_flat]
    flat_networks = sriovtenant1
 
-.. end
-
 Add ``PciPassthroughFilter`` to scheduler_default_filters
 
 The ``PciPassthroughFilter``, which is required by Nova Scheduler service
@@ -343,8 +319,6 @@ required by The Nova Scheduler service on the controller node.
    scheduler_default_filters = <existing filters>, PciPassthroughFilter
    scheduler_available_filters = nova.scheduler.filters.all_filters
 
-.. end
-
 Edit the ``/etc/kolla/config/nova.conf`` file and add PCI device whitelisting.
 this is needed by OpenStack Compute service(s) on the Compute.
 
@@ -353,8 +327,6 @@ this is needed by OpenStack Compute service(s) on the Compute.
 
    [pci]
    passthrough_whitelist = [{"devname": "ens785f0", "physical_network": "sriovtenant1"}]
-
-.. end
 
 Modify the ``/etc/kolla/config/neutron/sriov_agent.ini`` file. Add physical
 network to interface mapping. Specific VFs can also be excluded here. Leaving
@@ -366,8 +338,6 @@ blank means to enable all VFs for the interface:
    [sriov_nic]
    physical_device_mappings = sriovtenant1:ens785f0
    exclude_devices =
-
-.. end
 
 Run deployment.
 
@@ -392,8 +362,6 @@ output of both ``lspci`` and ``ip link show``.  For example:
    vf 2 MAC fa:16:3e:92:cf:12, spoof checking on, link-state auto, trust off
    vf 3 MAC fa:16:3e:00:a3:01, vlan 1000, spoof checking on, link-state auto, trust off
 
-.. end
-
 Verify the SRIOV Agent container is running on the compute node(s):
 
 .. code-block:: console
@@ -401,8 +369,6 @@ Verify the SRIOV Agent container is running on the compute node(s):
    # docker ps --filter name=neutron_sriov_agent
    CONTAINER ID   IMAGE                                                                COMMAND        CREATED         STATUS         PORTS  NAMES
    b03a8f4c0b80   10.10.10.10:4000/registry/centos-source-neutron-sriov-agent:17.04.0  "kolla_start"  18 minutes ago  Up 18 minutes         neutron_sriov_agent
-
-.. end
 
 Verify the SRIOV Agent service is present and UP:
 
@@ -415,8 +381,6 @@ Verify the SRIOV Agent service is present and UP:
    +--------------------------------------+--------------------+-------------+-------------------+-------+-------+---------------------------+
    | 7c06bda9-7b87-487e-a645-cc6c289d9082 | NIC Switch agent   | av09-18-wcp | None              | :-)   | UP    | neutron-sriov-nic-agent   |
    +--------------------------------------+--------------------+-------------+-------------------+-------+-------+---------------------------+
-
-.. end
 
 Create a new provider network. Set ``provider-physical-network`` to the
 physical network name that was configured in ``/etc/kolla/config/nova.conf``.
@@ -442,15 +406,11 @@ Create a subnet with a DHCP range for the provider network:
      --allocation-pool start=11.0.0.5,end=11.0.0.100 \
      sriovnet1_sub1
 
-.. end
-
 Create a port on the provider network with ``vnic_type`` set to ``direct``:
 
 .. code-block:: console
 
    # openstack port create --network sriovnet1 --vnic-type=direct sriovnet1-port1
-
-.. end
 
 Start a new instance with the SRIOV port assigned:
 
@@ -470,8 +430,6 @@ dmesg on the compute node where the instance was placed.
    [ 2896.849970] ixgbe 0000:05:00.0: setting MAC fa:16:3e:00:a3:01 on VF 3
    [ 2896.850028] ixgbe 0000:05:00.0: Setting VLAN 1000, QOS 0x0 on VF 3
    [ 2897.403367] vfio-pci 0000:05:10.4: enabling device (0000 -> 0002)
-
-.. end
 
 For more information see `OpenStack SRIOV documentation <https://docs.openstack.org/neutron/pike/admin/config-sriov.html>`_.
 
@@ -508,8 +466,6 @@ Compute service on the compute node also require the ``alias`` option under the
    passthrough_whitelist = [{"vendor_id": "8086", "product_id": "10fb"}]
    alias = [{"vendor_id":"8086", "product_id":"10ed", "device_type":"type-VF", "name":"vf1"}]
 
-.. end
-
 Run deployment.
 
 Verification
@@ -522,15 +478,11 @@ device from the PCI alias:
 
    # openstack flavor set sriov-flavor --property "pci_passthrough:alias"="vf1:1"
 
-.. end
-
 Start a new instance using the flavor:
 
 .. code-block:: console
 
    # openstack server create --flavor sriov-flavor --image fc-26 vm2
-
-.. end
 
 Verify VF devices were created and the instance starts successfully as in
 the Neutron SRIOV case.

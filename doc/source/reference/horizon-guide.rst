@@ -27,4 +27,3 @@ a file named custom_local_settings should be created under the directory
                 ('material', 'Material', 'themes/material'),
    ]
 
-.. end

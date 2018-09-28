@@ -87,8 +87,6 @@ resolving the deployment host's hostname to ``127.0.0.1``, for example:
     cat /etc/hosts
     127.0.0.1 bifrost localhost
 
-.. end
-
 The following lines are desirable for IPv6 capable hosts:
 
 .. code-block:: console
@@ -100,8 +98,6 @@ The following lines are desirable for IPv6 capable hosts:
     ff02::2 ip6-allrouters
     ff02::3 ip6-allhosts
     192.168.100.15 bifrost
-
-.. end
 
 Build a Bifrost Container Image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,16 +119,12 @@ bifrost image.
         cd kolla
         tox -e genconfig
 
-     .. end
-
    * Modify ``kolla-build.conf``, setting ``install_type`` to ``source``:
 
      .. path etc/kolla/kolla-build.conf
      .. code-block:: ini
 
         install_type = source
-
-     .. end
 
 Alternatively, instead of using ``kolla-build.conf``, a ``source`` build can
 be enabled by appending ``--type source`` to the :command:`kolla-build` or
@@ -145,15 +137,11 @@ be enabled by appending ``--type source`` to the :command:`kolla-build` or
       cd kolla
       tools/build.py bifrost-deploy
 
-   .. end
-
    For Production:
 
    .. code-block:: console
 
       kolla-build bifrost-deploy
-
-   .. end
 
    .. note::
 
@@ -164,8 +152,6 @@ be enabled by appending ``--type source`` to the :command:`kolla-build` or
       .. code-block:: console
 
          --base [ubuntu|centos|oraclelinux]
-
-      .. end
 
 Configure and Deploy a Bifrost Container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,8 +190,6 @@ different than ``network_interface``.  For example to use ``eth1``:
 
    bifrost_network_interface: eth1
 
-.. end
-
 Note that this interface should typically have L2 network connectivity with the
 bare metal cloud hosts in order to provide DHCP leases with PXE boot options.
 
@@ -215,8 +199,6 @@ reflected in ``globals.yml``
 .. code-block:: yaml
 
    kolla_install_type: source
-
-.. end
 
 Prepare Bifrost Configuration
 -----------------------------
@@ -266,8 +248,6 @@ properties and a logical name.
        cpus: "16"
      name: "cloud1"
 
-.. end
-
 The required inventory will be specific to the hardware and environment in use.
 
 Create Bifrost Configuration
@@ -288,8 +268,6 @@ For details on bifrost's variables see the bifrost documentation. For example:
    # dhcp_lease_time: 12h
    # dhcp_static_mask: 255.255.255.0
 
-.. end
-
 Create Disk Image Builder Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -304,8 +282,6 @@ For example, to use the ``debian`` Disk Image Builder OS element:
 .. code-block:: yaml
 
    dib_os_element: debian
-
-.. end
 
 See the `diskimage-builder documentation
 <https://docs.openstack.org/diskimage-builder/latest/>`__ for more details.
@@ -325,15 +301,11 @@ For development:
    cd kolla-ansible
    tools/kolla-ansible deploy-bifrost
 
-.. end
-
 For Production:
 
 .. code-block:: console
 
    kolla-ansible deploy-bifrost
-
-.. end
 
 Deploy Bifrost manually
 -----------------------
@@ -346,8 +318,6 @@ Deploy Bifrost manually
       --privileged --name bifrost_deploy \
       kolla/ubuntu-source-bifrost-deploy:3.0.1
 
-   .. end
-
 #. Copy Configuration Files
 
    .. code-block:: console
@@ -357,23 +327,17 @@ Deploy Bifrost manually
       docker cp /etc/kolla/config/bifrost/bifrost.yml bifrost_deploy:/etc/bifrost/bifrost.yml
       docker cp /etc/kolla/config/bifrost/dib.yml bifrost_deploy:/etc/bifrost/dib.yml
 
-   .. end
-
 #. Bootstrap Bifrost
 
    .. code-block:: console
 
       docker exec -it bifrost_deploy bash
 
-   .. end
-
 #. Generate an SSH Key
 
    .. code-block:: console
 
       ssh-keygen
-
-   .. end
 
 #. Bootstrap and Start Services
 
@@ -392,8 +356,6 @@ Deploy Bifrost manually
       -e @/etc/bifrost/dib.yml \
       -e skip_package_install=true
 
-   .. end
-
 Validate the Deployed Container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -402,8 +364,6 @@ Validate the Deployed Container
    docker exec -it bifrost_deploy bash
    cd /bifrost
    . env-vars
-
-.. end
 
 Running "ironic node-list" should return with no nodes, for example
 
@@ -414,8 +374,6 @@ Running "ironic node-list" should return with no nodes, for example
    | UUID | Name | Instance UUID | Power State | Provisioning State | Maintenance |
    +------+------+---------------+-------------+--------------------+-------------+
    +------+------+---------------+-------------+--------------------+-------------+
-
-.. end
 
 Enroll and Deploy Physical Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -434,15 +392,11 @@ For Development:
 
    tools/kolla-ansible deploy-servers
 
-.. end
-
 For Production:
 
 .. code-block:: console
 
    kolla-ansible deploy-servers
-
-.. end
 
 Manually
 --------
@@ -468,8 +422,6 @@ Manually
    /bifrost/playbooks/deploy-dynamic.yaml \
    -e "ansible_python_interpreter=/var/lib/kolla/venv/bin/python" \
    -e @/etc/bifrost/bifrost.yml
-
-.. end
 
 At this point Ironic should clean down the nodes and install the default
 OS image.
@@ -502,8 +454,6 @@ done remotely with :command:`ipmitool` and Serial Over LAN. For example
 .. code-block:: console
 
    ipmitool -I lanplus -H 192.168.1.30 -U admin -P root sol activate
-
-.. end
 
 References
 ~~~~~~~~~~

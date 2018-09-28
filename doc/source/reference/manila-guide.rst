@@ -42,16 +42,12 @@ Cinder and Ceph are required, enable it in ``/etc/kolla/globals.yml``:
    enable_cinder: "yes"
    enable_ceph: "yes"
 
-.. end
-
 Enable Manila and generic back end in ``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
    enable_manila: "yes"
    enable_manila_backend_generic: "yes"
-
-.. end
 
 By default Manila uses instance flavor id 100 for its file systems. For Manila
 to work, either create a new nova flavor with id 100 (use *nova flavor-create*)
@@ -66,8 +62,6 @@ contents:
 
    [generic]
    service_instance_flavor_id = 2
-
-.. end
 
 Verify Operation
 ~~~~~~~~~~~~~~~~
@@ -85,8 +79,6 @@ to verify successful launch of each process:
    | manila-scheduler | controller     | nova | enabled |   up  | 2014-10-18T01:30:54.000000 |       None      |
    | manila-share     | share1@generic | nova | enabled |   up  | 2014-10-18T01:30:57.000000 |       None      |
    +------------------+----------------+------+---------+-------+----------------------------+-----------------+
-
-.. end
 
 Launch an Instance
 ~~~~~~~~~~~~~~~~~~
@@ -111,8 +103,6 @@ Create a default share type before running manila-share service:
    +--------------------------------------+--------------------+------------+------------+-------------------------------------+-------------------------+
    | 8a35da28-0f74-490d-afff-23664ecd4f01 | default_share_type | public     | -          | driver_handles_share_servers : True | snapshot_support : True |
    +--------------------------------------+--------------------+------------+------------+-------------------------------------+-------------------------+
-
-.. end
 
 Create a manila share server image to the Image service:
 
@@ -146,8 +136,6 @@ Create a manila share server image to the Image service:
    | visibility       | public                               |
    +------------------+--------------------------------------+
 
-.. end
-
 List available networks to get id and subnets of the private network:
 
 .. code-block:: console
@@ -158,8 +146,6 @@ List available networks to get id and subnets of the private network:
    | 0e62efcd-8cee-46c7-b163-d8df05c3c5ad | public  | 5cc70da8-4ee7-4565-be53-b9c011fca011 10.3.31.0/24  |
    | 7c6f9b37-76b4-463e-98d8-27e5686ed083 | private | 3482f524-8bff-4871-80d4-5774c2730728 172.16.1.0/24 |
    +--------------------------------------+---------+----------------------------------------------------+
-
-.. end
 
 Create a shared network
 
@@ -187,16 +173,12 @@ Create a shared network
    | description       | None                                 |
    +-------------------+--------------------------------------+
 
-.. end
-
 Create a flavor (**Required** if you not defined *manila_instance_flavor_id* in
 ``/etc/kolla/config/manila-share.conf`` file)
 
 .. code-block:: console
 
    # nova flavor-create manila-service-flavor 100 128 0 1
-
-.. end
 
 Create a share
 ~~~~~~~~~~~~~~
@@ -234,8 +216,6 @@ Create a NFS share using the share network:
    | metadata                    | {}                                   |
    +-----------------------------+--------------------------------------+
 
-.. end
-
 After some time, the share status should change from ``creating``
 to ``available``:
 
@@ -249,16 +229,12 @@ to ``available``:
    | e1e06b14-ba17-48d4-9e0b-ca4d59823166 | demo-share1 | 1    | NFS         | available | False     | default_share_type                   | share1@generic#GENERIC      | nova              |
    +--------------------------------------+-------------+------+-------------+-----------+-----------+--------------------------------------+-----------------------------+-------------------+
 
-.. end
-
 Configure user access to the new share before attempting to mount it via the
 network:
 
 .. code-block:: console
 
    # manila access-allow demo-share1 ip INSTANCE_PRIVATE_NETWORK_IP
-
-.. end
 
 Mount the share from an instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,23 +280,17 @@ Get export location from share
    | metadata                    | {}                                                                   |
    +-----------------------------+----------------------------------------------------------------------+
 
-.. end
-
 Create a folder where the mount will be placed:
 
 .. code-block:: console
 
    # mkdir ~/test_folder
 
-.. end
-
 Mount the NFS share in the instance using the export location of the share:
 
 .. code-block:: console
 
    # mount -v 10.254.0.3:/shares/share-422dc546-8f37-472b-ac3c-d23fe410d1b6 ~/test_folder
-
-.. end
 
 Share Migration
 ~~~~~~~~~~~~~~~
@@ -340,8 +310,6 @@ Modify the file ``/etc/kolla/config/manila.conf`` and add the contents:
    [DEFAULT]
    data_node_access_ip = 10.10.10.199
 
-.. end
-
 .. note::
 
    Share migration requires have more than one back end configured.
@@ -355,8 +323,6 @@ Use the manila migration command, as shown in the following example:
      --writable True|False --force_host_assisted_migration True|False \
      --new_share_type share_type --new_share_network share_network \
      shareID destinationHost
-
-.. end
 
 - ``--force-host-copy``: Forces the generic host-based migration mechanism and
   bypasses any driver optimizations.
@@ -390,8 +356,6 @@ check progress.
    | task_state     | data_copying_completing |
    | total_progress | 100                     |
    +----------------+-------------------------+
-
-.. end
 
 Use the :command:`manila migration-complete shareID` command to complete share
 migration process.

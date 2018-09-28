@@ -66,8 +66,6 @@ result, simply :command:`mkdir -p /etc/kolla/config` and modify the file
    virt_type=qemu
    cpu_mode = none
 
-.. end
-
 After this change Kolla will use an emulated hypervisor with lower performance.
 Kolla could have templated this commonly modified configuration option. If
 Kolla starts down this path, the Kolla project could end with hundreds of

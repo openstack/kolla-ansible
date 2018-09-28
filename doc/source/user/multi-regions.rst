@@ -32,8 +32,6 @@ Keystone and Horizon are enabled:
    enable_keystone: "yes"
    enable_horizon: "yes"
 
-.. end
-
 Then, change the value of ``multiple_regions_names`` to add names of other
 regions. In this example, we consider two regions. The current one,
 formerly knows as RegionOne, that is hided behind
@@ -45,8 +43,6 @@ formerly knows as RegionOne, that is hided behind
    multiple_regions_names:
        - "{{ openstack_region_name }}"
        - "RegionTwo"
-
-.. end
 
 .. note::
 
@@ -83,8 +79,6 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
        project_name: "admin"
        domain_name: "default"
 
-.. end
-
 Configuration files of cinder,nova,neutron,glance... have to be updated to
 contact RegionOne's Keystone. Fortunately, Kolla offers to override all
 configuration files at the same time thanks to the
@@ -97,8 +91,6 @@ implies to create a ``global.conf`` file with the following content:
    www_authenticate_uri = {{ keystone_internal_url }}
    auth_url = {{ keystone_admin_url }}
 
-.. end
-
 The Placement API section inside the nova configuration file also has
 to be updated to contact RegionOne's Keystone. So create, in the same
 directory, a ``nova.conf`` file with below content:
@@ -107,8 +99,6 @@ directory, a ``nova.conf`` file with below content:
 
    [placement]
    auth_url = {{ keystone_admin_url }}
-
-.. end
 
 The Heat section inside the configuration file also
 has to be updated to contact RegionOne's Keystone. So create, in the same
@@ -126,8 +116,6 @@ directory, a ``heat.conf`` file with below content:
    [clients_keystone]
    www_authenticate_uri = {{ keystone_internal_url }}
 
-.. end
-
 The Ceilometer section inside the configuration file also
 has to be updated to contact RegionOne's Keystone. So create, in the same
 directory, a ``ceilometer.conf`` file with below content:
@@ -137,8 +125,6 @@ directory, a ``ceilometer.conf`` file with below content:
    [service_credentials]
    auth_url = {{ keystone_internal_url }}
 
-.. end
-
 And link the directory that contains these files into the
 ``/etc/kolla/globals.yml``:
 
@@ -146,15 +132,11 @@ And link the directory that contains these files into the
 
    node_custom_config: path/to/the/directory/of/global&nova_conf/
 
-.. end
-
 Also, change the name of the current region. For instance, RegionTwo:
 
 .. code-block:: yaml
 
    openstack_region_name: "RegionTwo"
-
-.. end
 
 Finally, disable the deployment of Keystone and Horizon that are
 unnecessary in this region and run ``kolla-ansible``:
@@ -163,7 +145,5 @@ unnecessary in this region and run ``kolla-ansible``:
 
    enable_keystone: "no"
    enable_horizon: "no"
-
-.. end
 
 The configuration is the same for any other region.

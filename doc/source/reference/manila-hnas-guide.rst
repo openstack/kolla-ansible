@@ -80,8 +80,6 @@ Enable Shared File Systems service and HNAS driver in
    enable_manila: "yes"
    enable_manila_backend_hnas: "yes"
 
-.. end
-
 Configure the OpenStack networking so it can reach HNAS Management
 interface and HNAS EVS Data interface.
 
@@ -94,8 +92,6 @@ In ``/etc/kolla/globals.yml`` set:
 
    neutron_bridge_name: "br-ex,br-ex2"
    neutron_external_interface: "eth1,eth2"
-
-.. end
 
 .. note::
 
@@ -127,8 +123,6 @@ List the available tenants:
 
    $ openstack project list
 
-.. end
-
 Create a network to the given tenant (service), providing the tenant ID,
 a name for the network, the name of the physical network over which the
 virtual network is implemented, and the type of the physical mechanism by
@@ -139,15 +133,11 @@ which the virtual network is implemented:
    $ neutron net-create --tenant-id <SERVICE_ID> hnas_network \
      --provider:physical_network=physnet2 --provider:network_type=flat
 
-.. end
-
 *Optional* - List available networks:
 
 .. code-block:: console
 
    $ neutron net-list
-
-.. end
 
 Create a subnet to the same tenant (service), the gateway IP of this subnet,
 a name for the subnet, the network ID created before, and the CIDR of
@@ -158,15 +148,11 @@ subnet:
    $ neutron subnet-create --tenant-id <SERVICE_ID> --gateway <GATEWAY> \
      --name hnas_subnet <NETWORK_ID> <SUBNET_CIDR>
 
-.. end
-
 *Optional* - List available subnets:
 
 .. code-block:: console
 
    $ neutron subnet-list
-
-.. end
 
 Add the subnet interface to a router, providing the router ID and subnet
 ID created before:
@@ -174,8 +160,6 @@ ID created before:
 .. code-block:: console
 
    $ neutron router-interface-add <ROUTER_ID> <SUBNET_ID>
-
-.. end
 
 Create a file system on HNAS. See the `Hitachi HNAS reference <http://www.hds.com/assets/pdf/hus-file-module-file-services-administration-guide.pdf>`_.
 
@@ -193,8 +177,6 @@ Create a route in HNAS to the tenant network:
    $ console-context --evs <EVS_ID_IN_USE> route-net-add --gateway <FLAT_NETWORK_GATEWAY> \
      <TENANT_PRIVATE_NETWORK>
 
-.. end
-
 .. important ::
 
    Make sure multi-tenancy is enabled and routes are configured per EVS.
@@ -203,8 +185,6 @@ Create a route in HNAS to the tenant network:
 
    $ console-context --evs 3 route-net-add --gateway 192.168.1.1 \
      10.0.0.0/24
-
-.. end
 
 Create a share
 ~~~~~~~~~~~~~~
@@ -221,8 +201,6 @@ Create a default share type before running manila-share service:
    | 3e54c8a2-1e50-455e-89a0-96bb52876c35 | default_share_hitachi | public     | -          | driver_handles_share_servers : False | snapshot_support : True |
    +--------------------------------------+-----------------------+------------+------------+--------------------------------------+-------------------------+
 
-.. end
-
 Create a NFS share using the HNAS back end:
 
 .. code-block:: console
@@ -231,8 +209,6 @@ Create a NFS share using the HNAS back end:
      --name mysharehnas \
      --description "My Manila share" \
      --share-type default_share_hitachi
-
-.. end
 
 Verify Operation:
 
@@ -245,8 +221,6 @@ Verify Operation:
    +--------------------------------------+----------------+------+-------------+-----------+-----------+-----------------------+-------------------------+-------------------+
    | 721c0a6d-eea6-41af-8c10-72cd98985203 | mysharehnas    | 1    | NFS         | available | False     | default_share_hitachi | control@hnas1#HNAS1     | nova              |
    +--------------------------------------+----------------+------+-------------+-----------+-----------+-----------------------+-------------------------+-------------------+
-
-.. end
 
 .. code-block:: console
 
@@ -288,8 +262,6 @@ Verify Operation:
    | metadata                    | {}                                                              |
    +-----------------------------+-----------------------------------------------------------------+
 
-.. end
-
 .. _hnas_configure_multiple_back_ends:
 
 Configure multiple back ends
@@ -313,8 +285,6 @@ Modify the file ``/etc/kolla/config/manila.conf`` and add the contents:
 
    [DEFAULT]
    enabled_share_backends = generic,hnas1,hnas2
-
-.. end
 
 Modify the file ``/etc/kolla/config/manila-share.conf`` and add the contents:
 
@@ -351,8 +321,6 @@ Modify the file ``/etc/kolla/config/manila-share.conf`` and add the contents:
    hitachi_hnas_evs_id = <evs_id>
    hitachi_hnas_evs_ip = <evs_ip>
    hitachi_hnas_file_system_name = FS-Manila2
-
-.. end
 
 For more information about how to manage shares, see the
 `Manage shares

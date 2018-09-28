@@ -28,8 +28,6 @@ currently running:
 
    docker_registry: 192.168.1.100:5000
 
-.. end
-
 The Kolla community recommends using registry 2.3 or later. To deploy registry
 with version 2.3 or later, do the following:
 
@@ -37,8 +35,6 @@ with version 2.3 or later, do the following:
 
    cd kolla
    tools/start-registry
-
-.. end
 
 The Docker registry can be configured as a pull through cache to proxy the
 official Kolla images hosted in Docker Hub. In order to configure the local
@@ -49,8 +45,6 @@ Docker Hub.
 .. code-block:: console
 
    export REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
-
-.. end
 
 .. note::
 
@@ -82,8 +76,6 @@ is currently running:
      "insecure-registries" : ["192.168.1.100:5000"]
    }
 
-.. end
-
 Restart Docker by executing the following commands:
 
 For CentOS or Ubuntu with systemd:
@@ -92,15 +84,11 @@ For CentOS or Ubuntu with systemd:
 
    systemctl restart docker
 
-.. end
-
 For Ubuntu with upstart or sysvinit:
 
 .. code-block:: console
 
    service docker restart
-
-.. end
 
 .. _edit-inventory:
 
@@ -134,8 +122,6 @@ controls how ansible interacts with remote hosts.
    control01      ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
    192.168.122.24 ansible_ssh_user=<ssh-username> ansible_become=True ansible_private_key_file=<path/to/private-key-file>
 
-.. end
-
 .. note::
 
    Additional inventory parameters might be required according to your
@@ -158,8 +144,6 @@ grouped together and changing these around can break your deployment:
 
    [haproxy:children]
    network
-
-.. end
 
 Deploying Kolla
 ===============
@@ -184,8 +168,6 @@ to them:
 
    kolla-ansible prechecks -i <path/to/multinode/inventory/file>
 
-.. end
-
 .. note::
 
    RabbitMQ doesn't work with IP addresses, hence the IP address of
@@ -198,4 +180,3 @@ Run the deployment:
 
    kolla-ansible deploy -i <path/to/multinode/inventory/file>
 
-.. end

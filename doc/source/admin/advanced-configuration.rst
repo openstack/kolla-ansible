@@ -31,8 +31,6 @@ API requests, internal and external, will flow over the same network.
    kolla_internal_vip_address: "10.10.10.254"
    network_interface: "eth0"
 
-.. end
-
 For the separate option, set these four variables. In this configuration
 the internal and external REST API requests can flow over separate
 networks.
@@ -43,8 +41,6 @@ networks.
    network_interface: "eth0"
    kolla_external_vip_address: "10.10.20.254"
    kolla_external_vip_interface: "eth1"
-
-.. end
 
 Fully Qualified Domain Name Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,8 +57,6 @@ in your kolla deployment use the variables:
 
    kolla_internal_fqdn: inside.mykolla.example.net
    kolla_external_fqdn: mykolla.example.net
-
-.. end
 
 Provisions must be taken outside of kolla for these names to map to the
 configured IP addresses. Using a DNS server or the ``/etc/hosts`` file
@@ -100,8 +94,6 @@ The default for TLS is disabled, to enable TLS networking:
    kolla_enable_tls_external: "yes"
    kolla_external_fqdn_cert: "{{ node_config_directory }}/certificates/mycert.pem"
 
-.. end
-
 .. note::
 
    TLS authentication is based on certificates that have been
@@ -137,8 +129,6 @@ have settings similar to this:
    # os_cacert is optional for trusted certificates
    export OS_CACERT=/etc/pki/mykolla-cacert.crt
    export OS_IDENTITY_API_VERSION=3
-
-.. end
 
 Self-Signed Certificates
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -191,8 +181,6 @@ needs to create ``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
    [DEFAULT]
    scheduler_max_attempts = 100
 
-.. end
-
 If the operator wants to configure compute node cpu and ram allocation ratio
 on host myhost, the operator needs to create file
 ``/etc/kolla/config/nova/myhost/nova.conf`` with content:
@@ -203,8 +191,6 @@ on host myhost, the operator needs to create file
    [DEFAULT]
    cpu_allocation_ratio = 16.0
    ram_allocation_ratio = 5.0
-
-.. end
 
 Kolla allows the operator to override configuration globally for all services.
 It will look for a file called ``/etc/kolla/config/global.conf``.
@@ -217,8 +203,6 @@ operator needs to create ``/etc/kolla/config/global.conf`` with content:
 
    [database]
    max_pool_size = 100
-
-.. end
 
 In case the operators want to customize ``policy.json`` file, they should
 create a full policy file for specific project in the same directory like above
@@ -242,8 +226,6 @@ using following command:
 
    kolla-ansible reconfigure
 
-.. end
-
 IP Address Constrained Environments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -254,8 +236,6 @@ adding:
 .. code-block:: yaml
 
    enable_haproxy: "no"
-
-.. end
 
 Note this method is not recommended and generally not tested by the
 Kolla community, but included since sometimes a free IP is not available
@@ -271,8 +251,6 @@ first disable the deployment of the central logging.
 
    enable_central_logging: "no"
 
-.. end
-
 Now you can use the parameter ``elasticsearch_address`` to configure the
 address of the external Elasticsearch environment.
 
@@ -286,8 +264,6 @@ for service(s) in Kolla. It is possible with setting
 .. code-block:: yaml
 
    database_port: 3307
-
-.. end
 
 As ``<service>_port`` value is saved in different services' configuration so
 it's advised to make above change before deploying.
@@ -304,8 +280,6 @@ You can set syslog parameters in ``globals.yml`` file. For example:
    syslog_server: "172.29.9.145"
    syslog_udp_port: "514"
 
-.. end
-
 You can also set syslog facility names for Swift and HAProxy logs.
 By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
 
@@ -314,4 +288,3 @@ By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
    syslog_swift_facility: "local0"
    syslog_haproxy_facility: "local1"
 
-.. end

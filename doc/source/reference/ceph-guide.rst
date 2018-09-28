@@ -45,8 +45,6 @@ operations:
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
 
-.. end
-
 The following shows an example of using parted to configure ``/dev/sdb`` for
 usage with Kolla.
 
@@ -61,8 +59,6 @@ usage with Kolla.
    Number  Start   End     Size    File system  Name                      Flags
         1      1049kB  10.7GB  10.7GB               KOLLA_CEPH_OSD_BOOTSTRAP
 
-.. end
-
 Bluestore
 ~~~~~~~~~
 
@@ -71,8 +67,6 @@ To prepare a bluestore OSD partition, execute the following operations:
 .. code-block:: console
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS 1 -1
-
-.. end
 
 If only one device is offered, Kolla Ceph will create the bluestore OSD on the
 device. Kolla Ceph will create two partitions for OSD and block separately.
@@ -87,8 +81,6 @@ To prepare a bluestore OSD block partition, execute the following operations:
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_B 1 -1
 
-.. end
-
 To prepare a bluestore OSD block.wal partition, execute the following
 operations:
 
@@ -96,16 +88,12 @@ operations:
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_W 1 -1
 
-.. end
-
 To prepare a bluestore OSD block.db partition, execute the following
 operations:
 
 .. code-block:: console
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_FOO_D 1 -1
-
-.. end
 
 Kolla Ceph will handle the bluestore OSD according to the above up to four
 partition labels. In Ceph bluestore OSD, the block.wal and block.db partitions
@@ -127,8 +115,6 @@ Using an external journal drive
 
    The section is only meaningful for Ceph filestore OSD.
 
-.. end
-
 The steps documented above created a journal partition of 5 GByte
 and a data partition with the remaining storage capacity on the same tagged
 drive.
@@ -146,15 +132,11 @@ Prepare the storage drive in the same way as documented above:
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO 1 -1
 
-.. end
-
 To prepare the journal external drive execute the following command:
 
 .. code-block:: console
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_FOO_J 1 -1
-
-.. end
 
 .. note::
 
@@ -182,23 +164,17 @@ of the hosts that have the block devices you have prepped as shown above.
    controller
    compute1
 
-.. end
-
 Enable Ceph in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_ceph: "yes"
 
-.. end
-
 RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_ceph_rgw: "yes"
-
-.. end
 
 .. note::
 
@@ -208,16 +184,12 @@ RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
     compatibility with Swift API completely. After changing the value, run the
     "reconfigure“ command to enable.
 
-.. end
-
 Configure the Ceph store type in ``ansible/group_vars/all.yml``, the default
 value is ``bluestore`` in Rocky:
 
 .. code-block:: yaml
 
    ceph_osd_store_type: "bluestore"
-
-.. end
 
 .. note::
 
@@ -228,8 +200,6 @@ value is ``bluestore`` in Rocky:
     the majority of users will be able to deploy Ceph out of the box. It is
     *highly* recommended to consult the official Ceph documentation regarding
     these values before running Ceph in any kind of production scenario.
-
-.. end
 
 RGW requires a healthy cluster in order to be successfully deployed. On initial
 start up, RGW will create several pools. The first pool should be in an
@@ -245,8 +215,6 @@ copies for the pools before deployment. Modify the file
    osd pool default size = 1
    osd pool default min size = 1
 
-.. end
-
 To build a high performance and secure Ceph Storage Cluster, the Ceph community
 recommend the use of two separate networks: public network and cluster network.
 Edit the ``/etc/kolla/globals.yml`` and configure the ``cluster_interface``:
@@ -255,8 +223,6 @@ Edit the ``/etc/kolla/globals.yml`` and configure the ``cluster_interface``:
 .. code-block:: yaml
 
    cluster_interface: "eth2"
-
-.. end
 
 For more details, see `NETWORK CONFIGURATION REFERENCE
 <http://docs.ceph.com/docs/master/rados/configuration/network-config-ref/#ceph-networks>`_
@@ -270,8 +236,6 @@ Finally deploy the Ceph-enabled OpenStack:
 .. code-block:: console
 
    kolla-ansible deploy -i path/to/inventory
-
-.. end
 
 Using Cache Tiering
 -------------------
@@ -287,15 +251,11 @@ operations:
 
    parted $DISK -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_CACHE_BOOTSTRAP 1 -1
 
-.. end
-
 .. note::
 
    To prepare a bluestore OSD as a cache device, change the partition name in
    the above command to "KOLLA_CEPH_OSD_CACHE_BOOTSTRAP_BS". The deployment of
    bluestore cache OSD is the same as bluestore OSD.
-
-.. end
 
 Enable the Ceph cache tier in ``/etc/kolla/globals.yml``:
 
@@ -306,15 +266,11 @@ Enable the Ceph cache tier in ``/etc/kolla/globals.yml``:
    # Valid options are [ forward, none, writeback ]
    ceph_cache_mode: "writeback"
 
-.. end
-
 After this run the playbooks as you normally would, for example:
 
 .. code-block:: console
 
    kolla-ansible deploy -i path/to/inventory
-
-.. end
 
 Setting up an Erasure Coded Pool
 --------------------------------
@@ -337,8 +293,6 @@ To enable erasure coded pools add the following options to your
    ceph_pool_type: "erasure"
    # Optionally, you can change the profile
    #ceph_erasure_profile: "k=4 m=2 ruleset-failure-domain=host"
-
-.. end
 
 Managing Ceph
 -------------
@@ -374,8 +328,6 @@ the number of copies for the pool to 1:
 
    docker exec ceph_mon ceph osd pool set rbd size 1
 
-.. end
-
 All the pools must be modified if Glance, Nova, and Cinder have been deployed.
 An example of modifying the pools to have 2 copies:
 
@@ -383,23 +335,17 @@ An example of modifying the pools to have 2 copies:
 
    for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p} size 2; done
 
-.. end
-
 If using a cache tier, these changes must be made as well:
 
 .. code-block:: console
 
    for p in images vms volumes backups; do docker exec ceph_mon ceph osd pool set ${p}-cache size 2; done
 
-.. end
-
 The default pool Ceph creates is named **rbd**. It is safe to remove this pool:
 
 .. code-block:: console
 
    docker exec ceph_mon ceph osd pool delete rbd rbd --yes-i-really-really-mean-it
-
-.. end
 
 Troubleshooting
 ---------------
@@ -465,8 +411,6 @@ environment before adding the 3rd node for Ceph:
    kolla1.ducourrier.com
    kolla2.ducourrier.com
 
-.. end
-
 Configuration
 ~~~~~~~~~~~~~
 
@@ -476,8 +420,6 @@ to add a partition label to it as shown below:
 .. code-block:: console
 
    parted /dev/sdb -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP 1 -1
-
-.. end
 
 Make sure to run this command on each of the 3 nodes or the deployment will
 fail.
@@ -510,8 +452,6 @@ existing inventory file:
    kolla2.ducourrier.com
    kolla3.ducourrier.com
 
-.. end
-
 It is now time to enable Ceph in the environment by editing the
 ``/etc/kolla/globals.yml`` file:
 
@@ -523,8 +463,6 @@ It is now time to enable Ceph in the environment by editing the
    glance_backend_file: "no"
    glance_backend_ceph: "yes"
 
-.. end
-
 Deployment
 ~~~~~~~~~~
 
@@ -534,4 +472,3 @@ Finally deploy the Ceph-enabled configuration:
 
    kolla-ansible deploy -i path/to/inventory-file
 
-.. end

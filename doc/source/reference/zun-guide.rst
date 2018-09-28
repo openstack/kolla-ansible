@@ -21,8 +21,6 @@ To allow Zun Compute connect to the Docker Daemon, add the following in the
 
    ExecStart= -H tcp://<DOCKER_SERVICE_IP>:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://<DOCKER_SERVICE_IP>:2379 --cluster-advertise=<DOCKER_SERVICE_IP>:2375
 
-.. end
-
 .. note::
 
    ``DOCKER_SERVICE_IP`` is zun-compute host IP address. ``2375`` is port that
@@ -38,15 +36,11 @@ following variables:
    enable_kuryr: "yes"
    enable_etcd: "yes"
 
-.. end
-
 Deploy the OpenStack cloud and zun.
 
 .. code-block:: console
 
    $ kolla-ansible deploy
-
-.. end
 
 Verification
 ------------
@@ -57,15 +51,11 @@ Verification
 
       $ kolla-ansible post-deploy
 
-   .. end
-
 #. Source credentials file:
 
    .. code-block:: console
 
       $ . /etc/kolla/admin-openrc.sh
-
-   .. end
 
 #. Download and create a glance container image:
 
@@ -75,15 +65,11 @@ Verification
       $ docker save cirros | openstack image create cirros --public \
         --container-format docker --disk-format raw
 
-   .. end
-
 #. Create zun container:
 
    .. code-block:: console
 
       $ zun create --name test --net network=demo-net cirros ping -c4 8.8.8.8
-
-   .. end
 
    .. note::
 
@@ -93,8 +79,6 @@ Verification
       .. code-block:: console
 
          $ openstack subnet set --no-dhcp <subnet>
-
-      .. end
 
 #. Verify container is created:
 
@@ -108,16 +92,12 @@ Verification
       | 3719a73e-5f86-47e1-bc5f-f4074fc749f2 | test | cirros        | Created | None       | 172.17.0.3 | []    |
       +--------------------------------------+------+---------------+---------+------------+------------+-------+
 
-   .. end
-
 #. Start container:
 
    .. code-block:: console
 
       $ zun start test
       Request to start container test has been accepted.
-
-   .. end
 
 #. Verify container:
 
@@ -133,8 +113,6 @@ Verification
       --- 8.8.8.8 ping statistics ---
       4 packets transmitted, 4 packets received, 0% packet loss
       round-trip min/avg/max = 95.884/96.376/96.721 ms
-
-   .. end
 
 For more information about how zun works, see
 `zun, OpenStack Container service <https://docs.openstack.org/zun/latest/>`__.

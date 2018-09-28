@@ -25,8 +25,6 @@ Enable ``OSprofiler`` in ``/etc/kolla/globals.yml`` file:
    enable_osprofiler: "yes"
    enable_elasticsearch: "yes"
 
-.. end
-
 Verify operation
 ----------------
 
@@ -43,16 +41,12 @@ UUID for :command:`openstack server create` command.
      --image cirros --flavor m1.tiny --key-name mykey \
      --nic net-id=${NETWORK_ID} demo
 
-.. end
-
 The previous command will output the command to retrieve OSprofiler trace.
 
 .. code-block:: console
 
    $ osprofiler trace show --html <TRACE_ID> --connection-string \
      elasticsearch://<api_interface_address>:9200
-
-.. end
 
 For more information about how OSprofiler works, see
 `OSProfiler – Cross-project profiling library

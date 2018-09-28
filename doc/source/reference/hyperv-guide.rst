@@ -58,8 +58,6 @@ Virtual Interface the following PowerShell may be used:
    PS C:\> $if = Get-NetIPAddress -IPAddress 192* | Get-NetIPInterface
    PS C:\> New-VMSwitch -NetAdapterName $if.ifAlias -Name YOUR_BRIDGE_NAME -AllowManagementOS $false
 
-.. end
-
 .. note::
 
    It is very important to make sure that when you are using a Hyper-V node
@@ -76,8 +74,6 @@ running and started automatically.
    PS C:\> Set-Service -Name MSiSCSI -StartupType Automatic
    PS C:\> Start-Service MSiSCSI
 
-.. end
-
 Preparation for Kolla deployer node
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,8 +82,6 @@ Hyper-V role is required, enable it in ``/etc/kolla/globals.yml``:
 .. code-block:: yaml
 
    enable_hyperv: "yes"
-
-.. end
 
 Hyper-V options are also required in ``/etc/kolla/globals.yml``:
 
@@ -98,16 +92,12 @@ Hyper-V options are also required in ``/etc/kolla/globals.yml``:
    vswitch_name: <HyperV virtual switch name>
    nova_msi_url: "https://www.cloudbase.it/downloads/HyperVNovaCompute_Beta.msi"
 
-.. end
-
 If tenant networks are to be built using VLAN add corresponding type in
 ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    neutron_tenant_network_types: 'flat,vlan'
-
-.. end
 
 The virtual switch is the same one created on the HyperV setup part.
 For nova_msi_url, different Nova MSI (Mitaka/Newton/Ocata) versions can
@@ -128,16 +118,12 @@ Add the Hyper-V node in ``ansible/inventory`` file:
    ansible_connection=winrm
    ansible_winrm_server_cert_validation=ignore
 
-.. end
-
 ``pywinrm`` package needs to be installed in order for Ansible to work
 on the HyperV node:
 
 .. code-block:: console
 
    pip install "pywinrm>=0.2.2"
-
-.. end
 
 .. note::
 
@@ -149,8 +135,6 @@ on the HyperV node:
 
    Set-VMNetworkAdapterVlan -Trunk -AllowedVlanIdList <VLAN ID> -NativeVlanId 0 <VM name>
 
-.. end
-
 networking-hyperv mechanism driver is needed for neutron-server to
 communicate with HyperV nova-compute. This can be built with source
 images by default. Manually it can be intalled in neutron-server
@@ -159,8 +143,6 @@ container with pip:
 .. code-block:: console
 
    pip install "networking-hyperv>=4.0.0"
-
-.. end
 
 For neutron_extension_drivers, ``port_security`` and ``qos`` are
 currently supported by the networking-hyperv mechanism driver.
@@ -177,14 +159,10 @@ OpenStack HyperV services can be inspected and managed from PowerShell:
    PS C:\> Get-Service nova-compute
    PS C:\> Get-Service neutron-hyperv-agent
 
-.. end
-
 .. code-block:: console
 
    PS C:\> Restart-Service nova-compute
    PS C:\> Restart-Service neutron-hyperv-agent
-
-.. end
 
 For more information on OpenStack HyperV, see
 `Hyper-V virtualization platform

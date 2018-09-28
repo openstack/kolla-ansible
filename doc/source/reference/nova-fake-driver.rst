@@ -32,8 +32,6 @@ the command line options.
    enable_nova_fake: "yes"
    num_nova_fake_per_node: 5
 
-.. end
-
 Each Compute node will run 5 ``nova-compute`` containers and 5
 ``neutron-plugin-agent`` containers. When booting instance, there will be
 no real instances created. But :command:`nova list` shows the fake instances.

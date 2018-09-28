@@ -86,15 +86,11 @@ contents:
    hnas_iscsi_svc0_hdp = FS-Baremetal1
    hnas_iscsi_svc0_iscsi_ip = <svc0_ip>
 
-.. end
-
 Then set password for the backend in ``/etc/kolla/passwords.yml``:
 
 .. code-block:: yaml
 
    hnas_iscsi_password: supervisor
-
-.. end
 
 NFS backend
 -----------
@@ -104,8 +100,6 @@ Enable cinder hnas backend nfs in ``/etc/kolla/globals.yml``
 .. code-block:: yaml
 
    enable_cinder_backend_hnas_nfs: "yes"
-
-.. end
 
 Create or modify the file ``/etc/kolla/config/cinder.conf`` and
 add the contents:
@@ -126,15 +120,11 @@ add the contents:
    hnas_nfs_svc0_volume_type = nfs_gold
    hnas_nfs_svc0_hdp = <svc0_ip>/<export_name>
 
-.. end
-
 Then set password for the backend in ``/etc/kolla/passwords.yml``:
 
 .. code-block:: yaml
 
    hnas_nfs_password: supervisor
-
-.. end
 
 Configuration on Kolla deployment
 ---------------------------------
@@ -145,8 +135,6 @@ Enable Shared File Systems service and HNAS driver in
 .. code-block:: yaml
 
    enable_cinder: "yes"
-
-.. end
 
 Configuration on HNAS
 ---------------------
@@ -159,8 +147,6 @@ List the available tenants:
 
    openstack project list
 
-.. end
-
 Create a network to the given tenant (service), providing the tenant ID,
 a name for the network, the name of the physical network over which the
 virtual network is implemented, and the type of the physical mechanism by
@@ -171,8 +157,6 @@ which the virtual network is implemented:
    neutron net-create --tenant-id <SERVICE_ID> hnas_network \
    --provider:physical_network=physnet2 --provider:network_type=flat
 
-.. end
-
 Create a subnet to the same tenant (service), the gateway IP of this subnet,
 a name for the subnet, the network ID created before, and the CIDR of
 subnet:
@@ -182,16 +166,12 @@ subnet:
    neutron subnet-create --tenant-id <SERVICE_ID> --gateway <GATEWAY> \
    --name hnas_subnet <NETWORK_ID> <SUBNET_CIDR>
 
-.. end
-
 Add the subnet interface to a router, providing the router ID and subnet
 ID created before:
 
 .. code-block:: console
 
    neutron router-interface-add <ROUTER_ID> <SUBNET_ID>
-
-.. end
 
 Create volume
 ~~~~~~~~~~~~~
@@ -201,8 +181,6 @@ Create a non-bootable volume.
 .. code-block:: console
 
    openstack volume create --size 1 my-volume
-
-.. end
 
 Verify Operation.
 
@@ -257,8 +235,6 @@ Verify Operation.
    +--------------------------------------+---------------+----------------+------+-------------------------------------------+
    | 4f5b8ae8-9781-411e-8ced-de616ae64cfd | my-volume     | in-use         |    1 | Attached to private-instance on /dev/vdb  |
    +--------------------------------------+---------------+----------------+------+-------------------------------------------+
-
-.. end
 
 For more information about how to manage volumes, see the
 `Manage volumes

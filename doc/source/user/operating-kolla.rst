@@ -81,8 +81,6 @@ If upgrading from ``5.0.0`` to ``6.0.0``, upgrade the kolla-ansible package:
 
    pip install --upgrade kolla-ansible==6.0.0
 
-.. end
-
 If this is a minor upgrade, and you do not wish to upgrade kolla-ansible
 itself, you may skip this step.
 
@@ -118,8 +116,6 @@ For the kolla docker images, the ``openstack_release`` is updated to ``6.0.0``:
 
    openstack_release: 6.0.0
 
-.. end
-
 Once the kolla release, the inventory file, and the relevant configuration
 files have been updated in this way, the operator may first want to 'pull'
 down the images to stage the ``6.0.0`` versions. This can be done safely
@@ -130,8 +126,6 @@ Run the command to pull the ``6.0.0`` images for staging:
 .. code-block:: console
 
    kolla-ansible pull
-
-.. end
 
 At a convenient time, the upgrade can now be run (it will complete more
 quickly if the images have been staged ahead of time).
@@ -144,8 +138,6 @@ To perform the upgrade:
 .. code-block:: console
 
    kolla-ansible upgrade
-
-.. end
 
 After this command is complete the containers will have been recreated from the
 new images.
@@ -220,4 +212,3 @@ For example:
    kolla-genpwd -p passwords.yml.new
    kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
 
-.. end

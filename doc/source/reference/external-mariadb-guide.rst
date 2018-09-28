@@ -33,8 +33,6 @@ by ensuring the following line exists within ``/etc/kolla/globals.yml`` :
 
    enable_mariadb: "no"
 
-.. end
-
 There are two ways in which you can use external MariaDB:
 * Using an already load-balanced MariaDB address
 * Using an external MariaDB cluster
@@ -53,16 +51,12 @@ need to do the following:
       [mariadb:children]
       myexternalmariadbloadbalancer.com
 
-   .. end
-
 
 #. Define ``database_address`` in ``/etc/kolla/globals.yml`` file:
 
    .. code-block:: yaml
 
       database_address: myexternalloadbalancer.com
-
-   .. end
 
 .. note::
 
@@ -82,8 +76,6 @@ Using this way, you need to adjust the inventory file:
    myexternaldbserver2.com
    myexternaldbserver3.com
 
-.. end
-
 If you choose to use haproxy for load balancing between the
 members of the cluster, every node within this group
 needs to be resolvable and reachable from all
@@ -97,8 +89,6 @@ according to the following configuration:
 
    enable_external_mariadb_load_balancer: yes
 
-.. end
-
 Using External MariaDB with a privileged user
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -111,16 +101,12 @@ and set the ``database_password`` in ``/etc/kolla/passwords.yml`` file:
 
    database_password: mySuperSecurePassword
 
-.. end
-
 If the MariaDB ``username`` is not ``root``, set ``database_username`` in
 ``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
    database_username: "privillegeduser"
-
-.. end
 
 Using preconfigured databases / users:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,8 +117,6 @@ The first step you need to take is to set ``use_preconfigured_databases`` to
 .. code-block:: yaml
 
    use_preconfigured_databases: "yes"
-
-.. end
 
 .. note::
 
@@ -153,8 +137,6 @@ In order to achieve this, you will need to define the user names in the
    keystone_database_user: preconfigureduser1
    nova_database_user: preconfigureduser2
 
-.. end
-
 Also, you will need to set the passwords for all databases in the
 ``/etc/kolla/passwords.yml`` file
 
@@ -172,16 +154,12 @@ all you need to do is the following steps:
 
       use_common_mariadb_user: "yes"
 
-   .. end
-
 #. Set the database_user within ``/etc/kolla/globals.yml`` to
    the one provided to you:
 
    .. code-block:: yaml
 
       database_user: mycommondatabaseuser
-
-   .. end
 
 #. Set the common password for all components within
    ``/etc/kolla/passwords.yml``. In order to achieve that you
@@ -191,4 +169,3 @@ all you need to do is the following steps:
 
       sed -i -r -e 's/([a-z_]{0,}database_password:+)(.*)$/\1 mycommonpass/gi' /etc/kolla/passwords.yml
 
-   .. end
