@@ -1,0 +1,41 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - storm_worker
+      - storm_nimbus
+  register: container_facts
+
+- name: Checking storm nimbus thrift port is available
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ storm_nimbus_thrift_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['storm_nimbus'] is not defined
+    - inventory_hostname in groups['storm-nimbus']
+
+- name: Checking storm supervisor thrift port is available
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ storm_supervisor_thrift_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['storm_worker'] is not defined
+    - inventory_hostname in groups['storm-worker']
+
+- name: Checking storm worker ports are available
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  with_sequence: "start={{ storm_worker_port_range.start|int }} end={{ storm_worker_port_range.end|int }}"
+  when:
+    - container_facts['storm_worker'] is not defined
+    - inventory_hostname in groups['storm-worker']
