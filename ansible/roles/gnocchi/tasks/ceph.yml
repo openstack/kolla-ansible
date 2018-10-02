@@ -3,6 +3,7 @@
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
+  become: true
   when: inventory_hostname in groups[item]
   with_items:
     - "gnocchi-api"
@@ -16,6 +17,7 @@
       - "{{ node_custom_config }}/ceph.conf"
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
+  become: true
   when: inventory_hostname in groups[item]
   with_items:
     - "gnocchi-api"
@@ -44,6 +46,7 @@
     content: "{{ cephx_key.stdout }}\n\r"
     dest: "{{ node_config_directory }}/{{ item }}/ceph.client.gnocchi.keyring"
     mode: "0600"
+  become: true
   when: inventory_hostname in groups[item]
   with_items:
     - "gnocchi-api"
