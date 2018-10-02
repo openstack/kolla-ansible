@@ -4,6 +4,7 @@
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     mode: "0770"
+  become: true
   with_items:
     - "nova-compute"
     - "nova-libvirt/secrets"
@@ -33,6 +34,7 @@
     src: "{{ nova_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
+  become: true
   with_items:
     - nova-compute
     - nova-libvirt
@@ -49,6 +51,7 @@
     src: "{{ node_custom_config }}/nova/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
+  become: true
   with_items:
     - nova-compute
     - nova-libvirt
@@ -64,6 +67,7 @@
     src: "secret.xml.j2"
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
     mode: "0600"
+  become: true
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
@@ -98,6 +102,7 @@
     content: "{{ item.result.stdout }}"
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
     mode: "0600"
+  become: true
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
