@@ -4,6 +4,7 @@
     path: "{{ node_config_directory }}/glance-api"
     state: "directory"
     mode: "0770"
+  become: true
   when: inventory_hostname in groups['glance-api']
 
 - name: Copy over ceph files
@@ -11,6 +12,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/glance-api/"
     mode: "0660"
+  become: true
   when: inventory_hostname in groups['glance-api']
   with_fileglob:
     - "{{ node_custom_config }}/glance/ceph*"
@@ -18,12 +20,12 @@
     - Restart glance-api container
 
 - name: Ensuring config directory has correct owner and permission
-  become: true
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     recurse: yes
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
+  become: true
   when: inventory_hostname in groups['glance-api']
   with_items:
     - "glance-api"

@@ -4,6 +4,7 @@
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     mode: "0770"
+  become: true
   with_items:
     - "nova-compute"
     - "nova-libvirt/secrets"
@@ -19,6 +20,7 @@
       - "{{ node_custom_config }}/ceph/{{ inventory_hostname }}/ceph.conf"
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
     mode: "0660"
+  become: true
   with_items:
     - "nova-compute"
     - "nova-libvirt"
@@ -58,6 +60,7 @@
           key = {{ nova_cephx_key.keyring.key }}
     dest: "{{ node_config_directory }}/nova-compute/ceph.client.nova.keyring"
     mode: "0600"
+  become: true
   when: inventory_hostname in groups['compute']
 
 - name: Pushing secrets xml for libvirt
@@ -65,6 +68,7 @@
     src: "secret.xml.j2"
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
     mode: "0600"
+  become: true
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
@@ -81,6 +85,7 @@
     content: "{{ item.content }}"
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
     mode: "0600"
+  become: true
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
