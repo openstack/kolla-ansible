@@ -236,6 +236,27 @@
   notify:
     - Restart monasca-notification container
 
+- name: Check for monasca-notification templates
+  local_action: stat path="{{ node_custom_config }}/monasca/notification_templates"
+  run_once: True
+  register: notification_templates
+
+- name: Copying over monasca-notification templates
+  vars:
+    service: "{{ monasca_services['monasca-notification'] }}"
+  copy:
+    src: "{{ node_custom_config }}/monasca/notification_templates"
+    dest: "{{ node_config_directory }}/monasca-notification/"
+    mode: "0660"
+  become: true
+  register: monasca_notification_plugin_templates
+  when:
+    - notification_templates.stat.exists and notification_templates.stat.isdir
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-notification container
+
 - name: Copying over monasca-persister config
   vars:
     service: "{{ monasca_services['monasca-persister'] }}"
