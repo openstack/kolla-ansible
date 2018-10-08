@@ -212,3 +212,11 @@ connection_string = {{ osprofiler_backend_connection_string }}
 [barbican]
 auth_endpoint = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 {% endif %}
+
+[coordination]
+{% if enable_redis | bool %}
+backend_url = redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&socket_timeout=60&retry_on_timeout=yes
+{% elif enable_etcd | bool %}
+# NOTE(jeffrey4l): python-etcd3 module do not support multi endpoint here.
+backend_url = etcd3://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+{% endif %}
