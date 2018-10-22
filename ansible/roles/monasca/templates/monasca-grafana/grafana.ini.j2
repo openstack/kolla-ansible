@@ -1,0 +1,55 @@
+[paths]
+data = /var/lib/grafana
+logs = /var/log/kolla/monasca
+plugins = /var/lib/grafana/plugins
+provisioning = /etc/grafana/provisioning
+
+[users]
+login_hint = OpenStack credentials
+allow_org_create = false
+allow_sign_up = false
+
+[server]
+protocol = http
+http_addr = {{ api_interface_address }}
+http_port = {{ monasca_grafana_server_port }}
+router_logging = true
+static_root_path = public
+enable_gzip = false
+
+[database]
+type = mysql
+host = {{ monasca_database_address }}:{{ monasca_database_port }}
+name = {{ monasca_grafana_database_name }}
+user = {{ monasca_database_user }}
+password = {{ monasca_database_password }}
+ssl_mode = disable
+
+[alerting]
+enabled = false
+execute_alerts = false
+
+[session]
+provider = mysql
+provider_config = {{ monasca_database_user }}:{{ monasca_database_password }}@tcp({{ monasca_database_address }}:{{ monasca_database_port }})/{{ monasca_grafana_database_name }}
+
+cookie_name = monasca_grafana_sess
+cookie_secure = false
+session_life_time = 86400
+
+[analytics]
+reporting_enabled = false
+check_for_updates = false
+
+[security]
+admin_user = {{ monasca_grafana_admin_username }}
+admin_password = {{ monasca_grafana_admin_password }}
+
+[auth.keystone]
+enabled = true
+auth_url = {{ keystone_internal_url }}
+default_domain = {{ default_project_domain_name }}
+default_role = Viewer
+admin_roles = admin
+editor_roles = _member_
+verify_ssl_cert = false

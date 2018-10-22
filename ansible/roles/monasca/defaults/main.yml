@@ -138,12 +138,35 @@ monasca_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
     dimensions: "{{ monasca_agent_dimensions }}"
+  monasca-grafana:
+    container_name: monasca_grafana
+    group: monasca-grafana
+    enabled: true
+    image: "{{ monasca_grafana_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "monasca_grafana:/var/lib/grafana/"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ monasca_grafana_dimensions }}"
+    haproxy:
+      monasca_grafana_server:
+        enabled: "{{ enable_monasca }}"
+        mode: "http"
+        external: false
+        port: "{{ monasca_grafana_server_port }}"
+      monasca_grafana_server_external:
+        enabled: "{{ enable_monasca }}"
+        mode: "http"
+        external: true
+        port: "{{ monasca_grafana_server_port }}"
 
 ####################
 # Databases
 ####################
 monasca_database_name: "monasca"
 monasca_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}monasca{% endif %}"
+monasca_grafana_database_name: "monasca_grafana"
 monasca_database_address: "{{ database_address }}"
 monasca_database_port: "{{ database_port }}"
 
@@ -193,6 +216,10 @@ monasca_agent_check_frequency: 30
 monasca_log_pipeline_threads: 2
 monasca_metric_pipeline_threads: 2
 
+# Local password for Grafana. This account allows you to bypass Keystone
+# authentication. This must *not* match any OpenStack username.
+monasca_grafana_admin_username: "grafana_local_admin"
+
 ####################
 # Docker
 ####################
@@ -229,6 +256,10 @@ monasca_persister_image: "{{ docker_registry ~ '/' if docker_registry else '' }}
 monasca_persister_tag: "{{ monasca_tag }}"
 monasca_persister_image_full: "{{ monasca_persister_image }}:{{ monasca_persister_tag }}"
 
+monasca_grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-grafana"
+monasca_grafana_tag: "{{ monasca_tag }}"
+monasca_grafana_image_full: "{{ monasca_grafana_image }}:{{ monasca_grafana_tag }}"
+
 monasca_agent_dimensions: "{{ default_container_dimensions }}"
 monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
@@ -238,6 +269,7 @@ monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 monasca_thresh_dimensions: "{{ default_container_dimensions }}"
 monasca_notification_dimensions: "{{ default_container_dimensions }}"
 monasca_persister_dimensions: "{{ default_container_dimensions }}"
+monasca_grafana_dimensions: "{{ default_container_dimensions }}"
 
 ####################
 # OpenStack
