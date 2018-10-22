@@ -15,6 +15,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DOCUMENTATION = '''
+---
+module: merge_configs
+short_description: Merge ini-style configs
+description:
+     - ConfigParser is used to merge several ini-style configs into one
+options:
+  dest:
+    description:
+      - The destination file name
+    required: True
+    type: str
+  sources:
+    description:
+      - A list of files on the destination node to merge together
+    default: None
+    required: True
+    type: str
+author: Sam Yaple
+'''
+
+EXAMPLES = '''
+Merge multiple configs:
+
+- hosts: database
+  tasks:
+    - name: Merge configs
+      merge_configs:
+        sources:
+          - "/tmp/config_1.cnf"
+          - "/tmp/config_2.cnf"
+          - "/tmp/config_3.cnf"
+        dest:
+          - "/etc/mysql/my.cnf"
+'''
 
 import collections
 import inspect

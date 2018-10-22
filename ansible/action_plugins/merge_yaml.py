@@ -15,6 +15,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DOCUMENTATION = '''
+---
+module: merge_yaml
+short_description: Merge yaml-style configs
+description:
+     - PyYAML is used to merge several yaml files into one
+options:
+  dest:
+    description:
+      - The destination file name
+    required: True
+    type: str
+  sources:
+    description:
+      - A list of files on the destination node to merge together
+    default: None
+    required: True
+    type: str
+author: Sean Mooney
+'''
+
+EXAMPLES = '''
+Merge multiple yaml files:
+
+- hosts: localhost
+  tasks:
+    - name: Merge yaml files
+      merge_yaml:
+        sources:
+          - "/tmp/default.yml"
+          - "/tmp/override.yml"
+        dest:
+          - "/tmp/out.yml"
+'''
+
 import inspect
 import os
 import shutil
