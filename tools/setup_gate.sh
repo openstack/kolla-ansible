@@ -86,7 +86,7 @@ function setup_ansible {
     RAW_INVENTORY=/etc/kolla/inventory
 
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "python-neutronclient" "ara" "cmd2<0.9.0"
+    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "ara" "cmd2<0.9.0"
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -124,7 +124,7 @@ function sanity_check {
     # https://bugs.launchpad.net/oslo.cache/+bug/1590779
     sudo docker restart memcached
     nova --debug service-list
-    neutron --debug agent-list
+    openstack --debug network agent list
     tools/init-runonce
     nova --debug boot --poll --image $(openstack image list | awk '/cirros/ {print $2}') --nic net-id=$(openstack network list | awk '/demo-net/ {print $2}') --flavor 1 kolla_boot_test
 
