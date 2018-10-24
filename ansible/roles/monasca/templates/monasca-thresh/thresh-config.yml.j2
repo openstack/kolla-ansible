@@ -18,13 +18,51 @@
 metricSpoutThreads: 2
 metricSpoutTasks: 2
 
-#statsdConfig:
-#  host: "127.0.0.1"
-#  port: %MONASCA_STATSD_PORT%
-#  prefix: monasca.storm.
-#  dimensions: !!map
-#    service : monitoring
-#    component : storm
+statsdConfig:
+  host: 127.0.0.1
+  port: {{ monasca_agent_statsd_port }}
+  debugmetrics: {{ monasca_logging_debug }}
+  dimensions: !!map
+    service : monitoring
+    component : storm
+  whitelist: !!seq
+    - aggregation-bolt.execute-count.filtering-bolt_alarm-creation-stream
+    - aggregation-bolt.execute-count.filtering-bolt_default
+    - aggregation-bolt.execute-count.system_tick
+    - filtering-bolt.execute-count.event-bolt_metric-alarm-events
+    - filtering-bolt.execute-count.metrics-spout_default
+    - thresholding-bolt.execute-count.aggregation-bolt_default
+    - thresholding-bolt.execute-count.event-bolt_alarm-definition-events
+    - system.memory_heap.committedBytes
+    - system.memory_nonHeap.committedBytes
+    - system.newWorkerEvent
+    - system.startTimeSecs
+    - system.GC_ConcurrentMarkSweep.timeMs
+  metricmap: !!map
+    aggregation-bolt.execute-count.filtering-bolt_alarm-creation-stream :
+      monasca.threshold.aggregation-bolt.execute-count.filtering-bolt_alarm-creation-stream
+    aggregation-bolt.execute-count.filtering-bolt_default :
+      monasca.threshold.aggregation-bolt.execute-count.filtering-bolt_default
+    aggregation-bolt.execute-count.system_tick :
+      monasca.threshold.aggregation-bolt.execute-count.system_tick
+    filtering-bolt.execute-count.event-bolt_metric-alarm-events :
+      monasca.threshold.filtering-bolt.execute-count.event-bolt_metric-alarm-events
+    filtering-bolt.execute-count.metrics-spout_default :
+      monasca.threshold.filtering-bolt.execute-count.metrics-spout_default
+    thresholding-bolt.execute-count.aggregation-bolt_default :
+      monasca.threshold.thresholding-bolt.execute-count.aggregation-bolt_default
+    thresholding-bolt.execute-count.event-bolt_alarm-definition-events :
+      monasca.threshold.thresholding-bolt.execute-count.event-bolt_alarm-definition-events
+    system.memory_heap.committedBytes :
+      monasca.threshold.system.memory_heap.committedBytes
+    system.memory_nonHeap.committedBytes :
+      monasca.threshold.system.memory_nonHeap.committedBytes
+    system.newWorkerEvent :
+      monasca.threshold.system.newWorkerEvent
+    system.startTimeSecs :
+      monasca.threshold.system.startTimeSecs
+    system.GC_ConcurrentMarkSweep.timeMs :
+      monasca.threshold.system.GC_ConcurrentMarkSweep.timeMs
 
 
 metricSpoutConfig:
