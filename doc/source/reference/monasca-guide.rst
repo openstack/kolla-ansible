@@ -147,7 +147,7 @@ images:
 
 .. code-block:: console
 
-   $ kolla-build cron fluentd mariadb kolla-toolbox keystone memcached keepalived haproxy
+   $ kolla-build cron chrony fluentd mariadb kolla-toolbox keystone memcached keepalived haproxy
 
 Deployment
 ~~~~~~~~~~
@@ -157,7 +157,92 @@ to decrypt secrets if you have encrypted them with Ansible Vault:
 
 .. code-block:: console
 
+   $ kolla-genpwd
    $ kolla-ansible deploy
+
+Quick start
+~~~~~~~~~~~
+
+The first thing you will want to do is to create a Monasca user to view
+metrics harvested by the Monasca Agent. By default these are saved into the
+`monasca_control_plane` project, which serves as a place to store all
+control plane logs and metrics:
+
+.. code-block:: console
+
+   [vagrant@operator kolla]$ openstack project list
+   +----------------------------------+-----------------------+
+   | ID                               | Name                  |
+   +----------------------------------+-----------------------+
+   | 03cb4b7daf174febbc4362d5c79c5be8 | service               |
+   | 2642bcc8604f4491a50cb8d47e0ec55b | monasca_control_plane |
+   | 6b75784f6bc942c6969bc618b80f4a8c | admin                 |
+   +----------------------------------+-----------------------+
+
+The permissions of Monasca users are governed by the roles which they have
+assigned to them in a given OpenStack project. This is an important point
+and forms the basis of how Monasca supports multi-tenancy.
+
+By default the `admin` role and the `monasca-read-only-user` role are
+configured. The `admin` role grants read/write privileges and the
+`monasca-read-only-user` role grants read privileges to a user.
+
+.. code-block:: console
+
+   [vagrant@operator kolla]$ openstack role list
+   +----------------------------------+------------------------+
+   | ID                               | Name                   |
+   +----------------------------------+------------------------+
+   | 0419463fd5a14ace8e5e1a1a70bbbd84 | agent                  |
+   | 1095e8be44924ae49585adc5d1136f86 | member                 |
+   | 60f60545e65f41749b3612804a7f6558 | admin                  |
+   | 7c184ade893442f78cea8e074b098cfd | _member_               |
+   | 7e56318e207a4e85b7d7feeebf4ba396 | reader                 |
+   | fd200a805299455d90444a00db5074b6 | monasca-read-only-user |
+   +----------------------------------+------------------------+
+
+Now lets consider the example of creating a monitoring user who has
+read/write privileges in the `monasca_control_plane` project. First
+we create the user:
+
+.. code-block:: console
+
+   openstack user create --project monasca_control_plane mon_user
+   User Password:
+   Repeat User Password:
+   +---------------------+----------------------------------+
+   | Field               | Value                            |
+   +---------------------+----------------------------------+
+   | default_project_id  | 2642bcc8604f4491a50cb8d47e0ec55b |
+   | domain_id           | default                          |
+   | enabled             | True                             |
+   | id                  | 088a725872c9410d9c806c24952f9ae1 |
+   | name                | mon_user                         |
+   | options             | {}                               |
+   | password_expires_at | None                             |
+   +---------------------+----------------------------------+
+
+Secondly we assign the user the `admin` role in the `monasca_control_plane`
+project:
+
+.. code-block:: console
+
+   openstack role add admin --project monasca_control_plane --user mon_user
+
+Alternatively we could have assigned the user the read only role:
+
+.. code-block:: console
+
+    openstack role add monasca_read_only_user --project monasca_control_plane --user mon_user
+
+The user is now active and the credentials can be used to log into the
+Monasca fork of Grafana which will be available by default on port `3001` on
+both internal and external VIPs.
+
+For log analysis Kibana is also available, by default on port `5601` on both
+internal and external VIPs. Currently the Keystone authentication plugin is
+not configured and the HAProxy endpoints are protected by a password which is
+defined in `/etc/kolla/passwords.yml` under `kibana_password`.
 
 System requirements and performance impact
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
