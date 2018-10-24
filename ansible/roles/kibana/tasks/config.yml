@@ -26,17 +26,22 @@
   notify:
     - Restart kibana container
 
-- name: Copying over Kibana configuration file
+- name: Copying over kibana configuration file
+  vars:
+    kibana: "{{ kibana_services.kibana }}"
   template:
-    src: "{{ item.key }}.yml.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.yml"
+    src: "kibana.yml.j2"
+    dest: "{{ node_config_directory }}/kibana/kibana.yml"
     mode: "0660"
   become: true
   register: kibana_confs
+  with_first_found:
+    - "{{ node_custom_config }}/kibana/{{ inventory_hostname }}/kibana.yml"
+    - "{{ node_custom_config }}/kibana/kibana.yml"
+    - "kibana.yml.j2"
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ kibana_services }}"
+    - inventory_hostname in groups[kibana.group]
+    - kibana.enabled | bool
   notify:
     - Restart kibana container
 
