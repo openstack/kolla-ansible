@@ -16,6 +16,9 @@ Requirements
 * Existing credentials in Ceph for OpenStack services to connect to Ceph
   (Glance, Cinder, Nova, Gnocchi, Manila)
 
+Refer to http://docs.ceph.com/docs/master/rbd/rbd-openstack/ for details on
+creating the pool and keyrings with appropriate permissions for each service.
+
 Enabling External Ceph
 ~~~~~~~~~~~~~~~~~~~~~~
 
