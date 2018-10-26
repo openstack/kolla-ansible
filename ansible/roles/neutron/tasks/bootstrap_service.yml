@@ -40,28 +40,6 @@
   run_once: True
   delegate_to: "{{ groups[neutron_lbaas_agent.group][0] }}"
 
-- name: Running Neutron vpnaas bootstrap container
-  vars:
-    neutron_vpnaas_agent: "{{ neutron_services['neutron-vpnaas-agent'] }}"
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    environment:
-      KOLLA_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_vpnaas_agent.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "bootstrap_neutron_vpnaas_agent"
-    restart_policy: "never"
-    volumes: "{{ neutron_vpnaas_agent.volumes }}"
-  when:
-    - neutron_vpnaas_agent.enabled | bool
-    - neutron_vpnaas_agent.host_in_groups | bool
-  run_once: True
-  delegate_to: "{{ groups[neutron_vpnaas_agent.group][0] }}"
-
 - name: Running Neutron sfc bootstrap container
   vars:
     neutron_server: "{{ neutron_services['neutron-server'] }}"
