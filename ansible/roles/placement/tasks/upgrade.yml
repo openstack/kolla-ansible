@@ -1,0 +1,42 @@
+---
+- include_tasks: register.yml
+  when: inventory_hostname in groups['placement-api']
+
+- include_tasks: clone.yml
+  when: placement_dev_mode | bool
+
+# TODO(mgoddard): Remove this in Train once all old containers have been
+# stopped.
+- name: "Stopping old placement-api containers"
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "placement_api"
+
+- include_tasks: config.yml
+
+- include_tasks: bootstrap.yml
+  when: inventory_hostname in groups['placement-api']
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Perform Placement online data migration
+  vars:
+    placement_api: "{{ placement_services['placement-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_OSM:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ placement_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_placement"
+    restart_policy: "never"
+    volumes: "{{ placement_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[placement_api.group][0] }}"

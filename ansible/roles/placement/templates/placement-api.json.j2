@@ -1,0 +1,42 @@
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/placement.conf",
+            "dest": "/etc/placement/placement.conf",
+            "owner": "placement",
+            "perm": "0600"
+        }{% if placement_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ placement_policy_file }}",
+            "dest": "/etc/placement/{{ placement_policy_file }}",
+            "owner": "placement",
+            "perm": "0600"
+        }{% endif %},
+        {
+            "source": "{{ container_config_directory }}/placement-api-wsgi.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/placement-api-wsgi.conf",
+            "owner": "placement",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/migrate-db.rc",
+            "dest": "/etc/placement/migrate-db.rc",
+            "owner": "placement",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/placement",
+            "owner": "placement:kolla",
+            "recurse": true
+        },
+        {
+            "path": "/var/log/kolla/placement/placement.log",
+            "owner": "placement:placement"
+        }
+    ]
+}

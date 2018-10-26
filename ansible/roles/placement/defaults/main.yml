@@ -1,0 +1,87 @@
+---
+project_name: "placement"
+
+placement_services:
+  placement-api:
+    container_name: "placement_api"
+    group: "placement-api"
+    image: "{{ placement_api_image_full }}"
+    enabled: True
+    volumes:
+      - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/placement/placement:/var/lib/kolla/venv/lib/python2.7/site-packages/placement' if placement_dev_mode | bool else '' }}"
+    dimensions: "{{ placement_api_dimensions }}"
+    haproxy:
+      placement_api:
+        enabled: "{{ enable_placement }}"
+        mode: "http"
+        external: false
+        port: "{{ placement_api_port }}"
+        listen_port: "{{ placement_api_listen_port }}"
+      placement_api_external:
+        enabled: "{{ enable_placement }}"
+        mode: "http"
+        external: true
+        port: "{{ placement_api_port }}"
+        listen_port: "{{ placement_api_listen_port }}"
+
+####################
+# Database
+####################
+placement_database_name: "placement"
+placement_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}placement{% endif %}"
+placement_database_address: "{{ database_address }}:{{ database_port }}"
+
+####################
+# Docker
+####################
+placement_install_type: "{{ kolla_install_type }}"
+placement_tag: "{{ openstack_release }}"
+
+placement_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ placement_install_type }}-placement-api"
+placement_api_tag: "{{ placement_tag }}"
+placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
+
+placement_api_dimensions: "{{ default_container_dimensions }}"
+
+####################
+# OpenStack
+####################
+placement_admin_endpoint: "{{ admin_protocol }}://{{ placement_internal_fqdn }}:{{ placement_api_port }}"
+placement_internal_endpoint: "{{ internal_protocol }}://{{ placement_internal_fqdn }}:{{ placement_api_port }}"
+placement_public_endpoint: "{{ public_protocol }}://{{ placement_external_fqdn }}:{{ placement_api_port }}"
+
+placement_logging_debug: "{{ openstack_logging_debug }}"
+
+openstack_placement_auth: "{{ openstack_auth }}"
+
+
+####################
+# Notification
+####################
+placement_notification_topics:
+  - name: notifications
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool or enable_neutron_infoblox_ipam_agent | bool }}"
+  - name: notifications_designate
+    enabled: "{{ enable_designate | bool }}"
+
+placement_enabled_notification_topics: "{{ placement_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+
+####################
+# Kolla
+####################
+placement_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+placement_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+placement_dev_mode: "{{ kolla_dev_mode }}"
+placement_source_version: "{{ kolla_source_version }}"
+
+####################
+# Upgrade
+####################
+nova_api_database_name: "nova_api"
+nova_api_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova_api{% endif %}"
+nova_api_database_host: "{{ database_address }}"
+placement_database_host: "{{ database_address }}"
