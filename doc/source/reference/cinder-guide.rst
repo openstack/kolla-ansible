@@ -171,6 +171,12 @@ targeted for nova compute role.
 
      mount -t configfs /etc/rc.local /sys/kernel/config
 
+  .. note::
+
+     There is currently an issue with the folder /sys/kernel/config as it is
+     either empty or does not exist in several operating systems,
+     see `_bug 1631072 <https://bugs.launchpad.net/kolla/+bug/1631072>`__ for more info
+
 Cinder backend with external iSCSI storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
