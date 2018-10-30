@@ -79,6 +79,12 @@
   notify:
     - Restart fluentd container
 
+- name: Determine whether logs should be forwarded directly to Elasticsearch
+  set_fact:
+    log_direct_to_elasticsearch: "{{ ( enable_elasticsearch | bool or
+                ( elasticsearch_address != kolla_internal_vip_address )) and
+                not enable_monasca | bool }}"
+
 - name: Copying over fluentd output config files
   template:
     src: "conf/output/{{ item.name }}.conf.j2"
@@ -93,8 +99,25 @@
     - name: "00-local"
       enabled: true
     - name: "01-es"
-      enabled: "{{ enable_elasticsearch | bool or
-                ( elasticsearch_address != kolla_internal_vip_address ) }}"
+      enabled: "{{ log_direct_to_elasticsearch }}"
+    - name: "02-monasca"
+      enabled: "{{ enable_monasca | bool }}"
+  notify:
+    - Restart fluentd container
+
+- name: Removing stale output config files
+  file:
+    path: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
+    state: "absent"
+  become: true
+  when:
+    - enable_fluentd | bool
+    - item.disable | bool
+  with_items:
+    - name: "02-monasca"
+      disable: "{{ not enable_monasca | bool }}"
+    - name: "01-es"
+      disable: "{{ not log_direct_to_elasticsearch }}"
   notify:
     - Restart fluentd container
 
