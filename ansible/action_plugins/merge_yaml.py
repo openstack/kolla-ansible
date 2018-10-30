@@ -32,6 +32,7 @@ except ImportError:
 
 from ansible import constants
 from ansible.plugins import action
+import six
 
 
 class ActionModule(action.ActionBase):
@@ -76,7 +77,7 @@ class ActionModule(action.ActionBase):
         if not isinstance(sources, list):
             sources = [sources]
         for source in sources:
-            output.update(self.read_config(source))
+            Utils.update_nested_conf(output, self.read_config(source))
 
         # restore original vars
         self._templar.set_available_variables(old_vars)
@@ -109,3 +110,14 @@ class ActionModule(action.ActionBase):
         finally:
             shutil.rmtree(local_tempdir)
         return result
+
+
+class Utils(object):
+    @staticmethod
+    def update_nested_conf(conf, update):
+        for k, v in six.iteritems(update):
+            if isinstance(v, dict):
+                conf[k] = Utils.update_nested_conf(conf.get(k, {}), v)
+            else:
+                conf[k] = v
+        return conf
