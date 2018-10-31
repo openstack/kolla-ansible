@@ -589,7 +589,6 @@ class DockerWorker(object):
             'image': self.params.get('image'),
             'name': self.params.get('name'),
             'volumes': volumes,
-            'tty': True
         }
 
     def create_container(self):
