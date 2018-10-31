@@ -183,11 +183,15 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ nova_serialproxy_port }}"
+        backend_http_extra:
+          - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
       nova_serialconsole_proxy_external:
         enabled: "{{ enable_nova|bool and enable_nova_serialconsole_proxy|bool }}"
         mode: "http"
         external: true
         port: "{{ nova_serialproxy_port }}"
+        backend_http_extra:
+          - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
   nova-conductor:
     container_name: "nova_conductor"
     group: "nova-conductor"
@@ -341,6 +345,11 @@ nova_serialproxy_dimensions: "{{ default_container_dimensions }}"
 nova_conductor_dimensions: "{{ default_container_dimensions }}"
 nova_compute_dimensions: "{{ default_container_dimensions }}"
 nova_compute_ironic_dimensions: "{{ default_container_dimensions }}"
+
+####################
+# HAProxy
+####################
+haproxy_nova_serialconsole_proxy_tunnel_timeout: "10m"
 
 ####################
 # OpenStack
