@@ -1,13 +1,6 @@
 ---
-- include_tasks: config.yml
+- include_tasks: rolling_upgrade.yml
+  when: neutron_enable_rolling_upgrade | bool
 
-- include_tasks: config-neutron-fake.yml
-  when:
-    - inventory_hostname in groups['compute']
-    - enable_nova_fake | bool
-
-- include_tasks: bootstrap_service.yml
-  when: inventory_hostname in groups['neutron-server']
-
-- name: Flush Handlers
-  meta: flush_handlers
+- include_tasks: legacy_upgrade.yml
+  when: not neutron_enable_rolling_upgrade | bool
