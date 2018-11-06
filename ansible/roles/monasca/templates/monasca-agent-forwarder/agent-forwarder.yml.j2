@@ -1,0 +1,26 @@
+Api:
+  service_type: monitoring
+  endpoint_type: internal
+  region_name: {{ openstack_region_name }}
+  username: {{ monasca_agent_user }}
+  password: {{ monasca_agent_password }}
+  keystone_url: {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}/v3
+  user_domain_name: Default
+  project_name: {{ monasca_control_plane_project }}
+  project_domain_id: {{ default_project_domain_id }}
+  project_domain_name: {{ default_project_domain_name }}
+  insecure: False
+  ca_file: /var/lib/kolla/venv/lib/python2.7/site-packages/certifi/cacert.pem
+  max_measurement_buffer_size: {{ monasca_agent_max_buffer_size }}
+  backlog_send_rate: {{ monasca_agent_backlog_send_rate }}
+  max_batch_size: {{ monasca_agent_max_batch_size }}
+
+Main:
+  hostname: {{ ansible_hostname }}
+  non_local_traffic: True
+  listen_port: {{ monasca_agent_forwarder_port }}
+
+Logging:
+  log_level: {{ 'DEBUG' if monasca_logging_debug else 'INFO' }}
+  forwarder_log_file: /var/log/kolla/monasca/agent-forwarder.log
+  enable_logrotate: False
