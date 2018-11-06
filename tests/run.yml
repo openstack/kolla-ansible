@@ -89,12 +89,6 @@
       when: scenario == "bifrost"
       delegate_to: "primary"
 
-    - name: copy passwords.yml file
-      copy:
-        src: "{{ kolla_ansible_full_src_dir }}/etc/kolla/passwords.yml"
-        dest: /etc/kolla/passwords.yml
-      delegate_to: "primary"
-
     - name: ensure /etc/docker exists
       file:
         path: "/etc/docker"
@@ -110,15 +104,39 @@
         dest: "/etc/docker/daemon.json"
       become: true
 
-
     - name: install kolla-ansible requirements
       pip:
         requirements: "{{ ansible_env.HOME }}/{{ kolla_ansible_src_dir }}/requirements.txt"
       become: true
 
+    - name: copy passwords.yml file
+      copy:
+        src: "{{ kolla_ansible_full_src_dir }}/etc/kolla/passwords.yml"
+        dest: /etc/kolla/passwords.yml
+
     - name: generate passwords
       shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
-      delegate_to: "primary"
+
+    - name: slurp kolla passwords
+      slurp:
+        src: /etc/kolla/passwords.yml
+      register: passwords_yml
+
+    - name: write out kolla SSH private key
+      copy:
+        content: "{{ (passwords_yml.content | b64decode | from_yaml).kolla_ssh_key.private_key }}"
+        dest: ~/.ssh/id_rsa_kolla
+        mode: 0600
+
+    - name: authorise kolla public key for zuul user
+      authorized_key:
+        user: "{{ ansible_env.USER }}"
+        key: "{{ (passwords_yml.content | b64decode | from_yaml).kolla_ssh_key.public_key }}"
+      # Delegate to each host in turn. If more tasks require execution on all
+      # hosts in future, break out into a separate play.
+      with_inventory_hostnames:
+        - all
+      delegate_to: "{{ item }}"
 
     - name: generate ceph config overrides
       template:
