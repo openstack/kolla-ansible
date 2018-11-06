@@ -1,0 +1,34 @@
+---
+- name: Creating the Masakari service and endpoint
+  become: true
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "masakari"
+      service_type: "instance-ha"
+      description: "OpenStack High Availability"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ openstack_masakari_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+  run_once: True
+  with_items:
+    - {'interface': 'admin', 'url': '{{ masakari_admin_endpoint }}'}
+    - {'interface': 'internal', 'url': '{{ masakari_internal_endpoint }}'}
+    - {'interface': 'public', 'url': '{{ masakari_public_endpoint }}'}
+
+- name: Creating the Masakari project, user, and role
+  become: true
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "service"
+      user: "{{ masakari_keystone_user }}"
+      password: "{{ masakari_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ openstack_masakari_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+  run_once: True

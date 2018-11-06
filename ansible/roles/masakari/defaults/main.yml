@@ -1,0 +1,117 @@
+---
+project_name: "masakari"
+
+masakari_services:
+  masakari-api:
+    container_name: masakari_api
+    group: masakari-api
+    enabled: true
+    image: "{{ masakari_api_image_full }}"
+    volumes: "{{ masakari_api_default_volumes + masakari_api_extra_volumes }}"
+    dimensions: "{{ masakari_api_dimensions }}"
+    haproxy:
+      masakari_api:
+        enabled: "{{ enable_masakari }}"
+        mode: "http"
+        external: false
+        port: "{{ masakari_api_port }}"
+      masakari_api_external:
+        enabled: "{{ enable_masakari }}"
+        mode: "http"
+        external: true
+        port: "{{ masakari_api_port }}"
+  masakari-engine:
+    container_name: masakari_engine
+    group: masakari-engine
+    enabled: true
+    image: "{{ masakari_engine_image_full }}"
+    volumes: "{{ masakari_engine_default_volumes + masakari_engine_extra_volumes }}"
+    dimensions: "{{ masakari_engine_dimensions }}"
+  masakari-instancemonitor:
+    container_name: masakari_instancemonitor
+    group: masakari-monitors
+    enabled: true
+    image: "{{ masakari_monitors_image_full }}"
+    volumes: "{{ masakari_instancemonitor_default_volumes + masakari_instancemonitor_extra_volumes }}"
+    privileged: True
+    dimensions: "{{ masakari_monitors_dimensions }}"
+
+
+####################
+# Database
+####################
+masakari_database_name: "masakari"
+masakari_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}masakari{% endif %}"
+masakari_database_address: "{{ database_address }}:{{ database_port }}"
+
+####################
+# Docker
+####################
+masakari_install_type: "{{ kolla_install_type }}"
+masakari_tag: "{{ openstack_release }}"
+
+masakari_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-api"
+masakari_api_tag: "{{ masakari_tag }}"
+masakari_api_image_full: "{{ masakari_api_image }}:{{ masakari_api_tag }}"
+
+masakari_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-engine"
+masakari_engine_tag: "{{ masakari_tag }}"
+masakari_engine_image_full: "{{ masakari_engine_image }}:{{ masakari_engine_tag }}"
+
+masakari_monitors_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-monitors"
+masakari_monitors_tag: "{{ masakari_tag }}"
+masakari_monitors_image_full: "{{ masakari_monitors_image }}:{{ masakari_monitors_tag }}"
+
+masakari_api_dimensions: "{{ default_container_dimensions }}"
+masakari_engine_dimensions: "{{ default_container_dimensions }}"
+masakari_monitors_dimensions: "{{ default_container_dimensions }}"
+
+masakari_extra_volumes: "{{ default_extra_volumes }}"
+masakari_api_extra_volumes: "{{ masakari_extra_volumes }}"
+masakari_engine_extra_volumes: "{{ masakari_extra_volumes }}"
+masakari_instancemonitor_extra_volumes: "{{ masakari_extra_volumes }}"
+
+masakari_api_default_volumes:
+  - "{{ node_config_directory }}/masakari-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/masakari/masakari:/var/lib/kolla/venv/lib/python2.7/site-packages/masakari' if masakari_dev_mode | bool else '' }}"
+masakari_engine_default_volumes:
+  - "{{ node_config_directory }}/masakari-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/masakari/masakari:/var/lib/kolla/venv/lib/python2.7/site-packages/masakari' if masakari_dev_mode | bool else '' }}"
+  - "masakari:/var/lib/masakari/"
+masakari_instancemonitor_default_volumes:
+  - "{{ node_config_directory }}/masakari-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/masakari/masakari:/var/lib/kolla/venv/lib/python2.7/site-packages/masakari' if masakari_dev_mode | bool else '' }}"
+
+
+####################
+# OpenStack
+####################
+masakari_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ masakari_api_port }}"
+masakari_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ masakari_api_port }}"
+masakari_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ masakari_api_port }}"
+
+masakari_logging_debug: "{{ openstack_logging_debug }}"
+
+masakari_keystone_user: "masakari"
+
+openstack_masakari_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+masakari_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+masakari_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+masakari_dev_mode: "{{ kolla_dev_mode }}"
+masakari_source_version: "{{ kolla_source_version }}"
+
+masakari_monitors_git_repository: "{{ kolla_dev_repos_git }}/masakarimonitors"
+masakari_monitors_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+masakari_monitors_dev_mode: "{{ kolla_dev_mode }}"
+masakari_monitors_source_version: "{{ kolla_source_version }}"

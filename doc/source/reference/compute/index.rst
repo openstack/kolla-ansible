@@ -9,6 +9,7 @@ compute services like HyperV, XenServer and so on.
    :maxdepth: 1
 
    hyperv-guide
+   masakari-guide
    nova-fake-driver
    qinling-guide
    vmware-guide

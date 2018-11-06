@@ -1,0 +1,18 @@
+---
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    name:
+      - masakari_api
+  register: container_facts
+
+- name: Checking free port for Masakari API
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ masakari_api_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['masakari_api'] is not defined
+    - inventory_hostname in groups['masakari-api']

@@ -1,0 +1,36 @@
+---
+- name: Creating Masakari database
+  become: true
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ masakari_database_name }}"
+  run_once: True
+  delegate_to: "{{ groups['masakari-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- name: Creating Masakari database user and setting permissions
+  become: true
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ masakari_database_user }}"
+      password: "{{ masakari_database_password }}"
+      host: "%"
+      priv: "{{ masakari_database_name }}.*:ALL"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['masakari-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- include_tasks: bootstrap_service.yml

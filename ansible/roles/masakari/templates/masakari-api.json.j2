@@ -1,0 +1,38 @@
+{% set masakari_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set masakari_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "{{ masakari_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/masakari.conf",
+            "dest": "/etc/masakari/masakari.conf",
+            "owner": "masakari",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/masakari-api-paste.ini",
+            "dest": "/etc/masakari/api-paste.ini",
+            "owner": "masakari",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/wsgi-masakari.conf",
+            "dest": "/etc/{{ masakari_dir }}/wsgi-masakari.conf",
+            "owner": "root",
+            "perm": "0600"
+        }{% if masakari_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ masakari_policy_file }}",
+            "dest": "/etc/masakari/{{ masakari_policy_file }}",
+            "owner": "masakari",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+       {
+            "path": "/var/log/kolla/masakari",
+            "owner": "masakari:masakari",
+            "recurse": true
+       }
+  ]
+}

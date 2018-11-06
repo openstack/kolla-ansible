@@ -1,0 +1,145 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - item.value.enabled | bool
+    - inventory_hostname in groups[item.value.group]
+  with_dict: "{{ masakari_services }}"
+
+- name: Check if policies shall be overwritten
+  local_action: stat path="{{ item }}"
+  run_once: True
+  register: masakari_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/masakari/"
+      skip: true
+
+- name: Set masakari policy file
+  set_fact:
+    masakari_policy_file: "{{ masakari_policy.results.0.stat.path | basename }}"
+    masakari_policy_file_path: "{{ masakari_policy.results.0.stat.path }}"
+  when:
+    - masakari_policy.results
+
+- name: Copying over existing policy file
+  template:
+    src: "{{ masakari_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item }}/{{ masakari_policy_file }}"
+    mode: "0660"
+  become: true
+  when:
+    - masakari_policy_file is defined
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ masakari_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ masakari_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over masakari.conf
+  vars:
+    service: "{{ item.key }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/masakari.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/masakari.conf"
+      - "{{ node_custom_config }}/masakari/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/masakari/{{ inventory_hostname }}/masakari.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/masakari.conf"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ masakari_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over masakari-monitors.conf
+  vars:
+    service: "{{ item.key }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/masakari-monitors.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/masakari/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/masakari/masakari-monitors.conf"
+      - "{{ node_custom_config }}/masakari/{{ inventory_hostname }}/masakari-monitors.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/masakari-monitors.conf"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ masakari_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Copying over wsgi-masakari file for services
+  vars:
+    service: "{{ masakari_services['masakari-api'] }}"
+  template:
+    src: "wsgi-masakari.conf.j2"
+    dest: "{{ node_config_directory }}/masakari-api/wsgi-masakari.conf"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart masakari-api container
+
+- name: Copying over masakari-api-paste.ini
+  vars:
+    service: "{{ masakari_services['masakari-api'] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/masakari-api-paste.ini.j2"
+      - "{{ node_custom_config }}/masakari/masakari-api/masakari-api-paste.ini"
+    dest: "{{ node_config_directory }}/masakari-api/masakari-api-paste.ini"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart masakari-api container
+
+- name: Check masakari containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    volumes: "{{ item.value.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ item.value.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ masakari_services }}"
+  notify:
+    - Restart {{ item.key }} container
