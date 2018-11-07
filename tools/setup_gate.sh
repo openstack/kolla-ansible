@@ -19,6 +19,9 @@ function setup_openstack_clients {
     if [[ $ACTION == ironic ]]; then
         ~/openstackclient-venv/bin/pip install python-ironicclient
     fi
+    if [[ $ACTION == masakari ]]; then
+        ~/openstackclient-venv/bin/pip install python-masakariclient
+    fi
 }
 
 function setup_config {
@@ -57,6 +60,9 @@ EOF
     fi
     if [[ $ACTION == "ironic" ]]; then
         GATE_IMAGES+=",dnsmasq,ironic,iscsid"
+    fi
+    if [[ $ACTION == "masakari" ]]; then
+        GATE_IMAGES+=",masakari"
     fi
 
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
