@@ -57,10 +57,13 @@ install_type = ${INSTALL_TYPE}
 profile = gate
 registry = 127.0.0.1:4000
 push = true
+logs_dir = /tmp/logs/build
 
 [profiles]
 gate = ${GATE_IMAGES}
 EOF
+
+mkdir -p /tmp/logs/build
 
     if [[ "${DISTRO}" == "Debian" ]]; then
         # Infra does not sign their mirrors so we ignore gpg signing in the gate
