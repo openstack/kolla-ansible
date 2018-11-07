@@ -145,19 +145,75 @@
       when: scenario == "ceph"
       delegate_to: "primary"
 
-    - shell:
-        cmd: |
-          set -e
-          set -x
-          export BASE_DISTRO={{ base_distro }}
-          export INSTALL_TYPE={{ install_type }}
-          export NODEPOOL_TARBALLS_MIRROR=http://{{ zuul_site_mirror_fqdn }}:8080/tarballs
-          export BUILD_IMAGE={{ need_build_image }}
-          export KOLLA_SRC_DIR={{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla
-          export ACTION={{ scenario }}
-
-          tools/setup_gate.sh
+    - name: Run setup_gate.sh script
+      shell:
+        cmd: tools/setup_gate.sh
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
-      delegate_to: "primary"
-      environment: '{{ zuul | zuul_legacy_vars }}'
+      environment:
+        BASE_DISTRO: "{{ base_distro }}"
+        INSTALL_TYPE: "{{ install_type }}"
+        NODEPOOL_TARBALLS_MIRROR: "http://{{ zuul_site_mirror_fqdn }}:8080/tarballs"
+        BUILD_IMAGE: "{{ need_build_image }}"
+        KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla"
+        ACTION: "{{ scenario }}"
+
+    - block:
+        - name: Run deploy.sh script
+          shell:
+            cmd: tests/deploy.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+
+        - name: Run test-openstack.sh script
+          shell:
+            cmd: tests/test-openstack.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+
+        - name: Run reconfigure.sh script
+          shell:
+            cmd: tests/reconfigure.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+
+        - name: Run upgrade.sh script
+          shell:
+            cmd: tests/upgrade.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+      when: scenario != "bifrost"
+
+    - block:
+        - name: Run deploy-bifrost.sh script
+          shell:
+            cmd: tests/deploy-bifrost.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+
+        - name: Run test-bifrost.sh script
+          shell:
+            cmd: tests/test-bifrost.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+
+        - name: Run upgrade-bifrost.sh script
+          shell:
+            cmd: tests/upgrade-bifrost.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+      when: scenario == "bifrost"
+
+    - name: Run check-failure.sh script
+      shell:
+        cmd: tests/check-failure.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
