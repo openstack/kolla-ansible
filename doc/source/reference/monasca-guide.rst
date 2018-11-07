@@ -140,7 +140,7 @@ them manually you can use the following commands:
 .. code-block:: console
 
    $ kolla-build -t source monasca
-   $ kolla-build kafka zookeeper storm elasticsearch logstash kibana grafana
+   $ kolla-build kafka zookeeper storm elasticsearch logstash kibana
 
 If you are deploying Monasca standalone you will also need the following
 images:
