@@ -1,11 +1,10 @@
 ---
 - hosts: all
   vars:
-    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-    kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
+    kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
   tasks:
     - name: Prepare disks for Ceph or LVM
-      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_disks.sh {{ disk_type }}"
+      script: "setup_disks.sh {{ disk_type }}"
       when: scenario in ["ceph", "cinder-lvm"]
       become: true
       vars:
@@ -16,23 +15,10 @@
   vars:
     kolla_inventory_path: "/etc/kolla/inventory"
     logs_dir: "/tmp/logs"
-    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-    kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
+    kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     need_build_image: false
   tasks:
-    - name: ensure /etc/kolla exists
-      file:
-        path: "/etc/kolla"
-        state: "directory"
-        mode: 0777
-      become: true
-
-    - name: copy default ansible kolla-ansible inventory
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/inventory.j2"
-        dest: "{{ kolla_inventory_path }}"
-      delegate_to: "primary"
-
     # FIXME: in multi node env, api_interface may be different on each node.
     - name: detect api_interface_name variable
       vars:
@@ -45,77 +31,78 @@
         - hostvars[inventory_hostname][ansible_interface_name]['ipv4'] is defined
         - hostvars[inventory_hostname][ansible_interface_name]['ipv4']['address'] == api_interface_address
       with_items: "{{ ansible_interfaces }}"
-      delegate_to: "primary"
 
     - name: detect whether need build images
       set_fact:
         need_build_image: true
       when:
         - item.project.short_name == "kolla"
+        - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
 
-    - name: generate global.yml file
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/globals-default.j2"
-        dest: /etc/kolla/globals.yml
-      delegate_to: "primary"
+    # NOTE(mgoddard): This only affects the remote copy of the repo, not the
+    # one on the executor.
+    - name: checkout the previous kolla-ansible branch
+      command:
+        cmd: "git checkout stable/{{ previous_release | lower }}"
+        chdir: "{{ kolla_ansible_src_dir }}"
+      when: scenario == "upgrade"
 
-    - name: ensure nova conf overrides dir exists
+    - name: ensure /etc/kolla exists
       file:
-        path: "/etc/kolla/config/nova"
-        state: "directory"
-        mode: 0777
-      when: scenario != "bifrost"
-      become: true
-      delegate_to: "primary"
-
-    - name: generate nova config overrides
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/nova-compute-overrides.j2"
-        dest: /etc/kolla/config/nova/nova-compute.conf
-      when: scenario != "bifrost"
-      delegate_to: "primary"
-
-    - name: ensure bifrost conf overrides dir exists
-      file:
-        path: "/etc/kolla/config/bifrost"
-        state: "directory"
-        mode: 0777
-      when: scenario == "bifrost"
-      become: true
-      delegate_to: "primary"
-
-    - name: generate bifrost DIB config overrides
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/bifrost-dib-overrides.j2"
-        dest: /etc/kolla/config/bifrost/dib.yml
-      when: scenario == "bifrost"
-      delegate_to: "primary"
-
-    - name: ensure /etc/docker exists
-      file:
-        path: "/etc/docker"
+        path: "/etc/kolla"
         state: "directory"
         mode: 0777
       become: true
 
-    - name: create deamon.json for nodepool cache
+    # Use the initial repo to generate config files. For upgrade jobs, this
+    # repo is only available on the remote node, so use the remote-template
+    # role.
+    - name: generate configuration files
+      include_role:
+        role: remote-template
       vars:
+        is_previous_release: "{{ scenario == 'upgrade' }}"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/docker_daemon.json.j2"
-        dest: "/etc/docker/daemon.json"
-      become: true
+        # Role variables.
+        remote_template_src: "{{ kolla_ansible_src_dir }}/{{ item.src }}"
+        remote_template_dest: "{{ item.dest }}"
+        remote_template_become: "{{ item.become | default(false) }}"
+      with_items:
+        # Docker daemon.json
+        - src: "tests/templates/docker_daemon.json.j2"
+          dest: "/etc/docker/daemon.json"
+          become: true
+        # Ansible inventory
+        - src: "tests/templates/inventory.j2"
+          dest: "{{ kolla_inventory_path }}"
+        # globals.yml
+        - src: "tests/templates/globals-default.j2"
+          dest: /etc/kolla/globals.yml
+        # nova-compute.conf
+        - src: "tests/templates/nova-compute-overrides.j2"
+          dest: /etc/kolla/config/nova/nova-compute.conf
+          when: scenario != "bifrost"
+        # ceph.conf
+        - src: "tests/templates/ceph-overrides.j2"
+          dest: /etc/kolla/config/ceph.conf
+          when: scenario == "ceph"
+        # bifrost/dib.yml
+        - src: "tests/templates/bifrost-dib-overrides.j2"
+          dest: /etc/kolla/config/bifrost/dib.yml
+          when: scenario == "bifrost"
+      when: item.when | default(true)
 
     - name: install kolla-ansible requirements
       pip:
-        requirements: "{{ ansible_env.HOME }}/{{ kolla_ansible_src_dir }}/requirements.txt"
+        requirements: "{{ kolla_ansible_src_dir }}/requirements.txt"
       become: true
 
     - name: copy passwords.yml file
       copy:
-        src: "{{ kolla_ansible_full_src_dir }}/etc/kolla/passwords.yml"
+        src: "{{ kolla_ansible_src_dir }}/etc/kolla/passwords.yml"
         dest: /etc/kolla/passwords.yml
+        remote_src: true
 
     - name: generate passwords
       shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
@@ -141,30 +128,133 @@
         - all
       delegate_to: "{{ item }}"
 
-    - name: generate ceph config overrides
-      template:
-        src: "{{ kolla_ansible_full_src_dir }}/tests/templates/ceph-overrides.j2"
-        dest: /etc/kolla/config/ceph.conf
-      when: scenario == "ceph"
-      delegate_to: "primary"
-
+    # NOTE(mgoddard): We are using the script module here and later to ensure
+    # we use the local copy of these scripts, rather than the one on the remote
+    # host, which could be checked out to a previous release (in an upgrade
+    # job).
     - name: Run setup_gate.sh script
-      shell:
-        cmd: tools/setup_gate.sh
+      script:
+        cmd: ../tools/setup_gate.sh
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
         BASE_DISTRO: "{{ base_distro }}"
         INSTALL_TYPE: "{{ install_type }}"
-        NODEPOOL_TARBALLS_MIRROR: "http://{{ zuul_site_mirror_fqdn }}:8080/tarballs"
         BUILD_IMAGE: "{{ need_build_image }}"
+        TAG: "change_{{ zuul.change }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/git.openstack.org/openstack/kolla"
         ACTION: "{{ scenario }}"
 
+    # At this point we have generated all necessary configuration, and are
+    # ready to deploy the control plane services. Control flow now depends on
+    # the scenario being exercised.
+
+    # Deploy control plane. For upgrade jobs this is the previous release.
     - block:
         - name: Run deploy.sh script
+          script:
+            cmd: deploy.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+
+        - name: Run test-openstack.sh script
+          script:
+            cmd: test-openstack.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+          when: scenario not in ['scenario_nfv']
+
+        - name: Run test-scenario-nfv.sh script
+          script:
+            cmd: test-scenario-nfv.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "scenario_nfv"
+
+        - name: Run reconfigure.sh script
+          script:
+            cmd: reconfigure.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            ACTION: "{{ scenario }}"
+          when: scenario != "upgrade"
+      when: scenario != "bifrost"
+
+    # Upgrade: update config.
+    - block:
+        - name: Run check-failure.sh script
+          script:
+            cmd: check-failure.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+
+        # NOTE(mgoddard): This only affects the remote copy of the repo, not the
+        # one on the executor.
+        - name: checkout the current kolla-ansible branch
+          command:
+            cmd: "git checkout {{ zuul.branch }}"
+            chdir: "{{ kolla_ansible_src_dir }}"
+
+        # Use the new kolla-ansible repo to generate config files.
+        # This is the branch checked out on the executor, so we can use
+        # template directly rather than the remote-template role.
+        - name: Generate configuration files
+          template:
+            src: "{{ kolla_ansible_local_src_dir }}/{{ item.src }}"
+            dest: "{{ item.dest }}"
+          vars:
+            is_previous_release: false
+          with_items:
+            # Ansible inventory
+            - src: "tests/templates/inventory.j2"
+              dest: "{{ kolla_inventory_path }}"
+            # globals.yml
+            - src: "tests/templates/globals-default.j2"
+              dest: /etc/kolla/globals.yml
+            # nova-compute.conf
+            - src: "tests/templates/nova-compute-overrides.j2"
+              dest: /etc/kolla/config/nova/nova-compute.conf
+            # ceph.conf
+            - src: "tests/templates/ceph-overrides.j2"
+              dest: /etc/kolla/config/ceph.conf
+              when: "'ceph' in scenario"
+          when: item.when | default(true)
+
+        - name: upgrade kolla-ansible requirements
+          pip:
+            requirements: "{{ kolla_ansible_src_dir }}/requirements.txt"
+          become: true
+
+        # Update passwords.yml to include any new passwords added in this
+        # release.
+        - name: move passwords.yml to passwords.yml.old
+          command: mv /etc/kolla/passwords.yml /etc/kolla/passwords.yml.old
+
+        - name: copy passwords.yml file
+          copy:
+            src: "{{ kolla_ansible_src_dir }}/etc/kolla/passwords.yml"
+            dest: /etc/kolla/passwords.yml
+            remote_src: true
+
+        - name: generate new passwords
+          shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+
+        - name: merge old and new passwords
+          shell: >-
+            {{ kolla_ansible_src_dir }}/tools/merge_passwords.py
+            --old /etc/kolla/passwords.yml.old
+            --new /etc/kolla/passwords.yml
+            --final /etc/kolla/passwords.yml
+
+        # Perform an upgrade to the in-development code.
+        - name: Run upgrade.sh script
           shell:
-            cmd: tests/deploy.sh
+            cmd: tests/upgrade.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
@@ -177,32 +267,9 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
-          when: scenario not in ['scenario_nfv']
+      when: scenario == "upgrade"
 
-        - name: Run test-scenario-nfv.sh script
-          shell:
-            cmd: tests/test-scenario-nfv.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "scenario_nfv"
-
-        - name: Run reconfigure.sh script
-          shell:
-            cmd: tests/reconfigure.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            ACTION: "{{ scenario }}"
-
-        - name: Run upgrade.sh script
-          shell:
-            cmd: tests/upgrade.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            ACTION: "{{ scenario }}"
-      when: scenario != "bifrost"
-
+    # Bifrost testing.
     - block:
         - name: Run deploy-bifrost.sh script
           shell:

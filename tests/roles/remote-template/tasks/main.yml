@@ -1,0 +1,22 @@
+---
+# Ensure the parent directory exists.
+- name: "ensure {{ remote_template_dest | dirname }} exists"
+  file:
+    path: "{{ remote_template_dest | dirname }}"
+    state: "directory"
+    mode: 0777
+  become: "{{ remote_template_become }}"
+
+# Template sources must be on localhost, so first fetch the remote template
+# file.
+- name: "fetch remote template {{ remote_template_src | basename }}"
+  fetch:
+    src: "{{ remote_template_src }}"
+    dest: "{{ remote_template_temp_path }}"
+    flat: true
+
+- name: "template {{ remote_template_src | basename }}"
+  template:
+    src: "{{ remote_template_temp_path }}"
+    dest: "{{ remote_template_dest }}"
+  become: "{{ remote_template_become }}"

@@ -8,19 +8,6 @@ export PYTHONUNBUFFERED=1
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
-function clone_repos {
-    cat > /tmp/clonemap <<EOF
-clonemap:
- - name: openstack/kolla
-   dest: ${GIT_PROJECT_DIR}/kolla
- - name: openstack/requirements
-   dest: ${GIT_PROJECT_DIR}/requirements
-EOF
-    /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
-        --cache-dir /opt/git git://git.openstack.org \
-        openstack/kolla openstack/requirements
-}
-
 function setup_config {
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
@@ -56,9 +43,6 @@ EOF
         GATE_IMAGES+=",tacker,mistral,redis,barbican"
     fi
 
-    # Use the kolla-ansible tag rather than the kolla tag, since this is what
-    # kolla-ansible will use by default.
-    TAG=$(python -c "import pbr.version; print(pbr.version.VersionInfo('kolla-ansible'))")
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
@@ -75,7 +59,7 @@ logs_dir = /tmp/logs/build
 gate = ${GATE_IMAGES}
 EOF
 
-mkdir -p /tmp/logs/build
+    mkdir -p /tmp/logs/build
 
     if [[ "${DISTRO}" == "Debian" ]]; then
         # Infra does not sign their mirrors so we ignore gpg signing in the gate
@@ -138,7 +122,6 @@ function prepare_images {
 }
 
 
-clone_repos
 setup_ansible
 setup_config
 setup_node
