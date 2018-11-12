@@ -48,10 +48,25 @@ function test_openstack_logged {
 
     if echo $ACTION | grep -q "zun"; then
         echo "TESTING: Zun"
-        openstack --debug appcontainer service list
-        openstack --debug appcontainer host list
-        # TODO(hongbin): Run a Zun container and assert the container becomes
-        # Running
+        openstack appcontainer service list
+        openstack appcontainer host list
+        openstack subnet set --no-dhcp demo-subnet
+        sudo docker pull alpine
+        sudo docker save alpine | openstack image create alpine --public --container-format docker --disk-format raw
+        openstack appcontainer run --name test alpine sleep 1000
+        attempt=1
+        while [[ $(openstack appcontainer show test -f value -c status) != "Running" ]]; do
+            echo "Container not running yet"
+            attempt=$((attempt+1))
+            if [[ $attempt -eq 10 ]]; then
+                echo "Container failed to start"
+                openstack appcontainer show test
+                return 1
+            fi
+            sleep 10
+        done
+        openstack appcontainer list
+        openstack appcontainer delete --force --stop test
         echo "SUCCESS: Zun"
     fi
 }
