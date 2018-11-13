@@ -108,7 +108,7 @@ Create a manila share server image to the Image service:
 
 .. code-block:: console
 
-   # wget http://tarballs.openstack.org/manila-image-elements/images/manila-service-image-master.qcow2
+   # wget https://tarballs.openstack.org/manila-image-elements/images/manila-service-image-master.qcow2
    # glance image-create --name "manila-service-image" \
      --file manila-service-image-master.qcow2 \
      --disk-format qcow2 --container-format bare \
