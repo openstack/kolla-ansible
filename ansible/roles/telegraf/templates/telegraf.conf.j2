@@ -80,6 +80,10 @@
 [[inputs.redis]]
   servers = ["{{ tcp://:{{ redis_master_password }}@{{ api_interface_address }}:{{ redis_port }}"]
 {% endif %}
+{% if inventory_hostname in groups['zookeeper'] and enable_zookeeper | bool %}
+[[inputs.zookeeper]]
+  servers = ["{{ api_interface_address }}:{{ zookeeper_port }}"]
+{% endif %}
 {% if inventory_hostname in groups['mariadb'] and (enable_mariadb or enable_external_mariadb_load_balancer) | bool %}
 [[inputs.mysql]]
   servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address }}:{{ database_port }})/"]
