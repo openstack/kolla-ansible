@@ -22,6 +22,11 @@ auth client required = cephx
 #             chown operation in upgrade procedure. https://bugs.launchpad.net/kolla/+bug/1620702
 setuser match path = /var/lib/ceph/$type/$cluster-$id
 
+# NOTE(Jeffrey4l): kolla is using node ip as host bucket name, whereas `osd
+# crush update on start` feature depends on hostname. Disable this feature for
+# less confusion and upgrade impact.
+osd crush update on start = false
+
 [mon]
 # NOTE(SamYaple): The monitor files have been known to grow very large. The
 #                 only fix for that is to compact the files.
