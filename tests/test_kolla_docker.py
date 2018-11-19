@@ -133,7 +133,6 @@ FAKE_DATA = {
         'image': 'myregistrydomain.com:5000/ubuntu:16.04',
         'name': 'test_container',
         'volumes': None,
-        'tty': True
     },
 
     'images': [
