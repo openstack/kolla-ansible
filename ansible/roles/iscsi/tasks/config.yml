@@ -1,4 +1,13 @@
 ---
+- name: Load and persist configfs module
+  import_role:
+    role: module-load
+  vars:
+    modules:
+      - name: configfs
+  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool )
+         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
+
 - name: Ensuring config directories exist
   file:
     path: "{{ node_config_directory }}/{{ item }}"
