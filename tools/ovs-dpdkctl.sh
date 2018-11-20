@@ -243,6 +243,7 @@ IPADDR=$ip
 NETMASK=$mask
 HOTPLUG=yes
 ONBOOT=yes
+NM_CONTROLLED=no
 EOF
 install_redhat_bridge_service $bridge
     else
