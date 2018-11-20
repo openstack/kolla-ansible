@@ -1,0 +1,11 @@
+{% set fluentd_dir = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+<source>
+  @type tail
+  path /var/log/kolla/opendaylight/karaf.log
+  pos_file /var/run/{{ fluentd_dir }}/opendaylight.pos
+  tag infra.opendaylight
+  format multiline
+  format_firstline /\d{4}-\d{2}-\d{2}/
+  format1 /^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\,\d{3})\s+\|\s+(?<level>[^|\s]+)\s+\|\s+(?<thread>[^|]+)\s+\|\s+(?<class>[\d -}]+)\s+\|\s+(?<bundle>[^|]+)\s+\|\s+(?<msg>.*)/
+  time_format %Y-%m-%d %H:%M:%S,%L
+</source>
