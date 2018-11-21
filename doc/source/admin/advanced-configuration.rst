@@ -233,7 +233,7 @@ and then put it to ``/etc/kolla/config/neutron/policy.json``.
 
 .. note::
 
-   Currently kolla-ansible only support JSON format for policy file.
+   Currently kolla-ansible only support JSON and YAML format for policy file.
 
 The operator can make these changes after services were already deployed by
 using following command:
