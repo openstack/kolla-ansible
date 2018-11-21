@@ -19,6 +19,11 @@ cinder_catalog_info = volume:cinder:internalURL
 
 transport_url = {{ rpc_transport_url }}
 
+{% if enable_glance_image_cache | bool %}
+image_cache_max_size = {{ glance_cache_max_size }}
+image_cache_dir = /var/lib/glance/image-cache
+{% endif %}
+
 [database]
 connection = mysql+pymysql://{{ glance_database_user }}:{{ glance_database_password }}@{{ glance_database_address }}/{{ glance_database_name }}
 max_retries = -1
@@ -38,7 +43,7 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [paste_deploy]
-flavor = keystone
+flavor = {% if enable_glance_image_cache | bool %}keystone+cachemanagement{% else %}keystone{% endif %}
 
 [glance_store]
 {% if glance_backend_vmware | bool %}
