@@ -9,3 +9,4 @@ hosts.
    :maxdepth: 1
 
    bifrost
+   bootstrap-servers

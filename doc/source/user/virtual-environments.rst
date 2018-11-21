@@ -49,6 +49,8 @@ Note that the use of a virtual environment on the Ansible control host does not
 imply that a virtual environment will be used for execution of Ansible modules
 on the target hosts.
 
+.. _virtual-environments-target-hosts:
+
 Target Hosts
 ============
 
