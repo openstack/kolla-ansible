@@ -29,3 +29,4 @@ Projects Deployment References
    xenserver-guide
    horizon-guide
    resource-constraints
+   glance-guide
