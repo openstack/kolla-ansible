@@ -1,8 +1,8 @@
 .. _resource-constraints:
 
-=====================================
-Resource Constraints in Kolla Ansible
-=====================================
+====================
+Resource Constraints
+====================
 
 Overview
 ~~~~~~~~

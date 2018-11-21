@@ -1,8 +1,8 @@
 .. _glance-guide:
 
-===============
-Glance in Kolla
-===============
+======================
+Glance - Image service
+======================
 
 Glance backends
 ---------------
@@ -41,8 +41,8 @@ Ceph backend
 
 To make use of ``ceph`` backend in glance, simply enable ceph or external ceph.
 By default will enable backend ceph automatically.
-Please refer to :doc:`ceph-guide` or :doc:`external-ceph-guide` on how to
-configure this backend.
+Please refer to :doc:`../storage/ceph-guide`
+or :doc:`../storage/external-ceph-guide` on how to configure this backend.
 
 To enable the ceph backend manually:
 
@@ -54,7 +54,7 @@ VMware backend
 ~~~~~~~~~~~~~~
 
 To make use of VMware datastores as a glance backend,
-enable `glance_backend_vmware` and refer to :doc:`vmware-guide` for
+enable `glance_backend_vmware` and refer to :doc:`../compute/vmware-guide` for
 further VMware configuration.
 
 To enable the vmware backend manually:
@@ -67,7 +67,8 @@ Swift backend
 ~~~~~~~~~~~~~
 
 To store glance images in a swift cluster, the ``swift`` backend should
-be enabled.  Refer to :doc:`swift-guide` on how to configure swift in kolla.
+be enabled.  Refer to :doc:`../storage/swift-guide` on how to configure
+swift in kolla.
 If ceph is enabled, will have higher precedence over swift as glance backend.
 
 To enable the swift backend manually:
@@ -103,7 +104,7 @@ need to be enabled.
 
 .. warning::
 
-    When using glance backend ``file`` without a shared filesytem, this method cannot
+    When using glance backend ``file`` without a shared filesystem, this method cannot
     be used or will end up with a corrupt state of glance services.
     Reasoning behind is because glance api is only running in one host, blocking the
     orchestration of a rolling upgrade.

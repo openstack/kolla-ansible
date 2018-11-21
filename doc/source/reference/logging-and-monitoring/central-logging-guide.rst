@@ -1,8 +1,8 @@
 .. _central-logging-guide:
 
-========================
-Central Logging in Kolla
-========================
+===============
+Central Logging
+===============
 
 An OpenStack deployment generates vast amounts of log data. In order to
 successfully monitor this and use it to diagnose problems, the standard "ssh

@@ -1,8 +1,8 @@
 .. _cinder-guide:
 
-===============
-Cinder in Kolla
-===============
+======================
+Cinder - Block storage
+======================
 
 Overview
 ~~~~~~~~

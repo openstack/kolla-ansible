@@ -1,8 +1,8 @@
 .. _osprofiler-guide:
 
-===================
-OSprofiler in Kolla
-===================
+====================================
+OSprofiler - Cross-project profiling
+====================================
 
 Overview
 ~~~~~~~~

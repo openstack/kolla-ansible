@@ -1,8 +1,8 @@
 .. _ceph-guide:
 
-=============
-Ceph in Kolla
-=============
+===============================
+Ceph - Software Defined Storage
+===============================
 
 .. note::
    The out-of-the-box Ceph deployment requires 3 hosts with at least one block

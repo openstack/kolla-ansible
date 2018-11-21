@@ -1,8 +1,8 @@
 .. _skydive-guide:
 
-================
-Skydive in Kolla
-================
+====================================
+Skydive - Real time network analyzer
+====================================
 
 Overview
 ~~~~~~~~

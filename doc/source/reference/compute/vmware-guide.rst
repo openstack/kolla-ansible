@@ -1,8 +1,8 @@
 .. _vmware-guide:
 
-===============
-VMware in Kolla
-===============
+======
+VMware
+======
 
 Overview
 ~~~~~~~~

@@ -1,6 +1,6 @@
-==============
-Kuryr in Kolla
-==============
+============================
+Kuryr - Container networking
+============================
 
 "Kuryr is a Docker network plugin that uses Neutron to provide networking
 services to Docker containers. It provides containerized images for the common

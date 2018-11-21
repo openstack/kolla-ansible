@@ -1,8 +1,8 @@
 .. _designate-guide:
 
-==================
-Designate in Kolla
-==================
+=======================
+Designate - DNS service
+=======================
 
 Overview
 ~~~~~~~~
