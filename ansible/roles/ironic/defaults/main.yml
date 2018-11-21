@@ -53,6 +53,7 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-inspector/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+      - "ironic_inspector_dhcp_hosts:/var/lib/ironic-inspector/dhcp-hostsdir"
       - "{{ kolla_dev_repos_directory ~ '/ironic-inspector/ironic_inspector:/var/lib/kolla/venv/lib/python2.7/site-packages/ironic_inspector' if ironic_dev_mode | bool else '' }}"
     dimensions: "{{ ironic_inspector_dimensions }}"
     haproxy:
@@ -99,6 +100,7 @@ ironic_services:
       - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
+      - "ironic_inspector_dhcp_hosts:/etc/dnsmasq/dhcp-hostsdir:ro"
     dimensions: "{{ ironic_dnsmasq_dimensions }}"
 
 
@@ -180,6 +182,7 @@ ironic_console_serial_speed: "115200n8"
 ironic_ipxe_url: http://{{ api_interface_address }}:{{ ironic_ipxe_port }}
 ironic_enable_rolling_upgrade: "yes"
 ironic_inspector_kernel_cmdline_extras: []
+ironic_inspector_pxe_filter: iptables
 
 ####################
 ## Kolla

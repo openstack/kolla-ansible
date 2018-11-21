@@ -34,11 +34,16 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 policy_file = {{ ironic_policy_file }}
 {% endif %}
 
-[iptables]
-dnsmasq_interface = {{ ironic_dnsmasq_interface }}
-
 [database]
 connection = mysql+pymysql://{{ ironic_inspector_database_user }}:{{ ironic_inspector_database_password }}@{{ ironic_inspector_database_address }}/{{ ironic_inspector_database_name }}
 
 [processing]
 ramdisk_logs_dir = /var/log/kolla/ironic-inspector
+
+[pxe_filter]
+driver = {{ ironic_inspector_pxe_filter }}
+
+{% if ironic_inspector_pxe_filter == 'iptables' %}
+[iptables]
+dnsmasq_interface = {{ ironic_dnsmasq_interface }}
+{% endif %}
