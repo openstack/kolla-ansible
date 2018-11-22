@@ -330,7 +330,16 @@ EOF
         ;;
 (stop)
         ACTION="Stop Kolla containers"
-        PLAYBOOK="${BASEDIR}/ansible/stop.yml"
+        EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=stop"
+        if [[ "${DANGER_CONFIRM}" != "--yes-i-really-really-mean-it" ]]; then
+            cat << EOF
+WARNING:
+    This will stop all deployed kolla containers, limit with tags is possible and also with
+    skip_stop_containers variable. To confirm, please add the following option:
+    --yes-i-really-really-mean-it
+EOF
+            exit 1
+        fi
         ;;
 (certificates)
         ACTION="Generate TLS Certificates"

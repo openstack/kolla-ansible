@@ -1,0 +1,12 @@
+---
+- name: "Stopping {{ service_name }} containers"
+  vars:
+    service: "{{ item.value }}"
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+  when:
+    - service.enabled | bool
+    - service.container_name not in skip_stop_containers
+  with_dict: "{{ project_services }}"
