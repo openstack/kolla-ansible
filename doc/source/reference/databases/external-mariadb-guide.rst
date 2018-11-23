@@ -48,7 +48,7 @@ need to do the following:
 
    .. code-block:: ini
 
-      [mariadb:children]
+      [mariadb]
       myexternalmariadbloadbalancer.com
 
 
@@ -56,7 +56,7 @@ need to do the following:
 
    .. code-block:: yaml
 
-      database_address: myexternalloadbalancer.com
+      database_address: myexternalmariadbloadbalancer.com
 
 .. note::
 
