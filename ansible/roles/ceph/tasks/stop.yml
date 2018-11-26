@@ -1,0 +1,63 @@
+---
+- name: Stopping ceph-mon container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ceph_mon"
+  when:
+    - inventory_hostname in groups['ceph-mon']
+    - "'ceph_mon' not in skip_stop_containers"
+
+- name: Find running ceph-osds containers
+  command: "docker ps --filter name=ceph_osd_ --format {% raw %}{{.Names}}{% endraw %}"
+  register: ceph_osd_containers
+
+- name: Stopping ceph-osd container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item }}"
+  with_items: "{{ ceph_osd_containers.stdout_lines }}"
+  when:
+    - inventory_hostname in groups['ceph-osd']
+    - ceph_osd_containers.stdout_lines | length >= 1
+    - item not in skip_stop_containers
+
+- name: Stopping ceph-rgw container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ceph_rgw"
+  when:
+    - inventory_hostname in groups['ceph-rgw']
+    - enable_ceph_rgw | bool
+    - "'ceph_rgw' not in skip_stop_containers"
+
+- name: Stopping ceph-mgr container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ceph_mgr"
+  when:
+    - inventory_hostname in groups['ceph-mgr']
+    - "'ceph_mgr' not in skip_stop_containers"
+
+- name: Stopping ceph-mds container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ceph_mds"
+  when:
+    - enable_ceph_mds | bool
+    - inventory_hostname in groups['ceph-mds']
+    - "'ceph_mds' not in skip_stop_containers"
+
+- name: Stopping ceph-nfs container
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ceph_nfs"
+  when:
+    - enable_ceph_nfs | bool
+    - inventory_hostname in groups['ceph-nfs']
+    - "'ceph_nfs' not in skip_stop_containers"
