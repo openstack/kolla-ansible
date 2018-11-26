@@ -208,6 +208,15 @@ Once logged on the **operator** VM call the ``kolla-build`` utility:
 It builds Docker images and pushes them to the local registry if the **push**
 option is enabled (in Vagrant this is the default behaviour).
 
+Generating passwords
+--------------------
+
+Before proceeding with the deployment you must generate the service passwords:
+
+.. code-block:: console
+
+   kolla-genpwd
+
 Deploying OpenStack with Kolla
 ------------------------------
 
@@ -217,7 +226,11 @@ To deploy **all-in-one**:
 
    sudo kolla-ansible deploy
 
-To deploy multinode:
+To deploy **multinode**:
+
+Ensure that the nodes deployed by Vagrant match those specified in the
+inventory file:
+``/usr/share/kolla-ansible/ansible/inventory/multinode``.
 
 For Centos 7:
 
