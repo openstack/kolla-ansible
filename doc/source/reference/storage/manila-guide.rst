@@ -1,8 +1,8 @@
 .. _manila-guide:
 
-===============
-Manila in Kolla
-===============
+===================================
+Manila - Shared filesystems service
+===================================
 
 Overview
 ~~~~~~~~

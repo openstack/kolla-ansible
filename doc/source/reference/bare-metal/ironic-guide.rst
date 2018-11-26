@@ -1,8 +1,8 @@
 .. _ironic-guide:
 
-===============
-Ironic in Kolla
-===============
+================================
+Ironic - Bare Metal provisioning
+================================
 
 Overview
 ~~~~~~~~

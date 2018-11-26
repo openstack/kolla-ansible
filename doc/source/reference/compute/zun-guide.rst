@@ -1,6 +1,6 @@
-============
-Zun in Kolla
-============
+=======================
+Zun - Container service
+=======================
 
 "Zun is an OpenStack Container service. It aims to provide an
 OpenStack API for provisioning and managing containerized
@@ -12,7 +12,7 @@ Preparation and Deployment
 --------------------------
 
 Zun requires kuryr and etcd services, for more information about how to
-configure kuryr refer to :doc:`kuryr-guide`.
+configure kuryr refer to :doc:`../containers/kuryr-guide`.
 
 To allow Zun Compute connect to the Docker Daemon, add the following in the
 ``docker.service`` file on each zun-compute node.

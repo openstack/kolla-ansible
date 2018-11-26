@@ -1,6 +1,6 @@
-===============
-Tacker in Kolla
-===============
+==========================
+Tacker - NFV orchestration
+==========================
 
 "Tacker is an OpenStack service for NFV Orchestration with a general purpose
 VNF Manager to deploy and operate Virtual Network Functions (VNFs) and

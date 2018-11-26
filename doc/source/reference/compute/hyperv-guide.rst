@@ -1,8 +1,8 @@
 .. _hyperv-guide:
 
-====================
-Nova-HyperV in Kolla
-====================
+===========
+Nova HyperV
+===========
 
 Overview
 ~~~~~~~~

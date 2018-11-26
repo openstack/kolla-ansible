@@ -1,8 +1,8 @@
 .. _swift-guide:
 
-==============
-Swift in Kolla
-==============
+=============================
+Swift- Object storage service
+=============================
 
 Overview
 ~~~~~~~~

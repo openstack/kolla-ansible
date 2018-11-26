@@ -1,8 +1,8 @@
 .. _horizon-guide:
 
-================
-Horizon in Kolla
-================
+=============================
+Horizon - OpenStack dashboard
+=============================
 
 Overview
 ~~~~~~~~

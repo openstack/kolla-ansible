@@ -1,8 +1,8 @@
 .. _monasca-guide:
 
-================
-Monasca in Kolla
-================
+============================
+Monasca - Monitoring service
+============================
 
 Overview
 ~~~~~~~~

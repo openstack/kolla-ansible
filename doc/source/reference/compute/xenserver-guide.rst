@@ -1,8 +1,8 @@
 .. _XenServer-guide:
 
-==================
-XenServer in Kolla
-==================
+=========
+XenServer
+=========
 
 Overview
 ========
