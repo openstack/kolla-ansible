@@ -55,6 +55,7 @@
       - "neutron-l3-agent"
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
+      - "neutron-metering-agent"
       - "neutron-openvswitch-agent"
       - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"
@@ -306,6 +307,24 @@
   notify:
     - "Restart {{ service_name }} container"
 
+- name: Copying over metering_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-metering-agent"
+    neutron_metering_agent: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/metering_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/metering_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/metering_agent.ini"
+    mode: "0660"
+  register: neutron_metering_agent_ini
+  when:
+    - neutron_metering_agent.enabled | bool
+    - neutron_metering_agent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
 - name: Copying over ironic_neutron_agent.ini
   become: true
   vars:
@@ -373,6 +392,7 @@
       - "neutron-l3-agent"
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
+      - "neutron-metering-agent"
       - "neutron-openvswitch-agent"
       - "neutron-openvswitch-agent-xenapi"
       - "neutron-server"

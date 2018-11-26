@@ -193,6 +193,19 @@ neutron_services:
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_infoblox_ipam_agent_dimensions }}"
+  neutron-metering-agent:
+    container_name: "neutron_metering_agent"
+    image: "{{ neutron_metering_agent_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_metering | bool }}"
+    group: "neutron-metering-agent"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-metering-agent'] }}"
+    volumes:
+      - "{{ node_config_directory }}/neutron-metering-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ neutron_metering_agent_dimensions }}"
   ironic-neutron-agent:
     container_name: "ironic_neutron_agent"
     image: "{{ ironic_neutron_agent_image_full }}"
@@ -260,6 +273,10 @@ neutron_infoblox_ipam_agent_image: "{{ docker_registry ~ '/' if docker_registry 
 neutron_infoblox_ipam_agent_tag: "{{ neutron_tag }}"
 neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}:{{ neutron_infoblox_ipam_agent_tag }}"
 
+neutron_metering_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-metering-agent"
+neutron_metering_agent_tag: "{{ neutron_tag }}"
+neutron_metering_agent_image_full: "{{ neutron_metering_agent_image }}:{{ neutron_metering_agent_tag }}"
+
 ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-ironic-neutron-agent"
 ironic_neutron_agent_tag: "{{ neutron_tag }}"
 ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
@@ -275,6 +292,7 @@ neutron_server_dimensions: "{{ default_container_dimensions }}"
 neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
 neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_openvswitch_agent_xenapi_dimensions: "{{ default_container_dimensions }}"
+neutron_metering_agent_dimensions: "{{ default_container_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
 
@@ -332,6 +350,8 @@ service_plugins:
     enabled: "{{ enable_neutron_lbaas | bool and not enable_octavia | bool }}"
   - name: "lbaasv2-proxy"
     enabled: "{{ enable_neutron_lbaas | bool and enable_octavia | bool }}"
+  - name: "metering"
+    enabled: "{{ enable_neutron_metering | bool }}"
   - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"
     enabled: "{{ enable_neutron_bgp_dragent | bool }}"
   - name: "qos"
