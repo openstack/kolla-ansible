@@ -11,10 +11,6 @@ function test_openstack {
     # Wait for service ready
     sleep 15
     . /etc/kolla/admin-openrc.sh
-    # TODO(Jeffrey4l): Restart the memcached container to cleanup all cache.
-    # Remove this after this bug is fixed
-    # https://bugs.launchpad.net/oslo.cache/+bug/1590779
-    sudo docker restart memcached
     nova --debug service-list
     openstack --debug network agent list
     tools/init-runonce
