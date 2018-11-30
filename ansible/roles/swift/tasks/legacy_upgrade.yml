@@ -1,4 +1,6 @@
 ---
+- include_tasks: config.yml
+
 # NOTE(pbourke): because the images that are used to start Swift containers
 # were refactored for Mitaka, we need to completely remove the existing
 # containers or we get a conflict when attempting to start the new ones.
@@ -6,9 +8,7 @@
   become: true
   kolla_docker:
     name: "{{ item }}"
-    # TODO(pbourke): Swift recommend using a SIGHUP to gracefully stop the
-    # services. Update once kolla_docker supports this.
-    action: remove_container
+    action: "stop_container"
   with_items:
     - "swift_rsyncd"
     - "swift_account_server"
@@ -27,3 +27,5 @@
     - "swift_proxy_server"
 
 - include_tasks: start.yml
+  vars:
+    run_start_swift_proxy_server: "yes"
