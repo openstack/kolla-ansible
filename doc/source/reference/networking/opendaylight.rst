@@ -12,6 +12,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 .. code-block:: yaml
 
    enable_opendaylight: "yes"
+   neutron_plugin_agent: "opendaylight"
 
 Networking-ODL is an additional Neutron plugin that allows the OpenDaylight
 SDN Controller to utilize its networking virtualization features.
