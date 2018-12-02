@@ -1,0 +1,19 @@
+[pipeline:main]
+pipeline = cors request_id authtoken api_v1
+
+[app:api_v1]
+paste.app_factory = cyborg.api.app:app_factory
+
+[filter:authtoken]
+acl_public_routes = /, /v1
+paste.filter_factory = cyborg.api.middleware.auth_token:AuthTokenMiddleware.factory
+
+[filter:osprofiler]
+paste.filter_factory = cyborg.common.profiler:WsgiMiddleware.factory
+
+[filter:request_id]
+paste.filter_factory = oslo_middleware:RequestId.factory
+
+[filter:cors]
+paste.filter_factory =  oslo_middleware.cors:filter_factory
+oslo_config_project = cyborg

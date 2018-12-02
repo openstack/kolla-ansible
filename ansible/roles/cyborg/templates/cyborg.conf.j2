@@ -1,0 +1,45 @@
+[DEFAULT]
+auth_strategy = keystone
+log_dir = /var/log/kolla/cyborg
+debug = {{ cyborg_logging_debug }}
+notification_topics = notifications
+
+transport_url = {{ rpc_transport_url }}
+
+[api]
+port = {{ cyborg_api_port }}
+host = {{ api_interface_address }}
+
+[database]
+connection = mysql+pymysql://{{ cyborg_database_user }}:{{ cyborg_database_password }}@{{ cyborg_database_address }}/{{ cyborg_database_name }}
+
+[keystone_authtoken]
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+project_domain_name = {{ default_project_domain_name }}
+project_name = service
+user_domain_name = {{ default_user_domain_name }}
+username = {{ cyborg_keystone_user }}
+password = {{ cyborg_keystone_password }}
+auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_type = password
+
+{% if cyborg_policy_file is defined %}
+[oslo_policy]
+policy_file = {{ cyborg_policy_file }}
+{% endif %}
+
+[service_credentials]
+auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+region_name = {{ openstack_region_name }}
+password = {{ cyborg_keystone_password }}
+username = {{ cyborg_keystone_user }}
+project_name = service
+project_domain_id = {{ default_project_domain_id }}
+user_domain_id = {{ default_user_domain_id }}
+auth_type = password
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}

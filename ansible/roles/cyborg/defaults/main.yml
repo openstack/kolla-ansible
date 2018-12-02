@@ -1,0 +1,77 @@
+---
+project_name: "cyborg"
+
+cyborg_services:
+  cyborg-api:
+    container_name: cyborg_api
+    group: cyborg-api
+    enabled: true
+    image: "{{ cyborg_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cyborg-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "cyborg:/var/lib/cyborg/"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ cyborg_api_dimensions }}"
+  cyborg-agent:
+    container_name: cyborg_agent
+    group: cyborg-agent
+    enabled: true
+    image: "{{ cyborg_agent_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cyborg-agent/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ cyborg_agent_dimensions }}"
+  cyborg-conductor:
+    container_name: cyborg_conductor
+    group: cyborg-conductor
+    enabled: true
+    image: "{{ cyborg_conductor_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/cyborg-conductor/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ cyborg_conductor_dimensions }}"
+
+####################
+# Database
+####################
+cyborg_database_name: "cyborg"
+cyborg_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}cyborg{% endif %}"
+cyborg_database_address: "{{ database_address }}:{{ database_port }}"
+
+####################
+# Docker
+####################
+cyborg_install_type: "{{ kolla_install_type }}"
+cyborg_tag: "{{ openstack_release }}"
+
+cyborg_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cyborg_install_type }}-cyborg-api"
+cyborg_api_tag: "{{ cyborg_tag }}"
+cyborg_api_image_full: "{{ cyborg_api_image }}:{{ cyborg_api_tag }}"
+
+cyborg_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cyborg_install_type }}-cyborg-agent"
+cyborg_agent_tag: "{{ cyborg_tag }}"
+cyborg_agent_image_full: "{{ cyborg_agent_image }}:{{ cyborg_agent_tag }}"
+
+cyborg_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cyborg_install_type }}-cyborg-conductor"
+cyborg_conductor_tag: "{{ cyborg_tag }}"
+cyborg_conductor_image_full: "{{ cyborg_conductor_image }}:{{ cyborg_conductor_tag }}"
+
+cyborg_api_dimensions: "{{ default_container_dimensions }}"
+cyborg_agent_dimensions: "{{ default_container_dimensions }}"
+cyborg_conductor_dimensions: "{{ default_container_dimensions }}"
+
+####################
+# OpenStack
+####################
+cyborg_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ cyborg_api_port }}"
+cyborg_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ cyborg_api_port }}"
+cyborg_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ cyborg_api_port }}"
+
+cyborg_logging_debug: "{{ openstack_logging_debug }}"
+
+cyborg_keystone_user: "cyborg"
+
+openstack_cyborg_auth: "{{ openstack_auth }}"

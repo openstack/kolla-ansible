@@ -30,6 +30,7 @@
         - enable_cloudkitty_{{ enable_cloudkitty | bool }}
         - enable_collectd_{{ enable_collectd | bool }}
         - enable_congress_{{ enable_congress | bool }}
+        - enable_cyborg_{{ enable_cyborg | bool }}
         - enable_designate_{{ enable_designate | bool }}
         - enable_elasticsearch_{{ enable_elasticsearch | bool }}
         - enable_etcd_{{ enable_etcd | bool }}
@@ -156,6 +157,11 @@
             tasks_from: loadbalancer
           tags: congress
           when: enable_congress | bool
+        - include_role:
+            role: cyborg
+            tasks_from: loadbalancer
+          tags: cyborg
+          when: enable_cyborg | bool
         - include_role:
             role: designate
             tasks_from: loadbalancer
@@ -979,6 +985,17 @@
     - { role: congress,
         tags: congress,
         when: enable_congress | bool }
+
+- name: Apply role cyborg
+  gather_facts: false
+  hosts:
+    - cyborg
+    - '&enable_cyborg_True'
+  serial: '{{ serial|default("0") }}'
+  roles:
+    - { role: cyborg,
+        tags: cyborg,
+        when: enable_cyborg | bool }
 
 - name: Apply role tempest
   gather_facts: false

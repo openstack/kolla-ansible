@@ -1,0 +1,19 @@
+---
+- name: Running cyborg bootstrap container
+  vars:
+    cyborg_api: "{{ cyborg_services['cyborg-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ cyborg_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_cyborg"
+    restart_policy: "never"
+    volumes: "{{ cyborg_api.volumes }}"
+  run_once: True
+  delegate_to: "{{ groups[cyborg_api.group][0] }}"
