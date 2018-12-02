@@ -92,7 +92,7 @@ The default for TLS is disabled, to enable TLS networking:
 .. code-block:: yaml
 
    kolla_enable_tls_external: "yes"
-   kolla_external_fqdn_cert: "{{ node_config_directory }}/certificates/mycert.pem"
+   kolla_external_fqdn_cert: "{{ node_config }}/certificates/mycert.pem"
 
 .. note::
 
