@@ -84,7 +84,8 @@ class ModuleArgsTest(base.BaseTestCase):
             tls_cacert=dict(required=False, type='str'),
             volumes=dict(required=False, type='list'),
             volumes_from=dict(required=False, type='list'),
-            dimensions=dict(required=False, type='dict', default=dict())
+            dimensions=dict(required=False, type='dict', default=dict()),
+            tty=dict(required=False, type='bool', default=False),
             )
         required_if = [
             ['action', 'pull_image', ['image']],
@@ -132,6 +133,7 @@ FAKE_DATA = {
         'image': 'myregistrydomain.com:5000/ubuntu:16.04',
         'name': 'test_container',
         'volumes': None,
+        'tty': False,
     },
 
     'images': [

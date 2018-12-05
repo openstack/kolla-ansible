@@ -172,6 +172,12 @@ options:
       - running
       - exited
       - paused
+  tty:
+    description:
+      - Allocate TTY to container
+    required: False
+    default: False
+    type: bool
 author: Sam Yaple
 '''
 
@@ -634,6 +640,7 @@ class DockerWorker(object):
             'image': self.params.get('image'),
             'name': self.params.get('name'),
             'volumes': volumes,
+            'tty': self.params.get('tty'),
         }
 
     def create_container(self):
@@ -817,7 +824,8 @@ def generate_module():
         tls_cacert=dict(required=False, type='str'),
         volumes=dict(required=False, type='list'),
         volumes_from=dict(required=False, type='list'),
-        dimensions=dict(required=False, type='dict', default=dict())
+        dimensions=dict(required=False, type='dict', default=dict()),
+        tty=dict(required=False, type='bool', default=False),
     )
     required_if = [
         ['action', 'pull_image', ['image']],
