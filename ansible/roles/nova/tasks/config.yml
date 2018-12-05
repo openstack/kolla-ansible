@@ -178,6 +178,25 @@
   notify:
     - Restart nova-compute container
 
+- name: Copying 'release' file for nova_compute
+  vars:
+    service: "{{ nova_services['nova-compute'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/nova-compute/release"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/nova_compute/{{ inventory_hostname }}/release"
+        - "{{ node_custom_config }}/nova_compute/release"
+        - "{{ node_custom_config }}/nova/release"
+      skip: true
+  register: nova_compute_release_file
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart nova-compute container
+
 - name: Copying over existing policy file
   become: true
   vars:
