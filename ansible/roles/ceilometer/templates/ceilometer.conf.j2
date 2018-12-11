@@ -51,3 +51,8 @@ connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
 connection_username = {{ xenserver_username }}
 connection_password = {{ xenserver_password }}
 {% endif %}
+
+[cache]
+backend = oslo_cache.memcache_pool
+enabled = True
+memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
