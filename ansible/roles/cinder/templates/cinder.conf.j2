@@ -61,9 +61,9 @@ transport_url = {{ rpc_transport_url }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool or enable_searchlight | bool %}
+{% if cinder_enabled_notification_topics %}
 driver = messagingv2
-topics = notifications
+topics = {{ cinder_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}
