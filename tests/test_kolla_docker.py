@@ -52,6 +52,7 @@ class ModuleArgsTest(base.BaseTestCase):
             auth_password=dict(required=False, type='str', no_log=True),
             auth_registry=dict(required=False, type='str'),
             auth_username=dict(required=False, type='str'),
+            command=dict(required=False, type='str'),
             detach=dict(required=False, type='bool', default=True),
             labels=dict(required=False, type='dict', default=dict()),
             name=dict(required=False, type='str'),
@@ -112,6 +113,7 @@ class ModuleArgsTest(base.BaseTestCase):
 FAKE_DATA = {
 
     'params': {
+        'command': None,
         'detach': True,
         'environment': {},
         'host_config': {
@@ -131,6 +133,7 @@ FAKE_DATA = {
                    'vendor': 'ubuntuOS'},
         'image': 'myregistrydomain.com:5000/ubuntu:16.04',
         'name': 'test_container',
+        'remove_on_exit': True,
         'volumes': None,
         'tty': False,
     },
@@ -198,8 +201,9 @@ class TestContainer(base.BaseTestCase):
             return_value=self.fake_data['params']['host_config'])
         self.dw.create_container()
         self.assertTrue(self.dw.changed)
-        self.dw.dc.create_container.assert_called_once_with(
-            **self.fake_data['params'])
+        expected_args = copy.copy(self.fake_data['params'])
+        del expected_args['remove_on_exit']
+        self.dw.dc.create_container.assert_called_once_with(**expected_args)
 
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',
@@ -268,6 +272,31 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.dw.dc.start.assert_called_once_with(
             container=self.fake_data['params'].get('name'))
+
+    def test_start_container_no_detach(self):
+        self.fake_data['params'].update({'name': 'my_container',
+                                         'detach': False})
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.images = mock.MagicMock(
+            return_value=self.fake_data['images'])
+        self.dw.dc.containers = mock.MagicMock(side_effect=[
+            [], self.fake_data['containers'], self.fake_data['containers'],
+            self.fake_data['containers']])
+        self.dw.dc.wait = mock.MagicMock(return_value={'StatusCode': 0})
+        self.dw.dc.logs = mock.MagicMock(
+            side_effect=['fake stdout', 'fake stderr'])
+        self.dw.start_container()
+        self.assertTrue(self.dw.changed)
+        name = self.fake_data['params'].get('name')
+        self.dw.dc.wait.assert_called_once_with(name)
+        self.dw.dc.logs.assert_has_calls([
+            mock.call(name, stdout=True, stderr=False),
+            mock.call(name, stdout=False, stderr=True)])
+        self.dw.dc.stop.assert_called_once_with(name, timeout=10)
+        self.dw.dc.remove_container.assert_called_once_with(
+            container=name, force=True)
+        expected = {'rc': 0, 'stdout': 'fake stdout', 'stderr': 'fake stderr'}
+        self.assertEqual(expected, self.dw.result)
 
     def test_stop_container(self):
         self.dw = get_DockerWorker({'name': 'my_container',
