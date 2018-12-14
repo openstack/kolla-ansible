@@ -1,0 +1,51 @@
+---
+- name: Create cell0 mappings
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 map_cell0'
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "create_cell0_nova"
+    restart_policy: "never"
+    volumes: "{{ nova_api.volumes|reject('equalto', '')|list }}"
+  register: map_cell0
+  changed_when:
+    - map_cell0 is success
+    - '"Cell0 is already setup" not in map_cell0.stdout'
+  failed_when:
+    - map_cell0.rc != 0
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+
+- include_tasks: bootstrap_service.yml
+  when: map_cell0.changed
+
+- name: Create base cell for legacy instances
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 create_cell'
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "create_cell_nova"
+    restart_policy: "never"
+    volumes: "{{ nova_api.volumes|reject('equalto', '')|list }}"
+  register: base_cell
+  changed_when:
+    - base_cell is success
+  failed_when:
+    - base_cell.rc != 0
+    - '"already exists" not in base_cell.stdout'
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
