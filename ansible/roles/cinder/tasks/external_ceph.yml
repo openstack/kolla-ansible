@@ -1,22 +1,4 @@
 ---
-- name: Ensuring config directory exists
-  vars:
-    services_need_directory:
-      - "cinder-volume"
-      - "cinder-backup"
-  file:
-    path: "{{ node_config_directory }}/{{ item.key }}"
-    state: "directory"
-    owner: "{{ config_owner_user }}"
-    group: "{{ config_owner_group }}"
-    mode: "0770"
-  become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-    - item.key in services_need_directory
-  with_dict: "{{ cinder_services }}"
-
 - name: Copying over ceph.conf for Cinder
   vars:
     services_need_config:
