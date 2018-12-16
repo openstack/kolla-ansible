@@ -24,17 +24,6 @@ vitrage_services:
         mode: "http"
         external: true
         port: "{{ vitrage_api_port }}"
-  vitrage-collector:
-    container_name: vitrage_collector
-    group: vitrage-collector
-    enabled: true
-    image: "{{ vitrage_collector_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/vitrage-collector/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
-    dimensions: "{{ vitrage_collector_dimensions }}"
   vitrage-notifier:
     container_name: vitrage_notifier
     group: vitrage-notifier
@@ -95,17 +84,12 @@ vitrage_notifier_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 vitrage_notifier_tag: "{{ vitrage_tag }}"
 vitrage_notifier_image_full: "{{ vitrage_notifier_image }}:{{ vitrage_notifier_tag }}"
 
-vitrage_collector_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-collector"
-vitrage_collector_tag: "{{ vitrage_tag }}"
-vitrage_collector_image_full: "{{ vitrage_collector_image }}:{{ vitrage_collector_tag }}"
-
 vitrage_ml_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-ml"
 vitrage_ml_tag: "{{ vitrage_tag }}"
 vitrage_ml_image_full: "{{ vitrage_ml_image }}:{{ vitrage_ml_tag }}"
 
 vitrage_api_dimensions: "{{ default_container_dimensions }}"
 vitrage_notifier_dimensions: "{{ default_container_dimensions }}"
-vitrage_collector_dimensions: "{{ default_container_dimensions }}"
 vitrage_graph_dimensions: "{{ default_container_dimensions }}"
 vitrage_ml_dimensions: "{{ default_container_dimensions }}"
 
