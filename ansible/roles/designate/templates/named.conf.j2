@@ -2,6 +2,9 @@
 include "/etc/rndc.key";
 options {
         listen-on port {{ designate_bind_port }} { {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}; };
+        {% if api_interface != dns_interface %}
+        listen-on port {{ designate_bind_port }} { {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['dns_interface']]['ipv4']['address'] }}; };
+        {% endif %}
         directory       "/var/lib/named";
         allow-new-zones yes;
         dnssec-validation {{ designate_dnssec_validation }};
