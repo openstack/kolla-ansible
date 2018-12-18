@@ -19,7 +19,7 @@ nova_services:
       - "kolla_logs:/var/log/kolla/"
       - "libvirtd:/var/lib/libvirt"
       - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
-      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "nova_libvirt_qemu:/etc/libvirt/qemu"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_libvirt_dimensions }}"
@@ -33,7 +33,7 @@ nova_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla"
       - "{{ nova_instance_datadir_volume }}:/var/lib/nova"
-      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_ssh_dimensions }}"
   placement-api:
@@ -222,7 +222,7 @@ nova_services:
       - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
       - "libvirtd:/var/lib/libvirt"
       - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
-      - "{% if enable_cinder_backend_nfs | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
       - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
     dimensions: "{{ nova_compute_dimensions }}"
   nova-compute-ironic:
@@ -403,3 +403,9 @@ nova_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 nova_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 nova_dev_mode: "{{ kolla_dev_mode }}"
 nova_source_version: "{{ kolla_source_version }}"
+
+###################################
+# Enable Shared Bind Propogation
+###################################
+
+enable_shared_var_lib_nova_mnt: "{{ enable_cinder_backend_nfs | bool or enable_cinder_backend_quobyte | bool }}"

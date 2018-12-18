@@ -12,6 +12,7 @@ supported by kolla.
    external-ceph-guide
    cinder-guide
    cinder-guide-hnas
+   cinder-guide-quobyte
    manila-guide
    manila-hnas-guide
    swift-guide
