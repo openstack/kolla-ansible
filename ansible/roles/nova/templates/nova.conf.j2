@@ -170,8 +170,8 @@ memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansib
 
 
 [keystone_authtoken]
-www_authenticate_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+www_authenticate_uri = {{ keystone_internal_url }}
+auth_url = {{ keystone_admin_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -260,7 +260,7 @@ default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabi
 
 [placement]
 auth_type = password
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_url = {{ keystone_admin_url }}
 username = {{ placement_keystone_user }}
 password = {{ placement_keystone_password }}
 user_domain_name = {{ default_user_domain_name }}
@@ -284,7 +284,7 @@ connection_string = {{ osprofiler_backend_connection_string }}
 
 {% if enable_barbican | bool %}
 [barbican]
-auth_endpoint = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_endpoint = {{ keystone_internal_url }}
 {% endif %}
 
 {% if nova_compute_virt_type == "xenapi" %}

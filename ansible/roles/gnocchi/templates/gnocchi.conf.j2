@@ -42,13 +42,13 @@ workers = {{ gnocchi_metricd_workers }}
 url = mysql+pymysql://{{ gnocchi_database_user }}:{{ gnocchi_database_password }}@{{ gnocchi_database_address }}/{{ gnocchi_database_name }}
 
 [keystone_authtoken]
-www_authenticate_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+www_authenticate_uri = {{ keystone_internal_url }}/v3
 project_domain_id = {{ default_project_domain_id }}
 project_name = service
 user_domain_id = {{ default_user_domain_id }}
 username = {{ gnocchi_keystone_user }}
 password = {{ gnocchi_keystone_password }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_url = {{ keystone_admin_url }}
 auth_type = password
 
 memcache_security_strategy = ENCRYPT
@@ -78,7 +78,7 @@ ceph_keyring = /etc/ceph/ceph.client.gnocchi.keyring
 ceph_conffile = /etc/ceph/ceph.conf
 {% elif gnocchi_backend_storage == 'swift' %}
 driver = swift
-swift_authurl = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
+swift_authurl = {{ keystone_internal_url }}/v3
 swift_auth_version = 3
 swift_user = service:{{ swift_keystone_user }}
 swift_key = {{ swift_keystone_password }}
