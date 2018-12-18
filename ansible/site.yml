@@ -32,23 +32,109 @@
         - (ansible_play_batch | length) != (groups['all'] | length)
   tags: always
 
+# NOTE(mgoddard): In large environments, even tasks that are skipped can take a
+# significant amount of time. This is an optimisation to prevent any tasks
+# running in the subsequent plays for services that are disabled.
+- name: Group hosts based on configuration
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Group hosts based on OpenStack release
+      group_by:
+        key: "openstack_release_{{ openstack_release }}"
+
+    - name: Group hosts based on Kolla action
+      group_by:
+        key: "kolla_action_{{ kolla_action }}"
+
+    - name: Group hosts based on enabled services
+      group_by:
+        key: "{{ item }}"
+      with_items:
+        - enable_aodh_{{ enable_aodh | bool }}
+        - enable_barbican_{{ enable_barbican | bool }}
+        - enable_blazar_{{ enable_blazar | bool }}
+        - enable_ceilometer_{{ enable_ceilometer | bool }}
+        - enable_ceph_{{ enable_ceph | bool }}
+        - enable_chrony_{{ enable_chrony | bool }}
+        - enable_cinder_{{ enable_cinder | bool }}
+        - enable_cloudkitty_{{ enable_cloudkitty | bool }}
+        - enable_collectd_{{ enable_collectd | bool }}
+        - enable_congress_{{ enable_congress | bool }}
+        - enable_designate_{{ enable_designate | bool }}
+        - enable_elasticsearch_{{ enable_elasticsearch | bool }}
+        - enable_etcd_{{ enable_etcd | bool }}
+        - enable_freezer_{{ enable_freezer | bool }}
+        - enable_glance_{{ enable_glance | bool }}
+        - enable_gnocchi_{{ enable_gnocchi | bool }}
+        - enable_grafana_{{ enable_grafana | bool }}
+        - enable_haproxy_{{ enable_haproxy | bool }}
+        - enable_heat_{{ enable_heat | bool }}
+        - enable_horizon_{{ enable_horizon | bool }}
+        - enable_hyperv_{{ enable_hyperv | bool }}
+        - enable_influxdb_{{ enable_influxdb | bool }}
+        - enable_ironic_{{ enable_ironic | bool }}
+        - enable_iscsid_{{ enable_iscsid | bool }}
+        - enable_kafka_{{ enable_kafka | bool }}
+        - enable_karbor_{{ enable_karbor | bool }}
+        - enable_keystone_{{ enable_keystone | bool }}
+        - enable_kibana_{{ enable_kibana | bool }}
+        - enable_kuryr_{{ enable_kuryr | bool }}
+        - enable_magnum_{{ enable_magnum | bool }}
+        - enable_manila_{{ enable_manila | bool }}
+        - enable_mariadb_{{ enable_mariadb | bool }}
+        - enable_memcached_{{ enable_memcached | bool }}
+        - enable_mistral_{{ enable_mistral | bool }}
+        - enable_monasca_{{ enable_monasca | bool }}
+        - enable_mongodb_{{ enable_mongodb | bool }}
+        - enable_multipathd_{{ enable_multipathd | bool }}
+        - enable_murano_{{ enable_murano | bool }}
+        - enable_neutron_{{ enable_neutron | bool }}
+        - enable_nova_{{ enable_nova | bool }}
+        - enable_octavia_{{ enable_octavia | bool }}
+        - enable_opendaylight_{{ enable_opendaylight | bool }}
+        - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
+        - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
+        - enable_panko_{{ enable_panko | bool }}
+        - enable_prometheus_{{ enable_prometheus | bool }}
+        - enable_qdrouterd_{{ enable_qdrouterd | bool }}
+        - enable_rabbitmq_{{ enable_rabbitmq | bool }}
+        - enable_rally_{{ enable_rally | bool }}
+        - enable_redis_{{ enable_redis | bool }}
+        - enable_sahara_{{ enable_sahara | bool }}
+        - enable_searchlight_{{ enable_searchlight | bool }}
+        - enable_senlin_{{ enable_senlin | bool }}
+        - enable_skydive_{{ enable_skydive | bool }}
+        - enable_solum_{{ enable_solum | bool }}
+        - enable_swift_{{ enable_swift | bool }}
+        - enable_tacker_{{ enable_tacker | bool }}
+        - enable_telegraf_{{ enable_telegraf | bool }}
+        - enable_tempest_{{ enable_tempest | bool }}
+        - enable_trove_{{ enable_trove | bool }}
+        - enable_vitrage_{{ enable_vitrage | bool }}
+        - enable_vmtp_{{ enable_vmtp | bool }}
+        - enable_watcher_{{ enable_watcher | bool }}
+        - enable_zookeeper_{{ enable_zookeeper | bool }}
+        - enable_zun_{{ enable_zun | bool }}
+  tags: always
+
 - import_playbook: detect-release.yml
   vars:
-    detect_release_hosts: all
+    detect_release_hosts: openstack_release_auto
 
 - name: Apply role prechecks
   gather_facts: false
-  hosts:
-    - all
+  # Apply only when kolla action is 'precheck'.
+  hosts: kolla_action_precheck
   roles:
     - role: prechecks
-      when: kolla_action == "precheck"
 
 - name: Apply role chrony
   gather_facts: false
   hosts:
     - chrony-server
     - chrony
+    - '&enable_chrony_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: chrony,
@@ -59,6 +145,7 @@
   gather_facts: false
   hosts:
     - haproxy
+    - '&enable_haproxy_True'
   roles:
     - { role: haproxy,
         tags: haproxy,
@@ -304,7 +391,9 @@
 
 - name: Apply role collectd
   gather_facts: false
-  hosts: collectd
+  hosts:
+    - collectd
+    - '&enable_collectd_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: collectd,
@@ -313,7 +402,9 @@
 
 - name: Apply role zookeeper
   gather_facts: false
-  hosts: zookeeper
+  hosts:
+    - zookeeper
+    - '&enable_zookeeper_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: zookeeper,
@@ -322,7 +413,9 @@
 
 - name: Apply role elasticsearch
   gather_facts: false
-  hosts: elasticsearch
+  hosts:
+    - elasticsearch
+    - '&enable_elasticsearch_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: elasticsearch,
@@ -331,7 +424,9 @@
 
 - name: Apply role influxdb
   gather_facts: false
-  hosts: influxdb
+  hosts:
+    - influxdb
+    - '&enable_influxdb_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: influxdb,
@@ -342,6 +437,7 @@
   gather_facts: false
   hosts:
     - telegraf
+    - '&enable_telegraf_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: telegraf,
@@ -352,6 +448,7 @@
   gather_facts: false
   hosts:
     - redis
+    - '&enable_redis_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: redis,
@@ -360,7 +457,9 @@
 
 - name: Apply role kibana
   gather_facts: false
-  hosts: kibana
+  hosts:
+    - kibana
+    - '&enable_kibana_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: kibana,
@@ -369,7 +468,9 @@
 
 - name: Apply role mariadb
   gather_facts: false
-  hosts: mariadb
+  hosts:
+    - mariadb
+    - '&enable_mariadb_True'
   roles:
     - { role: mariadb,
         tags: mariadb,
@@ -377,7 +478,9 @@
 
 - name: Apply role memcached
   gather_facts: false
-  hosts: memcached
+  hosts:
+    - memcached
+    - '&enable_memcached_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: memcached,
@@ -392,6 +495,7 @@
     - prometheus-mysqld-exporter
     - prometheus-haproxy-exporter
     - prometheus-cadvisor
+    - '&enable_prometheus_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: prometheus,
@@ -403,6 +507,7 @@
   hosts:
     - iscsid
     - tgtd
+    - '&enable_iscsid_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: iscsi,
@@ -413,6 +518,7 @@
   gather_facts: false
   hosts:
     - multipathd
+    - '&enable_multipathd_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: multipathd,
@@ -421,7 +527,9 @@
 
 - name: Apply role rabbitmq
   gather_facts: false
-  hosts: rabbitmq
+  hosts:
+    - rabbitmq
+    - '&enable_rabbitmq_True'
   roles:
     - { role: rabbitmq,
         tags: rabbitmq,
@@ -439,7 +547,9 @@
 
 - name: Apply role rabbitmq (outward)
   gather_facts: false
-  hosts: outward-rabbitmq
+  hosts:
+    - outward-rabbitmq
+    - '&enable_outward_rabbitmq_True'
   roles:
     - { role: rabbitmq,
         tags: rabbitmq,
@@ -456,7 +566,9 @@
 
 - name: Apply role qdrouterd
   gather_facts: false
-  hosts: qdrouterd
+  hosts:
+    - qdrouterd
+    - '&enable_qdrouterd_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: qdrouterd,
@@ -465,7 +577,9 @@
 
 - name: Apply role etcd
   gather_facts: false
-  hosts: etcd
+  hosts:
+    - etcd
+    - '&enable_etcd_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: etcd,
@@ -474,7 +588,9 @@
 
 - name: Apply role keystone
   gather_facts: false
-  hosts: keystone
+  hosts:
+    - keystone
+    - '&enable_keystone_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: keystone,
@@ -490,6 +606,7 @@
     - ceph-nfs
     - ceph-osd
     - ceph-rgw
+    - '&enable_ceph_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: ceph,
@@ -498,7 +615,9 @@
 
 - name: Apply role kafka
   gather_facts: false
-  hosts: kafka
+  hosts:
+    - kafka
+    - '&enable_kafka_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: kafka,
@@ -518,7 +637,9 @@
 
 - name: Apply role karbor
   gather_facts: false
-  hosts: karbor
+  hosts:
+    - karbor
+    - '&enable_karbor_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: karbor,
@@ -532,6 +653,7 @@
     - swift-container-server
     - swift-object-server
     - swift-proxy-server
+    - '&enable_swift_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: swift,
@@ -544,6 +666,7 @@
     - ceph-mon
     - glance-api
     - glance-registry
+    - '&enable_glance_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: glance,
@@ -557,6 +680,7 @@
     - ironic-conductor
     - ironic-inspector
     - ironic-pxe
+    - '&enable_ironic_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: ironic,
@@ -571,6 +695,7 @@
     - cinder-backup
     - cinder-scheduler
     - cinder-volume
+    - '&enable_cinder_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: cinder,
@@ -587,6 +712,7 @@
     - nova-consoleauth
     - nova-novncproxy
     - nova-scheduler
+    - '&enable_nova_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: nova,
@@ -595,7 +721,9 @@
 
 - name: Apply role opendaylight
   gather_facts: false
-  hosts: opendaylight
+  hosts:
+    - opendaylight
+    - '&enable_opendaylight_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: opendaylight,
@@ -606,6 +734,7 @@
   gather_facts: false
   hosts:
     - openvswitch
+    - '&enable_openvswitch_True_enable_ovs_dpdk_False'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: openvswitch,
@@ -616,6 +745,7 @@
   gather_facts: false
   hosts:
     - openvswitch
+    - '&enable_openvswitch_True_enable_ovs_dpdk_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: ovs-dpdk,
@@ -626,6 +756,7 @@
   gather_facts: false
   hosts:
     - hyperv
+    - '&enable_hyperv_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: nova-hyperv,
@@ -646,6 +777,7 @@
     - neutron-metering-agent
     - compute
     - manila-share
+    - '&enable_neutron_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: neutron,
@@ -656,6 +788,7 @@
   gather_facts: false
   hosts:
     - compute
+    - '&enable_kuryr_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: kuryr,
@@ -668,6 +801,7 @@
     - heat-api
     - heat-api-cfn
     - heat-engine
+    - '&enable_heat_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: heat,
@@ -678,6 +812,7 @@
   gather_facts: false
   hosts:
     - horizon
+    - '&enable_horizon_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: horizon,
@@ -689,6 +824,7 @@
   hosts:
     - murano-api
     - murano-engine
+    - '&enable_murano_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: murano,
@@ -702,6 +838,7 @@
     - solum-worker
     - solum-deployer
     - solum-conductor
+    - '&enable_solum_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: solum,
@@ -713,6 +850,7 @@
   hosts:
     - magnum-api
     - magnum-conductor
+    - '&enable_magnum_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: magnum,
@@ -725,6 +863,7 @@
     - mistral-api
     - mistral-engine
     - mistral-executor
+    - '&enable_mistral_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: mistral,
@@ -736,6 +875,7 @@
   hosts:
     - sahara-api
     - sahara-engine
+    - '&enable_sahara_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: sahara,
@@ -746,6 +886,7 @@
   gather_facts: false
   hosts:
     - mongodb
+    - '&enable_mongodb_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: mongodb,
@@ -754,7 +895,9 @@
 
 - name: Apply role panko
   gather_facts: false
-  hosts: panko-api
+  hosts:
+    - panko-api
+    - '&enable_panko_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: panko,
@@ -769,6 +912,7 @@
     - manila-data
     - manila-share
     - manila-scheduler
+    - '&enable_manila_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: manila,
@@ -782,6 +926,7 @@
     - gnocchi-api
     - gnocchi-metricd
     - gnocchi-statsd
+    - '&enable_gnocchi_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: gnocchi,
@@ -796,6 +941,7 @@
     - ceilometer-central
     - ceilometer-notification
     - ceilometer-compute
+    - '&enable_ceilometer_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: ceilometer,
@@ -816,6 +962,7 @@
     - monasca-thresh
     - monasca-notification
     - monasca-persister
+    - '&enable_monasca_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: monasca,
@@ -829,6 +976,7 @@
     - aodh-evaluator
     - aodh-listener
     - aodh-notifier
+    - '&enable_aodh_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: aodh,
@@ -841,6 +989,7 @@
     - barbican-api
     - barbican-keystone-listener
     - barbican-worker
+    - '&enable_barbican_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: barbican,
@@ -853,6 +1002,7 @@
     - congress-api
     - congress-policy-engine
     - congress-datasource
+    - '&enable_congress_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: congress,
@@ -863,6 +1013,7 @@
   gather_facts: false
   hosts:
     - tempest
+    - '&enable_tempest_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: tempest,
@@ -879,6 +1030,7 @@
     - designate-worker
     - designate-sink
     - designate-backend-bind9
+    - '&enable_designate_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: designate,
@@ -887,7 +1039,9 @@
 
 - name: Apply role rally
   gather_facts: false
-  hosts: rally
+  hosts:
+    - rally
+    - '&enable_rally_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: rally,
@@ -898,6 +1052,7 @@
   gather_facts: false
   hosts:
     - vmtp
+    - '&enable_vmtp_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: vmtp,
@@ -910,6 +1065,7 @@
     - trove-api
     - trove-conductor
     - trove-taskmanager
+    - '&enable_trove_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: trove,
@@ -922,6 +1078,7 @@
     - watcher-api
     - watcher-engine
     - watcher-applier
+    - '&enable_watcher_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: watcher,
@@ -932,6 +1089,7 @@
   gather_facts: false
   hosts:
     - grafana
+    - '&enable_grafana_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: grafana,
@@ -943,6 +1101,7 @@
   hosts:
     - cloudkitty-api
     - cloudkitty-processor
+    - '&enable_cloudkitty_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: cloudkitty,
@@ -954,6 +1113,7 @@
   hosts:
     - freezer-api
     - freezer-scheduler
+    - '&enable_freezer_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: freezer,
@@ -965,6 +1125,7 @@
   hosts:
     - senlin-api
     - senlin-engine
+    - '&enable_senlin_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: senlin,
@@ -976,6 +1137,7 @@
   hosts:
     - searchlight-api
     - searchlight-listener
+    - '&enable_searchlight_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: searchlight,
@@ -987,6 +1149,7 @@
   hosts:
     - tacker-server
     - tacker-conductor
+    - '&enable_tacker_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: tacker,
@@ -1000,6 +1163,7 @@
     - octavia-health-manager
     - octavia-housekeeping
     - octavia-worker
+    - '&enable_octavia_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: octavia,
@@ -1012,6 +1176,7 @@
     - zun-api
     - zun-wsproxy
     - zun-compute
+    - '&enable_zun_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: zun,
@@ -1023,6 +1188,7 @@
   hosts:
     - skydive-agent
     - skydive-analyzer
+    - '&enable_skydive_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: skydive,
@@ -1037,6 +1203,7 @@
     - vitrage-notifier
     - vitrage-collector
     - vitrage-ml
+    - '&enable_vitrage_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: vitrage,
@@ -1048,6 +1215,7 @@
   hosts:
     - blazar-api
     - blazar-manager
+    - '&enable_blazar_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
     - { role: blazar,
