@@ -1,18 +1,19 @@
 ---
 - name: Ensuring config directories exist
+  become: true
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  become: true
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ prometheus_services }}"
 
 - name: Copying over config.json files
+  become: true
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
@@ -25,6 +26,7 @@
     - Restart {{ item.key }} container
 
 - name: Find custom prometheus alert rules files
+  become: true
   local_action:
     module: find
     path: "{{ node_custom_config }}/prometheus/"
@@ -35,6 +37,7 @@
     - enable_prometheus_alertmanager | bool
 
 - name: Copying over custom prometheus alert rules files
+  become: true
   vars:
     service: "{{ prometheus_services['prometheus-server']}}"
   copy:
@@ -51,6 +54,7 @@
     - Restart prometheus-server container
 
 - name: Copying over prometheus config file
+  become: true
   vars:
     service: "{{ prometheus_services['prometheus-server']}}"
   template:
@@ -68,6 +72,7 @@
     - Restart prometheus-server container
 
 - name: Copying over prometheus alertmanager config file
+  become: true
   vars:
     service: "{{ prometheus_services['prometheus-alertmanager']}}"
   template:
@@ -85,6 +90,7 @@
     - Restart prometheus-alertmanager container
 
 - name: Copying over my.cnf for mysqld_exporter
+  become: true
   vars:
     service: "{{ prometheus_services['prometheus-mysqld-exporter']}}"
   merge_configs:
