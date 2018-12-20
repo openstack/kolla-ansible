@@ -47,8 +47,10 @@ interface = internal
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool %}
+{% if aodh_enabled_notification_topics %}
 driver = messagingv2
-topics = notifications
+topics = {{ aodh_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
 {% endif %}
 
