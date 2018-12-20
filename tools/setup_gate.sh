@@ -45,7 +45,7 @@ EOF
     fi
 
     if [[ $ACTION == "zun" ]]; then
-        GATE_IMAGES+=",zun,kuryr"
+        GATE_IMAGES+=",zun,kuryr,etcd"
     fi
 
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf

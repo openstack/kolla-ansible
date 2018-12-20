@@ -37,7 +37,7 @@ copy_logs() {
     ps -eo user,pid,ppid,lwp,%cpu,%mem,size,rss,cmd > ${LOG_DIR}/system_logs/ps.txt
 
     # docker related information
-    (docker info && docker images && docker ps -a) > ${LOG_DIR}/system_logs/docker-info.txt
+    (docker info && docker images && docker ps -a && docker network ls) > ${LOG_DIR}/system_logs/docker-info.txt
 
     # ceph related logs
     if [[ $(docker ps --filter name=ceph_mon --format "{{.Names}}") ]]; then
