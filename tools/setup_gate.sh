@@ -48,6 +48,10 @@ EOF
         GATE_IMAGES+=",zun,kuryr,etcd"
     fi
 
+    if [[ $ACTION == "scenario_nfv" ]]; then
+        GATE_IMAGES+=",tacker,mistral,redis,barbican"
+    fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header

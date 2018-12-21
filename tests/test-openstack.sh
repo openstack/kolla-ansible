@@ -8,20 +8,10 @@ export PYTHONUNBUFFERED=1
 
 
 function test_openstack_logged {
-    # Wait for service ready
-    sleep 15
-
     . /etc/kolla/admin-openrc.sh
 
     openstack --debug compute service list
     openstack --debug network agent list
-
-    if ! openstack image show cirros >/dev/null 2>&1; then
-        echo "Initialising OpenStack resources via init-runonce"
-        tools/init-runonce
-    else
-        echo "Not running init-runonce - resources exist"
-    fi
 
     echo "TESTING: Server creation"
     openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net kolla_boot_test
