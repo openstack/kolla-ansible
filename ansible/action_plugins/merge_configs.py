@@ -15,6 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
+import inspect
+import os
+import shutil
+import tempfile
+
+from ansible import constants
+from ansible.plugins import action
+from six import StringIO
+
+from oslo_config import iniparser
+
+_ORPHAN_SECTION = 'TEMPORARY_ORPHAN_VARIABLE_SECTION'
+
 DOCUMENTATION = '''
 ---
 module: merge_configs
@@ -50,20 +64,6 @@ Merge multiple configs:
         dest:
           - "/etc/mysql/my.cnf"
 '''
-
-import collections
-import inspect
-import os
-import shutil
-import tempfile
-
-from ansible import constants
-from ansible.plugins import action
-from six import StringIO
-
-from oslo_config import iniparser
-
-_ORPHAN_SECTION = 'TEMPORARY_ORPHAN_VARIABLE_SECTION'
 
 
 class OverrideConfigParser(iniparser.BaseParser):

@@ -15,6 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+import os
+import shutil
+import tempfile
+
+from yaml import dump
+from yaml import safe_load
+try:
+    from yaml import CDumper as Dumper  # noqa: F401
+    from yaml import CLoader as Loader  # noqa: F401
+except ImportError:
+    from yaml import Dumper  # noqa: F401
+    from yaml import Loader  # noqa: F401
+
+
+from ansible import constants
+from ansible.plugins import action
+import six
+
 DOCUMENTATION = '''
 ---
 module: merge_yaml
@@ -49,25 +68,6 @@ Merge multiple yaml files:
         dest:
           - "/tmp/out.yml"
 '''
-
-import inspect
-import os
-import shutil
-import tempfile
-
-from yaml import dump
-from yaml import safe_load
-try:
-    from yaml import CDumper as Dumper  # noqa: F401
-    from yaml import CLoader as Loader  # noqa: F401
-except ImportError:
-    from yaml import Dumper  # noqa: F401
-    from yaml import Loader  # noqa: F401
-
-
-from ansible import constants
-from ansible.plugins import action
-import six
 
 
 class ActionModule(action.ActionBase):

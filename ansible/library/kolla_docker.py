@@ -14,6 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import os
+import shlex
+import traceback
+
+import docker
+
+from ansible.module_utils.basic import AnsibleModule
+
 DOCUMENTATION = '''
 ---
 module: kolla_docker
@@ -216,13 +225,6 @@ EXAMPLES = '''
         action: remove_image
         image: name_of_image
 '''
-
-import json
-import os
-import shlex
-import traceback
-
-import docker
 
 
 def get_docker_client():
@@ -938,7 +940,5 @@ def main():
         module.fail_json(changed=True, msg=repr(traceback.format_exc()),
                          **dw.result)
 
-# import module snippets
-from ansible.module_utils.basic import *  # noqa
 if __name__ == '__main__':
     main()
