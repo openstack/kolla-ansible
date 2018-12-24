@@ -45,12 +45,12 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [service_credentials]
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}/v3
 region_name = {{ openstack_region_name }}
 auth_type = password
 project_domain_id = default
 user_domain_id = default
-project_name = service
+project_name = admin
 password = {{ vitrage_keystone_password }}
 username = {{ vitrage_keystone_user }}
 interface = internal
