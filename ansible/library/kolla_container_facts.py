@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import docker
+
+from ansible.module_utils.basic import AnsibleModule
+
 DOCUMENTATION = '''
 ---
 module: kolla_container_facts
@@ -49,8 +54,6 @@ EXAMPLES = '''
           - glance_registry
 '''
 
-import docker
-
 
 def get_docker_client():
     return docker.APIClient
@@ -81,6 +84,5 @@ def main():
     module.exit_json(**results)
 
 
-from ansible.module_utils.basic import *  # noqa
 if __name__ == "__main__":
     main()

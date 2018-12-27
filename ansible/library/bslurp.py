@@ -17,6 +17,14 @@
 # This module has been relicensed from the source below:
 # https://github.com/SamYaple/yaodu/blob/master/ansible/library/bslurp
 
+import base64
+import hashlib
+import os
+import traceback
+import zlib
+
+from ansible.module_utils.basic import AnsibleModule
+
 DOCUMENTATION = '''
 ---
 module: bslurp
@@ -107,12 +115,6 @@ permissions on dest:
         sha1: "{{ file_data.sha1 }}"
 '''
 
-import base64
-import hashlib
-import os
-import traceback
-import zlib
-
 
 def copy_from_host(module):
     compress = module.params.get('compress')
@@ -187,7 +189,5 @@ def main():
                          msg=repr(traceback.format_exc()))
 
 
-# import module snippets
-from ansible.module_utils.basic import *  # noqa
 if __name__ == '__main__':
     main()

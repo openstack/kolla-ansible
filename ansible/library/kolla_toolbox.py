@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import docker
+import json
+import re
+
+from ansible.module_utils.basic import AnsibleModule
+
 DOCUMENTATION = '''
 ---
 module: kolla_toolbox
@@ -82,11 +88,6 @@ EXAMPLES = '''
             project_name: "admin"
             domain_name: "default"
 '''
-
-
-import docker
-import json
-import re
 
 
 JSON_REG = re.compile('^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
@@ -158,6 +159,5 @@ def main():
     module.exit_json(**ret)
 
 
-from ansible.module_utils.basic import *  # noqa
 if __name__ == "__main__":
     main()
