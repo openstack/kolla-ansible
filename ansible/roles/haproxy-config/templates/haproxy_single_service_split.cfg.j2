@@ -45,7 +45,7 @@ frontend {{ service_name }}_front
     {% endif %}
 {% endmacro %}
 
-{%- macro backend_macro(service_name, service_port, service_mode, host_group,
+{%- macro backend_macro(service_name, listen_port, service_mode, host_group,
                         custom_member_list, backend_http_extra,
                         backend_tcp_extra, auth_user, auth_pass) %}
 backend {{ service_name }}_back
@@ -77,7 +77,7 @@ backend {{ service_name }}_back
             {% set api_interface = "ansible_%s"|format(hostvars[host]['api_interface']) %}
             {% set host_name = hostvars[host]['ansible_hostname'] %}
             {% set host_ip = hostvars[host][api_interface]['ipv4']['address'] %}
-    server {{ host_name }} {{ host_ip }}:{{ service_port }} {{ haproxy_health_check }}
+    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check }}
         {% endfor %}
     {% endif %}
 {% endmacro %}
@@ -89,6 +89,8 @@ backend {{ service_name }}_back
     {# Skip anything that is external when the external vip is not enabled #}
     {% if haproxy_service.enabled|bool and (not external or haproxy_enable_external_vip|bool)%}
         {# Here we define variables and their defaults #}
+        {# services can be listening on a different port than haproxy #}
+        {% set listen_port = haproxy_service.listen_port|default(haproxy_service.port) %}
         {# Custom member list can use jinja to generate a semicolon separated list #}
         {% set custom_member_list = haproxy_service.custom_member_list|default() %}
         {# Mode defaults to http #}
@@ -110,7 +112,7 @@ backend {{ service_name }}_back
                   frontend_http_extra, frontend_tcp_extra) }}
         {# Redirect (to https) is a special case, as it does not include a backend #}
         {% if haproxy_service.mode != 'redirect' %}
-{{ backend_macro(haproxy_name, haproxy_service.port, mode, host_group,
+{{ backend_macro(haproxy_name, listen_port, mode, host_group,
                  custom_member_list, backend_http_extra, backend_tcp_extra,
                  auth_user, auth_pass) }}
         {% endif %}

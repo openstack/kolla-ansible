@@ -6,7 +6,8 @@ userlist {{ service_name }}-user
   user {{ auth_user }} insecure-password {{ auth_pass }}
 {% endmacro %}
 
-{%- macro listen_macro(service_name, service_port, service_mode, external,
+{%- macro listen_macro(service_name, service_port, listen_port,
+                       service_mode, external,
                        haproxy_http_extra, haproxy_tcp_extra, host_group,
                        custom_member_list, auth_user, auth_pass) %}
 listen {{ service_name }}
@@ -56,7 +57,7 @@ listen {{ service_name }}
                 {% set api_interface = "ansible_%s"|format(hostvars[host]['api_interface']) %}
                 {% set host_name = hostvars[host]['ansible_hostname'] %}
                 {% set host_ip = hostvars[host][api_interface]['ipv4']['address'] %}
-    server {{ host_name }} {{ host_ip }}:{{ service_port }} {{ haproxy_health_check }}
+    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check }}
             {% endfor %}
         {% endif %}
     {% endif %}
@@ -69,6 +70,8 @@ listen {{ service_name }}
     {# Skip anything that is external when the external vip is not enabled #}
     {% if haproxy_service.enabled|bool and (not external or haproxy_enable_external_vip|bool)%}
         {# Here we define variables and their defaults #}
+        {# services can be listening on a different port than haproxy #}
+        {% set listen_port = haproxy_service.listen_port|default(haproxy_service.port) %}
         {# Custom member list can use jinja to generate a semicolon separated list #}
         {% set custom_member_list = haproxy_service.custom_member_list|default(none) %}
         {# Mode defaults to http #}
@@ -84,8 +87,8 @@ listen {{ service_name }}
         {% if auth_user and auth_pass %}
 {{ userlist_macro(haproxy_name, auth_user, auth_pass) }}
         {% endif %}
-{{ listen_macro(haproxy_name, haproxy_service.port, mode, external,
-                haproxy_http_extra, haproxy_tcp_extra, host_group,
-                custom_member_list, auth_user, auth_pass) }}
+{{ listen_macro(haproxy_name, haproxy_service.port, listen_port,
+                mode, external, haproxy_http_extra, haproxy_tcp_extra,
+                host_group, custom_member_list, auth_user, auth_pass) }}
     {% endif %}
 {%- endfor -%}
