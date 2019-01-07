@@ -1,6 +1,6 @@
 ---
 - name: Creating Panko MongoDB database
-  command: docker exec -t mongodb mongo --host {{ panko_database_mongodb_address }} --eval 'db = db.getSiblingDB("{{ panko_database_name }}"); db.createUser({user':' "{{ panko_database_user }}", pwd':' "{{ panko_database_password }}", roles':' [ "readWrite", "dbAdmin" ]})'
+  command: docker exec -t mongodb mongo --host {{ mongodb_replication_set_name }}/{{ panko_database_mongodb_address }} --eval 'db = db.getSiblingDB("{{ panko_database_name }}"); db.createUser({user':' "{{ panko_database_user }}", pwd':' "{{ panko_database_password }}", roles':' [ "readWrite", "dbAdmin" ]})'
   register: mongodb_panko_database
   run_once: true
   changed_when: mongodb_panko_database.stdout.find('already') == -1
