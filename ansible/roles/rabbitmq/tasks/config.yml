@@ -27,22 +27,63 @@
     - Restart rabbitmq container (first node)
     - Restart rabbitmq container (rest of nodes)
 
-- name: Copying over rabbitmq configs
+- name: Copying over rabbitmq-env.conf
+  become: true
   vars:
     service: "{{ rabbitmq_services['rabbitmq'] }}"
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ node_config_directory }}/{{ project_name }}/{{ item }}"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/rabbitmq-env.conf"
     mode: "0770"
-  become: true
-  register: rabbitmq_confs
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/rabbitmq-env.conf"
+    - "{{ node_custom_config }}/rabbitmq/rabbitmq-env.conf"
+    - "rabbitmq-env.conf.j2"
+  register: rabbitmq_env_conf
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-  with_items:
-    - "rabbitmq-env.conf"
-    - "rabbitmq.conf"
-    - "definitions.json"
+  notify:
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
+
+
+- name: Copying over rabbitmq.conf
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/rabbitmq.conf"
+    mode: "0770"
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/rabbitmq.conf"
+    - "{{ node_custom_config }}/rabbitmq/rabbitmq.conf"
+    - "rabbitmq.conf.j2"
+  register: rabbitmq_config
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
+
+- name: Copying over definitions.json
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/definitions.json"
+    mode: "0770"
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/definitions.json"
+    - "{{ node_custom_config }}/rabbitmq/definitions.json"
+    - "definitions.json.j2"
+  register: rabbitmq_definitions
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   notify:
     - Restart rabbitmq container (first node)
     - Restart rabbitmq container (rest of nodes)
