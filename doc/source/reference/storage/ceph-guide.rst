@@ -176,6 +176,12 @@ RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
    enable_ceph_rgw: "yes"
 
+You can enable RadosGW to be registered as Swift in Keystone catalog:
+
+.. code-block:: yaml
+
+   enable_ceph_rgw_keystone: "yes"
+
 .. note::
 
     By default RadosGW supports both Swift and S3 API, and it is not
