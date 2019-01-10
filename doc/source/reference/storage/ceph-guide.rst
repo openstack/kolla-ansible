@@ -237,6 +237,21 @@ Finally deploy the Ceph-enabled OpenStack:
 
    kolla-ansible deploy -i path/to/inventory
 
+.. note::
+
+   Kolla Ceph supports mixed Ceph OSD deployment, i.e. some Ceph OSDs are
+   bluestore, the others are filestore. The ``ceph_osd_store_type`` of each
+   Ceph OSD can be configured under ``[storage]`` in the multinode inventory
+   file. The Ceph OSD store type is unique in one storage node. For example:
+
+.. code-block:: ini
+
+   [storage]
+   storage_node1_hostname ceph_osd_store_type=bluestore
+   storage_node2_hostname ceph_osd_store_type=bluestore
+   storage_node3_hostname ceph_osd_store_type=filestore
+   storage_node4_hostname ceph_osd_store_type=filestore
+
 Using Cache Tiering
 -------------------
 
