@@ -86,8 +86,9 @@ been issues reported with using this option however, so use it at your own
 risk.
 
 Ensure that any operation that causes the Docker engine to be updated has been
-tested, particuarly when moving from legacy Docker packages to Docker Community
-Edition. See :ref:`bootstrap-servers-docker-package-repos` for details.
+tested, particularly when moving from legacy Docker packages to Docker
+Community Edition. See :ref:`bootstrap-servers-docker-package-repos` for
+details.
 
 Customisation of ``/etc/hosts``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -201,7 +202,7 @@ virtual environment to create.  By default, a virtual environment is not used.
 If ``virtualenv_site_packages`` is set, (default is ``true``) the virtual
 environment will inherit packages from the global site-packages directory. This
 is typically required for modules such as yum and apt which are not available
-on PyPI. See :ref:`virtual-environments-target-hosts` for futher information.
+on PyPI. See :ref:`virtual-environments-target-hosts` for further information.
 
 Configuration of Apparmor
 ~~~~~~~~~~~~~~~~~~~~~~~~~
