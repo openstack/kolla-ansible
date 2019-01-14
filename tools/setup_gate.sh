@@ -41,12 +41,16 @@ if echo $ACTION | grep -q "ceph"; then
 GATE_IMAGES+=",ceph,cinder"
 fi
 
+    # Use the kolla-ansible tag rather than the kolla tag, since this is what
+    # kolla-ansible will use by default.
+    TAG=$(python -c "import pbr.version; print(pbr.version.VersionInfo('kolla-ansible'))")
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
 namespace = lokolla
 base = ${BASE_DISTRO}
 install_type = ${INSTALL_TYPE}
+tag = ${TAG}
 profile = gate
 registry = 127.0.0.1:4000
 push = true
