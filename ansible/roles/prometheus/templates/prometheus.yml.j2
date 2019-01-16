@@ -75,6 +75,17 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
+{% if enable_prometheus_openstack_exporter | bool %}
+  - job_name: openstack_exporter
+    scrape_interval: {{ prometheus_openstack_exporter_interval }}
+    honor_labels: true
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-openstack-exporter"] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_openstack_exporter_port'] }}'
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
 alerting:
   alertmanagers:

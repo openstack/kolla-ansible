@@ -106,6 +106,23 @@
   notify:
     - Restart prometheus-mysqld-exporter container
 
+- name: Copying cloud config file for openstack exporter
+  vars:
+    service: "{{ prometheus_services['prometheus-openstack-exporter'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-openstack-exporter/clouds.yml"
+  register: prometheus_openstack_exporter_confs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus-openstack-exporter/{{ inventory_hostname }}/clouds.yml"
+    - "{{ node_custom_config }}/prometheus-openstack-exporter/clouds.yml"
+    - "{{ role_path }}/templates/clouds.yml.j2"
+  notify:
+    - Restart prometheus-openstack-exporter container
+
 - name: Check prometheus containers
   become: true
   kolla_docker:
