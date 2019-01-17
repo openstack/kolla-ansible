@@ -17,3 +17,12 @@
     - container_facts['iscsid'] is not defined
     - inventory_hostname in groups[iscsi_services.iscsid.group]
     - iscsi_services.iscsid.enabled | bool
+
+- name: Check supported platforms for tgtd
+  fail:
+    msg:
+      The SCSI target daemon tgtd is not supported on CentOS/RHEL 8 and later
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version is version_compare('8', '>=')
+    - enable_tgtd | bool

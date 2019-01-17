@@ -40,11 +40,17 @@ function setup_config {
     fi
 
     if [[ $SCENARIO == "cinder-lvm" ]]; then
-        GATE_IMAGES+=",cinder,iscsid,tgtd"
+        GATE_IMAGES+=",cinder,iscsid"
+        if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
+            GATE_IMAGES+=",tgtd"
+        fi
     fi
 
     if [[ $SCENARIO == "zun" ]]; then
-        GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid,tgtd"
+        GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid"
+        if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
+            GATE_IMAGES+=",tgtd"
+        fi
     fi
 
     if [[ $SCENARIO == "scenario_nfv" ]]; then
