@@ -24,7 +24,7 @@ function test_openstack_logged {
     fi
     echo "SUCCESS: Server creation"
 
-    if echo $ACTION | grep -q "ceph"; then
+    if [[ $ACTION = "ceph" ]] || [[ $ACTION == "cinder-lvm" ]]; then
         echo "TESTING: Cinder volume attachment"
         openstack volume create --size 2 test_volume
         openstack server add volume kolla_boot_test test_volume --device /dev/vdb

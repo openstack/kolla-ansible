@@ -44,6 +44,10 @@ EOF
         GATE_IMAGES+=",ceph,cinder"
     fi
 
+    if [[ $ACTION == "cinder-lvm" ]]; then
+        GATE_IMAGES+=",cinder,iscsid,tgtd"
+    fi
+
     if [[ $ACTION == "zun" ]]; then
         GATE_IMAGES+=",zun,kuryr,etcd"
     fi

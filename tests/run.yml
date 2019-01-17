@@ -4,10 +4,13 @@
     kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     kolla_ansible_full_src_dir: "{{ zuul.executor.work_root }}/{{ kolla_ansible_src_dir }}"
   tasks:
-    - name: Prepare ceph disks for bluestore and filestore OSD
-      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_ceph_disks.sh {{ hostvars[inventory_hostname]['ceph_osd_storetype'] }}"
-      when: scenario == "ceph"
+    - name: Prepare disks for Ceph or LVM
+      script: "{{ kolla_ansible_full_src_dir }}/tests/setup_disks.sh {{ disk_type }}"
+      when: scenario in ["ceph", "cinder-lvm"]
       become: true
+      vars:
+        disk_type: "{{ ceph_storetype if scenario == 'ceph' else 'cinder-lvm' }}"
+        ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
   vars:

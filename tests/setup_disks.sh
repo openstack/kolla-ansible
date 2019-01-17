@@ -1,6 +1,14 @@
 mkdir -p /opt/data/kolla
 
-if [ $1 = 'filestore' ]; then
+if [ $1 = 'cinder-lvm' ]; then
+    # cinder-volumes volume group
+    free_device=$(losetup -f)
+    fallocate -l 5G /var/lib/cinder_data.img
+    losetup $free_device /var/lib/cinder_data.img
+    pvcreate $free_device
+    vgcreate cinder-volumes $free_device
+
+elif [ $1 = 'filestore' ]; then
     #setup devices for Kolla Ceph filestore OSD
     dd if=/dev/zero of=/opt/data/kolla/ceph-osd1.img bs=5M count=1000
     LOOP=$(losetup -f)
