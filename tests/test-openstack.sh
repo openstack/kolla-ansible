@@ -28,6 +28,17 @@ function test_openstack_logged {
         echo "TESTING: Cinder volume attachment"
         openstack volume create --size 2 test_volume
         openstack server add volume kolla_boot_test test_volume --device /dev/vdb
+        attempt=1
+        while [[ $(openstack volume show test_volume -f value -c status) != "in-use" ]]; do
+            echo "Volume not attached yet"
+            attempt=$((attempt+1))
+            if [[ $attempt -eq 10 ]]; then
+                echo "Volume failed to attach"
+                openstack volume show test_volume
+                return 1
+            fi
+            sleep 10
+        done
         openstack server remove volume kolla_boot_test test_volume
         echo "SUCCESS: Cinder volume attachment"
     fi
