@@ -220,15 +220,15 @@ Install Kolla for development
 
    .. code-block:: console
 
-      pip install -r kolla/requirements.txt
-      pip install -r kolla-ansible/requirements.txt
+      pip install ./kolla
+      pip install ./kolla-ansible
 
    If not using a virtual environment:
 
    .. code-block:: console
 
-      sudo pip install -r kolla/requirements.txt
-      sudo pip install -r kolla-ansible/requirements.txt
+      sudo pip install ./kolla
+      sudo pip install ./kolla-ansible
 
 #. Create the ``/etc/kolla`` directory.
 
