@@ -23,6 +23,7 @@ try:
 except ImportError:
     import mock
 from docker import errors as docker_error
+from docker.types import Ulimit
 from oslotest import base
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
@@ -904,7 +905,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertTrue(self.dw.compare_dimensions(container_info))
 
@@ -915,7 +917,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 10,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertFalse(self.dw.compare_dimensions(container_info))
 
@@ -926,7 +929,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.compare_dimensions(container_info)
         self.dw.module.exit_json.assert_called_once_with(
@@ -939,7 +943,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '1', 'CpuShares': 0, 'BlkioWeight': 0,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertTrue(self.dw.compare_dimensions(container_info))
 
@@ -954,7 +959,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 10, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 10}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 10,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertTrue(self.dw.compare_dimensions(container_info))
 
@@ -969,7 +975,8 @@ class TestAttrComp(base.BaseTestCase):
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
-            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0}
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertFalse(self.dw.compare_dimensions(container_info))
 
@@ -977,3 +984,29 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'State': dict(Status='running')}
         self.dw = get_DockerWorker({'state': 'exited'})
         self.assertTrue(self.dw.compare_container_state(container_info))
+
+    def test_compare_ulimits_pos(self):
+        self.fake_data['params']['dimensions'] = {
+            'ulimits': {'nofile': {'soft': 131072, 'hard': 131072}}}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_dimensions(container_info))
+
+    def test_compare_ulimits_neg(self):
+        self.fake_data['params']['dimensions'] = {
+            'ulimits': {'nofile': {'soft': 131072, 'hard': 131072}}}
+        ulimits_nofile = Ulimit(name='nofile',
+                                soft=131072, hard=131072)
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': [ulimits_nofile]}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw.compare_dimensions(container_info))

@@ -474,7 +474,8 @@ class DockerWorker(object):
             'memswap_limit': 'MemorySwap', 'cpu_period': 'CpuPeriod',
             'cpu_quota': 'CpuQuota', 'cpu_shares': 'CpuShares',
             'cpuset_cpus': 'CpusetCpus', 'cpuset_mems': 'CpusetMems',
-            'kernel_memory': 'KernelMemory', 'blkio_weight': 'BlkioWeight'}
+            'kernel_memory': 'KernelMemory', 'blkio_weight': 'BlkioWeight',
+            'ulimits': 'Ulimits'}
         unsupported = set(new_dimensions.keys()) - \
             set(dimension_map.keys())
         if unsupported:
@@ -486,12 +487,28 @@ class DockerWorker(object):
             # NOTE(mgoddard): If a resource has been explicitly requested,
             # check for a match. Otherwise, ensure is is set to the default.
             if key1 in new_dimensions:
-                if new_dimensions[key1] != current_dimensions[key2]:
+                if key1 == 'ulimits':
+                    if self.compare_ulimits(new_dimensions[key1],
+                                            current_dimensions[key2]):
+                        return True
+                elif new_dimensions[key1] != current_dimensions[key2]:
                     return True
             elif current_dimensions[key2]:
                 # The default values of all currently supported resources are
                 # '' or 0 - both falsey.
                 return True
+
+    def compare_ulimits(self, new_ulimits, current_ulimits):
+        # The new_ulimits is dict, we need make it to a list of Ulimit
+        # instance.
+        new_ulimits = self.build_ulimits(new_ulimits)
+
+        def key(ulimit):
+            return ulimit['Name']
+
+        if current_ulimits is None:
+            current_ulimits = []
+        return sorted(new_ulimits, key=key) != sorted(current_ulimits, key=key)
 
     def compare_command(self, container_info):
         new_command = self.params.get('command')
@@ -606,6 +623,40 @@ class DockerWorker(object):
 
         return vol_list, vol_dict
 
+    def parse_dimensions(self, dimensions):
+        # When the data object contains types such as
+        # docker.types.Ulimit, Ansible will fail when these are
+        # returned via exit_json or fail_json. HostConfig is derived from dict,
+        # but its constructor requires additional arguments.
+        # to avoid that, here do copy the dimensions and return a new one.
+        dimensions = dimensions.copy()
+
+        supported = {'cpu_period', 'cpu_quota', 'cpu_shares',
+                     'cpuset_cpus', 'cpuset_mems', 'mem_limit',
+                     'mem_reservation', 'memswap_limit',
+                     'kernel_memory', 'blkio_weight', 'ulimits'}
+        unsupported = set(dimensions) - supported
+        if unsupported:
+            self.module.exit_json(failed=True,
+                                  msg=repr("Unsupported dimensions"),
+                                  unsupported_dimensions=unsupported)
+
+        ulimits = dimensions.get('ulimits')
+        if ulimits:
+            dimensions['ulimits'] = self.build_ulimits(ulimits)
+
+        return dimensions
+
+    def build_ulimits(self, ulimits):
+        ulimits_opt = []
+        for key, value in ulimits.items():
+            soft = value.get('soft')
+            hard = value.get('hard')
+            ulimits_opt.append(docker.types.Ulimit(name=key,
+                                                   soft=soft,
+                                                   hard=hard))
+        return ulimits_opt
+
     def build_host_config(self, binds):
         options = {
             'network_mode': 'host',
@@ -617,17 +668,11 @@ class DockerWorker(object):
             'volumes_from': self.params.get('volumes_from')
         }
 
-        if self.params.get('dimensions'):
-            supported = {'cpu_period', 'cpu_quota', 'cpu_shares',
-                         'cpuset_cpus', 'cpuset_mems', 'mem_limit',
-                         'mem_reservation', 'memswap_limit',
-                         'kernel_memory', 'blkio_weight'}
-            unsupported = set(self.params.get('dimensions')) - supported
-            if unsupported:
-                self.module.exit_json(failed=True,
-                                      msg=repr("Unsupported dimensions"),
-                                      unsupported_dimensions=unsupported)
-            options.update(self.params.get('dimensions'))
+        dimensions = self.params.get('dimensions')
+
+        if dimensions:
+            dimensions = self.parse_dimensions(dimensions)
+            options.update(dimensions)
 
         if self.params.get('restart_policy') in ['on-failure',
                                                  'always',
@@ -939,6 +984,7 @@ def main():
     except Exception:
         module.fail_json(changed=True, msg=repr(traceback.format_exc()),
                          **dw.result)
+
 
 if __name__ == '__main__':
     main()

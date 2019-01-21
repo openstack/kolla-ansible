@@ -27,6 +27,7 @@ The resources currently supported by Kolla Ansible are:
     memswap_limit
     kernel_memory
     blkio_weight
+    ulimits
 
 Pre-deployment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,6 +68,9 @@ Dimensions are defined as a mapping from a Docker resource name
    * - cpuset_mems
      - String
      - ''(Empty String)
+   * - ulimits
+     - Dict
+     - {}
 
 
 The variable ``default_container_dimensions`` sets the default dimensions
@@ -95,6 +99,23 @@ options section in ``/etc/kolla/globals.yml``:
 
    nova_libvirt_dimensions:
      cpuset_cpus: "2"
+
+How to config ulimits in kolla
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+  <container_name>_dimensions:
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+      fsize:
+        soft: 131072
+        hard: 131072
+
+A list of valid names can be found [here]
+(https://github.com/docker/go-units/blob/d4a9b9617350c034730bc5051c605919943080bf/ulimit.go#L46-L63)
 
 Deployment
 ~~~~~~~~~~
