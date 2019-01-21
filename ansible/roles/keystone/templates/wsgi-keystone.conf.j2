@@ -51,6 +51,51 @@ LogLevel info
     SSLCertificateFile /etc/keystone/certs/keystone-cert.pem
     SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
 {% endif %}
+
+{% if keystone_enable_federation_openid %}
+    OIDCClaimPrefix "OIDC-"
+    OIDCClaimDelimiter ";"
+    OIDCResponseType "id_token"
+    OIDCScope "{{ keystone_federation_oidc_scopes }}"
+    OIDCMetadataDir {{ keystone_container_federation_oidc_metadata_folder }}
+{% if keystone_federation_openid_certificate_key_ids | length > 0 %}
+    OIDCOAuthVerifyCertFiles {{ keystone_federation_openid_certificate_key_ids | join(" ") }}
+{% endif %}
+    OIDCCryptoPassphrase {{ keystone_federation_openid_crypto_password }}
+    OIDCRedirectURI {{ keystone_public_url }}/redirect_uri
+
+    <Location ~ "/redirect_uri">
+      Require valid-user
+      AuthType openid-connect
+    </Location>
+
+    {# WebSSO authentication endpoint -#}
+    <Location /v3/auth/OS-FEDERATION/websso/openid>
+      Require valid-user
+      AuthType openid-connect
+    </Location>
+
+{% for idp in keystone_identity_providers %}
+{% if idp.protocol == 'openid' %}
+    <LocationMatch /v3/auth/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/websso>
+      Require valid-user
+      AuthType openid-connect
+    </LocationMatch>
+{% endif %}
+{% endfor %}
+
+    {# CLI / API authentication endpoint -#}
+{% for idp in keystone_identity_providers %}
+{% if idp.protocol == 'openid' %}
+    <LocationMatch /v3/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/auth>
+      Require valid-user
+      {# Note(jasonanderson): `auth-openidc` is a special auth type that can -#}
+      {# additionally handle verifying bearer tokens -#}
+      AuthType auth-openidc
+    </LocationMatch>
+{% endif %}
+{% endfor %}
+{% endif %}
 </VirtualHost>
 
 <VirtualHost *:{{ keystone_admin_listen_port }}>

@@ -1,4 +1,5 @@
 {% set keystone_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_user = 'www-data' if kolla_base_distro in ['ubuntu', 'debian'] else 'apache' %}
 {
     "command": "/usr/bin/keystone-startup.sh",
     "config_files": [
@@ -52,6 +53,22 @@
             "owner": "keystone",
             "perm": "0600"
         }{% endif %}
+        {% if keystone_enable_federation_openid %},
+        {
+            "source": "{{ container_config_directory }}/federation/oidc/metadata",
+            "dest": "{{ keystone_container_federation_oidc_metadata_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0600",
+            "merge": true
+        },
+        {
+            "source": "{{ container_config_directory }}/federation/oidc/cert",
+            "dest": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0600",
+            "merge": true
+        }
+        {% endif %}
     ],
     "permissions": [
         {
@@ -61,7 +78,17 @@
         {
             "path": "/var/log/kolla/keystone/keystone.log",
             "owner": "keystone:keystone"
+        },{% if keystone_enable_federation_openid %}
+        {
+            "path": "{{ keystone_container_federation_oidc_metadata_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0700"
         },
+        {
+            "path": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0700"
+        },{% endif %}
         {
             "path": "/etc/keystone/fernet-keys",
             "owner": "keystone:keystone",

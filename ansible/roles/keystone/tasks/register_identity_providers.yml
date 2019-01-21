@@ -1,0 +1,238 @@
+---
+- name: List configured attribute mappings (that can be used by IdPs)
+  command: >
+    docker exec -t keystone openstack
+      --os-auth-url={{ openstack_auth.auth_url }}
+      --os-password={{ openstack_auth.password }}
+      --os-username={{ openstack_auth.username }}
+      --os-project-name={{ openstack_auth.project_name }}
+      --os-identity-api-version=3
+      --os-interface {{ openstack_interface }}
+      --os-project-domain-name {{ openstack_auth.domain_name }}
+      --os-user-domain-name {{ openstack_auth.domain_name }}
+      --os-region-name {{ openstack_region_name }}
+      {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    mapping list -c ID --format value
+  run_once: True
+  become: True
+  register: existing_mappings_register
+
+- name: Register existing mappings
+  set_fact:
+    existing_mappings: "{{ existing_mappings_register.stdout_lines | map('trim') | list }}"
+
+- name: Remove unmanaged attribute mappings
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    mapping delete {{ item }}
+  run_once: True
+  become: true
+  with_items: "{{ existing_mappings }}"
+  when:
+    - item not in (keystone_identity_mappings | map(attribute='name') | list)
+    - keystone_should_remove_attribute_mappings
+
+- name: Create unexisting domains
+  become: true
+  kolla_toolbox:
+    module_name: "os_keystone_domain"
+    module_args:
+      name: "{{ item.openstack_domain }}"
+      auth: "{{ openstack_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+      cacert: "{{ openstack_cacert }}"
+      region_name: "{{ openstack_region_name }}"
+  run_once: True
+  with_items: "{{ keystone_identity_providers }}"
+
+- name: Register attribute mappings in OpenStack
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    mapping create
+    --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
+    {{ item.name }}
+  run_once: True
+  when:
+    - item.name not in existing_mappings
+  with_items: "{{ keystone_identity_mappings }}"
+
+- name: Update existing attribute mappings in OpenStack
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    mapping set
+    --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
+    {{ item.name }}
+  run_once: True
+  when:
+    - item.name in existing_mappings
+  with_items: "{{ keystone_identity_mappings }}"
+
+- name: List configured IdPs
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    identity provider list -c ID --format value
+  run_once: True
+  register: existing_idps_register
+
+- name: Register existing idps
+  set_fact:
+    existing_idps: "{{ existing_idps_register.stdout.split('\n') | map('trim') | list }}"
+
+- name: Remove unmanaged identity providers
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    identity provider delete {{ item }}
+  run_once: True
+  with_items: "{{ existing_idps }}"
+  when:
+    - item not in (keystone_identity_providers | map(attribute='name') | list)
+    - keystone_should_remove_identity_providers
+
+- name: Register Identity Providers in OpenStack
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    identity provider create
+    --description "{{ item.public_name }}"
+    --remote-id "{{ item.identifier }}"
+    --domain "{{ item.openstack_domain }}"
+    {{ item.name }}
+  run_once: True
+  when:
+    - item.name not in existing_idps
+  with_items: "{{ keystone_identity_providers }}"
+
+- name: Update Identity Providers in OpenStack according to Kolla-Ansible configuraitons
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    identity provider set
+    --description "{{ item.public_name }}"
+    --remote-id "{{ item.identifier }}"
+    "{{ item.name }}"
+  run_once: True
+  when:
+    - item.name in existing_idps
+  with_items: "{{ keystone_identity_providers }}"
+
+- name: Configure attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator)
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    federation protocol create
+    --mapping {{ item.attribute_mapping }}
+    --identity-provider {{ item.name }}
+    {{ item.protocol }}
+  run_once: True
+  when:
+    - item.name not in existing_idps
+  with_items: "{{ keystone_identity_providers }}"
+
+- name: Update attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator).
+  become: true
+  command: >
+    docker exec -t keystone openstack
+    --os-auth-url={{ openstack_auth.auth_url }}
+    --os-password={{ openstack_auth.password }}
+    --os-username={{ openstack_auth.username }}
+    --os-project-name={{ openstack_auth.project_name }}
+    --os-identity-api-version=3
+    --os-interface {{ openstack_interface }}
+    --os-project-domain-name {{ openstack_auth.domain_name }}
+    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    federation protocol set
+    --identity-provider {{ item.name }}
+    --mapping {{ item.attribute_mapping }}
+    {{ item.protocol }}
+  run_once: True
+  register: result
+  failed_when: result.rc not in [0, 1]  # This command returns RC 1 on success, so we need to add this to avoid fails.
+  when:
+    - item.name in existing_idps
+  with_items: "{{ keystone_identity_providers }}"

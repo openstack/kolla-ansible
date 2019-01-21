@@ -557,6 +557,7 @@ enable_glance: "{{ enable_openstack_core | bool }}"
 enable_haproxy: "yes"
 enable_keepalived: "{{ enable_haproxy | bool }}"
 enable_keystone: "{{ enable_openstack_core | bool }}"
+enable_keystone_federation: "{{ (keystone_identity_providers | length > 0) and (keystone_identity_mappings | length > 0) }}"
 enable_mariadb: "yes"
 enable_memcached: "yes"
 enable_neutron: "{{ enable_openstack_core | bool }}"
@@ -1011,6 +1012,7 @@ enable_neutron_horizon_policy_file: "{{ enable_neutron }}"
 enable_nova_horizon_policy_file: "{{ enable_nova }}"
 
 horizon_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ horizon_tls_port if kolla_enable_tls_internal | bool else horizon_port }}"
+horizon_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ horizon_tls_port if kolla_enable_tls_external | bool else horizon_port }}"
 
 ###################
 # External Ceph options
@@ -1153,3 +1155,45 @@ swift_public_endpoint: "{{ public_protocol }}://{{ swift_external_fqdn | put_add
 octavia_admin_endpoint: "{{ admin_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 octavia_internal_endpoint: "{{ internal_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 octavia_public_endpoint: "{{ public_protocol }}://{{ octavia_external_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
+
+###################################
+# Identity federation configuration
+###################################
+# Here we configure all of the IdPs meta informations that will be required to implement identity federation with OpenStack Keystone.
+# We require the administrator to enter the following metadata:
+# * name (internal name of the IdP in Keystone);
+# * openstack_domain (the domain in Keystone that the IdP belongs to)
+# * protocol (the federated protocol used by the IdP; e.g. openid or saml);
+# * identifier (the IdP identifier; e.g. https://accounts.google.com);
+# * public_name (the public name that will be shown for users in Horizon);
+# * attribute_mapping (the attribute mapping to be used for this IdP. This mapping is configured in the "keystone_identity_mappings" configuration);
+# * metadata_folder (folder containing all the identity provider metadata as jsons named as the identifier without the protocol
+#   and with '/' escaped as %2F followed with '.provider' or '.client' or '.conf'; e.g. accounts.google.com.provider; PS, all .conf,
+#   .provider and .client jsons must be in the folder, even if you dont override any conf in the .conf json, you must leave it as an empty json '{}');
+# * certificate_file (the path to the Identity Provider certificate file, the file must be named as 'certificate-key-id.pem';
+#   e.g. LRVweuT51StjMdsna59jKfB3xw0r8Iz1d1J1HeAbmlw.pem; You can find the key-id in the Identity provider '.well-known/openid-configuration' jwks_uri as kid);
+#
+# The IdPs meta information are to be presented to Kolla-Ansible as the following example:
+# keystone_identity_providers:
+#   - name: "myidp1"
+#     openstack_domain: "my-domain"
+#     protocol: "openid"
+#     identifier: "https://accounts.google.com"
+#     public_name: "Authenticate via myidp1"
+#     attribute_mapping: "mappingId1"
+#     metadata_folder: "path/to/metadata/folder"
+#     certificate_file: "path/to/certificate/file.pem"
+#
+# We also need to configure the attribute mapping that is used by IdPs.
+# The configuration of attribute mappings is a list of objects, where each
+# object must have a 'name' (that mapps to the 'attribute_mapping' to the IdP
+# object in the IdPs set), and the 'file' with a full qualified path to a mapping file.
+# keystone_identity_mappings:
+#   - name: "mappingId1"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId1"
+#   - name: "mappingId2"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId2"
+#   - name: "mappingId3"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId3"
+keystone_identity_providers: []
+keystone_identity_mappings: []

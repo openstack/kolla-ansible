@@ -21,3 +21,4 @@ We welcome everyone to join our project!
    bug-triage
    ptl-guide
    release-management
+   setup-identity-provider
