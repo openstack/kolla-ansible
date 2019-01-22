@@ -52,4 +52,37 @@
         rndc_key_file: /etc/designate/rndc.key
 {% endfor %}
 {% endif %}
+{% elif designate_backend == 'infoblox' %}
+- name: infoblox
+  id: {{ designate_pool_id }}
+  description: Default Infoblox Pool
+  attributes:
+    internal: true
+  ns_records:
+    - hostname: {{ designate_ns_record }}.
+      priority: 1
+  nameservers:
+{% for host in designate_backend_infoblox_nameservers.replace(" ", "").split(',') %}
+    - host: {{ host }}
+      port: {{ designate_bind_port }}
+{% endfor %}
+  targets:
+    - type: infoblox
+      description: Default Infoblox Pool
+      masters:
+{% for mdns_host in groups['designate-mdns'] %}
+        - host: {{ hostvars[mdns_host]['ansible_' + hostvars[mdns_host]['dns_interface']]['ipv4']['address'] }}
+          port: {{ designate_mdns_port }}
+{% endfor %}
+      options:
+        host: {{ designate_infoblox_host }}
+        port: 53
+        http_pool_maxsize: 100
+        http_pool_connections: 100
+        wapi_url: {{ designate_infoblox_wapi_url }}
+        sslverify: {{ designate_infoblox_ssl_verify }}
+        username: {{ designate_infoblox_auth_username }}
+        password: {{ designate_infoblox_auth_password }}
+        multi_tenant: {{ designate_infoblox_multi_tenant }}
+        ns_group: {{ designate_infoblox_ns_group }}
 {% endif %}
