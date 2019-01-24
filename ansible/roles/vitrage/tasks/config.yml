@@ -33,7 +33,7 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
-    mode: "0770"
+    mode: "0660"
   become: true
   register: vitrage_config_jsons
   when:
@@ -58,7 +58,7 @@
       - "{{ node_config_directory }}/config/vitrage/{{ item.key }}.conf"
       - "{{ node_config_directory }}/config/vitrage/{{ inventory_hostname }}/vitrage.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/vitrage.conf"
-    mode: "0770"
+    mode: "0660"
   become: true
   register: vitrage_confs
   when:
@@ -75,18 +75,34 @@
   template:
     src: "wsgi-vitrage.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-vitrage.conf"
-    mode: "0770"
+    mode: "0660"
   become: true
   with_items:
     - "vitrage-api"
   notify:
     - Restart vitrage-api container
 
+- name: Copying over prometheus_conf.yml file for service
+  vars:
+    service: "{{ vitrage_services['vitrage-graph'] }}"
+  template:
+    src: "{{ node_custom_config }}/vitrage/prometheus_conf.yaml"
+    dest: "{{ node_config_directory }}/vitrage-graph/prometheus_conf.yaml"
+    mode: "0660"
+  become: true
+  register: vitrage_prometheus_conf
+  when:
+    - enable_vitrage_prometheus_datasource | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart vitrage-graph container
+
 - name: Copying over existing policy file
   template:
     src: "{{ vitrage_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ vitrage_policy_file }}"
-    mode: "0770"
+    mode: "0660"
   become: true
   register: vitrage_policy_overwriting
   when:

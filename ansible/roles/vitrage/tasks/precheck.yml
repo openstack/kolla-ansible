@@ -14,3 +14,11 @@
   when:
     - container_facts['vitrage_api'] is not defined
     - inventory_hostname in groups['vitrage-api']
+
+- name: Checking custom prometheus_conf.yaml exists
+  local_action: stat_path="{{ node_custom_config }}/vitrage/prometheus_conf.yaml"
+  register: result
+  run_once: true
+  failed_when: not result.stat.exists
+  when:
+    - enable_vitrage_prometheus_datasource | bool
