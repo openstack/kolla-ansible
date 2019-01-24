@@ -9,6 +9,7 @@
       - prometheus_mysqld_exporter
       - prometheus_cadvisor
       - prometheus_alertmanager
+      - prometheus_openstack_exporter
   register: container_facts
 
 - name: Checking free port for Prometheus server
@@ -96,3 +97,17 @@
   with_items:
     - "{{ prometheus_alertmanager_port }}"
     - "{{ prometheus_alertmanager_cluster_port }}"
+
+- name: Checking free ports for Prometheus openstack-exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_openstack_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-openstack-exporter']
+    - enable_prometheus_openstack_exporter | bool
+  with_items:
+    - "{{ prometheus_openstack_exporter_port }}"

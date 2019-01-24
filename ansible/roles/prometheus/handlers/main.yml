@@ -147,3 +147,24 @@
     - config_json.changed | bool
       or prometheus_alertmanager_confs.changed | bool
       or prometheus_container.changed | bool
+
+- name: Restart prometheus-openstack-exporter container
+  vars:
+    service_name: "prometheus-openstack-exporter"
+    service: "{{ prometheus_services[service_name] }}"
+    config_json: "{{ prometheus_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    prometheus_container: "{{ check_prometheus_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or prometheus_openstack_exporter_confs.changed | bool
+      or prometheus_container.changed | bool

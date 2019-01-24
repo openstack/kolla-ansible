@@ -104,6 +104,17 @@ prometheus_services:
         port: "{{ prometheus_alertmanager_port }}"
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
+  prometheus-openstack-exporter:
+    container_name: "prometheus_openstack_exporter"
+    group: "prometheus-openstack-exporter"
+    enabled: "{{ enable_prometheus_openstack_exporter | bool }}"
+    image: "{{ prometheus_openstack_exporter_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-openstack-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+      - "prometheus:/var/lib/prometheus"
+    dimensions: "{{ prometheus_openstack_exporter_dimensions }}"
 
 ####################
 # Database
@@ -144,6 +155,10 @@ prometheus_alertmanager_image: "{{ docker_registry ~ '/' if docker_registry else
 prometheus_alertmanager_tag: "{{ openstack_release }}"
 prometheus_alertmanager_image_full: "{{ prometheus_alertmanager_image }}:{{ prometheus_alertmanager_tag }}"
 
+# Prometheus openstack_exporter
+prometheus_openstack_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-prometheus-openstack-exporter"
+prometheus_openstack_exporter_tag: "{{ openstack_release }}"
+prometheus_openstack_exporter_image_full: "{{ prometheus_openstack_exporter_image }}:{{ prometheus_openstack_exporter_tag }}"
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -151,3 +166,4 @@ prometheus_node_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_memcached_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
 prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"
+prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
