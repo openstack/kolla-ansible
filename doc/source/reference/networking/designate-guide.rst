@@ -14,7 +14,7 @@ Designate provides DNSaaS services for OpenStack:
 -  Integrated with Keystone for authentication
 -  Framework in place to integrate with Nova and Neutron
    notifications (for auto-generated records)
--  Support for PowerDNS and Bind9 out of the box
+-  Support for Bind9 and Infoblox out of the box
 
 Configuration on Kolla deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,8 +35,50 @@ Configure Designate options in ``/etc/kolla/globals.yml``
 .. code-block:: yaml
 
    dns_interface: "eth1"
-   designate_backend: "bind9"
    designate_ns_record: "sample.openstack.org"
+
+The following additional variables are required depending on which backend you
+intend to use:
+
+Bind9 Backend
+-------------
+
+Configure Designate options in ``/etc/kolla/globals.yml``
+
+.. code-block:: yaml
+
+   designate_backend: "bind9"
+
+Infoblox Backend
+----------------
+
+.. important::
+
+   When using Infoblox as the Designate backend the MDNS node
+   requires the container to listen on port 53. As this is a privilaged
+   port you will need to build your designate-mdns container to run
+   as the user root rather than designate.
+
+Configure Designate options in ``/etc/kolla/globals.yml``
+
+.. code-block:: yaml
+
+   designate_backend: "infoblox"
+   designate_backend_infoblox_nameservers: "192.168.1.1,192.168.1.2"
+   designate_infoblox_host: "192.168.1.1"
+   designate_infoblox_wapi_url: "https://infoblox.example.com/wapi/v2.1/"
+   designate_infoblox_auth_username: "username"
+   designate_infoblox_ns_group: "INFOBLOX"
+
+Configure Designate options in ``/etc/kolla/passwords.yml``
+
+.. code-block:: yaml
+
+    designate_infoblox_auth_password: "password"
+
+For more information about how the Infoblox backend works, see
+`Infoblox backend
+<https://docs.openstack.org/designate/latest/admin/backends/infoblox.html>`__.
 
 Neutron and Nova Integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +108,7 @@ Reconfigure Designate:
 
 .. code-block:: console
 
-   kolla-ansible reconfigure -i <INVENTORY_FILE> --tags designate
+   kolla-ansible reconfigure -i <INVENTORY_FILE> --tags designate,neutron,nova
 
 Verify operation
 ~~~~~~~~~~~~~~~~
