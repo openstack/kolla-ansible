@@ -125,10 +125,14 @@ Directories
 -  ``etc`` - Contains a reference etc directory structure which requires
    configuration of a small number of configuration variables to achieve
    a working All-in-One (AIO) deployment.
+-  ``kolla_ansible`` - Contains password generation script.
+-  ``releasenotes`` - Contains releasenote of all features added in
+   Kolla-Ansible.
 -  ``specs`` - Contains the Kolla-Ansible communities key arguments about
    architectural shifts in the code base.
 -  ``tests`` - Contains functional testing tools.
 -  ``tools`` - Contains tools for interacting with Kolla-Ansible.
+-  ``zuul.d`` - Contains project gate job definitions.
 
 Getting Involved
 ================
