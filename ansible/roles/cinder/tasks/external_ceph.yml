@@ -11,14 +11,14 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
     mode: "0660"
   become: true
+  register: ceph_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
     - item.key in services_need_config
   with_dict: "{{ cinder_services }}"
   notify:
-    - Restart cinder-volume container
-    - Restart cinder-backup container
+    - Restart {{ item.key }} container
 
 - name: Copy over Ceph keyring files for cinder-volume
   copy:

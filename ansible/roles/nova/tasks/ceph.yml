@@ -20,10 +20,13 @@
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
     mode: "0660"
   become: true
+  register: ceph_confs
   with_items:
     - "nova-compute"
     - "nova-libvirt"
   when: inventory_hostname in groups['compute']
+  notify:
+    - Restart {{ item }} container
 
 - include_tasks: ../../ceph_pools.yml
   vars:

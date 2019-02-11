@@ -51,6 +51,7 @@
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
   become: true
+  register: ceph_confs
   with_items:
     - nova-compute
     - nova-libvirt
@@ -58,8 +59,7 @@
     - inventory_hostname in groups['compute']
     - nova_backend == "rbd"
   notify:
-    - Restart nova-compute container
-    - Restart nova-libvirt container
+    - Restart {{ item }} container
 
 - name: Pushing nova secret xml for libvirt
   template:
