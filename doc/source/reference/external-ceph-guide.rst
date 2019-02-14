@@ -275,8 +275,7 @@ in Ceph) into the same directory, for example:
   key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
 
 For more details on the rest of the Manila setup, such as creating the share
-type ``default_share_type``, please see:
-https://docs.openstack.org/kolla-ansible/latest/reference/manila-guide.html
+type ``default_share_type``, please see :doc:`Manila in Kolla <manila-guide>`.
 
 For more details on the CephFS Native driver, please see:
 https://docs.openstack.org/manila/latest/admin/cephfs_driver.html
