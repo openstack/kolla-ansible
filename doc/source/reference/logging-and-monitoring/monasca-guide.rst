@@ -46,14 +46,6 @@ following override in ``/etc/kolla/globals.yml``:
 
    monasca_install_type: "source"
 
-Until the Monasca Kafka client is upgraded it is currently required
-to run Kafka in compatibility mode. This can be achieved by adding some
-custom Kafka configuration:
-
-.. code-block:: console
-
-   echo "log.message.format.version=0.9.0.0" >> /etc/kolla/config/kafka.server.properties
-
 Stand-alone configuration (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
