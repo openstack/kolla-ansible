@@ -51,12 +51,32 @@
     - Restart karbor-protection container
     - Restart karbor-operationengine container
 
+- name: Copying over provider configs
+  vars:
+    service_name: 'karbor-protection'
+    service: "{{ karbor_services[service_name] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/providers.d/"
+    mode: "0660"
+  become: true
+  with_fileglob:
+    - "{{ node_custom_config }}/karbor/{{ service_name }}/providers.d/*"
+  register: providers_conf
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart karbor-protection container
+
 - name: Copying over openstack-infra.conf
   vars:
     service_name: 'karbor-protection'
     service: "{{ karbor_services[service_name] }}"
-  template:
-    src: "providers.d/openstack-infra.conf.j2"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/providers.d/openstack-infra.conf.j2"
+      - "{{ node_custom_config }}/karbor/{{ service_name }}/providers.d/openstack-infra.conf"
     dest: "{{ node_config_directory }}/{{ service_name }}/providers.d/openstack-infra.conf"
     mode: "0660"
   become: true
