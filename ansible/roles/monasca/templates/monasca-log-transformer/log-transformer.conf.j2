@@ -18,6 +18,14 @@ filter {
         remove_field => [ "[log][dimensions][timestamp]", "[log][dimensions][Timestamp]" ]
     }
 
+    # Monasca Log API adds a timestamp when it processes a log entry. This
+    # timestamp needs to be converted from seconds since the epoch for
+    # Elasticsearch to parse it correctly. Here we make that conversion.
+    date {
+        match => ["creation_time", "UNIX"]
+        target => "creation_time"
+    }
+
     # OpenStack log levels are uppercase, and syslog are lowercase.
     # Furthermore, syslog has more log levels that OpenStack. To avoid
     # mapping syslog log levels to OpenStack log levels, we standardise
