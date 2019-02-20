@@ -11,6 +11,8 @@
       name: "{{ blazar_database_name }}"
   run_once: True
   delegate_to: "{{ groups['blazar-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 - name: Creating blazar database user and setting permissions
   become: true
@@ -28,6 +30,8 @@
       append_privs: "yes"
   run_once: True
   delegate_to: "{{ groups['blazar-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
 
 # TODO(egonzalez) Use os_nova_host_aggregate ansible module once ansible min version is 2.3
 # http://docs.ansible.com/ansible/os_nova_host_aggregate_module.html
