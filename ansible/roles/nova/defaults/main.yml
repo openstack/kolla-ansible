@@ -53,11 +53,13 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ placement_api_port }}"
+        listen_port: "{{ placement_api_listen_port }}"
       placement_api_external:
         enabled: "{{ enable_nova }}"
         mode: "http"
         external: true
         port: "{{ placement_api_port }}"
+        listen_port: "{{ placement_api_listen_port }}"
   nova-api:
     container_name: "nova_api"
     group: "nova-api"
@@ -77,21 +79,25 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ nova_api_port }}"
+        listen_port: "{{ nova_api_listen_port }}"
       nova_api_external:
         enabled: "{{ enable_nova }}"
         mode: "http"
         external: true
         port: "{{ nova_api_port }}"
+        listen_port: "{{ nova_api_listen_port }}"
       nova_metadata:
         enabled: "{{ enable_nova }}"
         mode: "http"
         external: false
         port: "{{ nova_metadata_port }}"
+        listen_port: "{{ nova_metadata_listen_port }}"
       nova_metadata_external:
         enabled: "{{ enable_nova }}"
         mode: "http"
         external: true
         port: "{{ nova_metadata_port }}"
+        listen_port: "{{ nova_metadata_listen_port }}"
       nova_rdp:
         enabled: "{{ enable_nova|bool and nova_console == 'rdp' }}"
         mode: "http"
@@ -126,6 +132,7 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ nova_novncproxy_port }}"
+        listen_port: "{{ nova_novncproxy_listen_port }}"
         backend_http_extra:
           - "timeout tunnel 1h"
       nova_novncproxy_external:
@@ -133,6 +140,7 @@ nova_services:
         mode: "http"
         external: true
         port: "{{ nova_novncproxy_port }}"
+        listen_port: "{{ nova_novncproxy_listen_port }}"
   nova-scheduler:
     container_name: "nova_scheduler"
     group: "nova-scheduler"
@@ -161,11 +169,13 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ nova_spicehtml5proxy_port }}"
+        listen_port: "{{ nova_spicehtml5proxy_listen_port }}"
       nova_spicehtml5proxy_external:
         enabled: "{{ enable_nova|bool and nova_console == 'spice' }}"
         mode: "http"
         external: true
         port: "{{ nova_spicehtml5proxy_port }}"
+        listen_port: "{{ nova_spicehtml5proxy_listen_port }}"
   nova-serialproxy:
     container_name: "nova_serialproxy"
     group: "nova-serialproxy"
@@ -183,6 +193,7 @@ nova_services:
         mode: "http"
         external: false
         port: "{{ nova_serialproxy_port }}"
+        listen_port: "{{ nova_serialproxy_listen_port }}"
         backend_http_extra:
           - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
       nova_serialconsole_proxy_external:
@@ -190,6 +201,7 @@ nova_services:
         mode: "http"
         external: true
         port: "{{ nova_serialproxy_port }}"
+        listen_port: "{{ nova_serialproxy_listen_port }}"
         backend_http_extra:
           - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
   nova-conductor:
@@ -354,17 +366,18 @@ haproxy_nova_serialconsole_proxy_tunnel_timeout: "10m"
 ####################
 # OpenStack
 ####################
-nova_legacy_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
-nova_legacy_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
-nova_legacy_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
 
-nova_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
-nova_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
-nova_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
+nova_legacy_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
+nova_legacy_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
+nova_legacy_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
 
-placement_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ placement_api_port }}"
-placement_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ placement_api_port }}"
-placement_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ placement_api_port }}"
+nova_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
+nova_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
+nova_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn }}:{{ nova_api_port }}/v2.1/%(tenant_id)s"
+
+placement_admin_endpoint: "{{ admin_protocol }}://{{ placement_internal_fqdn }}:{{ placement_api_port }}"
+placement_internal_endpoint: "{{ internal_protocol }}://{{ placement_internal_fqdn }}:{{ placement_api_port }}"
+placement_public_endpoint: "{{ public_protocol }}://{{ placement_external_fqdn }}:{{ placement_api_port }}"
 
 nova_logging_debug: "{{ openstack_logging_debug }}"
 

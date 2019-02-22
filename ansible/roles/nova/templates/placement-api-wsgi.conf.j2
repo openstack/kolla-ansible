@@ -1,13 +1,13 @@
 {% set log_dir = '/var/log/kolla/nova' %}
 {% set python_path = '/usr/lib/python2.7/site-packages' if nova_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
 {% set wsgi_directory = '/usr/bin' if nova_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
-Listen {{ api_interface_address }}:{{ placement_api_port }}
+Listen {{ api_interface_address }}:{{ placement_api_listen_port }}
 
 ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
-<VirtualHost *:{{ placement_api_port }}>
+<VirtualHost *:{{ placement_api_listen_port }}>
     WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=nova group=nova display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup placement-api
     WSGIScriptAlias / {{ wsgi_directory }}/nova-placement-api

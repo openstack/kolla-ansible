@@ -7,12 +7,12 @@ log_dir = /var/log/kolla/nova
 state_path = /var/lib/nova
 
 osapi_compute_listen = {{ api_interface_address }}
-osapi_compute_listen_port = {{ nova_api_port }}
+osapi_compute_listen_port = {{ nova_api_listen_port }}
 osapi_compute_workers = {{ openstack_service_workers }}
 metadata_workers = {{ openstack_service_workers }}
 
 metadata_listen = {{ api_interface_address }}
-metadata_listen_port = {{ nova_metadata_port }}
+metadata_listen_port = {{ nova_metadata_listen_port }}
 
 # NOTE(mgoddard): This option has been deprecated but RDO sets a different
 # default value for it in /usr/share/nova/nova-dist.conf which causes the
@@ -74,11 +74,11 @@ workers = {{ openstack_service_workers }}
 enabled = false
 {% else %}
 novncproxy_host = {{ api_interface_address }}
-novncproxy_port = {{ nova_novncproxy_port }}
+novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups['compute'] %}
-novncproxy_base_url = {{ public_protocol }}://{{ kolla_external_fqdn }}:{{ nova_novncproxy_port }}/vnc_auto.html
+novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn }}:{{ nova_novncproxy_port }}/vnc_auto.html
 {% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
@@ -90,10 +90,10 @@ enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups['compute'] %}
-html5proxy_base_url = {{ public_protocol }}://{{ kolla_external_fqdn }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
+html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
 {% endif %}
 html5proxy_host = {{ api_interface_address }}
-html5proxy_port = {{ nova_spicehtml5proxy_port }}
+html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
 {% elif nova_console == 'none' %}
 [vnc]
 enabled = false
@@ -103,9 +103,9 @@ enabled = false
 {% if enable_nova_serialconsole_proxy | bool %}
 [serial_console]
 enabled = true
-base_url = ws://{{ kolla_external_fqdn }}:{{ nova_serialproxy_port }}/
+base_url = ws://{{ nova_serialproxy_fqdn }}:{{ nova_serialproxy_port }}/
 serialproxy_host = {{ api_interface_address }}
-serialproxy_port = {{ nova_serialproxy_port }}
+serialproxy_port = {{ nova_serialproxy_listen_port }}
 proxyclient_address = {{ api_interface_address }}
 {% endif %}
 
