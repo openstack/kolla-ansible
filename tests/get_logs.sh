@@ -56,6 +56,12 @@ copy_logs() {
         docker exec bifrost_deploy journalctl -u rabbitmq-server > ${LOG_DIR}/kolla/rabbitmq-server/rabbitmq.txt
     fi
 
+    # haproxy related logs
+    if [[ $(docker ps --filter name=haproxy --format "{{.Names}}") ]]; then
+        mkdir -p ${LOG_DIR}/kolla/haproxy
+        docker exec haproxy bash -c 'echo show stat | socat stdio /var/lib/kolla/haproxy/haproxy.sock' > ${LOG_DIR}/kolla/haproxy/stats.txt
+    fi
+
     for container in $(docker ps -a --format "{{.Names}}"); do
         docker logs --tail all ${container} &> ${LOG_DIR}/docker_logs/${container}.txt
     done
