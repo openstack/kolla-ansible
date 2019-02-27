@@ -473,7 +473,7 @@ dmesg on the compute node where the instance was placed.
 
 .. end
 
-For more information see `OpenStack SRIOV documentation <https://docs.openstack.org/neutron/pike/admin/config-sriov.html>`_.
+For more information see `OpenStack SRIOV documentation <https://docs.openstack.org/neutron/rocky/admin/config-sriov.html>`_.
 
 Nova SRIOV
 ~~~~~~~~~~
@@ -535,4 +535,4 @@ Start a new instance using the flavor:
 Verify VF devices were created and the instance starts successfully as in
 the Neutron SRIOV case.
 
-For more information see `OpenStack PCI passthrough documentation <https://docs.openstack.org/nova/pike/admin/pci-passthrough.html>`_.
+For more information see `OpenStack PCI passthrough documentation <https://docs.openstack.org/nova/rocky/admin/pci-passthrough.html>`_.
