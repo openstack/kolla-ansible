@@ -5,20 +5,30 @@
     port: "{{ kibana_server_port }}"
   run_once: true
 
+- name: Check if kibana index is registered in elasticsearch
+  uri:
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
+    method: GET
+    status_code: 200, 404
+  register: query_index_result
+  run_once: true
+
+- name: Determine whether Kibana index needs to be created
+  set_fact:
+    create_kibana_index: >-
+      {{ query_index_result.status == 404 and
+         query_index_result.get('json', {}).get('error', {}).get('type') == 'index_not_found_exception' }}
+
 - name: Register the kibana index in elasticsearch
   uri:
     url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana"
     method: PUT
     body: "{{ kibana_default_index_options | to_json }}"
     body_format: json
-    status_code: 200, 201, 400
+    status_code: 200, 201
   register: result
-  failed_when:
-    # If the index already exists, Elasticsearch will respond with a 400 error.
-    - result.status == 400
-    # Format: {"json": {"error": {"type": "index_already_exists_exception"}}}
-    - result.get('json', {}).get('error', {}).get('type') != 'index_already_exists_exception'
   run_once: true
+  when: create_kibana_index | bool
 
 - name: Wait for kibana to register in elasticsearch
   uri:
@@ -29,6 +39,7 @@
   retries: 20
   delay: 2
   run_once: true
+  when: create_kibana_index | bool
 
 - name: Change kibana config to set index as defaultIndex
   uri:
@@ -39,6 +50,7 @@
     body_format: json
     status_code: 200, 201
   run_once: true
+  when: false # FIXME FOR ES 6
 
 - name: Get kibana default indexes
   uri:
@@ -57,6 +69,7 @@
     - kibana_default_indexes is defined
   run_once: true
   connection: local
+  when: false # FIXME FOR ES 6
 
 - name: Add index pattern to kibana
   uri:
@@ -66,7 +79,7 @@
     body_format: json
     status_code: 201
   run_once: true
-  when:
-    - kibana_default_index is defined
-    - kibana_default_indexes is defined
-    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
+  when: false # FIXME FOR ES 6
+#    - kibana_default_index is defined
+#    - kibana_default_indexes is defined
+#    - kibana_default_indexes['.kibana']['mappings']['config']['properties']['defaultIndex'] is not defined
