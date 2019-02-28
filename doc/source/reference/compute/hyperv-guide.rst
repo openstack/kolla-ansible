@@ -166,4 +166,4 @@ OpenStack HyperV services can be inspected and managed from PowerShell:
 
 For more information on OpenStack HyperV, see
 `Hyper-V virtualization platform
-<https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html>`__.
+<https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-hyper-v.html>`__.

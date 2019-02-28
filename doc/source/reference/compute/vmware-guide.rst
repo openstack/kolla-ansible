@@ -271,5 +271,5 @@ KVM/QEMU deployment.
 
 For more information on OpenStack vSphere, see
 `VMware vSphere
-<https://docs.openstack.org/ocata/config-reference/compute/hypervisor-vmware.html>`__,
+<https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-vmware.html>`__,
 `VMware-NSX package <https://github.com/openstack/vmware-nsx>`_.

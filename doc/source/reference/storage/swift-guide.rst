@@ -171,8 +171,8 @@ To generate Swift container ring, run the following commands:
          /etc/kolla/config/swift/${ring}.builder rebalance;
    done
 
-For more information, see
-https://docs.openstack.org/project-install-guide/object-storage/ocata/initial-rings.html
+For more information, see `the Swift documentation
+<https://docs.openstack.org/swift/latest/install/initial-rings.html>`__.
 
 Deploying
 ~~~~~~~~~
