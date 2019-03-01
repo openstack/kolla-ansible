@@ -94,6 +94,13 @@ prometheus_services:
     image: "{{ prometheus_blackbox_exporter_image_full }}"
     volumes: "{{ prometheus_blackbox_exporter_default_volumes + prometheus_blackbox_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_blackbox_exporter_dimensions }}"
+  prometheus-mtail:
+    container_name: "prometheus_mtail"
+    group: "prometheus-mtail"
+    enabled: "{{ enable_prometheus_mtail | bool }}"
+    image: "{{ prometheus_mtail_image_full }}"
+    volumes: "{{ prometheus_mtail_default_volumes + prometheus_mtail_extra_volumes }}"
+    dimensions: "{{ prometheus_mtail_dimensions }}"
 
 ####################
 # Database
@@ -112,6 +119,14 @@ prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bo
 #
 # For a list of modules see the alertmanager config.
 prometheus_blackbox_exporter_endpoints: []
+
+####################
+# mtail
+####################
+prometheus_mtail_log_directories:
+  - /var/log/secure
+  - /var/log/messages
+  - /var/log/kolla/keystone/*.log #Need some way of only configuring on host running keystone
 
 ####################
 # Docker
@@ -160,6 +175,10 @@ prometheus_blackbox_exporter_image: "{{ docker_registry ~ '/' if docker_registry
 prometheus_blackbox_exporter_tag: "{{ prometheus_tag }}"
 prometheus_blackbox_exporter_image_full: "{{ prometheus_blackbox_exporter_image }}:{{ prometheus_blackbox_exporter_tag }}"
 
+prometheus_mtail_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-mtail"
+prometheus_mtail_tag: "{{ prometheus_tag }}"
+prometheus_mtail_image_full: "{{ prometheus_mtail_image }}:{{ prometheus_mtail_tag }}"
+
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -170,6 +189,7 @@ prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"
 prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_mtail_dimensions: "{{ default_container_dimensions }}"
 
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
@@ -232,6 +252,12 @@ prometheus_blackbox_exporter_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
+prometheus_mtail_default_volumes:
+  - "{{ node_config_directory }}/prometheus-mtail/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/var/log/secure:/var/log/secure:ro"
+  - "/var/log/messages:/var/log/messages:ro"
 
 prometheus_extra_volumes: "{{ default_extra_volumes }}"
 prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
@@ -244,3 +270,4 @@ prometheus_alertmanager_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_blackbox_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_mtail_extra_volumes: "{{ prometheus_extra_volumes }}"

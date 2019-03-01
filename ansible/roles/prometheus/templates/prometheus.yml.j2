@@ -126,6 +126,17 @@ scrape_configs:
         replacement: '{{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_blackbox_exporter_port }}'
 {% endif %}
 
+{% if enable_prometheus_mtail | bool %}
+  - job_name: mtail
+    scrape_interval: {{ prometheus_mtail_interval }}
+    honor_labels: true
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-mtail"] %}
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mtail_port'] }}'
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
 alerting:
   alertmanagers:
