@@ -18,7 +18,6 @@
     dest: "{{ node_config_directory }}/{{ project_name }}/config.json"
     mode: "0770"
   become: true
-  register: rabbitmq_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -39,7 +38,6 @@
     - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/rabbitmq-env.conf"
     - "{{ node_custom_config }}/rabbitmq/rabbitmq-env.conf"
     - "rabbitmq-env.conf.j2"
-  register: rabbitmq_env_conf
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -60,7 +58,6 @@
     - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/rabbitmq.conf"
     - "{{ node_custom_config }}/rabbitmq/rabbitmq.conf"
     - "rabbitmq.conf.j2"
-  register: rabbitmq_config
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -80,7 +77,6 @@
     - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/definitions.json"
     - "{{ node_custom_config }}/rabbitmq/definitions.json"
     - "definitions.json.j2"
-  register: rabbitmq_definitions
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -98,7 +94,6 @@
     volumes: "{{ item.value.volumes }}"
     environment: "{{ item.value.environment }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_rabbitmq_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
