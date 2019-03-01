@@ -1,0 +1,34 @@
+---
+- name: Restart iscsid container
+  vars:
+    service_name: "iscsid"
+    service: "{{ iscsi_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    privileged: "{{ service.privileged }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart tgtd container
+  vars:
+    service_name: "tgtd"
+    service: "{{ iscsi_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    privileged: "{{ service.privileged }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"

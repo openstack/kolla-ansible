@@ -1,19 +1,6 @@
 ---
-- name: Stopping iscsid container
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "iscsid"
-  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool  )
-         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool and 'iscsid' not in skip_stop_containers)
-
-- name: Stopping tgtd container
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "tgtd"
-  when:
-    - inventory_hostname in groups['tgtd']
-    - enable_cinder | bool
-    - enable_cinder_backend_lvm | bool
-    - "'tgtd' not in skip_stop_containers"
+- import_role:
+    role: service-stop
+  vars:
+    project_services: "{{ iscsi_services }}"
+    service_name: "{{ project_name }}"

@@ -1,16 +1,10 @@
 ---
-- name: Pulling iscsid image
-  become: true
+- name: Pulling iscsi images
   kolla_docker:
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
-    image: "{{ iscsid_image_full }}"
-  when: inventory_hostname in groups['iscsid']
-
-- name: Pulling tgtd image
-  become: true
-  kolla_docker:
-    action: "pull_image"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ tgtd_image_full }}"
-  when: inventory_hostname in groups['tgtd']
+    image: "{{ item.value.image }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ iscsi_services }}"

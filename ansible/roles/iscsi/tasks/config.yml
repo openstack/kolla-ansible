@@ -5,55 +5,50 @@
   vars:
     modules:
       - name: configfs
-  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool )
-         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
+  when:
+    - inventory_hostname in groups[iscsi_services.iscsid.group]
+    - iscsi_services.iscsid.enabled | bool
 
 - name: Ensuring config directories exist
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    state: "directory"
-    owner: "{{ config_owner_user }}"
-    group: "{{ config_owner_group }}"
-    mode: "0770"
-  become: true
-  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool )
-         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
-  with_items:
-    - "iscsid"
-
-- name: Copying over config.json files for services
-  template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
-    mode: "0660"
-  become: true
-  when: ( ( inventory_hostname in groups['compute'] or inventory_hostname in groups['cinder-volume'] ) and enable_cinder | bool and enable_cinder_backend_iscsi | bool )
-         or ( inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool )
-  with_items:
-    - "iscsid"
-
-- name: Ensuring config directories exist
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
   when:
-    - enable_cinder_backend_lvm | bool
-    - inventory_hostname in groups['tgtd']
-  with_items:
-    - "tgtd"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ iscsi_services }}"
 
 - name: Copying over config.json files for services
   template:
-    src: "{{ item }}.json.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/config.json"
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
   when:
-    - enable_cinder_backend_lvm | bool
-    - inventory_hostname in groups['tgtd']
-  with_items:
-    - "tgtd"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ iscsi_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Check iscsi containers
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    ipc_mode: "{{ item.value.ipc_mode }}"
+    privileged: "{{ item.value.privileged|default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ iscsi_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
