@@ -5,6 +5,12 @@
   become: True
   when: ansible_os_family == 'Debian'
 
+- name: Update yum cache
+  yum:
+    update_cache: yes
+  become: True
+  when: ansible_os_family == 'RedHat'
+
 # TODO(inc0): Gates don't seem to have ufw executable, check for it instead of ignore errors
 - name: Set firewall default policy
   become: True
@@ -32,6 +38,17 @@
     - ansible_os_family == 'RedHat'
     - firewalld_check.rc == 0
 
+# Upgrading docker engine may cause containers to stop. Take a snapshot of the
+# running containers prior to a potential upgrade of Docker.
+
+- name: Check which containers are running
+  command: docker ps -f 'status=running' -q
+  become: true
+  # If Docker is not installed this command may exit non-zero.
+  failed_when: false
+  changed_when: false
+  register: running_containers
+
 - name: Install apt packages
   package:
     name: "{{ item }}"
@@ -39,6 +56,7 @@
   become: True
   with_items: "{{ debian_pkg_install }}"
   when: ansible_os_family == 'Debian'
+  register: apt_install_result
 
 - name: Install deltarpm packages
   package:
@@ -56,6 +74,30 @@
   become: True
   with_items: "{{ redhat_pkg_install }}"
   when: ansible_os_family == 'RedHat'
+  register: yum_install_result
+
+# If any packages were updated, and any containers were running, wait for the
+# daemon to come up and start all previously running containers.
+
+- block:
+    - name: Wait for Docker to start
+      command: docker info
+      become: true
+      changed_when: false
+      register: result
+      until: result is success
+      retries: 6
+      delay: 10
+
+    - name: Ensure containers are running after Docker upgrade
+      command: "docker start {{ running_containers.stdout }}"
+      become: true
+  when:
+    - install_result is changed
+    - running_containers.rc == 0
+    - running_containers.stdout != ''
+  vars:
+    install_result: "{{ yum_install_result if ansible_os_family == 'RedHat' else apt_install_result }}"
 
 - name: Install virtualenv packages
   package:
@@ -94,7 +136,9 @@
     state: absent
   with_items: "{{ ubuntu_pkg_removals }}"
   become: True
-  when: ansible_distribution|lower == "ubuntu"
+  when:
+    - ansible_distribution|lower == "ubuntu"
+    - item != ""
 
 - name: Remove packages
   package:
@@ -102,4 +146,6 @@
     state: absent
   with_items: "{{ redhat_pkg_removals }}"
   become: True
-  when: ansible_os_family == 'RedHat'
+  when:
+    - ansible_os_family == 'RedHat'
+    - item != ""

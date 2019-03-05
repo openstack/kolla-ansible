@@ -47,64 +47,65 @@
   become: True
   when: create_kolla_user | bool
 
-- name: Install apt packages
-  apt:
-    update_cache: yes
-  become: True
-  when: ansible_os_family == 'Debian'
+- block:
+    - block:
+        - name: Install apt packages
+          apt:
+            update_cache: yes
+          become: True
 
-- name: Install ca certs
-  package:
-    name: "{{ item }}"
-    state: latest
-  become: True
-  with_items:
-    - ca-certificates
-    - apt-transport-https
-  when:
-    - ansible_os_family == 'Debian'
+        - name: Install ca certs
+          package:
+            name: "{{ item }}"
+            state: latest
+          become: True
+          with_items:
+            - ca-certificates
+            - apt-transport-https
 
-- name: Ensure apt sources list directory exists
-  file:
-    path: /etc/apt/sources.list.d
-    state: directory
-    recurse: yes
-  become: True
-  when: ansible_os_family == 'Debian'
+        - name: Ensure apt sources list directory exists
+          file:
+            path: /etc/apt/sources.list.d
+            state: directory
+            recurse: yes
+          become: True
 
-- name: Enable docker repo apt
-  template:
-    src: docker_apt_repo.j2
-    dest: /etc/apt/sources.list.d/docker.list
-  become: True
-  when: ansible_os_family == 'Debian'
+        - name: Install docker apt gpg key
+          apt_key:
+            url: "{{ docker_apt_url }}/{{ docker_apt_key_file }}"
+            id: "{{ docker_apt_key_id }}"
+            state: present
+          become: True
 
-- name: Install docker apt gpg key
-  apt_key:
-    url: "{{ docker_apt_url }}/{{ docker_apt_key_file }}"
-    id: "{{ docker_apt_key_id }}"
-    state: present
-  become: True
-  when: ansible_os_family == 'Debian'
+        - name: Enable docker apt repository
+          apt_repository:
+            repo: "{{ docker_apt_repo }}"
+            filename: docker
+          become: True
+      when: ansible_os_family == 'Debian'
 
-- name: Ensure yum repos directory exists
-  file:
-    path: /etc/yum.repos.d/
-    state: directory
-    recurse: yes
-  become: True
-  when: ansible_os_family == 'RedHat'
+    - block:
+        - name: Ensure yum repos directory exists
+          file:
+            path: /etc/yum.repos.d/
+            state: directory
+            recurse: yes
+          become: True
 
-- name: Enable docker repo yum
-  become: True
-  template:
-    src: docker_yum_repo.j2
-    dest: /etc/yum.repos.d/docker.repo
-  when: ansible_os_family == 'RedHat'
+        - name: Enable docker yum repository
+          yum_repository:
+            name: docker
+            description: Docker main Repository
+            baseurl: "{{ docker_yum_baseurl }}"
+            gpgcheck: "{{ docker_yum_gpgcheck | bool }}"
+            gpgkey: "{{ docker_yum_gpgkey }}"
+          become: True
 
-- name: Install docker rpm gpg key
-  rpm_key:
-    state: present
-    key: "{{ docker_yum_url }}/gpg"
-  become: True
-  when: ansible_os_family == 'RedHat'
+        - name: Install docker rpm gpg key
+          rpm_key:
+            state: present
+            key: "{{ docker_yum_url }}/gpg"
+          become: True
+          when: docker_yum_gpgcheck | bool
+      when: ansible_os_family == 'RedHat'
+  when: enable_docker_repo | bool
