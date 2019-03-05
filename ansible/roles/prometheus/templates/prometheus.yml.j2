@@ -86,6 +86,16 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
+{% if enable_prometheus_elasticsearch_exporter | bool %}
+  - job_name: elasticsearch_exporter
+    scrape_interval: {{ prometheus_elasticsearch_exporter_interval }}
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-elasticsearch-exporter"] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
 alerting:
   alertmanagers:
