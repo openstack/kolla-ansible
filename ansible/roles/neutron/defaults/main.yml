@@ -19,6 +19,7 @@ neutron_services:
         mode: "http"
         external: false
         port: "{{ neutron_server_port }}"
+        listen_port: "{{ neutron_server_listen_port }}"
         frontend_http_extra:
           - "option http-tunnel"
       neutron_server_external:
@@ -26,6 +27,7 @@ neutron_services:
         mode: "http"
         external: true
         port: "{{ neutron_server_port }}"
+        listen_port: "{{ neutron_server_listen_port }}"
   neutron-openvswitch-agent:
     container_name: "neutron_openvswitch_agent"
     image: "{{ neutron_openvswitch_agent_image_full }}"
@@ -305,9 +307,9 @@ max_l3_agents_per_router: 3
 # valid value is: ["v1", "v2"]
 neutron_fwaas_version: "v1"
 
-neutron_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}"
-neutron_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ neutron_server_port }}"
-neutron_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ neutron_server_port }}"
+neutron_admin_endpoint: "{{ admin_protocol }}://{{ neutron_internal_fqdn }}:{{ neutron_server_port }}"
+neutron_internal_endpoint: "{{ internal_protocol }}://{{ neutron_internal_fqdn }}:{{ neutron_server_port }}"
+neutron_public_endpoint: "{{ public_protocol }}://{{ neutron_external_fqdn }}:{{ neutron_server_port }}"
 
 neutron_logging_debug: "{{ openstack_logging_debug }}"
 
