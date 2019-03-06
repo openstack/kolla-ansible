@@ -1,8 +1,8 @@
 {% set keystone_log_dir = '/var/log/kolla/keystone' %}
 {% set python_path = '/usr/lib/python2.7/site-packages' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
 {% set binary_path = '/usr/bin' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
-Listen {{ api_interface_address }}:{{ keystone_public_port }}
-Listen {{ api_interface_address }}:{{ keystone_admin_port }}
+Listen {{ api_interface_address }}:{{ keystone_public_listen_port }}
+Listen {{ api_interface_address }}:{{ keystone_admin_listen_port }}
 
 ServerSignature Off
 ServerTokens Prod
@@ -17,7 +17,7 @@ TraceEnable off
 </Directory>
 
 
-<VirtualHost *:{{ keystone_public_port }}>
+<VirtualHost *:{{ keystone_public_listen_port }}>
     WSGIDaemonProcess keystone-public processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-public
     WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-public
@@ -31,7 +31,7 @@ TraceEnable off
     CustomLog "{{ keystone_log_dir }}/keystone-apache-public-access.log" logformat
 </VirtualHost>
 
-<VirtualHost *:{{ keystone_admin_port }}>
+<VirtualHost *:{{ keystone_admin_listen_port }}>
     WSGIDaemonProcess keystone-admin processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-admin
     WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-admin
