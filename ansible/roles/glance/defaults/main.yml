@@ -41,7 +41,7 @@ glance_services:
 ####################
 # HAProxy
 ####################
-haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
+haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
 
 ####################
 # Notification
@@ -125,9 +125,10 @@ glance_store_backends: "{{ glance_backends|selectattr('enabled', 'equalto', true
 ####################
 # OpenStack
 ####################
-glance_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ glance_api_port }}"
-glance_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ glance_api_port }}"
-glance_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ glance_api_port }}"
+
+glance_admin_endpoint: "{{ admin_protocol }}://{{ glance_internal_fqdn }}:{{ glance_api_port }}"
+glance_internal_endpoint: "{{ internal_protocol }}://{{ glance_internal_fqdn }}:{{ glance_api_port }}"
+glance_public_endpoint: "{{ public_protocol }}://{{ glance_external_fqdn }}:{{ glance_api_port }}"
 
 glance_logging_debug: "{{ openstack_logging_debug }}"
 
