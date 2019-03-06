@@ -2,6 +2,9 @@
 debug = {{ ironic_logging_debug }}
 log_dir = /var/log/kolla/ironic-inspector
 
+{% if not enable_keystone | bool %}
+auth_strategy = noauth
+{% endif %}
 listen_address = {{ api_interface_address }}
 listen_port = {{ ironic_inspector_port }}
 transport_url = {{ rpc_transport_url }}
@@ -10,6 +13,7 @@ transport_url = {{ rpc_transport_url }}
 transport_url = {{ notify_transport_url }}
 
 [ironic]
+{% if enable_keystone | bool %}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
@@ -18,7 +22,12 @@ project_name = service
 username = {{ ironic_inspector_keystone_user }}
 password = {{ ironic_inspector_keystone_password }}
 os_endpoint_type = internalURL
+{% else %}
+auth_type = none
+endpoint_override = {{ ironic_internal_endpoint }}
+{% endif %}
 
+{% if enable_keystone | bool %}
 [keystone_authtoken]
 www_authenticate_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
 auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
@@ -32,6 +41,7 @@ password = {{ ironic_inspector_keystone_password }}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 
 {% if ironic_policy_file is defined %}
 [oslo_policy]
