@@ -12,11 +12,14 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
     mode: "0660"
   become: true
+  register: ceph_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
     - item.key in services_need_config
   with_dict: "{{ cinder_services }}"
+  notify:
+    - Restart {{ item.key }} container
 
 - include_tasks: ../../ceph_pools.yml
   vars:
