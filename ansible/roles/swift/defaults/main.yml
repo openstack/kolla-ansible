@@ -10,12 +10,12 @@ swift_services:
         enabled: "{{ enable_swift }}"
         mode: "http"
         external: false
-        port: "{{ swift_proxy_server_port }}"
+        port: "{{ swift_proxy_server_listen_port }}"
       swift_api_external:
         enabled: "{{ enable_swift }}"
         mode: "http"
         external: true
-        port: "{{ swift_proxy_server_port }}"
+        port: "{{ swift_proxy_server_listen_port }}"
 
 ####################
 # Docker
@@ -52,9 +52,9 @@ swift_log_level: "{{ 'INFO' if openstack_logging_debug == 'False' else 'DEBUG'}}
 ####################
 # OpenStack
 ####################
-swift_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ swift_proxy_server_port }}/v1"
-swift_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
-swift_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
+swift_admin_endpoint: "{{ admin_protocol }}://{{ swift_internal_fqdn }}:{{ swift_proxy_server_port }}/v1"
+swift_internal_endpoint: "{{ internal_protocol }}://{{ swift_internal_fqdn }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
+swift_public_endpoint: "{{ public_protocol }}://{{ swift_external_fqdn }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
 
 swift_logging_debug: "{{ openstack_logging_debug }}"
 
