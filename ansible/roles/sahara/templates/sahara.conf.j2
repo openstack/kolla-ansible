@@ -14,7 +14,7 @@ use_rootwrap = True
 connection = mysql+pymysql://{{ sahara_database_user }}:{{ sahara_database_password }}@{{ sahara_database_address }}/{{ sahara_database_name }}
 
 [keystone_authtoken]
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_url = {{ keystone_admin_url }}
 auth_type = password
 user_domain_name = {{ default_project_domain_name }}
 project_name = service
@@ -27,7 +27,7 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [service_credentials]
-auth_url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
+auth_url = {{ keystone_internal_url }}
 region_name = {{ openstack_region_name }}
 password = {{ sahara_keystone_password }}
 username = {{ sahara_keystone_user }}
@@ -60,4 +60,4 @@ project_name = service
 user_domain_name = {{ default_user_domain_name }}
 username = {{ sahara_keystone_user }}
 password = {{ sahara_keystone_password }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}/v3
+auth_url = {{ keystone_admin_url }}/v3

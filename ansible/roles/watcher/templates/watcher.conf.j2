@@ -17,8 +17,8 @@ connection = mysql+pymysql://{{ watcher_database_user }}:{{ watcher_database_pas
 max_retries = -1
 
 [keystone_authtoken]
-www_authenticate_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+www_authenticate_uri = {{ keystone_internal_url }}
+auth_url = {{ keystone_admin_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -32,8 +32,8 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [watcher_clients_auth]
-auth_uri = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_public_port }}
-auth_url = {{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ keystone_admin_port }}
+auth_uri = {{ keystone_internal_url }}
+auth_url = {{ keystone_admin_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
