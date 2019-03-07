@@ -188,3 +188,16 @@ the following parameter must be specified in ``globals.yml``:
    enable_cinder_backend_iscsi: "yes"
 
 Also ``enable_cinder_backend_lvm`` should be set to ``no`` in this case.
+
+Skip Cinder prechecks for Custom backends
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to use custom storage backends which currently not yet implemented
+in Kolla, the following parameter must be specified in ``globals.yml``:
+
+.. code-block:: yaml
+
+   skip_cinder_backend_check: True
+
+All configuration for custom NFS backend should be performed
+via ``cinder.conf`` in config overrides directory.
