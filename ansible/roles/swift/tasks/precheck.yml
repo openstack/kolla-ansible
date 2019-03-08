@@ -10,7 +10,7 @@
 
 - name: Checking free port for Swift Account Server
   wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_storage_interface]['ipv4']['address'] }}"
     port: "{{ swift_account_server_port }}"
     connect_timeout: 1
     timeout: 1
@@ -21,7 +21,7 @@
 
 - name: Checking free port for Swift Container Server
   wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_storage_interface]['ipv4']['address'] }}"
     port: "{{ swift_container_server_port }}"
     connect_timeout: 1
     timeout: 1
@@ -32,7 +32,40 @@
 
 - name: Checking free port for Swift Object Server
   wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_storage_interface]['ipv4']['address'] }}"
+    port: "{{ swift_object_server_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['swift_object_server'] is not defined
+    - inventory_hostname in groups['swift-object-server']
+
+- name: Checking free port for Swift Account Replication Server
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_replication_interface]['ipv4']['address'] }}"
+    port: "{{ swift_account_server_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['swift_account_server'] is not defined
+    - inventory_hostname in groups['swift-account-server']
+
+- name: Checking free port for Swift Container Replication Server
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_replication_interface]['ipv4']['address'] }}"
+    port: "{{ swift_container_server_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['swift_container_server'] is not defined
+    - inventory_hostname in groups['swift-container-server']
+
+- name: Checking free port for Swift Object Replication Server
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_replication_interface]['ipv4']['address'] }}"
     port: "{{ swift_object_server_port }}"
     connect_timeout: 1
     timeout: 1
@@ -43,7 +76,7 @@
 
 - name: Checking free port for Rsync
   wait_for:
-    host: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+    host: "{{ hostvars[inventory_hostname]['ansible_' + swift_replication_interface]['ipv4']['address'] }}"
     port: "873"
     connect_timeout: 1
     timeout: 1
