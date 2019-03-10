@@ -901,6 +901,7 @@ def generate_module():
 def main():
     module = generate_module()
 
+    dw = None
     try:
         dw = DockerWorker(module)
         # TODO(inc0): We keep it bool to have ansible deal with consistent
@@ -910,7 +911,7 @@ def main():
         module.exit_json(changed=dw.changed, result=result, **dw.result)
     except Exception:
         module.fail_json(changed=True, msg=repr(traceback.format_exc()),
-                         **dw.result)
+                         **getattr(dw, 'result', {}))
 
 # import module snippets
 from ansible.module_utils.basic import *  # noqa
