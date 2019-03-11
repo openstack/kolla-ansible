@@ -19,11 +19,13 @@ heat_services:
         mode: "http"
         external: false
         port: "{{ heat_api_port }}"
+        listen_port: "{{ heat_api_listen_port }}"
       heat_api_external:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
         port: "{{ heat_api_port }}"
+        listen_port: "{{ heat_api_listen_port }}"
   heat-api-cfn:
     container_name: heat_api_cfn
     group: heat-api-cfn
@@ -41,11 +43,13 @@ heat_services:
         mode: "http"
         external: false
         port: "{{ heat_api_cfn_port }}"
+        listen_port: "{{ heat_api_cfn_listen_port }}"
       heat_api_cfn_external:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
         port: "{{ heat_api_cfn_port }}"
+        listen_port: "{{ heat_api_cfn_listen_port }}"
   heat-engine:
     container_name: heat_engine
     group: heat-engine
@@ -92,12 +96,12 @@ heat_engine_dimensions: "{{ default_container_dimensions }}"
 ####################
 # OpenStack
 ####################
-heat_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_cfn_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
-heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
-heat_cfn_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ heat_api_cfn_port }}/v1"
+heat_admin_endpoint: "{{ admin_protocol }}://{{ heat_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_internal_endpoint: "{{ internal_protocol }}://{{ heat_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_public_endpoint: "{{ public_protocol }}://{{ heat_external_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_cfn_admin_endpoint: "{{ admin_protocol }}://{{ heat_cfn_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ heat_cfn_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_public_endpoint: "{{ public_protocol }}://{{ heat_cfn_external_fqdn }}:{{ heat_api_cfn_port }}/v1"
 
 heat_logging_debug: "{{ openstack_logging_debug }}"
 
