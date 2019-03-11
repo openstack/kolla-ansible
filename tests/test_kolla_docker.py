@@ -113,6 +113,7 @@ class ModuleArgsTest(base.BaseTestCase):
             bypass_checks=False
         )
 
+
 FAKE_DATA = {
 
     'params': {
@@ -190,6 +191,43 @@ def get_DockerWorker(mod_param, mock_dclient):
     module.params = mod_param
     dw = kd.DockerWorker(module)
     return dw
+
+
+class TestMainModule(base.BaseTestCase):
+
+    def setUp(self):
+        super(TestMainModule, self).setUp()
+        self.fake_data = copy.deepcopy(FAKE_DATA)
+
+    @mock.patch("kolla_docker.traceback.format_exc")
+    @mock.patch("kolla_docker.get_docker_client")
+    @mock.patch("kolla_docker.generate_module")
+    def test_docker_client_exception(self, mock_generate_module, mock_dclient,
+                                     mock_traceback):
+        module_mock = mock.MagicMock()
+        mock_generate_module.return_value = module_mock
+        mock_dclient.side_effect = AttributeError()
+        mock_traceback.return_value = "Some very ugly traceback"
+        kd.main()
+        module_mock.fail_json.assert_called_once_with(
+            changed=True, msg=repr("Some very ugly traceback"))
+
+    @mock.patch("kolla_docker.DockerWorker")
+    @mock.patch("kolla_docker.generate_module")
+    def test_execute_module(self, mock_generate_module, mock_dw):
+        mock_dw.return_value.check_image.return_value = False
+        mock_dw.return_value.changed = False
+        mock_dw.return_value.result = {"some_key": "some_value"}
+        module_mock = mock.MagicMock()
+        module_mock.params = self.fake_data['params']
+        module_mock.params["action"] = "check_image"
+        mock_generate_module.return_value = module_mock
+        kd.main()
+        mock_dw.assert_called_once_with(module_mock)
+        mock_dw.return_value.check_image.assert_called_once_with()
+        module_mock.exit_json.assert_called_once_with(changed=False,
+                                                      result=False,
+                                                      some_key="some_value")
 
 
 class TestContainer(base.BaseTestCase):
