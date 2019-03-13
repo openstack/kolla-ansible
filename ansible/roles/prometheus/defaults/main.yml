@@ -115,6 +115,16 @@ prometheus_services:
       - "kolla_logs:/var/log/kolla/"
       - "prometheus:/var/lib/prometheus"
     dimensions: "{{ prometheus_openstack_exporter_dimensions }}"
+  prometheus-elasticsearch-exporter:
+    container_name: prometheus_elasticsearch_exporter
+    group: prometheus-elasticsearch-exporter
+    enabled: "{{ enable_prometheus_elasticsearch_exporter | bool }}"
+    image: "{{ prometheus_elasticsearch_exporter_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/prometheus-elasticsearch-exporter/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ prometheus_elasticsearch_exporter_dimensions }}"
 
 ####################
 # Database
@@ -160,6 +170,10 @@ prometheus_openstack_exporter_image: "{{ docker_registry ~ '/' if docker_registr
 prometheus_openstack_exporter_tag: "{{ prometheus_tag }}"
 prometheus_openstack_exporter_image_full: "{{ prometheus_openstack_exporter_image }}:{{ prometheus_openstack_exporter_tag }}"
 
+prometheus_elasticsearch_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-elasticsearch-exporter"
+prometheus_elasticsearch_exporter_tag: "{{ prometheus_tag }}"
+prometheus_elasticsearch_exporter_image_full: "{{ prometheus_elasticsearch_exporter_image }}:{{ prometheus_elasticsearch_exporter_tag }}"
+
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -168,3 +182,4 @@ prometheus_memcached_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
 prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"
 prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
