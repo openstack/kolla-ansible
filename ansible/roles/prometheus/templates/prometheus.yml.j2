@@ -145,6 +145,17 @@ scrape_configs:
         replacement: '{{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_blackbox_exporter_port }}'
 {% endif %}
 
+{% if enable_prometheus_libvirt_exporter | bool %}
+  - job_name: libvirt_exporter
+    scrape_interval: {{ prometheus_libvirt_exporter_interval }}
+    honor_labels: true
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-libvirt-exporter"] %}
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_libvirt_exporter_port'] }}'
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
   - job_name: alertmanager
     static_configs:
