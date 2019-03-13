@@ -1,5 +1,9 @@
 {% set keystone_log_dir = '/var/log/kolla/keystone' %}
-{% set python_path = '/usr/lib/python2.7/site-packages' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% if keystone_install_type == 'binary' %}
+    {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro == 'ubuntu' else '/usr/lib/python2.7/site-packages' %}
+{% else %}
+    {% set python_path = '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% endif %}
 {% set binary_path = '/usr/bin' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address }}:{{ keystone_public_listen_port }}
 Listen {{ api_interface_address }}:{{ keystone_admin_listen_port }}
@@ -20,7 +24,11 @@ TraceEnable off
 <VirtualHost *:{{ keystone_public_listen_port }}>
     WSGIDaemonProcess keystone-public processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-public
+{% if kolla_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
+    WSGIScriptAlias / {{ binary_path }}/python3-keystone-wsgi-public
+{% else %}
     WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-public
+{% endif %}
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
     <IfVersion >= 2.4>
@@ -34,7 +42,11 @@ TraceEnable off
 <VirtualHost *:{{ keystone_admin_listen_port }}>
     WSGIDaemonProcess keystone-admin processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup keystone-admin
+{% if kolla_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
+    WSGIScriptAlias / {{ binary_path }}/python3-keystone-wsgi-admin
+{% else %}
     WSGIScriptAlias / {{ binary_path }}/keystone-wsgi-admin
+{% endif %}
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
     <IfVersion >= 2.4>

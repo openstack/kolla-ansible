@@ -1,4 +1,8 @@
-{% set python_path = '/usr/lib/python2.7/site-packages' if cinder_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% if cinder_install_type == 'binary' %}
+    {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro == 'ubuntu' else '/usr/lib/python2.7/site-packages' %}
+{% else %}
+    {% set python_path = '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% endif %}
 Listen {{ api_interface_address }}:{{ cinder_api_listen_port }}
 
 ServerSignature Off
