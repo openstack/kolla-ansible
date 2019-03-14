@@ -182,6 +182,17 @@ Configuration of custom fluentd filters is possible by placing filter
 configuration files in ``/etc/kolla/config/fluentd/filter/*.conf`` on the
 control host.
 
+Custom log formatting
+---------------------
+
+In some scenarios it may be useful to perform custom formatting of logs before
+forwarding them. For example, the JSON formatter plugin can be used to convert
+an event to JSON.
+
+Configuration of custom fluentd formatting is possible by placing filter
+configuration files in ``/etc/kolla/config/fluentd/format/*.conf`` on the
+control host.
+
 Custom log forwarding
 ---------------------
 
