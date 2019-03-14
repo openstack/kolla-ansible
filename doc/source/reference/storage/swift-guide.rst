@@ -10,6 +10,24 @@ Overview
 Kolla can deploy a full working Swift setup in either a **all-in-one** or
 **multinode** setup.
 
+Networking
+~~~~~~~~~~
+
+The following networks are used by Swift:
+
+External API network (``kolla_external_vip_interface``)
+  This network is used by users to access the Swift public API.
+Internal API network (``api_interface``)
+  This network is used by users to access the Swift internal API. It is also
+  used by HAProxy to access the Swift proxy servers.
+Swift Storage network (``swift_storage_interface``)
+  This network is used by the Swift proxy server to access the account,
+  container and object servers. Defaults to ``storage_interface``.
+Swift replication network (``swift_replication_network``)
+  This network is used for Swift storage replication traffic.
+  This is optional as the default configuration uses
+  the ``swift_storage_interface`` for replication traffic.
+
 Disks with a partition table (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -74,6 +92,11 @@ The following example commands should be run from the ``operator`` node to
 generate rings for a demo setup. The commands work with **disks with partition
 table** example listed above. Please modify accordingly if your setup is
 different.
+
+If using a separate replication network it is necessary to add the replication
+network IP addresses to the rings. See the `Swift documentation
+<https://docs.openstack.org/swift/latest/replication_network.html#dedicated-replication-network>`__
+for details on how to do that.
 
 Prepare for Rings generating
 ----------------------------
@@ -161,6 +184,15 @@ To generate Swift container ring, run the following commands:
              /etc/kolla/config/swift/container.builder add r1z1-${node}:6002/d${i} 1;
        done
    done
+
+.. end
+
+Rebalance
+---------
+
+To rebalance the ring files:
+
+.. code-block:: console
 
    for ring in object account container; do
      docker run \

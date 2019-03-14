@@ -1,0 +1,22 @@
+---
+features:
+  - |
+    Adds support to seperate Swift access and replication traffic from other
+    storage traffic.
+
+    In a deployment where both Ceph and Swift have been deployed,
+    this changes adds functionalality to support optional seperation
+    of storage network traffic. This adds two new network interfaces
+    'swift_storage_interface' and 'swift_replication_interface' which maintain
+    backwards compatibility.
+
+    The Swift access network interface is configured via 'swift_storage_interface',
+    which defaults to 'storage_interface'. The Swift replication network
+    interface is configured via 'swift_replication_interface', which
+    defaults to 'swift_storage_interface'.
+
+    If a separate replication network is used, Kolla Ansible now deploys separate
+    replication servers for the accounts, containers and objects, that listen on
+    this network. In this case, these services handle only replication traffic, and
+    the original account-, container- and object- servers only handle storage
+    user requests.

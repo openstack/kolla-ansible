@@ -75,6 +75,24 @@
       - "/etc/localtime:/etc/localtime:ro"
   when: inventory_hostname in groups['swift-account-server']
 
+- name: Starting swift-account-replication-server container
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment:
+      RSYNC_CONNECT_PROG: "nc %H {{ swift_rsync_port }}"
+    image: "{{ swift_account_image_full }}"
+    name: "swift_account_replication_server"
+    volumes:
+      - "{{ node_config_directory }}/swift/:/var/lib/kolla/swift/:ro"
+      - "{{ node_config_directory }}/swift-account-replication-server/:{{ container_config_directory }}/:ro"
+      - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
+      - "/etc/localtime:/etc/localtime:ro"
+  when:
+    - inventory_hostname in groups['swift-account-server']
+    - swift_has_replication_network
+
 - name: Starting swift-account-replicator container
   become: true
   kolla_docker:
@@ -133,6 +151,24 @@
       - "/etc/localtime:/etc/localtime:ro"
   when: inventory_hostname in groups['swift-container-server']
 
+- name: Starting swift-container-replication-server container
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment:
+      RSYNC_CONNECT_PROG: "nc %H {{ swift_rsync_port }}"
+    image: "{{ swift_container_image_full }}"
+    name: "swift_container_replication_server"
+    volumes:
+      - "{{ node_config_directory }}/swift/:/var/lib/kolla/swift/:ro"
+      - "{{ node_config_directory }}/swift-container-replication-server/:{{ container_config_directory }}/:ro"
+      - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
+      - "/etc/localtime:/etc/localtime:ro"
+  when:
+    - inventory_hostname in groups['swift-container-server']
+    - swift_has_replication_network
+
 - name: Starting swift-container-replicator container
   become: true
   kolla_docker:
@@ -190,6 +226,24 @@
       - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
       - "/etc/localtime:/etc/localtime:ro"
   when: inventory_hostname in groups['swift-object-server']
+
+- name: Starting swift-object-replication-server container
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment:
+      RSYNC_CONNECT_PROG: "nc %H {{ swift_rsync_port }}"
+    image: "{{ swift_object_image_full }}"
+    name: "swift_object_replication_server"
+    volumes:
+      - "{{ node_config_directory }}/swift/:/var/lib/kolla/swift/:ro"
+      - "{{ node_config_directory }}/swift-object-replication-server/:{{ container_config_directory }}/:ro"
+      - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
+      - "/etc/localtime:/etc/localtime:ro"
+  when:
+    - inventory_hostname in groups['swift-object-server']
+    - swift_has_replication_network
 
 - name: Starting swift-object-replicator container
   become: true

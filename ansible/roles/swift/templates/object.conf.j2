@@ -1,5 +1,6 @@
+{% set interface = swift_replication_interface if 'replicat' in service_name else swift_storage_interface %}
 [DEFAULT]
-bind_ip = {{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}
+bind_ip = {{ hostvars[inventory_hostname]['ansible_' + interface]['ipv4']['address'] }}
 bind_port = {{ swift_object_server_port }}
 devices = {{ swift_devices_mount_point }}
 mount_check = false
@@ -20,6 +21,9 @@ pipeline = object-server
 
 [app:object-server]
 use = egg:swift#object
+{% if swift_has_replication_network %}
+replication_server = {{ service_name == 'swift-object-replication-server' }}
+{% endif %}
 
 {% if service_name == 'swift-object-auditor' %}
 [object-auditor]
