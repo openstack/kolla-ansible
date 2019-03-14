@@ -1,4 +1,8 @@
-{% set python_path = '/usr/lib/python2.7/site-packages' if aodh_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% if aodh_install_type == 'binary' %}
+    {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro == 'ubuntu' else '/usr/lib/python2.7/site-packages' %}
+{% else %}
+    {% set python_path = '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% endif %}
 {% set binary_path = '/usr/bin' if aodh_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address }}:{{ aodh_api_listen_port }}
 
@@ -23,5 +27,9 @@ TraceEnable off
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess aodh group=aodh processes={{ openstack_service_workers }} threads=1 user=aodh python-path={{ python_path }}
   WSGIProcessGroup aodh
+{% if kolla_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
+  WSGIScriptAlias / "{{ binary_path }}/python3-aodh-api"
+{% else %}
   WSGIScriptAlias / "{{ binary_path }}/aodh-api"
+{% endif %}
 </VirtualHost>
