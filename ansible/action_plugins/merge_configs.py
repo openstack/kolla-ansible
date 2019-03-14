@@ -176,7 +176,7 @@ class ActionModule(action.ActionBase):
 
         try:
             result_file = os.path.join(local_tempdir, 'source')
-            with open(result_file, 'wb') as f:
+            with open(result_file, 'w') as f:
                 f.write(full_source)
 
             new_task = self._task.copy()
