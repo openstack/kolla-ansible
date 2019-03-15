@@ -95,8 +95,19 @@
     - "07-kafka"
     - "08-opendaylight"
     - "09-monasca"
+    - "10-caso"
   notify:
     - Restart fluentd container
+
+- name: Copying over cASO input config file
+  template:
+    src: "conf/input/10-caso.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/input/10-caso.conf"
+    mode: "0660"
+  become: true
+  notify:
+    - Restart fluentd container
+  when: enable_fluentd | bool and enable_caso | bool and inventory_hostname in groups['caso']
 
 - name: Copying over custom fluentd input config files
   template:
@@ -279,6 +290,7 @@
     - { name: "aodh", enabled: "{{ enable_aodh }}" }
     - { name: "barbican", enabled: "{{ enable_barbican }}" }
     - { name: "blazar", enabled: "{{ enable_blazar }}" }
+    - { name: "caso", enabled: "{{ enable_caso }}" }
     - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
     - { name: "ceph", enabled: "{{ enable_ceph }}" }
     - { name: "chrony", enabled: "{{ enable_chrony }}" }

@@ -1,0 +1,23 @@
+---
+- name: Restart caso container
+  vars:
+    service_name: "caso"
+    service: "{{ caso_services[service_name] }}"
+    config_json: "{{ caso_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
+    caso_container: "{{ check_caso_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - config_json.changed | bool
+      or caso_conf.changed | bool
+      or caso_vom_conf.changed | bool
+      or caso_container.changed | bool

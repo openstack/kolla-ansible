@@ -1,0 +1,36 @@
+---
+caso_services:
+  caso:
+    container_name: caso
+    group: caso
+    enabled: true
+    image: "{{ caso_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/caso/:{{ container_config_directory }}/"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "caso_spool:/var/spool/"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ caso_dimensions }}"
+
+####################
+# caso
+####################
+caso_site_name: "kolla_caso"
+caso_projects: []
+caso_logging_debug: "{{ openstack_logging_debug }}"
+caso_log_dir: "/var/log/kolla/caso"
+
+####################
+# OpenStack
+####################
+caso_openstack_auth: "{{ openstack_auth }}"
+caso_keystone_user: "caso"
+
+####################
+# Docker
+####################
+caso_install_type: "{{ kolla_install_type }}"
+caso_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ caso_install_type }}-caso"
+caso_tag: "{{ openstack_release }}"
+caso_image_full: "{{ caso_image }}:{{ caso_tag }}"
+caso_dimensions: "{{ default_container_dimensions }}"

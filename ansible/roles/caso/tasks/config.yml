@@ -1,0 +1,76 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  register: caso_config_jsons
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+  notify:
+    - Restart caso container
+
+- name: Copying over caso config
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/caso.conf.j2"
+      - "{{ node_custom_config }}//caso/caso.conf"
+      - "{{ node_custom_config }}/{{ item.key }}/{{ inventory_hostname }}/caso.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/caso.conf"
+    mode: "0660"
+  become: true
+  register: caso_conf
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+  notify:
+    - Restart caso container
+
+- name: Copying over caso voms file
+  template:
+    src: "{{ role_path }}/templates/voms.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/voms.json"
+    mode: "0660"
+  become: true
+  register: caso_vom_conf
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+  notify:
+    - Restart caso container
+
+- name: Check caso containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+  register: check_caso_containers
+  when:
+    - kolla_action != "config"
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+  notify:
+    - Restart caso container

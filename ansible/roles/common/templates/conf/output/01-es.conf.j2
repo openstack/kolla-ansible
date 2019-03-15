@@ -1,3 +1,19 @@
+{% if enable_caso | bool and inventory_hostname in groups['caso'] %}
+<match apel.events>
+    @type copy
+    <store>
+       @type elasticsearch
+       host {% raw %}{{ elasticsearch_address }}
+{% endraw %}
+       port {% raw %}{{ elasticsearch_port }}
+{% endraw %}
+       logstash_format true
+       logstash_prefix apel
+       flush_interval 15s
+    </store>
+</match>
+{% endif %}
+
 <match *.**>
     @type copy
     <store>
