@@ -1,0 +1,20 @@
+---
+- name: Get container facts
+  kolla_container_facts:
+    name:
+      - placement_api
+  register: container_facts
+
+- name: Checking free port for Placement API
+  vars:
+    placement_api: "{{ placement_services['placement-api'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ placement_api_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['placement_api'] is not defined
+    - inventory_hostname in groups[placement_api.group]
+    - placement_api.enabled | bool

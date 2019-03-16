@@ -1,10 +1,11 @@
-{% set log_dir = '/var/log/kolla/nova' %}
-{% if nova_install_type == 'binary' %}
+{% set log_dir = '/var/log/kolla/placement' %}
+{% if placement_install_type == 'binary' %}
     {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro == 'ubuntu' else '/usr/lib/python2.7/site-packages' %}
 {% else %}
     {% set python_path = '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
 {% endif %}
-{% set wsgi_directory = '/usr/bin' if nova_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+{% set wsgi_directory = '/usr/bin' if placement_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+
 Listen {{ api_interface_address }}:{{ placement_api_listen_port }}
 
 ServerSignature Off
@@ -12,12 +13,12 @@ ServerTokens Prod
 TraceEnable off
 
 <VirtualHost *:{{ placement_api_listen_port }}>
-    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=nova group=nova display-name=%{GROUP} python-path={{ python_path }}
+    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=placement group=placement display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup placement-api
-{% if kolla_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
-    WSGIScriptAlias / {{ wsgi_directory }}/python3-nova-placement-api
+{% if placement_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
+    WSGIScriptAlias / {{ wsgi_directory }}/python3-placement-api
 {% else %}
-    WSGIScriptAlias / {{ wsgi_directory }}/nova-placement-api
+    WSGIScriptAlias / {{ wsgi_directory }}/placement-api
 {% endif %}
     WSGIApplicationGroup %{GLOBAL}
     WSGIPassAuthorization On
@@ -28,10 +29,10 @@ TraceEnable off
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog "{{ log_dir }}/placement-api-access.log" logformat
     <Directory {{ wsgi_directory }}>
-{% if kolla_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
-        <Files python3-nova-placement-api>
+{% if placement_install_type == 'binary' and kolla_base_distro == 'ubuntu' %}
+        <Files python3-placement-api>
 {% else %}
-        <Files nova-placement-api>
+        <Files placement-api>
 {% endif %}
             Require all granted
         </Files>

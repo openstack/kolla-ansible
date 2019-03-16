@@ -1,0 +1,32 @@
+---
+- name: Creating the placement service and endpoint
+  kolla_toolbox:
+    module_name: "kolla_keystone_service"
+    module_args:
+      service_name: "{{ item.name }}"
+      service_type: "{{ item.service_type }}"
+      description: "{{ item.description }}"
+      endpoint_region: "{{ openstack_region_name }}"
+      url: "{{ item.url }}"
+      interface: "{{ item.interface }}"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ openstack_placement_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+  run_once: True
+  with_items:
+    - {'name': 'placement', 'service_type': 'placement', 'interface': 'admin', 'url': '{{ placement_admin_endpoint }}', 'description': 'Placement Service'}
+    - {'name': 'placement', 'service_type': 'placement', 'interface': 'internal', 'url': '{{ placement_internal_endpoint }}', 'description': 'Placement Service'}
+    - {'name': 'placement', 'service_type': 'placement', 'interface': 'public', 'url': '{{ placement_public_endpoint }}', 'description': 'Placement Service'}
+
+- name: Creating the placement project, user, and role
+  kolla_toolbox:
+    module_name: "kolla_keystone_user"
+    module_args:
+      project: "service"
+      user: "{{ placement_keystone_user }}"
+      password: "{{ placement_keystone_password }}"
+      role: "admin"
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ openstack_placement_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+  run_once: True

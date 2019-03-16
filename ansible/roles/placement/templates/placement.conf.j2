@@ -1,0 +1,61 @@
+[DEFAULT]
+debug = {{ placement_logging_debug }}
+
+log_dir = /var/log/kolla/placement
+
+state_path = /var/lib/placement
+
+osapi_compute_listen = {{ api_interface_address }}
+
+# Though my_ip is not used directly, lots of other variables use $my_ip
+my_ip = {{ api_interface_address }}
+
+transport_url = {{ rpc_transport_url }}
+
+[api]
+use_forwarded_for = true
+
+[oslo_middleware]
+enable_proxy_headers_parsing = True
+
+[oslo_concurrency]
+lock_path = /var/lib/placement/tmp
+
+[placement_database]
+connection = mysql+pymysql://{{ placement_database_user }}:{{ placement_database_password }}@{{ placement_database_address }}/{{ placement_database_name }}
+max_pool_size = 50
+max_overflow = 1000
+max_retries = -1
+
+[cache]
+backend = oslo_cache.memcache_pool
+enabled = True
+memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_internal_url }}
+auth_url = {{ keystone_admin_url }}
+auth_type = password
+project_domain_id = {{ default_project_domain_id }}
+user_domain_id = {{ default_user_domain_id }}
+project_name = service
+username = {{ placement_keystone_user }}
+password = {{ placement_keystone_password }}
+
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% if placement_policy_file is defined %}
+[oslo_policy]
+policy_file = {{ placement_policy_file }}
+{% endif %}
+
+{% if enable_osprofiler | bool %}
+[profiler]
+enabled = true
+trace_sqlalchemy = true
+hmac_keys = {{ osprofiler_secret }}
+connection_string = {{ osprofiler_backend_connection_string }}
+{% endif %}

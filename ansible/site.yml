@@ -65,6 +65,7 @@
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_panko_{{ enable_panko | bool }}
+        - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_qdrouterd_{{ enable_qdrouterd | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
@@ -266,6 +267,10 @@
             tasks_from: loadbalancer
           tags: neutron
           when: enable_neutron | bool
+        - include_role:
+            role: placement
+            tasks_from: loadbalancer
+          tags: placement
         - include_role:
             role: nova
             tasks_from: loadbalancer
@@ -673,6 +678,17 @@
     - { role: cinder,
         tags: cinder,
         when: enable_cinder | bool }
+
+- name: Apply role placement
+  gather_facts: false
+  hosts:
+    - placement-api
+    - '&enable_placement_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: placement,
+        tags: placement,
+        when: enable_placement | bool }
 
 - name: Apply role nova
   gather_facts: false

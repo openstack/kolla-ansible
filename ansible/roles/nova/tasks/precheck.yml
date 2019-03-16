@@ -8,7 +8,6 @@
       - nova_spicehtml5proxy
       - nova_ssh
       - nova_libvirt
-      - placement_api
   register: container_facts
 
 - name: Checking available compute nodes in inventory
@@ -118,20 +117,6 @@
     - container_facts['nova_libvirt'] is not defined
     - nova_libvirt.enabled | bool
     - inventory_hostname in groups[nova_libvirt.group]
-
-- name: Checking free port for Nova Placement API
-  vars:
-    placement_api: "{{ nova_services['placement-api'] }}"
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ placement_api_listen_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts['placement_api'] is not defined
-    - inventory_hostname in groups[placement_api.group]
-    - placement_api.enabled | bool
 
 - name: Checking that libvirt is not running
   vars:

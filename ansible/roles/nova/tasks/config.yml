@@ -82,7 +82,6 @@
   become: true
   vars:
     services_require_nova_conf:
-      - placement-api
       - nova-api
       - nova-compute
       - nova-compute-ironic
@@ -128,20 +127,6 @@
     - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
   notify:
     - Restart nova-libvirt container
-
-- name: Copying over placement-api wsgi configuration
-  become: true
-  vars:
-    service: "{{ nova_services['placement-api'] }}"
-  template:
-    src: "placement-api-wsgi.conf.j2"
-    dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
-  register: placement_api_wsgi_conf
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart placement-api container
 
 - name: Copying files for nova-ssh
   become: true
@@ -201,7 +186,6 @@
   become: true
   vars:
     services_require_policy_json:
-      - placement-api
       - nova-api
       - nova-compute
       - nova-compute-ironic

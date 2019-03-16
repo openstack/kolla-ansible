@@ -1,0 +1,65 @@
+---
+- name: Creating placement databases
+  kolla_toolbox:
+    module_name: mysql_db
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ placement_database_name }}"
+  register: database
+  run_once: True
+  delegate_to: "{{ groups['placement-api'][0] }}"
+  when:
+    - not use_preconfigured_databases | bool
+
+- name: Creating placement databases user and setting permissions
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ database_address }}"
+      login_port: "{{ database_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ placement_database_user }}"
+      password: "{{ placement_database_password }}"
+      host: "%"
+      priv: "{{ placement_database_name }}.*:ALL"
+      append_privs: "yes"
+  run_once: True
+  delegate_to: "{{ groups['placement-api'][0] }}"
+  when:
+    - database.changed
+    - not use_preconfigured_databases | bool
+
+# TODO(egonzalez): Remove this task once stein is release as will not be required to migrate data.
+# Error codes https://github.com/openstack/placement/blob/master/tools/mysql-migrate-db.sh#L230
+- name: Migrate placement database
+  vars:
+    placement_api: "{{ placement_services['placement-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: bash -c 'sudo -E kolla_set_configs && bash /opt/mysql-migrate-db.sh --migrate /etc/placement/migrate-db.rc'
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ placement_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "migrate_placement_database"
+    restart_policy: "never"
+    volumes: "{{ placement_api.volumes|reject('equalto', '')|list }}"
+  register: migrate_placement
+  changed_when:
+    - migrate_placement is success
+    - migrate_placement.rc == 0
+  failed_when:
+    - migrate_placement.rc not in [0, 3, 4]
+  run_once: True
+  delegate_to: "{{ groups[placement_api.group][0] }}"
+  when:
+    - kolla_action == "upgrade"
+
+- include_tasks: bootstrap_service.yml
+  when: database.changed or use_preconfigured_databases | bool
