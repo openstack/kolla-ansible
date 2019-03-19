@@ -176,6 +176,24 @@ glance_source_version: "{{ kolla_source_version }}"
 vmware_vcenter_name:
 vmware_datastore_name:
 
+####################
+# External Ceph RGW
+####################
+swift_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ rgw_port }}{{ '/' if ceph_rgw_compatibility|bool else '/swift/' }}v1"
+swift_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ rgw_port }}{{ '/' if ceph_rgw_compatibility|bool else '/swift/' }}v1"
+swift_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ rgw_port }}{{ '/' if ceph_rgw_compatibility|bool else '/swift/' }}v1"
+
+openstack_ceph_rgw_auth: "{{ openstack_auth }}"
+
+swift_hack_ks_services:
+  - name: "swift"
+    type: "object-store"
+    description: "Openstack Object Storage"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ swift_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ swift_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ swift_public_endpoint }}'}
+
 ###################
 # Glance cache
 ###################

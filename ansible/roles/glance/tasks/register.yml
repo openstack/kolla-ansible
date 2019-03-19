@@ -6,3 +6,14 @@
     service_ks_register_services: "{{ glance_ks_services }}"
     service_ks_register_users: "{{ glance_ks_users }}"
   tags: always
+
+# NOTE(wszumski): I've kept this here for now in case there is an ordering
+# issue, but this really feels like it should be part of the ceph role
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_ceph_rgw_auth }}"
+    service_ks_register_services: "{{ swift_hack_ks_services }}"
+  when:
+    - "{{ enable_ceph_rgw_external | bool }}"
+  tags: always
