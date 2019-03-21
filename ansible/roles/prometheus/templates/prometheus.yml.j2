@@ -65,14 +65,21 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
-{% if enable_prometheus_ceph_mgr_exporter | bool %}
+{% if enable_prometheus_ceph_mgr_exporter | bool or enable_prometheus_external_ceph_mgr_exporter | bool %}
   - job_name: ceph_mgr_exporter
     honor_labels: true
     static_configs:
       - targets:
+{% if enable_prometheus_ceph_mgr_exporter | bool %}
 {% for host in groups["ceph-mgr"] %}
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_ceph_mgr_exporter_port'] }}'
 {% endfor %}
+{% elif enable_prometheus_external_ceph_mgr_exporter | bool %}
+{% for host in prometheus_external_ceph_mgr_hosts %}
+        - '{{ host }}:{{ hostvars[host]['prometheus_ceph_mgr_exporter_port'] }}'
+
+{% endfor %}
+{% endif %}
 {% endif %}
 
 {% if enable_prometheus_openstack_exporter | bool %}
