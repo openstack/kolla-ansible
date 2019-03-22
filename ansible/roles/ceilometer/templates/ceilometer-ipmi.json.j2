@@ -1,0 +1,30 @@
+{
+    "command": "ceilometer-polling --polling-namespaces ipmi",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/ceilometer.conf",
+            "dest": "/etc/ceilometer/ceilometer.conf",
+            "owner": "ceilometer",
+            "perm": "0600"
+        }{% if ceilometer_polling_file_path is defined %},
+        {
+            "source": "{{ container_config_directory }}/polling.yaml",
+            "dest": "/etc/ceilometer/polling.yaml",
+            "owner": "ceilometer",
+            "perm": "0600"
+        }{% endif %}{% if ceilometer_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ ceilometer_policy_file }}",
+            "dest": "/etc/ceilometer/{{ ceilometer_policy_file }}",
+            "owner": "ceilometer",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/ceilometer",
+            "owner": "ceilometer:ceilometer",
+            "recurse": true
+        }
+    ]
+}

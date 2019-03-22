@@ -40,6 +40,18 @@ ceilometer_services:
       - "nova_libvirt:/var/lib/libvirt"
       - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python2.7/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
     dimensions: "{{ ceilometer_compute_dimensions }}"
+  ceilometer-ipmi:
+    container_name: ceilometer_ipmi
+    group: ceilometer-ipmi
+    enabled: "{{ enable_ceilometer_ipmi }}"
+    image: "{{ ceilometer_ipmi_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/ceilometer-ipmi/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "ceilometer:/var/lib/ceilometer/"
+      - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python2.7/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
+    dimensions: "{{ ceilometer_ipmi_dimensions }}"
 
 
 ####################
@@ -60,9 +72,15 @@ ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }
 ceilometer_compute_tag: "{{ ceilometer_tag }}"
 ceilometer_compute_image_full: "{{ ceilometer_compute_image }}:{{ ceilometer_compute_tag }}"
 
+ceilometer_ipmi_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-ipmi"
+ceilometer_ipmi_tag: "{{ ceilometer_tag }}"
+ceilometer_ipmi_image_full: "{{ ceilometer_ipmi_image }}:{{ ceilometer_ipmi_tag }}"
+
 ceilometer_notification_dimensions: "{{ default_container_dimensions }}"
 ceilometer_central_dimensions: "{{ default_container_dimensions }}"
 ceilometer_compute_dimensions: "{{ default_container_dimensions }}"
+ceilometer_ipmi_dimensions: "{{ default_container_dimensions }}"
+
 
 ####################
 # OpenStack
