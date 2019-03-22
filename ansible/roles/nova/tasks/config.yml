@@ -62,7 +62,7 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
-    mode: "0770"
+    mode: "0660"
   register: config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -125,6 +125,7 @@
   template:
     src: "placement-api-wsgi.conf.j2"
     dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
+    mode: "0660"
   register: placement_api_wsgi_conf
   when:
     - inventory_hostname in groups[service.group]
@@ -158,6 +159,7 @@
   copy:
     src: "{{ node_custom_config }}/vmware_ca"
     dest: "{{ node_config_directory }}/nova-compute/vmware_ca"
+    mode: "0660"
   register: vcenter_ca_file
   when:
     - nova_compute_virt_type == "vmware"
@@ -184,6 +186,7 @@
   template:
     src: "{{ nova_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ nova_policy_file }}"
+    mode: "0660"
   register: nova_policy_overwriting
   when:
     - inventory_hostname in groups[item.value.group]

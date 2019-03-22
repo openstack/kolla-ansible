@@ -16,6 +16,7 @@
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
   register: prometheus_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
@@ -30,6 +31,7 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
+    mode: "0660"
   register: prometheus_confs
   when:
     - inventory_hostname in groups[service.group]
@@ -47,6 +49,7 @@
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-alertmanager/prometheus-alertmanager.yml"
+    mode: "0660"
   register: prometheus_alertmanager_confs
   when:
     - inventory_hostname in groups[service.group]
@@ -67,6 +70,7 @@
       - "{{ node_custom_config }}/prometheus-mysqld-exporter/my.cnf"
       - "{{ role_path }}/templates/my.cnf.j2"
     dest: "{{ node_config_directory }}/prometheus-mysqld-exporter/my.cnf"
+    mode: "0660"
   register: prometheus_conf_mycnf
   when:
     - inventory_hostname in groups[service.group]

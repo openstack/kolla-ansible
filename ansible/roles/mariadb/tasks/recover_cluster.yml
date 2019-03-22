@@ -4,12 +4,17 @@
   when: not has_cluster | bool
 
 - name: Cleaning up temp file on mariadb hosts
-  file: path=/tmp/kolla_mariadb_grastate.dat state=absent
+  file:
+    path: /tmp/kolla_mariadb_grastate.dat
+    state: absent
   changed_when: false
   check_mode: no
 
 - name: Cleaning up temp file on localhost
-  local_action: file path=/tmp/kolla_mariadb_recover_inventory_name state=absent
+  local_action:
+    module: file
+    path: /tmp/kolla_mariadb_recover_inventory_name
+    state: absent
   changed_when: false
   check_mode: no
   run_once: true
@@ -50,7 +55,9 @@
       register: wsrep_recovery_seqno
 
     - name: Removing MariaDB log file from /tmp
-      file: path=/tmp/mariadb_tmp.log state=absent
+      file:
+        path: /tmp/mariadb_tmp.log
+        state: absent
       changed_when: false
       check_mode: no
 
