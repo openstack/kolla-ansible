@@ -4,7 +4,12 @@ enable_docker_repo: true
 
 # Whether to use the legacy Docker packages at dockerproject.org instead of the
 # newer packages at docker.com.
-docker_legacy_packages: true
+# Ubuntu 18.04+ does not support the legacy packages, so use the new packages.
+# All other distros & versions use legacy packages by default in Rocky for
+# backwards compatibility.
+docker_legacy_packages: >-
+  {{ ansible_facts.distribution != 'Ubuntu' or
+     ansible_facts.distribution_version | version_compare('18.04', 'lt') }}
 
 # Docker APT repository configuration.
 docker_apt_url: "{% if docker_legacy_packages | bool %}{{ docker_legacy_apt_url }}{% else %}{{ docker_new_apt_url }}{% endif %}"
