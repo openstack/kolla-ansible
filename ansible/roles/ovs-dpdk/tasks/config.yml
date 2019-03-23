@@ -55,21 +55,5 @@
     hugepage_mountpoint: "{{ ovs_hugepage_mountpoint }}"
     ovs_physical_port_policy: "{{ ovs_physical_port_policy }}"
 
-# TODO check the environment change
-- name: Check ovs containers
-  become: true
-  kolla_docker:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    privileged: "{{ item.value.privileged | default(False) }}"
-    volumes: "{{ item.value.volumes }}"
-    dimensions: "{{ item.value.dimensions }}"
-  when:
-    - kolla_action != "config"
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ ovsdpdk_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+- include_tasks: check-containers.yml
+  when: kolla_action != "config"

@@ -85,19 +85,5 @@
   notify:
     - restart mariadb
 
-- name: Check mariadb containers
-  become: true
-  kolla_docker:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    volumes: "{{ item.value.volumes }}"
-    dimensions: "{{ item.value.dimensions }}"
-  when:
-    - kolla_action != "config"
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ mariadb_services }}"
-  notify:
-    - restart mariadb
+- include_tasks: check-containers.yml
+  when: kolla_action != "config"

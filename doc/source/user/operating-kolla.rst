@@ -189,6 +189,9 @@ tests.
 
 ``kolla-ansible -i INVENTORY stop`` is used to stop running containers.
 
+``kolla-ansible -i INVENTORY deploy-containers`` is used to check and if
+necessary update containers, without generating configuration.
+
 .. note::
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.

@@ -1,0 +1,18 @@
+---
+- name: Check rabbitmq containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+    environment: "{{ item.value.environment }}"
+    dimensions: "{{ item.value.dimensions }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ rabbitmq_services }}"
+  notify:
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
