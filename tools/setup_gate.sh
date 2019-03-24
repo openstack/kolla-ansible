@@ -17,7 +17,7 @@ clonemap:
    dest: ${GIT_PROJECT_DIR}/requirements
 EOF
     /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
-        --cache-dir /opt/git git://git.openstack.org \
+        --cache-dir /opt/git https://git.openstack.org \
         openstack/kolla openstack/requirements
 }
 
