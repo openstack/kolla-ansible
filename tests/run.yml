@@ -144,3 +144,13 @@
         chdir: "{{ kolla_ansible_src_dir }}"
       delegate_to: "primary"
       environment: '{{ zuul | zuul_legacy_vars }}'
+
+- hosts: all
+  vars:
+    kolla_ansible_src_dir: "src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+  tasks:
+    - name: Run check-config.sh script
+      shell:
+        cmd: tests/check-config.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
