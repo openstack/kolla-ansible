@@ -9,7 +9,8 @@
 # Speaking to the nova team, this seems to be an issue in oslo.service,
 # with a fix proposed here: https://review.openstack.org/#/c/641907.
 # This issue also seems to affect the proxy services, which exit non-zero in
-# reponse to a SIGHUP, so restart those too.
+# reponse to a SIGHUP, so restart those too. Placement does not need to be
+# restarted as it does not use nova versioned objects.
 # TODO(mgoddard): Remove this workaround when this bug has been fixed.
 
 - name: Send SIGHUP to nova services
@@ -21,6 +22,7 @@
     - item.key in nova_services_require_nova_conf
     - not item.key.startswith('nova-compute')
     - not item.key.endswith('proxy')
+    - item.key != 'placement-api'
   with_dict: "{{ nova_services }}"
 
 - name: Restart nova compute and proxy services
