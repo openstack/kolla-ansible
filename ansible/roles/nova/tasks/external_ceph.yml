@@ -34,6 +34,7 @@
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
   become: true
+  register: nova_ceph_keyring
   with_items:
     - nova-compute
     - nova-libvirt
@@ -67,6 +68,7 @@
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
     mode: "0600"
   become: true
+  register: libvirt_secrets_xml
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
@@ -102,6 +104,7 @@
     dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
     mode: "0600"
   become: true
+  register: libvirt_secrets_key
   when:
     - inventory_hostname in groups['compute']
     - item.enabled | bool
