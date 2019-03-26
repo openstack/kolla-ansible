@@ -48,13 +48,11 @@
     dest: "{{ node_config_directory }}/{{ service_name }}/config.json"
     mode: "0660"
   become: true
-  register: mariadb_config_json
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
-    - restart slave mariadb
-    - restart master mariadb
+    - restart mariadb
 
 - name: Copying over galera.cnf
   vars:
@@ -68,13 +66,11 @@
     dest: "{{ node_config_directory }}/{{ service_name }}/galera.cnf"
     mode: "0660"
   become: true
-  register: mariadb_galera_conf
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
-    - restart slave mariadb
-    - restart master mariadb
+    - restart mariadb
 
 - name: Copying over wsrep-notify.sh
   template:
@@ -82,14 +78,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/wsrep-notify.sh"
     mode: "0770"
   become: true
-  register: mariadb_wsrep_notify
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ mariadb_services }}"
   notify:
-    - restart slave mariadb
-    - restart master mariadb
+    - restart mariadb
 
 - name: Check mariadb containers
   become: true
@@ -100,12 +94,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_mariadb_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ mariadb_services }}"
   notify:
-    - restart slave mariadb
-    - restart master mariadb
+    - restart mariadb
