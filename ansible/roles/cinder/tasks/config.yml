@@ -50,16 +50,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: cinder_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ cinder_services }}"
   notify:
-    - Restart cinder-api container
-    - Restart cinder-scheduler container
-    - Restart cinder-volume container
-    - Restart cinder-backup container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over cinder-wsgi.conf
   vars:
@@ -73,7 +69,6 @@
     - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/cinder-wsgi.conf"
     - "{{ node_custom_config }}/cinder/cinder-wsgi.conf"
     - "cinder-wsgi.conf.j2"
-  register: wsgi_cinder_api
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -93,16 +88,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/cinder.conf"
     mode: "0660"
   become: true
-  register: cinder_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ cinder_services }}"
   notify:
-    - Restart cinder-api container
-    - Restart cinder-scheduler container
-    - Restart cinder-volume container
-    - Restart cinder-backup container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over existing policy file
   become: true
@@ -110,17 +101,13 @@
     src: "{{ cinder_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ cinder_policy_file }}"
     mode: "0660"
-  register: cinder_policy_overwriting
   when:
     - item.value.enabled | bool
     - cinder_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ cinder_services }}"
   notify:
-    - Restart cinder-api container
-    - Restart cinder-scheduler container
-    - Restart cinder-volume container
-    - Restart cinder-backup container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over nfs_shares files for cinder_volume
   become: true
@@ -140,6 +127,8 @@
         - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/nfs_shares"
       skip: "{{ not enable_cinder_backend_nfs | bool and not enable_cinder_backend_hnas_nfs | bool }}"
   when: inventory_hostname in groups['cinder-volume']
+  notify:
+    - Restart cinder-volume container
 
 - name: Check cinder containers
   become: true
@@ -152,14 +141,10 @@
     dimensions: "{{ item.value.dimensions }}"
     privileged: "{{ item.value.privileged | default(False) }}"
     ipc_mode: "{{ item.value.ipc_mode | default('') }}"
-  register: check_cinder_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ cinder_services }}"
   notify:
-    - Restart cinder-api container
-    - Restart cinder-scheduler container
-    - Restart cinder-volume container
-    - Restart cinder-backup container
+    - "Restart {{ item.key }} container"

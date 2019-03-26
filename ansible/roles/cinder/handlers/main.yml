@@ -3,10 +3,6 @@
   vars:
     service_name: "cinder-api"
     service: "{{ cinder_services[service_name] }}"
-    config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_api_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,22 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cinder_conf.changed | bool
-      or wsgi_cinder_api.changed | bool
-      or policy_overwriting.changed | bool
-      or cinder_api_container.changed | bool
 
 - name: Restart cinder-scheduler container
   vars:
     service_name: "cinder-scheduler"
     service: "{{ cinder_services[service_name] }}"
-    config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_scheduler_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,22 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cinder_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or cinder_scheduler_container.changed | bool
 
 - name: Restart cinder-volume container
   vars:
     service_name: "cinder-volume"
     service: "{{ cinder_services[service_name] }}"
-    config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item.key', 'equalto', service_name)|first if ceph_confs is defined else none }}"
-    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_volume_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -71,24 +45,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cinder_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or cinder_volume_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
-      or ( cinder_volume_ceph_keyring is defined and cinder_volume_ceph_keyring.changed | bool )
 
 - name: Restart cinder-backup container
   vars:
     service_name: "cinder-backup"
     service: "{{ cinder_services[service_name] }}"
-    config_json: "{{ cinder_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_conf: "{{ cinder_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item.key', 'equalto', service_name)|first if ceph_confs is defined else none }}"
-    policy_overwriting: "{{ cinder_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cinder_backup_container: "{{ check_cinder_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -100,11 +61,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cinder_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or cinder_backup_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
-      or ( cinder_backup_ceph_keyring is defined and cinder_backup_ceph_keyring.changed | bool )

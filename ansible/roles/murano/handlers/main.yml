@@ -3,10 +3,6 @@
   vars:
     service_name: "murano-api"
     service: "{{ murano_services[service_name] }}"
-    config_json: "{{ murano_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    murano_conf: "{{ murano_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ murano_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    murano_api_container: "{{ check_murano_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or murano_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or murano_api_container.changed | bool
 
 - name: Restart murano-engine container
   vars:
     service_name: "murano-engine"
     service: "{{ murano_services[service_name] }}"
-    config_json: "{{ murano_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    murano_conf: "{{ murano_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ murano_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    murano_conductor_container: "{{ check_murano_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,9 +29,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or murano_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or murano_conductor_container.changed | bool

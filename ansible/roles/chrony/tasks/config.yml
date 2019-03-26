@@ -1,5 +1,8 @@
 ---
 - name: Ensuring config directories exist
+  vars:
+    service_name: "chrony"
+    service: "{{ chrony_services[service_name] }}"
   file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
@@ -7,26 +10,41 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "chrony"
 
 - name: Copying over config.json files for services
+  vars:
+    service_name: "chrony"
+    service: "{{ chrony_services[service_name] }}"
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
     mode: "0660"
   become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "chrony"
   notify:
     - Restart chrony container
 
 - name: Copying over chrony.conf
+  vars:
+    service_name: "chrony"
+    service: "{{ chrony_services[service_name] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/chrony/chrony.conf"
     mode: "0660"
   become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_first_found:
     - "{{ node_custom_config }}/chrony/{{ inventory_hostname }}/chrony.conf"
     - "{{ node_custom_config }}/chrony/chrony.conf"
@@ -50,4 +68,4 @@
     - item.value.enabled | bool
   with_dict: "{{ chrony_services }}"
   notify:
-    - Restart chrony container
+    - "Restart {{ item.key }} container"

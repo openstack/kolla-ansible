@@ -3,7 +3,6 @@
   vars:
     service_name: "vmtp"
     service: "{{ vmtp_services[service_name] }}"
-    vmtp_container: "{{ check_vmtp_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -14,7 +13,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - vmtp_confs.changed | bool
-      or vmtp_container.changed | bool

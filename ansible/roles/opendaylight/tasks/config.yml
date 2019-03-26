@@ -23,7 +23,6 @@
     - "opendaylight"
 
 - name: Copying over config.json files for services
-  register: opendaylight_config_json
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
@@ -35,7 +34,6 @@
     - Restart opendaylight container
 
 - name: Copying over custom.properties
-  register: opendaylight_config_custom_props
   template:
     src: "{{ role_path }}/templates/custom.properties.j2"
     dest: "{{ node_config_directory }}/opendaylight/custom.properties"
@@ -45,7 +43,6 @@
     - Restart opendaylight container
 
 - name: Copying over start-odl
-  register: opendaylight_config_start_odl
   template:
     src: "{{ role_path }}/templates/start-odl.j2"
     dest: "{{ node_config_directory }}/opendaylight/start-odl"
@@ -55,7 +52,6 @@
     - Restart opendaylight container
 
 - name: Copying over jetty.xml
-  register: opendaylight_config_jetty
   template:
     src: "{{ role_path }}/templates/jetty.xml.j2"
     dest: "{{ node_config_directory }}/{{ item }}/jetty.xml"
@@ -67,7 +63,6 @@
     - Restart opendaylight container
 
 - name: Copying over org.apache.karaf.features.cfg
-  register: opendaylight_config_features
   template:
     src: "{{ role_path }}/templates/org.apache.karaf.features.cfg.j2"
     dest: "{{ node_config_directory }}/{{ item }}/org.apache.karaf.features.cfg"
@@ -79,7 +74,6 @@
     - Restart opendaylight container
 
 - name: Copying over org.opendaylight.ovsdb.library.cfg
-  register: opendaylight_config_ovsdb
   template:
     src: "{{ role_path }}/templates/org.opendaylight.ovsdb.library.cfg.j2"
     dest: "{{ node_config_directory }}/{{ item }}/org.opendaylight.ovsdb.library.cfg"
@@ -96,7 +90,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/tomcat-server.xml"
     mode: "0660"
   become: true
-  register: opendaylight_config_tomcat
   with_items:
     - "opendaylight"
   notify:
@@ -108,7 +101,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/org.ops4j.pax.logging.cfg"
     mode: "0660"
   become: true
-  register: opendaylight_config_logging
   with_items:
     - "opendaylight"
   notify:
@@ -120,7 +112,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/netvirt-impl-config_netvirt-impl-config.xml"
     mode: "0660"
   become: true
-  register: opendaylight_config_netvirt
   with_items:
     - "opendaylight"
   notify:
@@ -132,7 +123,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/netvirt-aclservice-config.xml"
     mode: "0660"
   become: true
-  register: opendaylight_config_netvirt_acl
   with_items:
     - "opendaylight"
   notify:
@@ -144,7 +134,6 @@
     dest: "{{ node_config_directory }}/opendaylight/setenv"
     mode: "0660"
   become: true
-  register: opendaylight_config_env
   with_first_found:
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/setenv"
     - "{{ node_custom_config }}/opendaylight/setenv"
@@ -162,7 +151,6 @@
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/akka.conf"
     - "{{ node_custom_config }}/opendaylight/akka.conf"
     - "akka.conf.j2"
-  register: opendaylight_config_akka
   notify:
     - Restart opendaylight container
 
@@ -176,7 +164,6 @@
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/modules.conf"
     - "{{ node_custom_config }}/opendaylight/modules.conf"
     - "modules.conf.j2"
-  register: opendaylight_config_modules
   notify:
     - Restart opendaylight container
 
@@ -190,7 +177,6 @@
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/module-shards.conf"
     - "{{ node_custom_config }}/opendaylight/module-shards.conf"
     - "module-shards.conf.j2"
-  register: opendaylight_config_module_shards
   notify:
     - Restart opendaylight container
 
@@ -204,7 +190,6 @@
     - "{{ node_custom_config }}/opendaylight/{{ inventory_hostname }}/10-rest-connector.xml"
     - "{{ node_custom_config }}/opendaylight/10-rest-connector.xml"
     - "10-rest-connector.xml.j2"
-  register: opendaylight_config_10_rest_connector
   notify:
     - Restart opendaylight container
 
@@ -219,7 +204,6 @@
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
     tty: "{{ item.value.tty }}"
-  register: check_opendaylight_containers
   when:
     - kolla_action != "config"
     - item.value.enabled | bool

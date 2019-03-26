@@ -3,8 +3,6 @@
   vars:
     service_name: "etcd"
     service: "{{ etcd_services[service_name] }}"
-    config_json: "{{ etcd_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    etcd_container: "{{ check_etcd_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -16,7 +14,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - service.enabled | bool
-    - inventory_hostname in groups[service.group]
-    - config_json.changed | bool
-      or etcd_container.changed | bool

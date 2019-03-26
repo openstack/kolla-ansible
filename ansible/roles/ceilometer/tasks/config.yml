@@ -69,7 +69,6 @@
     force: True
     mode: "0660"
   become: true
-  register: ceilometer_polling_overwriting
   when:
     - ceilometer_polling_file.stat.exists
     - inventory_hostname in groups[item.value.group]
@@ -95,7 +94,6 @@
     force: True
     mode: "0660"
   become: true
-  register: ceilometer_gnocchi_resources_overwriting
   when:
     - ceilometer_gnocchi_resources_file.stat.exists
     - inventory_hostname in groups[item.value.group]
@@ -133,16 +131,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: ceilometer_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-notification container
-    - Restart ceilometer-central container
-    - Restart ceilometer-compute container
-    - Restart ceilometer-ipmi container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over ceilometer.conf
   vars:
@@ -157,16 +151,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceilometer.conf"
     mode: "0660"
   become: true
-  register: ceilometer_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-notification container
-    - Restart ceilometer-central container
-    - Restart ceilometer-compute container
-    - Restart ceilometer-ipmi container
+    - "Restart {{ item.key }} container"
 
 - name: Check custom event_definitions.yaml exists
   local_action: stat path="{{ node_custom_config }}/ceilometer/event_definitions.yaml"
@@ -234,7 +224,6 @@
     dest: "{{ node_config_directory }}/ceilometer-notification/event_pipeline.yaml"
     mode: "0660"
   become: true
-  register: ceilometer_event_pipeline
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -279,7 +268,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/pipeline.yaml"
     mode: "0660"
   become: true
-  register: ceilometer_pipelines
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -303,7 +291,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/panko.conf"
     mode: "0660"
   become: true
-  register: panko_confs
   when:
     - enable_panko | bool
     - item.value.enabled | bool
@@ -320,7 +307,6 @@
     src: "{{ node_custom_config }}/vmware_ca"
     dest: "{{ node_config_directory }}/ceilometer-compute/vmware_ca"
     mode: "0660"
-  register: vcenter_ca_file
   when:
     - nova_compute_virt_type == "vmware"
     - not vmware_vcenter_insecure | bool
@@ -335,17 +321,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ ceilometer_policy_file }}"
     mode: "0660"
   become: true
-  register: ceilometer_policy_overwriting
   when:
     - ceilometer_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-notification container
-    - Restart ceilometer-central container
-    - Restart ceilometer-compute container
-    - Restart ceilometer-ipmi container
+    - "Restart {{ item.key }} container"
 
 # check whether the containers parameter is changed. If yes, trigger the handler.
 - name: Check ceilometer containers
@@ -358,14 +340,10 @@
     privileged: "{{ item.value.privileged | default(False) }}"
     volumes: "{{ item.value.volumes | reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_ceilometer_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
   notify:
-    - Restart ceilometer-notification container
-    - Restart ceilometer-central container
-    - Restart ceilometer-compute container
-    - Restart ceilometer-ipmi container
+    - "Restart {{ item.key }} container"

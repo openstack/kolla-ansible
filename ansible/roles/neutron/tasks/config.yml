@@ -37,7 +37,6 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  register: neutron_config_jsons
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
@@ -71,7 +70,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/neutron.conf"
     mode: "0660"
-  register: neutron_confs
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
@@ -94,7 +92,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron_vpnaas.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/neutron_vpnaas.conf"
     mode: "0660"
-  register: neutron_vpnaas_confs
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
@@ -119,7 +116,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ml2_conf.ini"
     mode: "0660"
-  register: neutron_ml2_confs
   when:
     - item.key in services_need_ml2_conf_ini
     - item.value.enabled | bool
@@ -144,7 +140,6 @@
       - "{{ node_custom_config }}/neutron/{{ service_name }}/ml2_conf.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ml2_conf.ini"
     mode: "0660"
-  register: neutron_ml2_xenapi_confs
   when:
     - item.key in services_need_ml2_conf_ini
     - item.value.enabled | bool
@@ -164,7 +159,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/sriov_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/sriov_agent.ini"
     mode: "0660"
-  register: neutron_sriov_agent_ini
   when:
     - neutron_sriov_agent.enabled | bool
     - neutron_sriov_agent.host_in_groups | bool
@@ -183,7 +177,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/dhcp_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/dhcp_agent.ini"
     mode: "0660"
-  register: dhcp_agent_ini
   when:
     - neutron_dhcp_agent.enabled | bool
     - neutron_dhcp_agent.host_in_groups | bool
@@ -199,7 +192,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/{{ service_name }}/dnsmasq.conf"
     mode: "0660"
-  register: dnsmasq_conf
   with_first_found:
     - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/dnsmasq.conf"
     - "{{ node_custom_config }}/neutron/dnsmasq.conf"
@@ -223,7 +215,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/l3_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/l3_agent.ini"
     mode: "0660"
-  register: neutron_l3_agent_inis
   when:
     - item.key in services_need_l3_agent_ini
     - item.value.enabled | bool
@@ -245,7 +236,6 @@
       - "{{ node_custom_config }}/neutron/fwaas_driver.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/fwaas_driver.ini"
     mode: "0660"
-  register: neutron_fwaas_driver_inis
   when:
     - item.key in services_need_fwaas_driver_ini
     - item.value.enabled | bool
@@ -265,7 +255,6 @@
       - "{{ node_custom_config }}/neutron/metadata_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/metadata_agent.ini"
     mode: "0660"
-  register: neutron_metadata_agent_ini
   when:
     - neutron_metadata_agent.enabled | bool
     - neutron_metadata_agent.host_in_groups | bool
@@ -283,7 +272,6 @@
       - "{{ node_custom_config }}/neutron/metering_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/metering_agent.ini"
     mode: "0660"
-  register: neutron_metering_agent_ini
   when:
     - neutron_metering_agent.enabled | bool
     - neutron_metering_agent.host_in_groups | bool
@@ -301,7 +289,6 @@
       - "{{ node_custom_config }}/neutron/ironic_neutron_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ironic_neutron_agent.ini"
     mode: "0660"
-  register: ironic_neutron_agent_ini
   when:
     - ironic_neutron_agent.enabled | bool
     - ironic_neutron_agent.host_in_groups | bool
@@ -319,7 +306,6 @@
       - "{{ node_custom_config }}/neutron/bgp_dragent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/bgp_dragent.ini"
     mode: "0660"
-  register: neutron_bgp_dragent_ini
   when:
     - neutron_bgp_dragent.enabled | bool
     - neutron_bgp_dragent.host_in_groups | bool
@@ -342,7 +328,6 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/nsx.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/nsx.ini"
     mode: "0660"
-  register: nsx_ini
   when:
     - neutron_server.enabled | bool
     - neutron_server.host_in_groups | bool
@@ -369,7 +354,6 @@
     src: "{{ node_custom_config }}/neutron/policy.json"
     dest: "{{ node_config_directory }}/{{ service_name }}/policy.json"
     mode: "0660"
-  register: policy_jsons
   when:
     - neutron_policy.stat.exists
     - item.value.enabled | bool
@@ -387,7 +371,6 @@
     src: neutron-l3-agent-wrapper.sh.j2
     dest: "{{ node_config_directory }}/{{ service_name }}/neutron-l3-agent-wrapper.sh"
     mode: "0770"
-  register: neutron_l3_agent_wrapper
   when:
     - service.enabled | bool
     - service.host_in_groups | bool
@@ -406,7 +389,6 @@
     src: "{{ item.2.path }}"
     dest: "{{ node_config_directory }}/{{ service_name }}/{{ item.2.path | basename }}"
     mode: "0660"
-  register: extra_ml2_plugins
   when:
     - item.2 is defined
     - item.1.enabled | bool
@@ -429,7 +411,6 @@
     privileged: "{{ item.value.privileged | default(False) }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_neutron_containers
   when:
     - kolla_action != "config"
     - item.value.enabled | bool

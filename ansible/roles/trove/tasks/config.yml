@@ -35,7 +35,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: trove_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -58,7 +57,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
     mode: "0660"
   become: true
-  register: trove_confs
   when:
     - item.key in services_need_confs
     - inventory_hostname in groups[item.value.group]
@@ -80,7 +78,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/trove.conf"
     mode: "0660"
   become: true
-  register: trove_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -93,15 +90,12 @@
     src: "{{ trove_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ trove_policy_file }}"
     mode: "0660"
-  register: trove_policy_overwriting
   when:
     - trove_policy_file is defined
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ trove_services }}"
   notify:
-    - Restart trove-api container
-    - Restart trove-conductor container
-    - Restart trove-taskmanager container
+    - Restart {{ item.key }} container
 
 - name: Check trove containers
   become: true
@@ -112,7 +106,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_trove_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

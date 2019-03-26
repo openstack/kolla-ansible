@@ -3,8 +3,6 @@
   vars:
     service_name: "designate-backend-bind9"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_backend_bind9_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -15,22 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_rndc_conf.changed | bool
-      or designate_rndc_key_file.changed | bool
-      or designate_named.changed | bool
-      or designate_backend_bind9_container.changed | bool
 
 - name: Restart designate-api container
   vars:
     service_name: "designate-api"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_api_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -41,21 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_api_container.changed | bool
 
 - name: Restart designate-central container
   vars:
     service_name: "designate-central"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_central_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -66,21 +43,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_central_container.changed | bool
 
 - name: Restart designate-producer container
   vars:
     service_name: "designate-producer"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_producer_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -91,21 +58,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_producer_container.changed | bool
 
 - name: Restart designate-mdns container
   vars:
     service_name: "designate-mdns"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_mdns_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -116,21 +73,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_mdns_container.changed | bool
 
 - name: Restart designate-worker container
   vars:
     service_name: "designate-worker"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_worker_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -141,24 +88,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or designate_rndc_conf.changed | bool
-      or designate_rndc_key_file.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_worker_container.changed | bool
-      or designate_pool.changed | bool
 
 - name: Restart designate-sink container
   vars:
     service_name: "designate-sink"
     service: "{{ designate_services[service_name] }}"
-    config_json: "{{ designate_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_conf: "{{ designate_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ designate_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    designate_sink_container: "{{ check_designate_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -169,9 +103,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or designate_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or designate_sink_container.changed | bool

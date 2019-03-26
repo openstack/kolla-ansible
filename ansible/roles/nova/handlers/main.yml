@@ -3,10 +3,6 @@
   vars:
     service_name: "nova-conductor"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conductor_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -18,19 +14,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_conductor_container.changed | bool
 
 - name: Restart nova-ssh container
   vars:
     service_name: "nova-ssh"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_ssh_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,19 +31,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_ssh_confs.changed | bool
-      or nova_ssh_container.changed | bool
 
 - name: Restart nova-libvirt container
   vars:
     service_name: "nova-libvirt"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else none }}"
-    nova_libvirt_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -73,24 +53,11 @@
   until: restart_nova_libvirt is success
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_libvirt_confs.changed | bool
-      or nova_libvirt_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
-      or ( nova_ceph_keyring is defined and nova_ceph_keyring.changed | bool )
-      or ( libvirt_secrets_xml is defined and libvirt_secrets_xml.changed | bool )
-      or ( libvirt_secrets_key is defined and libvirt_secrets_key.changed | bool )
 
 - name: Restart nova-scheduler container
   vars:
     service_name: "nova-scheduler"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_scheduler_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -102,21 +69,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_scheduler_container.changed | bool
 
 - name: Restart nova-novncproxy container
   vars:
     service_name: "nova-novncproxy"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_novncproxy_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -128,21 +85,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_novncproxy_container.changed | bool
 
 - name: Restart nova-spicehtml5proxy container
   vars:
     service_name: "nova-spicehtml5proxy"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_spicehtml5proxy_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -154,21 +101,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_spicehtml5proxy_container.changed | bool
 
 - name: Restart nova-serialproxy container
   vars:
     service_name: "nova-serialproxy"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_serialproxy_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -180,21 +117,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_serialproxy_container.changed | bool
 
 - name: Restart nova-api container
   vars:
     service_name: "nova-api"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_api_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -206,22 +133,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_api_container.changed | bool
 
 - name: Restart nova-compute container
   vars:
     service_name: "nova-compute"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else none }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_compute_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -235,25 +151,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or vcenter_ca_file | bool
-      or nova_compute_release_file | bool
-      or nova_compute_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
-      or ( nova_ceph_keyring is defined and nova_ceph_keyring.changed | bool )
 
 - name: Restart nova-compute-ironic container
   vars:
     service_name: "nova-compute-ironic"
     service: "{{ nova_services[service_name] }}"
-    config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    nova_compute_ironic_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -265,12 +167,6 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or nova_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or nova_compute_ironic_container.changed | bool
 
 # nova-compute-fake is special. It will start multi numbers of container
 # so put all variables here rather than defaults/main.yml file
@@ -291,8 +187,6 @@
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups['compute']
-    - enable_nova_fake | bool
 
 # NOTE(mgoddard): After upgrading nova-compute, services will have an RPC
 # version cap in place.  We need to restart all services that communicate with

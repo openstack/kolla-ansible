@@ -35,16 +35,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: vitrage_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"
   notify:
-    - Restart vitrage-api container
-    - Restart vitrage-notifier container
-    - Restart vitrage-graph container
-    - Restart vitrage-ml container
+    - Restart {{ item.key }} container
 
 - name: Copying over vitrage.conf
   vars:
@@ -60,16 +56,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/vitrage.conf"
     mode: "0660"
   become: true
-  register: vitrage_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"
   notify:
-    - Restart vitrage-api container
-    - Restart vitrage-notifier container
-    - Restart vitrage-graph container
-    - Restart vitrage-ml container
+    - Restart {{ item.key }} container
 
 - name: Copying over wsgi-vitrage files for services
   template:
@@ -90,7 +82,6 @@
     dest: "{{ node_config_directory }}/vitrage-graph/prometheus_conf.yaml"
     mode: "0660"
   become: true
-  register: vitrage_prometheus_conf
   when:
     - enable_vitrage_prometheus_datasource | bool
     - inventory_hostname in groups[service.group]
@@ -104,17 +95,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ vitrage_policy_file }}"
     mode: "0660"
   become: true
-  register: vitrage_policy_overwriting
   when:
     - vitrage_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"
   notify:
-    - Restart vitrage-api container
-    - Restart vitrage-graph container
-    - Restart vitrage-notifier container
-    - Restart vitrage-ml container
+    - Restart {{ item.key }} container
 
 - name: Check vitrage containers
   become: true
@@ -125,14 +112,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_vitrage_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ vitrage_services }}"
   notify:
-    - Restart vitrage-api container
-    - Restart vitrage-graph container
-    - Restart vitrage-notifier container
-    - Restart vitrage-ml container
+    - Restart {{ item.key }} container

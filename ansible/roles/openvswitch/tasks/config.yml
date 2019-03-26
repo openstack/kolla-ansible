@@ -25,7 +25,6 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  register: openvswitch_config_jsons
   when:
     - item.value.enabled | bool
     - item.value.host_in_groups | bool
@@ -41,7 +40,6 @@
     src: "{{ role_path }}/templates/start-ovs.j2"
     dest: "{{ node_config_directory }}/openvswitch-vswitchd/start-ovs"
     mode: "0770"
-  register: openvswitch_start_ovs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -56,7 +54,6 @@
     src: "{{ role_path }}/templates/start-ovsdb-server.j2"
     dest: "{{ node_config_directory }}/openvswitch-db-server/start-ovsdb-server"
     mode: "0770"
-  register: openvswitch_start_ovsdb_server
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -73,7 +70,6 @@
     privileged: "{{ item.value.privileged | default(False) }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_openvswitch_containers
   when:
     - kolla_action != "config"
     - item.value.enabled | bool

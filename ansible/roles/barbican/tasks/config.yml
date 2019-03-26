@@ -1,16 +1,32 @@
 ---
 - name: Ensuring config directories exist
   file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ barbican_services }}"
+
+- name: Ensuring vassals config directories exist
+  vars:
+    service: "{{ barbican_services['barbican-api'] }}"
+  file:
     path: "{{ node_config_directory }}/{{ item }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   with_items:
     - "barbican-api/vassals"
-    - "barbican-keystone-listener"
-    - "barbican-worker"
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ item }}"
@@ -35,7 +51,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: barbican_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -54,9 +69,8 @@
     dest: "{{ node_config_directory }}/barbican-api/vassals/barbican-api.ini"
     mode: "0660"
   become: true
-  register: barbican_api_ini
   when:
-    - inventory_hostname in groups['barbican-api']
+    - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
     - Restart barbican-api container
@@ -68,6 +82,7 @@
   run_once: True
   register: check_barbican_api_paste_ini
   when:
+    - inventory_hostname in groups[service.group]
     - service.enabled | bool
 
 - name: Copying over barbican-api-paste.ini
@@ -79,10 +94,9 @@
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups['barbican-api']
+    - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - check_barbican_api_paste_ini.stat.exists
-  register: barbican_api_paste
   notify:
     - Restart barbican-api container
 
@@ -99,7 +113,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/barbican.conf"
     mode: "0660"
   become: true
-  register: barbican_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -113,7 +126,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ barbican_policy_file }}"
     mode: "0660"
   become: true
-  register: barbican_policy_overwriting
   when:
     - barbican_policy_file is defined
     - inventory_hostname in groups[item.value.group]
@@ -131,7 +143,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_barbican_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

@@ -18,7 +18,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: monasca_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -37,7 +36,6 @@
     dest: "{{ node_config_directory }}/monasca-agent-collector/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_agent_collector_confs
   with_items:
     - agent-collector.yml
   when:
@@ -78,7 +76,6 @@
     dest: "{{ node_config_directory }}/monasca-agent-collector/plugins/{{ item.path | basename }}"
     mode: "0660"
   become: true
-  register: monasca_agent_collector_plugin_confs
   with_items:
     "{{ agent_plugins.files }}"
   when:
@@ -98,7 +95,6 @@
     dest: "{{ node_config_directory }}/monasca-agent-forwarder/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_agent_forwarder_confs
   with_items:
     - agent-forwarder.yml
   when:
@@ -118,7 +114,6 @@
     dest: "{{ node_config_directory }}/monasca-agent-statsd/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_agent_statsd_confs
   with_items:
     - agent-statsd.yml
   when:
@@ -138,7 +133,6 @@
     dest: "{{ node_config_directory }}/monasca-api/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_api_confs
   with_items:
     - api.conf
     - api-config.ini
@@ -156,7 +150,6 @@
     dest: "{{ node_config_directory }}/monasca-api/wsgi-api.conf"
     mode: "0660"
   become: true
-  register: monasca_api_wsgi_confs
   when:
     - inventory_hostname in groups[service['group']]
     - service.enabled | bool
@@ -174,7 +167,6 @@
     dest: "{{ node_config_directory }}/monasca-log-api/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_log_api_confs
   with_items:
     - log-api.conf
     - log-api-paste.ini
@@ -192,7 +184,6 @@
     dest: "{{ node_config_directory }}/monasca-log-api/wsgi-log-api.conf"
     mode: "0660"
   become: true
-  register: monasca_log_api_wsgi_confs
   when:
     - inventory_hostname in groups[service['group']]
     - service.enabled | bool
@@ -207,7 +198,6 @@
     dest: "{{ node_config_directory }}/monasca-log-transformer/log-transformer.conf"
     mode: "0660"
   become: true
-  register: monasca_log_transformer_confs
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-transformer.conf"
     - "{{ node_custom_config }}/monasca/log-transformer.conf"
@@ -226,7 +216,6 @@
     dest: "{{ node_config_directory }}/monasca-log-persister/log-persister.conf"
     mode: "0660"
   become: true
-  register: monasca_log_persister_confs
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-persister.conf"
     - "{{ node_custom_config }}/monasca/log-persister.conf"
@@ -245,7 +234,6 @@
     dest: "{{ node_config_directory }}/monasca-log-persister/elasticsearch-template.json"
     mode: "0660"
   become: true
-  register: monasca_log_persister_elasticsearch_template
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/elasticsearch-template.json"
     - "{{ node_custom_config }}/monasca/elasticsearch-template.json"
@@ -264,7 +252,6 @@
     dest: "{{ node_config_directory }}/monasca-log-metrics/log-metrics.conf"
     mode: "0660"
   become: true
-  register: monasca_log_metrics_confs
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-metrics.conf"
     - "{{ node_custom_config }}/monasca/log-metrics.conf"
@@ -286,7 +273,6 @@
     dest: "{{ node_config_directory }}/monasca-thresh/thresh-config.yml"
     mode: "0660"
   become: true
-  register: monasca_thresh_confs
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/thresh-config.yml"
     - "{{ node_custom_config }}/monasca/thresh-config.yml"
@@ -305,7 +291,6 @@
     dest: "{{ node_config_directory }}/monasca-thresh/storm.yml"
     mode: "0660"
   become: true
-  register: monasca_thresh_storm_conf
   with_first_found:
     - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/storm.yml"
     - "{{ node_custom_config }}/monasca/storm.yml"
@@ -327,7 +312,6 @@
     dest: "{{ node_config_directory }}/monasca-notification/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_notification_confs
   with_items:
     - notification.conf
   when:
@@ -349,7 +333,6 @@
     dest: "{{ node_config_directory }}/monasca-notification/"
     mode: "0660"
   become: true
-  register: monasca_notification_plugin_templates
   when:
     - notification_templates.stat.exists and notification_templates.stat.isdir
     - inventory_hostname in groups[service['group']]
@@ -368,7 +351,6 @@
     dest: "{{ node_config_directory }}/monasca-persister/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_persister_confs
   with_items:
     - persister.conf
   when:
@@ -388,7 +370,6 @@
     dest: "{{ node_config_directory }}/monasca-grafana/{{ item }}"
     mode: "0660"
   become: true
-  register: monasca_grafana_confs
   with_items:
     - grafana.ini
   when:
@@ -407,7 +388,6 @@
     pid_mode: "{{ item.value.pid_mode|default('') }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_monasca_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

@@ -18,13 +18,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: etcd_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ etcd_services }}"
   notify:
-    - Restart etcd container
+    - Restart {{ item.key }} container
 
 - name: Check etcd containers
   become: true
@@ -36,11 +35,10 @@
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment }}"
-  register: check_etcd_containers
   when:
     - kolla_action != "config"
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ etcd_services }}"
   notify:
-    - Restart etcd container
+    - Restart {{ item.key }} container

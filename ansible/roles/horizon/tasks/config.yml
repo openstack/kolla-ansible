@@ -54,7 +54,6 @@
     src: "horizon.json.j2"
     dest: "{{ node_config_directory }}/horizon/config.json"
     mode: "0660"
-  register: horizon_config_json
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
@@ -69,7 +68,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/horizon.conf"
     mode: "0660"
-  register: horizon_conf
   with_first_found:
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/horizon.conf"
     - "{{ node_custom_config }}/horizon/horizon.conf"
@@ -92,7 +90,6 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/local_settings"
     - "{{ node_custom_config }}/horizon/local_settings"
     - "local_settings.j2"
-  register: horizon_local_settings
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
@@ -111,7 +108,6 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/custom_local_settings"
     - "{{ node_custom_config }}/horizon/custom_local_settings"
     - "custom_local_settings.j2"
-  register: horizon_custom_local_settings
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
@@ -126,7 +122,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/{{ item | basename }}"
     mode: "0660"
-  register: policy_jsons
   when:
     - horizon.enabled | bool
     - inventory_hostname in groups[horizon.group]
@@ -146,7 +141,6 @@
     environment: "{{ horizon.environment }}"
     volumes: "{{ horizon.volumes }}"
     dimensions: "{{ horizon.dimensions }}"
-  register: check_horizon_container
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[horizon.group]

@@ -3,8 +3,6 @@
   vars:
     service_name: "ovsdpdk-db"
     service: "{{ ovsdpdk_services[service_name] }}"
-    config_json: "{{ ovsdpdk_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ovsdpdk_db_container: "{{ check_ovsdpdk_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -15,10 +13,6 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - service.enabled | bool
-    - service.host_in_groups | bool
-    - config_json is changed
-      or ovsdpdk_db_container is changed
   notify:
     - Waiting the ovs db service to be ready
     - Ensuring ovsdpdk bridges are properly setup indexed
@@ -59,8 +53,6 @@
   vars:
     service_name: "ovsdpdk-vswitchd"
     service: "{{ ovsdpdk_services[service_name] }}"
-    config_json: "{{ ovsdpdk_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ovsdpdk_vswitchd_container: "{{ check_ovsdpdk_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -72,10 +64,6 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - service.enabled | bool
-    - service.host_in_groups | bool
-    - config_json is changed
-      or ovsdpdk_vswitchd_container is changed
 
 - name: Ensuring ovsdpdk bridges are properly setup named
   vars:

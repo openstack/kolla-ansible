@@ -3,9 +3,6 @@
   vars:
     service_name: "grafana"
     service: "{{ grafana_services[service_name] }}"
-    config_json: "{{ grafana_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    grafana_conf: "{{ grafana_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    grafana_container: "{{ check_grafana_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -16,10 +13,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or grafana_conf.changed | bool
-      or grafana_container.changed | bool
-      or grafana_home_dashboard.changed | bool
-      or grafana_prometheus_data_source.changed | bool

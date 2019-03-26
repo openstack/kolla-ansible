@@ -18,7 +18,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: redis_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -32,7 +31,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/redis.conf"
     mode: "0660"
   become: true
-  register: redis_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -49,7 +47,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_redis_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

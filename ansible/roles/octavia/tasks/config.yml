@@ -35,7 +35,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ octavia_policy_file }}"
     mode: "0660"
   become: true
-  register: octavia_policy_overwriting
   when:
     - octavia_policy_file is defined
     - inventory_hostname in groups[item.value.group]
@@ -50,7 +49,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: octavia_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -71,7 +69,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
     mode: "0660"
   become: true
-  register: octavia_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -87,7 +84,6 @@
     dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
     mode: "0660"
   become: true
-  register: octavia_worker_certificate
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -106,7 +102,6 @@
     dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
     mode: "0660"
   become: true
-  register: octavia_housekeeping_certificate
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -125,7 +120,6 @@
     dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
     mode: "0660"
   become: true
-  register: octavia_health_manager_certificate
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -145,7 +139,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_octavia_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

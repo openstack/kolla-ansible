@@ -3,10 +3,6 @@
   vars:
     service_name: "trove-api"
     service: "{{ trove_services[service_name] }}"
-    config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_api_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or trove_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or trove_api_container.changed | bool
 
 - name: Restart trove-conductor container
   vars:
     service_name: "trove-conductor"
     service: "{{ trove_services[service_name] }}"
-    config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_conductor_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,21 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or trove_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or trove_conductor_container.changed | bool
 
 - name: Restart trove-taskmanager container
   vars:
     service_name: "trove-taskmanager"
     service: "{{ trove_services[service_name] }}"
-    config_json: "{{ trove_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_conf: "{{ trove_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ trove_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    trove_taskmanager_container: "{{ check_trove_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -67,9 +43,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or trove_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or trove_taskmanager_container.changed | bool

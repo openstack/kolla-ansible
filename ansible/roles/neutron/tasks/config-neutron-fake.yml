@@ -15,11 +15,12 @@
     src: "neutron-openvswitch-agent.json.j2"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/config.json"
     mode: "0660"
-  register: fake_config_json
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
     - neutron_plugin_agent == "openvswitch"
+  notify:
+    - Restart fake neutron-openvswitch-agent container
 
 - name: Copying over neutron.conf
   become: true
@@ -34,11 +35,12 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron.conf"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/neutron.conf"
     mode: "0660"
-  register: fake_neutron_conf
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
     - neutron_plugin_agent == "openvswitch"
+  notify:
+    - Restart fake neutron-openvswitch-agent container
 
 - name: Copying over ml2_conf.ini
   become: true
@@ -51,11 +53,12 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron.conf"
     dest: "{{ node_config_directory }}/neutron-openvswitch-agent-fake-{{ item }}/ml2_conf.ini"
     mode: "0660"
-  register: fake_neutron_ml2_conf_ini
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
   when:
     - inventory_hostname in groups['compute']
     - neutron_plugin_agent == "openvswitch"
+  notify:
+    - Restart fake neutron-openvswitch-agent container
 
 - name: Checking neutron-openvswitch-agent container for nova fake node
   vars:
@@ -68,7 +71,6 @@
     image: "{{ neutron_openvswitch_agent.image }}"
     privileged: "{{ neutron_openvswitch_agent.privileged | default(False) }}"
     volumes: "{{ neutron_openvswitch_agent.volumes }}"
-  register: check_fake_neutron_openvswitch_agent
   when:
     - kolla_action != "config"
     - enable_nova_fake | bool

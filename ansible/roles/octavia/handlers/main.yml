@@ -3,10 +3,6 @@
   vars:
     service_name: "octavia-api"
     service: "{{ octavia_services[service_name] }}"
-    config_json: "{{ octavia_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_conf: "{{ octavia_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ octavia_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_api_container: "{{ check_octavia_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or octavia_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or octavia_api_container.changed | bool
 
 - name: Restart octavia-health-manager container
   vars:
     service_name: "octavia-health-manager"
     service: "{{ octavia_services[service_name] }}"
-    config_json: "{{ octavia_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_conf: "{{ octavia_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ octavia_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_health_manager_container: "{{ check_octavia_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,22 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or octavia_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or octavia_health_manager_certificate.changed | bool
-      or octavia_health_manager_container.changed | bool
 
 - name: Restart octavia-housekeeping container
   vars:
     service_name: "octavia-housekeeping"
     service: "{{ octavia_services[service_name] }}"
-    config_json: "{{ octavia_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_conf: "{{ octavia_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ octavia_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_housekeeping_container: "{{ check_octavia_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -68,22 +43,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or octavia_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or octavia_housekeeping_certificate.changed | bool
-      or octavia_housekeeping_container.changed | bool
 
 - name: Restart octavia-worker container
   vars:
     service_name: "octavia-worker"
     service: "{{ octavia_services[service_name] }}"
-    config_json: "{{ octavia_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_conf: "{{ octavia_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ octavia_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    octavia_worker_container: "{{ check_octavia_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -94,10 +58,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or octavia_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or octavia_worker_certificate.changed | bool
-      or octavia_worker_container.changed | bool

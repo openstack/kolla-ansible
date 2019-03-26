@@ -3,10 +3,6 @@
   vars:
     service_name: "kuryr"
     service: "{{ kuryr_services[service_name] }}"
-    config_json: "{{ kuryr_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    kuryr_conf: "{{ kuryr_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ kuryr_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    kuryr_container: "{{ check_kuryr_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -19,10 +15,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or kuryr_conf.changed | bool
-      or kuryr_spec.changed | bool
-      or policy_overwriting.changed | bool
-      or kuryr_container.changed | bool

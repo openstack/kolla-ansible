@@ -42,7 +42,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: ironic_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -63,7 +62,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ironic.conf"
     mode: "0660"
   become: true
-  register: ironic_confs
   when:
     - item.key in [ "ironic-api", "ironic-conductor" ]
     - inventory_hostname in groups[item.value.group]
@@ -85,7 +83,6 @@
     dest: "{{ node_config_directory }}/ironic-inspector/inspector.conf"
     mode: "0660"
   become: true
-  register: ironic_inspector_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -100,7 +97,6 @@
     dest: "{{ node_config_directory }}/ironic-dnsmasq/dnsmasq.conf"
     mode: "0660"
   become: true
-  register: ironic_dnsmasq_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -119,7 +115,6 @@
     dest: "{{ node_config_directory }}/ironic-pxe/default"
     mode: "0660"
   become: true
-  register: ironic_pxe_confs
   with_first_found:
     - "{{ node_custom_config }}/ironic/pxelinux.default"
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/pxelinux.default"
@@ -142,7 +137,6 @@
     dest: "{{ node_config_directory }}/ironic-pxe/default"
     mode: "0660"
   become: true
-  register: ironic_pxe_uefi_confs
   with_first_found:
     - "{{ node_custom_config }}/ironic/ironic_pxe_uefi.default"
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ironic_pxe_uefi.default"
@@ -162,14 +156,12 @@
     dest: "{{ node_config_directory }}/ironic-pxe/{{ item }}"
     mode: "0660"
   become: true
-  register: ironic_kernel
   with_items:
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups['ironic-pxe']
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - not enable_ironic_pxe_uefi | bool
@@ -185,7 +177,6 @@
     dest: "{{ node_config_directory }}/ironic-ipxe/{{ item }}"
     mode: "0660"
   become: true
-  register: ironic_kernel_ipxe
   with_items:
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
@@ -205,7 +196,6 @@
     dest: "{{ node_config_directory }}/ironic-ipxe/inspector.ipxe"
     mode: "0660"
   become: true
-  register: ironic_ipxe_inspector_boot_script
   with_first_found:
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/inspector.ipxe"
     - "{{ node_custom_config }}/ironic/inspector.ipxe"
@@ -226,7 +216,6 @@
     dest: "{{ node_config_directory }}/ironic-ipxe/httpd.conf"
     mode: "0660"
   become: true
-  register: ironic_ipxe_apache_confs
   with_first_found:
     - "{{ node_custom_config }}/ironic/ironic-ipxe-httpd.conf"
     - "ironic-ipxe-httpd.conf.j2"
@@ -247,7 +236,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ ironic_policy_file }}"
     mode: "0660"
   become: true
-  register: ironic_policy_jsons
   when:
     - ironic_policy_file is defined
     - item.key in services_require_policy_json
@@ -268,7 +256,6 @@
     cap_add: "{{ item.value.cap_add|default([]) }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_ironic_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

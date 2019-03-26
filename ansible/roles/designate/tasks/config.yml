@@ -35,19 +35,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: designate_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-api container
-    - Restart designate-central container
-    - Restart designate-producer container
-    - Restart designate-mdns container
-    - Restart designate-sink container
-    - Restart designate-backend-bind9 container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
 
 - name: Copying over designate.conf
   vars:
@@ -62,18 +55,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/designate.conf"
     mode: "0660"
   become: true
-  register: designate_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-api container
-    - Restart designate-central container
-    - Restart designate-producer container
-    - Restart designate-mdns container
-    - Restart designate-sink container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
 
 - name: Copying over pools.yaml
   vars:
@@ -83,7 +70,6 @@
     dest: "{{ node_config_directory }}/designate-worker/pools.yaml"
     mode: "0660"
   become: true
-  register: designate_pool
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -101,7 +87,6 @@
     dest: "{{ node_config_directory }}/designate-backend-bind9/named.conf"
     mode: "0660"
   become: true
-  register: designate_named
   when:
     - designate_backend == 'bind9'
     - inventory_hostname in groups[service.group]
@@ -120,7 +105,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/rndc.conf"
     mode: "0660"
   become: true
-  register: designate_rndc_conf
   when:
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
@@ -128,8 +112,7 @@
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-backend-bind9 container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
 
 - name: Copying over rndc.key
   template:
@@ -137,7 +120,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/rndc.key"
     mode: "0660"
   become: true
-  register: designate_rndc_key_file
   when:
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
@@ -145,8 +127,7 @@
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-backend-bind9 container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
 
 - include_tasks: backend_external.yml
   when: designate_backend_external == 'bind9'
@@ -157,19 +138,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ designate_policy_file }}"
     mode: "0660"
   become: true
-  register: designate_policy_overwriting
   when:
     - designate_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-api container
-    - Restart designate-central container
-    - Restart designate-producer container
-    - Restart designate-mdns container
-    - Restart designate-sink container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
 
 - name: Check designate containers
   become: true
@@ -180,17 +155,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_designate_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ designate_services }}"
   notify:
-    - Restart designate-api container
-    - Restart designate-central container
-    - Restart designate-producer container
-    - Restart designate-mdns container
-    - Restart designate-sink container
-    - Restart designate-backend-bind9 container
-    - Restart designate-worker container
+    - Restart {{ item.key }} container
