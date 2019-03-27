@@ -21,6 +21,10 @@
     body_format: json
   delegate_to: "{{ groups['elasticsearch'][0] }}"
   run_once: true
+  retries: 10
+  delay: 5
+  register: result
+  until: ('status' in result) and result.status == 200
 
 # Stop all elasticsearch containers before applying configuration to ensure
 # handlers are triggered to restart them.
