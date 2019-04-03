@@ -21,3 +21,20 @@
 
 - name: Flush handlers
   meta: flush_handlers
+
+# NOTE(mgoddard): If inspector was previously configured to use the iptables
+# PXE filter, it may leave rules in place that block inspection. Clean them up.
+# The iptables Ansible module is not idempotent - it fails if the chain does
+# not exist, so use a command instead.
+- name: Flush and delete ironic-inspector iptables chain
+  become: true
+  command: iptables --{{ item }} ironic-inspector
+  register: ironic_inspector_chain
+  with_items:
+    - flush
+    - delete-chain
+  when: ironic_inspector_pxe_filter != 'iptables'
+  changed_when: ironic_inspector_chain.rc == 0
+  failed_when:
+    - ironic_inspector_chain.rc != 0
+    - "'No chain/target/match by that name' not in ironic_inspector_chain.stderr"
