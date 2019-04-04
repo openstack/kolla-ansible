@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# NOTE(mnasiadka): ensure existing ovsdb doesn't need to be upgraded
+
+if ([ -f /var/lib/openvswitch/conf.db ] && [ `ovsdb-tool needs-conversion /var/lib/openvswitch/conf.db` == "yes" ]); then
+  /usr/bin/ovsdb-tool convert /var/lib/openvswitch/conf.db
+fi
+
 # NOTE: (sbezverk) ovs_bridge and ovs_ext_intf variables get initialized only when
 # this script is executed for kubernetes deployment. With Ansible deployment, only
 # ovsdb-server gets launched and then the following workflow step will create
