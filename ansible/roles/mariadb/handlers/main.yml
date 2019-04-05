@@ -42,39 +42,6 @@
     - bootstrap_host == inventory_hostname
   listen: Bootstrap MariaDB cluster
 
-# NOTE(mgoddard): In Rocky the MariaDB image had an issue where it would not
-# stop on demand, and would result in Docker forcibly killing the container.
-# This could lead to a failed upgrade if the new image is unable to recover
-# from the crash. See https://bugs.launchpad.net/kolla-ansible/+bug/1820325.
-# TODO(mgoddard): Remove this task in Train.
-- name: shutdown slave mariadb
-  vars:
-    service_name: "mariadb"
-    service: "{{ mariadb_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "start_container"
-    command: >-
-      bash -c '
-      sudo -E kolla_set_configs &&
-      mysqladmin shutdown --host={{ api_interface_address }} --user=root --password={{ database_password }}
-      '
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    name: "mariadb_shutdown"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
-    labels:
-      UPGRADE:
-    restart_policy: "never"
-  no_log: true
-  when:
-    - kolla_action != "config"
-    - has_cluster | bool
-    - inventory_hostname != master_host
-  listen: restart mariadb
-
 - name: restart slave mariadb
   vars:
     service_name: "mariadb"
@@ -136,38 +103,6 @@
   when:
     - kolla_action == "upgrade"
     - inventory_hostname != master_host
-  listen: restart mariadb
-
-# NOTE(mgoddard): In Rocky the MariaDB image had an issue where it would not
-# stop on demand, and would result in Docker forcibly killing the container.
-# This could lead to a failed upgrade if the new image is unable to recover
-# from the crash. See https://bugs.launchpad.net/kolla-ansible/+bug/1820325.
-# TODO(mgoddard): Remove this task in Train.
-- name: shutdown master mariadb
-  vars:
-    service_name: "mariadb"
-    service: "{{ mariadb_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "start_container"
-    command: >-
-      bash -c '
-      sudo -E kolla_set_configs &&
-      mysqladmin shutdown --host={{ api_interface_address }} --user=root --password={{ database_password }}
-      '
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    name: "mariadb_shutdown"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
-    labels:
-      UPGRADE:
-    restart_policy: "never"
-  no_log: true
-  when:
-    - kolla_action != "config"
-    - inventory_hostname == master_host
   listen: restart mariadb
 
 - name: restart master mariadb
