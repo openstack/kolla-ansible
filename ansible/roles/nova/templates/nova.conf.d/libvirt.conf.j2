@@ -1,5 +1,10 @@
 [libvirt]
+{% if libvirt_tls | bool %}
+connection_uri = "qemu+tls://{{ migration_hostname }}/system"
+live_migration_uri = "qemu+tls://%s/system"
+{% else %}
 connection_uri = "qemu+tcp://{{ migration_interface_address }}/system"
+{% endif %}
 {% if enable_ceph | bool and nova_backend == "rbd" %}
 images_type = rbd
 images_rbd_pool = {{ ceph_nova_pool_name }}

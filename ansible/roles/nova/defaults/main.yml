@@ -362,7 +362,7 @@ nova_compute_host_rp_filter_mode: 0
 nova_enable_rolling_upgrade: "yes"
 nova_safety_upgrade: "no"
 
-nova_libvirt_port: "16509"
+nova_libvirt_port: "{{'16514' if libvirt_tls | bool  else '16509'}}"
 nova_ssh_port: "8022"
 
 nova_services_require_nova_conf:
@@ -410,6 +410,17 @@ ovs_bridge: "nsx-managed"
 qemu_max_files: 32768
 # The number of max processes qemu can open
 qemu_max_processes: 131072
+# Use TLS for libvirt connections and live migration
+libvirt_tls: false
+# Should kolla-ansible manage/copy the certs.  False, assumes the deployer is
+# responsible for making the TLS certs show up in the config directories
+# also means the deployer is responsible for restarting the nova_compute and
+# nova_libvirt containers when the key changes, as we can't know when to do that
+libvirt_tls_manage_certs: true
+# When using tls we are verfiying the hostname we are connected to matches the
+# libvirt cert we are presented.  As such we can't use IP's here, but keep the
+# ability for people to override the hostname to use.
+migration_hostname: "{{ ansible_nodename }}"
 
 ####################
 # Kolla
