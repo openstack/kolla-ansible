@@ -8,7 +8,6 @@
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
       name: "{{ item }}"
-  register: database
   run_once: True
   delegate_to: "{{ groups['monasca-api'][0] }}"
   with_items:
@@ -34,10 +33,8 @@
   delegate_to: "{{ groups['monasca-api'][0] }}"
   when:
     - not use_preconfigured_databases | bool
-    - database.changed
 
 - include_tasks: bootstrap_service.yml
-  when: database.changed or use_preconfigured_databases | bool
 
 # NOTE(dszumski): Monasca is not yet compatible with InfluxDB > 1.1.10, which means
 # that the official Ansible modules for managing InfluxDB don't work [1].
