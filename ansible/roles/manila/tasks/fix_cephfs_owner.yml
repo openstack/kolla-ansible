@@ -1,5 +1,6 @@
 ---
 - name: Check /tmp/cephfs path
+  become: true
   command: "docker exec -u 0 manila_share ls /tmp/cephfs/"
   register: check_cephfs
   changed_when: False
@@ -7,11 +8,13 @@
   run_once: True
 
 - name: Create /tmp/cephfs path
+  become: true
   command: "docker exec -u 0 manila_share mkdir -p /tmp/cephfs"
   run_once: True
   when: check_cephfs.rc != 0
 
 - name: Get monitor dump
+  become: true
   command: docker exec manila_share ceph mon dump -c /etc/ceph/ceph.conf --name client.manila -f json
   register: ceph_monitor_dump
   changed_when: False
@@ -28,12 +31,14 @@
   run_once: true
 
 - name: Get cephfs secret
+  become: true
   command: docker exec manila_share ceph-authtool -p /etc/ceph/ceph.client.manila.keyring -n client.manila
   register: manila_keyring
   changed_when: False
   run_once: True
 
 - name: Umount cephfs
+  become: true
   command: "docker exec -u 0 manila_share umount /tmp/cephfs/"
   register: umount_cephfs
   changed_when: False
@@ -41,12 +46,14 @@
   run_once: True
 
 - name: Mount cephfs
+  become: true
   command: "docker exec -u 0 manila_share mount -t ceph {{cephfs_addr}} /tmp/cephfs -o name=manila,secret={{ manila_keyring.stdout }}"
   register: mount_cephfs
   changed_when: False
   run_once: True
 
 - name: Check volumes path
+  become: true
   command: "docker exec -u 0 manila_share ls /tmp/cephfs/volumes"
   register: check_volume
   changed_when: False
@@ -54,18 +61,21 @@
   run_once: True
 
 - name: Create /tmp/cephfs/volumes path
+  become: true
   command: "docker exec -u 0 manila_share mkdir /tmp/cephfs/volumes"
   register: create_volume
   run_once: True
   when: check_volume.rc != 0
 
 - name: Change the owner and group of /tmp/cephfs/volumes
+  become: true
   command: "docker exec -u 0 manila_share chown manila:manila /tmp/cephfs/volumes"
   register: chown_volume
   run_once: True
   when: check_volume.rc != 0 and create_volume.rc == 0
 
 - name: Umount cephfs
+  become: true
   command: "docker exec -u 0 manila_share umount /tmp/cephfs"
   changed_when: False
   register: umount_cephfs

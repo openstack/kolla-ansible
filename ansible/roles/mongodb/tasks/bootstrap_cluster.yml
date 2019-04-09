@@ -4,6 +4,7 @@
   run_once: True
 
 - name: Bootstrapping the mongodb replication set
+  become: true
   command: "docker exec -t mongodb mongo --host {{ api_interface_address }} --port {{ mongodb_port }} --quiet --eval '{{ lookup('file','/tmp/mongodb_bootstrap_replication_set.js') }}'"
   register: bootstrap_mongodb_cluster
   failed_when: (bootstrap_mongodb_cluster.stdout|from_json).ok != 1

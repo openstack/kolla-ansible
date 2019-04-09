@@ -10,6 +10,7 @@
   delay: 5
 
 - name: Initialise fernet key authentication
+  become: true
   command: "docker exec -t keystone_fernet kolla_keystone_bootstrap {{ keystone_username }} {{ keystone_groupname }}"
   register: fernet_create
   changed_when: fernet_create.stdout.find('localhost | SUCCESS => ') != -1 and (fernet_create.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed
@@ -20,6 +21,7 @@
   delegate_to: "{{ groups['keystone'][0] }}"
 
 - name: Run key distribution
+  become: true
   command: docker exec -t keystone_fernet /usr/bin/fernet-rotate.sh
   run_once: True
   delegate_to: "{{ groups['keystone'][0] }}"

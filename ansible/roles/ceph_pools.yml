@@ -1,6 +1,7 @@
 ---
 # TODO(SamYaple): Improve failed_when and changed_when tests if possible
 - name: Creating ceph erasure profile
+  become: true
   command: docker exec ceph_mon ceph osd erasure-code-profile set erasure-profile {{ ceph_erasure_profile }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -9,6 +10,7 @@
   when: pool_type == "erasure"
 
 - name: Creating ceph ruleset
+  become: true
   command: docker exec ceph_mon ceph osd crush rule create-erasure disks erasure-profile
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -17,6 +19,7 @@
   when: pool_type == "erasure"
 
 - name: Creating ceph ruleset
+  become: true
   command: docker exec ceph_mon ceph osd crush rule create-simple disks {{ ceph_rule }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -25,18 +28,21 @@
   when: pool_type == "replicated"
 
 - name: Creating ceph pool
+  become: true
   command: docker exec ceph_mon ceph osd pool create {{ pool_name }} {{ pool_pg_num }} {{ pool_pgp_num }} {{ pool_type }} {{ 'erasure-profile' if pool_type == 'erasure' else '' }} disks
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
   run_once: True
 
 - name: enable application for ceph pool
+  become: true
   command: docker exec ceph_mon ceph osd pool application enable {{ pool_name }} {{ pool_application }}
   changed_when: False
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   run_once: True
 
 - name: Creating ceph ruleset for cache
+  become: true
   command: docker exec ceph_mon ceph osd crush rule create-simple cache {{ ceph_cache_rule }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -45,6 +51,7 @@
   when: ceph_enable_cache | bool
 
 - name: Creating ceph pool for cache
+  become: true
   command: docker exec ceph_mon ceph osd pool create {{ pool_name }}-cache 128 128 replicated cache
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -52,6 +59,7 @@
   when: ceph_enable_cache | bool
 
 - name: Adding cache to pool
+  become: true
   command: docker exec ceph_mon ceph osd tier add {{ pool_name }} {{ pool_name }}-cache
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -60,6 +68,7 @@
   when: ceph_enable_cache | bool
 
 - name: Setting cache-mode
+  become: true
   command: docker exec ceph_mon ceph osd tier cache-mode {{ pool_name }}-cache {{ cache_mode }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -68,6 +77,7 @@
   when: ceph_enable_cache | bool
 
 - name: Setting cache overlay for pool
+  become: true
   command: docker exec ceph_mon ceph osd tier set-overlay {{ pool_name }} {{ pool_name }}-cache
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -76,6 +86,7 @@
   when: ceph_enable_cache | bool
 
 - name: Setting cache hit_set_type
+  become: true
   command: docker exec ceph_mon ceph osd pool set {{ pool_name }}-cache hit_set_type bloom
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -84,6 +95,7 @@
   when: ceph_enable_cache | bool
 
 - name: Setting cache target_max_bytes
+  become: true
   command: docker exec ceph_mon ceph osd pool set {{ pool_name }}-cache target_max_bytes {{ ceph_target_max_bytes }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
@@ -94,6 +106,7 @@
     - ceph_target_max_bytes != ''
 
 - name: Setting cache target_max_objects
+  become: true
   command: docker exec ceph_mon ceph osd pool set {{ pool_name }}-cache target_max_objects {{ ceph_target_max_objects }}
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   changed_when: False
