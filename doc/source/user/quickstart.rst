@@ -5,7 +5,7 @@ Quick Start
 ===========
 
 This guide provides step by step instructions to deploy OpenStack using Kolla
-on bare metal servers or virtual machines.
+Ansible on bare metal servers or virtual machines.
 
 Recommended reading
 ~~~~~~~~~~~~~~~~~~~
@@ -25,81 +25,121 @@ The host machine must satisfy the following minimum requirements:
 Install dependencies
 ~~~~~~~~~~~~~~~~~~~~
 
-#. Install and upgrad ``pip`` to the latest before proceeding.
+Typically commands that use the system package manager in this section must be
+run with root privileges.
+
+It is generally recommended to use a virtual environment to install Kolla
+Ansible and its dependencies, to avoid conflicts with the system site packages.
+Note that this is independent from the use of a virtual environment for remote
+execution, which is described :ref:`here <virtual-environments-target-hosts>`.
+
+#. For CentOS, install EPEL.
+
+   .. code-block:: console
+
+      sudo yum install epel-release
+
+#. For Ubuntu, update the package index.
+
+   .. code-block:: console
+
+      sudo apt-get update
+
+#. Install Python build dependencies:
 
    For CentOS, run:
 
    .. code-block:: console
 
-      yum install epel-release
-      yum install python-pip
-      pip install -U pip
+      sudo yum install python-devel libffi-devel gcc openssl-devel libselinux-python
 
    For Ubuntu, run:
 
    .. code-block:: console
 
-      apt-get update
-      apt-get install python-pip
-      pip install -U pip
+      sudo apt-get install python-dev libffi-dev gcc libssl-dev python-selinux python-setuptools
 
-#. Install the following dependencies:
+Install dependencies using a virtual environment
+------------------------------------------------
 
-   For CentOS, run:
+If not installing Kolla Ansible in a virtual environment, skip this section.
+
+#. Install the virtualenv package.
+
+   For CentOS or RHEL, run:
 
    .. code-block:: console
 
-      yum install python-devel libffi-devel gcc openssl-devel libselinux-python
+      sudo yum install python-virtualenv
 
    For Ubuntu, run:
 
    .. code-block:: console
 
-      apt-get install python-dev libffi-dev gcc libssl-dev python-selinux python-setuptools
+      sudo apt-get install python-virtualenv
 
-#. Install `Ansible <http://www.ansible.com>`__ from distribution packaging:
-
-   .. note::
-
-      Some implemented distro versions of Ansible are too old to use distro
-      packaging. Currently, CentOS and RHEL package Ansible >=2.4 which is suitable
-      for use with Kolla. Note that you will need to enable access to the EPEL
-      repository to install via :command:`yum` to do so, take a look at `Fedora's EPEL docs
-      <https://fedoraproject.org/wiki/EPEL>`__ and `FAQ
-      <https://fedoraproject.org/wiki/EPEL/FAQ>`__.
-
-   For CentOS or RHEL, this can be done using:
+#. Create a virtual environment and activate it:
 
    .. code-block:: console
 
-      yum install ansible
+      virtualenv /path/to/virtualenv
+      source /path/to/virtualenv/bin/activate
 
-   For Ubuntu, it can be installed by:
+   The virtual environment should be activated before running any commands that
+   depend on packages installed in it.
 
-   .. code-block:: console
-
-      apt-get install ansible
-
-#. Use ``pip`` to install or upgrade Ansible to latest version:
+#. Ensure the latest version of pip is installed:
 
    .. code-block:: console
 
-      pip install -U ansible
+      pip install -U pip
 
-   .. note::
+#. Install `Ansible <http://www.ansible.com>`__. Currently, Kolla Ansible
+   requires Ansible 2.4+.
 
-      It is recommended to use virtualenv to install non-system packages.
+   .. code-block:: console
 
-#. (optional) Add the following options to ansible configuration file
-   ``/etc/ansible/ansible.cfg``:
+      pip install ansible
 
-   .. path /etc/ansible/ansible.cfg
-   .. code-block:: ini
+Install dependencies not using a virtual environment
+----------------------------------------------------
 
-      [defaults]
-      host_key_checking=False
-      pipelining=True
-      forks=100
+If installing Kolla Ansible in a virtual environment, skip this section.
+
+#. Install ``pip``.
+
+   For CentOS or RHEL, run:
+
+   .. code-block:: console
+
+      sudo yum install python-pip
+
+   For Ubuntu, run:
+
+   .. code-block:: console
+
+      sudo apt-get install python-pip
+
+#. Ensure the latest version of pip is installed:
+
+   .. code-block:: console
+
+      sudo pip install -U pip
+
+#. Install `Ansible <http://www.ansible.com>`__. Currently, Kolla Ansible
+   requires Ansible 2.4+.
+
+   For CentOS or RHEL, run:
+
+   .. code-block:: console
+
+      sudo yum install ansible
+
+   For Ubuntu, run:
+
+   .. code-block:: console
+
+      sudo apt-get install ansible
 
 Install Kolla-ansible
 ~~~~~~~~~~~~~~~~~~~~~
@@ -109,9 +149,24 @@ Install Kolla-ansible for deployment or evaluation
 
 #. Install kolla-ansible and its dependencies using ``pip``.
 
+   If using a virtual environment:
+
    .. code-block:: console
 
       pip install kolla-ansible
+
+   If not using a virtual environment:
+
+   .. code-block:: console
+
+      sudo pip install kolla-ansible
+
+#. Create the ``/etc/kolla`` directory.
+
+   .. code-block:: console
+
+      sudo mkdir -p /etc/kolla
+      sudo chown $USER:$USER /etc/kolla
 
 #. Copy ``globals.yml`` and ``passwords.yml`` to ``/etc/kolla`` directory.
 
@@ -119,13 +174,13 @@ Install Kolla-ansible for deployment or evaluation
 
    .. code-block:: console
 
-      cp -r /usr/share/kolla-ansible/etc_examples/kolla /etc/
+      cp -r /usr/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 
    For Ubuntu, run:
 
    .. code-block:: console
 
-      cp -r /usr/local/share/kolla-ansible/etc_examples/kolla /etc/
+      cp -r /usr/local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 
 #. Copy ``all-in-one`` and ``multinode`` inventory files to
    the current directory.
@@ -154,10 +209,26 @@ Install Kolla for development
 
 #. Install requirements of ``kolla`` and ``kolla-ansible``:
 
+   If using a virtual environment:
+
    .. code-block:: console
 
       pip install -r kolla/requirements.txt
       pip install -r kolla-ansible/requirements.txt
+
+   If not using a virtual environment:
+
+   .. code-block:: console
+
+      sudo pip install -r kolla/requirements.txt
+      sudo pip install -r kolla-ansible/requirements.txt
+
+#. Create the ``/etc/kolla`` directory.
+
+   .. code-block:: console
+
+      sudo mkdir -p /etc/kolla
+      sudo chown $USER:$USER /etc/kolla
 
 #. Copy the configuration files to ``/etc/kolla`` directory.
    ``kolla-ansible`` holds the configuration files ( ``globals.yml`` and
@@ -165,7 +236,6 @@ Install Kolla for development
 
    .. code-block:: console
 
-      mkdir -p /etc/kolla
       cp -r kolla-ansible/etc/kolla/* /etc/kolla
 
 #. Copy the inventory files to the current directory. ``kolla-ansible`` holds
@@ -176,17 +246,36 @@ Install Kolla for development
 
       cp kolla-ansible/ansible/inventory/* .
 
+Configure Ansible
+~~~~~~~~~~~~~~~~~
+
+For best results, Ansible configuration should be tuned for your environment.
+For example, add the following options to the Ansible configuration file
+``/etc/ansible/ansible.cfg``:
+
+   .. path /etc/ansible/ansible.cfg
+   .. code-block:: ini
+
+      [defaults]
+      host_key_checking=False
+      pipelining=True
+      forks=100
+
+Further information on tuning Ansible is available `here
+<https://www.ansible.com/blog/ansible-performance-tuning>`__.
+
 Prepare initial configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Inventory
 ---------
 
-Next step is to prepare our inventory file. Inventory is an ansible file where
-we specify node roles and access credentials.
+The next step is to prepare our inventory file. An inventory is an Ansible file
+where we specify hosts and the groups that they belong to. We can use this to
+define node roles and access credentials.
 
 Kolla-Ansible comes with ``all-in-one`` and ``multinode`` example inventory
-files. Difference between them is that the former is ready for deploying
+files. The difference between them is that the former is ready for deploying
 single node OpenStack on localhost. If you need to use separate host or more
 than one node, edit ``multinode`` inventory:
 
@@ -371,6 +460,11 @@ There are a few options that are required to deploy Kolla-Ansible:
   `Services Reference Guide
   <https://docs.openstack.org/kolla-ansible/latest/reference/index.html>`_.
 
+* Virtual environment
+
+  It is recommended to use a virtual environment to execute tasks on the remote
+  hosts.  This is covered :ref:`here <virtual-environments-target-hosts>`.
+
 Deployment
 ~~~~~~~~~~
 
@@ -379,6 +473,10 @@ need to setup basic host-level dependencies, like docker.
 
 Kolla-Ansible provides a playbook that will install all required services in
 the correct versions.
+
+The following assumes the use of the ``multinode`` inventory. If using a
+different inventory, such as ``all-in-one``, replace the ``-i`` argument
+accordingly.
 
 * For deployment or evaluation, run:
 
@@ -407,19 +505,19 @@ the correct versions.
      .. code-block:: console
 
         cd kolla-ansible/tools
-        ./kolla-ansible -i ../ansible/inventory/multinode bootstrap-servers
+        ./kolla-ansible -i ../../multinode bootstrap-servers
 
   #. Do pre-deployment checks for hosts:
 
      .. code-block:: console
 
-        ./kolla-ansible -i ../ansible/inventory/multinode prechecks
+        ./kolla-ansible -i ../../multinode prechecks
 
   #. Finally proceed to actual OpenStack deployment:
 
      .. code-block:: console
 
-        ./kolla-ansible -i ../ansible/inventory/multinode deploy
+        ./kolla-ansible -i ../../multinode deploy
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to
