@@ -7,11 +7,7 @@ heat_services:
     group: heat-api
     enabled: true
     image: "{{ heat_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ heat_api_default_volumes + heat_api_extra_volumes }}"
     dimensions: "{{ heat_api_dimensions }}"
     haproxy:
       heat_api:
@@ -31,11 +27,7 @@ heat_services:
     group: heat-api-cfn
     enabled: true
     image: "{{ heat_api_cfn_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/heat-api-cfn/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ heat_api_cfn_default_volumes + heat_api_cfn_extra_volumes }}"
     dimensions: "{{ heat_api_cfn_dimensions }}"
     haproxy:
       heat_api_cfn:
@@ -55,11 +47,7 @@ heat_services:
     group: heat-engine
     enabled: true
     image: "{{ heat_engine_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/heat-engine/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ heat_engine_default_volumes + heat_engine_extra_volumes }}"
     dimensions: "{{ heat_engine_dimensions }}"
 
 ####################
@@ -92,6 +80,26 @@ heat_api_dimensions: "{{ default_container_dimensions }}"
 heat_api_cfn_dimensions: "{{ default_container_dimensions }}"
 heat_engine_dimensions: "{{ default_container_dimensions }}"
 
+heat_api_default_volumes:
+  - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+heat_api_cfn_default_volumes:
+  - "{{ node_config_directory }}/heat-api-cfn/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+heat_engine_default_volumes:
+  - "{{ node_config_directory }}/heat-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python2.7/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+heat_extra_volumes: "{{ default_extra_volumes }}"
+heat_api_extra_volumes: "{{ heat_extra_volumes }}"
+heat_api_cfn_extra_volumes: "{{ heat_extra_volumes }}"
+heat_engine_extra_volumes: "{{ heat_extra_volumes }}"
 
 ####################
 # OpenStack

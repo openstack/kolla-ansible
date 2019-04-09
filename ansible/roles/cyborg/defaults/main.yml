@@ -7,31 +7,21 @@ cyborg_services:
     group: cyborg-api
     enabled: true
     image: "{{ cyborg_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/cyborg-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "cyborg:/var/lib/cyborg/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cyborg_api_default_volumes + cyborg_api_extra_volumes }}"
     dimensions: "{{ cyborg_api_dimensions }}"
   cyborg-agent:
     container_name: cyborg_agent
     group: cyborg-agent
     enabled: true
     image: "{{ cyborg_agent_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/cyborg-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cyborg_agent_default_volumes + cyborg_agent_extra_volumes }}"
     dimensions: "{{ cyborg_agent_dimensions }}"
   cyborg-conductor:
     container_name: cyborg_conductor
     group: cyborg-conductor
     enabled: true
     image: "{{ cyborg_conductor_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/cyborg-conductor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cyborg_conductor_default_volumes + cyborg_conductor_extra_volumes }}"
     dimensions: "{{ cyborg_conductor_dimensions }}"
 
 ####################
@@ -62,6 +52,27 @@ cyborg_conductor_image_full: "{{ cyborg_conductor_image }}:{{ cyborg_conductor_t
 cyborg_api_dimensions: "{{ default_container_dimensions }}"
 cyborg_agent_dimensions: "{{ default_container_dimensions }}"
 cyborg_conductor_dimensions: "{{ default_container_dimensions }}"
+
+cyborg_api_default_volumes:
+  - "{{ node_config_directory }}/cyborg-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "cyborg:/var/lib/cyborg/"
+  - "kolla_logs:/var/log/kolla/"
+
+cyborg_agent_default_volumes:
+  - "{{ node_config_directory }}/cyborg-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+cyborg_conductor_default_volumes:
+  - "{{ node_config_directory }}/cyborg-conductor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+cyborg_extra_volumes: "{{ default_extra_volumes }}"
+cyborg_api_extra_volumes: "{{ cyborg_extra_volumes }}"
+cyborg_agent_extra_volumes: "{{ cyborg_extra_volumes }}"
+cyborg_conductor_extra_volumes: "{{ cyborg_extra_volumes }}"
 
 ####################
 # OpenStack

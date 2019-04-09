@@ -7,11 +7,7 @@ watcher_services:
     group: watcher-api
     enabled: true
     image: "{{ watcher_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/watcher-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ watcher_api_default_volumes + watcher_api_extra_volumes }}"
     dimensions: "{{ watcher_api_dimensions }}"
     haproxy:
       watcher_api:
@@ -29,22 +25,14 @@ watcher_services:
     group: watcher-applier
     enabled: true
     image: "{{ watcher_applier_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/watcher-applier/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ watcher_applier_default_volumes + watcher_applier_extra_volumes }}"
     dimensions: "{{ watcher_applier_dimensions }}"
   watcher-engine:
     container_name: watcher_engine
     group: watcher-engine
     enabled: true
     image: "{{ watcher_engine_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/watcher-engine/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ watcher_engine_default_volumes + watcher_engine_extra_volumes }}"
     dimensions: "{{ watcher_engine_dimensions }}"
 
 
@@ -77,6 +65,27 @@ watcher_applier_image_full: "{{ watcher_applier_image }}:{{ watcher_applier_tag 
 watcher_api_dimensions: "{{ default_container_dimensions }}"
 watcher_applier_dimensions: "{{ default_container_dimensions }}"
 watcher_engine_dimensions: "{{ default_container_dimensions }}"
+
+watcher_api_default_volumes:
+  - "{{ node_config_directory }}/watcher-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+watcher_applier_default_volumes:
+  - "{{ node_config_directory }}/watcher-applier/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+watcher_engine_default_volumes:
+  - "{{ node_config_directory }}/watcher-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python2.7/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+watcher_extra_volumes: "{{ default_extra_volumes }}"
+watcher_api_extra_volumes: "{{ watcher_extra_volumes }}"
+watcher_applier_extra_volumes: "{{ watcher_extra_volumes }}"
+watcher_engine_extra_volumes: "{{ watcher_extra_volumes }}"
 
 ####################
 # OpenStack

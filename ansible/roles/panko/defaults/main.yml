@@ -7,10 +7,7 @@ panko_services:
     group: panko-api
     enabled: true
     image: "{{ panko_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/panko-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ panko_api_default_volumes + panko_api_extra_volumes }}"
     dimensions: "{{ panko_api_dimensions }}"
     haproxy:
       panko_api:
@@ -42,6 +39,12 @@ panko_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 panko_api_tag: "{{ openstack_release }}"
 panko_api_image_full: "{{ panko_api_image }}:{{ panko_api_tag }}"
 panko_api_dimensions: "{{ default_container_dimensions }}"
+
+panko_api_default_volumes:
+  - "{{ node_config_directory }}/panko-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+panko_api_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # OpenStack

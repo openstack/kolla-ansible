@@ -7,12 +7,7 @@ sahara_services:
     group: sahara-api
     enabled: true
     image: "{{ sahara_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/sahara-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "sahara:/var/lib/sahara/"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+    volumes: "{{ sahara_api_default_volumes + sahara_api_extra_volumes }}"
     dimensions: "{{ sahara_api_dimensions }}"
     haproxy:
       sahara_api:
@@ -31,13 +26,7 @@ sahara_services:
     enabled: true
     image: "{{ sahara_engine_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/sahara-engine/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "sahara:/var/lib/sahara/"
-      - "kolla_logs:/var/log/kolla/"
-      - "/run:/run:shared"
-      - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+    volumes: "{{ sahara_engine_default_volumes + sahara_engine_extra_volumes }}"
     dimensions: "{{ sahara_engine_dimensions }}"
 
 
@@ -65,6 +54,24 @@ sahara_api_image_full: "{{ sahara_api_image }}:{{ sahara_api_tag }}"
 
 sahara_api_dimensions: "{{ default_container_dimensions }}"
 sahara_engine_dimensions: "{{ default_container_dimensions }}"
+
+sahara_api_default_volumes:
+  - "{{ node_config_directory }}/sahara-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "sahara:/var/lib/sahara/"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+sahara_engine_default_volumes:
+  - "{{ node_config_directory }}/sahara-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "sahara:/var/lib/sahara/"
+  - "kolla_logs:/var/log/kolla/"
+  - "/run:/run:shared"
+  - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python2.7/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
+
+sahara_extra_volumes: "{{ default_extra_volumes }}"
+sahara_api_extra_volumes: "{{ sahara_extra_volumes }}"
+sahara_engine_extra_volumes: "{{ sahara_extra_volumes }}"
 
 ####################
 # OpenStack

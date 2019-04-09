@@ -7,12 +7,7 @@ barbican_services:
     group: barbican-api
     enabled: true
     image: "{{ barbican_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "barbican:/var/lib/barbican/"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    volumes: "{{ barbican_api_default_volumes + barbican_api_extra_volumes }}"
     dimensions: "{{ barbican_api_dimensions }}"
     haproxy:
       barbican_api:
@@ -32,22 +27,14 @@ barbican_services:
     group: barbican-keystone-listener
     enabled: true
     image: "{{ barbican_keystone_listener_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    volumes: "{{ barbican_keystone_listener_default_volumes + barbican_keystone_listener_extra_volumes }}"
     dimensions: "{{ barbican_keystone_listener_dimensions }}"
   barbican-worker:
     container_name: barbican_worker
     group: barbican-worker
     enabled: true
     image: "{{ barbican_worker_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+    volumes: "{{ barbican_worker_default_volumes + barbican_worker_extra_volumes }}"
     dimensions: "{{ barbican_worker_dimensions }}"
 
 
@@ -80,6 +67,28 @@ barbican_worker_image_full: "{{ barbican_worker_image }}:{{ barbican_worker_tag 
 barbican_api_dimensions: "{{ default_container_dimensions }}"
 barbican_keystone_listener_dimensions: "{{ default_container_dimensions }}"
 barbican_worker_dimensions: "{{ default_container_dimensions }}"
+
+barbican_api_default_volumes:
+  - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "barbican:/var/lib/barbican/"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+barbican_keystone_listener_default_volumes:
+  - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+barbican_worker_default_volumes:
+  - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python2.7/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+
+barbican_extra_volumes: "{{ default_extra_volumes }}"
+barbican_api_extra_volumes: "{{ barbican_extra_volumes }}"
+barbican_keystone_listener_extra_volumes: "{{ barbican_extra_volumes }}"
+barbican_worker_extra_volumes: "{{ barbican_extra_volumes }}"
 
 ####################
 # OpenStack
