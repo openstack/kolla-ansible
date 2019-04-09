@@ -1,5 +1,6 @@
 ---
 - name: Waiting for nova-compute service up
+  become: true
   command: >
     docker exec kolla_toolbox openstack
     --os-interface internal
@@ -22,6 +23,7 @@
     - nova_compute_services.stdout | from_json | length != 0
 
 - name: Discovering nova hosts
+  become: true
   command: >
     docker exec nova_api nova-manage cell_v2 discover_hosts --by-service
   register: discover_hosts
@@ -30,6 +32,7 @@
   delegate_to: "{{ groups['nova-api'][0] }}"
 
 - name: Refresh cell cache in nova scheduler
+  become: true
   command: docker kill --signal HUP nova_scheduler
   changed_when: False
   when:

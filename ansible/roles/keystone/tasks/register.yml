@@ -1,5 +1,6 @@
 ---
 - name: Creating admin project, user, role, service, and endpoint
+  become: true
   command: docker exec keystone kolla_keystone_bootstrap {{ openstack_auth.username }} {{ openstack_auth.password }} {{ openstack_auth.project_name }} admin {{ keystone_admin_url }} {{ keystone_internal_url }} {{ keystone_public_url }} {{ item }}
   register: keystone_bootstrap
   changed_when: (keystone_bootstrap.stdout | from_json).changed
@@ -10,6 +11,7 @@
 # NOTE(jeffrey4l): Since keystone-manage bootstrap cloud not update the endpoint,
 # run kolla_keystone_service module again.
 - name: Creating the Keystone service and endpoint
+  become: true
   kolla_toolbox:
     module_name: "kolla_keystone_service"
     module_args:
@@ -29,6 +31,7 @@
     - { interface: public, url: "{{ keystone_public_url }}" }
 
 - name: Creating default user role
+  become: true
   kolla_toolbox:
     module_name: "os_keystone_role"
     module_args:

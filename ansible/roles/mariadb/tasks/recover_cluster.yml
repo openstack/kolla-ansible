@@ -48,6 +48,7 @@
         action: "stop_container"
 
     - name: Copying MariaDB log file to /tmp
+      become: true
       shell: "docker cp {{ mariadb_service.container_name }}:/var/log/kolla/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
     - name: Get MariaDB wsrep recovery seqno
@@ -95,6 +96,7 @@
   changed_when: true
 
 - name: Copying grastate.dat file from MariaDB container in bootstrap host
+  become: true
   command: "docker cp {{ mariadb_service.container_name }}:/var/lib/mysql/grastate.dat /tmp/kolla_mariadb_grastate.dat"
   changed_when: false
   when:
@@ -112,6 +114,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Copying grastate.dat file to mariadb container
+  become: true
   command: docker cp /tmp/kolla_mariadb_grastate.dat mariadb:/var/lib/mysql/grastate.dat
   changed_when: false
   when:
@@ -152,6 +155,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Set first MariaDB container as primary
+  become: true
   shell: "docker exec {{ mariadb_service.container_name }} mysql -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
   no_log: True
   when:

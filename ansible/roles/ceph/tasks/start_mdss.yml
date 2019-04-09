@@ -20,6 +20,7 @@
       pool_pgp_num: "{{ cephfs_metadata_pool_pgp_num }}"
 
 - name: Geting ceph mds keyring
+  become: true
   kolla_ceph_keyring:
     name: "mds.{{ hostvars[item]['inventory_hostname'] }}"
     caps: "{{ ceph_client_mds_keyring_caps }}"
@@ -53,6 +54,7 @@
       - "kolla_logs:/var/log/kolla/"
 
 - name: Checking whether cephfs is created
+  become: true
   command: docker exec ceph_mon ceph fs get cephfs
   register: cephfs_stat
   failed_when: false
@@ -60,6 +62,7 @@
   run_once: true
 
 - name: Creating ceph new filesystem
+  become: true
   command: docker exec ceph_mon ceph fs new cephfs cephfs_metadata cephfs_data
   run_once: true
   when: cephfs_stat.rc != 0
