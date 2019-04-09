@@ -73,9 +73,16 @@ docker_custom_option: ""
 
 docker_runtime_directory: ""
 
+# Ubuntu 18+ does not have easy_install available due to
+# https://bugs.launchpad.net/ubuntu/+source/python-setuptools/+bug/1774419.
+easy_install_available: >-
+  {{ ansible_distribution != 'Ubuntu' or
+     ansible_distribution_major_version is version(18, 'lt') }}
+
 debian_pkg_install:
  - "{{ docker_apt_package }}"
  - git
+ - "{% if not easy_install_available %}python-pip{% endif %}"
  - python-setuptools
  - ntp
 
