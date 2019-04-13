@@ -4,5 +4,14 @@ features:
     Adds support for the `Ironic Inspector dnsmasq PXE filter
     <https://docs.openstack.org/ironic-inspector/latest/admin/dnsmasq-pxe-filter.html>`__
     that provides improved scalability over the default IPTables PXE filter.
-    This can be enabled by setting ``ironic_inspector_pxe_filter`` to
-    ``dnsmasq``.
+    This is now used by default instead of the ``iptables`` PXE filter.
+    The ``iptables`` filter can be enabled by setting
+    ``ironic_inspector_pxe_filter`` to ``iptables``.
+upgrade:
+  - |
+    The default PXE filter used by Ironic Inspector is now ``dnsmasq`` rather
+    than ``iptables``.  This change has been made to work around an issue
+    introduced by moving to Docker CE, where the daemon sets the default
+    policy on the ``iptables`` ``FORWARD`` chain to ``DROP``. This policy can
+    interact with the Ironic Inspector ``iptables`` PXE filter to cause DHCP
+    packets from bare metal nodes to get dropped, which prevents provisioning.
