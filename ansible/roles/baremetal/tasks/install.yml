@@ -49,7 +49,9 @@
     state: present
   become: True
   with_items: "{{ debian_pkg_install }}"
-  when: ansible_os_family == 'Debian'
+  when:
+    - ansible_os_family == 'Debian'
+    - item != ""
   register: apt_install_result
 
 - name: Install deltarpm packages
@@ -108,6 +110,7 @@
     virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
     virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
   become: True
+  when: easy_install_available
 
 - name: Install latest pip in the virtualenv
   pip:
