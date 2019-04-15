@@ -73,21 +73,17 @@ To configure a standalone installation you will need to add the following to
 
 .. code-block:: yaml
 
-   enable_nova: "no"
-   enable_neutron: "no"
-   enable_heat: "no"
-   enable_openvswitch: "no"
-   enable_horizon: "no"
-   enable_glance: "no"
+   enable_openstack_core: "no"
    enable_rabbitmq: "no"
+   enable_keystone: "yes"
 
 With the above configuration alone Keystone *will* be deployed. If you want
-Monasca to be registered with an external instance of Keystone you can
-add the following, additional configuration to `/etc/kolla/globals.yml`:
+Monasca to be registered with an external instance of Keystone remove
+`enable_keystone: "yes"` from `/etc/kolla/globals.yml` and add the following,
+additional configuration:
 
 .. code-block:: yaml
 
-   enable_keystone: "no"
    keystone_admin_url: "http://172.28.128.254:35357"
    keystone_internal_url: "http://172.28.128.254:5000"
    monasca_openstack_auth:
