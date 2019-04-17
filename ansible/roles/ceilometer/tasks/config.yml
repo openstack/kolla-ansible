@@ -38,6 +38,32 @@
   when:
     - ceilometer_polling_file.stat.exists
 
+- name: Check custom gnocchi_resources.yaml exists
+  local_action: stat path="{{ node_custom_config }}/ceilometer/gnocchi_resources.yaml"
+  register: ceilometer_gnocchi_resources_file
+
+- name: Copying over gnocchi_resources.yaml
+  copy:
+    src: "{{ node_custom_config }}/ceilometer/gnocchi_resources.yaml"
+    dest: "{{ node_config_directory }}/{{ item.key }}/gnocchi_resources.yaml"
+    force: True
+    mode: "0660"
+  become: true
+  register: ceilometer_gnocchi_resources_overwriting
+  when:
+    - ceilometer_gnocchi_resources_file.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ceilometer_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Set ceilometer gnocchi_resources file's path
+  set_fact:
+    ceilometer_gnocchi_resources_file_path: "{{ ceilometer_gnocchi_resources_file.stat.path }}"
+  when:
+    - ceilometer_gnocchi_resources_file.stat.exists
+
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ item }}"
   run_once: True
