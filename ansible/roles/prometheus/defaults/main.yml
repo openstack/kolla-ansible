@@ -108,6 +108,13 @@ prometheus_services:
     image: "{{ prometheus_libvirt_exporter_image_full }}"
     volumes: "{{ prometheus_libvirt_exporter_default_volumes + prometheus_libvirt_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_libvirt_exporter_dimensions }}"
+  prometheus-jiralert:
+    container_name: "prometheus_jiralert"
+    group: "prometheus-jiralert"
+    enabled: "{{ enable_prometheus_jiralert | bool }}"
+    image: "{{ prometheus_jiralert_image_full }}"
+    volumes: "{{ prometheus_jiralert_default_volumes + prometheus_jiralert_extra_volumes }}"
+    dimensions: "{{ prometheus_jiralert_dimensions }}"
 
 ####################
 # Database
@@ -134,6 +141,11 @@ prometheus_mtail_log_directories:
   - /var/log/secure
   - /var/log/messages
   - /var/log/kolla/keystone/*.log #Need some way of only configuring on host running keystone
+
+###################
+# Jiralert
+###################
+prometheus_jiralert_default_receiver_name: 'jira'
 
 ####################
 # Docker
@@ -190,6 +202,10 @@ prometheus_libvirt_exporter_image: "{{ docker_registry ~ '/' if docker_registry 
 prometheus_libvirt_exporter_tag: "{{ prometheus_tag }}"
 prometheus_libvirt_exporter_image_full: "{{ prometheus_libvirt_exporter_image }}:{{ prometheus_libvirt_exporter_tag }}"
 
+prometheus_jiralert_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-jiralert"
+prometheus_jiralert_tag: "{{ prometheus_tag }}"
+prometheus_jiralert_image_full: "{{ prometheus_jiralert_image }}:{{ prometheus_jiralert_tag }}"
+
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -202,6 +218,7 @@ prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }
 prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mtail_dimensions: "{{ default_container_dimensions }}"
 prometheus_libvirt_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_jiralert_dimensions: "{{ default_container_dimensions }}"
 
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
@@ -264,6 +281,10 @@ prometheus_libvirt_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-libvirt-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "libvirtd_run:/var/run/libvirt:ro"
+prometheus_jiralert_default_volumes:
+  - "{{ node_config_directory }}/prometheus-jiralert/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
 
 prometheus_extra_volumes: "{{ default_extra_volumes }}"
 prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
@@ -278,3 +299,4 @@ prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}
 prometheus_blackbox_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_mtail_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_jiralert_extra_volumes: "{{ prometheus_extra_volumes }}"
