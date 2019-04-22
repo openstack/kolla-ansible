@@ -8,7 +8,7 @@ Basics
 ======
 
 #. Our source code is hosted on `OpenStack Kolla-Ansible Git
-   <https://git.openstack.org/cgit/openstack/kolla-ansible/>`_. Bugs should be
+   <https://opendev.org/openstack/kolla-ansible/>`_. Bugs should be
    filed on `launchpad <https://bugs.launchpad.net/kolla-ansible>`_.
 
 #. Please follow OpenStack `Gerrit Workflow
@@ -35,7 +35,7 @@ Please follow our :doc:`/user/quickstart` to deploy your environment and test
 your changes.
 
 Please use the existing sandbox repository, available at `sandbox
-<https://git.openstack.org/cgit/openstack-dev/sandbox>`_, for learning, understanding
+<https://opendev.org/openstack-dev/sandbox>`_, for learning, understanding
 and testing the `Gerrit Workflow
 <https://docs.openstack.org/infra/manual/developers.html#development-workflow>`_.
 
