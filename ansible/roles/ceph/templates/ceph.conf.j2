@@ -6,7 +6,15 @@ log to stderr = false
 err to stderr = false
 
 fsid = {{ ceph_cluster_fsid }}
+{% if ceph_mon_host_type == 'HOSTNAME' %}
+mon initial members = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_hostname'] }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% elif ceph_mon_host_type == 'FQDN' %}
+mon initial members = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_fqdn'] }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% elif ceph_mon_host_type == 'INVENTORY' %}
+mon initial members = {% for host in groups['ceph-mon'] %}{{ host }}{% if not loop.last %}, {% endif %}{% endfor %}
+{%- else %}
 mon initial members = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
 
 mon host = {% for host in groups['ceph-mon'] %}{{ hostvars[host]['ansible_' + hostvars[host]['storage_interface']]['ipv4']['address'] }}{% if not loop.last %}, {% endif %}{% endfor %}
 
