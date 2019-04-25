@@ -53,6 +53,10 @@ function setup_config {
         GATE_IMAGES+=",masakari"
     fi
 
+    if [[ $ACTION == "mariadb" ]]; then
+        GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
+    fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 namespace = lokolla

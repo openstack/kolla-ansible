@@ -23,6 +23,12 @@ function deploy {
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy &> /tmp/logs/ansible/post-deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check &> /tmp/logs/ansible/check-deploy
 
+    if [[ ${ACTION} != "mariadb" ]]; then
+        init_runonce
+    fi
+}
+
+function init_runonce {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
 
