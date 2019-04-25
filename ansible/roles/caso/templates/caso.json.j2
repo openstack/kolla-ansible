@@ -1,6 +1,13 @@
+{% set cron_cmd = 'cron -f' if kolla_base_distro in ['ubuntu', 'debian'] else 'crond -s -n' %}
 {
-    "command": "caso-extract --config-file /etc/caso/caso.conf",
+    "command": "{{ cron_cmd }}",
     "config_files": [
+        {
+            "source": "{{ container_config_directory }}/caso.crontab",
+            "dest": "/var/spool/cron/caso",
+            "owner": "caso",
+            "perm": "0600"
+        },
         {
             "source": "{{ container_config_directory }}/caso.conf",
             "dest": "/etc/caso/caso.conf",

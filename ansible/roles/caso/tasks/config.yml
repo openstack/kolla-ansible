@@ -43,6 +43,20 @@
   notify:
     - Restart caso container
 
+- name: Copying over caso crontab
+  template:
+    src: "{{ role_path }}/templates/caso.crontab.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/caso.crontab"
+    mode: "0660"
+  become: true
+  register: caso_crontab
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ caso_services }}"
+  notify:
+    - Restart caso container
+
 - name: Copying over caso voms file
   template:
     src: "{{ role_path }}/templates/voms.json.j2"
