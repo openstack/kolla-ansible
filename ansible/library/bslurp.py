@@ -58,6 +58,11 @@ options:
       - sha1 hash of the underlying data
     default: None
     type: bool
+  sha256:
+    description:
+      - sha256 hash of the underlying data
+    default: None
+    type: bool
 author: Sam Yaple
 '''
 
@@ -131,10 +136,12 @@ def copy_from_host(module):
         raw_data = f.read()
 
     sha1 = hashlib.sha1(raw_data).hexdigest()
+    sha256 = hashlib.sha256(raw_data).hexdigest()
+
     data = zlib.compress(raw_data) if compress else raw_data
 
-    module.exit_json(content=base64.b64encode(data), sha1=sha1, mode=mode,
-                     source=src)
+    module.exit_json(content=base64.b64encode(data), sha1=sha1, sha256=sha256,
+                     mode=mode, source=src)
 
 
 def copy_to_host(module):
@@ -142,12 +149,26 @@ def copy_to_host(module):
     dest = module.params.get('dest')
     mode = int(module.params.get('mode'), 0)
     sha1 = module.params.get('sha1')
+    sha256 = module.params.get('sha256')
     src = module.params.get('src')
 
     data = base64.b64decode(src)
     raw_data = zlib.decompress(data) if compress else data
 
-    if sha1:
+    if sha256:
+        if os.path.exists(dest):
+            if os.access(dest, os.R_OK):
+                with open(dest, 'rb') as f:
+                    if hashlib.sha256(f.read()).hexdigest() == sha256:
+                        module.exit_json(changed=False)
+            else:
+                module.exit_json(failed=True, changed=False,
+                                 msg='file is not accessible: {}'.format(dest))
+
+        if sha256 != hashlib.sha256(raw_data).hexdigest():
+            module.exit_json(failed=True, changed=False,
+                             msg='sha256 sum does not match data')
+    elif sha1:
         if os.path.exists(dest):
             if os.access(dest, os.R_OK):
                 with open(dest, 'rb') as f:
@@ -173,6 +194,7 @@ def main():
         dest=dict(type='str'),
         mode=dict(default='0644', type='str'),
         sha1=dict(default=None, type='str'),
+        sha256=dict(default=None, type='str'),
         src=dict(required=True, type='str')
     )
     module = AnsibleModule(argument_spec)
