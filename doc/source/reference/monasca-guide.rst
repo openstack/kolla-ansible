@@ -54,9 +54,6 @@ custom Kafka configuration:
 
    echo "log.message.format.version=0.9.0.0" >> /etc/kolla/config/kafka.server.properties
 
-Finally it should be noted that support for Kibana and Grafana integration has
-not yet been enabled. This will be added in the future.
-
 Building images
 ~~~~~~~~~~~~~~~
 
