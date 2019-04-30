@@ -1,14 +1,25 @@
 # These initial groups are the only groups required to be modified. The
 # additional groups are for more control of the environment.
 [control]
+{% if scenario == 'monasca' %}
+{% for host in hostvars if host in ['primary', 'secondary1', 'secondary2'] %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endfor %}
+{% else %}
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
+{% endif %}
 
+{% if scenario == 'monasca' %}
+[network:children]
+control
+{% else %}
 [network]
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
+{% endif %}
 
 [compute]
 {% for host in hostvars %}
@@ -21,9 +32,15 @@
 {% endfor %}
 
 [monitoring]
+{% if scenario == 'monasca' %}
+{% for host in hostvars if host in ['secondary3', 'secondary4', 'secondary5'] %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endfor %}
+{% else %}
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
+{% endif %}
 
 [deployment]
 {% for host in hostvars %}
@@ -85,8 +102,9 @@ monitoring
 [etcd:children]
 control
 
-[influxdb:children]
-monitoring
+[influxdb]
+# NOTE(dszumski): This doesn't support clustering
+primary
 
 [prometheus:children]
 monitoring
