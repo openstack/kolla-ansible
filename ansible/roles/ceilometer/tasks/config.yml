@@ -12,7 +12,53 @@
     - item.value.enabled | bool
   with_dict: "{{ ceilometer_services }}"
 
-- name: Check custom polling.yaml exists
+- name: Check if the folder for custom meter definitions exist
+  local_action: stat path="{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}"
+  register: ceilometer_custom_meters_folder
+
+- name: Set variable that indicates if we have a folder for custom meter YAML files
+  set_fact:
+    custom_meter_folder_exist: "{{ ceilometer_custom_meters_folder.stat.exists and ceilometer_custom_meters_folder.stat.isdir }}"
+
+- name: Find all *.yaml files in custom meter definitions folder (if the folder exist)
+  local_action: find paths="{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}" patterns="*.yaml"
+  register: ceilometer_custom_meters_folder_found_files
+  when: custom_meter_folder_exist
+
+- name: Set the variable that control the copy of custom meter definitions
+  set_fact:
+    should_copy_custom_meter_definitions: "{{ custom_meter_folder_exist and ceilometer_custom_meters_folder_found_files.matched > 0 }}"
+
+- name: Create default folder for custom meter definitions
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}/meters.d"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_dict: "{{ ceilometer_services }}"
+  when:
+    - should_copy_custom_meter_definitions
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+
+- name: Copying custom meter definitions to Ceilometer
+  copy:
+    src: "{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}/"
+    dest: "{{ node_config_directory }}/{{ item.key }}/meters.d"
+    force: True
+    mode: "0660"
+  become: true
+  when:
+    - should_copy_custom_meter_definitions
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ceilometer_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Check if custom polling.yaml exists
   local_action: stat path="{{ node_custom_config }}/ceilometer/polling.yaml"
   register: ceilometer_polling_file
 
