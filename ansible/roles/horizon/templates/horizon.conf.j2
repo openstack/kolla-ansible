@@ -34,13 +34,12 @@ TraceEnable off
 
 {% if kolla_enable_tls_external | bool %}
 Header edit Location ^http://(.*)$ https://$1
-{% else %}
-# NOTE(Jeffrey4l): Only enable deflate when tls is disabled until the
-# OSSN-0037 is fixed.
-# see https://wiki.openstack.org/wiki/OSSN/OSSN-0037 for more information.
+{% endif %}
+
 <IfModule mod_deflate.c>
-    # Compress HTML, CSS, JavaScript, Text, XML and fonts
+    # Compress HTML, CSS, JavaScript, Json, Text, XML and fonts
     AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
     AddOutputFilterByType DEFLATE application/rss+xml
     AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
     AddOutputFilterByType DEFLATE application/x-font
@@ -62,7 +61,6 @@ Header edit Location ^http://(.*)$ https://$1
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/xml
 </IfModule>
-{% endif %}
 
 <IfModule mod_expires.c>
     <Filesmatch "\.(jpg|jpeg|png|gif|js|css|swf|ico|woff)$">
