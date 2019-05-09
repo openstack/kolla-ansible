@@ -45,32 +45,26 @@
 
 - name: Install apt packages
   package:
-    name: "{{ item }}"
+    name: "{{ (debian_pkg_install | join(' ')).split() }}"
     state: present
   become: True
-  with_items: "{{ debian_pkg_install }}"
-  when:
-    - ansible_os_family == 'Debian'
-    - item != ""
+  when: ansible_os_family == 'Debian'
   register: apt_install_result
 
 - name: Install deltarpm packages
   package:
-    name: "{{ item }}"
+    name: deltarpm
     state: present
     update_cache: yes
   become: True
-  with_items:
-    - deltarpm
   when: ansible_os_family == 'RedHat'
 
 - name: Install yum packages
   package:
-    name: "{{ item }}"
+    name: "{{ (redhat_pkg_install | join(' ')).split() }}"
     state: present
     update_cache: yes
   become: True
-  with_items: "{{ redhat_pkg_install }}"
   when: ansible_os_family == 'RedHat'
   register: yum_install_result
 
@@ -131,20 +125,14 @@
 
 - name: Remove packages
   package:
-    name: "{{ item }}"
+    name: "{{ (ubuntu_pkg_removals | join(' ')).split() }}"
     state: absent
-  with_items: "{{ ubuntu_pkg_removals }}"
   become: True
-  when:
-    - ansible_distribution|lower == "ubuntu"
-    - item != ""
+  when: ansible_distribution|lower == "ubuntu"
 
 - name: Remove packages
   package:
-    name: "{{ item }}"
+    name: "{{ (redhat_pkg_removals | join(' ')).split() }}"
     state: absent
-  with_items: "{{ redhat_pkg_removals }}"
   become: True
-  when:
-    - ansible_os_family == 'RedHat'
-    - item != ""
+  when: ansible_os_family == 'RedHat'
