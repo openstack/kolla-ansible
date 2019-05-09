@@ -2,13 +2,14 @@
 - hosts: all
   vars:
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ["ceph", "cinder-lvm"]
+      when: scenario == "cinder-lvm" or is_ceph
       become: true
       vars:
-        disk_type: "{{ ceph_storetype if scenario == 'ceph' else 'cinder-lvm' }}"
+        disk_type: "{{ ceph_storetype if is_ceph else 'cinder-lvm' }}"
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
@@ -19,6 +20,8 @@
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     need_build_image: false
     build_image_tag: "change_{{ zuul.change | default('none') }}"
+    is_upgrade: "{{ 'upgrade' in scenario }}"
+    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
     # FIXME: in multi node env, api_interface may be different on each node.
     - name: detect api_interface_name variable
@@ -44,10 +47,13 @@
     # NOTE(mgoddard): This only affects the remote copy of the repo, not the
     # one on the executor.
     - name: checkout the previous kolla-ansible branch
-      command:
-        cmd: "git checkout stable/{{ previous_release | lower }}"
+      shell:
+        cmd: |
+          git checkout stable/{{ previous_release | lower }}
+          echo "kolla-ansible checked out to:"
+          git log --pretty=oneline  -1
         chdir: "{{ kolla_ansible_src_dir }}"
-      when: scenario == "upgrade"
+      when: is_upgrade
 
     - name: ensure /etc/kolla exists
       file:
@@ -63,7 +69,7 @@
       include_role:
         role: remote-template
       vars:
-        is_previous_release: "{{ scenario == 'upgrade' }}"
+        is_previous_release: "{{ is_upgrade }}"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
         # Role variables.
         remote_template_src: "{{ kolla_ansible_src_dir }}/{{ item.src }}"
@@ -87,7 +93,7 @@
         # ceph.conf
         - src: "tests/templates/ceph-overrides.j2"
           dest: /etc/kolla/config/ceph.conf
-          when: scenario == "ceph"
+          when: "{{ 'ceph' in scenario }}"
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
@@ -183,7 +189,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
-          when: scenario != "upgrade"
+          when: not is_upgrade
       when: scenario != "bifrost"
 
     # Upgrade: update config.
@@ -197,8 +203,11 @@
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
         - name: checkout the current kolla-ansible branch
-          command:
-            cmd: "git checkout {{ zuul.branch }}"
+          shell:
+            cmd: |
+              git checkout {{ zuul.branch }}
+              echo "kolla-ansible checked out to:"
+              git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
         # Use the new kolla-ansible repo to generate config files.
@@ -223,7 +232,7 @@
             # ceph.conf
             - src: "tests/templates/ceph-overrides.j2"
               dest: /etc/kolla/config/ceph.conf
-              when: "'ceph' in scenario"
+              when: "{{ is_ceph }}"
           when: item.when | default(true)
 
         - name: upgrade kolla-ansible requirements
@@ -268,7 +277,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
-      when: scenario == "upgrade"
+      when: is_upgrade
 
     # Bifrost testing.
     - block:
