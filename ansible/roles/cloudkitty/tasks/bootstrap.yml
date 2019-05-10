@@ -34,5 +34,15 @@
   when:
     - not use_preconfigured_databases | bool
 
+- name: Creating Cloudkitty influxdb database
+  become: true
+  kolla_toolbox:
+    module_name: influxdb_database
+    module_args:
+      hostname: "{{ influxdb_address }}"
+      port: "{{ influxdb_http_port }}"
+      database_name: "{{ cloudkitty_influxdb_name }}"
+  when: cloudkitty_storage_backend == 'influxdb'
+
 - include_tasks: bootstrap_service.yml
   when: database.changed or use_preconfigured_databases | bool
