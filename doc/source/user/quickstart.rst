@@ -253,13 +253,13 @@ For best results, Ansible configuration should be tuned for your environment.
 For example, add the following options to the Ansible configuration file
 ``/etc/ansible/ansible.cfg``:
 
-   .. path /etc/ansible/ansible.cfg
-   .. code-block:: ini
+.. path /etc/ansible/ansible.cfg
+.. code-block:: ini
 
-      [defaults]
-      host_key_checking=False
-      pipelining=True
-      forks=100
+   [defaults]
+   host_key_checking=False
+   pipelining=True
+   forks=100
 
 Further information on tuning Ansible is available `here
 <https://www.ansible.com/blog/ansible-performance-tuning>`__.
