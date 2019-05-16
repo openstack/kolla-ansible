@@ -13,6 +13,7 @@ Reference
    designate-guide
    hyperv-guide
    ironic-guide
+   keystone-guide
    manila-guide
    manila-hnas-guide
    nova-fake-driver
