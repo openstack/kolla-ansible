@@ -26,6 +26,10 @@ DAY_SPAN = 24 * HOUR_SPAN
 WEEK_SPAN = 7 * DAY_SPAN
 
 
+class RotationIntervalTooLong(Exception):
+    pass
+
+
 def json_exit(msg=None, failed=False, changed=False):
     if type(msg) is not dict:
         msg = {'msg': str(msg)}
@@ -35,50 +39,59 @@ def json_exit(msg=None, failed=False, changed=False):
 
 
 def generate(host_index, total_hosts, total_rotation_mins):
-    min = '*'
-    hour = '*'
-    day = '*'
+    min = '*'  # 0-59
+    hour = '*'  # 0-23
+    day = '*'  # 0-6 (day of week)
     crons = []
 
     if host_index >= total_hosts:
         return crons
 
-    rotation_frequency = total_rotation_mins // total_hosts
-    cron_min = rotation_frequency * host_index
+    # We need to rotate the key every total_rotation_mins minutes.
+    # When there are N hosts, each host should rotate once every N *
+    # total_rotation_mins minutes, in a round-robin manner.
+    # We can generate a cycle for index 0, then add an offset specific to each
+    # host.
+    # NOTE: Minor under-rotation is better than over-rotation since tokens
+    # may become invalid if keys are over-rotated.
+    host_rotation_mins = total_rotation_mins * total_hosts
+    host_rotation_offset = total_rotation_mins * host_index
 
-    # Build crons for a week period
-    if total_rotation_mins == WEEK_SPAN:
-        day = cron_min // DAY_SPAN
-        hour = (cron_min % DAY_SPAN) // HOUR_SPAN
-        min = cron_min % HOUR_SPAN
-        crons.append({'min': min, 'hour': hour, 'day': day})
+    # Can't currently rotate less than once per week.
+    if total_rotation_mins > WEEK_SPAN:
+        msg = ("Unable to schedule fernet key rotation with an interval "
+               "greater than 1 week divided by the number of hosts")
+        raise RotationIntervalTooLong(msg)
 
-    # Build crons for a day period
-    elif total_rotation_mins == DAY_SPAN:
-        hour = cron_min // HOUR_SPAN
-        min = cron_min % HOUR_SPAN
-        crons.append({'min': min, 'hour': hour, 'day': day})
+    # Build crons multiple of a day
+    elif host_rotation_mins > DAY_SPAN:
+        time = host_rotation_offset
+        while time + total_rotation_mins <= WEEK_SPAN:
+            day = time // DAY_SPAN
+            hour = time % HOUR_SPAN
+            min = time % HOUR_SPAN
+            crons.append({'min': min, 'hour': hour, 'day': day})
+
+            time += host_rotation_mins
 
     # Build crons for multiple of an hour
-    elif total_rotation_mins % HOUR_SPAN == 0:
-        for multiple in range(1, DAY_SPAN // total_rotation_mins + 1):
-            time = cron_min
-            if multiple > 1:
-                time += total_rotation_mins * (multiple - 1)
-
+    elif host_rotation_mins > HOUR_SPAN:
+        time = host_rotation_offset
+        while time + total_rotation_mins <= DAY_SPAN:
             hour = time // HOUR_SPAN
             min = time % HOUR_SPAN
             crons.append({'min': min, 'hour': hour, 'day': day})
 
-    # Build crons for multiple of a minute
-    elif total_rotation_mins % MINUTE_SPAN == 0:
-        for multiple in range(1, HOUR_SPAN // total_rotation_mins + 1):
-            time = cron_min
-            if multiple > 1:
-                time += total_rotation_mins * (multiple - 1)
+            time += host_rotation_mins
 
+    # Build crons for multiple of a minute
+    else:
+        time = host_rotation_offset
+        while time + total_rotation_mins <= HOUR_SPAN:
             min = time // MINUTE_SPAN
             crons.append({'min': min, 'hour': hour, 'day': day})
+
+            time += host_rotation_mins
 
     return crons
 
@@ -86,9 +99,9 @@ def generate(host_index, total_hosts, total_rotation_mins):
 def main():
     parser = argparse.ArgumentParser(description='''Creates a list of cron
         intervals for a node in a group of nodes to ensure each node runs
-        a cron in round robbin style.''')
+        a cron in round robin style.''')
     parser.add_argument('-t', '--time',
-                        help='Time in seconds for a token rotation cycle',
+                        help='Time in minutes for a key rotation cycle',
                         required=True,
                         type=int)
     parser.add_argument('-i', '--index',
@@ -96,11 +109,15 @@ def main():
                         required=True,
                         type=int)
     parser.add_argument('-n', '--number',
-                        help='Number of tokens that should exist',
+                        help='Number of hosts',
                         required=True,
                         type=int)
     args = parser.parse_args()
-    json_exit({'cron_jobs': generate(args.index, args.number, args.time)})
+    try:
+        jobs = generate(args.index, args.number, args.time)
+    except Exception as e:
+        json_exit(str(e), failed=True)
+    json_exit({'cron_jobs': jobs})
 
 
 if __name__ == "__main__":
