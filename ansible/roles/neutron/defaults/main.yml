@@ -12,6 +12,7 @@ neutron_services:
       - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_server_dimensions }}"
     haproxy:
       neutron_server:
@@ -54,6 +55,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
   neutron-openvswitch-agent-xenapi:
     container_name: "neutron_openvswitch_agent_xenapi"
@@ -70,6 +72,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_openvswitch_agent_xenapi_dimensions }}"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
@@ -94,6 +97,7 @@ neutron_services:
       - "/lib/modules:/lib/modules:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
   neutron-dhcp-agent:
     container_name: "neutron_dhcp_agent"
@@ -108,6 +112,7 @@ neutron_services:
       - "/run/:/run/:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_dhcp_agent_dimensions }}"
   neutron-l3-agent:
     container_name: "neutron_l3_agent"
@@ -126,6 +131,7 @@ neutron_services:
       - "/run:/run:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_l3_agent_dimensions }}"
   neutron-lbaas-agent:
     container_name: "neutron_lbaas_agent"
@@ -151,6 +157,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
   neutron-metadata-agent:
     container_name: "neutron_metadata_agent"
@@ -168,6 +175,7 @@ neutron_services:
       - "/run/:/run/:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_metadata_agent_dimensions }}"
   neutron-bgp-dragent:
     container_name: "neutron_bgp_dragent"
@@ -207,6 +215,7 @@ neutron_services:
       - "/etc/localtime:/etc/localtime:ro"
       - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
+      - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
     dimensions: "{{ neutron_metering_agent_dimensions }}"
   ironic-neutron-agent:
     container_name: "ironic_neutron_agent"
@@ -469,3 +478,11 @@ neutron_notification_drivers: "{{ notification_drivers|selectattr('enabled', 'eq
 ############
 onos_url: "127.0.0.1"
 onos_username: "username"
+
+####################
+# Kolla
+####################
+neutron_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+neutron_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+neutron_dev_mode: "{{ kolla_dev_mode }}"
+neutron_source_version: "{{ kolla_source_version }}"
