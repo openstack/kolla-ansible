@@ -741,7 +741,15 @@ default_user_domain_id: "default"
 
 # Valid options are [ fernet ]
 keystone_token_provider: "fernet"
+# Keystone fernet token expiry in seconds. Default is 1 day.
 fernet_token_expiry: 86400
+# Keystone window to allow expired fernet tokens. Default is 2 days.
+fernet_token_allow_expired_window: 172800
+# Keystone fernet key rotation interval in seconds. Default is sum of token
+# expiry and allow expired window, 3 days. This ensures the minimum number
+# of keys are active. If this interval is lower than the sum of the token
+# expiry and allow expired window, multiple active keys will be necessary.
+fernet_key_rotation_interval: "{{ fernet_token_expiry + fernet_token_allow_expired_window }}"
 
 keystone_default_user_role: "_member_"
 
