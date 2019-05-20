@@ -30,7 +30,7 @@
   wait_for: host={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }} port={{ mongodb_port }}
 
 - name: Checking current replication status
-  command: "docker exec -t mongodb mongo {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }} --quiet --eval rs.status().ok"
+  command: "docker exec -t mongodb mongo --host {{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }} --port {{ mongodb_port }} --quiet --eval rs.status().ok"
   register: mongodb_replication_status
   changed_when: false
   delegate_to: "{{ groups['mongodb'][0] }}"
