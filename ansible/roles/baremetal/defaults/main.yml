@@ -71,8 +71,11 @@ docker_runtime_directory: ""
 # Ubuntu 18+ does not have easy_install available due to
 # https://bugs.launchpad.net/ubuntu/+source/python-setuptools/+bug/1774419.
 easy_install_available: >-
-  {{ ansible_distribution != 'Ubuntu' or
-     ansible_distribution_major_version is version(18, 'lt') }}
+  {{ not (ansible_distribution == 'Ubuntu' and
+          ansible_distribution_major_version is version(18, 'ge'))
+     and
+     not (ansible_distribution == 'Debian' and
+          ansible_distribution_major_version is version(10, 'ge')) }}
 
 debian_pkg_install:
  - "{{ docker_apt_package }}"
