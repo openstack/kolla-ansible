@@ -7,7 +7,7 @@ How To Contribute
 Basics
 ======
 
-#. Our source code is hosted on `OpenStack Kolla-Ansible Git
+#. Our source code is hosted on `OpenDev Kolla-Ansible Git
    <https://opendev.org/openstack/kolla-ansible/>`_. Bugs should be
    filed on `launchpad <https://bugs.launchpad.net/kolla-ansible>`_.
 
@@ -28,6 +28,10 @@ Basics
 
 #. TrivialFix tags or bugs are not required for documentation changes.
 
+#. We use a `whiteboard <https://etherpad.openstack.org/p/KollaWhiteBoard>`__
+   to keep track of CI gate status, release status, stable backports, planning
+   and feature development status.
+
 Development Environment
 =======================
 
@@ -39,11 +43,24 @@ Please use the existing sandbox repository, available at `sandbox
 and testing the `Gerrit Workflow
 <https://docs.openstack.org/infra/manual/developers.html#development-workflow>`_.
 
+Adding a release note
+=====================
+
+All new features should have a documented release note.  To add a release note
+run the following command:
+
+.. code-block:: console
+
+   tox -e venv -- reno new <feature-being-added>
+
+Typically in this project we do not add release notes for bug fixes. Upgrade
+notes can be extremely helpful for operators so these are encouraged.
+
 Adding a new service
 ====================
 
 Kolla aims to both containerise and deploy all services within the OpenStack
-"big tent". This is a constantly moving target as the ecosystem grows, so these
+ecosystem. This is a constantly moving target as the ecosystem grows, so these
 guidelines aim to help make adding a new service to Kolla a smooth experience.
 
 When adding a role for a new service in Ansible, there are couple of patterns
@@ -69,6 +86,9 @@ that Kolla uses throughout that should be followed.
 * Common tasks
 
   All services should include the following tasks:
+
+  - ``deploy.yml`` : Used to bootstrap, configure and deploy containers
+    for the service.
 
   - ``reconfigure.yml`` : Used to push new configuration files to the host
     and restart the service.
@@ -129,4 +149,4 @@ Other than the above, most service roles abide by the following pattern:
 - ``Bootstrap Service``: Starts a one shot container on the host to create
   the database tables, and other initial run time config.
 
-- ``Start``: Start the service(s).
+Ansible handlers are used to create or restart containers when necessary.
