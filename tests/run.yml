@@ -18,6 +18,7 @@
     kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     need_build_image: false
+    build_image_tag: "change_{{ zuul.change | default('none') }}"
   tasks:
     # FIXME: in multi node env, api_interface may be different on each node.
     - name: detect api_interface_name variable
@@ -141,7 +142,7 @@
         BASE_DISTRO: "{{ base_distro }}"
         INSTALL_TYPE: "{{ install_type }}"
         BUILD_IMAGE: "{{ need_build_image }}"
-        TAG: "change_{{ zuul.change }}"
+        TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
         ACTION: "{{ scenario }}"
 
