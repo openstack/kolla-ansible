@@ -1,0 +1,88 @@
+---
+project_name: "qinling"
+
+qinling_services:
+  qinling-api:
+    container_name: qinling_api
+    group: qinling-api
+    enabled: true
+    image: "{{ qinling_api_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/qinling-api/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ qinling_api_dimensions }}"
+    haproxy:
+      qinling_api:
+        enabled: "{{ enable_qinling }}"
+        mode: "http"
+        external: false
+        port: "{{ qinling_api_port }}"
+      qinling_api_external:
+        enabled: "{{ enable_qinling }}"
+        mode: "http"
+        external: true
+        port: "{{ qinling_api_port }}"
+  qinling-engine:
+    container_name: qinling_engine
+    group: qinling-engine
+    enabled: true
+    image: "{{ qinling_engine_image_full }}"
+    environment: "{{ container_proxy }}"
+    volumes:
+      - "{{ node_config_directory }}/qinling-engine/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "qinling:/var/lib/qinling/"
+      - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
+      - "kolla_logs:/var/log/kolla/"
+    dimensions: "{{ qinling_engine_dimensions }}"
+
+
+####################
+# Database
+####################
+qinling_database_name: "qinling"
+qinling_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}qinling{% endif %}"
+qinling_database_address: "{{ database_address }}:{{ database_port }}"
+
+
+####################
+# Docker
+####################
+qinling_install_type: "{{ kolla_install_type }}"
+qinling_tag: "{{ openstack_release }}"
+
+qinling_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ qinling_install_type }}-qinling-api"
+qinling_api_tag: "{{ qinling_tag }}"
+qinling_api_image_full: "{{ qinling_api_image }}:{{ qinling_api_tag }}"
+
+qinling_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ qinling_install_type }}-qinling-engine"
+qinling_engine_tag: "{{ qinling_tag }}"
+qinling_engine_image_full: "{{ qinling_engine_image }}:{{ qinling_engine_tag }}"
+
+qinling_api_dimensions: "{{ default_container_dimensions }}"
+qinling_engine_dimensions: "{{ default_container_dimensions }}"
+
+
+####################
+# OpenStack
+####################
+qinling_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ qinling_api_port }}"
+qinling_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ qinling_api_port }}"
+qinling_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ qinling_api_port }}"
+
+qinling_logging_debug: "{{ openstack_logging_debug }}"
+
+qinling_keystone_user: "qinling"
+
+openstack_qinling_auth: "{{ openstack_auth }}"
+
+
+####################
+# Kolla
+####################
+qinling_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+qinling_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+qinling_dev_mode: "{{ kolla_dev_mode }}"
+qinling_source_version: "{{ kolla_source_version }}"

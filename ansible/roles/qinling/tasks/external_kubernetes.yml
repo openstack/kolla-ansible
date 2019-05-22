@@ -1,0 +1,19 @@
+---
+- name: Copy over Kubernetes certificates files for qinling-engine
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/qinling-engine/"
+    mode: "0660"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  become: true
+  register: qinling_engine_kubernetes_files
+  with_items:
+    - "{{ node_custom_config }}/qinling/qinling-engine/kubernetes_ca.crt"
+    - "{{ node_custom_config }}/qinling/qinling-engine/kubernetes.crt"
+    - "{{ node_custom_config }}/qinling/qinling-engine/kubernetes.key"
+  when:
+    - qinling_kubernetes_certificates | bool
+    - inventory_hostname in groups['qinling-engine']
+  notify:
+    - Restart qinling-engine container
