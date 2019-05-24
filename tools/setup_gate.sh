@@ -89,17 +89,17 @@ function setup_ansible {
     RAW_INVENTORY=/etc/kolla/inventory
 
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "ara" "cmd2<0.9.0"
+    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
     if [[ $ACTION == "zun" ]]; then
         sudo -H pip install -U "python-zunclient"
     fi
     detect_distro
 
     sudo mkdir /etc/ansible
-    ara_location=$(python -c "import os,ara; print(os.path.dirname(ara.__file__))")
+    ara_location=$(python -m ara.setup.callback_plugins)
     sudo tee /etc/ansible/ansible.cfg<<EOF
 [defaults]
-callback_plugins = ${ara_location}/plugins/callbacks
+callback_plugins = ${ara_location}
 host_key_checking = False
 EOF
 
