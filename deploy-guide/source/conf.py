@@ -23,9 +23,6 @@
 import os
 # import sys
 
-
-import openstackdocstheme
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -40,7 +37,9 @@ import openstackdocstheme
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # TODO(ajaeger): enable PDF building, for example add 'rst2pdf.pdfbuilder'
-# extensions =
+extensions = [
+    'openstackdocstheme',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
@@ -129,7 +128,7 @@ html_theme = 'openstackdocs'
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
+# html_theme_path = [openstackdocstheme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -295,4 +294,10 @@ locale_dirs = ['locale/']
 pdf_documents = [
     ('index', u'DeployGuide', u'Deploy Guide',
      u'OpenStack contributors')
+]
+
+# -- Options for openstackdocstheme -------------------------------------------
+
+openstack_projects = [
+    'kolla-ansible',
 ]
