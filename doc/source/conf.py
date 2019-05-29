@@ -88,3 +88,6 @@ latex_documents = [
 repository_name = 'openstack/kolla-ansible'
 bug_project = 'kolla-ansible'
 bug_tag = ''
+openstack_projects = [
+    'kolla-ansible',
+]
