@@ -228,7 +228,7 @@ configurations:
 Gnocchi
 -------
 
-Modify ``/etc/kolla/config/gnocchi/gnocchi.conf`` file according to
+Modify ``/etc/kolla/config/gnocchi.conf`` file according to
 the following configuration:
 
 .. code-block:: ini
