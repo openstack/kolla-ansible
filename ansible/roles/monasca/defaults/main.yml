@@ -61,6 +61,16 @@ monasca_services:
       - "monasca_thresh:/var/lib/monasca-thresh/"
       - "kolla_logs:/var/log/kolla"
     dimensions: "{{ monasca_thresh_dimensions }}"
+  monasca-notification:
+    container_name: monasca_notification
+    group: monasca-notification
+    enabled: true
+    image: "{{ monasca_notification_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/monasca-notification/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "kolla_logs:/var/log/kolla"
+    dimensions: "{{ monasca_notification_dimensions }}"
 
 ####################
 # Databases
@@ -119,12 +129,17 @@ monasca_thresh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ 
 monasca_thresh_tag: "{{ monasca_tag }}"
 monasca_thresh_image_full: "{{ monasca_thresh_image }}:{{ monasca_thresh_tag }}"
 
+monasca_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-notification"
+monasca_notification_tag: "{{ monasca_tag }}"
+monasca_notification_image_full: "{{ monasca_notification_image }}:{{ monasca_notification_tag }}"
+
 monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_transformer_dimensions: "{{ default_container_dimensions }}"
 monasca_log_persister_dimensions: "{{ default_container_dimensions }}"
 monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 monasca_thresh_dimensions: "{{ default_container_dimensions }}"
+monasca_notification_dimensions: "{{ default_container_dimensions }}"
 
 
 ####################
