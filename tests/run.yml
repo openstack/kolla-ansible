@@ -2,13 +2,14 @@
 - hosts: all
   vars:
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ["ceph", "cinder-lvm"]
+      when: scenario == "cinder-lvm" or is_ceph
       become: true
       vars:
-        disk_type: "{{ ceph_storetype if scenario == 'ceph' else 'cinder-lvm' }}"
+        disk_type: "{{ ceph_storetype if is_ceph else 'cinder-lvm' }}"
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
@@ -19,6 +20,7 @@
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
     need_build_image: false
     build_image_tag: "change_{{ zuul.change | default('none') }}"
+    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
     # FIXME: in multi node env, api_interface may be different on each node.
     - name: detect api_interface_name variable
@@ -87,7 +89,7 @@
         # ceph.conf
         - src: "tests/templates/ceph-overrides.j2"
           dest: /etc/kolla/config/ceph.conf
-          when: scenario == "ceph"
+          when: "{{ is_ceph }}"
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
@@ -223,7 +225,7 @@
             # ceph.conf
             - src: "tests/templates/ceph-overrides.j2"
               dest: /etc/kolla/config/ceph.conf
-              when: "'ceph' in scenario"
+              when: "{{ is_ceph }}"
           when: item.when | default(true)
 
         - name: upgrade kolla-ansible requirements

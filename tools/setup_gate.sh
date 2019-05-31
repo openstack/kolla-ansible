@@ -27,7 +27,7 @@ EOF
         GATE_IMAGES="bifrost"
     fi
 
-    if [[ $ACTION == "ceph" ]]; then
+    if [[ $ACTION =~ "ceph" ]]; then
         GATE_IMAGES+=",ceph,cinder"
     fi
 
