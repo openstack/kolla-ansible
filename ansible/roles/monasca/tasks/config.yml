@@ -175,6 +175,47 @@
   notify:
     - Restart monasca-log-metrics container
 
+- name: Copying over monasca-thresh config
+  vars:
+    service: "{{ monasca_services['monasca-thresh'] }}"
+  # NOTE(dszumski): We can't use merge_yaml since it replaces empty values
+  # with `null`. This breaks the thresholder config file parsing (which should
+  # probably be more robust).
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-thresh/thresh-config.yml"
+    mode: "0660"
+  become: true
+  register: monasca_thresh_confs
+  with_first_found:
+    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/thresh-config.yml"
+    - "{{ node_custom_config }}/monasca/thresh-config.yml"
+    - "{{ role_path }}/templates/monasca-thresh/thresh-config.yml.j2"
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-thresh container
+
+- name: Copying over monasca-thresh storm config
+  vars:
+    service: "{{ monasca_services['monasca-thresh'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/monasca-thresh/storm.yml"
+    mode: "0660"
+  become: true
+  register: monasca_thresh_storm_conf
+  with_first_found:
+    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/storm.yml"
+    - "{{ node_custom_config }}/monasca/storm.yml"
+    - "{{ role_path }}/templates/monasca-thresh/storm.yml.j2"
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart monasca-thresh container
+
 - name: Check monasca containers
   become: true
   kolla_docker:
