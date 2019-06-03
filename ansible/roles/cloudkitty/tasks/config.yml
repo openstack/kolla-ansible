@@ -29,6 +29,28 @@
   when:
     - cloudkitty_policy.results
 
+- name: Check if custom {{ cloudkitty_custom_metrics_yaml_file }} exists
+  local_action: stat path="{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
+  register: cloudkitty_custom_metrics_file
+
+- name: Copying {{ cloudkitty_custom_metrics_yaml_file }} if it exists
+  copy:
+    src: "{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ cloudkitty_custom_metrics_yaml_file }}"
+    mode: "0660"
+  become: true
+  when:
+    - cloudkitty_custom_metrics_file.stat.exists
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ cloudkitty_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Are we using {{ cloudkitty_custom_metrics_yaml_file }}?
+  set_fact:
+    cloudkitty_custom_metrics_used: "{{ cloudkitty_custom_metrics_file.stat.exists }}"
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
