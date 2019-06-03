@@ -7,11 +7,7 @@ senlin_services:
     group: senlin-api
     enabled: true
     image: "{{ senlin_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+    volumes: "{{ senlin_api_default_volumes + senlin_api_extra_volumes }}"
     dimensions: "{{ senlin_api_dimensions }}"
     haproxy:
       senlin_api:
@@ -31,11 +27,7 @@ senlin_services:
     group: senlin-engine
     enabled: true
     image: "{{ senlin_engine_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/senlin-engine/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+    volumes: "{{ senlin_engine_default_volumes + senlin_engine_extra_volumes }}"
     dimensions: "{{ senlin_engine_dimensions }}"
 
 ####################
@@ -63,6 +55,20 @@ senlin_api_image_full: "{{ senlin_api_image }}:{{ senlin_api_tag }}"
 senlin_api_dimensions: "{{ default_container_dimensions }}"
 senlin_engine_dimensions: "{{ default_container_dimensions }}"
 
+senlin_api_default_volumes:
+  - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+senlin_engine_default_volumes:
+  - "{{ node_config_directory }}/senlin-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+
+senlin_extra_volumes: "{{ default_extra_volumes }}"
+senlin_api_extra_volumes: "{{ senlin_extra_volumes }}"
+senlin_engine_extra_volumes: "{{ senlin_extra_volumes }}"
 
 ####################
 # OpenStack

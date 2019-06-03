@@ -7,11 +7,7 @@ cinder_services:
     group: cinder-api
     enabled: true
     image: "{{ cinder_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    volumes: "{{ cinder_api_default_volumes + cinder_api_extra_volumes }}"
     dimensions: "{{ cinder_api_dimensions }}"
     haproxy:
       cinder_api:
@@ -31,11 +27,7 @@ cinder_services:
     group: cinder-scheduler
     enabled: true
     image: "{{ cinder_scheduler_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/cinder-scheduler/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    volumes: "{{ cinder_scheduler_default_volumes + cinder_scheduler_extra_volumes }}"
     dimensions: "{{ cinder_scheduler_dimensions }}"
   cinder-volume:
     container_name: cinder_volume
@@ -44,17 +36,7 @@ cinder_services:
     image: "{{ cinder_volume_image_full }}"
     privileged: True
     ipc_mode: "host"
-    volumes:
-      - "{{ node_config_directory }}/cinder-volume/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run/:/run/:shared"
-      - "cinder:/var/lib/cinder"
-      - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
-      - "{% if enable_cinder_backend_lvm | bool and cinder_target_helper == 'lioadm' %}target_config:/etc/target{% endif %}"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    volumes: "{{ cinder_volume_default_volumes + cinder_volume_extra_volumes }}"
     dimensions: "{{ cinder_volume_dimensions }}"
   cinder-backup:
     container_name: cinder_backup
@@ -62,15 +44,7 @@ cinder_services:
     enabled: "{{ enable_cinder_backup | bool }}"
     image: "{{ cinder_backup_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/cinder-backup/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/run/:/run/:shared"
-      - "cinder:/var/lib/cinder"
-      - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+    volumes: "{{ cinder_backup_default_volumes + cinder_backup_extra_volumes }}"
     dimensions: "{{ cinder_backup_dimensions }}"
 
 ####################
@@ -151,6 +125,43 @@ cinder_api_dimensions: "{{ default_container_dimensions }}"
 cinder_backup_dimensions: "{{ default_container_dimensions }}"
 cinder_scheduler_dimensions: "{{ default_container_dimensions }}"
 cinder_volume_dimensions: "{{ default_container_dimensions }}"
+
+cinder_api_default_volumes:
+  - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+cinder_backup_default_volumes:
+  - "{{ node_config_directory }}/cinder-backup/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/run/:/run/:shared"
+  - "cinder:/var/lib/cinder"
+  - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+cinder_scheduler_default_volumes:
+  - "{{ node_config_directory }}/cinder-scheduler/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+cinder_volume_default_volumes:
+  - "{{ node_config_directory }}/cinder-volume/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run/:/run/:shared"
+  - "cinder:/var/lib/cinder"
+  - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+  - "{% if enable_cinder_backend_lvm | bool and cinder_target_helper == 'lioadm' %}target_config:/etc/target{% endif %}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/cinder/cinder:/var/lib/kolla/venv/lib/python2.7/site-packages/cinder' if cinder_dev_mode | bool else '' }}"
+
+cinder_extra_volumes: "{{ default_extra_volumes }}"
+cinder_api_extra_volumes: "{{ cinder_extra_volumes }}"
+cinder_backup_extra_volumes: "{{ cinder_extra_volumes }}"
+cinder_scheduler_extra_volumes: "{{ cinder_extra_volumes }}"
+cinder_volume_extra_volumes: "{{ cinder_extra_volumes }}"
 
 ####################
 # OpenStack

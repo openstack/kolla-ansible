@@ -7,33 +7,21 @@ solum_services:
     group: solum-api
     enabled: true
     image: "{{ solum_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/solum-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    volumes: "{{ solum_api_default_volumes + solum_api_extra_volumes }}"
     dimensions: "{{ solum_api_dimensions }}"
   solum-worker:
     container_name: solum_worker
     group: solum-worker
     enabled: true
     image: "{{ solum_worker_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/solum-worker/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    volumes: "{{ solum_worker_default_volumes + solum_worker_extra_volumes }}"
     dimensions: "{{ solum_worker_dimensions }}"
   solum-deployer:
     container_name: solum_deployer
     group: solum-deployer
     enabled: true
     image: "{{ solum_deployer_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/solum-deployer/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    volumes: "{{ solum_deployer_default_volumes + solum_deployer_extra_volumes }}"
     dimensions: "{{ solum_deployer_dimensions }}"
     haproxy:
       solum_application_deployment:
@@ -65,11 +53,7 @@ solum_services:
     group: solum-conductor
     enabled: true
     image: "{{ solum_conductor_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/solum-conductor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+    volumes: "{{ solum_conductor_default_volumes + solum_conductor_extra_volumes }}"
     dimensions: "{{ solum_conductor_dimensions }}"
 
 ####################
@@ -106,6 +90,33 @@ solum_api_dimensions: "{{ default_container_dimensions }}"
 solum_worker_dimensions: "{{ default_container_dimensions }}"
 solum_deployer_dimensions: "{{ default_container_dimensions }}"
 solum_conductor_dimensions: "{{ default_container_dimensions }}"
+
+solum_api_default_volumes:
+  - "{{ node_config_directory }}/solum-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+solum_worker_default_volumes:
+  - "{{ node_config_directory }}/solum-worker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+solum_deployer_default_volumes:
+  - "{{ node_config_directory }}/solum-deployer/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+solum_conductor_default_volumes:
+  - "{{ node_config_directory }}/solum-conductor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/solum/solum:/var/lib/kolla/venv/lib/python2.7/site-packages/solum' if solum_dev_mode | bool else '' }}"
+
+solum_extra_volumes: "{{ default_extra_volumes }}"
+solum_api_extra_volumes: "{{ solum_extra_volumes }}"
+solum_worker_extra_volumes: "{{ solum_extra_volumes }}"
+solum_deployer_extra_volumes: "{{ solum_extra_volumes }}"
+solum_conductor_extra_volumes: "{{ solum_extra_volumes }}"
 
 ####################
 # OpenStack

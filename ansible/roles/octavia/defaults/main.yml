@@ -7,10 +7,7 @@ octavia_services:
     group: octavia-api
     enabled: true
     image: "{{ octavia_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ octavia_api_default_volumes + octavia_api_extra_volumes }}"
     dimensions: "{{ octavia_api_dimensions }}"
     haproxy:
       octavia_api:
@@ -28,30 +25,21 @@ octavia_services:
     group: octavia-health-manager
     enabled: true
     image: "{{ octavia_health_manager_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ octavia_health_manager_default_volumes + octavia_health_manager_extra_volumes }}"
     dimensions: "{{ octavia_health_manager_dimensions }}"
   octavia-housekeeping:
     container_name: octavia_housekeeping
     group: octavia-housekeeping
     enabled: true
     image: "{{ octavia_housekeeping_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ octavia_housekeeping_default_volumes + octavia_housekeeping_extra_volumes }}"
     dimensions: "{{ octavia_housekeeping_dimensions }}"
   octavia-worker:
     container_name: octavia_worker
     group: octavia-worker
     enabled: true
     image: "{{ octavia_worker_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ octavia_worker_default_volumes + octavia_worker_extra_volumes }}"
     dimensions: "{{ octavia_worker_dimensions }}"
 
 octavia_required_roles:
@@ -97,6 +85,28 @@ octavia_health_manager_dimensions: "{{ default_container_dimensions }}"
 octavia_housekeeping_dimensions: "{{ default_container_dimensions }}"
 octavia_worker_dimensions: "{{ default_container_dimensions }}"
 
+octavia_api_default_volumes:
+  - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+octavia_health_manager_default_volumes:
+  - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+octavia_housekeeping_default_volumes:
+  - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+octavia_worker_default_volumes:
+  - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+octavia_extra_volumes: "{{ default_extra_volumes }}"
+octavia_api_extra_volumes: "{{ octavia_extra_volumes }}"
+octavia_health_manager_extra_volumes: "{{ octavia_extra_volumes }}"
+octavia_housekeeping_extra_volumes: "{{ octavia_extra_volumes }}"
+octavia_worker_extra_volumes: "{{ octavia_extra_volumes }}"
 
 ####################
 # OpenStack

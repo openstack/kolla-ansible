@@ -9,11 +9,7 @@ magnum_services:
     image: "{{ magnum_api_image_full }}"
     environment:
       DUMMY_ENVIRONMENT: kolla_useless_env
-    volumes:
-      - "{{ node_config_directory }}/magnum-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ magnum_api_default_volumes + magnum_api_extra_volumes }}"
     dimensions: "{{ magnum_api_dimensions }}"
     haproxy:
       magnum_api:
@@ -32,12 +28,7 @@ magnum_services:
     enabled: true
     image: "{{ magnum_conductor_image_full }}"
     environment: "{{ container_proxy }}"
-    volumes:
-      - "{{ node_config_directory }}/magnum-conductor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "magnum:/var/lib/magnum/"
-      - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ magnum_conductor_default_volumes + magnum_conductor_extra_volumes }}"
     dimensions: "{{ magnum_conductor_dimensions }}"
 
 
@@ -75,6 +66,21 @@ magnum_conductor_image_full: "{{ magnum_conductor_image }}:{{ magnum_conductor_t
 magnum_api_dimensions: "{{ default_container_dimensions }}"
 magnum_conductor_dimensions: "{{ default_container_dimensions }}"
 
+magnum_api_default_volumes:
+  - "{{ node_config_directory }}/magnum-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+magnum_conductor_default_volumes:
+  - "{{ node_config_directory }}/magnum-conductor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "magnum:/var/lib/magnum/"
+  - "{{ kolla_dev_repos_directory ~ '/magnum/magnum:/var/lib/kolla/venv/lib/python2.7/site-packages/magnum' if magnum_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+magnum_extra_volumes: "{{ default_extra_volumes }}"
+magnum_api_extra_volumes: "{{ magnum_extra_volumes }}"
+magnum_conductor_extra_volumes: "{{ magnum_extra_volumes }}"
 
 ####################
 # OpenStack

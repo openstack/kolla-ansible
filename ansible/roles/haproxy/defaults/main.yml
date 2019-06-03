@@ -8,10 +8,7 @@ haproxy_services:
     enabled: true
     image: "{{ haproxy_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "haproxy_socket:/var/lib/kolla/haproxy/"
+    volumes: "{{ haproxy_default_volumes + haproxy_extra_volumes }}"
     dimensions: "{{ haproxy_dimensions }}"
   keepalived:
     container_name: keepalived
@@ -19,11 +16,7 @@ haproxy_services:
     enabled: "{{ enable_keepalived | bool }}"
     image: "{{ keepalived_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "haproxy_socket:/var/lib/kolla/haproxy/"
+    volumes: "{{ keepalived_default_volumes + keepalived_extra_volumes }}"
     dimensions: "{{ keepalived_dimensions }}"
 
 
@@ -51,6 +44,19 @@ haproxy_process_cpu_map: "no"
 
 haproxy_dimensions: "{{ default_container_dimensions }}"
 keepalived_dimensions: "{{ default_container_dimensions }}"
+
+haproxy_default_volumes:
+  - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "haproxy_socket:/var/lib/kolla/haproxy/"
+keepalived_default_volumes:
+  - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "haproxy_socket:/var/lib/kolla/haproxy/"
+
+haproxy_extra_volumes: "{{ default_extra_volumes }}"
+keepalived_extra_volumes: "{{ default_extra_volumes }}"
 
 # Default timeout values
 haproxy_http_request_timeout: "10s"

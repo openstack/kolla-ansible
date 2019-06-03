@@ -7,11 +7,7 @@ blazar_services:
     group: blazar-api
     enabled: true
     image: "{{ blazar_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+    volumes: "{{ blazar_api_default_volumes + blazar_api_extra_volumes }}"
     dimensions: "{{ blazar_api_dimensions }}"
     haproxy:
       blazar_api:
@@ -29,11 +25,7 @@ blazar_services:
     group: blazar-manager
     enabled: true
     image: "{{ blazar_manager_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/blazar-manager/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+    volumes: "{{ blazar_manager_default_volumes + blazar_manager_extra_volumes }}"
     dimensions: "{{ blazar_manager_dimensions }}"
 
 
@@ -66,6 +58,21 @@ blazar_api_image_full: "{{ blazar_api_image }}:{{ blazar_api_tag }}"
 
 blazar_api_dimensions: "{{ default_container_dimensions }}"
 blazar_manager_dimensions: "{{ default_container_dimensions }}"
+
+blazar_api_default_volumes:
+  - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+blazar_manager_default_volumes:
+  - "{{ node_config_directory }}/blazar-manager/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
+
+blazar_extra_volumes: "{{ default_extra_volumes }}"
+blazar_api_extra_volumes: "{{ blazar_extra_volumes }}"
+blazar_manager_extra_volumes: "{{ blazar_extra_volumes }}"
 
 ####################
 # OpenStack

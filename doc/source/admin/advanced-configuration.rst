@@ -288,3 +288,40 @@ By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
    syslog_swift_facility: "local0"
    syslog_haproxy_facility: "local1"
 
+Mount additional Docker volumes in containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is sometimes useful to be able to mount additional Docker volumes into
+one or more containers. This may be to integrate 3rd party components into
+OpenStack, or to provide access to site-specific data such as x.509
+certificate bundles.
+
+Additional volumes may be specified at three levels:
+
+* globally
+* per-service (e.g. nova)
+* per-container (e.g. ``nova-api``)
+
+To specify additional volumes globally for all containers, set
+``default_extra_volumes`` in ``globals.yml``. For example:
+
+.. code-block:: yaml
+
+  default_extra_volumes:
+    - "/etc/foo:/etc/foo"
+
+To specify additional volumes for all containers in a service, set
+``<service_name>_extra_volumes`` in ``globals.yml``. For example:
+
+.. code-block:: yaml
+
+  nova_extra_volumes:
+    - "/etc/foo:/etc/foo"
+
+To specify additional volumes for a single container, set
+``<container_name>_extra_volumes`` in ``globals.yml``. For example:
+
+.. code-block:: yaml
+
+  nova_libvirt_extra_volumes:
+    - "/etc/foo:/etc/foo"

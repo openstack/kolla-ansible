@@ -7,11 +7,7 @@ zun_services:
     group: zun-api
     enabled: true
     image: "{{ zun_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ zun_api_default_volumes + zun_api_extra_volumes }}"
     dimensions: "{{ zun_api_dimensions }}"
     haproxy:
       zun_api:
@@ -29,11 +25,7 @@ zun_services:
     group: zun-wsproxy
     enabled: true
     image: "{{ zun_wsproxy_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/zun-wsproxy/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ zun_wsproxy_default_volumes + zun_wsproxy_extra_volumes }}"
     dimensions: "{{ zun_wsproxy_dimensions }}"
     haproxy:
       zun_wsproxy:
@@ -52,14 +44,7 @@ zun_services:
     enabled: true
     image: "{{ zun_compute_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/zun-compute/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
-      - "/run:/run:shared"
-      - "/usr/lib/docker:/usr/lib/docker"
-      - "/var/lib/docker:/var/lib/docker"
+    volumes: "{{ zun_compute_default_volumes + zun_compute_extra_volumes }}"
     dimensions: "{{ zun_compute_dimensions }}"
 
 ####################
@@ -92,6 +77,29 @@ zun_api_dimensions: "{{ default_container_dimensions }}"
 zun_wsproxy_dimensions: "{{ default_container_dimensions }}"
 zun_compute_dimensions: "{{ default_container_dimensions }}"
 
+zun_api_default_volumes:
+  - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+zun_wsproxy_default_volumes:
+  - "{{ node_config_directory }}/zun-wsproxy/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+zun_compute_default_volumes:
+  - "{{ node_config_directory }}/zun-compute/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python2.7/site-packages/zun' if zun_dev_mode | bool else '' }}"
+  - "/run:/run:shared"
+  - "/usr/lib/docker:/usr/lib/docker"
+  - "/var/lib/docker:/var/lib/docker"
+
+zun_extra_volumes: "{{ default_extra_volumes }}"
+zun_api_extra_volumes: "{{ zun_extra_volumes }}"
+zun_wsproxy_extra_volumes: "{{ zun_extra_volumes }}"
+zun_compute_extra_volumes: "{{ zun_extra_volumes }}"
 
 ####################
 ## OpenStack

@@ -7,11 +7,7 @@ manila_services:
     group: "manila-api"
     image: "{{ manila_api_image_full }}"
     enabled: True
-    volumes:
-      - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    volumes: "{{ manila_api_default_volumes + manila_api_extra_volumes }}"
     dimensions: "{{ manila_api_dimensions }}"
     haproxy:
       manila_api:
@@ -29,11 +25,7 @@ manila_services:
     group: "manila-scheduler"
     image: "{{ manila_scheduler_image_full }}"
     enabled: True
-    volumes:
-      - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    volumes: "{{ manila_scheduler_default_volumes + manila_scheduler_extra_volumes }}"
     dimensions: "{{ manila_scheduler_dimensions }}"
   manila-share:
     container_name: "manila_share"
@@ -41,13 +33,7 @@ manila_services:
     image: "{{ manila_share_image_full }}"
     enabled: True
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/run/:/run/:shared"
-      - "kolla_logs:/var/log/kolla/"
-      - "/lib/modules:/lib/modules:ro"
-      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes }}"
     dimensions: "{{ manila_share_dimensions }}"
   manila-data:
     container_name: "manila_data"
@@ -55,13 +41,7 @@ manila_services:
     image: "{{ manila_data_image_full }}"
     enabled: True
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/run/:/run/:shared"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+    volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes }}"
     dimensions: "{{ manila_data_dimensions }}"
 
 
@@ -115,6 +95,36 @@ manila_scheduler_dimensions: "{{ default_container_dimensions }}"
 manila_api_dimensions: "{{ default_container_dimensions }}"
 manila_data_dimensions: "{{ default_container_dimensions }}"
 
+manila_share_default_volumes:
+  - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/run/:/run/:shared"
+  - "kolla_logs:/var/log/kolla/"
+  - "/lib/modules:/lib/modules:ro"
+  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+manila_scheduler_default_volumes:
+  - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+manila_api_default_volumes:
+  - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+manila_data_default_volumes:
+  - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/run/:/run/:shared"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
+
+manila_extra_volumes: "{{ default_extra_volumes }}"
+manila_share_extra_volumes: "{{ manila_extra_volumes }}"
+manila_scheduler_extra_volumes: "{{ manila_extra_volumes }}"
+manila_api_extra_volumes: "{{ manila_extra_volumes }}"
+manila_data_extra_volumes: "{{ manila_extra_volumes }}"
 
 #####################
 ## OpenStack

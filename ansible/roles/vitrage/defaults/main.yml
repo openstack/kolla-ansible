@@ -7,11 +7,7 @@ vitrage_services:
     group: vitrage-api
     enabled: true
     image: "{{ vitrage_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ vitrage_api_default_volumes + vitrage_api_extra_volumes }}"
     dimensions: "{{ vitrage_api_dimensions }}"
     haproxy:
       vitrage_api:
@@ -29,33 +25,21 @@ vitrage_services:
     group: vitrage-notifier
     enabled: true
     image: "{{ vitrage_notifier_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/vitrage-notifier/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ vitrage_notifier_default_volumes + vitrage_notifier_extra_volumes }}"
     dimensions: "{{ vitrage_notifier_dimensions }}"
   vitrage-graph:
     container_name: vitrage_graph
     group: vitrage-graph
     enabled: true
     image: "{{ vitrage_graph_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/vitrage-graph/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ vitrage_graph_default_volumes + vitrage_graph_extra_volumes }}"
     dimensions: "{{ vitrage_graph_dimensions }}"
   vitrage-ml:
     container_name: vitrage_ml
     group: vitrage-ml
     enabled: true
     image: "{{ vitrage_ml_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/vitrage-ml/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ vitrage_ml_default_volumes + vitrage_ml_extra_volumes }}"
     dimensions: "{{ vitrage_ml_dimensions }}"
 
 ####################
@@ -92,6 +76,33 @@ vitrage_api_dimensions: "{{ default_container_dimensions }}"
 vitrage_notifier_dimensions: "{{ default_container_dimensions }}"
 vitrage_graph_dimensions: "{{ default_container_dimensions }}"
 vitrage_ml_dimensions: "{{ default_container_dimensions }}"
+
+vitrage_api_default_volumes:
+  - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+vitrage_notifier_default_volumes:
+  - "{{ node_config_directory }}/vitrage-notifier/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+vitrage_graph_default_volumes:
+  - "{{ node_config_directory }}/vitrage-graph/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+vitrage_ml_default_volumes:
+  - "{{ node_config_directory }}/vitrage-ml/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python2.7/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+vitrage_extra_volumes: "{{ default_extra_volumes }}"
+vitrage_api_extra_volumes: "{{ vitrage_extra_volumes }}"
+vitrage_notifier_extra_volumes: "{{ vitrage_extra_volumes }}"
+vitrage_graph_extra_volumes: "{{ vitrage_extra_volumes }}"
+vitrage_ml_extra_volumes: "{{ vitrage_extra_volumes }}"
 
 ####################
 # OpenStack

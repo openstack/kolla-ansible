@@ -7,12 +7,7 @@ trove_services:
     group: trove-api
     enabled: true
     image: "{{ trove_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
-      - "trove:/var/lib/trove/"
+    volumes: "{{ trove_api_default_volumes + trove_api_extra_volumes }}"
     dimensions: "{{ trove_api_dimensions }}"
     haproxy:
       trove_api:
@@ -30,24 +25,14 @@ trove_services:
     group: trove-conductor
     enabled: true
     image: "{{ trove_conductor_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
-      - "trove:/var/lib/trove/"
+    volumes: "{{ trove_conductor_default_volumes + trove_conductor_extra_volumes }}"
     dimensions: "{{ trove_conductor_dimensions }}"
   trove-taskmanager:
     container_name: trove_taskmanager
     group: trove-taskmanager
     enabled: true
     image: "{{ trove_taskmanager_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
-      - "trove:/var/lib/trove/"
+    volumes: "{{ trove_taskmanager_default_volumes + trove_taskmanager_extra_volumes }}"
     dimensions: "{{ trove_taskmanager_dimensions }}"
 
 
@@ -81,6 +66,29 @@ trove_api_dimensions: "{{ default_container_dimensions }}"
 trove_conductor_dimensions: "{{ default_container_dimensions }}"
 trove_taskmanager_dimensions: "{{ default_container_dimensions }}"
 
+trove_api_default_volumes:
+  - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "trove:/var/lib/trove/"
+trove_conductor_default_volumes:
+  - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "trove:/var/lib/trove/"
+trove_taskmanager_default_volumes:
+  - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python2.7/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "trove:/var/lib/trove/"
+
+trove_extra_volumes: "{{ default_extra_volumes }}"
+trove_api_extra_volumes: "{{ trove_extra_volumes }}"
+trove_conductor_extra_volumes: "{{ trove_extra_volumes }}"
+trove_taskmanager_extra_volumes: "{{ trove_extra_volumes }}"
 
 ####################
 # OpenStack

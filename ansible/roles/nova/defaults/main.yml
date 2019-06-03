@@ -9,32 +9,14 @@ nova_services:
     image: "{{ nova_libvirt_image_full }}"
     pid_mode: "host"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run/:/run/:shared"
-      - "/dev:/dev"
-      - "/sys/fs/cgroup:/sys/fs/cgroup"
-      - "kolla_logs:/var/log/kolla/"
-      - "libvirtd:/var/lib/libvirt"
-      - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
-      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
-      - "nova_libvirt_qemu:/etc/libvirt/qemu"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_libvirt_default_volumes + nova_libvirt_extra_volumes }}"
     dimensions: "{{ nova_libvirt_dimensions }}"
   nova-ssh:
     container_name: "nova_ssh"
     group: "compute"
     image: "{{ nova_ssh_image_full }}"
     enabled: "{{ enable_nova_ssh | bool }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
-      - "{{ nova_instance_datadir_volume }}:/var/lib/nova"
-      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_ssh_default_volumes + nova_ssh_extra_volumes }}"
     dimensions: "{{ nova_ssh_dimensions }}"
   nova-api:
     container_name: "nova_api"
@@ -42,12 +24,7 @@ nova_services:
     image: "{{ nova_api_image_full }}"
     enabled: True
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/nova-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_api_default_volumes + nova_api_extra_volumes }}"
     dimensions: "{{ nova_api_dimensions }}"
     haproxy:
       nova_api:
@@ -85,22 +62,14 @@ nova_services:
     group: "nova-consoleauth"
     image: "{{ nova_consoleauth_image_full }}"
     enabled: True
-    volumes:
-      - "{{ node_config_directory }}/nova-consoleauth/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_consoleauth_default_volumes + nova_consoleauth_extra_volumes }}"
     dimensions: "{{ nova_consoleauth_dimensions }}"
   nova-novncproxy:
     container_name: "nova_novncproxy"
     group: "nova-novncproxy"
     image: "{{ nova_novncproxy_image_full }}"
     enabled: "{{ nova_console == 'novnc' }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-novncproxy/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_novncproxy_default_volumes + nova_novncproxy_extra_volumes }}"
     dimensions: "{{ nova_novncproxy_dimensions }}"
     haproxy:
       nova_novncproxy:
@@ -122,22 +91,14 @@ nova_services:
     group: "nova-scheduler"
     image: "{{ nova_scheduler_image_full }}"
     enabled: True
-    volumes:
-      - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_scheduler_default_volumes + nova_scheduler_extra_volumes }}"
     dimensions: "{{ nova_scheduler_dimensions }}"
   nova-spicehtml5proxy:
     container_name: "nova_spicehtml5proxy"
     group: "nova-spicehtml5proxy"
     image: "{{ nova_spicehtml5proxy_image_full }}"
     enabled: "{{ nova_console == 'spice' }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-spicehtml5proxy/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_spicehtml5proxy_default_volumes + nova_spicehtml5proxy_extra_volumes }}"
     dimensions: "{{ nova_spicehtml5proxy_dimensions }}"
     haproxy:
       nova_spicehtml5proxy:
@@ -157,11 +118,7 @@ nova_services:
     group: "nova-serialproxy"
     image: "{{ nova_serialproxy_image_full }}"
     enabled: "{{ enable_nova_serialconsole_proxy | bool }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_serialproxy_default_volumes + nova_serialproxy_extra_volumes }}"
     dimensions: "{{ nova_serialproxy_dimensions }}"
     haproxy:
       nova_serialconsole_proxy:
@@ -185,11 +142,7 @@ nova_services:
     group: "nova-conductor"
     enabled: True
     image: "{{ nova_conductor_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-conductor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_conductor_default_volumes + nova_conductor_extra_volumes }}"
     dimensions: "{{ nova_conductor_dimensions }}"
   nova-compute:
     container_name: "nova_compute"
@@ -200,29 +153,14 @@ nova_services:
     privileged: True
     enabled: "{{ not enable_nova_fake | bool }}"
     ipc_mode: "host"
-    volumes:
-      - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
-      - "/dev:/dev"
-      - "kolla_logs:/var/log/kolla/"
-      - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
-      - "libvirtd:/var/lib/libvirt"
-      - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
-      - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_compute_default_volumes + nova_compute_extra_volumes }}"
     dimensions: "{{ nova_compute_dimensions }}"
   nova-compute-ironic:
     container_name: "nova_compute_ironic"
     group: "nova-compute-ironic"
     image: "{{ nova_compute_ironic_image_full }}"
     enabled: "{{ enable_ironic | bool }}"
-    volumes:
-      - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+    volumes: "{{ nova_compute_ironic_default_volumes + nova_compute_ironic_extra_volumes }}"
     dimensions: "{{ nova_compute_ironic_dimensions }}"
 
 ####################
@@ -328,6 +266,94 @@ nova_serialproxy_dimensions: "{{ default_container_dimensions }}"
 nova_conductor_dimensions: "{{ default_container_dimensions }}"
 nova_compute_dimensions: "{{ default_container_dimensions }}"
 nova_compute_ironic_dimensions: "{{ default_container_dimensions }}"
+
+nova_libvirt_default_volumes:
+  - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run/:/run/:shared"
+  - "/dev:/dev"
+  - "/sys/fs/cgroup:/sys/fs/cgroup"
+  - "kolla_logs:/var/log/kolla/"
+  - "libvirtd:/var/lib/libvirt"
+  - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
+  - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+  - "nova_libvirt_qemu:/etc/libvirt/qemu"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_ssh_default_volumes:
+  - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+  - "{{ nova_instance_datadir_volume }}:/var/lib/nova"
+  - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_api_default_volumes:
+  - "{{ node_config_directory }}/nova-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_consoleauth_default_volumes:
+  - "{{ node_config_directory }}/nova-consoleauth/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_novncproxy_default_volumes:
+  - "{{ node_config_directory }}/nova-novncproxy/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_scheduler_default_volumes:
+  - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_spicehtml5proxy_default_volumes:
+  - "{{ node_config_directory }}/nova-spicehtml5proxy/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_serialproxy_default_volumes:
+  - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_conductor_default_volumes:
+  - "{{ node_config_directory }}/nova-conductor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_compute_default_volumes:
+  - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run:/run:shared"
+  - "/dev:/dev"
+  - "kolla_logs:/var/log/kolla/"
+  - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+  - "libvirtd:/var/lib/libvirt"
+  - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
+  - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+nova_compute_ironic_default_volumes:
+  - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
+
+nova_extra_volumes: "{{ default_extra_volumes }}"
+nova_libvirt_extra_volumes: "{{ nova_extra_volumes }}"
+nova_ssh_extra_volumes: "{{ nova_extra_volumes }}"
+nova_api_extra_volumes: "{{ nova_extra_volumes }}"
+nova_consoleauth_extra_volumes: "{{ nova_extra_volumes }}"
+nova_novncproxy_extra_volumes: "{{ nova_extra_volumes }}"
+nova_scheduler_extra_volumes: "{{ nova_extra_volumes }}"
+nova_spicehtml5proxy_extra_volumes: "{{ nova_extra_volumes }}"
+nova_serialproxy_extra_volumes: "{{ nova_extra_volumes }}"
+nova_conductor_extra_volumes: "{{ nova_extra_volumes }}"
+nova_compute_extra_volumes: "{{ nova_extra_volumes }}"
+nova_compute_ironic_extra_volumes: "{{ nova_extra_volumes }}"
+
 
 ####################
 # HAProxy

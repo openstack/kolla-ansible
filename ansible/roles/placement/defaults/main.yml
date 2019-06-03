@@ -7,11 +7,7 @@ placement_services:
     group: "placement-api"
     image: "{{ placement_api_image_full }}"
     enabled: True
-    volumes:
-      - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "{{ kolla_dev_repos_directory ~ '/placement/placement:/var/lib/kolla/venv/lib/python2.7/site-packages/placement' if placement_dev_mode | bool else '' }}"
+    volumes: "{{ placement_api_default_volumes + placement_api_extra_volumes }}"
     dimensions: "{{ placement_api_dimensions }}"
     haproxy:
       placement_api:
@@ -45,6 +41,14 @@ placement_api_tag: "{{ placement_tag }}"
 placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
 
 placement_api_dimensions: "{{ default_container_dimensions }}"
+
+placement_api_default_volumes:
+  - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/placement/placement:/var/lib/kolla/venv/lib/python2.7/site-packages/placement' if placement_dev_mode | bool else '' }}"
+
+placement_api_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # OpenStack
