@@ -1,0 +1,16 @@
+---
+- include_tasks: register.yml
+  when: inventory_hostname in groups['qinling-api']
+
+- include_tasks: config.yml
+  when: inventory_hostname in groups['qinling-api'] or
+        inventory_hostname in groups['qinling-engine']
+
+- include_tasks: clone.yml
+  when: qinling_dev_mode | bool
+
+- include_tasks: bootstrap.yml
+  when: inventory_hostname in groups['qinling-api']
+
+- name: Flush handlers
+  meta: flush_handlers

@@ -10,6 +10,7 @@ compute services like HyperV, XenServer and so on.
 
    hyperv-guide
    nova-fake-driver
+   qinling-guide
    vmware-guide
    xenserver-guide
    zun-guide

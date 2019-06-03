@@ -1,0 +1,47 @@
+{
+    "command": "qinling-engine --config-file /etc/qinling/qinling.conf",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/qinling.conf",
+            "dest": "/etc/qinling/qinling.conf",
+            "owner": "qinling",
+            "perm": "0600"
+        }{% if qinling_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ qinling_policy_file }}",
+            "dest": "/etc/qinling/{{ qinling_policy_file }}",
+            "owner": "qinling",
+            "perm": "0600"
+        }{% endif %}{% if qinling_kubernetes_certificates is defined and qinling_kubernetes_certificates | bool %},
+        {
+            "source": "{{ container_config_directory }}/kubernetes_ca.crt",
+            "dest": "/etc/qinling/pki/kubernetes/ca.crt",
+            "owner": "qinling",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/kubernetes.crt",
+            "dest": "/etc/qinling/pki/kubernetes/qinling.crt",
+            "owner": "qinling",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/kubernetes.key",
+            "dest": "/etc/qinling/pki/kubernetes/qinling.key",
+            "owner": "qinling",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/lib/qinling",
+            "owner": "qinling:qinling",
+            "recurse": true
+        },
+        {
+            "path": "/var/log/kolla/qinling",
+            "owner": "qinling:qinling",
+            "recurse": true
+        }
+    ]
+}
