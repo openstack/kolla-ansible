@@ -35,3 +35,39 @@
         programname haproxy
     </record>
 </filter>
+
+{% if enable_monasca | bool %}
+# Kolla Fluentd input config configures Fluentd to save all log messages
+# under the 'Payload' field, however the fluentd-monasca plugin assumes
+# that log messages are saved under the 'message' field. Here we map the
+# 'Payload' field to the 'message' field so that log can be forwarded to
+# Monasca.
+<filter *.**>
+  @type record_transformer
+  enable_ruby true
+  <record>
+    message ${record["Payload"]}
+  </record>
+  remove_keys Payload
+</filter>
+
+# Kolla configures Fluentd to extract timestamps from OpenStack service
+# logs, however these timestamps are not saved in the event and are not
+# forwarded to Monasca. Here we save the timestamp which has been
+# *parsed* by Fluentd to a field which is part of the event and *is*
+# therefore forwarded to Monasca. If no timestamp is parsed, then this
+# should stamp the event with the current time. Note that since Kolla
+# configures Fluentd to keep the time key, the original, *unparsed*
+# timestamp, if present, will also be forwarded to Monasca as part of the
+# event. However, because the logs which are collected by Fluentd use a
+# variety of time formats the format of this timestamp is irregular and
+# is therefore dropped in the Monasca log pipeline in favour of the
+# timestamp added here. In the future we could investigate getting the
+# Fluentd Monasca plugin to add this timestamp.
+<filter *.**>
+  @type record_transformer
+  <record>
+    timestamp ${time}
+  </record>
+</filter>
+{% endif %}
