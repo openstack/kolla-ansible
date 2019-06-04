@@ -15,6 +15,7 @@ Projects Deployment References
    ironic-guide
    manila-guide
    manila-hnas-guide
+   monasca-guide
    nova-fake-driver
    swift-guide
    bifrost
