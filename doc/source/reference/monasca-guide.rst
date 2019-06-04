@@ -29,7 +29,7 @@ a single server that's fine too, and if you find that you need to improve
 capacity later on down the line, adding additional nodes should be a
 fairly straightforward exercise.
 
-Pre-deployment Configuration
+Pre-deployment configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Enable Monasca in ``/etc/kolla/globals.yml``:
@@ -54,6 +54,81 @@ custom Kafka configuration:
 
    echo "log.message.format.version=0.9.0.0" >> /etc/kolla/config/kafka.server.properties
 
+Stand-alone configuration (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Monasca can be deployed via Kolla-Ansible in a standalone configuration. The
+deployment will include all supporting services such as HAProxy, Keepalived,
+MariaDB and Memcached. It can also include Keystone, but you will likely
+want to integrate with the Keystone instance provided by your existing
+OpenStack deployment. Some reasons to perform a standalone deployment are:
+
+* Your OpenStack deployment is *not* managed by Kolla-Ansible, but you want
+  to take advantage of Monasca support in Kolla-Ansible.
+* Your OpenStack deployment *is* managed by Kolla-Ansible, but you do not
+  want the Monasca deployment to share services with your OpenStack
+  deployment. For example, in a combined deployment Monasca will share HAProxy
+  and MariaDB with the core OpenStack services.
+* Your OpenStack deployment *is* managed by Kolla-Ansible, but you want
+  Monasca to be decoupled from the core OpenStack services. For example, you
+  may have a dedicated monitoring and logging team, and wish to prevent that
+  team accidentally breaking, or redeploying core OpenStack services.
+* You want to deploy Monasca for testing. In this case you will likely want
+  to deploy Keystone as well.
+
+To configure a standalone installation you will need to add the following to
+`/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_nova: "no"
+   enable_neutron: "no"
+   enable_heat: "no"
+   enable_openvswitch: "no"
+   enable_horizon: "no"
+   enable_glance: "no"
+   enable_rabbitmq: "no"
+
+With the above configuration alone Keystone *will* be deployed. If you want
+Monasca to be registered with an external instance of Keystone you can
+add the following, additional configuration to `/etc/kolla/globals.yml`:
+
+.. code-block:: yaml
+
+   enable_keystone: "no"
+   keystone_admin_url: "http://172.28.128.254:35357"
+   keystone_internal_url: "http://172.28.128.254:5000"
+   monasca_openstack_auth:
+     auth_url: "{{ keystone_admin_url }}"
+     username: "admin"
+     password: "{{ external_keystone_admin_password }}"
+     project_name: "admin"
+     domain_name: "default"
+     user_domain_name: "default"
+
+In this example it is assumed that the external Keystone admin and internal
+URLs are `http://172.28.128.254:35357` and `http://172.28.128.254:5000`
+respectively, and that the external Keystone admin password is defined by
+the variable `external_keystone_admin_password` which you will most likely
+want to save in `/etc/kolla/passwords.yml`. Note that the Keystone URLs can
+be obtained from the external OpenStack CLI, for example:
+
+.. code-block:: console
+
+   openstack endpoint list --service identity
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
+   | ID                               | Region    | Service Name | Service Type | Enabled | Interface | URL                         |
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
+   | 162365440e6c43d092ad6069f0581a57 | RegionOne | keystone     | identity     | True    | admin     | http://172.28.128.254:35357 |
+   | 6d768ee2ce1c4302a49e9b7ac2af472c | RegionOne | keystone     | identity     | True    | public    | http://172.28.128.254:5000  |
+   | e02067a58b1946c7ae53abf0cfd0bf11 | RegionOne | keystone     | identity     | True    | internal  | http://172.28.128.254:5000  |
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
+
+If you are also using Kolla-Ansible to manage the external OpenStack
+installation, the external Keystone admin password will most likely
+be defined in the *external* `/etc/kolla/passwords.yml` file. For other
+deployment methods you will need to consult the relevant documentation.
+
 Building images
 ~~~~~~~~~~~~~~~
 
@@ -67,21 +142,18 @@ them manually you can use the following commands:
    $ kolla-build -t source monasca
    $ kolla-build kafka zookeeper storm elasticsearch logstash kibana grafana
 
-If you want to deploy Monasca standalone you will also need the following
+If you are deploying Monasca standalone you will also need the following
 images:
 
 .. code-block:: console
 
    $ kolla-build cron fluentd mariadb kolla-toolbox keystone memcached keepalived haproxy
 
-Note that deploying Monasca standalone isn't fully supported yet, and it's
-likely that you'll want to integrate with an external Keystone deployment
-for tight integration with your OpenStack deployment,
-
 Deployment
 ~~~~~~~~~~
 
-Run the deploy as usual:
+Run the deploy as usual, following whichever procedure you normally use
+to decrypt secrets if you have encrypted them with Ansible Vault:
 
 .. code-block:: console
 
@@ -126,7 +198,7 @@ multi-core CPU. You will also need enough space to store metrics and logs,
 and to buffer these in Kafka. Whilst Kafka is happy with spinning disks,
 you will likely want to use SSDs to back InfluxDB and Elasticsearch.
 
-Security Impact
+Security impact
 ~~~~~~~~~~~~~~~
 
 The Monasca API and the Monasca Log API will be exposed on public endpoints
@@ -136,6 +208,15 @@ If you are using the multi-tenant capabilities of Monasca there is a risk
 that tenants could gain access to other tenants logs and metrics. This could
 include logs and metrics for the control plane which could reveal sensitive
 information about the size and nature of the deployment.
+
+Another risk is that users may gain access to system logs via Kibana, which
+is not accessed via the Monasca APIs. Whilst Kolla configures a password out
+of the box to restrict access to Kibana, the password will not apply if a
+user has access to the network on which the individual Kibana service(s) bind
+behind HAProxy. Note that Elasticsearch, which is not protected by a
+password, will also be directly accessible on this network, and therefore
+great care should be taken to ensure that untrusted users do not have access
+to it.
 
 A full evaluation of attack vectors is outside the scope of this document.
 
