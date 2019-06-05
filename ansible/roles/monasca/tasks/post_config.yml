@@ -1,0 +1,90 @@
+---
+- name: Wait for Monasca Grafana to load
+  uri:
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/login"
+    status_code: 200
+  register: result
+  until: result.get('status') == 200
+  retries: 10
+  delay: 2
+  run_once: true
+
+- name: Define Monasca Grafana control plane organisation name
+  set_fact:
+    monasca_grafana_control_plane_org: "{{ monasca_control_plane_project }}@{{ default_project_domain_name }}"
+
+- name: List Monasca Grafana organisations
+  uri:
+    method: GET
+    url: '{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/orgs'
+    user: '{{ monasca_grafana_admin_username }}'
+    password: '{{ monasca_grafana_admin_password }}'
+    return_content: true
+    force_basic_auth: true
+  register: monasca_grafana_orgs
+
+- name: Create default control plane organisation if it doesn't exist
+  uri:
+    method: POST
+    url: '{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/orgs'
+    user: '{{ monasca_grafana_admin_username }}'
+    password: '{{ monasca_grafana_admin_password }}'
+    body_format: json
+    body:
+      name: '{{ monasca_grafana_control_plane_org }}'
+    force_basic_auth: true
+  when: monasca_grafana_control_plane_org not in monasca_grafana_orgs.json|map(attribute='name')|unique
+
+- name: Lookup Monasca Grafana control plane organisation ID
+  uri:
+    method: GET
+    url: '{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/orgs/name/{{ monasca_grafana_control_plane_org }}'
+    user: '{{ monasca_grafana_admin_username }}'
+    password: '{{ monasca_grafana_admin_password }}'
+    return_content: true
+    force_basic_auth: true
+  register: monasca_grafana_conf_org
+
+- name: Add {{ monasca_grafana_admin_username }} user to control plane organisation
+  uri:
+    method: POST
+    url: '{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/orgs/{{ monasca_grafana_conf_org.json.id }}/users'
+    user: '{{ monasca_grafana_admin_username }}'
+    password: '{{ monasca_grafana_admin_password }}'
+    body:
+      loginOrEmail: '{{ monasca_grafana_admin_username }}'
+      role: Admin
+    force_basic_auth: true
+    body_format: json
+    status_code: 200, 409
+  register: monasca_grafana_add_user_response
+  run_once: True
+  changed_when: monasca_grafana_add_user_response.status == 200
+  failed_when: monasca_grafana_add_user_response.status not in [200, 409] or
+               monasca_grafana_add_user_response.status == 409 and ("User is already" not in  monasca_grafana_add_user_response.json.message|default(""))
+
+- name: Switch Monasca Grafana to the control plane organisation
+  uri:
+    method: POST
+    url: '{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/user/using/{{ monasca_grafana_conf_org.json.id }}'
+    user: '{{ monasca_grafana_admin_username }}'
+    password: '{{ monasca_grafana_admin_password }}'
+    force_basic_auth: true
+
+- name: Enable Monasca Grafana datasource for control plane organisation
+  uri:
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_grafana_server_port }}/api/datasources"
+    method: POST
+    user: "{{ monasca_grafana_admin_username }}"
+    password: "{{ monasca_grafana_admin_password }}"
+    body: "{{ item.value.data | to_json }}"
+    body_format: json
+    force_basic_auth: true
+    status_code: 200, 409
+  register: monasca_grafana_datasource_response
+  run_once: True
+  changed_when: monasca_grafana_datasource_response.status == 200
+  failed_when: monasca_grafana_datasource_response.status not in [200, 409] or
+               monasca_grafana_datasource_response.status == 409 and ("Data source with same name already exists" not in  monasca_grafana_datasource_response.json.message|default(""))
+  with_dict: "{{ monasca_grafana_data_sources }}"
+  when: item.value.enabled | bool
