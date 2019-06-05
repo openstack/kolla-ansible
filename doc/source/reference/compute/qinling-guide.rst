@@ -22,6 +22,17 @@ Apply custom policies to Qinling API
 Custom policies could be apply by creating ``policy.json`` file under
 ``/etc/kolla/config/qinling`` directory.
 
+Enable etcd role
+~~~~~~~~~~~~~~~~
+
+Qinling requires etcd for function mapping and concurrency. The etcd role
+should be enabled to configure the etcd address and port within `qinling.conf`.
+
+Look for ``enable_etcd: "no"`` and change it in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_etcd: "yes"
 
 Connect to an existing Kubernetes cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,18 +59,18 @@ created with Magnum.
 
 Four files should have been generated:
 
-  - ``ca.pem``
-  - ``cert.pem``
-  - ``key.pem``
-  - ``config``
+* ``ca.pem``
+* ``cert.pem``
+* ``key.pem``
+* ``config``
 
 Only ``ca.pem``, ``cert.pem`` and ``key.pem`` will be used, these files have
 to be stored in ``/etc/kolla/config/qinling/qinling-engine`` directory under
 these file name:
 
-  - ``ca.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes_ca.crt``
-  - ``cert.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes.crt``
-  - ``key.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes.key``
+* ``ca.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes_ca.crt``
+* ``cert.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes.crt``
+* ``key.pem``: ``/etc/kolla/config/qinling/qinling-engine/kubernetes.key``
 
 
 Declare ``qinling_kubernetes_certificates`` variable in
@@ -83,14 +94,9 @@ put the content in ``/etc/kolla/config/qinling/qinling-engine.conf``.
 
    [kubernetes]
    kube_host = https://192.168.1.168:6443
-   use_api_certificate = True
    ssl_ca_cert = /etc/qinling/pki/kubernetes/ca.crt
    cert_file = /etc/qinling/pki/kubernetes/qinling.crt
    key_file = /etc/qinling/pki/kubernetes/qinling.key
-   trusted_cidrs = 192.168.1.0/24,10.0.0.53/32
 
 ``kube_host`` is the the Kubernetes cluster API address, ``https`` protocol
-have to be defined.
-
-``trusted_cidrs`` is a list of CIDR trusted by the Kubernetes cluster defined
-by a network policy under the ``qinling`` namespace.
+has to be defined.
