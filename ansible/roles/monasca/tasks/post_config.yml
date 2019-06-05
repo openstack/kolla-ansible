@@ -21,6 +21,7 @@
     password: '{{ monasca_grafana_admin_password }}'
     return_content: true
     force_basic_auth: true
+  run_once: True
   register: monasca_grafana_orgs
 
 - name: Create default control plane organisation if it doesn't exist
@@ -33,6 +34,7 @@
     body:
       name: '{{ monasca_grafana_control_plane_org }}'
     force_basic_auth: true
+  run_once: True
   when: monasca_grafana_control_plane_org not in monasca_grafana_orgs.json|map(attribute='name')|unique
 
 - name: Lookup Monasca Grafana control plane organisation ID
@@ -43,6 +45,7 @@
     password: '{{ monasca_grafana_admin_password }}'
     return_content: true
     force_basic_auth: true
+  run_once: True
   register: monasca_grafana_conf_org
 
 - name: Add {{ monasca_grafana_admin_username }} user to control plane organisation
@@ -70,6 +73,7 @@
     user: '{{ monasca_grafana_admin_username }}'
     password: '{{ monasca_grafana_admin_password }}'
     force_basic_auth: true
+  run_once: True
 
 - name: Enable Monasca Grafana datasource for control plane organisation
   uri:
