@@ -186,6 +186,8 @@ monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ hostvars[hos
 monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}'{% if not loop.last %},{% endif %}{% endfor %}"
+# NOTE(dszumski): Only one NTP server is currently supported by the Monasca Agent plugin
+monasca_ntp_server: "{{ external_ntp_servers | first }}"
 
 # Kafka topics used by Monasca services
 monasca_metrics_topic: "metrics"
