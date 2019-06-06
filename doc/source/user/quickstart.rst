@@ -540,11 +540,11 @@ If error occurs during execution, refer to
 Using OpenStack
 ~~~~~~~~~~~~~~~
 
-#. Install basic OpenStack CLI clients:
+#. Install the OpenStack CLI client:
 
    .. code-block:: console
 
-      pip install python-openstackclient python-glanceclient python-neutronclient
+      pip install python-openstackclient
 
 #. OpenStack requires an openrc file where credentials for admin user
    are set. To generate this file:
