@@ -40,22 +40,22 @@ eval set -- "$ARGS"
 case "$1" in
 
     (--all|-a)
-            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version" --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version" --format "{{.ID}}")"
             shift
             ;;
 
     (--dangling)
-            KOLLA_IMAGES="$(docker images -a --filter dangling=true --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo docker images -a --filter dangling=true --format "{{.ID}}")"
             shift
             ;;
 
     (--image|-i)
-            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version" --format "{{.Repository}}\t{{.ID}}" | grep -E "$2" | awk '{print $2}')"
+            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version" --format "{{.Repository}}\t{{.ID}}" | grep -E "$2" | awk '{print $2}')"
             shift 2
             ;;
 
     (--image-version)
-            KOLLA_IMAGES="$(docker images -a --filter "label=kolla_version=${2}" --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version=${2}" --format "{{.ID}}")"
             shift 2
             ;;
 
@@ -73,5 +73,5 @@ case "$1" in
 
 esac
 
-CMD="docker rmi -f $@ $KOLLA_IMAGES"
+CMD="sudo docker rmi -f $@ $KOLLA_IMAGES"
 process_cmd

@@ -11,6 +11,7 @@
     - { name: ceph_mon, group: ceph-mon }
 
 - name: Looking up OSDs for Ceph
+  become: true
   command: docker exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
     -a "partition_name={{ partition_name_osd_data }} match_mode='prefix' use_udev={{ kolla_ceph_use_udev }}"
@@ -58,6 +59,7 @@
 - include_tasks: config.yml
 
 - name: Check the configs in ceph_mon container
+  become: true
   command: docker exec {{ item.name }} /usr/local/bin/kolla_set_configs --check
   changed_when: false
   failed_when: false
@@ -67,6 +69,7 @@
     - { name: ceph_mon, group: ceph-mon }
 
 - name: Check the configs in the ceph_osd container
+  become: true
   command: docker exec ceph_osd_{{ item.stdout }} /usr/local/bin/kolla_set_configs --check
   changed_when: false
   failed_when: false
@@ -75,6 +78,7 @@
   when: inventory_hostname in groups['ceph-osd']
 
 - name: Check the configs in ceph_rgw container
+  become: true
   command: docker exec {{ item.name }} /usr/local/bin/kolla_set_configs --check
   changed_when: false
   failed_when: false

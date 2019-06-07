@@ -1,5 +1,6 @@
 ---
 - name: Creating Panko MongoDB database
+  become: true
   command: docker exec -t mongodb mongo --host {{ mongodb_replication_set_name }}/{{ panko_database_mongodb_address }} --eval 'db = db.getSiblingDB("{{ panko_database_name }}"); db.createUser({user':' "{{ panko_database_user }}", pwd':' "{{ panko_database_password }}", roles':' [ "readWrite", "dbAdmin" ]})'
   register: mongodb_panko_database
   run_once: true
@@ -10,6 +11,7 @@
     - panko_database_type == "mongodb"
 
 - name: Creating Panko mysql database
+  become: true
   kolla_toolbox:
     module_name: mysql_db
     module_args:
@@ -26,6 +28,7 @@
     - panko_database_type == "mysql"
 
 - name: Creating Panko mysql database user and setting permissions
+  become: true
   kolla_toolbox:
     module_name: mysql_user
     module_args:
