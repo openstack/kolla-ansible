@@ -97,7 +97,11 @@ function test_openstack_logged {
 
 function test_openstack {
     echo "Testing OpenStack"
-    test_openstack_logged > /tmp/logs/ansible/test-openstack 2>&1
+    log_file=/tmp/logs/ansible/test-openstack
+    if [[ -f $log_file ]]; then
+        log_file=${log_file}-upgrade
+    fi
+    test_openstack_logged > $log_file 2>&1
     result=$?
     if [[ $result != 0 ]]; then
         echo "Testing OpenStack failed. See ansible/test-openstack for details"
