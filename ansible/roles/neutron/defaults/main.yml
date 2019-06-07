@@ -98,15 +98,6 @@ neutron_services:
       }}
     volumes: "{{ neutron_l3_agent_default_volumes + neutron_l3_agent_extra_volumes }}"
     dimensions: "{{ neutron_l3_agent_dimensions }}"
-  neutron-lbaas-agent:
-    container_name: "neutron_lbaas_agent"
-    image: "{{ neutron_lbaas_agent_image_full }}"
-    privileged: True
-    enabled: "{{ enable_neutron_lbaas | bool and not enable_octavia | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_dvs'] }}"
-    group: "neutron-lbaas-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-lbaas-agent'] }}"
-    volumes: "{{ neutron_lbaas_agent_default_volumes + neutron_lbaas_agent_extra_volumes }}"
-    dimensions: "{{ neutron_lbaas_agent_dimensions }}"
   neutron-sriov-agent:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
@@ -186,10 +177,6 @@ neutron_l3_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 neutron_l3_agent_tag: "{{ neutron_tag }}"
 neutron_l3_agent_image_full: "{{ neutron_l3_agent_image }}:{{ neutron_l3_agent_tag }}"
 
-neutron_lbaas_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-lbaas-agent"
-neutron_lbaas_agent_tag: "{{ neutron_tag }}"
-neutron_lbaas_agent_image_full: "{{ neutron_lbaas_agent_image }}:{{ neutron_lbaas_agent_tag }}"
-
 neutron_sriov_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-sriov-agent"
 neutron_sriov_agent_tag: "{{ neutron_tag }}"
 neutron_sriov_agent_image_full: "{{ neutron_sriov_agent_image }}:{{ neutron_sriov_agent_tag }}"
@@ -228,7 +215,6 @@ ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neu
 
 neutron_dhcp_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_l3_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_lbaas_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_sriov_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_linuxbridge_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_metadata_agent_dimensions: "{{ default_container_dimensions }}"
@@ -256,11 +242,6 @@ neutron_l3_agent_default_volumes:
   - "neutron_metadata_socket:/var/lib/neutron/kolla/"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python2.7/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
-neutron_lbaas_agent_default_volumes:
-  - "{{ node_config_directory }}/neutron-lbaas-agent/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "/run:/run:shared"
-  - "kolla_logs:/var/log/kolla/"
 neutron_sriov_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -324,7 +305,6 @@ ironic_neutron_agent_default_volumes:
 neutron_extra_volumes: "{{ default_extra_volumes }}"
 neutron_dhcp_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_l3_agent_extra_volumes: "{{ neutron_extra_volumes }}"
-neutron_lbaas_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_sriov_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_linuxbridge_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -386,10 +366,6 @@ service_plugins:
     enabled: "{{ enable_neutron_fwaas | bool and neutron_fwaas_version == 'v2' }}"
   - name: "flow_classifier"
     enabled: "{{ enable_neutron_sfc | bool }}"
-  - name: "lbaasv2"
-    enabled: "{{ enable_neutron_lbaas | bool and not enable_octavia | bool }}"
-  - name: "lbaasv2-proxy"
-    enabled: "{{ enable_neutron_lbaas | bool and enable_octavia | bool }}"
   - name: "metering"
     enabled: "{{ enable_neutron_metering | bool }}"
   - name: "neutron_dynamic_routing.services.bgp.bgp_plugin.BgpPlugin"

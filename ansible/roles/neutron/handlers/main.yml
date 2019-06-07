@@ -5,7 +5,6 @@
     service: "{{ neutron_services[service_name] }}"
     config_json: "{{ neutron_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     neutron_conf: "{{ neutron_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_lbaas_conf: "{{ neutron_lbaas_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     neutron_vpnaas_conf: "{{ neutron_vpnaas_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     neutron_ml2_conf: "{{ neutron_ml2_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
@@ -25,7 +24,6 @@
     - service.host_in_groups | bool
     - config_json is changed
       or neutron_conf is changed
-      or neutron_lbaas_conf is changed
       or neutron_vpnaas_conf is changed
       or neutron_ml2_conf is changed
       or nsx_ini is changed
@@ -207,35 +205,6 @@
       or policy_json is changed
       or neutron_l3_agent_wrapper is changed
       or neutron_l3_agent_container is changed
-
-- name: Restart neutron-lbaas-agent container
-  vars:
-    service_name: "neutron-lbaas-agent"
-    service: "{{ neutron_services[service_name] }}"
-    config_json: "{{ neutron_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_conf: "{{ neutron_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_lbaas_conf: "{{ neutron_lbaas_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_json: "{{ policy_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    neutron_lbaas_agent_container: "{{ check_neutron_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
-  become: true
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
-    privileged: "{{ service.privileged | default(False) }}"
-  when:
-    - kolla_action != "config"
-    - service.enabled | bool
-    - service.host_in_groups | bool
-    - config_json is changed
-      or neutron_conf is changed
-      or neutron_lbaas_conf is changed
-      or neutron_lbaas_agent_ini is changed
-      or policy_json is changed
-      or neutron_lbaas_agent_container is changed
 
 - name: Restart neutron-sriov-agent container
   vars:
