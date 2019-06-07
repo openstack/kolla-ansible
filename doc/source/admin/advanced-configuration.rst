@@ -73,19 +73,26 @@ TLS Configuration
 ~~~~~~~~~~~~~~~~~
 
 An additional endpoint configuration option is to enable or disable
-TLS protection for the external VIP. TLS allows a client to authenticate
-the OpenStack service endpoint and allows for encryption of the requests
-and responses.
-
-.. note::
-
-   The kolla_internal_vip_address and kolla_external_vip_address must
-   be different to enable TLS on the external network.
+TLS protection for the internal and/or external VIP. TLS allows a client to
+authenticate the OpenStack service endpoint and allows for encryption of the
+requests and responses.
 
 The configuration variables that control TLS networking are:
 
 - kolla_enable_tls_external
 - kolla_external_fqdn_cert
+- kolla_enable_tls_internal
+- kolla_internal_fqdn_cert
+
+.. note::
+
+   If TLS is enabled only on the internal or the external network
+   the kolla_internal_vip_address and kolla_external_vip_address must
+   be different.
+
+   If there is only a single network configured in your network topology
+   (opposed to configuring seperate internal and external networks), TLS
+   can be enabled using only the internal network configuration variables.
 
 The default for TLS is disabled, to enable TLS networking:
 
@@ -93,6 +100,12 @@ The default for TLS is disabled, to enable TLS networking:
 
    kolla_enable_tls_external: "yes"
    kolla_external_fqdn_cert: "{{ node_config }}/certificates/mycert.pem"
+
+   and/or
+
+   kolla_enable_tls_internal: "yes"
+   kolla_internal_fqdn_cert: "{{ node_config }}/certificates/mycert-internal.pem"
+
 
 .. note::
 
@@ -111,9 +124,9 @@ These two files will be provided by your Certificate Authority. These
 two files are the server certificate with private key and the CA certificate
 with any intermediate certificates. The server certificate needs to be
 installed with the kolla deployment and is configured with the
-``kolla_external_fqdn_cert`` parameter. If the server certificate provided
-is not already trusted by the client, then the CA certificate file will
-need to be distributed to the client.
+``kolla_external_fqdn_cert`` or ``kolla_internal_fqdn_cert`` parameter.
+If the server certificate provided is not already trusted by the client,
+then the CA certificate file will need to be distributed to the client.
 
 When using TLS to connect to a public endpoint, an OpenStack client will
 have settings similar to this:

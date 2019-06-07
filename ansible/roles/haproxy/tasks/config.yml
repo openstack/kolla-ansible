@@ -109,6 +109,23 @@
   notify:
     - Restart haproxy container
 
+- name: Copying over haproxy-internal.pem
+  vars:
+    service: "{{ haproxy_services['haproxy'] }}"
+  copy:
+    src: "{{ kolla_internal_fqdn_cert }}"
+    dest: "{{ node_config_directory }}/haproxy/{{ item }}"
+    mode: "0660"
+  become: true
+  when:
+    - kolla_enable_tls_internal | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - "haproxy-internal.pem"
+  notify:
+    - Restart haproxy container
+
 - name: Copying over haproxy start script
   vars:
     service: "{{ haproxy_services['haproxy'] }}"
