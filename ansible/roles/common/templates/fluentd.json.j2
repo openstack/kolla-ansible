@@ -1,7 +1,18 @@
-{% set fluentd_cmd = '/usr/sbin/td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else '/usr/bin/fluentd -c /etc/fluentd/fluent.conf' %}
-{% set fluentd_dir = '/etc/td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else '/etc/fluentd' %}
-{% set fluentd_conf = 'td-agent.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluent.conf' %}
-{% set fluentd_user = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+{% if kolla_base_distro in ['ubuntu', 'debian'] and ansible_architecture == 'x86_64' %}
+    {% set fluentd_cmd = '/usr/sbin/td-agent' %}
+    {% set fluentd_dir = '/etc/td-agent' %}
+    {% set fluentd_conf = 'td-agent.conf' %}
+    {% set fluentd_user = 'td-agent' %}
+{% else %}
+    {% if kolla_base_distro in ['ubuntu', 'debian'] %}
+        {% set fluentd_cmd = '/usr/local/bin/fluentd -c /etc/fluentd/fluent.conf' %}
+    {% else %}
+        {% set fluentd_cmd = '/usr/bin/fluentd -c /etc/fluentd/fluent.conf' %}
+    {% endif %}
+    {% set fluentd_dir = '/etc/fluentd' %}
+    {% set fluentd_conf = 'fluent.conf' %}
+    {% set fluentd_user = 'fluentd' %}
+{% endif %}
 {
     "command": "{{ fluentd_cmd }}",
     "config_files": [
