@@ -47,7 +47,7 @@ class ModuleArgsTest(base.BaseTestCase):
                          'pull_image', 'recreate_or_restart_container',
                          'remove_container', 'remove_image', 'remove_volume',
                          'restart_container', 'start_container',
-                         'stop_container']),
+                         'stop_container', 'stop_and_remove_container']),
             api_version=dict(required=False, type='str', default='auto'),
             auth_email=dict(required=False, type='str'),
             auth_password=dict(required=False, type='str', no_log=True),
@@ -102,7 +102,8 @@ class ModuleArgsTest(base.BaseTestCase):
             ['action', 'remove_image', ['image']],
             ['action', 'remove_volume', ['name']],
             ['action', 'restart_container', ['name']],
-            ['action', 'stop_container', ['name']]
+            ['action', 'stop_container', ['name']],
+            ['action', 'stop_and_remove_container', ['name']],
         ]
 
         kd.AnsibleModule = mock.MagicMock()
@@ -384,6 +385,29 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.module.fail_json.assert_called_once_with(
             msg="No such container: fake_container to stop")
+
+    def test_stop_and_remove_container(self):
+        self.dw = get_DockerWorker({'name': 'my_container',
+                                    'action': 'stop_and_remove_container'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.stop_and_remove_container()
+
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.containers.assert_called_with(all=True)
+        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
+        self.dw.dc.remove_container.assert_called_once_with(
+            container='my_container', force=True)
+
+    def test_stop_and_remove_container_not_exists(self):
+        self.dw = get_DockerWorker({'name': 'fake_container',
+                                    'action': 'stop_and_remove_container'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.stop_and_remove_container()
+
+        self.assertFalse(self.dw.changed)
+        self.dw.dc.containers.assert_called_with(all=True)
+        self.assertFalse(self.dw.dc.stop.called)
+        self.assertFalse(self.dw.dc.remove_container.called)
 
     def test_restart_container(self):
         self.dw = get_DockerWorker({'name': 'my_container',
