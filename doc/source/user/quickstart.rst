@@ -31,7 +31,8 @@ run with root privileges.
 It is generally recommended to use a virtual environment to install Kolla
 Ansible and its dependencies, to avoid conflicts with the system site packages.
 Note that this is independent from the use of a virtual environment for remote
-execution, which is described :ref:`here <virtual-environments-target-hosts>`.
+execution, which is described in
+:kolla-ansible-doc:`Virtual Environments <user/virtual-environments.html>`.
 
 #. For CentOS, install EPEL.
 
@@ -475,7 +476,8 @@ There are a few options that are required to deploy Kolla-Ansible:
 * Virtual environment
 
   It is recommended to use a virtual environment to execute tasks on the remote
-  hosts.  This is covered :ref:`here <virtual-environments-target-hosts>`.
+  hosts.  This is covered
+  :kolla-ansible-doc:`Virtual Environments <user/virtual-environments.html>`.
 
 Deployment
 ~~~~~~~~~~
