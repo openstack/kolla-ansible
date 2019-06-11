@@ -37,20 +37,6 @@
 </filter>
 
 {% if enable_monasca | bool %}
-# Kolla Fluentd input config configures Fluentd to save all log messages
-# under the 'Payload' field, however the fluentd-monasca plugin assumes
-# that log messages are saved under the 'message' field. Here we map the
-# 'Payload' field to the 'message' field so that log can be forwarded to
-# Monasca.
-<filter *.**>
-  @type record_transformer
-  enable_ruby true
-  <record>
-    message ${record["Payload"]}
-  </record>
-  remove_keys Payload
-</filter>
-
 # Kolla configures Fluentd to extract timestamps from OpenStack service
 # logs, however these timestamps are not saved in the event and are not
 # forwarded to Monasca. Here we save the timestamp which has been
