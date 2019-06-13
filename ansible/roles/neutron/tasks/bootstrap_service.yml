@@ -21,29 +21,6 @@
   when: (kolla_action == "deploy")
         or (not neutron_enable_rolling_upgrade | bool)
 
-- name: Running Neutron lbaas bootstrap container
-  vars:
-    neutron_lbaas_agent: "{{ neutron_services['neutron-lbaas-agent'] }}"
-  become: true
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    environment:
-      KOLLA_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_lbaas_agent.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "bootstrap_neutron_lbaas_agent"
-    restart_policy: "never"
-    volumes: "{{ neutron_lbaas_agent.volumes }}"
-  when:
-    - neutron_lbaas_agent.enabled | bool
-    - neutron_lbaas_agent.host_in_groups | bool
-  run_once: True
-  delegate_to: "{{ groups[neutron_lbaas_agent.group][0] }}"
-
 - name: Running Neutron sfc bootstrap container
   vars:
     neutron_server: "{{ neutron_services['neutron-server'] }}"

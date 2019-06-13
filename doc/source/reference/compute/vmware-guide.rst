@@ -117,11 +117,10 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
 
 .. note::
 
-   VMware NSX-V also supports Neutron FWaaS, LBaaS and VPNaaS services, you can enable
+   VMware NSX-V also supports Neutron FWaaS and VPNaaS services, you can enable
    them by setting these options in ``globals.yml``:
 
    * enable_neutron_vpnaas: "yes"
-   * enable_neutron_lbaas: "yes"
    * enable_neutron_fwaas: "yes"
 
 If you want to set VMware datastore as cinder backend, enable it in
