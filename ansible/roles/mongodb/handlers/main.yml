@@ -25,6 +25,7 @@
   notify:
     - Waiting for the mongodb startup
     - Checking current replication status
+    - Bootstrap cluster
 
 - name: Waiting for the mongodb startup
   wait_for: host={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }} port={{ mongodb_port }}
@@ -36,5 +37,6 @@
   delegate_to: "{{ groups['mongodb'][0] }}"
   run_once: True
 
-- include_tasks: "bootstrap_cluster.yml"
+- name: Bootstrap cluster
+  include_tasks: "bootstrap_cluster.yml"
   when: mongodb_replication_status.stdout != "1"
