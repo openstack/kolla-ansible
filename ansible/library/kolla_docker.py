@@ -55,6 +55,7 @@ options:
       - restart_container
       - start_container
       - stop_container
+      - stop_container_and_remove_container
   api_version:
     description:
       - The version of the api for docker-py to use when contacting docker
@@ -818,6 +819,12 @@ class DockerWorker(object):
             self.changed = True
             self.dc.stop(name, timeout=graceful_timeout)
 
+    def stop_and_remove_container(self):
+        container = self.check_container()
+        if container:
+            self.stop_container()
+            self.remove_container()
+
     def restart_container(self):
         name = self.params.get('name')
         graceful_timeout = self.params.get('graceful_timeout')
@@ -885,7 +892,8 @@ def generate_module():
                              'recreate_or_restart_container',
                              'remove_container', 'remove_image',
                              'remove_volume', 'restart_container',
-                             'start_container', 'stop_container']),
+                             'start_container', 'stop_container',
+                             'stop_and_remove_container']),
         api_version=dict(required=False, type='str', default='auto'),
         auth_email=dict(required=False, type='str'),
         auth_password=dict(required=False, type='str', no_log=True),
@@ -940,7 +948,8 @@ def generate_module():
         ['action', 'remove_image', ['image']],
         ['action', 'remove_volume', ['name']],
         ['action', 'restart_container', ['name']],
-        ['action', 'stop_container', ['name']]
+        ['action', 'stop_container', ['name']],
+        ['action', 'stop_and_remove_container', ['name']],
     ]
     module = AnsibleModule(
         argument_spec=argument_spec,
