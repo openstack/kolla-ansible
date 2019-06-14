@@ -54,43 +54,8 @@ The NFS and iSCSI drivers support these operations:
 
 - Manage and unmanage snapshots (HNAS NFS only).
 
-Configuration example for Hitachi NAS Platform iSCSI and NFS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-iSCSI backend
--------------
-
-Enable cinder hnas backend iscsi in ``/etc/kolla/globals.yml``
-
-.. code-block:: yaml
-
-   enable_cinder_backend_hnas_iscsi: "yes"
-
-Create or modify the file ``/etc/kolla/config/cinder.conf`` and add the
-contents:
-
-.. path /etc/kolla/config/cinder.conf
-.. code-block:: ini
-
-   [DEFAULT]
-   enabled_backends = hnas-iscsi
-
-   [hnas-iscsi]
-   volume_driver = cinder.volume.drivers.hitachi.hnas_iscsi.HNASISCSIDriver
-   volume_iscsi_backend = hnas_iscsi_backend
-   hnas_iscsi_username = supervisor
-   hnas_iscsi_mgmt_ip0 = <hnas_ip>
-   hnas_chap_enabled = True
-
-   hnas_iscsi_svc0_volume_type = iscsi_gold
-   hnas_iscsi_svc0_hdp = FS-Baremetal1
-   hnas_iscsi_svc0_iscsi_ip = <svc0_ip>
-
-Then set password for the backend in ``/etc/kolla/passwords.yml``:
-
-.. code-block:: yaml
-
-   hnas_iscsi_password: supervisor
+Configuration example for Hitachi NAS Platform NFS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 NFS backend
 -----------

@@ -11,7 +11,6 @@ Cinder can be deployed using Kolla and supports the following storage
 backends:
 
 * ceph
-* hnas_iscsi
 * hnas_nfs
 * iscsi
 * lvm
