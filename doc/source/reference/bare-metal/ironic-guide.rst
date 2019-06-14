@@ -186,8 +186,8 @@ requests may not be hitting various pieces of the process:
 
 Configuring the Web Console
 ---------------------------
-Configuration based off upstream `Node web console
-<https://docs.openstack.org/ironic/latest/admin/console.html#node-web-console>`__.
+Configuration based off upstream :ironic-doc:`Node web console
+<admin/console.html#node-web-console>`.
 
 Serial speed must be the same as the serial configuration in the BIOS settings.
 Default value: 115200bps, 8bit, non-parity.If you have different serial speed.
