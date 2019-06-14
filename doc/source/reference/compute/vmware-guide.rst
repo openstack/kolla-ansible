@@ -269,6 +269,6 @@ Then you should start :command:`kolla-ansible` deployment normally as
 KVM/QEMU deployment.
 
 For more information on OpenStack vSphere, see
-`VMware vSphere
-<https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-vmware.html>`__,
+:nova-doc:`VMware vSphere
+<admin/configuration/hypervisor-vmware.html>`,
 `VMware-NSX package <https://github.com/openstack/vmware-nsx>`_.

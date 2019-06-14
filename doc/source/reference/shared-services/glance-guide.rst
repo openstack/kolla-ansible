@@ -144,5 +144,5 @@ Glance cache is disabled by default, it can be enabled by:
 
 Glance caches are not cleaned up automatically, the glance team recommends to
 use a cron service to regularly clean cached images. In the future kolla will
-deploy a cron container to manage such clean ups.  Please refer to `Glance
-image cache <https://docs.openstack.org/glance/latest/admin/cache.html>`__.
+deploy a cron container to manage such clean ups.  Please refer to
+:glance-doc:`Glance image cache <admin/cache.html>`.
