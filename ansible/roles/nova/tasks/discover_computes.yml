@@ -22,14 +22,15 @@
     - nova_compute_services is success
     - nova_compute_services.stdout | from_json | length != 0
 
-- name: Discovering nova hosts
+# TODO(yoctozepto): no need to do --by-service if ironic not used
+- name: Discover nova hosts
   command: >
     docker exec nova_api nova-manage cell_v2 discover_hosts --by-service
-  register: discover_hosts
   changed_when: False
   run_once: True
   delegate_to: "{{ groups['nova-api'][0] }}"
 
+# NOTE(yoctozepto): SIGHUP is probably unnecessary
 - name: Refresh cell cache in nova scheduler
   command: docker kill --signal HUP nova_scheduler
   changed_when: False
