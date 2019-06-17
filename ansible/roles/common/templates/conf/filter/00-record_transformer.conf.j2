@@ -36,6 +36,27 @@
     </record>
 </filter>
 
+# Rename internal Fluent message field to match other logs. This removes
+# all other fields by default, including the original message field. This is
+# intented to avoid duplication of the log message and to prevent passing
+# invalid dimensions to Monasca, if it is enabled. Note that if this step
+# is moved to the format folder, then it will applied after the second step
+# below which will break the logic.
+<filter fluent.**>
+    @type parser
+    key_name message
+    format /^(?<Payload>.*)$/
+</filter>
+
+<filter fluent.**>
+    @type record_transformer
+    <record>
+        Hostname "#{Socket.gethostname}"
+        programname ${tag_parts[0]}
+        log_level ${tag_parts[1]}
+    </record>
+</filter>
+
 {% if enable_monasca | bool %}
 # Kolla configures Fluentd to extract timestamps from OpenStack service
 # logs, however these timestamps are not saved in the event and are not
