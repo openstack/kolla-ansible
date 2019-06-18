@@ -187,11 +187,12 @@
     -t {{ (fernet_key_rotation_interval | int) // 60 }}
     -i {{ groups['keystone'].index(inventory_hostname) }}
     -n {{ (groups['keystone'] | length) }}
+  changed_when: false
   register: cron_jobs_json
   when: keystone_token_provider == 'fernet'
   delegate_to: localhost
 
-- name: Save the returned from cron jobs for building the crontab
+- name: Set fact with the generated cron jobs for building the crontab later
   set_fact:
     cron_jobs: "{{ (cron_jobs_json.stdout | from_json).cron_jobs }}"
   ignore_errors: "{{ ansible_check_mode }}"
