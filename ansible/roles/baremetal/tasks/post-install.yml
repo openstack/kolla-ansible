@@ -16,18 +16,12 @@
   become: True
   when: create_kolla_user | bool
 
-- name: Create sudoers profile for user kolla
-  file:
-    path: /etc/sudoers.d/kolla-ansible-users
-    state: touch
-    mode: "0640"
-  become: True
-  when: create_kolla_user_sudoers | bool
-
 - name: Grant kolla user passwordless sudo
   lineinfile:
     dest: /etc/sudoers.d/kolla-ansible-users
     state: present
+    create: yes
+    mode: '0640'
     regexp: '^{{ kolla_user }}'
     line: '{{ kolla_user }} ALL=(ALL) NOPASSWD: ALL'
   become: True
