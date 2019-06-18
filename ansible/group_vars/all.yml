@@ -681,7 +681,7 @@ enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bo
 ####################
 # Redis options
 ####################
-redis_address: "{{ kolla_internal_fqdn }}"
+redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&socket_timeout=60&retry_on_timeout=yes"
 
 ####################
 # Osprofiler options
@@ -689,7 +689,6 @@ redis_address: "{{ kolla_internal_fqdn }}"
 # valid values: ["elasticsearch", "redis"]
 osprofiler_backend: "elasticsearch"
 elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}"
-redis_connection_string: "redis://:{{ redis_master_password }}@{{ redis_address }}:{{ redis_port }}"
 osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else elasticsearch_connection_string }}"
 
 ####################
