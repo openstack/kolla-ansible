@@ -34,10 +34,17 @@
     - enable_ceph_nfs | bool
     - inventory_hostname in groups['ceph-nfs']
 
-# NOTE(chenxing): Disallowing pre-luminous OSDs and enabling all
-# new Luminous-only functionality
-- name: Enabling all new Luminous-only functionality
-  command: docker exec ceph_mon ceph osd require-osd-release luminous
+- name: Check final release (as running on MONs)
+  become: true
+  shell: docker exec ceph_mon ceph version | cut -d' ' -f5
+  changed_when: false
+  register: ceph_release_command
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  changed_when: False
-  run_once: True
+  run_once: true
+
+- name: Finalize the upgrade by disallowing older OSDs
+  become: true
+  command: docker exec ceph_mon ceph osd require-osd-release {{ ceph_release_command.stdout }}
+  changed_when: false
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  run_once: true
