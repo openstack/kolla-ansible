@@ -26,6 +26,44 @@
 - include_tasks: bootstrap_service.yml
   when: map_cell0.changed
 
+- name: Get list of existing cells
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 list_cells --verbose'
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "list_cells_nova"
+    restart_policy: "never"
+    volumes: "{{ nova_api.volumes|reject('equalto', '')|list }}"
+  register: existing_cells_list
+  changed_when: false
+  failed_when:
+    - existing_cells_list.rc != 0
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+
+- name: Check if a base cell already exists
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+    # We match lines containing a UUID in a column (except the one used by
+    # cell0), followed by two other columns, the first containing the transport
+    # URL and the second the database connection. For example:
+    #
+    # | None | 68a3f49e-27ec-422f-9e2e-2a4e5dc8291b | rabbit://openstack:password@1.2.3.4:5672 | mysql+pymysql://nova:password@1.2.3.4:3306/nova |
+    #
+    # NOTE(priteau): regexp doesn't support passwords containing spaces
+    regexp: '\| +(?!00000000-0000-0000-0000-000000000000)([0-9a-f\-]+) +\| +([^ ]+) +\| +([^ ]+) +\|$'
+  set_fact:
+    existing_cells: "{{ existing_cells_list.stdout | regex_findall(regexp, multiline=True) }}"
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+
 - name: Create base cell for legacy instances
   vars:
     nova_api: "{{ nova_services['nova-api'] }}"
@@ -49,3 +87,42 @@
     - '"already exists" not in base_cell.stdout'
   run_once: True
   delegate_to: "{{ groups[nova_api.group][0] }}"
+  when: existing_cells | length == 0
+
+- name: Update base cell for legacy instances
+  vars:
+    connection_url: "mysql+pymysql://{{ nova_database_user }}:{{ nova_database_password }}@{{ nova_database_address }}/{{ nova_database_name }}"
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: "bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 update_cell --cell_uuid {{ existing_cells[0][0] }}'"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "create_cell_nova"
+    restart_policy: "never"
+    volumes: "{{ nova_api.volumes|reject('equalto', '')|list }}"
+  register: base_cell
+  changed_when:
+    - base_cell is success
+  failed_when:
+    - base_cell.rc != 0
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+  when:
+    - existing_cells | length == 1
+    - existing_cells[0][1] != rpc_transport_url or existing_cells[0][2] != connection_url
+
+- name: Print warning if a duplicate cell is detected
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  fail:
+    msg: Multiple base cells detected, manual cleanup with `nova-manage cell_v2` may be required.
+  ignore_errors: yes
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+  when:
+    - existing_cells | length > 1
