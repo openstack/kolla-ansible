@@ -572,17 +572,17 @@ Using OpenStack
 
      .. code-block:: console
 
-        . /usr/share/kolla-ansible/init-runonce
+        /usr/share/kolla-ansible/init-runonce
 
      Run ``init-runonce`` script on Ubuntu:
 
      .. code-block:: console
 
-        . /usr/local/share/kolla-ansible/init-runonce
+        /usr/local/share/kolla-ansible/init-runonce
 
    * For development, run:
 
      .. code-block:: console
 
-        . kolla-ansible/tools/init-runonce
+        kolla-ansible/tools/init-runonce
 
