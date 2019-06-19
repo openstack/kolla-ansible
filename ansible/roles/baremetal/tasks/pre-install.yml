@@ -24,7 +24,8 @@
         {% for host in groups['baremetal'] %}
         {% set api_interface = hostvars[host]['api_interface'] %}
         {% if host not in groups['bifrost'] or 'ansible_' + api_interface in hostvars[host] %}
-        {{ hostvars[host]['ansible_' + api_interface]['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }}
+        {% set hostnames = [hostvars[host]['ansible_nodename'], hostvars[host]['ansible_hostname']] %}
+        {{ hostvars[host]['ansible_' + api_interface]['ipv4']['address'] }} {{ hostnames | unique | join(' ') }}
         {% endif %}
         {% endfor %}
   become: True
