@@ -46,12 +46,25 @@ enable_proxy_headers_parsing = True
 [paste_deploy]
 config_file = /etc/freezer/freezer-paste.ini
 
+
+{% if freezer_database_backend == 'mariadb' %}
+[storage]
+backend = sqlachemy
+driver = sqlalchemy
+
+[database]
+connection = mysql+pymysql://{{ freezer_database_user }}:{{ freezer_database_password }}@{{ freezer_database_address }}/{{ freezer_database_name }}
+max_retries = -1
+{% endif %}
+
+{% if freezer_database_backend == 'elasticsearch' %}
 [storage]
 backend = elasticsearch
 driver = elasticsearch
 
 [elasticsearch]
-hosts = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ elasticsearch_port }}
-number_of_replicas = 0
+hosts = {{ freezer_es_protocol }}://{{ freezer_es_address }}:{{ freezer_es_port }}
+number_of_replicas = {{ freezer_elasticsearch_replicas }}
 index = freezer
+{% endif %}
 {% endif %}
