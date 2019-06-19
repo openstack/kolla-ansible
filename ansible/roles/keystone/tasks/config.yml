@@ -29,22 +29,10 @@
   when:
     - keystone_policy.results
 
-- name: Check if Keystone Domain specific settings enabled
+- name: Check if Keystone domain-specific config is supplied
   local_action: stat path="{{ node_custom_config }}/keystone/domains"
   run_once: True
   register: keystone_domain_directory
-
-- name: Creating Keystone Domain directory
-  vars:
-    keystone: "{{ keystone_services.keystone }}"
-  file:
-    dest: "{{ node_config_directory }}/keystone/domains/"
-    state: "directory"
-    mode: "0770"
-  become: true
-  when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
 
 - name: Copying over config.json files for services
   template:
@@ -85,7 +73,7 @@
     - Restart keystone container
     - Restart keystone-fernet container
 
-- name: Creating Keystone Domain directory
+- name: Create Keystone domain-specific config directory
   vars:
     keystone: "{{ keystone_services.keystone }}"
   file:
