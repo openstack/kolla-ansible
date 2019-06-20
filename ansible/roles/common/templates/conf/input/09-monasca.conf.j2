@@ -1,0 +1,22 @@
+<source>
+  @type tail
+  path /var/log/kolla/monasca/agent*.log
+  pos_file /var/run/fluentd/monasca-agent.pos
+  tag kolla.*
+  format multiline
+  format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \S+ \| \S+ \| \S+ \| .*$/
+  format1 /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \S+) \| (?<log_level>\S+) \| (?<programname>\S+) \| (?<Payload>.*)$/
+  time_key Timestamp
+</source>
+
+<source>
+  @type tail
+  path /var/log/kolla/monasca/grafana.log
+  pos_file /var/run/fluentd/monasca-grafana.pos
+  tag infra.*
+  format multiline
+  format_firstline /^t=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{4} lvl=\S+ msg=.*$/
+  format1 /^t=(?<Timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{4}) lvl=(?<log_level>\S+) msg=(?<Payload>.*)$/
+  time_key Timestamp
+</source>
+
