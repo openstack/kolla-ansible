@@ -69,6 +69,21 @@
   notify:
     - Restart {{ item.key }} container
 
+- name: Copying over wsgi-qinling files for services
+  vars:
+    service: "{{ qinling_services['qinling-api'] }}"
+  template:
+    src: "wsgi-qinling.conf.j2"
+    dest: "{{ node_config_directory }}/qinling-api/wsgi-qinling.conf"
+    mode: "0660"
+  become: true
+  register: qinling_conf_wsgi
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart qinling-api container
+
 - name: Copying over existing policy file
   template:
     src: "{{ qinling_policy_file_path }}"
