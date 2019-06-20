@@ -32,9 +32,19 @@ domain_config_dir = /etc/keystone/domains
 revoke_by_id = False
 provider = {{ keystone_token_provider }}
 expiration = {{ fernet_token_expiry }}
+allow_expired_window = {{ fernet_token_allow_expired_window }}
 
 [fernet_tokens]
-max_active_keys = {{ (groups['keystone'] | length) + 1 }}
+# Keystone docs note:
+#   max_active_keys =
+#     ((token_expiration + allow_expired_window) / rotation_frequency) + 2
+# https://docs.openstack.org/keystone/stein/admin/fernet-token-faq.html
+#
+# Use (x + y - 1) / y to round up integer division.
+max_active_keys = {{ ((fernet_token_expiry | int +
+                       fernet_token_allow_expired_window | int +
+                       fernet_key_rotation_interval | int - 1) //
+                      fernet_key_rotation_interval | int) + 2 }}
 
 [cache]
 backend = oslo_cache.memcache_pool
