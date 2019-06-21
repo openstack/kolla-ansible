@@ -1,0 +1,7 @@
+#!/bin/bash
+
+{% for host in groups['keystone'] %}
+{% if inventory_hostname != host %}
+/usr/bin/rsync -az -e 'ssh -i /var/lib/keystone/.ssh/id_rsa -p {{ hostvars[host]['keystone_ssh_port'] }} -F /var/lib/keystone/.ssh/config' --delete /etc/keystone/fernet-keys/ keystone@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:/etc/keystone/fernet-keys
+{% endif %}
+{% endfor %}
