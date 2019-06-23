@@ -7,11 +7,7 @@ gnocchi_services:
     group: gnocchi-api
     enabled: true
     image: "{{ gnocchi_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/gnocchi-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ gnocchi_api_default_volumes + gnocchi_api_extra_volumes }}"
     dimensions: "{{ gnocchi_api_dimensions }}"
     haproxy:
       gnocchi_api:
@@ -29,22 +25,14 @@ gnocchi_services:
     group: gnocchi-metricd
     enabled: true
     image: "{{ gnocchi_metricd_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/gnocchi-metricd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ gnocchi_metricd_default_volumes + gnocchi_metricd_extra_volumes }}"
     dimensions: "{{ gnocchi_metricd_dimensions }}"
   gnocchi-statsd:
     container_name: gnocchi_statsd
     group: gnocchi-statsd
     enabled: true
     image: "{{ gnocchi_statsd_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/gnocchi-statsd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ gnocchi_statsd_default_volumes + gnocchi_statsd_extra_volumes }}"
     dimensions: "{{ gnocchi_statsd_dimensions }}"
 
 
@@ -106,6 +94,29 @@ gnocchi_metricd_image_full: "{{ gnocchi_metricd_image }}:{{ gnocchi_metricd_tag 
 gnocchi_api_dimensions: "{{ default_container_dimensions }}"
 gnocchi_metricd_dimensions: "{{ default_container_dimensions }}"
 gnocchi_statsd_dimensions: "{{ default_container_dimensions }}"
+
+gnocchi_api_default_volumes:
+  - "{{ node_config_directory }}/gnocchi-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
+  - "kolla_logs:/var/log/kolla/"
+
+gnocchi_metricd_default_volumes:
+  - "{{ node_config_directory }}/gnocchi-metricd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
+  - "kolla_logs:/var/log/kolla/"
+
+gnocchi_statsd_default_volumes:
+  - "{{ node_config_directory }}/gnocchi-statsd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ gnocchi_metric_datadir_volume }}:/var/lib/gnocchi/"
+  - "kolla_logs:/var/log/kolla/"
+
+gnocchi_extra_volumes: "{{ default_extra_volumes }}"
+gnocchi_api_extra_volumes: "{{ gnocchi_extra_volumes }}"
+gnocchi_metricd_extra_volumes: "{{ gnocchi_extra_volumes }}"
+gnocchi_statsd_extra_volumes: "{{ gnocchi_extra_volumes }}"
 
 ####################
 # OpenStack
