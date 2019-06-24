@@ -1,0 +1,33 @@
+{% if kolla_base_distro == 'ubuntu' %}
+    {% set python_path = '/usr/lib/python3/dist-packages' if qinling_install_type == 'binary' else '/var/lib/kolla/venv/lib/python3.6/site-packages' %}
+{% else %}
+    {% set python_path = '/usr/lib/python2.7/site-packages' if qinling_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
+{% endif %}
+
+Listen {{ api_interface_address }}:{{ qinling_api_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+
+<VirtualHost *:{{ qinling_api_port }}>
+
+  ## Vhost docroot
+  DocumentRoot "/var/www/cgi-bin/qinling"
+
+  ## Directories, there should at least be a declaration for /var/www/cgi-bin/qinling
+
+  <Directory "/var/www/cgi-bin/qinling">
+    Options Indexes FollowSymLinks MultiViews
+    Require all granted
+  </Directory>
+
+  ## Logging
+  ErrorLog "/var/log/kolla/qinling/qinling_api_wsgi_error.log"
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+  CustomLog "/var/log/kolla/qinling/qinling_api_wsgi_access.log" logformat
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess qinling group=qinling processes={{ openstack_service_workers }} threads=1 user=qinling python-path={{ python_path }}
+  WSGIProcessGroup qinling
+  WSGIScriptAlias / "/var/www/cgi-bin/qinling/wsgi.py"
+</VirtualHost>
