@@ -7,6 +7,8 @@ copy_logs() {
 
     cp -rnL /var/lib/docker/volumes/kolla_logs/_data/* ${LOG_DIR}/kolla/
     cp -rnL /etc/kolla/* ${LOG_DIR}/kolla_configs/
+    # Don't save the IPA images.
+    rm ${LOG_DIR}/kolla_configs/config/ironic/ironic-agent.{kernel,initramfs}
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
 
 
@@ -60,6 +62,12 @@ copy_logs() {
     if [[ $(docker ps --filter name=haproxy --format "{{.Names}}") ]]; then
         mkdir -p ${LOG_DIR}/kolla/haproxy
         docker exec haproxy bash -c 'echo show stat | socat stdio /var/lib/kolla/haproxy/haproxy.sock' > ${LOG_DIR}/kolla/haproxy/stats.txt
+    fi
+
+    # FIXME: remove
+    if [[ $(docker ps -a --filter name=ironic_inspector --format "{{.Names}}") ]]; then
+        mkdir -p ${LOG_DIR}/kolla/ironic-inspector
+        ls -lR /var/lib/docker/volumes/ironic_inspector_dhcp_hosts > ${LOG_DIR}/kolla/ironic-inspector/var-lib-ls.txt
     fi
 
     for container in $(docker ps -a --format "{{.Names}}"); do

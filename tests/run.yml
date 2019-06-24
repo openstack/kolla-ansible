@@ -98,7 +98,28 @@
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
           when: scenario == "bifrost"
+        - src: "tests/templates/ironic-overrides.j2"
+          dest: /etc/kolla/config/ironic.conf
+          when: "{{ scenario == 'ironic' }}"
       when: item.when | default(true)
+
+    - block:
+        - name: ensure ironic config directory exists
+          file:
+            path: /etc/kolla/config/ironic
+            state: directory
+            mode: 0777
+
+        - name: download Ironic Python Agent (IPA) images
+          get_url:
+            url: "https://tarballs.openstack.org/ironic-python-agent/tinyipa/files/{{ item.src }}"
+            dest: "/etc/kolla/config/ironic/{{ item.dest }}"
+          with_items:
+            - src: "tinyipa-{{ zuul.branch | replace('/', '-') }}.gz"
+              dest: ironic-agent.initramfs
+            - src: "tinyipa-{{ zuul.branch | replace('/', '-') }}.vmlinuz"
+              dest: ironic-agent.kernel
+      when: scenario == "ironic"
 
     - name: install kolla-ansible requirements
       pip:
@@ -173,7 +194,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
-          when: scenario not in ['scenario_nfv']
+          when: scenario not in ['ironic', 'scenario_nfv']
 
         - name: Run test-scenario-nfv.sh script
           script:
@@ -181,6 +202,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "scenario_nfv"
+
+        - name: Run test-ironic.sh script
+          script:
+            cmd: test-ironic.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "ironic"
 
         - name: Run reconfigure.sh script
           script:
