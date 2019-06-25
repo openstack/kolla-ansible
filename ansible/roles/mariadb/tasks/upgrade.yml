@@ -1,2 +1,30 @@
 ---
+# NOTE(mgoddard): In Rocky, xtrabackup was used for galera state sync. In Stein
+# this was switched to mariabackup. This means that Rocky and Stein containers
+# are not compatible, and we need to shut down the entire cluster and perform
+# an offline upgrade. We do this using the existing cluster recovery code.
+
+- block:
+    - name: Check for use of xtrabackup
+      become: true
+      command: grep xtrabackup {{ node_config_directory }}/mariadb/galera.cnf
+      changed_when: false
+      failed_when: false
+      register: grep_result
+
+    - name: Set a fact to trigger shutdown and recovery of MariaDB cluster for xtrabackup to mariabackup migration
+      set_fact:
+        mariadb_recover: true
+      when: grep_result.rc == 0
+
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  when:
+    # Only required for multinode galera clusters on CentOS.
+    - groups[service.group] | length > 1
+    - kolla_base_distro in ['centos', 'oraclelinux', 'rhel']
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
 - include_tasks: deploy.yml
