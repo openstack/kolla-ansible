@@ -7,11 +7,7 @@ qdrouterd_services:
     group: qdrouterd
     enabled: true
     image: "{{ qdrouterd_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/qdrouterd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "qdrouterd:/var/lib/qdrouterd/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ qdrouterd_default_volumes + qdrouterd_extra_volumes }}"
     dimensions: "{{ qdrouterd_dimensions }}"
 
 ####################
@@ -21,3 +17,10 @@ qdrouterd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 qdrouterd_tag: "{{ openstack_release }}"
 qdrouterd_image_full: "{{ qdrouterd_image }}:{{ qdrouterd_tag }}"
 qdrouterd_dimensions: "{{ default_container_dimensions }}"
+
+qdrouterd_default_volumes:
+  - "{{ node_config_directory }}/qdrouterd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "qdrouterd:/var/lib/qdrouterd/"
+  - "kolla_logs:/var/log/kolla/"
+qdrouterd_extra_volumes: "{{ default_extra_volumes }}"

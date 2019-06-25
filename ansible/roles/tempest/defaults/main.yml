@@ -7,10 +7,7 @@ tempest_services:
     image: "{{ tempest_image_full }}"
     enabled: true
     group: "tempest"
-    volumes:
-      - "{{ node_config_directory }}/tempest/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ tempest_default_volumes + tempest_extra_volumes }}"
     dimensions: "{{ tempest_dimensions }}"
 
 
@@ -21,6 +18,13 @@ tempest_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_
 tempest_tag: "{{ openstack_release }}"
 tempest_image_full: "{{ tempest_image }}:{{ tempest_tag }}"
 tempest_dimensions: "{{ default_container_dimensions }}"
+
+tempest_default_volumes:
+  - "{{ node_config_directory }}/tempest/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+tempest_extra_volumes: "{{ default_extra_volumes }}"
 
 ###########################
 # Tempest Required Resource

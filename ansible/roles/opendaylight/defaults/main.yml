@@ -9,10 +9,7 @@ opendaylight_services:
     privileged: True
     group: "opendaylight"
     host_in_groups: "{{ inventory_hostname in groups['opendaylight'] }}"
-    volumes:
-      - "{{ node_config_directory }}/opendaylight/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ opendaylight_default_volumes + opendaylight_extra_volumes }}"
     dimensions: "{{ opendaylight_dimensions }}"
     tty: True
     haproxy:
@@ -52,6 +49,14 @@ opendaylight_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ do
 opendaylight_tag: "{{ openstack_release }}"
 opendaylight_image_full: "{{ opendaylight_image }}:{{ opendaylight_tag }}"
 opendaylight_dimensions: "{{ default_container_dimensions }}"
+
+opendaylight_default_volumes:
+  - "{{ node_config_directory }}/opendaylight/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+opendaylight_extra_volumes: "{{ default_extra_volumes }}"
+
 
 ###################
 # Java Opts

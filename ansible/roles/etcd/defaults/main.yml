@@ -19,11 +19,7 @@ etcd_services:
       ETCD_OUT_FILE: "/var/log/kolla/etcd/etcd.log"
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
     image: "{{ etcd_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_etcd:/var/lib/etcd/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ etcd_default_volumes + etcd_extra_volumes }}"
     dimensions: "{{ etcd_dimensions }}"
 
 
@@ -34,3 +30,10 @@ etcd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_nam
 etcd_tag: "{{ openstack_release }}"
 etcd_image_full: "{{ etcd_image }}:{{ etcd_tag }}"
 etcd_dimensions: "{{ default_container_dimensions }}"
+
+etcd_default_volumes:
+  - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_etcd:/var/lib/etcd/"
+  - "kolla_logs:/var/log/kolla/"
+etcd_extra_volumes: "{{ default_extra_volumes }}"

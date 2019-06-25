@@ -15,13 +15,7 @@ openvswitch_services:
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
       }}
-    volumes:
-      - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
-      - "openvswitch_db:/var/lib/openvswitch/"
+    volumes: "{{ openvswitch_db_default_volumes + openvswitch_db_extra_volumes }}"
     dimensions: "{{ openvswitch_db_dimensions }}"
   openvswitch-vswitchd:
     container_name: "openvswitch_vswitchd"
@@ -37,12 +31,7 @@ openvswitch_services:
       or inventory_hostname in groups['neutron-metadata-agent']
       }}
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/openvswitch-vswitchd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ openvswitch_vswitchd_default_volumes + openvswitch_vswitchd_extra_volumes }}"
     dimensions: "{{ openvswitch_vswitchd_dimensions }}"
 
 ####################
@@ -61,3 +50,21 @@ openvswitch_vswitchd_image_full: "{{ openvswitch_vswitchd_image }}:{{ openvswitc
 
 openvswitch_db_dimensions: "{{ default_container_dimensions }}"
 openvswitch_vswitchd_dimensions: "{{ default_container_dimensions }}"
+
+openvswitch_db_default_volumes:
+  - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run:/run:shared"
+  - "kolla_logs:/var/log/kolla/"
+  - "openvswitch_db:/var/lib/openvswitch/"
+openvswitch_vswitchd_default_volumes:
+  - "{{ node_config_directory }}/openvswitch-vswitchd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run:/run:shared"
+  - "kolla_logs:/var/log/kolla/"
+
+openvswitch_extra_volumes: "{{ default_extra_volumes }}"
+openvswitch_db_extra_volumes: "{{ openvswitch_extra_volumes }}"
+openvswitch_vswitchd_extra_volumes: "{{ openvswitch_extra_volumes }}"

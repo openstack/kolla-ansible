@@ -7,10 +7,7 @@ monasca_services:
     group: monasca-api
     enabled: true
     image: "{{ monasca_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_api_default_volumes + monasca_api_extra_volumes }}"
     dimensions: "{{ monasca_api_dimensions }}"
     haproxy:
       monasca_api:
@@ -28,10 +25,7 @@ monasca_services:
     group: monasca-log-api
     enabled: true
     image: "{{ monasca_log_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_log_api_default_volumes + monasca_log_api_extra_volumes }}"
     dimensions: "{{ monasca_log_api_dimensions }}"
     haproxy:
       monasca_log_api:
@@ -49,61 +43,42 @@ monasca_services:
     group: monasca-log-transformer
     enabled: true
     image: "{{ monasca_logstash_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_log_transformer_default_volumes + monasca_log_transformer_extra_volumes }}"
     dimensions: "{{ monasca_log_transformer_dimensions }}"
   monasca-log-persister:
     container_name: monasca_log_persister
     group: monasca-log-persister
     enabled: true
     image: "{{ monasca_logstash_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_log_persister_default_volumes + monasca_log_persister_extra_volumes }}"
     dimensions: "{{ monasca_log_persister_dimensions }}"
   monasca-log-metrics:
     container_name: monasca_log_metrics
     group: monasca-log-metrics
     enabled: true
     image: "{{ monasca_logstash_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-log-metrics/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_log_metrics_default_volumes + monasca_log_metrics_extra_volumes }}"
     dimensions: "{{ monasca_log_metrics_dimensions }}"
   monasca-thresh:
     container_name: monasca_thresh
     group: monasca-thresh
     enabled: true
     image: "{{ monasca_thresh_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-thresh/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "monasca_thresh:/var/lib/monasca-thresh/"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_thresh_default_volumes + monasca_thresh_extra_volumes }}"
     dimensions: "{{ monasca_thresh_dimensions }}"
   monasca-notification:
     container_name: monasca_notification
     group: monasca-notification
     enabled: true
     image: "{{ monasca_notification_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-notification/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_notification_default_volumes + monasca_notification_extra_volumes }}"
     dimensions: "{{ monasca_notification_dimensions }}"
   monasca-persister:
     container_name: monasca_persister
     group: monasca-persister
     enabled: true
     image: "{{ monasca_persister_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-persister/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_persister_default_volumes + monasca_persister_extra_volumes }}"
     dimensions: "{{ monasca_persister_dimensions }}"
   monasca-agent-collector:
     container_name: monasca_agent_collector
@@ -111,43 +86,28 @@ monasca_services:
     enabled: true
     image: "{{ monasca_agent_image_full }}"
     pid_mode: "host"
-    volumes:
-      - "{{ node_config_directory }}/monasca-agent-collector/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
-      - "/sys:/sys:ro"
-      - "/dev/disk/:/dev/disk:ro"
+    volumes: "{{ monasca_agent_collector_default_volumes + monasca_agent_collector_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
   monasca-agent-statsd:
     container_name: monasca_agent_statsd
     group: monasca-agent-statsd
     enabled: true
     image: "{{ monasca_agent_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-agent-statsd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_agent_statsd_default_volumes + monasca_agent_statsd_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
   monasca-agent-forwarder:
     container_name: monasca_agent_forwarder
     group: monasca-agent-forwarder
     enabled: true
     image: "{{ monasca_agent_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-agent-forwarder/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ monasca_agent_forwarder_default_volumes + monasca_agent_forwarder_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
   monasca-grafana:
     container_name: monasca_grafana
     group: monasca-grafana
     enabled: true
     image: "{{ monasca_grafana_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "monasca_grafana:/var/lib/grafana/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ monasca_grafana_default_volumes + monasca_grafana_extra_volumes }}"
     dimensions: "{{ monasca_grafana_dimensions }}"
     haproxy:
       monasca_grafana_server:
@@ -285,6 +245,73 @@ monasca_thresh_dimensions: "{{ default_container_dimensions }}"
 monasca_notification_dimensions: "{{ default_container_dimensions }}"
 monasca_persister_dimensions: "{{ default_container_dimensions }}"
 monasca_grafana_dimensions: "{{ default_container_dimensions }}"
+
+monasca_agent_collector_default_volumes:
+  - "{{ node_config_directory }}/monasca-agent-collector/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+  - "/sys:/sys:ro"
+  - "/dev/disk/:/dev/disk:ro"
+monasca_agent_statsd_default_volumes:
+  - "{{ node_config_directory }}/monasca-agent-statsd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_agent_forwarder_default_volumes:
+  - "{{ node_config_directory }}/monasca-agent-forwarder/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_api_default_volumes:
+  - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_log_api_default_volumes:
+  - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_log_transformer_default_volumes:
+  - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_log_persister_default_volumes:
+  - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_log_metrics_default_volumes:
+  - "{{ node_config_directory }}/monasca-log-metrics/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_thresh_default_volumes:
+  - "{{ node_config_directory }}/monasca-thresh/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "monasca_thresh:/var/lib/monasca-thresh/"
+  - "kolla_logs:/var/log/kolla"
+monasca_notification_default_volumes:
+  - "{{ node_config_directory }}/monasca-notification/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_persister_default_volumes:
+  - "{{ node_config_directory }}/monasca-persister/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+monasca_grafana_default_volumes:
+  - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "monasca_grafana:/var/lib/grafana/"
+  - "kolla_logs:/var/log/kolla/"
+
+monasca_extra_volumes: "{{ default_extra_volumes }}"
+monasca_agent_collector_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_agent_statsd_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_agent_forwarder_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_api_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_log_api_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_log_transformer_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_log_persister_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_thresh_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_notification_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_persister_extra_volumes: "{{ monasca_extra_volumes }}"
+monasca_grafana_extra_volumes: "{{ monasca_extra_volumes }}"
 
 ####################
 # OpenStack

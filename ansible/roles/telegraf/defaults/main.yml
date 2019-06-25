@@ -8,13 +8,7 @@ telegraf_services:
     enabled: true
     pid_mode: "host"
     group: "telegraf"
-    volumes:
-      - "{{ node_config_directory }}/telegraf/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "/sys:/rootfs/sys:ro"
-      - "/proc:/rootfs/proc:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    volumes: "{{ telegraf_default_volumes + telegraf_extra_volumes }}"
     dimensions: "{{ telegraf_dimensions }}"
 
 ####################
@@ -24,6 +18,16 @@ telegraf_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker
 telegraf_tag: "{{ openstack_release }}"
 telegraf_image_full: "{{ telegraf_image }}:{{ telegraf_tag }}"
 telegraf_dimensions: "{{ default_container_dimensions }}"
+
+telegraf_default_volumes:
+  - "{{ node_config_directory }}/telegraf/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/sys:/rootfs/sys:ro"
+  - "/proc:/rootfs/proc:ro"
+  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+telegraf_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # Protocols

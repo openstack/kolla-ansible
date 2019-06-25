@@ -7,9 +7,7 @@ vmtp_services:
     image: "{{ vmtp_image_full }}"
     enabled: true
     group: "vmtp"
-    volumes:
-      - "{{ node_config_directory }}/vmtp/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
+    volumes: "{{ vmtp_default_volumes + vmtp_extra_volumes }}"
     dimensions: "{{ vmtp_dimensions }}"
 
 ####################
@@ -20,6 +18,12 @@ vmtp_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_nam
 vmtp_tag: "{{ openstack_release }}"
 vmtp_image_full: "{{ vmtp_image }}:{{ vmtp_tag }}"
 vmtp_dimensions: "{{ default_container_dimensions }}"
+
+vmtp_default_volumes:
+  - "{{ node_config_directory }}/vmtp/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+
+vmtp_extra_volumes: "{{ default_extra_volumes }}"
 
 #########################
 # VMTP Specific resources

@@ -8,11 +8,7 @@ mongodb_services:
     enabled: true
     privileged: True
     image: "{{ mongodb_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/mongodb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "mongodb:/var/lib/mongodb"
+    volumes: "{{ mongodb_default_volumes + mongodb_extra_volumes }}"
     dimensions: "{{ mongodb_dimensions }}"
     haproxy:
       mongodb:
@@ -29,6 +25,13 @@ mongodb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_
 mongodb_tag: "{{ openstack_release }}"
 mongodb_image_full: "{{ mongodb_image }}:{{ mongodb_tag }}"
 mongodb_dimensions: "{{ default_container_dimensions }}"
+
+mongodb_default_volumes:
+  - "{{ node_config_directory }}/mongodb/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "mongodb:/var/lib/mongodb"
+mongodb_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # Mongodb

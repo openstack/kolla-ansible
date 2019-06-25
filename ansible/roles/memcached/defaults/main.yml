@@ -7,9 +7,7 @@ memcached_services:
     image: "{{ memcached_image_full }}"
     enabled: true
     group: "memcached"
-    volumes:
-      - "{{ node_config_directory }}/memcached/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
+    volumes: "{{ memcached_default_volumes + memcached_extra_volumes }}"
     dimensions: "{{ memcached_dimensions }}"
     haproxy:
       memcached:
@@ -36,6 +34,11 @@ memcached_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 memcached_tag: "{{ openstack_release }}"
 memcached_image_full: "{{ memcached_image }}:{{ memcached_tag }}"
 memcached_dimensions: "{{ default_container_dimensions }}"
+
+memcached_default_volumes:
+  - "{{ node_config_directory }}/memcached/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+memcached_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # Memcached options

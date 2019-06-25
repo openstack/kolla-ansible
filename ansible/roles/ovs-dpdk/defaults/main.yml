@@ -16,12 +16,7 @@ ovsdpdk_services:
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
       }}
-    volumes:
-      - "{{ node_config_directory }}/ovsdpdk-db/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
-      - "kolla_logs:/var/log/kolla/"
-      - "ovsdpdk_db:/var/lib/openvswitch/"
+    volumes: "{{ ovsdpdk_db_default_volumes + ovsdpdk_db_extra_volumes }}"
     dimensions: "{{ ovsdpdk_db_dimensions }}"
   ovsdpdk-vswitchd:
     container_name: "ovsdpdk_vswitchd"
@@ -36,13 +31,7 @@ ovsdpdk_services:
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
       }}
-    volumes:
-      - "{{ node_config_directory }}/ovsdpdk-vswitchd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
-      - "/dev:/dev:shared"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ ovsdpdk_vswitchd_default_volumes + ovsdpdk_vswitchd_extra_volumes }}"
     dimensions: "{{ ovsdpdk_vswitchd_dimensions }}"
 
 ####################
@@ -85,3 +74,21 @@ ovsdpdk_vswitchd_tag: "{{ ovsdpdk_tag }}"
 ovsdpdk_vswitchd_image_full: "{{ ovsdpdk_vswitchd_image }}:{{ ovsdpdk_vswitchd_tag }}"
 ovsdpdk_db_dimensions: "{{ default_container_dimensions }}"
 ovsdpdk_vswitchd_dimensions: "{{ default_container_dimensions }}"
+
+ovsdpdk_db_default_volumes:
+  - "{{ node_config_directory }}/ovsdpdk-db/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/run:/run:shared"
+  - "kolla_logs:/var/log/kolla/"
+  - "ovsdpdk_db:/var/lib/openvswitch/"
+ovsdpdk_vswitchd_default_volumes:
+  - "{{ node_config_directory }}/ovsdpdk-vswitchd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/run:/run:shared"
+  - "/dev:/dev:shared"
+  - "kolla_logs:/var/log/kolla/"
+
+ovsdpdk_extra_volumes: "{{ default_extra_volumes }}"
+ovsdpdk_db_extra_volumes: "{{ ovsdpdk_extra_volumes }}"
+ovsdpdk_vswitchd_extra_volumes: "{{ ovsdpdk_extra_volumes }}"

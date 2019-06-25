@@ -10,11 +10,7 @@ zookeeper_services:
     environment:
       ZOO_LOG_DIR: /var/log/kolla/zookeeper
       ZOO_LOG4J_PROP: "{{ zookeeper_log_settings }}"
-    volumes:
-      - "{{ node_config_directory }}/zookeeper/:{{ container_config_directory }}/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "zookeeper:/var/lib/zookeeper/data"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ zookeeper_default_volumes + zookeeper_extra_volumes }}"
     dimensions: "{{ zookeeper_dimensions }}"
 
 ####################
@@ -30,3 +26,11 @@ zookeeper_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 zookeeper_tag: "{{ openstack_release }}"
 zookeeper_image_full: "{{ zookeeper_image }}:{{ zookeeper_tag }}"
 zookeeper_dimensions: "{{ default_container_dimensions }}"
+
+zookeeper_default_volumes:
+  - "{{ node_config_directory }}/zookeeper/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "zookeeper:/var/lib/zookeeper/data"
+  - "kolla_logs:/var/log/kolla/"
+
+zookeeper_extra_volumes: "{{ default_extra_volumes }}"

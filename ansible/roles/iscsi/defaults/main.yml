@@ -9,17 +9,7 @@ iscsi_services:
     image: "{{ iscsid_image_full }}"
     ipc_mode: "host"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/iscsid/:{{ container_config_directory }}/:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/run/:/run/:shared"
-      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/sys/kernel/config:/configfs"
-      - "cinder:/var/lib/cinder"
-      - "iscsi_info:/etc/iscsi"
+    volumes: "{{ iscsid_default_volumes + iscsid_extra_volumes }}"
     dimensions: "{{ iscsid_dimensions }}"
   tgtd:
     container_name: tgtd
@@ -28,17 +18,7 @@ iscsi_services:
     image: "{{ tgtd_image_full }}"
     ipc_mode: "host"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/tgtd/:{{ container_config_directory }}/:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/run/:/run/:shared"
-      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
-      - "/lib/modules:/lib/modules:ro"
-      - "/sys/kernel/config:/configfs"
-      - "cinder:/var/lib/cinder"
-      - "iscsi_info:/etc/iscsi"
+    volumes: "{{ tgtd_default_volumes + tgtd_extra_volumes }}"
     dimensions: "{{ tgtd_dimensions }}"
 
 
@@ -58,6 +38,31 @@ tgtd_image_full: "{{ tgtd_image }}:{{ tgtd_tag }}"
 
 iscsid_dimensions: "{{ default_container_dimensions }}"
 tgtd_dimensions: "{{ default_container_dimensions }}"
+
+iscsid_default_volumes:
+  - "{{ node_config_directory }}/iscsid/:{{ container_config_directory }}/:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/run/:/run/:shared"
+  - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/sys/kernel/config:/configfs"
+  - "cinder:/var/lib/cinder"
+  - "iscsi_info:/etc/iscsi"
+tgtd_default_volumes:
+  - "{{ node_config_directory }}/tgtd/:{{ container_config_directory }}/:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/run/:/run/:shared"
+  - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+  - "/lib/modules:/lib/modules:ro"
+  - "/sys/kernel/config:/configfs"
+  - "cinder:/var/lib/cinder"
+  - "iscsi_info:/etc/iscsi"
+iscsid_extra_volumes: "{{ default_extra_volumes }}"
+tgtd_extra_volumes: "{{ default_extra_volumes }}"
 
 enable_iscsid_for_cinder: >-
   {{ (inventory_hostname in groups['compute']

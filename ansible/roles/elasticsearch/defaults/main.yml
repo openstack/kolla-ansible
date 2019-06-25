@@ -9,10 +9,7 @@ elasticsearch_services:
     image: "{{ elasticsearch_image_full }}"
     environment:
       ES_JAVA_OPTS: "{{ es_java_opts }}"
-    volumes:
-      - "{{ node_config_directory }}/elasticsearch/:{{ container_config_directory }}/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ elasticsearch_datadir_volume }}:/var/lib/elasticsearch/data"
+    volumes: "{{ elasticsearch_default_volumes + elasticsearch_extra_volumes }}"
     dimensions: "{{ elasticsearch_dimensions }}"
     haproxy:
       elasticsearch:
@@ -39,3 +36,9 @@ elasticsearch_tag: "{{ openstack_release }}"
 elasticsearch_image_full: "{{ elasticsearch_image }}:{{ elasticsearch_tag }}"
 
 elasticsearch_dimensions: "{{ default_container_dimensions }}"
+
+elasticsearch_default_volumes:
+  - "{{ node_config_directory }}/elasticsearch/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ elasticsearch_datadir_volume }}:/var/lib/elasticsearch/data"
+elasticsearch_extra_volumes: "{{ default_extra_volumes }}"

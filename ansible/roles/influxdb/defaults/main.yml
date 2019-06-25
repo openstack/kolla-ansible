@@ -7,11 +7,7 @@ influxdb_services:
     group: influxdb
     enabled: true
     image: "{{ influxdb_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/influxdb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "influxdb:/var/lib/influxdb"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ influxdb_default_volumes + influxdb_extra_volumes }}"
     dimensions: "{{ influxdb_dimensions }}"
     haproxy:
       influxdb_admin:
@@ -33,3 +29,10 @@ influxdb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker
 influxdb_tag: "{{ openstack_release }}"
 influxdb_image_full: "{{ influxdb_image }}:{{ influxdb_tag }}"
 influxdb_dimensions: "{{ default_container_dimensions }}"
+
+influxdb_default_volumes:
+  - "{{ node_config_directory }}/influxdb/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "influxdb:/var/lib/influxdb"
+  - "kolla_logs:/var/log/kolla/"
+influxdb_extra_volumes: "{{ default_extra_volumes }}"

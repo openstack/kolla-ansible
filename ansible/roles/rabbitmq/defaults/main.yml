@@ -16,11 +16,7 @@ rabbitmq_services:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       RABBITMQ_CLUSTER_COOKIE: "{{ role_rabbitmq_cluster_cookie }}"
       RABBITMQ_LOG_DIR: "/var/log/kolla/{{ project_name }}"
-    volumes:
-      - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ project_name }}:/var/lib/rabbitmq/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ rabbitmq_default_volumes + rabbitmq_extra_volumes }}"
     dimensions: "{{ rabbitmq_dimensions }}"
     haproxy:
       rabbitmq_management:
@@ -44,7 +40,6 @@ rabbitmq_services:
         backend_tcp_extra:
           - "timeout server {{ haproxy_outward_rabbitmq_server_timeout }}"
 
-
 ####################
 # HAProxy
 ####################
@@ -60,6 +55,12 @@ rabbitmq_tag: "{{ openstack_release }}"
 rabbitmq_image_full: "{{ rabbitmq_image }}:{{ rabbitmq_tag }}"
 rabbitmq_dimensions: "{{ default_container_dimensions }}"
 
+rabbitmq_default_volumes:
+  - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ project_name }}:/var/lib/rabbitmq/"
+  - "kolla_logs:/var/log/kolla/"
+rabbitmq_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # Message-Broker

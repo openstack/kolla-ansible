@@ -7,21 +7,14 @@ redis_services:
     group: redis
     enabled: true
     image: "{{ redis_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/redis/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ project_name }}:/var/lib/redis/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ redis_default_volumes + redis_extra_volumes }}"
     dimensions: "{{ redis_dimensions }}"
   redis-sentinel:
     container_name: redis_sentinel
     group: redis
     enabled: true
     image: "{{ redis_sentinel_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/redis-sentinel/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ redis_sentinel_default_volumes + redis_sentinel_extra_volumes }}"
     dimensions: "{{ redis_sentinel_dimensions }}"
 
 ####################
@@ -36,3 +29,16 @@ redis_sentinel_tag: "{{ openstack_release }}"
 redis_sentinel_image_full: "{{ redis_sentinel_image }}:{{ redis_tag }}"
 redis_dimensions: "{{ default_container_dimensions }}"
 redis_sentinel_dimensions: "{{ default_container_dimensions }}"
+
+redis_default_volumes:
+  - "{{ node_config_directory }}/redis/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ project_name }}:/var/lib/redis/"
+  - "kolla_logs:/var/log/kolla/"
+redis_sentinel_default_volumes:
+  - "{{ node_config_directory }}/redis-sentinel/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+redis_extra_volumes: "{{ default_extra_volumes }}"
+redis_sentinel_extra_volumes: "{{ default_extra_volumes }}"
