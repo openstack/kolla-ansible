@@ -1,10 +1,35 @@
 ---
-- name: Stopping bifrost_deploy container
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "bifrost_deploy"
+- block:
+    - name: Check if bifrost_deploy container is running
+      become: true
+      kolla_container_facts:
+        name:
+          - bifrost_deploy
+      register: container_facts
+
+    - block:
+        # Ensure that all services are stopped gracefully, and in a sensible
+        # order.
+        - name: Stop services gracefully
+          become: true
+          command: docker exec bifrost_deploy systemctl stop {{ item }}.service
+          with_items:
+            - ironic-api
+            - ironic-conductor
+            - ironic-inspector
+            - mariadb
+            - rabbitmq-server
+            - nginx
+
+        - name: Stopping bifrost_deploy container
+          become: true
+          kolla_docker:
+            action: "stop_container"
+            common_options: "{{ docker_common_options }}"
+            name: "bifrost_deploy"
+
+      when: "'bifrost_deploy' in container_facts"
+
   when:
     - inventory_hostname in groups['bifrost']
     - "'bifrost_deploy' not in skip_stop_containers"
