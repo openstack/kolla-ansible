@@ -8,19 +8,6 @@ export PYTHONUNBUFFERED=1
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
-function clone_repos {
-    cat > /tmp/clonemap <<EOF
-clonemap:
- - name: openstack/kolla
-   dest: ${GIT_PROJECT_DIR}/kolla
- - name: openstack/requirements
-   dest: ${GIT_PROJECT_DIR}/requirements
-EOF
-    /usr/zuul-env/bin/zuul-cloner -m /tmp/clonemap --workspace "$(pwd)" \
-        --cache-dir /opt/git https://git.openstack.org \
-        openstack/kolla openstack/requirements
-}
-
 function setup_config {
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
@@ -276,8 +263,6 @@ check_failure() {
 }
 
 
-
-clone_repos
 setup_ansible
 setup_config
 setup_node
