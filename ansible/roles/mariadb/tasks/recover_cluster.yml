@@ -26,35 +26,36 @@
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
 
+    # Run wsrep recovery with detach=false to block until completion. Use a
+    # different container name to avoid the mariadb container being removed.
     - name: Run MariaDB wsrep recovery
       become: true
       kolla_docker:
         action: "start_container"
         common_options: "{{ docker_common_options }}"
+        detach: false
         environment:
           KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
           BOOTSTRAP_ARGS: "--wsrep-recover"
         image: "{{ mariadb_service.image }}"
         labels:
           BOOTSTRAP:
-        name: "{{ mariadb_service.container_name }}"
+        name: mariadb_wsrep_recovery
         restart_policy: "never"
         volumes: "{{ mariadb_service.volumes }}"
-
-    - name: Stop MariaDB containers
-      become: true
-      kolla_docker:
-        name: "{{ mariadb_service.container_name }}"
-        action: "stop_container"
 
     - name: Copying MariaDB log file to /tmp
       shell: "docker cp {{ mariadb_service.container_name }}:/var/log/kolla/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
+    # Look for sequence number in logs. Format is:
+    # WSREP: Recovered position: <UUID>:<seqno>.
     - name: Get MariaDB wsrep recovery seqno
-      shell: tail -n 200 /tmp/mariadb_tmp.log | awk -F" " '$0~/Recovered position/{print $NF;exit;}' | awk -F":" '{print $1}'
+      become: true
+      shell: tail -n 200 /tmp/mariadb_tmp.log | awk -F" " '$0~/Recovered position/{print $NF;exit;}' | awk -F":" '{print $2}'
       register: wsrep_recovery_seqno
 
     - name: Removing MariaDB log file from /tmp
+      become: true
       file:
         path: /tmp/mariadb_tmp.log
         state: absent
@@ -102,6 +103,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Set grastate.dat file from MariaDB container in bootstrap host
+  become: true
   lineinfile:
     dest: /tmp/kolla_mariadb_grastate.dat
     regexp: 'safe_to_bootstrap:(.*)$'
@@ -154,6 +156,23 @@
 - name: Set first MariaDB container as primary
   shell: "docker exec {{ mariadb_service.container_name }} mysql -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
   no_log: True
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+
+- name: Wait for MariaDB to become operational
+  become: true
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e 'SHOW STATUS LIKE "wsrep_evs_state"'
+  changed_when: false
+  register: result
+  until: '"OPERATIONAL" in result.stdout'
+  retries: 10
+  delay: 6
+  no_log: true
   when:
     - bootstrap_host is defined
     - bootstrap_host == inventory_hostname

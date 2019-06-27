@@ -22,6 +22,7 @@
     - bootstrap_host == inventory_hostname
   notify:
     - wait first mariadb container
+    - Wait for MariaDB to become operational
     - restart slave mariadb
     - restart master mariadb
 
@@ -39,6 +40,23 @@
   until: check_mariadb_port is success
   retries: 10
   delay: 6
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+
+- name: Wait for MariaDB to become operational
+  become: true
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e 'SHOW STATUS LIKE "wsrep_evs_state"'
+  changed_when: false
+  register: result
+  until: '"OPERATIONAL" in result.stdout'
+  retries: 10
+  delay: 6
+  no_log: true
   when:
     - bootstrap_host is defined
     - bootstrap_host == inventory_hostname
@@ -66,6 +84,7 @@
       or mariadb_wsrep_notify.changed | bool
       or mariadb_container.changed | bool
       or bootstrap_host is defined
+    - not mariadb_recover | default(false)
   notify:
     - wait for slave mariadb
 
@@ -85,6 +104,7 @@
   when:
     - kolla_action != "config"
     - inventory_hostname != master_host
+    - not mariadb_recover | default(false)
 
 - name: restart master mariadb
   vars:
@@ -109,6 +129,7 @@
       or mariadb_wsrep_notify.changed | bool
       or mariadb_container.changed | bool
       or bootstrap_host is defined
+    - not mariadb_recover | default(false)
   notify:
     - Waiting for master mariadb
 
@@ -128,3 +149,4 @@
   when:
     - kolla_action != "config"
     - inventory_hostname == master_host
+    - not mariadb_recover | default(false)
