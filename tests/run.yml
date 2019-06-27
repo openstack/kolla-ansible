@@ -44,6 +44,12 @@
         - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
 
+    # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
+    - name: Include kolla Zuul vars if building new images
+      include_vars:
+        file: "{{ zuul.executor.work_root }}/src/opendev.org/openstack/kolla/tests/vars/zuul.yml"
+      when: need_build_image  # only then kolla sources are available (and used)
+
     # NOTE(mgoddard): This only affects the remote copy of the repo, not the
     # one on the executor.
     - name: checkout the previous kolla-ansible branch
@@ -61,6 +67,13 @@
         state: "directory"
         mode: 0777
       become: true
+
+    # NOTE(yoctozepto): required to customize kolla to use local mirrors
+    - name: Template template_overrides.j2
+      template:
+        src: "{{ zuul.executor.work_root }}/src/opendev.org/openstack/kolla/tests/templates/template_overrides.j2"
+        dest: /etc/kolla/template_overrides.j2
+      when: need_build_image  # only then kolla sources are available (and used)
 
     # Use the initial repo to generate config files. For upgrade jobs, this
     # repo is only available on the remote node, so use the remote-template
