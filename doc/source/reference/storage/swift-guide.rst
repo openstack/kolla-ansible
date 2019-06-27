@@ -94,9 +94,9 @@ table** example listed above. Please modify accordingly if your setup is
 different.
 
 If using a separate replication network it is necessary to add the replication
-network IP addresses to the rings. See the `Swift documentation
-<https://docs.openstack.org/swift/latest/replication_network.html#dedicated-replication-network>`__
-for details on how to do that.
+network IP addresses to the rings. See the :swift-doc:`Swift documentation
+<replication_network.html#dedicated-replication-network>` for details on
+how to do that.
 
 Prepare for Rings generating
 ----------------------------
@@ -203,8 +203,8 @@ To rebalance the ring files:
          /etc/kolla/config/swift/${ring}.builder rebalance;
    done
 
-For more information, see `the Swift documentation
-<https://docs.openstack.org/swift/latest/install/initial-rings.html>`__.
+For more information, see :swift-doc:`the Swift documentation
+<install/initial-rings.html>`.
 
 Deploying
 ~~~~~~~~~

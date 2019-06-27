@@ -202,8 +202,8 @@ Verify Operation.
    +--------------------------------------+---------------+----------------+------+-------------------------------------------+
 
 For more information about how to manage volumes, see the
-`Manage volumes
-<https://docs.openstack.org/cinder/latest/cli/cli-manage-volumes.html>`__.
+:cinder-doc:`Manage volumes
+<cli/cli-manage-volumes.html>`.
 
 For more information about how HNAS driver works, see
 `Hitachi NAS Platform iSCSI and NFS drives for OpenStack
