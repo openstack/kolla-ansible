@@ -196,10 +196,14 @@
     service_name: "neutron-dhcp-agent"
     neutron_dhcp_agent: "{{ neutron_services[service_name] }}"
   template:
-    src: "dnsmasq.conf.j2"
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/{{ service_name }}/dnsmasq.conf"
     mode: "0660"
   register: dnsmasq_conf
+  with_first_found:
+    - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/dnsmasq.conf"
+    - "{{ node_custom_config }}/neutron/dnsmasq.conf"
+    - "dnsmasq.conf.j2"
   when:
     - neutron_dhcp_agent.enabled | bool
     - neutron_dhcp_agent.host_in_groups | bool
