@@ -4,15 +4,16 @@
   command: docker exec -t nova_api nova-status upgrade check
   register: nova_upgrade_check_stdout
   when: inventory_hostname == groups['nova-api'][0]
+  failed_when: false
 
 - name: Upgrade status check result
   fail:
     msg:
-      - "There was an upgrade status check warning or failure!"
+      - "There was an upgrade status check failure!"
       - "See the detail at https://docs.openstack.org/nova/latest/cli/nova-status.html#nova-status-checks"
   vars:
     first_nova_api_host: "{{ groups['nova-api'][0] }}"
-  when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] != 0
+  when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] not in [0, 1]
 
 - include_tasks: legacy_upgrade.yml
   when: not nova_enable_rolling_upgrade | bool
