@@ -254,7 +254,10 @@ secure_proxy_ssl_header = HTTP_X_FORWARDED_PROTO
 
 [scheduler]
 max_attempts = 10
-discover_hosts_in_cells_interval = 60
+# NOTE(yoctozepto): kolla-ansible handles cell mapping by itself on each deploy
+# periodic run must be disabled to avoid random failures (where both try to map)
+# -1 is default and means periodic discovery is disabled
+discover_hosts_in_cells_interval = -1
 
 {% if enable_nova_fake | bool %}
 default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
