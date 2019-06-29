@@ -89,7 +89,7 @@ function setup_ansible {
     RAW_INVENTORY=/etc/kolla/inventory
 
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
+    sudo -H pip install -U "ansible>=2.5" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
     if [[ $ACTION == "zun" ]]; then
         sudo -H pip install -U "python-zunclient"
     fi
