@@ -83,8 +83,16 @@ function detect_distro {
 function setup_ansible {
     RAW_INVENTORY=/etc/kolla/inventory
 
+    # Test latest ansible version on Ubuntu, minimum supported on others.
+    if [[ $BASE_DISTRO == "ubuntu" ]]; then
+        ANSIBLE_VERSION=">=2.4"
+        ARA_VERSION="<1.0.0"
+    else
+        ANSIBLE_VERSION="<2.5"
+        ARA_VERSION="<0.16"
+    fi
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible>=2.4" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
+    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara${ARA_VERSION}" "cmd2<0.9.0"
     if [[ $ACTION == "zun" ]]; then
         sudo -H pip install -U "python-zunclient"
     fi
