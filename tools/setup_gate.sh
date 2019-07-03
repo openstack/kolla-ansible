@@ -57,6 +57,7 @@ profile = gate
 registry = 127.0.0.1:4000
 push = true
 logs_dir = /tmp/logs/build
+template_override = /etc/kolla/template_overrides.j2
 
 [profiles]
 gate = ${GATE_IMAGES}

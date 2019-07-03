@@ -23,7 +23,8 @@ function check_config {
                 -not -name kolla-build.conf \
                 -not -name passwords.yml \
                 -not -name passwords.yml.old \
-                -not -name sources.list)
+                -not -name sources.list \
+                -not -name template_overrides.j2)
     do
         mode=$(sudo stat -c %a $f)
         owner=$(sudo stat -c %U:%G $f)
