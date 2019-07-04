@@ -21,6 +21,7 @@ import re
 import sys
 
 import jinja2
+import yaml
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -31,6 +32,10 @@ NEWLINE_EOF_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git']
 # Render json file by using jinja2 template is OK
 JSON_J2_INCLUDE_PATTERNS = ['*.json.j2', '*.json']
 JSON_J2_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git']
+
+YAML_INCLUDE_PATTERNS = ['*.yml']
+YAML_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git',
+                         'defaults', 'templates', 'vars']
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -111,10 +116,50 @@ def check_json_j2():
     return return_code
 
 
+def check_docker_become():
+    """All tasks that use Docker should have 'become: true'."""
+    includes = r'|'.join([fnmatch.translate(x)
+                          for x in YAML_INCLUDE_PATTERNS])
+    excludes = r'|'.join([fnmatch.translate(x)
+                          for x in YAML_EXCLUDE_PATTERNS])
+    docker_modules = ('kolla_docker', 'kolla_ceph_keyring',
+                      'kolla_container_facts', 'kolla_toolbox')
+    cmd_modules = ('command', 'shell')
+    return_code = 0
+    roles_path = os.path.join(PROJECT_ROOT, 'ansible', 'roles')
+    for root, dirs, files in os.walk(roles_path):
+        dirs[:] = [d for d in dirs if not re.match(excludes, d)]
+        for filename in files:
+            if not re.match(excludes, filename) and \
+                    re.match(includes, filename):
+                fullpath = os.path.join(root, filename)
+                with open(fullpath) as fp:
+                    tasks = yaml.safe_load(fp)
+                tasks = tasks or []
+                for task in tasks:
+                    for module in docker_modules:
+                        if module in task and not task.get('become'):
+                            return_code = 1
+                            LOG.error("Use of %s module without become in "
+                                      "task %s in %s",
+                                      module, task['name'], fullpath)
+                    for module in cmd_modules:
+                        if (module in task and
+                                task[module].startswith('docker') and
+                                not task.get('become')):
+                            return_code = 1
+                            LOG.error("Use of docker in %s module without "
+                                      "become in task %s in %s",
+                                      module, task['name'], fullpath)
+
+    return return_code
+
+
 def main():
     checks = (
         check_newline_eof,
-        check_json_j2
+        check_json_j2,
+        check_docker_become,
     )
     return sum([check() for check in checks])
 
