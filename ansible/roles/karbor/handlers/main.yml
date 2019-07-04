@@ -3,9 +3,6 @@
   vars:
     service_name: "karbor-api"
     service: "{{ karbor_services[service_name] }}"
-    config_json: "{{ karbor_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_conf: "{{ karbor_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_api_container: "{{ check_karbor_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -16,19 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or karbor_conf.changed | bool
-      or karbor_api_container.changed | bool
 
 - name: Restart karbor-protection container
   vars:
     service_name: "karbor-protection"
     service: "{{ karbor_services[service_name] }}"
-    config_json: "{{ karbor_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_conf: "{{ karbor_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_protection_container: "{{ check_karbor_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -39,21 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or karbor_conf.changed | bool
-      or providers_conf.changed
-      or openstack_infra_conf.changed | bool
-      or karbor_protection_container.changed | bool
 
 - name: Restart karbor-operationengine container
   vars:
     service_name: "karbor-operationengine"
     service: "{{ karbor_services[service_name] }}"
-    config_json: "{{ karbor_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_conf: "{{ karbor_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    karbor_operationengine_container: "{{ check_karbor_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -64,8 +43,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or karbor_conf.changed | bool
-      or karbor_operationengine_container.changed | bool

@@ -35,17 +35,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ aodh_policy_file }}"
     mode: "0660"
   become: true
-  register: aodh_policy_overwriting
   when:
     - aodh_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ aodh_services }}"
   notify:
-    - Restart aodh-api container
-    - Restart aodh-evaluator container
-    - Restart aodh-listener container
-    - Restart aodh-notifier container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over config.json files for services
   template:
@@ -53,16 +49,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: aodh_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ aodh_services }}"
   notify:
-    - Restart aodh-api container
-    - Restart aodh-evaluator container
-    - Restart aodh-listener container
-    - Restart aodh-notifier container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over aodh.conf
   vars:
@@ -77,16 +69,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/aodh.conf"
     mode: "0660"
   become: true
-  register: aodh_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ aodh_services }}"
   notify:
-    - Restart aodh-api container
-    - Restart aodh-evaluator container
-    - Restart aodh-listener container
-    - Restart aodh-notifier container
+    - "Restart {{ item.key }} container"
 
 - name: Copying over wsgi-aodh files for services
   vars:
@@ -96,12 +84,11 @@
     dest: "{{ node_config_directory }}/aodh-api/wsgi-aodh.conf"
     mode: "0660"
   become: true
-  register: aodh_conf_wsgi
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
-    - Restart aodh-api container
+    - "Restart aodh-api container"
 
 - name: Check aodh containers
   become: true
@@ -112,14 +99,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_aodh_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ aodh_services }}"
   notify:
-    - Restart aodh-api container
-    - Restart aodh-evaluator container
-    - Restart aodh-listener container
-    - Restart aodh-notifier container
+    - "Restart {{ item.key }} container"

@@ -18,7 +18,6 @@
     dest: "{{ node_config_directory }}/telegraf/config.json"
     mode: "0660"
   become: true
-  register: telegraf_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -34,7 +33,6 @@
     dest: "{{ node_config_directory }}/telegraf/telegraf.conf"
     mode: "0660"
   become: true
-  register: telegraf_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -53,7 +51,6 @@
     dest: "{{ node_config_directory }}/telegraf/config"
     mode: "0660"
   become: true
-  register: telegraf_plugin
   when:
     - inventory_hostname in groups[service.group]
     - item.value.enabled | bool
@@ -72,7 +69,6 @@
     volumes: "{{ item.value.volumes }}"
     pid_mode: "{{ item.value.pid_mode }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_telegraf_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

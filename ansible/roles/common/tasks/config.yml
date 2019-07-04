@@ -32,7 +32,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: common_config_jsons
   when: item.value.enabled | bool
   with_dict: "{{ common_services }}"
   notify:
@@ -44,7 +43,6 @@
     dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
     mode: "0660"
   become: true
-  register: fluentd_input
   when: enable_fluentd | bool
   with_items:
     - "00-global"
@@ -75,7 +73,6 @@
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/fluentd/input/{{ item.path | basename }}"
     mode: "0660"
-  register: fluentd_input_custom
   when:
     - enable_fluentd | bool
   with_items: "{{ find_custom_fluentd_inputs.files }}"
@@ -94,7 +91,6 @@
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
     mode: "0660"
   become: true
-  register: fluentd_output
   when:
     - enable_fluentd | bool
     - item.enabled | bool
@@ -140,7 +136,6 @@
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.path | basename }}"
     mode: "0660"
   become: true
-  register: fluentd_output_custom
   when:
     - enable_fluentd | bool
   with_items: "{{ find_custom_fluentd_outputs.files }}"
@@ -153,7 +148,6 @@
     dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
     mode: "0660"
   become: true
-  register: fluentd_format
   with_items:
     - "apache_access"
     - "wsgi_access"
@@ -176,7 +170,6 @@
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/fluentd/format/{{ item.path | basename }}"
     mode: "0660"
-  register: fluentd_format_custom
   when:
     - enable_fluentd | bool
   with_items: "{{ find_custom_fluentd_format.files }}"
@@ -189,7 +182,6 @@
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item.dest }}.conf"
     mode: "0660"
   become: true
-  register: fluentd_filter
   with_items:
     - src: 00-record_transformer
       dest: 00-record_transformer
@@ -214,7 +206,6 @@
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item.path | basename }}"
     mode: "0660"
   become: true
-  register: fluentd_filter_custom
   with_items: "{{ find_custom_fluentd_filters.files }}"
   when: enable_fluentd | bool
   notify:
@@ -226,7 +217,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/td-agent.conf"
     mode: "0660"
   become: true
-  register: fluentd_td_agent
   with_items:
     - "fluentd"
   when: enable_fluentd | bool
@@ -239,7 +229,6 @@
     dest: "{{ node_config_directory }}/cron/logrotate/{{ item.name }}.conf"
     mode: "0660"
   become: true
-  register: cron_confs
   when: item.enabled | bool
   with_items:
     - { name: "ansible", enabled: "yes" }
@@ -332,7 +321,6 @@
     dimensions: "{{ item.value.dimensions }}"
     privileged: "{{ item.value.privileged | default(False) }}"
     environment: "{{ item.value.environment }}"
-  register: check_common_containers
   when:
     - kolla_action != "config"
     - item.value.enabled | bool

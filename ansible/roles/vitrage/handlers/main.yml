@@ -3,10 +3,6 @@
   vars:
     service_name: "vitrage-api"
     service: "{{ vitrage_services[service_name] }}"
-    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ vitrage_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_api_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or vitrage_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or vitrage_api_container.changed | bool
 
 - name: Restart vitrage-notifier container
   vars:
     service_name: "vitrage-notifier"
     service: "{{ vitrage_services[service_name] }}"
-    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ vitrage_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_notifier_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,22 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or vitrage_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or vitrage_notifier_container.changed | bool
 
 - name: Restart vitrage-graph container
   vars:
     service_name: "vitrage-graph"
     service: "{{ vitrage_services[service_name] }}"
-    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ vitrage_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_graph_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_prometheus_conf: "{{ vitrage_prometheus_conf.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -68,22 +43,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or vitrage_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or vitrage_graph_container.changed | bool
-      or vitrage_prometheus_conf.changed | bool
 
 - name: Restart vitrage-ml container
   vars:
     service_name: "vitrage-ml"
     service: "{{ vitrage_services[service_name] }}"
-    config_json: "{{ vitrage_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_conf: "{{ vitrage_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ vitrage_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    vitrage_ml_container: "{{ check_vitrage_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -94,9 +58,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or vitrage_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or vitrage_ml_container.changed | bool

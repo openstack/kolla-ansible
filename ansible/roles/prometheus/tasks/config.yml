@@ -18,7 +18,6 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  register: prometheus_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
@@ -45,7 +44,6 @@
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/prometheus-server/{{ item.path | basename }}"
     mode: "0660"
-  register: prometheus_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool and enable_prometheus_alertmanager | bool
@@ -62,7 +60,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
     mode: "0660"
-  register: prometheus_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -81,7 +78,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-alertmanager/prometheus-alertmanager.yml"
     mode: "0660"
-  register: prometheus_alertmanager_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -103,7 +99,6 @@
       - "{{ role_path }}/templates/my.cnf.j2"
     dest: "{{ node_config_directory }}/prometheus-mysqld-exporter/my.cnf"
     mode: "0660"
-  register: prometheus_conf_mycnf
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -118,7 +113,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-openstack-exporter/clouds.yml"
     mode: "0660"
-  register: prometheus_openstack_exporter_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -139,7 +133,6 @@
     pid_mode: "{{ item.value.pid_mode|default('') }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_prometheus_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

@@ -12,7 +12,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
     mode: "0660"
   become: true
-  register: ceph_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -72,3 +71,5 @@
   when:
     - inventory_hostname in groups[item.service_name]
     - cinder_services[item.service_name].enabled | bool
+  notify:
+    - "Restart {{ item.service_name }} container"

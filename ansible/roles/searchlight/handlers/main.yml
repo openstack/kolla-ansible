@@ -3,10 +3,6 @@
   vars:
     service_name: "searchlight-api"
     service: "{{ searchlight_services[service_name] }}"
-    config_json: "{{ searchlight_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    searchlight_conf: "{{ searchlight_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ searchlight_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    searchlight_api_container: "{{ check_searchlight_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or searchlight_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or searchlight_api_container.changed | bool
 
 - name: Restart searchlight-listener container
   vars:
     service_name: "searchlight-listener"
     service: "{{ searchlight_services[service_name] }}"
-    config_json: "{{ searchlight_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    searchlight_conf: "{{ searchlight_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ searchlight_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    searchlight_listener_container: "{{ check_searchlight_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,9 +28,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or searchlight_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or searchlight_listener_container.changed | bool

@@ -35,14 +35,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: blazar_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ blazar_services }}"
   notify:
-    - Restart blazar-api container
-    - Restart blazar-manager container
+    - Restart {{ item.key }} container
 
 - name: Copying over blazar.conf
   vars:
@@ -57,14 +55,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/blazar.conf"
     mode: "0660"
   become: true
-  register: blazar_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ blazar_services }}"
   notify:
-    - Restart blazar-api container
-    - Restart blazar-manager container
+    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   template:
@@ -72,14 +68,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ blazar_policy_file }}"
     mode: "0660"
   become: true
-  register: blazar_policy_overwriting
   when:
     - blazar_policy_file is defined
     - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
   with_dict: "{{ blazar_services }}"
   notify:
-    - Restart blazar-api container
-    - Restart blazar-manager container
+    - Restart {{ item.key }} container
 
 - name: Check blazar containers
   become: true
@@ -90,12 +85,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_blazar_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ blazar_services }}"
   notify:
-    - Restart blazar-api container
-    - Restart blazar-manager container
+    - Restart {{ item.key }} container

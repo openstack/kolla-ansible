@@ -3,10 +3,6 @@
   vars:
     service_name: "congress-api"
     service: "{{ congress_services[service_name] }}"
-    config_json: "{{ congress_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_conf: "{{ congress_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ congress_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_api_container: "{{ check_congress_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or congress_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or congress_api_container.changed | bool
 
 - name: Restart congress-policy-engine container
   vars:
     service_name: "congress-policy-engine"
     service: "{{ congress_services[service_name] }}"
-    config_json: "{{ congress_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_conf: "{{ congress_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ congress_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_policy_engin_container: "{{ check_congress_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,21 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or congress_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or congress_policy_engin_container.changed | bool
 
 - name: Restart congress-datasource container
   vars:
     service_name: "congress-datasource"
     service: "{{ congress_services[service_name] }}"
-    config_json: "{{ congress_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_conf: "{{ congress_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ congress_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    congress_datasource_container: "{{ check_congress_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -67,9 +43,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or congress_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or congress_datasource_container.changed | bool

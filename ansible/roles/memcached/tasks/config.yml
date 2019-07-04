@@ -11,14 +11,18 @@
     - "memcached"
 
 - name: Copying over config.json files for services
+  vars:
+    service: "{{ memcached_services.memcached }}"
   template:
     src: "{{ item }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item }}/config.json"
     mode: "0660"
-  register: memcached_config_json
   become: true
   with_items:
     - "memcached"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
   notify: Restart memcached container
 
 - name: Check memcached container
@@ -32,9 +36,8 @@
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
-  register: check_memcached_container
   when:
+    - kolla_action != "config"
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-    - kolla_action != "config"
   notify: Restart memcached container

@@ -3,10 +3,6 @@
   vars:
     service_name: "cloudkitty-api"
     service: "{{ cloudkitty_services[service_name] }}"
-    config_json: "{{ cloudkitty_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cloudkitty_conf: "{{ cloudkitty_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ cloudkitty_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cloudkitty_api_container: "{{ check_cloudkitty_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,22 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cloudkitty_conf.changed | bool
-      or cloudkitty_conf_wsgi.changed | bool
-      or policy_overwriting.changed | bool
-      or cloudkitty_api_container.changed | bool
 
 - name: Restart cloudkitty-processor container
   vars:
     service_name: "cloudkitty-processor"
     service: "{{ cloudkitty_services[service_name] }}"
-    config_json: "{{ cloudkitty_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cloudkitty_conf: "{{ cloudkitty_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ cloudkitty_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    cloudkitty_processor_container: "{{ check_cloudkitty_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,9 +28,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or cloudkitty_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or cloudkitty_processor_container.changed | bool

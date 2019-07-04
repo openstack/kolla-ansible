@@ -3,10 +3,6 @@
   vars:
     service_name: "sahara-api"
     service: "{{ sahara_services[service_name] }}"
-    config_json: "{{ sahara_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    sahara_conf: "{{ sahara_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ sahara_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    sahara_api_container: "{{ check_sahara_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or sahara_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or sahara_api_container.changed | bool
 
 - name: Restart sahara-engine container
   vars:
     service_name: "sahara-engine"
     service: "{{ sahara_services[service_name] }}"
-    config_json: "{{ sahara_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    sahara_conf: "{{ sahara_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ sahara_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    sahara_engine_container: "{{ check_sahara_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,9 +29,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or sahara_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or sahara_engine_container.changed | bool

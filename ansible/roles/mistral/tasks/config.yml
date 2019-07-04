@@ -35,7 +35,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: mistral_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -56,7 +55,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/mistral.conf"
     mode: "0660"
   become: true
-  register: mistral_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -70,7 +68,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ mistral_policy_file }}"
     mode: "0660"
   become: true
-  register: mistral_policy_overwriting
   when:
     - mistral_policy_file is defined
     - inventory_hostname in groups[item.value.group]
@@ -87,7 +84,6 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/mistral-event-engine/event_definitions.yaml"
     mode: "0660"
-  register: mistral_event_definitions_confs
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -107,7 +103,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_mistral_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

@@ -3,10 +3,6 @@
   vars:
     service_name: "zookeeper"
     service: "{{ zookeeper_services[service_name] }}"
-    config_json: "{{ zookeeper_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    zookeeper_conf: "{{ zookeeper_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    zookeeper_instance_id: "{{ zookeeper_instance_id.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    zookeeper_container: "{{ check_zookeeper_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -18,9 +14,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or zookeeper_conf.changed | bool
-      or zookeeper_instance_id.changed | bool
-      or zookeeper_container.changed | bool

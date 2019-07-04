@@ -35,14 +35,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: sahara_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ sahara_services }}"
   notify:
-    - Restart sahara-api container
-    - Restart sahara-engine container
+    - Restart {{ item.key }} container
 
 - name: Copying over sahara.conf
   vars:
@@ -57,14 +55,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/sahara.conf"
     mode: "0660"
   become: true
-  register: sahara_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ sahara_services }}"
   notify:
-    - Restart sahara-api container
-    - Restart sahara-engine container
+    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   template:
@@ -72,15 +68,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ sahara_policy_file }}"
     mode: "0660"
   become: true
-  register: sahara_policy_overwriting
   when:
     - sahara_policy_file is defined
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ sahara_services }}"
   notify:
-    - Restart sahara-api container
-    - Restart sahara-engine container
+    - Restart {{ item.key }} container
 
 - name: Check sahara containers
   become: true
@@ -92,12 +86,10 @@
     privileged: "{{ item.value.privileged | default(False) }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_sahara_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ sahara_services }}"
   notify:
-    - Restart sahara-api container
-    - Restart sahara-engine container
+    - Restart {{ item.key }} container

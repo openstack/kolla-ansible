@@ -35,7 +35,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: rally_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -53,7 +52,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
     mode: "0660"
   become: true
-  register: rally_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
@@ -67,7 +65,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ rally_policy_file }}"
     mode: "0660"
   become: true
-  register: rally_policy_overwriting
   when:
     - rally_policy_file is defined
     - inventory_hostname in groups[item.value.group]
@@ -85,7 +82,6 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_rally_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]

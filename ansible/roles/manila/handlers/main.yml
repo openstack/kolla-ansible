@@ -3,10 +3,6 @@
   vars:
     service_name: "manila-api"
     service: "{{ manila_services[service_name] }}"
-    config_json: "{{ manila_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_conf: "{{ manila_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ manila_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_api_container: "{{ check_manila_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or manila_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or manila_api_container.changed | bool
 
 - name: Restart manila-data container
   vars:
     service_name: "manila-data"
     service: "{{ manila_services[service_name] }}"
-    config_json: "{{ manila_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_conf: "{{ manila_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ manila_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_data_container: "{{ check_manila_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -43,21 +29,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or manila_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or manila_data_container.changed | bool
 
 - name: Restart manila-scheduler container
   vars:
     service_name: "manila-scheduler"
     service: "{{ manila_services[service_name] }}"
-    config_json: "{{ manila_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_conf: "{{ manila_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ manila_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_scheduler_container: "{{ check_manila_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -68,20 +44,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or manila_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or manila_scheduler_container.changed | bool
 
 - name: Restart manila-share container
   vars:
     service_name: "manila-share"
     service: "{{ manila_services[service_name] }}"
-    config_json: "{{ manila_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ manila_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    manila_share_container: "{{ check_manila_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -94,9 +61,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or manila_conf_share.changed | bool
-      or policy_overwriting.changed | bool
-      or manila_share_container.changed | bool

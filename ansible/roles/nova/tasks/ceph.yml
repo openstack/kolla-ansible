@@ -20,7 +20,6 @@
     dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
     mode: "0660"
   become: true
-  register: ceph_confs
   with_items:
     - "nova-compute"
     - "nova-libvirt"
@@ -66,6 +65,8 @@
     mode: "0600"
   become: true
   when: inventory_hostname in groups['compute']
+  notify:
+    - Restart nova-compute container
 
 - name: Pushing secrets xml for libvirt
   template:
@@ -83,6 +84,8 @@
     - uuid: "{{ cinder_rbd_secret_uuid }}"
       name: client.cinder secret
       enabled: "{{ enable_cinder | bool and cinder_backend_ceph | bool}}"
+  notify:
+    - Restart nova-libvirt container
 
 - name: Pushing secrets key for libvirt
   copy:
@@ -100,6 +103,8 @@
     - uuid: "{{ cinder_rbd_secret_uuid }}"
       content: "{{ cinder_cephx_raw_key.stdout|default('') }}"
       enabled: "{{ enable_cinder | bool and cinder_backend_ceph | bool}}"
+  notify:
+    - Restart nova-libvirt container
 
 - name: Ensuring config directory has correct owner and permission
   become: true

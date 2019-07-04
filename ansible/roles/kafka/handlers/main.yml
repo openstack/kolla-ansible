@@ -3,9 +3,6 @@
   vars:
     service_name: "kafka"
     service: "{{ kafka_services[service_name] }}"
-    config_json: "{{ kafka_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    kafka_conf: "{{ kafka_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    kafka_container: "{{ check_kafka_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,8 +14,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or kafka_conf.changed | bool
-      or kafka_container.changed | bool

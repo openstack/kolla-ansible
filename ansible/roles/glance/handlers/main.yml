@@ -3,10 +3,6 @@
   vars:
     service_name: "glance-api"
     service: "{{ glance_services[service_name] }}"
-    config_json: "{{ glance_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    glance_conf: "{{ glance_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ glance_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    glance_api_container: "{{ check_glance_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -18,13 +14,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in glance_api_hosts
-    - service.enabled | bool
-    - config_json.changed | bool
-      or glance_cache_conf.changed | bool
-      or glance_conf.changed | bool
-      or glance_swift_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or glance_api_container.changed | bool
-      or ( glance_upgrading is defined and glance_upgrading | bool )
-      or ( glance_api_ceph_files is defined and glance_api_ceph_files.changed | bool )

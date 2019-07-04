@@ -3,10 +3,6 @@
   vars:
     service_name: "tacker-conductor"
     service: "{{ tacker_services[service_name] }}"
-    config_json: "{{ tacker_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    tacker_conf: "{{ tacker_confs.results|selectattr('item.key', 'equalto', service_name)|first  }}"
-    policy_overwriting: "{{ tacker_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    tacker_conductor_container: "{{ check_tacker_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or tacker_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or tacker_conductor_container.changed | bool
 
 - name: Restart tacker-server container
   vars:
     service_name: "tacker-server"
     service: "{{ tacker_services[service_name] }}"
-    config_json: "{{ tacker_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    tacker_conf: "{{ tacker_confs.results|selectattr('item.key', 'equalto', service_name)|first  }}"
-    policy_overwriting: "{{ tacker_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    tacker_server_container: "{{ check_tacker_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,9 +28,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or tacker_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or tacker_server_container.changed | bool

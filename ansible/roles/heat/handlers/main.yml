@@ -3,10 +3,6 @@
   vars:
     service_name: "heat-api"
     service: "{{ heat_services[service_name] }}"
-    config_json: "{{ heat_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_conf: "{{ heat_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ heat_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_api_container: "{{ check_heat_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -17,21 +13,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or heat_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or heat_api_container.changed | bool
 
 - name: Restart heat-api-cfn container
   vars:
     service_name: "heat-api-cfn"
     service: "{{ heat_services[service_name] }}"
-    config_json: "{{ heat_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_conf: "{{ heat_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ heat_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_api_cfn_container: "{{ check_heat_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -42,21 +28,11 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or heat_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or heat_api_cfn_container.changed | bool
 
 - name: Restart heat-engine container
   vars:
     service_name: "heat-engine"
     service: "{{ heat_services[service_name] }}"
-    config_json: "{{ heat_config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_conf: "{{ heat_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    policy_overwriting: "{{ heat_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    heat_engine_container: "{{ check_heat_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -67,9 +43,3 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - config_json.changed | bool
-      or heat_conf.changed | bool
-      or policy_overwriting.changed | bool
-      or heat_engine_container.changed | bool

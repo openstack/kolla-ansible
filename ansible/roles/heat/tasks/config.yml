@@ -35,15 +35,12 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  register: heat_config_jsons
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ heat_services }}"
   notify:
-    - Restart heat-api container
-    - Restart heat-api-cfn container
-    - Restart heat-engine container
+    - Restart {{ item.key }} container
 
 - name: Copying over the heat-engine environment file
   become: true
@@ -67,15 +64,12 @@
       - "{{ node_custom_config }}/heat/{{ inventory_hostname }}/heat.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/heat.conf"
     mode: "0660"
-  register: heat_confs
   when:
     - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ heat_services }}"
   notify:
-    - Restart heat-api container
-    - Restart heat-api-cfn container
-    - Restart heat-engine container
+    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   become: true
@@ -83,15 +77,13 @@
     src: "{{ heat_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ heat_policy_file }}"
     mode: "0660"
-  register: heat_policy_overwriting
   when:
     - heat_policy_file is defined
+    - item.value.enabled | bool
     - inventory_hostname in groups[item.value.group]
   with_dict: "{{ heat_services }}"
   notify:
-    - Restart heat-api container
-    - Restart heat-api-cfn container
-    - Restart heat-engine container
+    - Restart {{ item.key }} container
 
 - name: Check heat containers
   become: true
@@ -102,13 +94,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_heat_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ heat_services }}"
   notify:
-    - Restart heat-api container
-    - Restart heat-api-cfn container
-    - Restart heat-engine container
+    - Restart {{ item.key }} container

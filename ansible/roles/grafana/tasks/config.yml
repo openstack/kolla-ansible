@@ -24,13 +24,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  register: grafana_config_jsons
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ grafana_services }}"
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
 
 - name: Copying over grafana.ini
   vars:
@@ -43,13 +42,12 @@
     dest: "{{ node_config_directory }}/grafana/grafana.ini"
     mode: "0660"
   become: true
-  register: grafana_confs
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ grafana_services }}"
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
 
 - name: Copying over extra configuration file
   become: true
@@ -62,7 +60,7 @@
   with_items:
     - "{{ check_extra_conf_grafana.files }}"
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
 
 - name: Check if custom grafana home dashboard exists
   local_action: "stat path={{ node_custom_config }}/grafana/grafana_home_dashboard.json"
@@ -74,10 +72,9 @@
     src: "{{ node_custom_config }}/grafana/grafana_home_dashboard.json"
     dest: "{{ node_config_directory }}/grafana/grafana_home_dashboard.json"
     mode: "0660"
-  register: grafana_home_dashboard
   when: grafana_custom_dashboard_file.stat.exists
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
 
 - name: Configuring Prometheus as data source for Grafana
   vars:
@@ -87,7 +84,6 @@
     dest: "{{ node_config_directory }}/grafana/prometheus.yaml"
     mode: "0660"
   become: true
-  register: grafana_prometheus_data_source
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
@@ -97,7 +93,7 @@
     - "{{ node_custom_config }}/grafana/prometheus.yaml"
     - "prometheus.yaml.j2"
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
 
 - name: Check grafana containers
   become: true
@@ -108,11 +104,10 @@
     image: "{{ item.value.image }}"
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
-  register: check_grafana_containers
   when:
     - kolla_action != "config"
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ grafana_services }}"
   notify:
-    - Restart grafana container
+    - Restart {{ item.key }} container
