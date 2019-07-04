@@ -1,5 +1,6 @@
 ---
 - name: Creating monasca database
+  become: true
   kolla_toolbox:
     module_name: mysql_db
     module_args:
@@ -18,6 +19,7 @@
     - not use_preconfigured_databases | bool
 
 - name: Creating monasca database user and setting permissions
+  become: true
   kolla_toolbox:
     module_name: mysql_user
     module_args:
@@ -45,6 +47,7 @@
 # and set a default retention policy.
 # [1] https://github.com/influxdata/influxdb-python#influxdb-pre-v110-users
 - name: List influxdb databases
+  become: true
   command: "docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'show databases'"
   run_once: True
   delegate_to: "{{ groups['influxdb'][0] }}"
@@ -52,6 +55,7 @@
   changed_when: False
 
 - name: Creating monasca influxdb database
+  become: true
   command: "docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'CREATE DATABASE {{ monasca_influxdb_name }} WITH DURATION {{ monasca_influxdb_retention_policy.duration }} REPLICATION  {{ monasca_influxdb_retention_policy.replication_count }} NAME {{ monasca_influxdb_retention_policy.name }}'"
   run_once: True
   delegate_to: "{{ groups['influxdb'][0] }}"

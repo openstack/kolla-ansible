@@ -38,6 +38,7 @@
     pool_application: "rbd"
 
 - name: Pulling cephx keyring for nova
+  become: true
   kolla_ceph_keyring:
     name: client.nova
     caps: "{{ ceph_client_nova_keyring_caps }}"
@@ -46,6 +47,7 @@
   run_once: True
 
 - name: Pulling cinder cephx keyring for libvirt
+  become: true
   command: docker exec ceph_mon ceph auth get-key client.cinder
   register: cinder_cephx_raw_key
   delegate_to: "{{ groups['ceph-mon'][0] }}"

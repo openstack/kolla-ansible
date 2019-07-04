@@ -1,5 +1,6 @@
 ---
 - name: Waiting for nova-compute service up
+  become: true
   command: >
     docker exec kolla_toolbox openstack
     --os-interface internal
@@ -24,6 +25,7 @@
 
 # TODO(yoctozepto): no need to do --by-service if ironic not used
 - name: Discover nova hosts
+  become: true
   command: >
     docker exec nova_api nova-manage cell_v2 discover_hosts --by-service
   changed_when: False
@@ -32,6 +34,7 @@
 
 # NOTE(yoctozepto): SIGHUP is probably unnecessary
 - name: Refresh cell cache in nova scheduler
+  become: true
   command: docker kill --signal HUP nova_scheduler
   changed_when: False
   when:
