@@ -75,12 +75,16 @@ easy_install_available: >-
      not (ansible_distribution == 'Debian' and
           ansible_distribution_major_version is version(10, 'ge')) }}
 
+# Ubuntu 18+ bundles nfs-ganesha 2.6.0 with Ceph Mimic packages,
+# which does udp rpcbind test even with NFSv3 disabled - therefore
+# rpcbind needs to be installed, when Ceph NFS is enabled.
 debian_pkg_install:
  - "{{ docker_apt_package }}"
  - git
  - "{% if not easy_install_available %}python-pip{% endif %}"
  - python-setuptools
  - ntp
+ - "{% if enable_ceph_nfs|bool %}rpcbind{% endif %}"
 
 redhat_pkg_install:
  - epel-release
