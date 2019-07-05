@@ -1,6 +1,66 @@
 ---
-- import_role:
-    role: service-stop
+- name: Remove restart policy from MariaDB
   vars:
-    project_services: "{{ mariadb_services }}"
-    service_name: "{{ project_name }}"
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  command: "docker update --restart no {{ service.container_name }}"
+
+- name: Shutdown MariaDB
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: >-
+      bash -c '
+      sudo -E kolla_set_configs &&
+      mysqladmin shutdown --host={{ api_interface_address }} --user=root --password={{ database_password }}
+      '
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    name: "mariadb_shutdown"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    labels:
+      UPGRADE:
+    restart_policy: "never"
+  no_log: true
+
+- name: Wait for MariaDB shutdown
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_container_facts:
+    name:
+      - "{{ service.container_name }}"
+  register: mariadb_container_facts
+  # Don't fail if the container is still up - we will stop it in the next task.
+  failed_when: false
+  until: service.container_name not in mariadb_container_facts
+  retries: 30
+  delay: 2
+
+# Sometimes the mariadb service can get into a partially shutdown
+# state following a 'mysqladmin shutdown'. Stop the container.
+- name: Stop MariaDB container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ mariadb_service.container_name }}"
+  when: service.container_name in mariadb_container_facts
+
+- name: Replace restart policy on MariaDB
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+    restart_policy: "{{ docker_restart_policy }}{% if docker_restart_policy == 'on-failure' %}{{ docker_restart_policy_retry }}{% endif %}"
+  become: true
+  command: "docker update --restart {{ restart_policy }} {{ service.container_name }}"
