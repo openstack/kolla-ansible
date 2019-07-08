@@ -28,17 +28,6 @@
   delegate_to: "{{ groups['nova-api'][0] }}"
 
 - name: Waiting for nova-compute services to register themselves
-  vars:
-    # A list containing the 'Host' field of compute services that have
-    # registered themselves.  Don't exclude compute services that are disabled
-    # since these could have been explicitly disabled by the operator. While we
-    # could exclude services that are down, the nova-manage cell_v2
-    # discover_hosts does not do this so let's not block on it here.
-    found_compute_service_hosts: >-
-      {{ nova_compute_services.stdout |
-         from_json |
-         map(attribute='Host') |
-         list }}
   become: true
   command: >
     docker exec kolla_toolbox openstack
@@ -60,7 +49,19 @@
   delay: 10
   until:
     - nova_compute_services is success
-    - found_compute_service_hosts is superset(expected_compute_service_hosts)
+    # A list containing the 'Host' field of compute services that have
+    # registered themselves.  Don't exclude compute services that are disabled
+    # since these could have been explicitly disabled by the operator. While we
+    # could exclude services that are down, the nova-manage cell_v2
+    # discover_hosts does not do this so let's not block on it here.
+    # NOTE(mgoddard): Cannot factor this out into an intermediary variable
+    # before ansible 2.8, due to
+    # https://bugs.launchpad.net/kolla-ansible/+bug/1835817.
+    - (nova_compute_services.stdout |
+       from_json |
+       map(attribute='Host') |
+       list)
+      is superset(expected_compute_service_hosts)
 
 # TODO(yoctozepto): no need to do --by-service if ironic not used
 - name: Discover nova hosts
