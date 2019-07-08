@@ -126,5 +126,5 @@ setup_ansible
 setup_config
 setup_node
 
-tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER bootstrap-servers > /tmp/logs/ansible/bootstrap-servers
+tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
 prepare_images

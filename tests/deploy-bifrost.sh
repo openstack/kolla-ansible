@@ -14,7 +14,7 @@ function deploy_bifrost {
     # Deploy the bifrost container.
     # TODO(mgoddard): add pull action when we have a local registry service in
     # CI.
-    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy-bifrost > /tmp/logs/ansible/deploy-bifrost
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy-bifrost &> /tmp/logs/ansible/deploy-bifrost
 }
 
 
