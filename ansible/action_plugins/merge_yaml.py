@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 import os
 import shutil
 import tempfile
@@ -80,6 +79,15 @@ class ActionModule(action.ActionBase):
         if os.access(source, os.R_OK):
             with open(source, 'r') as f:
                 template_data = f.read()
+
+            # set search path to mimic 'template' module behavior
+            searchpath = [
+                self._loader._basedir,
+                os.path.join(self._loader._basedir, 'templates'),
+                os.path.dirname(source),
+            ]
+            self._templar.environment.loader.searchpath = searchpath
+
             template_data = self._templar.template(template_data)
             result = safe_load(template_data)
         return result or {}
@@ -88,17 +96,8 @@ class ActionModule(action.ActionBase):
         if task_vars is None:
             task_vars = dict()
         result = super(ActionModule, self).run(tmp, task_vars)
+        del tmp  # not used
 
-        # NOTE(jeffrey4l): Ansible 2.1 add a remote_user param to the
-        # _make_tmp_path function.  inspect the number of the args here. In
-        # this way, ansible 2.0 and ansible 2.1 are both supported
-        make_tmp_path_args = inspect.getargspec(self._make_tmp_path)[0]
-        if not tmp and len(make_tmp_path_args) == 1:
-            tmp = self._make_tmp_path()
-        if not tmp and len(make_tmp_path_args) == 2:
-            remote_user = (task_vars.get('ansible_user')
-                           or self._play_context.remote_user)
-            tmp = self._make_tmp_path(remote_user)
         # save template args.
         extra_vars = self._task.args.get('vars', list())
         old_vars = self._templar._available_variables
