@@ -42,6 +42,24 @@
     - bootstrap_host == inventory_hostname
   listen: Bootstrap MariaDB cluster
 
+- name: Wait for MariaDB to become operational
+  become: true
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e 'SHOW STATUS LIKE "wsrep_evs_state"'
+  changed_when: false
+  register: result
+  until: '"OPERATIONAL" in result.stdout'
+  retries: 10
+  delay: 6
+  no_log: true
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+  listen: Bootstrap MariaDB cluster
+
 - name: restart slave mariadb
   vars:
     service_name: "mariadb"
@@ -57,6 +75,7 @@
   when:
     - kolla_action != "config"
     - inventory_hostname != master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
 
 # TODO(jeffrey4l), remove the task check when the wait_for bug is fixed
@@ -75,6 +94,7 @@
   when:
     - kolla_action != "config"
     - inventory_hostname != master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
 
 - name: run upgrade on slave
@@ -103,6 +123,7 @@
   when:
     - kolla_action == "upgrade"
     - inventory_hostname != master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
 
 - name: restart master mariadb
@@ -120,6 +141,7 @@
   when:
     - kolla_action != "config"
     - inventory_hostname == master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
 
 # TODO(jeffrey4l), remove the task check when the wait_for bug is fixed
@@ -138,6 +160,7 @@
   when:
     - kolla_action != "config"
     - inventory_hostname == master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
 
 - name: run upgrade on master
@@ -166,4 +189,5 @@
   when:
     - kolla_action == "upgrade"
     - inventory_hostname == master_host
+    - not mariadb_recover | default(false)
   listen: restart mariadb
