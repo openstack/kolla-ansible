@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import collections
-import inspect
 import os
 import shutil
 import tempfile
@@ -135,6 +134,15 @@ class ActionModule(action.ActionBase):
         if os.access(source, os.R_OK):
             with open(source, 'r') as f:
                 template_data = f.read()
+
+            # set search path to mimic 'template' module behavior
+            searchpath = [
+                self._loader._basedir,
+                os.path.join(self._loader._basedir, 'templates'),
+                os.path.dirname(source),
+            ]
+            self._templar.environment.loader.searchpath = searchpath
+
             result = self._templar.template(template_data)
             fakefile = StringIO(result)
             config.parse(fakefile)
@@ -143,17 +151,7 @@ class ActionModule(action.ActionBase):
     def run(self, tmp=None, task_vars=None):
 
         result = super(ActionModule, self).run(tmp, task_vars)
-
-        # NOTE(jeffrey4l): Ansible 2.1 add a remote_user param to the
-        # _make_tmp_path function.  inspect the number of the args here. In
-        # this way, ansible 2.0 and ansible 2.1 are both supported
-        make_tmp_path_args = inspect.getargspec(self._make_tmp_path)[0]
-        if not tmp and len(make_tmp_path_args) == 1:
-            tmp = self._make_tmp_path()
-        if not tmp and len(make_tmp_path_args) == 2:
-            remote_user = (task_vars.get('ansible_user')
-                           or self._play_context.remote_user)
-            tmp = self._make_tmp_path(remote_user)
+        del tmp  # not used
 
         sources = self._task.args.get('sources', None)
 
