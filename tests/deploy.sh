@@ -28,7 +28,7 @@ function deploy {
 
     if ! openstack image show cirros >/dev/null 2>&1; then
         echo "Initialising OpenStack resources via init-runonce"
-        tools/init-runonce
+        tools/init-runonce &> /tmp/logs/ansible/init-runonce
     else
         echo "Not running init-runonce - resources exist"
     fi
