@@ -1,8 +1,17 @@
 .. _ceph-guide:
 
-===============================
-Ceph - Software Defined Storage
-===============================
+============================================
+Ceph - Software Defined Storage (Deprecated)
+============================================
+
+.. warning::
+   Support for deploying Ceph via Kolla Ansible is deprecated. In a future
+   release support for deploying Ceph will be removed from Kolla Ansible. Prior
+   to this we will ensure a migration path to another tool such as `Ceph
+   Ansible <http://docs.ceph.com/ceph-ansible/master/>`__ is available. For new
+   deployments it is recommended to use another tool to deploy Ceph to avoid a
+   future migration. This can be integrated with OpenStack by following
+   :doc:`external-ceph-guide`.
 
 .. note::
    The out-of-the-box Ceph deployment requires 3 hosts with at least one block
