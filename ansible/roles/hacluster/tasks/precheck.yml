@@ -1,0 +1,24 @@
+---
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    name:
+      - hacluster_pacemaker_remote
+  register: container_facts
+
+# NOTE(yoctozepto): Corosync runs over UDP so one cannot use wait_for to check
+# for it being up or down (TCP-only). In fact, such prechecks should only really
+# check if the port is taken already by the host and not contact it.
+
+# NOTE(yoctozepto): The below is a slight simplification because
+# pacemaker_remoted always listens on all addresses (wildcard listen).
+- name: Check free port for Pacemaker Remote
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ hacluster_pacemaker_remote_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['hacluster_pacemaker_remote'] is not defined
+    - inventory_hostname in groups['hacluster-remote']

@@ -35,6 +35,7 @@
         - enable_gnocchi_{{ enable_gnocchi | bool }}
         - enable_grafana_{{ enable_grafana | bool }}
         - enable_haproxy_{{ enable_haproxy | bool }}
+        - enable_hacluster_{{ enable_hacluster | bool }}
         - enable_heat_{{ enable_heat | bool }}
         - enable_horizon_{{ enable_horizon | bool }}
         - enable_influxdb_{{ enable_influxdb | bool }}
@@ -730,6 +731,18 @@
     - { role: kuryr,
         tags: kuryr,
         when: enable_kuryr | bool }
+
+- name: Apply role hacluster
+  gather_facts: false
+  hosts:
+    - hacluster
+    - hacluster-remote
+    - '&enable_hacluster_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: hacluster,
+        tags: hacluster,
+        when: enable_hacluster | bool }
 
 - name: Apply role heat
   gather_facts: false

@@ -1,0 +1,50 @@
+---
+- name: Restart hacluster-corosync container
+  vars:
+    service_name: "hacluster-corosync"
+    service: "{{ hacluster_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    cap_add: "{{ service.cap_add }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart hacluster-pacemaker container
+  vars:
+    service_name: "hacluster-pacemaker"
+    service: "{{ hacluster_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart hacluster-pacemaker-remote container
+  vars:
+    service_name: "hacluster-pacemaker-remote"
+    service: "{{ hacluster_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    ipc_mode: "{{ service.ipc_mode }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"

@@ -78,7 +78,7 @@ function prepare_images {
         GATE_IMAGES+=",^octavia"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
-        GATE_IMAGES+=",^masakari"
+        GATE_IMAGES+=",^masakari-,^hacluster-"
     fi
 
     if [[ $SCENARIO == "swift" ]]; then

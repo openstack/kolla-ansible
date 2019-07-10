@@ -1,0 +1,100 @@
+---
+project_name: "hacluster"
+
+hacluster_services:
+  hacluster-corosync:
+    container_name: "hacluster_corosync"
+    group: "hacluster"
+    enabled: true
+    image: "{{ hacluster_corosync_image_full }}"
+    volumes: "{{ hacluster_corosync_default_volumes + hacluster_corosync_extra_volumes }}"
+    ipc_mode: "host"
+    cap_add:
+      - SYS_NICE
+      - IPC_LOCK
+      - NET_ADMIN
+    dimensions: "{{ hacluster_corosync_dimensions }}"
+  hacluster-pacemaker:
+    container_name: "hacluster_pacemaker"
+    group: "hacluster"
+    enabled: true
+    image: "{{ hacluster_pacemaker_image_full }}"
+    environment:
+      PCMK_logfile: /var/log/kolla/hacluster/pacemaker.log
+      PCMK_debug: "{{ 'on' if openstack_logging_debug | bool else 'off' }}"
+    volumes: "{{ hacluster_pacemaker_default_volumes + hacluster_pacemaker_extra_volumes }}"
+    ipc_mode: "host"
+    dimensions: "{{ hacluster_pacemaker_dimensions }}"
+  hacluster-pacemaker-remote:
+    container_name: "hacluster_pacemaker_remote"
+    group: "hacluster-remote"
+    enabled: true
+    image: "{{ hacluster_pacemaker_remote_image_full }}"
+    volumes: "{{ hacluster_pacemaker_remote_default_volumes + hacluster_pacemaker_remote_extra_volumes }}"
+    ipc_mode: "host"
+    dimensions: "{{ hacluster_pacemaker_remote_dimensions }}"
+
+####################
+# HAProxy
+####################
+
+
+####################
+# Docker
+####################
+
+hacluster_tag: "{{ openstack_tag }}"
+hacluster_corosync_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-hacluster-corosync"
+hacluster_corosync_tag: "{{ openstack_tag }}"
+hacluster_corosync_image_full: "{{ hacluster_corosync_image }}:{{ hacluster_corosync_tag }}"
+
+hacluster_pacemaker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-hacluster-pacemaker"
+hacluster_pacemaker_tag: "{{ openstack_tag }}"
+hacluster_pacemaker_image_full: "{{ hacluster_pacemaker_image }}:{{ hacluster_pacemaker_tag }}"
+
+hacluster_pacemaker_remote_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-hacluster-pacemaker-remote"
+hacluster_pacemaker_remote_tag: "{{ openstack_tag }}"
+hacluster_pacemaker_remote_image_full: "{{ hacluster_pacemaker_remote_image }}:{{ hacluster_pacemaker_remote_tag }}"
+
+hacluster_corosync_dimensions: "{{ default_container_dimensions }}"
+hacluster_pacemaker_dimensions: "{{ default_container_dimensions }}"
+hacluster_pacemaker_remote_dimensions: "{{ default_container_dimensions }}"
+
+hacluster_corosync_default_volumes:
+  - "{{ node_config_directory }}/hacluster-corosync/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "hacluster_corosync:/var/lib/corosync"
+hacluster_pacemaker_default_volumes:
+  - "{{ node_config_directory }}/hacluster-pacemaker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "hacluster_pacemaker:/var/lib/pacemaker"
+hacluster_pacemaker_remote_default_volumes:
+  - "{{ node_config_directory }}/hacluster-pacemaker-remote/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "hacluster_pacemaker_remote:/var/lib/pacemaker"
+
+hacluster_extra_volumes: "{{ default_extra_volumes }}"
+hacluster_corosync_extra_volumes: "{{ hacluster_extra_volumes }}"
+hacluster_pacemaker_extra_volumes: "{{ hacluster_extra_volumes }}"
+hacluster_pacemaker_remote_extra_volumes: "{{ hacluster_extra_volumes }}"
+
+
+####################
+# Corosync options
+####################
+
+# this is UDP port
+hacluster_corosync_port: 5405
+
+####################
+# Pacemaker options
+####################
+
+# this is TCP port
+hacluster_pacemaker_remote_port: 3121
