@@ -122,7 +122,7 @@ Associate a domain to a network:
 
 .. code-block:: console
 
-   neutron net-update <NETWORK_ID> --dns_domain sample.openstack.org.
+   openstack network set <NETWORK_ID> --dns-domain sample.openstack.org.
 
 Start an instance:
 
