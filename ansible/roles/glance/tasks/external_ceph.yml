@@ -5,7 +5,9 @@
     dest: "{{ node_config_directory }}/glance-api/"
     mode: "0660"
   become: true
-  when: inventory_hostname in groups['glance-api']
+  when:
+    - glance_services['glance-api'].host_in_groups | bool
+    - glance_services['glance-api'].enabled | bool
   with_fileglob:
     - "{{ node_custom_config }}/glance/ceph*"
   notify:
@@ -18,6 +20,8 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
   become: true
-  when: inventory_hostname in groups['glance-api']
+  when:
+    - glance_services[item].host_in_groups | bool
+    - glance_services[item].enabled | bool
   with_items:
     - "glance-api"
