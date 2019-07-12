@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# FIXME(yoctozepto): this module does *not* validate "common_options" which are
+# a hacky way to seed most usages of kolla_docker in kolla-ansible ansible
+# playbooks - caution has to be exerted when setting "common_options"
+
+# FIXME(yoctozepto): restart_policy is *not* checked in the container
+
 import json
 import os
 import shlex
@@ -156,17 +162,17 @@ options:
     type: bool
   restart_policy:
     description:
-      - Determine what docker does when the container exits
+      - When docker restarts the container (does not affect checks)
     required: False
     type: str
     choices:
-      - never
+      - no
       - on-failure
       - always
       - unless-stopped
   restart_retries:
     description:
-      - How many times to attempt a restart if restart_policy is set
+      - How many times to attempt a restart if 'on-failure' policy is set
     type: int
     default: 10
   volumes:
@@ -675,16 +681,17 @@ class DockerWorker(object):
             dimensions = self.parse_dimensions(dimensions)
             options.update(dimensions)
 
-        if self.params.get('restart_policy') in ['on-failure',
-                                                 'always',
-                                                 'unless-stopped']:
-            policy = {'Name': self.params.get('restart_policy')}
+        restart_policy = self.params.get('restart_policy')
+
+        if restart_policy is not None:
+            restart_policy = {'Name': restart_policy}
             # NOTE(Jeffrey4l): MaximumRetryCount is only needed for on-failure
             # policy
-            if self.params.get('restart_policy') == 'on-failure':
+            if restart_policy['Name'] == 'on-failure':
                 retries = self.params.get('restart_retries')
-                policy['MaximumRetryCount'] = retries
-            options['restart_policy'] = policy
+                if retries is not None:
+                    restart_policy['MaximumRetryCount'] = retries
+            options['restart_policy'] = restart_policy
 
         if binds:
             options['binds'] = binds
@@ -917,7 +924,6 @@ def generate_module():
         remove_on_exit=dict(required=False, type='bool', default=True),
         restart_policy=dict(required=False, type='str', choices=[
                             'no',
-                            'never',
                             'on-failure',
                             'always',
                             'unless-stopped']),
