@@ -4,9 +4,9 @@
 Multiple Regions Deployment with Kolla
 ======================================
 
-This section describes how to perform a basic multiple regions deployment
-with Kolla. A basic multiple regions deployment consists of separate
-OpenStack installation in two or more regions (RegionOne, RegionTwo, ...)
+This section describes how to perform a basic multiple region deployment
+with Kolla. A basic multiple region deployment consists of separate
+OpenStack installations in two or more regions (RegionOne, RegionTwo, ...)
 with a shared Keystone and Horizon. The rest of this documentation assumes
 Keystone and Horizon are deployed in RegionOne, and other regions have
 access to the admin endpoint (for example, ``kolla_internal_fqdn``) of
@@ -22,7 +22,7 @@ Deployment of the first region with Keystone and Horizon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Deployment of the first region results in a typical Kolla deployment
-whenever, it is an *all-in-one* or *multinode* deployment (see
+whether it is an *all-in-one* or *multinode* deployment (see
 :doc:`quickstart`). It only requires slight modifications in the
 ``/etc/kolla/globals.yml`` configuration file. First of all, ensure that
 Keystone and Horizon are enabled:
@@ -36,7 +36,7 @@ Keystone and Horizon are enabled:
 
 Then, change the value of ``multiple_regions_names`` to add names of other
 regions. In this example, we consider two regions. The current one,
-formerly knows as RegionOne, that is hided behind
+formerly known as RegionOne, that is hidden behind
 ``openstack_region_name`` variable, and the RegionTwo:
 
 .. code-block:: yaml
@@ -86,10 +86,10 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
 .. end
 
 Configuration files of cinder,nova,neutron,glance... have to be updated to
-contact RegionOne's Keystone. Fortunately, Kolla offers to override all
+contact RegionOne's Keystone. Fortunately, Kolla allows you to override all
 configuration files at the same time thanks to the
-``node_custom_config`` variable (see :ref:`service-config`). This
-implies to create a ``global.conf`` file with the following content:
+``node_custom_config`` variable (see :ref:`service-config`). To do so,
+create a ``global.conf`` file with the following content:
 
 .. code-block:: ini
 
