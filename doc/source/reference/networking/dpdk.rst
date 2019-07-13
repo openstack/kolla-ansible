@@ -76,6 +76,11 @@ To enable ovs-dpdk, add the following configuration to
    tunnel_interface: "dpdk_bridge"
    neutron_bridge_name: "dpdk_bridge"
 
+.. note::
+
+   Kolla doesn't support ovs-dpdk for RHEL-based distros due to the lack
+   of a suitable package.
+
 Unlike standard Open vSwitch deployments, the interface specified by
 neutron_external_interface should have an ip address assigned.
 The ip address assigned to neutron_external_interface will be moved to
