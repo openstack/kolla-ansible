@@ -74,6 +74,7 @@ function test_instance_boot {
 function check_dashboard {
     # Query the dashboard, and check that the returned page looks like a login
     # page.
+    DASHBOARD_URL=${OS_AUTH_URL%:*}
     output_path=$1
     if ! curl --include --location --fail $DASHBOARD_URL > $output_path; then
         return 1

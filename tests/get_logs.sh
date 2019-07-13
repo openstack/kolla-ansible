@@ -30,6 +30,26 @@ copy_logs() {
     mount > ${LOG_DIR}/system_logs/mount.txt
     env > ${LOG_DIR}/system_logs/env.txt
 
+    (set -x
+    ip a
+    ip l
+    ip r
+    ping -c 4 ${KOLLA_INTERNAL_VIP_ADDRESS}) &> ${LOG_DIR}/system_logs/ip.txt
+
+    (set -x
+    iptables -t raw -v -n -L
+    iptables -t mangle -v -n -L
+    iptables -t nat -v -n -L
+    iptables -t filter -v -n -L) &> ${LOG_DIR}/system_logs/iptables.txt
+
+    (set -x
+    ip6tables -t raw -v -n -L
+    ip6tables -t mangle -v -n -L
+    ip6tables -t nat -v -n -L
+    ip6tables -t filter -v -n -L) &> ${LOG_DIR}/system_logs/ip6tables.txt
+
+    ss -putona > ${LOG_DIR}/system_logs/ss.txt
+
     if [ `command -v dpkg` ]; then
         dpkg -l > ${LOG_DIR}/system_logs/dpkg-l.txt
     fi

@@ -38,5 +38,69 @@
       hostname:
         name: "{{ inventory_hostname }}"
       become: true
+
+    # NOTE(yoctozepto): start VXLAN interface config
+
+    - name: Set VXLAN interface facts
+      set_fact:
+        api_interface_address: "{{ api_network_prefix }}{{ groups['all'].index(inventory_hostname) + 1 }}"
+        api_interface_tunnel_vni: 10001
+        tunnel_local_address: "{{ nodepool.private_ipv4 }}"
+
+    - name: Create VXLAN interface
+      become: true
+      command: ip link add {{ api_interface_name }} type vxlan id {{ api_interface_tunnel_vni }} local {{ tunnel_local_address }} dstport 4789
+
+    - name: Set VXLAN interface MTU
+      become: true
+      vars:
+        # Find the parent interface
+        parent_interface: >-
+          {{ ansible_interfaces |
+             map('extract', ansible_facts) |
+             selectattr('ipv4.address', 'defined') |
+             selectattr('ipv4.address', 'equalto', tunnel_local_address) |
+             first }}
+        # Allow 50 bytes overhead for VXLAN headers.
+        mtu: "{{ parent_interface.mtu | int - 50 }}"
+      command: ip link set {{ api_interface_name }} mtu {{ mtu }}
+
+    # emulate BUM by multiplicating traffic to unicast targets
+    - name: Add fdb entries for BUM traffic
+      become: true
+      vars:
+        dest_ip: "{{ hostvars[item].tunnel_local_address }}"
+      command: bridge fdb append 00:00:00:00:00:00 dev {{ api_interface_name }} dst {{ dest_ip }}
+      with_inventory_hostnames: all
+      when: item != inventory_hostname
+
+    - name: Add IP address for VXLAN network
+      become: true
+      vars:
+        api_network_cidr: "{{ api_interface_address }}/{{ api_network_prefix_length }}"
+        # NOTE(yoctozepto): we have to compute and explicitly set the broadcast address,
+        # otherwise bifrost fails its pre-bootstrap sanity checks due to missing
+        # broadcast address as ansible picks up scope ('global') as the interface's
+        # broadcast address which fails checks logic
+        api_network_broadcast_address: "{{ api_network_cidr | ipaddr('broadcast') }}"
+      command: ip address add {{ api_network_cidr }} broadcast {{ api_network_broadcast_address }} dev {{ api_interface_name }}
+
+    - name: Accept traffic on the VXLAN network
+      become: true
+      iptables:
+        state: present
+        action: insert
+        chain: INPUT
+        ip_version: ipv4
+        in_interface: "{{ api_interface_name }}"
+        jump: ACCEPT
+
+    - name: Bring VXLAN interface up
+      become: true
+      command: ip link set {{ api_interface_name }} up
+
+    - name: Ping across VXLAN
+      command: ping -c1 {{ hostvars[item].api_interface_address }}
+      with_inventory_hostnames: all
   roles:
     - multi-node-firewall
