@@ -8,7 +8,7 @@
     mode: "0770"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
   with_dict: "{{ glance_services }}"
 
@@ -19,7 +19,7 @@
 
 - include_tasks: external_ceph.yml
   when:
-    - enable_ceph | bool == False
+    - not enable_ceph | bool
     - glance_backend_ceph | bool
 
 - name: Check if policies shall be overwritten
@@ -47,7 +47,7 @@
   become: true
   when:
     - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
   with_dict: "{{ glance_services }}"
   notify:
     - Restart {{ item.key }} container
@@ -67,7 +67,7 @@
   become: true
   when:
     - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
   with_dict: "{{ glance_services }}"
   notify:
     - Restart {{ item.key }} container
@@ -86,7 +86,7 @@
   become: true
   when:
     - glance_api.enabled | bool
-    - inventory_hostname in groups[glance_api.group]
+    - glance_api.host_in_groups | bool
     - enable_glance_image_cache | bool
   notify:
     - Restart glance-api container
@@ -105,7 +105,7 @@
   become: true
   when:
     - glance_api.enabled | bool
-    - inventory_hostname in groups[glance_api.group]
+    - glance_api.host_in_groups | bool
     - glance_backend_swift | bool
   notify:
     - Restart glance-api container
@@ -118,7 +118,7 @@
   become: true
   when:
     - glance_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
   with_dict: "{{ glance_services }}"
   notify:
@@ -136,7 +136,7 @@
     dimensions: "{{ item.value.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
   with_dict: "{{ glance_services }}"
   notify:

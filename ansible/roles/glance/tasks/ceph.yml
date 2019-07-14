@@ -8,7 +8,9 @@
     dest: "{{ node_config_directory }}/glance-api/ceph.conf"
     mode: "0660"
   become: true
-  when: inventory_hostname in groups['glance-api']
+  when:
+    - glance_services['glance-api'].host_in_groups | bool
+    - glance_services['glance-api'].enabled | bool
   notify:
     - Restart glance-api container
 
@@ -38,7 +40,9 @@
     dest: "{{ node_config_directory }}/glance-api/ceph.client.glance.keyring"
     mode: "0600"
   become: true
-  when: inventory_hostname in groups['glance-api']
+  when:
+    - glance_services['glance-api'].host_in_groups | bool
+    - glance_services['glance-api'].enabled | bool
   notify:
     - Restart glance-api container
 
@@ -49,6 +53,8 @@
     recurse: yes
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
-  when: inventory_hostname in groups['glance-api']
+  when:
+    - glance_services[item].host_in_groups | bool
+    - glance_services[item].enabled | bool
   with_items:
     - "glance-api"
