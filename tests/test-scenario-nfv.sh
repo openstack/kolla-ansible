@@ -50,11 +50,13 @@ function test_heat {
 
 function install_requirements {
     echo "TESTING: Install requirements"
-    sudo -H pip install --ignore-installed -U "python-tackerclient" "python-heatclient" "networking-sfc" "python-mistralclient" "python-barbicanclient"
+    pip install "python-tackerclient" "python-heatclient" "networking-sfc" "python-mistralclient" "python-barbicanclient"
 }
 
 function test_scenario_nfv_logged {
     . /etc/kolla/admin-openrc.sh
+    . ~/openstackclient-venv/bin/activate
+
     install_requirements
     test_tacker
     test_barbican
