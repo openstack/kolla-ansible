@@ -8,6 +8,7 @@ export PYTHONUNBUFFERED=1
 
 function test_openstack_logged {
     . /etc/kolla/admin-openrc.sh
+    . ~/openstackclient-venv/bin/activate
 
     openstack --debug compute service list
     openstack --debug network agent list
