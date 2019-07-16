@@ -185,26 +185,12 @@ memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
+{% if service_name == 'nova-compute' %}
 {% if nova_compute_virt_type in ['kvm', 'qemu'] %}
-[libvirt]
-connection_uri = "qemu+tcp://{{ migration_interface_address }}/system"
-{% if enable_ceph | bool and nova_backend == "rbd" %}
-images_type = rbd
-images_rbd_pool = {{ ceph_nova_pool_name }}
-images_rbd_ceph_conf = /etc/ceph/ceph.conf
-rbd_user = nova
-disk_cachemodes="network=writeback"
-{% if nova_hw_disk_discard != '' %}
-hw_disk_discard = {{ nova_hw_disk_discard }}
+{# must be an include because Ansible 2.8 (and earlier) does not like defined variables referencing undefined variables: migration_interface_address here #}
+{# see https://github.com/ansible/ansible/issues/58835 #}
+{% include 'nova.conf.d/libvirt.conf.j2' %}
 {% endif %}
-{% endif %}
-{% if nova_backend == "rbd" and external_ceph_cephx_enabled | bool %}
-rbd_secret_uuid = {{ rbd_secret_uuid }}
-{% endif %}
-virt_type = {{ nova_compute_virt_type }}
-{% endif %}
-{% if nova_libvirt_cpu_mode %}
-cpu_mode = {{ nova_libvirt_cpu_mode }}
 {% endif %}
 
 {% if nova_compute_virt_type == "vmware" %}
