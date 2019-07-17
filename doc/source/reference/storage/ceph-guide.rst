@@ -118,7 +118,7 @@ are not mandatory.
 
 
 Using an external journal drive
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
@@ -179,6 +179,9 @@ Enable Ceph in ``/etc/kolla/globals.yml``:
 
    enable_ceph: "yes"
 
+Ceph RADOS Gateway
+~~~~~~~~~~~~~~~~~~
+
 RadosGW is optional, enable it in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
@@ -195,26 +198,9 @@ You can enable RadosGW to be registered as Swift in Keystone catalog:
 
     By default RadosGW supports both Swift and S3 API, and it is not
     completely compatible with Swift API. The option `ceph_rgw_compatibility`
-    in ``ansible/group_vars/all.yml`` can enable/disable the RadosGW
+    in ``/etc/kolla/globals.yml`` can enable/disable the RadosGW
     compatibility with Swift API completely. After changing the value, run the
     "reconfigure“ command to enable.
-
-Configure the Ceph store type in ``ansible/group_vars/all.yml``, the default
-value is ``bluestore`` in Rocky:
-
-.. code-block:: yaml
-
-   ceph_osd_store_type: "bluestore"
-
-.. note::
-
-    Regarding number of placement groups (PGs)
-
-    Kolla sets very conservative values for the number of PGs per pool
-    (`ceph_pool_pg_num` and `ceph_pool_pgp_num`). This is in order to ensure
-    the majority of users will be able to deploy Ceph out of the box. It is
-    *highly* recommended to consult the official Ceph documentation regarding
-    these values before running Ceph in any kind of production scenario.
 
 RGW requires a healthy cluster in order to be successfully deployed. On initial
 start up, RGW will create several pools. The first pool should be in an
@@ -229,6 +215,48 @@ copies for the pools before deployment. Modify the file
    [global]
    osd pool default size = 1
    osd pool default min size = 1
+
+NFS
+~~~
+
+NFS is an optional feature, you can enable it in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_ceph_nfs: "yes"
+
+.. note::
+
+   If you are using Ubuntu, please enable Ceph NFS before using
+   ``kolla-ansible bootstrap-servers`` command - it will install required rpcbind
+   package.
+
+Store type
+~~~~~~~~~~
+
+Configure the Ceph store type in ``/etc/kolla/globals.yml``, the default
+value is ``bluestore`` in Rocky:
+
+.. code-block:: yaml
+
+   ceph_osd_store_type: "bluestore"
+
+Recommendations
+---------------
+
+Placement groups
+~~~~~~~~~~~~~~~~
+
+Regarding number of placement groups (PGs)
+
+Kolla sets very conservative values for the number of PGs per pool
+(`ceph_pool_pg_num` and `ceph_pool_pgp_num`). This is in order to ensure
+the majority of users will be able to deploy Ceph out of the box. It is
+*highly* recommended to consult the official Ceph documentation regarding
+these values before running Ceph in any kind of production scenario.
+
+Cluster Network
+~~~~~~~~~~~~~~~
 
 To build a high performance and secure Ceph Storage Cluster, the Ceph community
 recommend the use of two separate networks: public network and cluster network.
