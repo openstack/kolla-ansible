@@ -79,6 +79,14 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
        project_name: "admin"
        domain_name: "default"
 
+.. note::
+
+   If the ``kolla_internal_vip_address`` and/or the
+   ``kolla_external_vip_address`` reside on the same subnet as
+   ``kolla_internal_fqdn_r1``, you should set the
+   ``keepalived_virtual_router_id`` value in the ``/etc/kolla/globals.yml``
+   to a unique number.
+
 Configuration files of cinder,nova,neutron,glance... have to be updated to
 contact RegionOne's Keystone. Fortunately, Kolla allows you to override all
 configuration files at the same time thanks to the
