@@ -1,7 +1,5 @@
 ---
 - name: Enable log_bin_trust_function_creators function
-  vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
   become: true
   kolla_toolbox:
     module_name: mysql_variables
@@ -13,7 +11,7 @@
       variable: log_bin_trust_function_creators
       value: 1
   run_once: True
-  delegate_to: "{{ groups[glance_api.group][0] }}"
+  delegate_to: "{{ glance_api_hosts[0] }}"
   when:
     - not use_preconfigured_databases | bool
 
@@ -35,11 +33,9 @@
     restart_policy: "never"
     volumes: "{{ glance_api.volumes|reject('equalto', '')|list }}"
   run_once: True
-  delegate_to: "{{ groups[glance_api.group][0] }}"
+  delegate_to: "{{ glance_api_hosts[0] }}"
 
 - name: Disable log_bin_trust_function_creators function
-  vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
   become: true
   kolla_toolbox:
     module_name: mysql_variables
@@ -51,6 +47,6 @@
       variable: log_bin_trust_function_creators
       value: 0
   run_once: True
-  delegate_to: "{{ groups[glance_api.group][0] }}"
+  delegate_to: "{{ glance_api_hosts[0] }}"
   when:
     - not use_preconfigured_databases | bool
