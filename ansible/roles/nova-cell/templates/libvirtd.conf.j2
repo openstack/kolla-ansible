@@ -1,0 +1,17 @@
+{% if libvirt_tls | bool %}
+listen_tls = 1
+listen_tcp = 0
+tls_port = "{{ nova_libvirt_port }}"
+key_file = "/etc/pki/libvirt/private/serverkey.pem"
+cert_file = "/etc/pki/libvirt/servercert.pem"
+ca_file = "/etc/pki/CA/cacert.pem"
+{% else %}
+listen_tcp = 1
+listen_tls = 0
+auth_tcp = "none"
+tcp_port = "{{ nova_libvirt_port }}"
+ca_file = ""
+{% endif %}
+log_level = 3
+log_outputs = "3:file:/var/log/kolla/libvirt/libvirtd.log"
+listen_addr = "{{ migration_interface_address }}"

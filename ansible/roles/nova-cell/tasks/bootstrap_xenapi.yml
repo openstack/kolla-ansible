@@ -1,0 +1,26 @@
+---
+- name: Install package python-os-xenapi
+  package:
+    name: python-os-xenapi
+    state: present
+  become: True
+
+- name: Ensure XenAPI root path
+  file:
+    path: "{{ xenapi_facts_root }}"
+    state: directory
+    mode: "0770"
+  become: True
+
+- name: Bootstrap XenAPI compute node
+  vars:
+    xenapi_facts_path: "{{ xenapi_facts_root + '/' + xenapi_facts_file }}"
+  command: xenapi_bootstrap -i {{ xenserver_himn_ip }} -u {{ xenserver_username }} -p {{ xenserver_password }} -f {{ xenapi_facts_path }}
+  become: True
+
+- name: Fetching XenAPI facts file
+  fetch:
+    src: "{{ xenapi_facts_root + '/' + xenapi_facts_file }}"
+    dest: "{{ xenapi_facts_root + '/' + inventory_hostname + '/' }}"
+    flat: yes
+  become: True

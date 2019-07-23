@@ -1,0 +1,20 @@
+---
+- name: Running Nova bootstrap container
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ nova_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_nova"
+    restart_policy: no
+    volumes: "{{ nova_api.volumes|reject('equalto', '')|list }}"
+  run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"

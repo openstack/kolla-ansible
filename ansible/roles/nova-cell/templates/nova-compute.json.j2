@@ -1,0 +1,66 @@
+{
+    "command": "nova-compute",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/nova.conf",
+            "dest": "/etc/nova/nova.conf",
+            "owner": "nova",
+            "perm": "0600"
+        }{% if nova_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ nova_policy_file }}",
+            "dest": "/etc/nova/{{ nova_policy_file }}",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if nova_backend == "rbd" %},
+        {
+            "source": "{{ container_config_directory }}/ceph.*",
+            "dest": "/etc/ceph/",
+            "owner": "nova",
+            "perm": "0700"
+        }{% endif %}{% if nova_compute_virt_type == "vmware" and not vmware_vcenter_insecure | bool %},
+        {
+            "source": "{{ container_config_directory }}/vmware_ca",
+            "dest": "/etc/nova/vmware_ca",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if libvirt_tls | bool %},
+        {
+            "source": "{{ container_config_directory }}/clientkey.pem",
+            "dest": "/etc/pki/libvirt/private/clientkey.pem",
+            "owner": "root:nova",
+            "perm": "0640"
+        },
+        {
+            "source": "{{ container_config_directory }}/clientcert.pem",
+            "dest": "/etc/pki/libvirt/clientcert.pem",
+            "owner": "root:nova",
+            "perm": "0640"
+        },
+        {
+            "source": "{{ container_config_directory }}/cacert.pem",
+            "dest": "/etc/pki/CA/cacert.pem",
+            "owner": "root:nova",
+            "perm": "0640"
+        }{% endif %},
+        {
+            "source": "{{ container_config_directory }}/release",
+            "dest": "/etc/nova/release",
+            "owner": "nova",
+            "perm": "0600",
+            "optional": true
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/nova",
+            "owner": "nova:nova",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/nova",
+            "owner": "nova:nova",
+            "recurse": true
+        }
+    ]
+}
