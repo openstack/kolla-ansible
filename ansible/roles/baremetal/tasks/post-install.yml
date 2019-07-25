@@ -55,35 +55,83 @@
   become: True
   when: not create_kolla_user | bool
 
+- name: Ensure docker config directory exists
+  file:
+    path: /etc/docker
+    state: directory
+  become: True
+
+- name: Merge Zun docker config
+  set_fact:
+    docker_config: "{{ docker_config | combine(docker_zun_config) }}"
+  when:
+    - docker_configure_for_zun | bool
+
+- name: Warn about deprecations
+  debug:
+    msg: >
+      docker_custom_option is deprecated in favor of docker_custom_config
+  when: docker_custom_option
+
+- name: Setup docker insecure registries
+  vars:
+    registries: ["{{ docker_registry }}"]
+  set_fact:
+    docker_config: "{{ docker_config | combine({'insecure-registries': registries}) }}"
+  when: docker_registry_insecure | bool
+
+- name: Setup docker storage driver
+  set_fact:
+    docker_config: "{{ docker_config | combine({'storage-driver': docker_storage_driver}) }}"
+  when: docker_storage_driver
+
+- name: Setup docker runtime directory
+  set_fact:
+    docker_config: "{{ docker_config | combine({'data-root': docker_runtime_directory}) }}"
+  when: docker_runtime_directory
+
+- name: Merge custom docker config
+  set_fact:
+    docker_config: "{{ docker_config | combine(docker_custom_config) }}"
+
+- name: Write docker config
+  become: True
+  copy:
+    content: "{{ docker_config | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: 0644
+  register: docker_configured
+
+- name: Remove old docker options file
+  become: True
+  file:
+    path: /etc/systemd/system/docker.service.d/kolla.conf
+    state: absent
+  when:
+    - not docker_custom_option
+    - not docker_configure_for_zun|bool
+
 - name: Ensure docker service directory exists
+  become: True
   file:
     path: /etc/systemd/system/docker.service.d
     state: directory
     recurse: yes
-  become: True
-
-- name: Check dockerd exists
-  stat: path=/usr/bin/dockerd
-  register: dockerd_exists
-
-- name: Setting docker daemon name
-  set_fact:
-    docker_binary_name: "dockerd"
-  when:
-    dockerd_exists.stat.exists == True
+  when: docker_custom_option or docker_configure_for_zun|bool
 
 - name: Configure docker service
   become: True
   template:
     src: docker_systemd_service.j2
     dest: /etc/systemd/system/docker.service.d/kolla.conf
-  register: docker_configured
+  when: docker_custom_option or docker_configure_for_zun|bool
 
 - name: Reload docker service file
   become: True
   systemd:
     name: docker
     daemon_reload: yes
+  register: docker_reloaded
 
 - name: Get stat of libvirtd apparmor profile
   stat:
@@ -122,7 +170,7 @@
     name: docker
     state: restarted
   become: True
-  when: docker_configured.changed
+  when: docker_configured.changed or docker_reloaded.changed
 
 - name: Enable docker
   service:

@@ -97,8 +97,8 @@ docker_registry_insecure: "{{ 'yes' if docker_registry else 'no' }}"
 docker_runtime_directory: ""
 
 # Retention settings for Docker logs
-docker_log_max_file: 5
-docker_log_max_size: 50m
+docker_log_max_file: "5"
+docker_log_max_size: "50m"
 
 # Valid options are [ no, on-failure, always, unless-stopped ]
 docker_restart_policy: "unless-stopped"
@@ -108,7 +108,9 @@ docker_restart_policy_retry: "10"
 
 # Extra docker options for Zun
 docker_configure_for_zun: "no"
-docker_zun_options: -H fd:// -H tcp://{{ api_interface_address }}:2375 --cluster-store=etcd://{% for host in groups.get('etcd', []) %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
+docker_zun_options: -H tcp://{{ api_interface_address }}:2375
+docker_zun_config:
+  cluster-store: etcd://{% for host in groups.get('etcd', []) %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
 
 # Timeout after Docker sends SIGTERM before sending SIGKILL.
 docker_graceful_timeout: 60
