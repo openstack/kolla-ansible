@@ -96,7 +96,7 @@ function create_resources {
 function test_ironic_logged {
     # Assumes init-runonce has been executed.
     . /etc/kolla/admin-openrc.sh
-    . ~/ironic-venv/bin/activate
+    . ~/openstackclient-venv/bin/activate
 
     # Smoke test ironic API.
     if ! openstack baremetal driver list | grep fake-hardware; then
