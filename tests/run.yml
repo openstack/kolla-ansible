@@ -1,9 +1,17 @@
 ---
 - hosts: all
-  vars:
-    kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
+    # NOTE(yoctozepto): setting vars as facts for all to have them around in all the plays
+    - set_fact:
+        kolla_inventory_path: "/etc/kolla/inventory"
+        logs_dir: "/tmp/logs"
+        kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+        kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+        need_build_image: false
+        build_image_tag: "change_{{ zuul.change | default('none') }}"
+        is_upgrade: "{{ 'upgrade' in scenario }}"
+        is_ceph: "{{ 'ceph' in scenario }}"
+
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
       when: scenario == "cinder-lvm" or is_ceph
@@ -13,15 +21,6 @@
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
-  vars:
-    kolla_inventory_path: "/etc/kolla/inventory"
-    logs_dir: "/tmp/logs"
-    kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-    kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-    need_build_image: false
-    build_image_tag: "change_{{ zuul.change | default('none') }}"
-    is_upgrade: "{{ 'upgrade' in scenario }}"
-    is_ceph: "{{ 'ceph' in scenario }}"
   tasks:
     # FIXME: in multi node env, api_interface may be different on each node.
     - name: detect api_interface_name variable
@@ -205,14 +204,31 @@
           when: not is_upgrade
       when: scenario != "bifrost"
 
-    # Upgrade: update config.
-    - block:
-        - name: Run check-failure.sh script
+# NOTE(yoctozepto): each host checks itself
+# Stein-only NOTE: due to upgrade from Rocky which is pre-"testing revolution"
+# this part actually uses Stein's script unlike in Train where it can and does
+# use Stein's script
+- hosts: all
+  tasks:
+    - name: Pre-upgrade sanity checks
+      block:
+        - name: Run pre-upgrade check-failure.sh script
           script:
             cmd: check-failure.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
 
+        - name: Run pre-upgrade check-config.sh script
+          script:
+            cmd: check-config.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+      when: is_upgrade
+
+- hosts: primary
+  tasks:
+    # Upgrade: update config.
+    - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
         - name: checkout the current kolla-ansible branch
@@ -313,6 +329,9 @@
             chdir: "{{ kolla_ansible_src_dir }}"
       when: scenario == "bifrost"
 
+# NOTE(yoctozepto): each host checks itself
+- hosts: all
+  tasks:
     - name: Run check-failure.sh script
       shell:
         cmd: tests/check-failure.sh
