@@ -47,12 +47,17 @@ ceph_pool_pgp_num: 8
 # This is experimental feature, disable if gate fail.
 # In multinode jobs without ceph rolling upgrade fails.
 glance_enable_rolling_upgrade: "yes"
+{% else %}
+# NOTE(yoctozepto): in case ceph is *not* used, we have to use the ansible node (primary)
+# to avoid random errors due to inventory randomness in Zuul (YAML format)
+# because we use primary as the API endpoint and there is currently no HAProxy in CI
+# and the default behavior is to pick the "first" node (issue affects only multinode)
+glance_api_hosts: ["{{ inventory_hostname }}"]
 {% endif %}
 
 {% if scenario == "cinder-lvm" %}
 enable_cinder: "yes"
 enable_cinder_backend_lvm: "yes"
-glance_api_hosts: ["{{ inventory_hostname }}"]
 {% endif %}
 
 {% if scenario == "zun" %}
@@ -63,7 +68,6 @@ docker_custom_option: " -H unix:///var/run/docker.sock -H tcp://{{ api_interface
 {% endif %}
 
 {% if scenario == "scenario_nfv" %}
-glance_api_hosts: ["{{ inventory_hostname }}"]
 enable_tacker: "yes"
 enable_neutron_sfc: "yes"
 enable_mistral: "yes"
