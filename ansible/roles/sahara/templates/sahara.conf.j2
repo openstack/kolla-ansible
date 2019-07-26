@@ -28,9 +28,9 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool %}
+{% if sahara_enabled_notification_topics %}
 driver = messagingv2
-topics = notifications
+topics = {{ sahara_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}

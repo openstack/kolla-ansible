@@ -44,6 +44,13 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if manila_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ manila_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
+
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True

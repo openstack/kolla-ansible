@@ -91,9 +91,9 @@ cert_manager_type = x509keypair
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool %}
+{% if magnum_enabled_notification_topics %}
 driver = messaging
-topics = notifications
+topics = {{ magnum_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}

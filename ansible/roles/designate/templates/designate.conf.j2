@@ -80,7 +80,7 @@ idle_timeout = 3600
 [handler:nova_fixed]
 #NOTE: zone_id must be manually filled an ID from openstack zone list
 zone_id =
-notification_topics = notifications_designate
+notification_topics = {{ designate_notifications_topic_name }}
 control_exchange = nova
 formatv4 = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s'
 formatv4 = '%(hostname)s.%(project)s.%(zone)s'
@@ -91,14 +91,18 @@ formatv6 = '%(hostname)s.%(project)s.%(zone)s'
 [handler:neutron_floatingip]
 #NOTE: zone_id must be manually filled an ID from openstack zone list
 zone_id =
-notification_topics = notifications_designate
+notification_topics = {{ designate_notifications_topic_name }}
 control_exchange = neutron
 formatv4 = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s'
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-topics = notifications_designate
+{% if designate_enabled_notification_topics %}
 driver = messagingv2
+topics = {{ designate_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 [oslo_concurrency]
 lock_path = /var/lib/designate/tmp

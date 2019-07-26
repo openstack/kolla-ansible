@@ -113,3 +113,18 @@ keystone_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 keystone_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 keystone_dev_mode: "{{ kolla_dev_mode }}"
 keystone_source_version: "{{ kolla_source_version }}"
+
+
+####################
+# Notifications
+####################
+keystone_default_notifications_topic_enabled: "{{ (enable_ceilometer | bool ) or (enable_cadf_notifications | bool)}}"
+keystone_default_notifications_topic_name: "notifications"
+
+keystone_notification_topics:
+  - name: "{{ keystone_default_notifications_topic_name }}"
+    enabled: "{{ keystone_default_notifications_topic_enabled | bool }}"
+  - name: barbican_notifications
+    enabled: "{{ enable_barbican | bool }}"
+
+keystone_enabled_notification_topics: "{{ keystone_notification_topics | selectattr('enabled', 'equalto', true) | list }}"

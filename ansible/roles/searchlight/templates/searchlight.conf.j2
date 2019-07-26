@@ -36,6 +36,13 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if searchlight_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ searchlight_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
+
 
 {% if searchlight_policy_file is defined %}
 [oslo_policy]

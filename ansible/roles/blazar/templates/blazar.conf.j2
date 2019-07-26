@@ -50,12 +50,13 @@ blazar_password = {{ blazar_keystone_password }}
 blazar_project_name = service
 
 [oslo_messaging_notifications]
-{% if enable_ceilometer | bool %}
+{% if blazar_enabled_notification_topics %}
 driver = messagingv2
-topics = notifications
+topics = {{ blazar_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}
+
 
 {% if blazar_policy_file is defined %}
 [oslo_policy]

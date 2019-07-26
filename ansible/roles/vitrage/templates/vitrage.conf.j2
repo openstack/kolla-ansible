@@ -61,8 +61,12 @@ memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansi
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-topics = notifications,vitrage_notifications
+{% if vitrage_enabled_notification_topics %}
 driver = messagingv2
+topics = {{ vitrage_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 [oslo_concurrency]
 lock_path = /var/lib/vitrage/tmp
