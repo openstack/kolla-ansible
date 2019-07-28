@@ -41,9 +41,11 @@ copy_logs() {
 
     # ceph related logs
     if [[ $(docker ps --filter name=ceph_mon --format "{{.Names}}") ]]; then
-        docker exec ceph_mon ceph -s > ${LOG_DIR}/kolla/ceph/ceph_s.txt
-        docker exec ceph_mon ceph osd df > ${LOG_DIR}/kolla/ceph/ceph_osd_df.txt
-        docker exec ceph_mon ceph osd tree > ${LOG_DIR}/kolla/ceph/ceph_osd_tree.txt
+        docker exec ceph_mon ceph --connect-timeout 5 -s > ${LOG_DIR}/kolla/ceph/ceph_s.txt
+        # NOTE(yoctozepto): osd df removed on purpose to avoid CI POST_FAILURE due to a possible hang:
+        # as of ceph mimic it hangs when MON is operational but MGR not
+        # its usefulness is mediocre and having POST_FAILUREs is bad
+        docker exec ceph_mon ceph --connect-timeout 5 osd tree > ${LOG_DIR}/kolla/ceph/ceph_osd_tree.txt
     fi
 
     # bifrost related logs

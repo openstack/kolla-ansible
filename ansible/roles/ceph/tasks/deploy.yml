@@ -1,4 +1,6 @@
 ---
+# NOTE(yoctozepto): this file is used during upgrade as well
+
 - include_tasks: config.yml
 
 - include_tasks: bootstrap_mons.yml
@@ -9,6 +11,19 @@
 - include_tasks: start_mons.yml
   when: inventory_hostname in groups['ceph-mon']
 
+# NOTE(yoctozepto): this ensures caps for admin are always up-to-date (run as earliest as possible = after MONs start)
+# this is retried because the cluster might not be fully operational yet (quorum gathering)
+- name: configuring client.admin caps
+  kolla_ceph_keyring:
+    name: client.admin
+    caps: "{{ ceph_client_admin_keyring_caps }}"
+  run_once: True
+  delegate_to: "{{ groups['ceph-mon'][0] }}"
+  register: result
+  until: result is success
+  retries: 3
+  delay: 15
+
 - include_tasks: start_mgrs.yml
   when: inventory_hostname in groups['ceph-mgr']
 
@@ -16,18 +31,6 @@
   when:
     - enable_ceph_dashboard | bool
     - inventory_hostname in groups['ceph-mon']
-
-- include_tasks: start_nfss.yml
-  when:
-    - enable_ceph_nfs | bool
-    - inventory_hostname in groups['ceph-nfs']
-
-- name: configuring client.admin caps
-  kolla_ceph_keyring:
-    name: client.admin
-    caps: "{{ ceph_client_admin_keyring_caps }}"
-  run_once: True
-  delegate_to: "{{ groups['ceph-mon'][0] }}"
 
 - include_tasks: bootstrap_osds.yml
   when: inventory_hostname in groups['ceph-osd']
@@ -49,3 +52,9 @@
   when:
     - enable_ceph_mds | bool
     - inventory_hostname in groups['ceph-mds']
+
+# NOTE(yoctozepto): nfs (cephfs-based) depends on mds so start it after
+- include_tasks: start_nfss.yml
+  when:
+    - enable_ceph_nfs | bool
+    - inventory_hostname in groups['ceph-nfs']
