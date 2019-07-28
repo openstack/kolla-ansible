@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import json
+import re
 import subprocess  # nosec
 
 
@@ -51,11 +52,14 @@ EXAMPLES = '''
     name: client.admin
     container_name: ceph_mon
     caps:
-      mds: 'allow'
+      mds: 'allow *'
       mon: 'allow *'
       osd: 'allow *'
       mgr: 'allow *'
 '''
+
+
+enoent_re = re.compile(r"\bENOENT\b")
 
 
 class CephKeyring(object):
@@ -93,7 +97,10 @@ class CephKeyring(object):
     def ensure_keyring(self):
         try:
             stdout = self.get_keyring()
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
+            if e.returncode != 2 or not enoent_re.search(e.output):
+                # this is not a missing keyring case
+                raise
             # keyring doesn't exsit, try to create it
             stdout = self.create_keyring()
             self.changed = True
