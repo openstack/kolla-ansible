@@ -8,7 +8,6 @@
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
       name: "{{ item.database_name }}"
-  register: database
   run_once: True
   delegate_to: "{{ groups[item.group][0] }}"
   with_items:
@@ -51,7 +50,6 @@
     - inventory_hostname in groups[item.group]
 
 - include_tasks: bootstrap_service.yml
-  when: database.changed
 
 - name: Running Ironic-PXE bootstrap container
   vars:

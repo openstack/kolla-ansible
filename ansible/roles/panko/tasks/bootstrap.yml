@@ -18,7 +18,6 @@
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
       name: "{{ panko_database_name }}"
-  register: mysql_panko_database
   run_once: True
   delegate_to: "{{ groups['panko-api'][0] }}"
   when:
@@ -45,6 +44,3 @@
     - panko_database_type == "mysql"
 
 - include_tasks: bootstrap_service.yml
-  when: (panko_database_type == "mongodb" and mongodb_panko_database.changed)
-         or (panko_database_type == "mysql" and mysql_panko_database.changed)
-         or use_preconfigured_databases | bool
