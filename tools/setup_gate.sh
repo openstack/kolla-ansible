@@ -8,6 +8,19 @@ export PYTHONUNBUFFERED=1
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
+function setup_openstack_clients {
+    # Prepare virtualenv for openstack deployment tests
+    virtualenv ~/openstackclient-venv
+    ~/openstackclient-venv/bin/pip install -U pip
+    ~/openstackclient-venv/bin/pip install python-openstackclient
+    if [[ $ACTION == zun ]]; then
+        ~/openstackclient-venv/bin/pip install python-zunclient
+    fi
+    if [[ $ACTION == ironic ]]; then
+        ~/openstackclient-venv/bin/pip install python-ironicclient
+    fi
+}
+
 function setup_config {
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
@@ -98,18 +111,10 @@ function setup_ansible {
     else
         ANSIBLE_VERSION="<2.6"
     fi
+
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
-    if [[ $ACTION == "zun" ]]; then
-        sudo -H pip install -U "python-zunclient"
-    fi
-    if [[ $ACTION == ironic ]]; then
-        # NOTE(mgoddard): Installing python-ironicclient to site-packages fails
-        # due to pip 10 distutils issue with ipaddress package.
-        virtualenv ~/ironic-venv
-        ~/ironic-venv/bin/pip install -U pip
-        ~/ironic-venv/bin/pip install python-openstackclient python-ironicclient
-    fi
+    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0"
+
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -137,6 +142,8 @@ function prepare_images {
     sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
     popd
 }
+
+setup_openstack_clients
 
 setup_ansible
 setup_config
