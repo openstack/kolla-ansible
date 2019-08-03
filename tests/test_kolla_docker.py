@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# FIXME(yoctozepto): tests do not imitate how ansible would handle module args
+
 import copy
 import imp
 import os
@@ -71,7 +73,6 @@ class ModuleArgsTest(base.BaseTestCase):
             remove_on_exit=dict(required=False, type='bool', default=True),
             restart_policy=dict(
                 required=False, type='str', choices=['no',
-                                                     'never',
                                                      'on-failure',
                                                      'always',
                                                      'unless-stopped']),
