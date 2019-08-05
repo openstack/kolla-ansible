@@ -26,22 +26,6 @@
     - groups['neutron-dhcp-agent'] | length < 2
       or groups['neutron-l3-agent'] | length < 2
 
-# When MountFlags is set to shared, a signal bit configured on 20th bit of a number
-# We need to check the 20th bit. 2^20 = 1048576. So we are validating against it.
-# In some systems MountFlags on the Docker service is set to 'shared', whereas
-# in others it's set to the decimal value of the 20th bit. This now checks for both
-# values. Either '1048576' or 'shared' will pass the precheck.
-- name: Checking if 'MountFlags' for docker service is set to 'shared'
-  command: systemctl show docker
-  register: result
-  changed_when: false
-  failed_when: result.stdout.find('MountFlags=1048576') == -1 and result.stdout.find('MountFlags=shared') == -1
-  when:
-    - (inventory_hostname in groups['neutron-dhcp-agent']
-       or inventory_hostname in groups['neutron-l3-agent']
-       or inventory_hostname in groups['neutron-metadata-agent'])
-    - ansible_os_family == 'RedHat' or ansible_distribution == 'Ubuntu'
-
 - name: Checking tenant network types
   vars:
     type_drivers: "{{ neutron_type_drivers.replace(' ', '').split(',') | reject('equalto', '') | list }}"
