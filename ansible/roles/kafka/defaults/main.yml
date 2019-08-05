@@ -10,11 +10,7 @@ kafka_services:
     environment:
       LOG_DIR: "{{ kafka_log_dir }}"
       KAFKA_HEAP_OPTS: "{{ kafka_heap_opts }}"
-    volumes:
-      - "{{ node_config_directory }}/kafka/:{{ container_config_directory }}/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kafka:/var/lib/kafka/data"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ kafka_default_volumes + kafka_extra_volumes }}"
     dimensions: "{{ kafka_dimensions }}"
 
 ####################
@@ -34,3 +30,10 @@ kafka_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_na
 kafka_tag: "{{ openstack_release }}"
 kafka_image_full: "{{ kafka_image }}:{{ kafka_tag }}"
 kafka_dimensions: "{{ default_container_dimensions }}"
+
+kafka_default_volumes:
+  - "{{ node_config_directory }}/kafka/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kafka:/var/lib/kafka/data"
+  - "kolla_logs:/var/log/kolla/"
+kafka_extra_volumes: "{{ default_extra_volumes }}"

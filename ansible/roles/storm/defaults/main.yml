@@ -10,11 +10,7 @@ storm_services:
     environment:
       STORM_LOG_DIR: /var/log/kolla/storm
       STORM_LOG4J_PROP: "{{ storm_log_settings }}"
-    volumes:
-      - "{{ node_config_directory }}/storm-worker/:{{ container_config_directory }}/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "storm:/var/lib/storm/data"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ storm_worker_default_volumes + storm_nimbus_extra_volumes }}"
     dimensions: "{{ storm_worker_dimensions }}"
   storm-nimbus:
     container_name: storm_nimbus
@@ -24,11 +20,7 @@ storm_services:
     environment:
       STORM_LOG_DIR: /var/log/kolla/storm
       STORM_LOG4J_PROP: "{{ storm_log_settings }}"
-    volumes:
-      - "{{ node_config_directory }}/storm-nimbus/:{{ container_config_directory }}/"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "storm:/var/lib/storm/data"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ storm_nimbus_default_volumes + storm_nimbus_extra_volumes }}"
     dimensions: "{{ storm_nimbus_dimensions }}"
 
 ####################
@@ -47,3 +39,18 @@ storm_image_full: "{{ storm_image }}:{{ storm_tag }}"
 
 storm_worker_dimensions: "{{ default_container_dimensions }}"
 storm_nimbus_dimensions: "{{ default_container_dimensions }}"
+
+storm_worker_default_volumes:
+  - "{{ node_config_directory }}/storm-worker/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "storm:/var/lib/storm/data"
+  - "kolla_logs:/var/log/kolla/"
+storm_nimbus_default_volumes:
+  - "{{ node_config_directory }}/storm-nimbus/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "storm:/var/lib/storm/data"
+  - "kolla_logs:/var/log/kolla/"
+
+storm_extra_volumes: "{{ default_extra_volumes }}"
+storm_worker_extra_volumes: "{{ storm_extra_volumes }}"
+storm_nimbus_extra_volumes: "{{ storm_extra_volumes }}"

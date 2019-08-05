@@ -7,11 +7,7 @@ mariadb_services:
     group: mariadb
     enabled: true
     image: "{{ mariadb_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "mariadb:/var/lib/mysql"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ mariadb_default_volumes + mariadb_extra_volumes }}"
     dimensions: "{{ mariadb_dimensions }}"
     haproxy:
       mariadb:
@@ -57,6 +53,13 @@ mariadb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_
 mariadb_tag: "{{ openstack_release }}"
 mariadb_image_full: "{{ mariadb_image }}:{{ mariadb_tag }}"
 mariadb_dimensions: "{{ default_container_dimensions }}"
+
+mariadb_default_volumes:
+  - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "mariadb:/var/lib/mysql"
+  - "kolla_logs:/var/log/kolla/"
+mariadb_extra_volumes: "{{ default_extra_volumes }}"
 
 ########################################
 # Vars used within recover_cluster.yml

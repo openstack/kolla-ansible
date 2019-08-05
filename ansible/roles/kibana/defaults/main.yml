@@ -7,10 +7,7 @@ kibana_services:
     image: "{{ kibana_image_full }}"
     enabled: true
     group: "kibana"
-    volumes:
-      - "{{ node_config_directory }}/kibana/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ kibana_default_volumes + kibana_extra_volumes }}"
     dimensions: "{{ kibana_dimensions }}"
     haproxy:
       kibana:
@@ -55,3 +52,9 @@ kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_n
 kibana_tag: "{{ openstack_release }}"
 kibana_image_full: "{{ kibana_image }}:{{ kibana_tag }}"
 kibana_dimensions: "{{ default_container_dimensions }}"
+
+kibana_default_volumes:
+  - "{{ node_config_directory }}/kibana/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+kibana_extra_volumes: "{{ default_extra_volumes }}"

@@ -7,10 +7,7 @@ skydive_services:
     group: skydive-analyzer
     enabled: true
     image: "{{ skydive_analyzer_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ skydive_analyzer_default_volumes + skydive_analyzer_extra_volumes }}"
     dimensions: "{{ skydive_analyzer_dimensions }}"
     haproxy:
       skydive_server:
@@ -29,12 +26,7 @@ skydive_services:
     enabled: true
     image: "{{ skydive_agent_image_full }}"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/skydive-agent/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/var/run/openvswitch:/var/run/openvswitch:ro"
-      - "/var/run/netns:/host/run:shared"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ skydive_agent_default_volumes + skydive_agent_extra_volumes }}"
     dimensions: "{{ skydive_agent_dimensions }}"
 
 ####################
@@ -49,3 +41,18 @@ skydive_agent_tag: "{{ openstack_release }}"
 skydive_agent_image_full: "{{ skydive_agent_image }}:{{ skydive_agent_tag }}"
 skydive_analyzer_dimensions: "{{ default_container_dimensions }}"
 skydive_agent_dimensions: "{{ default_container_dimensions }}"
+
+skydive_analyzer_default_volumes:
+  - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+skydive_agent_default_volumes:
+  - "{{ node_config_directory }}/skydive-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/var/run/openvswitch:/var/run/openvswitch:ro"
+  - "/var/run/netns:/host/run:shared"
+  - "kolla_logs:/var/log/kolla/"
+
+skydive_extra_volumes: "{{ default_extra_volumes }}"
+skydive_analyzer_extra_volumes: "{{ skydive_extra_volumes }}"
+skydive_agent_extra_volumes: "{{ skydive_extra_volumes }}"

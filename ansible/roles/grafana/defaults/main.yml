@@ -7,11 +7,7 @@ grafana_services:
     group: grafana
     enabled: true
     image: "{{ grafana_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/grafana/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "grafana:/var/lib/grafana/"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ grafana_default_volumes + grafana_extra_volumes }}"
     dimensions: "{{ grafana_dimensions }}"
     haproxy:
       grafana_server:
@@ -67,3 +63,10 @@ grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"
 
 grafana_dimensions: "{{ default_container_dimensions }}"
+
+grafana_default_volumes:
+  - "{{ node_config_directory }}/grafana/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "grafana:/var/lib/grafana/"
+  - "kolla_logs:/var/log/kolla/"
+grafana_extra_volumes: "{{ default_extra_volumes }}"

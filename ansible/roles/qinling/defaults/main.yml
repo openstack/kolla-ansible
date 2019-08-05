@@ -7,11 +7,7 @@ qinling_services:
     group: qinling-api
     enabled: true
     image: "{{ qinling_api_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/qinling-api/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ qinling_api_default_volumes + qinling_api_extra_volumes }}"
     dimensions: "{{ qinling_api_dimensions }}"
     haproxy:
       qinling_api:
@@ -29,12 +25,7 @@ qinling_services:
     group: qinling-engine
     enabled: true
     image: "{{ qinling_engine_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/qinling-engine/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "qinling:/var/lib/qinling/"
-      - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ qinling_engine_default_volumes + qinling_engine_extra_volumes }}"
     dimensions: "{{ qinling_engine_dimensions }}"
 
 
@@ -63,6 +54,21 @@ qinling_engine_image_full: "{{ qinling_engine_image }}:{{ qinling_engine_tag }}"
 qinling_api_dimensions: "{{ default_container_dimensions }}"
 qinling_engine_dimensions: "{{ default_container_dimensions }}"
 
+qinling_api_default_volumes:
+  - "{{ node_config_directory }}/qinling-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mod| bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+qinling_engine_default_volumes:
+  - "{{ node_config_directory }}/qinling-engine/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "qinling:/var/lib/qinling/"
+  - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python2.7/site-packages/qinling' if qinling_dev_mod| bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+qinling_extra_volumes: "{{ default_extra_volumes }}"
+qinling_api_extra_volumes: "{{ qinling_extra_volumes }}"
+qinling_engine_extra_volumes: "{{ qinling_extra_volumes }}"
 
 ####################
 # OpenStack

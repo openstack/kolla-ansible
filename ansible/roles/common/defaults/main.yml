@@ -12,10 +12,7 @@ common_services:
     image: "{{ fluentd_image_full }}"
     environment:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    volumes:
-      - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ fluentd_default_volumes + fluentd_extra_volumes }}"
     dimensions: "{{ fluentd_dimensions }}"
   kolla-toolbox:
     container_name: kolla_toolbox
@@ -25,12 +22,7 @@ common_services:
       ANSIBLE_NOCOLOR: "1"
       ANSIBLE_LIBRARY: "/usr/share/ansible"
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/kolla-toolbox/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "/dev/:/dev/"
-      - "/run/:/run/:shared"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ kolla_toolbox_default_volumes + kolla_toolbox_extra_volumes }}"
     dimensions: "{{ kolla_toolbox_dimensions }}"
   # DUMMY_ENVIRONMENT is needed because empty environment is not supported
   cron:
@@ -39,10 +31,7 @@ common_services:
     image: "{{ cron_image_full }}"
     environment:
       DUMMY_ENVIRONMENT: kolla_useless_env
-    volumes:
-      - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ cron_default_volumes + cron_extra_volumes }}"
     dimensions: "{{ cron_dimensions }}"
 
 #######################
@@ -80,3 +69,21 @@ fluentd_image_full: "{{ fluentd_image }}:{{ fluentd_tag }}"
 
 syslog_swift_facility: "local0"
 syslog_haproxy_facility: "local1"
+
+kolla_toolbox_default_volumes:
+  - "{{ node_config_directory }}/kolla-toolbox/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/dev/:/dev/"
+  - "/run/:/run/:shared"
+  - "kolla_logs:/var/log/kolla/"
+cron_default_volumes:
+  - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+fluentd_default_volumes:
+  - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+kolla_toolbox_extra_volumes: "{{ default_extra_volumes }}"
+cron_extra_volumes: "{{ default_extra_volumes }}"
+fluentd_extra_volumes: "{{ default_extra_volumes }}"

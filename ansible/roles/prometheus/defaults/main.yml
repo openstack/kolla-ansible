@@ -7,11 +7,7 @@ prometheus_services:
     group: prometheus
     enabled: true
     image: "{{ prometheus_server_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "prometheus:/var/lib/prometheus"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ prometheus_server_default_volumes + prometheus_server_extra_volumes }}"
     dimensions: "{{ prometheus_server_dimensions }}"
     haproxy:
       prometheus_server:
@@ -25,69 +21,42 @@ prometheus_services:
     enabled: "{{ enable_prometheus_node_exporter | bool }}"
     image: "{{ prometheus_node_exporter_image_full }}"
     pid_mode: "host"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "/proc:/host/proc:ro"
-      - "/sys:/host/sys:ro"
+    volumes: "{{ prometheus_node_exporter_default_volumes + prometheus_node_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_node_exporter_dimensions }}"
   prometheus-mysqld-exporter:
     container_name: prometheus_mysqld_exporter
     group: prometheus-mysqld-exporter
     enabled: "{{ enable_prometheus_mysqld_exporter | bool }}"
     image: "{{ prometheus_mysqld_exporter_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-mysqld-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ prometheus_mysqld_exporter_default_volumes + prometheus_mysqld_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_mysqld_exporter_dimensions }}"
   prometheus-haproxy-exporter:
     container_name: prometheus_haproxy_exporter
     group: prometheus-haproxy-exporter
     enabled: "{{ enable_prometheus_haproxy_exporter | bool }}"
     image: "{{ prometheus_haproxy_exporter_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-haproxy-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "haproxy_socket:/var/lib/kolla/haproxy"
+    volumes: "{{ prometheus_haproxy_exporter_default_volumes + prometheus_haproxy_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_haproxy_exporter_dimensions }}"
   prometheus-memcached-exporter:
     container_name: prometheus_memcached_exporter
     group: prometheus-memcached-exporter
     enabled: "{{ enable_prometheus_memcached_exporter | bool }}"
     image: "{{ prometheus_memcached_exporter_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ prometheus_memcached_exporter_default_volumes + prometheus_memcached_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_memcached_exporter_dimensions }}"
   prometheus-cadvisor:
     container_name: "prometheus_cadvisor"
     group: "prometheus-cadvisor"
     enabled: "{{ enable_prometheus_cadvisor | bool }}"
     image: "{{ prometheus_cadvisor_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "/:/rootfs:ro"
-      - "/var/run:/var/run:rw"
-      - "/sys:/sys:ro"
-      - "/var/lib/docker/:/var/lib/docker:ro"
-      - "/dev/disk/:/dev/disk:ro"
+    volumes: "{{ prometheus_cadvisor_default_volumes + prometheus_cadvisor_extra_volumes }}"
     dimensions: "{{ prometheus_cadvisor_dimensions }}"
   prometheus-alertmanager:
     container_name: "prometheus_alertmanager"
     group: "prometheus-alertmanager"
     enabled: "{{ enable_prometheus_alertmanager | bool }}"
     image: "{{ prometheus_alertmanager_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-alertmanager/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "prometheus:/var/lib/prometheus"
+    volumes: "{{ prometheus_alertmanager_default_volumes + prometheus_alertmanager_extra_volumes }}"
     dimensions: "{{ prometheus_alertmanager_dimensions }}"
     haproxy:
       prometheus_alertmanager:
@@ -109,21 +78,14 @@ prometheus_services:
     group: "prometheus-openstack-exporter"
     enabled: "{{ enable_prometheus_openstack_exporter | bool }}"
     image: "{{ prometheus_openstack_exporter_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-openstack-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
-      - "prometheus:/var/lib/prometheus"
+    volumes: "{{ prometheus_openstack_exporter_default_volumes + prometheus_openstack_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_openstack_exporter_dimensions }}"
   prometheus-elasticsearch-exporter:
     container_name: prometheus_elasticsearch_exporter
     group: prometheus-elasticsearch-exporter
     enabled: "{{ enable_prometheus_elasticsearch_exporter | bool }}"
     image: "{{ prometheus_elasticsearch_exporter_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/prometheus-elasticsearch-exporter/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ prometheus_elasticsearch_exporter_default_volumes + prometheus_elasticsearch_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_elasticsearch_exporter_dimensions }}"
 
 ####################
@@ -183,3 +145,62 @@ prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
 prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"
 prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
+
+prometheus_server_default_volumes:
+  - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "prometheus:/var/lib/prometheus"
+  - "kolla_logs:/var/log/kolla/"
+prometheus_haproxy_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-haproxy-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "haproxy_socket:/var/lib/kolla/haproxy"
+prometheus_mysqld_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-mysqld-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+prometheus_node_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/proc:/host/proc:ro"
+  - "/sys:/host/sys:ro"
+prometheus_memcached_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+prometheus_cadvisor_default_volumes:
+  - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "/:/rootfs:ro"
+  - "/var/run:/var/run:rw"
+  - "/sys:/sys:ro"
+  - "/var/lib/docker/:/var/lib/docker:ro"
+  - "/dev/disk/:/dev/disk:ro"
+prometheus_alertmanager_default_volumes:
+  - "{{ node_config_directory }}/prometheus-alertmanager/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "prometheus:/var/lib/prometheus"
+prometheus_openstack_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-openstack-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "prometheus:/var/lib/prometheus"
+prometheus_elasticsearch_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-elasticsearch-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+prometheus_extra_volumes: "{{ default_extra_volumes }}"
+prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_haproxy_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_mysqld_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_node_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_memcached_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_cadvisor_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_alertmanager_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"

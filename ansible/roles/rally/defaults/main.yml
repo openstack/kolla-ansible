@@ -7,10 +7,7 @@ rally_services:
     image: "{{ rally_image_full }}"
     enabled: true
     group: "rally"
-    volumes:
-      - "{{ node_config_directory }}/rally/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla/"
+    volumes: "{{ rally_default_volumes + rally_extra_volumes }}"
     dimensions: "{{ rally_dimensions }}"
 
 
@@ -22,6 +19,12 @@ rally_tag: "{{ openstack_release }}"
 rally_image_full: "{{ rally_image }}:{{ rally_tag }}"
 rally_dimensions: "{{ default_container_dimensions }}"
 
+rally_default_volumes:
+  - "{{ node_config_directory }}/rally/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+rally_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # Database

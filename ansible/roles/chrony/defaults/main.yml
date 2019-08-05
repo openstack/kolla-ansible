@@ -8,10 +8,7 @@ chrony_services:
     image: "{{ chrony_image_full }}"
     enabled: True
     privileged: True
-    volumes:
-      - "{{ node_config_directory }}/chrony/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "kolla_logs:/var/log/kolla"
+    volumes: "{{ chrony_default_volumes + chrony_extra_volumes }}"
     dimensions: "{{ chrony_dimensions }}"
 
 chrony_bindaddress: "{{ kolla_internal_vip_address }}"
@@ -24,3 +21,9 @@ chrony_tag: "{{ openstack_release }}"
 chrony_image_full: "{{ chrony_image }}:{{ chrony_tag }}"
 
 chrony_dimensions: "{{ default_container_dimensions }}"
+
+chrony_default_volumes:
+  - "{{ node_config_directory }}/chrony/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+chrony_extra_volumes: "{{ default_extra_volumes }}"
