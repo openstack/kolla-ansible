@@ -155,9 +155,9 @@ Find a location in the system's home directory and checkout Kolla repos:
 
 .. code-block:: console
 
-   git clone https://git.openstack.org/openstack/kolla-cli
-   git clone https://git.openstack.org/openstack/kolla-ansible
-   git clone https://git.openstack.org/openstack/kolla
+   git clone https://opendev.org/openstack/kolla-cli
+   git clone https://opendev.org/openstack/kolla-ansible
+   git clone https://opendev.org/openstack/kolla
 
 All repos must share the same parent directory so the bootstrap code can
 locate them.
