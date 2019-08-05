@@ -84,6 +84,10 @@
 [[inputs.zookeeper]]
   servers = ["{{ api_interface_address }}:{{ zookeeper_port }}"]
 {% endif %}
+{% if inventory_hostname in groups['kafka'] and enable_kafka | bool %}
+[[inputs.kafka_consumer]]
+  brokers = ["{{ api_interface_address }}:{{ kafka_port }}"]
+{% endif %}
 {% if inventory_hostname in groups['mariadb'] and (enable_mariadb or enable_external_mariadb_load_balancer) | bool %}
 [[inputs.mysql]]
   servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address }}:{{ database_port }})/"]
