@@ -2,24 +2,19 @@
 - name: Getting ceph mgr keyring
   become: true
   kolla_ceph_keyring:
-    name: "mgr.{{ item }}"
+    name: "mgr.{{ ceph_mgr_hostname }}"
     caps: "{{ ceph_client_mgr_keyring_caps }}"
   register: ceph_mgr_keyring
-  run_once: true
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  with_items: "{{ groups['ceph-mgr'] }}"
 
 - name: Pushing ceph mgr keyring to ceph-mgr
   become: true
   copy:
     content: |
-      [mgr.{{ item.item }}]
-          key = {{ item.keyring.key }}
-    dest: "{{ node_config_directory }}/ceph-mgr/ceph.mgr.{{ inventory_hostname }}.keyring"
+      [mgr.{{ ceph_mgr_hostname }}]
+          key = {{ ceph_mgr_keyring.keyring.key }}
+    dest: "{{ node_config_directory }}/ceph-mgr/ceph.mgr.{{ ceph_mgr_hostname }}.keyring"
     mode: "0600"
-  when:
-    - inventory_hostname == item.item
-  with_items: "{{ ceph_mgr_keyring.results }}"
 
 - name: Starting ceph-mgr container
   become: true

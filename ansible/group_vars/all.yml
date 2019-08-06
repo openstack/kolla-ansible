@@ -65,6 +65,9 @@ container_proxy:
 # to the api_interface.  Allow the bind address to be an override.
 api_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
 
+# This is used to get the ip corresponding to the storage_interface.
+storage_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+
 ################
 # Chrony options
 ################
@@ -964,6 +967,16 @@ ceph_pool_pgp_num: 8
 # Set the store type for ceph OSD
 # Valid options are [ filestore, bluestore]
 ceph_osd_store_type: "bluestore"
+
+# Set the host type for ceph daemons
+# Valid options are [ IP, HOSTNAME, FQDN, INVENTORY ]
+# Note: For existing clusters, please don't modify this parameter. Otherwise,
+# the existing mon will be invalidated, and the existing osd crush map will
+# be changed.
+ceph_mon_host_type: "IP"
+ceph_mgr_host_type: "INVENTORY"
+ceph_osd_host_type: "IP"
+ceph_mds_host_type: "INVENTORY"
 
 #####################
 # VMware support

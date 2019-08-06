@@ -22,24 +22,19 @@
 - name: Geting ceph mds keyring
   become: true
   kolla_ceph_keyring:
-    name: "mds.{{ hostvars[item]['inventory_hostname'] }}"
+    name: "mds.{{ ceph_mds_hostname }}"
     caps: "{{ ceph_client_mds_keyring_caps }}"
   register: ceph_mds_auth
-  run_once: true
   delegate_to: "{{ groups['ceph-mon'][0] }}"
-  with_items: "{{ groups['ceph-mds'] }}"
 
 - name: Pushing ceph mds keyring to ceph-mds
   become: true
   copy:
     content: |
-      [mds.{{ item.item }}]
-          key = {{ item.keyring.key }}
-    dest: "{{ node_config_directory }}/ceph-mds/ceph.mds.{{ inventory_hostname }}.keyring"
+      [mds.{{ ceph_mds_hostname }}]
+          key = {{ ceph_mds_auth.keyring.key }}
+    dest: "{{ node_config_directory }}/ceph-mds/ceph.mds.{{ ceph_mds_hostname }}.keyring"
     mode: "0600"
-  when:
-    - inventory_hostname == item.item
-  with_items: "{{ ceph_mds_auth.results }}"
 
 - name: Starting ceph-mds container
   become: true
