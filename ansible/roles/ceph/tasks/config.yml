@@ -55,3 +55,16 @@
     - "ceph-mgr"
     - "ceph-mds"
     - "ceph-nfs"
+
+- name: Copying over ganesha.conf for ceph-nfs
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ceph-nfs/ganesha.conf"
+    mode: 0600
+  become: true
+  when:
+    - inventory_hostname in groups['ceph-nfs']
+  with_first_found:
+    - "{{ node_custom_config }}/ganesha.conf"
+    - "{{ node_custom_config }}/ceph-nfs/ganesha.conf"
+    - "ganesha.conf.j2"
