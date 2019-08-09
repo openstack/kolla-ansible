@@ -145,15 +145,11 @@ Package repositories
 --------------------
 
 If the ``enable_docker_repo`` flag is set, then a package repository for Docker
-packages will be configured. There are two sets of package repositories
-provided by Docker - 'legacy' packages from https://dockerproject.org, and new
-'Community Edition' packages from https://download.docker.com. To use legacy
-packages, set ``docker_legacy_packages`` to ``true``, or to use new packages
-set it to ``false``.  The new packages are used by default.
+packages will be configured. Kolla Ansible uses the
+'Community Edition' packages from https://download.docker.com.
 
 Various other configuration options are available beginning
-``docker[_(new|legacy)]_(apt|yum)_``. Typically these do not need to be
-changed.
+``docker_(apt|yum)_``. Typically these do not need to be changed.
 
 Configuration
 -------------
