@@ -165,5 +165,5 @@ OpenStack HyperV services can be inspected and managed from PowerShell:
    PS C:\> Restart-Service neutron-hyperv-agent
 
 For more information on OpenStack HyperV, see
-`Hyper-V virtualization platform
-<https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-hyper-v.html>`__.
+:nova-doc:`Hyper-V virtualization platform
+<admin/configuration/hypervisor-hyper-v.html>`.

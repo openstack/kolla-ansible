@@ -85,18 +85,15 @@ You also need set the password for xenserver_username in
 
     xenserver_password: "root_password"
 
-Then you can start kolla-ansible deployment just following the general
-deployment instructions [`Quick Start`_].
+Then you can start kolla-ansible deployment just following the
+:doc:`/user/quickstart`.
 
 References
 ==========
 
-For more information on XenAPI OpenStack, see:
-
-XenAPI OpenStack: https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-xen-api.html
+For more information on XenAPI OpenStack, see
+:nova-doc:`XenAPI OpenStack <admin/configuration/hypervisor-xen-api.html>`
 
 .. _RDO repos: https://www.rdoproject.org/what/repos/
 
 .. _XenServer documents: https://docs.citrix.com/en-us/xenserver/current-release.html
-
-.. _Quick Start: https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html
