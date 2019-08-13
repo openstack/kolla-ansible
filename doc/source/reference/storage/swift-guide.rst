@@ -1,8 +1,8 @@
 .. _swift-guide:
 
-=============================
-Swift- Object storage service
-=============================
+==============================
+Swift - Object storage service
+==============================
 
 Overview
 ~~~~~~~~
@@ -266,3 +266,12 @@ A very basic smoke test:
    | Containers | 1                                     |
    | Objects    | 1                                     |
    +------------+---------------------------------------+
+
+S3 API
+~~~~~~
+
+The Swift S3 API can be enabled by setting ``enable_swift_s3api`` to ``true``
+in ``globals.yml``. It is disabled by default. In order to use this API it is
+necessary to obtain EC2 credentials from Keystone. See the `Swift documentation
+<https://docs.openstack.org/swift/latest/middleware.html#module-swift.common.middleware.s3api.s3api>`__
+for details.

@@ -10,7 +10,7 @@ log_level = {{ swift_log_level }}
 workers = {{ openstack_service_workers }}
 
 [pipeline:main]
-pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk tempurl ratelimit authtoken keystoneauth container_quotas account_quotas slo dlo {% if enable_ceilometer | bool %}ceilometer {% endif %}proxy-server
+pipeline = catch_errors gatekeeper healthcheck cache container_sync bulk tempurl ratelimit authtoken {% if enable_swift_s3api | bool %}s3api s3token {% endif %}keystoneauth container_quotas account_quotas slo dlo {% if enable_ceilometer | bool %}ceilometer {% endif %}proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -91,3 +91,12 @@ use = egg:swift#dlo
 [filter:versioned_writes]
 use = egg:swift#versioned_writes
 allow_versioned_writes = True
+
+{% if enable_swift_s3api | bool %}
+[filter:s3api]
+use = egg:swift#s3api
+
+[filter:s3token]
+use = egg:swift#s3token
+www_authenticate_uri = {{ keystone_internal_url }}/v3
+{% endif %}
