@@ -38,14 +38,28 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Find custom fluentd input config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/input"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_inputs
+  when:
+    - enable_fluentd | bool
+
 - name: Copying over fluentd input config files
+  vars:
+    customised_input_files: "{{ find_custom_fluentd_inputs.files | map(attribute='path') | map('basename') | list }}"
   template:
     src: "conf/input/{{ item }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
     mode: "0660"
   become: true
   register: fluentd_input
-  when: enable_fluentd | bool
+  when:
+    - enable_fluentd | bool
+    - item ~ '.conf' not in customised_input_files
   with_items:
     - "00-global"
     - "01-syslog"
@@ -59,16 +73,6 @@
     - "09-monasca"
   notify:
     - Restart fluentd container
-
-- name: Find custom fluentd input config files
-  local_action:
-    module: find
-    path: "{{ node_custom_config }}/fluentd/input"
-    pattern: "*.conf"
-  run_once: True
-  register: find_custom_fluentd_inputs
-  when:
-    - enable_fluentd | bool
 
 - name: Copying over custom fluentd input config files
   template:
@@ -88,7 +92,19 @@
                 ( elasticsearch_address != kolla_internal_vip_address )) and
                 not enable_monasca | bool }}"
 
+- name: Find custom fluentd output config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/output"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_outputs
+  when:
+    - enable_fluentd | bool
+
 - name: Copying over fluentd output config files
+  vars:
+    customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | map('basename') | list }}"
   template:
     src: "conf/output/{{ item.name }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
@@ -98,6 +114,7 @@
   when:
     - enable_fluentd | bool
     - item.enabled | bool
+    - item.name ~ '.conf' not in customised_output_files
   with_items:
     - name: "00-local"
       enabled: true
@@ -124,16 +141,6 @@
   notify:
     - Restart fluentd container
 
-- name: Find custom fluentd output config files
-  local_action:
-    module: find
-    path: "{{ node_custom_config }}/fluentd/output"
-    pattern: "*.conf"
-  run_once: True
-  register: find_custom_fluentd_outputs
-  when:
-    - enable_fluentd | bool
-
 - name: Copying over custom fluentd output config files
   template:
     src: "{{ item.path }}"
@@ -147,20 +154,6 @@
   notify:
     - Restart fluentd container
 
-- name: Copying over fluentd format config files
-  template:
-    src: "conf/format/{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
-    mode: "0660"
-  become: true
-  register: fluentd_format
-  with_items:
-    - "apache_access"
-    - "wsgi_access"
-  when: enable_fluentd | bool
-  notify:
-    - Restart fluentd container
-
 - name: Find custom fluentd format config files
   local_action:
     module: find
@@ -170,6 +163,24 @@
   register: find_custom_fluentd_format
   when:
     - enable_fluentd | bool
+
+- name: Copying over fluentd format config files
+  vars:
+    customised_format_files: "{{ find_custom_fluentd_format.files | map(attribute='path') | map('basename') | list }}"
+  template:
+    src: "conf/format/{{ item }}.conf.j2"
+    dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
+    mode: "0660"
+  become: true
+  register: fluentd_format
+  with_items:
+    - "apache_access"
+    - "wsgi_access"
+  when:
+    - enable_fluentd | bool
+    - item ~ '.conf' not in customised_format_files
+  notify:
+    - Restart fluentd container
 
 - name: Copying over custom fluentd format config files
   template:
@@ -183,7 +194,18 @@
   notify:
     - Restart fluentd container
 
+- name: Find custom fluentd filter config files
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/fluentd/filter"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_filters
+  when: enable_fluentd | bool
+
 - name: Copying over fluentd filter config files
+  vars:
+    customised_filter_files: "{{ find_custom_fluentd_filters.files | map(attribute='path') | map('basename') | list }}"
   template:
     src: "conf/filter/{{ item.src }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item.dest }}.conf"
@@ -195,18 +217,11 @@
       dest: 00-record_transformer
     - src: "{{ '01-rewrite-0.14' if kolla_base_distro in ['debian', 'ubuntu'] else '01-rewrite-0.12' }}"
       dest: 01-rewrite
-  when: enable_fluentd | bool
+  when:
+    - enable_fluentd | bool
+    - item.src ~ '.conf' not in customised_filter_files
   notify:
     - Restart fluentd container
-
-- name: Find custom fluentd filter config files
-  local_action:
-    module: find
-    path: "{{ node_custom_config }}/fluentd/filter"
-    pattern: "*.conf"
-  run_once: True
-  register: find_custom_fluentd_filters
-  when: enable_fluentd | bool
 
 - name: Copying over custom fluentd filter config files
   template:
