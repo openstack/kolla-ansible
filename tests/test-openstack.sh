@@ -2,17 +2,17 @@
 
 set -o xtrace
 set -o errexit
+set -o pipefail
 
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-function test_openstack_logged {
-    . /etc/kolla/admin-openrc.sh
-    . ~/openstackclient-venv/bin/activate
-
+function test_smoke {
     openstack --debug compute service list
     openstack --debug network agent list
+}
 
+function test_instance_boot {
     echo "TESTING: Server creation"
     openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net kolla_boot_test
     openstack --debug server list
@@ -93,6 +93,45 @@ function test_openstack_logged {
         openstack appcontainer delete --force --stop test
         echo "SUCCESS: Zun"
     fi
+}
+
+function check_dashboard {
+    # Query the dashboard, and check that the returned page looks like a login
+    # page.
+    output_path=$1
+    if ! curl --include --location --fail $DASHBOARD_URL > $output_path; then
+        return 1
+    fi
+    if ! grep Login $output_path >/dev/null; then
+        return 1
+    fi
+}
+
+function test_dashboard {
+    echo "TESTING: Dashboard"
+    # The dashboard has been known to take some time to become accessible, so
+    # use retries.
+    output_path=$(mktemp)
+    attempt=1
+    while ! check_dashboard $output_path; do
+        echo "Dashboard not accessible yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "FAILED: Dashboard did not become accessible. Response:"
+            cat $output_path
+            return 1
+        fi
+        sleep 10
+    done
+    echo "SUCCESS: Dashboard"
+}
+
+function test_openstack_logged {
+    . /etc/kolla/admin-openrc.sh
+    . ~/openstackclient-venv/bin/activate
+    test_smoke
+    test_instance_boot
+    test_dashboard
 }
 
 function test_openstack {

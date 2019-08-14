@@ -2,7 +2,10 @@
 - hosts: all
   tasks:
     # NOTE(yoctozepto): setting vars as facts for all to have them around in all the plays
-    - set_fact:
+    - name: set facts for commonly used variables
+      vars:
+        api_interface_address: "{{ nodepool.private_ipv4 }}"
+      set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
@@ -11,6 +14,17 @@
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         is_upgrade: "{{ 'upgrade' in scenario }}"
         is_ceph: "{{ 'ceph' in scenario }}"
+        api_interface_address: "{{ api_interface_address }}"
+        # FIXME: in multi node env, api_interface may be different on each node.
+        api_interface_name: >-
+          {{ (ansible_interfaces |
+              map('replace', '-', '_') |
+              map('extract', ansible_facts) |
+              selectattr('ipv4.address', 'defined') |
+              selectattr('ipv4.address', 'equalto', api_interface_address) |
+              first).device }}
+        # We use HAProxy and a VIP for single node, not for multinode jobs.
+        kolla_internal_vip_address: "{{ api_interface_address if hostvars | length > 2 else '169.254.169.10' }}"
 
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
@@ -22,19 +36,6 @@
 
 - hosts: primary
   tasks:
-    # FIXME: in multi node env, api_interface may be different on each node.
-    - name: detect api_interface_name variable
-      vars:
-        ansible_interface_name: "ansible_{{ item.replace('-', '_') }}"
-        api_interface_address: "{{ hostvars[inventory_hostname]['nodepool']['private_ipv4'] }}"
-      set_fact:
-        api_interface_name: "{{ item }}"
-        api_interface_address: "{{ api_interface_address }}"
-      when:
-        - hostvars[inventory_hostname][ansible_interface_name]['ipv4'] is defined
-        - hostvars[inventory_hostname][ansible_interface_name]['ipv4']['address'] == api_interface_address
-      with_items: "{{ ansible_interfaces }}"
-
     - name: detect whether need build images
       set_fact:
         need_build_image: true
@@ -206,6 +207,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
+            DASHBOARD_URL: "http://{{ kolla_internal_vip_address }}"
           when: scenario not in ['ironic', 'scenario_nfv']
 
         - name: Run test-scenario-nfv.sh script
@@ -334,6 +336,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
+            DASHBOARD_URL: "http://{{ kolla_internal_vip_address }}"
       when: is_upgrade
 
     # Bifrost testing.
