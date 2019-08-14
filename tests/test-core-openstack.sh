@@ -11,7 +11,7 @@ function test_smoke {
     openstack --debug compute service list
     openstack --debug network agent list
     openstack --debug orchestration service list
-    if [[ $SCENARIO == "ceph" ]] || [[ $SCENARIO == "cinder-lvm" ]]; then
+    if [[ $SCENARIO == "ceph" ]] || [[ $SCENARIO == "ceph-ansible" ]] | [[ $SCENARIO == "cinder-lvm" ]]; then
         openstack --debug volume service list
     fi
 }
@@ -28,7 +28,7 @@ function test_instance_boot {
     fi
     echo "SUCCESS: Server creation"
 
-    if [[ $SCENARIO == "ceph" ]] || [[ $SCENARIO == "cinder-lvm" ]]; then
+    if [[ $SCENARIO == "ceph" ]] || [ $SCENARIO == "ceph-ansible" ] || [[ $SCENARIO == "cinder-lvm" ]]; then
         echo "TESTING: Cinder volume attachment"
         openstack volume create --size 2 test_volume
         attempt=1

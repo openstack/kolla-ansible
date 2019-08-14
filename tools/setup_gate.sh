@@ -39,6 +39,10 @@ function setup_config {
         GATE_IMAGES+=",ceph,cinder"
     fi
 
+    if [[ $SCENARIO == "ceph-ansible" ]]; then
+        GATE_IMAGES+=",cinder"
+    fi
+
     if [[ $SCENARIO == "cinder-lvm" ]]; then
         GATE_IMAGES+=",cinder,iscsid,tgtd"
     fi

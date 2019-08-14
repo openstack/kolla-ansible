@@ -17,10 +17,11 @@
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
+        ceph_ansible_src_dir: "{{ ansible_env.PWD }}/src/github.com/ceph/ceph-ansible"
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'cinder-lvm', 'cells', 'swift'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'ceph-ansible', 'cinder-lvm', 'cells', 'swift'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' else '3' }}"
@@ -33,10 +34,10 @@
 
     - name: Prepare disks for a storage service
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ['cinder-lvm', 'ceph', 'zun', 'swift']
+      when: scenario in ['cinder-lvm', 'ceph', 'ceph-ansible', 'zun', 'swift']
       become: true
       vars:
-        disk_type: "{{ ceph_storetype if scenario == 'ceph' else scenario }}"
+        disk_type: "{{ ceph_storetype if scenario in ['ceph', 'ceph-ansible'] else scenario }}"
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
@@ -132,6 +133,14 @@
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
           when: "{{ scenario == 'ironic' }}"
+        # Ceph-Ansible inventory
+        - src: "tests/templates/ceph-inventory.j2"
+          dest: /etc/kolla/ceph-inventory
+          when: "{{ scenario == 'ceph-ansible' }}"
+        # ceph-ansible.yml
+        - src: "tests/templates/ceph-ansible.j2"
+          dest: /etc/kolla/ceph-ansible.yml
+          when: "{{ scenario == 'ceph-ansible' }}"
       when: item.when | default(true)
 
     - block:
@@ -256,6 +265,46 @@
     # At this point we have generated all necessary configuration, and are
     # ready to deploy the control plane services. Control flow now depends on
     # the scenario being exercised.
+
+    # Deploy ceph-ansible on ceph-ansible scenarios
+    - block:
+        - name: Run deploy-ceph-ansible.sh script
+          script:
+            cmd: deploy-ceph-ansible.sh
+            executable: /bin/bash
+            chdir: "{{ ceph_ansible_src_dir }}"
+
+        - name: Ensure required kolla config directories exist
+          file:
+            state: directory
+            name: "/etc/kolla/config/{{ item.name }}"
+            mode: 0777
+          with_items: "{{ ceph_ansible_services }}"
+
+        - name: copy ceph.conf to enabled services
+          copy:
+            src: "/etc/ceph/ceph.conf"
+            dest: "/etc/kolla/config/{{ item.name }}/ceph.conf"
+            remote_src: True
+          with_items: "{{ ceph_ansible_services }}"
+
+        - name: copy keyrings to enabled services
+          copy:
+            remote_src: True
+            src: "/etc/ceph/{{ item.keyring }}"
+            dest: "/etc/kolla/config/{{ item.name }}/{{ item.keyring }}"
+          with_items: "{{ ceph_ansible_services }}"
+          become: True
+
+      vars:
+        ceph_ansible_services:
+          - { name: 'cinder/cinder-volume', keyring: "ceph.client.cinder.keyring" }
+          - { name: 'cinder/cinder-backup', keyring: "ceph.client.cinder.keyring" }
+          - { name: 'cinder/cinder-backup', keyring: "ceph.client.cinder-backup.keyring" }
+          - { name: 'glance', keyring: "ceph.client.glance.keyring" }
+          - { name: 'nova', keyring: "ceph.client.nova.keyring" }
+          - { name: 'nova', keyring: "ceph.client.cinder.keyring" }
+      when: scenario == "ceph-ansible"
 
     # Deploy control plane. For upgrade jobs this is the previous release.
     - block:

@@ -18,8 +18,10 @@ function check_config {
                 -not -path /etc/kolla \
                 -not -name admin-openrc.sh \
                 -not -name globals.yml \
+                -not -name ceph-ansible.yml \
                 -not -name header \
                 -not -name inventory \
+                -not -name ceph-inventory \
                 -not -name kolla-build.conf \
                 -not -name passwords.yml \
                 -not -name passwords.yml.old \
