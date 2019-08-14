@@ -64,7 +64,9 @@ swift_admin_tenant_name: "admin"
 swift_devices_mount_point: "/srv/node"
 swift_devices_match_mode: "strict"
 swift_devices_name: "KOLLA_SWIFT_DATA"
-swift_delay_auth_decision: "False"
+# For S3 API we need to defer the auth decision to allow s3api and s3token
+# middlewares to process requests using EC2 credentials.
+swift_delay_auth_decision: "{{ enable_swift_s3api | bool }}"
 
 # Boolean, true if there is a dedicated replication network.
 swift_has_replication_network: "{{ swift_storage_interface != swift_replication_interface }}"
