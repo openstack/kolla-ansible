@@ -36,6 +36,7 @@ horizon_services:
       FORCE_GENERATE: "{{ 'yes' if horizon_dev_mode | bool else 'no' }}"
     volumes: "{{ horizon_default_volumes + horizon_extra_volumes }}"
     dimensions: "{{ horizon_dimensions }}"
+    healthcheck: "{{ horizon_healthcheck }}"
     haproxy:
       horizon:
         enabled: "{{ enable_horizon }}"
@@ -86,6 +87,19 @@ horizon_tag: "{{ openstack_tag }}"
 horizon_image_full: "{{ horizon_image }}:{{ horizon_tag }}"
 
 horizon_dimensions: "{{ default_container_dimensions }}"
+
+horizon_enable_healthchecks: "{{ enable_container_healthchecks }}"
+horizon_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+horizon_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+horizon_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+horizon_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if horizon_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ horizon_listen_port }}"]
+horizon_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+horizon_healthcheck:
+  interval: "{{ horizon_healthcheck_interval }}"
+  retries: "{{ horizon_healthcheck_retries }}"
+  start_period: "{{ horizon_healthcheck_start_period }}"
+  test: "{% if horizon_enable_healthchecks | bool %}{{ horizon_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ horizon_healthcheck_timeout }}"
 
 horizon_default_volumes:
   - "{{ node_config_directory }}/horizon/:{{ container_config_directory }}/:ro"

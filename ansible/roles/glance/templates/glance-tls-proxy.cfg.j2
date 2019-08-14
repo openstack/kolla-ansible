@@ -30,6 +30,15 @@ defaults
     balance {{ glance_tls_proxy_defaults_balance }}
     maxconn {{ glance_tls_proxy_defaults_max_connections }}
 
+listen stats
+   bind {{ api_interface_address }}:{{ glance_tls_proxy_stats_port }}
+   mode http
+   stats enable
+   stats uri /
+   stats refresh 15s
+   stats realm Haproxy\ Stats
+   stats auth {{ haproxy_user }}:{{ haproxy_password }}
+
 frontend glance_backend_tls
     bind {{ api_interface_address }}:{{ glance_api_listen_port }} ssl crt /etc/glance/certs/glance-cert-and-key.pem
     default_backend glance_api

@@ -11,6 +11,7 @@ nova_cell_services:
     privileged: True
     volumes: "{{ nova_libvirt_default_volumes + nova_libvirt_extra_volumes }}"
     dimensions: "{{ nova_libvirt_dimensions }}"
+    healthcheck: "{{ nova_libvirt_healthcheck }}"
   nova-ssh:
     container_name: "nova_ssh"
     group: "{{ nova_cell_compute_group }}"
@@ -18,6 +19,7 @@ nova_cell_services:
     enabled: "{{ enable_nova_ssh | bool }}"
     volumes: "{{ nova_ssh_default_volumes + nova_ssh_extra_volumes }}"
     dimensions: "{{ nova_ssh_dimensions }}"
+    healthcheck: "{{ nova_ssh_healthcheck }}"
   nova-novncproxy:
     container_name: "nova_novncproxy"
     group: "{{ nova_cell_novncproxy_group }}"
@@ -25,6 +27,7 @@ nova_cell_services:
     enabled: "{{ nova_console == 'novnc' }}"
     volumes: "{{ nova_novncproxy_default_volumes + nova_novncproxy_extra_volumes }}"
     dimensions: "{{ nova_novncproxy_dimensions }}"
+    healthcheck: "{{ nova_novncproxy_healthcheck }}"
   nova-spicehtml5proxy:
     container_name: "nova_spicehtml5proxy"
     group: "{{ nova_cell_spicehtml5proxy_group }}"
@@ -46,6 +49,7 @@ nova_cell_services:
     image: "{{ nova_conductor_image_full }}"
     volumes: "{{ nova_conductor_default_volumes + nova_conductor_extra_volumes }}"
     dimensions: "{{ nova_conductor_dimensions }}"
+    healthcheck: "{{ nova_conductor_healthcheck }}"
   nova-compute:
     container_name: "nova_compute"
     group: "{{ nova_cell_compute_group }}"
@@ -57,6 +61,7 @@ nova_cell_services:
     ipc_mode: "host"
     volumes: "{{ nova_compute_default_volumes + nova_compute_extra_volumes }}"
     dimensions: "{{ nova_compute_dimensions }}"
+    healthcheck: "{{ nova_compute_healthcheck }}"
   nova-compute-ironic:
     container_name: "nova_compute_ironic"
     group: "{{ nova_cell_compute_ironic_group }}"
@@ -64,6 +69,7 @@ nova_cell_services:
     enabled: "{{ enable_ironic | bool and nova_cell_name == nova_cell_ironic_cell_name }}"
     volumes: "{{ nova_compute_ironic_default_volumes + nova_compute_ironic_extra_volumes }}"
     dimensions: "{{ nova_compute_ironic_dimensions }}"
+    healthcheck: "{{ nova_compute_ironic_healthcheck }}"
 
 ####################
 # Ceph options
@@ -235,6 +241,84 @@ nova_serialproxy_dimensions: "{{ default_container_dimensions }}"
 nova_conductor_dimensions: "{{ default_container_dimensions }}"
 nova_compute_dimensions: "{{ default_container_dimensions }}"
 nova_compute_ironic_dimensions: "{{ default_container_dimensions }}"
+
+nova_libvirt_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_libvirt_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_libvirt_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_libvirt_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_libvirt_healthcheck_test: ["CMD-SHELL", "virsh version --daemon"]
+nova_libvirt_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_libvirt_healthcheck:
+  interval: "{{ nova_libvirt_healthcheck_interval }}"
+  retries: "{{ nova_libvirt_healthcheck_retries }}"
+  start_period: "{{ nova_libvirt_healthcheck_start_period }}"
+  test: "{% if nova_libvirt_enable_healthchecks | bool %}{{ nova_libvirt_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_libvirt_healthcheck_timeout }}"
+
+nova_ssh_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_ssh_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_ssh_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_ssh_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_ssh_healthcheck_test: ["CMD-SHELL", "healthcheck_listen sshd {{ nova_ssh_port }}"]
+nova_ssh_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_ssh_healthcheck:
+  interval: "{{ nova_ssh_healthcheck_interval }}"
+  retries: "{{ nova_ssh_healthcheck_retries }}"
+  start_period: "{{ nova_ssh_healthcheck_start_period }}"
+  test: "{% if nova_ssh_enable_healthchecks | bool %}{{ nova_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_ssh_healthcheck_timeout }}"
+
+nova_novncproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_novncproxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_novncproxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_novncproxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_novncproxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ nova_novncproxy_listen_port }}/vnc_auto.html"]
+nova_novncproxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_novncproxy_healthcheck:
+  interval: "{{ nova_novncproxy_healthcheck_interval }}"
+  retries: "{{ nova_novncproxy_healthcheck_retries }}"
+  start_period: "{{ nova_novncproxy_healthcheck_start_period }}"
+  test: "{% if nova_novncproxy_enable_healthchecks | bool %}{{ nova_novncproxy_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_novncproxy_healthcheck_timeout }}"
+
+nova_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port nova-conductor {{ om_rpc_port }}"]
+nova_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_conductor_healthcheck:
+  interval: "{{ nova_conductor_healthcheck_interval }}"
+  retries: "{{ nova_conductor_healthcheck_retries }}"
+  start_period: "{{ nova_conductor_healthcheck_start_period }}"
+  test: "{% if nova_conductor_enable_healthchecks | bool %}{{ nova_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_conductor_healthcheck_timeout }}"
+
+nova_compute_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_compute_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_compute_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_compute_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_compute_healthcheck_test: ["CMD-SHELL", "healthcheck_port nova-compute {{ om_rpc_port }}"]
+nova_compute_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_compute_healthcheck:
+  interval: "{{ nova_compute_healthcheck_interval }}"
+  retries: "{{ nova_compute_healthcheck_retries }}"
+  start_period: "{{ nova_compute_healthcheck_start_period }}"
+  test: "{% if nova_compute_enable_healthchecks | bool %}{{ nova_compute_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_compute_healthcheck_timeout }}"
+
+nova_compute_ironic_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_compute_ironic_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_compute_ironic_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_compute_ironic_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_compute_ironic_healthcheck_test: ["CMD-SHELL", "healthcheck_port nova-compute {{ om_rpc_port }}"]
+nova_compute_ironic_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_compute_ironic_healthcheck:
+  interval: "{{ nova_compute_ironic_healthcheck_interval }}"
+  retries: "{{ nova_compute_ironic_healthcheck_retries }}"
+  start_period: "{{ nova_compute_ironic_healthcheck_start_period }}"
+  test: "{% if nova_compute_ironic_enable_healthchecks | bool %}{{ nova_compute_ironic_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_compute_ironic_healthcheck_timeout }}"
 
 nova_libvirt_default_volumes:
   - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
