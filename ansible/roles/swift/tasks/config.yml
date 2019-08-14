@@ -99,6 +99,7 @@
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
     mode: "0660"
   become: true
+  when: inventory_hostname in groups['swift-account-server']
   with_items:
     - "account-auditor"
     - "account-reaper"
@@ -119,6 +120,7 @@
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
     mode: "0660"
   become: true
+  when: inventory_hostname in groups['swift-container-server']
   with_items:
     - "container-auditor"
     - "container-replication-server"
@@ -139,6 +141,7 @@
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
     mode: "0660"
   become: true
+  when: inventory_hostname in groups['swift-object-server']
   with_items:
     - "object-auditor"
     - "object-expirer"
@@ -159,6 +162,7 @@
     dest: "{{ node_config_directory }}/swift-{{ item }}/{{ item }}.conf"
     mode: "0660"
   become: true
+  when: inventory_hostname in groups['swift-proxy-server']
   with_items:
     - "proxy-server"
 
@@ -168,6 +172,9 @@
     dest: "{{ node_config_directory }}/swift-rsyncd/rsyncd.conf"
     mode: "0660"
   become: true
+  when: inventory_hostname in groups['swift-account-server'] or
+        inventory_hostname in groups['swift-container-server'] or
+        inventory_hostname in groups['swift-object-server']
 
 - name: Copying over Swift ring files
   copy:
