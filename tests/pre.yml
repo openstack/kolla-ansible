@@ -3,6 +3,14 @@
   vars:
     logs_dir: "/tmp/logs"
   tasks:
+    # We have had cases where the nodepool private IP address is not assigned,
+    # which causes hard to diagnose errors later on. Catch it early.
+    - name: Assert that the nodepool private IPv4 address is assigned
+      assert:
+        that: nodepool.private_ipv4 in ansible_all_ipv4_addresses
+        fail_msg: >-
+          The nodepool private IP address {{ nodepool.private_ipv4 }} is not assigned
+
     - name: Install dbus for debian system
       apt: name=dbus
       when:
