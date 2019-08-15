@@ -33,3 +33,9 @@ policy_file = {{ cyborg_policy_file }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if cyborg_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ cyborg_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}

@@ -56,9 +56,9 @@ port = {{ tacker_server_port }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_ceilometer | bool %}
+{% if tacker_enabled_notification_topics %}
 driver = messagingv2
-topics = notifications
+topics = {{ tacker_enabled_notification_topics | map(attribute='name') | join(',') }}
 {% else %}
 driver = noop
 {% endif %}

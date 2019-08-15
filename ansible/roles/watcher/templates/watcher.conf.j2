@@ -46,6 +46,12 @@ lock_path = /var/lib/watcher/tmp
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if watcher_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ watcher_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 {% if watcher_policy_file is defined %}
 [oslo_policy]

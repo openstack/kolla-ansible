@@ -48,7 +48,12 @@ api_workers = {{ openstack_service_workers }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if murano_enabled_notification_topics %}
 driver = messagingv2
+topics = {{ murano_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True

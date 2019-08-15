@@ -1,8 +1,5 @@
 [DEFAULT]
 debug = {{ keystone_logging_debug }}
-{% if enable_cadf_notifications | bool %}
-notification_format = cadf
-{% endif %}
 
 transport_url = {{ rpc_transport_url }}
 
@@ -53,9 +50,13 @@ memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansib
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
-{% if enable_cadf_notifications | bool %}
+{% if keystone_enabled_notification_topics %}
 driver = messagingv2
+topics = {{ keystone_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
 {% endif %}
+
 
 {% if enable_osprofiler | bool %}
 [profiler]

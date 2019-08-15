@@ -60,3 +60,16 @@ auth_type = v3password
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if nova_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
+
+[notifications]
+{% if not enable_searchlight | bool %}
+notification_format = unversioned
+{% else %}
+notification_format = both
+{% endif %}

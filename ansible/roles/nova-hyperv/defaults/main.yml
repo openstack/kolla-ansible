@@ -6,3 +6,16 @@ log_dir: "%SYSTEMDRIVE%\\OpenStack\\Log"
 freerdp_msi_url: "https://cloudbase.it/downloads/FreeRDPWebConnect.msi"
 hyperv_compute_msi: "HyperVNovaCompute.msi"
 freerdp_webconnect_msi: "FreeRDPWebConnect.msi"
+
+####################
+# Notification
+####################
+nova_notification_topics:
+  - name: notifications
+    enabled: "{{ enable_ceilometer | bool or enable_searchlight | bool or enable_neutron_infoblox_ipam_agent | bool }}"
+  - name: notifications_designate
+    enabled: "{{ enable_designate | bool }}"
+  - name: vitrage_notifications
+    enabled: "{{ enable_vitrage | bool }}"
+
+nova_enabled_notification_topics: "{{ nova_notification_topics | selectattr('enabled', 'equalto', true) | list }}"

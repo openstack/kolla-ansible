@@ -21,6 +21,12 @@ pin_release_version = {{ pin_release_version }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if ironic_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ ironic_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 {% if ironic_policy_file is defined %}
 [oslo_policy]

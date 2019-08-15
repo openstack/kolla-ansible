@@ -12,6 +12,12 @@ os_region_name = {{ openstack_region_name }}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
+{% if trove_enabled_notification_topics %}
+driver = messagingv2
+topics = {{ trove_enabled_notification_topics | map(attribute='name') | join(',') }}
+{% else %}
+driver = noop
+{% endif %}
 
 [database]
 connection = mysql+pymysql://{{ trove_database_user }}:{{ trove_database_password }}@{{ trove_database_address }}/{{ trove_database_name }}
