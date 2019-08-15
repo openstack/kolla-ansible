@@ -53,6 +53,7 @@
         - enable_magnum_{{ enable_magnum | bool }}
         - enable_manila_{{ enable_manila | bool }}
         - enable_mariadb_{{ enable_mariadb | bool }}
+        - enable_masakari_{{ enable_masakari | bool }}
         - enable_memcached_{{ enable_memcached | bool }}
         - enable_mistral_{{ enable_mistral | bool }}
         - enable_monasca_{{ enable_monasca | bool }}
@@ -244,6 +245,11 @@
             tasks_from: loadbalancer
           tags: mariadb
           when: enable_mariadb | bool
+        - include_role:
+            role: masakari
+            tasks_from: loadbalancer
+          tags: masakari
+          when: enable_masakari | bool
         - include_role:
             role: memcached
             tasks_from: loadbalancer
@@ -1241,3 +1247,16 @@
     - { role: blazar,
         tags: blazar,
         when: enable_blazar | bool }
+
+- name: Apply role masakari
+  gather_facts: false
+  hosts:
+    - masakari-api
+    - masakari-engine
+    - masakari-monitors
+    - '&enable_masakari_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: masakari,
+        tags: masakari,
+        when: enable_masakari | bool }

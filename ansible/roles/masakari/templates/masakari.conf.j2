@@ -1,0 +1,53 @@
+[DEFAULT]
+debug = {{ masakari_logging_debug }}
+log_dir = /var/log/kolla/masakari
+masakari_api_listen = {{ api_interface_address }}
+masakari_api_listen_port = {{ masakari_api_port }}
+enabled_apis = masakari_api
+state_path = /var/lib/masakari
+transport_url = {{ rpc_transport_url }}
+os_user_domain_name = {{ default_user_domain_id }}
+os_project_domain_name = {{ default_project_domain_id }}
+os_privileged_user_tenant = service
+os_privileged_user_auth_url = {{ keystone_internal_url }}/v3
+os_privileged_user_name = {{ nova_keystone_user }}
+os_privileged_user_password = {{ nova_keystone_password }}
+
+[database]
+connection = mysql+pymysql://{{ masakari_database_user }}:{{ masakari_database_password }}@{{ masakari_database_address }}/{{ masakari_database_name }}
+max_retries = -1
+
+[keystone_authtoken]
+www_authenticate_uri = {{ keystone_internal_url }}/v3
+auth_url = {{ keystone_admin_url }}
+auth_type = password
+project_domain_name = {{ default_project_domain_name }}
+user_domain_name = {{ default_user_domain_name }}
+project_name = service
+username = {{ masakari_keystone_user }}
+password = {{ masakari_keystone_password }}
+service_token_roles_required = True
+region_name = {{ openstack_region_name }}
+
+{% if enable_memcached | bool %}
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+
+[oslo_messaging_notifications]
+transport_url = {{ notify_transport_url }}
+{% if enable_ceilometer | bool %}
+driver = messagingv2
+topics = notifications
+{% else %}
+driver = noop
+{% endif %}
+
+[oslo_middleware]
+enable_proxy_headers_parsing = True
+
+{% if masakari_policy_file is defined %}
+[oslo_policy]
+policy_file = {{ masakari_policy_file }}
+{% endif %}

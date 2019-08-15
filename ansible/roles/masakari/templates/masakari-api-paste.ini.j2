@@ -1,0 +1,44 @@
+[composite:masakari_api]
+use = call:masakari.api.urlmap:urlmap_factory
+/: apiversions
+/v1: masakari_api_v1
+
+[composite:masakari_api_v1]
+use = call:masakari.api.auth:pipeline_factory_v1
+keystone = cors http_proxy_to_wsgi request_id faultwrap sizelimit authtoken keystonecontext osapi_masakari_app_v1
+
+# filters
+[filter:cors]
+paste.filter_factory = oslo_middleware.cors:filter_factory
+oslo_config_project = masakari
+
+[filter:http_proxy_to_wsgi]
+paste.filter_factory = oslo_middleware.http_proxy_to_wsgi:HTTPProxyToWSGI.factory
+
+[filter:request_id]
+paste.filter_factory = oslo_middleware:RequestId.factory
+
+[filter:faultwrap]
+paste.filter_factory = masakari.api.openstack:FaultWrapper.factory
+
+[filter:sizelimit]
+paste.filter_factory = oslo_middleware:RequestBodySizeLimiter.factory
+
+[filter:authtoken]
+paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+
+[filter:keystonecontext]
+paste.filter_factory = masakari.api.auth:MasakariKeystoneContext.factory
+
+[filter:noauth2]
+paste.filter_factory = masakari.api.auth:NoAuthMiddleware.factory
+
+# apps
+[app:osapi_masakari_app_v1]
+paste.app_factory = masakari.api.openstack.ha:APIRouterV1.factory
+
+[pipeline:apiversions]
+pipeline = faultwrap http_proxy_to_wsgi apiversionsapp
+
+[app:apiversionsapp]
+paste.app_factory = masakari.api.openstack.ha.versions:Versions.factory

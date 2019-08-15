@@ -1,0 +1,30 @@
+{% if kolla_base_distro in ['debian', 'ubuntu'] %}
+    {% set python_path = '/usr/lib/python3/dist-packages' if masakari_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
+{% else %}
+    {% set python_path = '/usr/lib/python2.7/site-packages' if masakari_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
+{% endif %}
+{% set binary_path = '/usr/bin' if masakari_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+
+Listen {{ api_interface_address }}:{{ masakari_api_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+
+<Directory "{{ binary_path }}">
+    <FilesMatch "^masakari-wsgi$">
+      Options Indexes FollowSymLinks MultiViews
+      Require all granted
+    </FilesMatch>
+</Directory>
+
+<VirtualHost *:{{ masakari_api_port }}>
+  ## Logging
+  ErrorLog "/var/log/kolla/masakari/masakari_wsgi_error.log"
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+  CustomLog "/var/log/kolla/masakari/masakari_wsgi_access.log" logformat
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess masakari group=masakari processes={{ openstack_service_workers }} threads=1 user=masakari python-path={{ python_path }}
+  WSGIProcessGroup masakari
+  WSGIScriptAlias / "{{ binary_path }}/masakari-wsgi"
+</VirtualHost>
