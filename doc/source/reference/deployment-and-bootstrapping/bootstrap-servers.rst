@@ -51,6 +51,8 @@ to override the inventory defaults:
 
    kolla-ansible bootstrap-servers -i INVENTORY -e ansible_user=<bootstrap user> -e ansible_python_interpreter=/usr/bin/python
 
+.. _rebootstrapping:
+
 Subsequent bootstrap considerations
 -----------------------------------
 
