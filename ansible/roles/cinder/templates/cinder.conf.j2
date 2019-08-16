@@ -206,9 +206,9 @@ auth_endpoint = {{ keystone_internal_url }}
 {% endif %}
 
 [coordination]
-{% if enable_redis | bool %}
+{% if cinder_coordination_backend == 'redis' %}
 backend_url = {{ redis_connection_string }}
-{% elif enable_etcd | bool %}
+{% elif cinder_coordination_backend == 'etcd' %}
 # NOTE(jeffrey4l): python-etcd3 module do not support multi endpoint here.
 backend_url = etcd3://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
 {% endif %}
