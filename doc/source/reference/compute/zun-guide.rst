@@ -11,23 +11,8 @@ For more details about Zun, see `OpenStack Zun Documentation
 Preparation and Deployment
 --------------------------
 
-Zun requires kuryr and etcd services, for more information about how to
-configure kuryr refer to :doc:`../containers/kuryr-guide`.
-
-To allow Zun Compute connect to the Docker Daemon, add the following in the
-``docker.service`` file on each zun-compute node.
-
-.. code-block:: ini
-
-   ExecStart= -H tcp://<DOCKER_SERVICE_IP>:2375 -H unix:///var/run/docker.sock --cluster-store=etcd://<DOCKER_SERVICE_IP>:2379 --cluster-advertise=<DOCKER_SERVICE_IP>:2375
-
-.. note::
-
-   ``DOCKER_SERVICE_IP`` is zun-compute host IP address. ``2375`` is port that
-   allows Docker daemon to be accessed remotely.
-
-By default zun is disabled in the ``group_vars/all.yml``.
-In order to enable it, you need to edit the file globals.yml and set the
+By default Zun and its dependencies are disabled.
+In order to enable Zun, you need to edit globals.yml and set the
 following variables:
 
 .. code-block:: yaml
@@ -35,8 +20,20 @@ following variables:
    enable_zun: "yes"
    enable_kuryr: "yes"
    enable_etcd: "yes"
+   docker_configure_for_zun: "yes"
 
-Deploy the OpenStack cloud and zun.
+Docker reconfiguration requires reboostrapping before deploy.
+Make sure you understand the consequences of restarting Docker.
+Please see :ref:`rebootstrapping` for details.
+If it's initial deploy, then there is nothing to worry about
+because it's initial bootstrapping as well and there are no
+running services to affect.
+
+.. code-block:: console
+
+   $ kolla-ansible bootstrap-servers
+
+Finally deploy:
 
 .. code-block:: console
 
