@@ -1,0 +1,28 @@
+---
+- name: Get a list of existing cells
+  vars:
+    nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 list_cells --verbose'
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    image: "{{ nova_conductor.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "nova_list_cells"
+    restart_policy: no
+    volumes: "{{ nova_cell_bootstrap_default_volumes + nova_cell_bootstrap_extra_volumes }}"
+  register: existing_cells_list
+  changed_when: false
+  failed_when:
+    - existing_cells_list.rc != 0
+  when: inventory_hostname == groups[nova_conductor.group][0] | default(None)
+
+- name: Extract current cell settings from list
+  vars:
+    nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
+  set_fact:
+    nova_cell_settings: "{{ existing_cells_list | extract_cell(nova_cell_name) }}"
+  when: inventory_hostname == groups[nova_conductor.group][0] | default(None)

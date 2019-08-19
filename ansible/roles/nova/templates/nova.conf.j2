@@ -3,6 +3,9 @@
 debug = {{ nova_logging_debug }}
 
 log_dir = /var/log/kolla/nova
+{% if service_name == "nova-super-conductor" %}
+log_file = /var/log/kolla/nova/nova-super-conductor.log
+{% endif %}
 
 state_path = /var/lib/nova
 
@@ -16,104 +19,37 @@ metadata_listen_port = {{ nova_metadata_listen_port }}
 
 allow_resize_to_same_host = true
 
-{% if service_name == "nova-compute-ironic" %}
-host={{ ansible_hostname }}-ironic
-log_file = /var/log/kolla/nova/nova-compute-ironic.log
-compute_driver = ironic.IronicDriver
-ram_allocation_ratio = 1.0
-reserved_host_memory_mb = 0
-{% elif enable_nova_fake | bool %}
-host = {{ ansible_hostname }}_{{ service_name }}
-compute_driver = fake.FakeDriver
-{% elif nova_compute_virt_type == 'vmware' %}
-compute_driver = vmwareapi.VMwareVCDriver
-{% elif nova_compute_virt_type == 'xenapi' %}
-compute_driver = xenapi.XenAPIDriver
-{% if service_name == 'nova-compute' %}
-host = xenapi_facts['dom0_hostname']
-{% endif %}
-{% else %}
-compute_driver = libvirt.LibvirtDriver
-{% endif %}
-
 # Though my_ip is not used directly, lots of other variables use $my_ip
 my_ip = {{ api_interface_address }}
 
 {% if enable_ceilometer | bool or enable_searchlight | bool or enable_designate | bool %}
 instance_usage_audit = True
 instance_usage_audit_period = hour
-{% if enable_watcher | bool %}
-compute_monitors=nova.compute.monitors.cpu.virt_driver
-{% endif %}
 {% endif %}
 
 transport_url = {{ rpc_transport_url }}
 
-{% if enable_blazar | bool %}
 [filter_scheduler]
+{% if enable_blazar | bool %}
 available_filters = nova.scheduler.filters.all_filters
 available_filters = blazarnova.scheduler.filters.blazar_filter.BlazarFilter
 enabled_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter,BlazarFilter
+{% endif %}
+{% if enable_nova_fake | bool %}
+enabled_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
+{% endif %}
+{% if enable_cells | bool %}
+# When in superconductor mode, nova-compute can't send instance
+# info updates to the scheduler, so just disable it.
+track_instance_changes = False
 {% endif %}
 
 [api]
 use_forwarded_for = true
 
+# Super conductor
 [conductor]
 workers = {{ openstack_service_workers }}
-
-{% if nova_console == 'novnc' %}
-[vnc]
-{% if service_name == "nova-compute-ironic" %}
-enabled = false
-{% else %}
-novncproxy_host = {{ api_interface_address }}
-novncproxy_port = {{ nova_novncproxy_listen_port }}
-server_listen = {{ api_interface_address }}
-server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups['compute'] %}
-novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn | put_address_in_context('url') }}:{{ nova_novncproxy_port }}/vnc_auto.html
-{% endif %}
-{% endif %}
-{% elif nova_console == 'spice' %}
-[vnc]
-# We have to turn off vnc to use spice
-enabled = false
-[spice]
-enabled = true
-server_listen = {{ api_interface_address }}
-server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups['compute'] %}
-html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
-{% endif %}
-html5proxy_host = {{ api_interface_address }}
-html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
-{% elif nova_console == 'none' %}
-[vnc]
-enabled = false
-[spice]
-enabled = false
-{% endif %}
-{% if enable_nova_serialconsole_proxy | bool %}
-[serial_console]
-enabled = true
-base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn | put_address_in_context('url') }}:{{ nova_serialproxy_port }}/
-serialproxy_host = {{ api_interface_address }}
-serialproxy_port = {{ nova_serialproxy_listen_port }}
-proxyclient_address = {{ api_interface_address }}
-{% endif %}
-
-{% if service_name == "nova-compute-ironic" %}
-[ironic]
-username = {{ ironic_keystone_user }}
-password = {{ ironic_keystone_password }}
-auth_url = {{ openstack_auth.auth_url }}/v3
-auth_type = password
-project_name = service
-user_domain_name = {{ default_user_domain_name }}
-project_domain_name = {{ default_project_domain_name }}
-endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}/v1
-{% endif %}
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True
@@ -148,9 +84,8 @@ password = {{ neutron_keystone_password }}
 region_name = {{ openstack_region_name }}
 valid_interfaces = internal
 
-{% if not service_name.startswith('nova-compute') %}
 [database]
-connection = mysql+pymysql://{{ nova_database_user }}:{{ nova_database_password }}@{{ nova_database_address }}/{{ nova_database_name }}
+connection = mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}
 max_pool_size = 50
 max_overflow = 1000
 max_retries = -1
@@ -158,7 +93,6 @@ max_retries = -1
 [api_database]
 connection = mysql+pymysql://{{ nova_api_database_user }}:{{ nova_api_database_password }}@{{ nova_api_database_address }}/{{ nova_api_database_name }}
 max_retries = -1
-{% endif %}
 
 [cache]
 backend = oslo_cache.memcache_pool
@@ -180,27 +114,6 @@ memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-{% if service_name == 'nova-compute' %}
-{% if nova_compute_virt_type in ['kvm', 'qemu'] %}
-{# must be an include because Ansible 2.8 (and earlier) does not like defined variables referencing undefined variables: migration_interface_address here #}
-{# see https://github.com/ansible/ansible/issues/58835 #}
-{% include 'nova.conf.d/libvirt.conf.j2' %}
-{% endif %}
-{% endif %}
-
-{% if nova_compute_virt_type == "vmware" %}
-[vmware]
-host_ip = {{ vmware_vcenter_host_ip }}
-host_username = {{ vmware_vcenter_host_username }}
-host_password = {{ vmware_vcenter_host_password }}
-cluster_name = {{ vmware_vcenter_cluster_name }}
-datastore_regex = {{ vmware_vcenter_datastore_regex }}
-insecure = {{ vmware_vcenter_insecure }}
-{% if not vmware_vcenter_insecure | bool %}
-ca_file = /etc/nova/vmware_ca
-{% endif %}
-{% endif %}
-
 [upgrade_levels]
 compute = auto
 
@@ -213,7 +126,7 @@ topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',')
 driver = noop
 {% endif %}
 
-{% if nova_policy_file is defined %}
+{% if service_name in nova_services_require_policy_json and nova_policy_file is defined %}
 [oslo_policy]
 policy_file = {{ nova_policy_file }}
 {% endif %}
@@ -239,10 +152,6 @@ max_attempts = 10
 # periodic run must be disabled to avoid random failures (where both try to map)
 # -1 is default and means periodic discovery is disabled
 discover_hosts_in_cells_interval = -1
-
-{% if enable_nova_fake | bool %}
-default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
-{% endif %}
 
 [placement]
 auth_type = password
@@ -277,12 +186,4 @@ connection_string = {{ osprofiler_backend_connection_string }}
 {% if enable_barbican | bool %}
 [barbican]
 auth_endpoint = {{ keystone_internal_url }}
-{% endif %}
-
-{% if nova_compute_virt_type == "xenapi" %}
-[xenserver]
-ovs_integration_bridge = br-int
-connection_password = {{ xenserver_password }}
-connection_username = {{ xenserver_username }}
-connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
 {% endif %}

@@ -1,0 +1,266 @@
+---
+# This playbook is for nova services. Due to support for deployment of cells,
+# nova is separated into two roles - nova and nova-cell. This makes it more
+# complicated than other services, as we may execute each role several times
+# for a given operation.
+#
+# The nova role now deploys the global services:
+#
+# * nova-api
+# * nova-scheduler
+# * nova-super-conductor (if enable_cells is true)
+#
+# The nova-cell role handles services specific to a cell:
+#
+# * nova-compute
+# * nova-compute-ironic
+# * nova-conductor
+# * nova-libvirt
+# * nova-novncproxy
+# * nova-serialproxy
+# * nova-spicehtml5proxy
+# * nova-ssh
+
+# We need to perform database bootstrapping before deploying or upgrading any
+# containers, to ensure all database schema migrations have been performed,
+# both in the API and cell databases. Note that this should not be disruptive
+# to the Nova services, which will continue to run against the new schema.
+
+- name: Bootstrap nova API databases
+  gather_facts: false
+  hosts:
+    - nova-api
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-bootstrap
+    - nova-api
+    - nova-api-bootstrap
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    # * Create nova API & cell0 DBs & users
+    # * API DB schema migrations
+    # * Map cell0
+    # * Cell0 DB schema migrations
+    - name: Bootstrap deploy
+      include_role:
+        name: nova
+        tasks_from: bootstrap
+      when:
+        - enable_nova | bool
+        - kolla_action in ['deploy', 'reconfigure']
+
+    # * API DB schema migrations
+    # * Cell0 DB schema migrations
+    - name: Bootstrap upgrade
+      include_role:
+        name: nova
+        tasks_from: bootstrap_upgrade
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+- name: Bootstrap nova cell databases
+  gather_facts: false
+  hosts:
+    - nova-conductor
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-bootstrap
+    - nova-cell
+    - nova-cell-bootstrap
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    # * Create nova cell DBs & users
+    # * Create RabbitMQ vhost & user
+    # * Cell DB schema migrations
+    # * Create cell mappings
+    - name: Bootstrap deploy
+      include_role:
+        name: nova-cell
+        tasks_from: bootstrap
+      when:
+        - enable_nova | bool
+        - kolla_action in ['deploy', 'reconfigure']
+
+    # * Cell DB schema migrations
+    - name: Bootstrap upgrade
+      include_role:
+        name: nova-cell
+        tasks_from: bootstrap_upgrade
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+# Standard {{ kolla_action }}.yml for nova role.
+- name: Apply role nova
+  gather_facts: false
+  hosts:
+    - nova-api
+    - nova-scheduler
+    - nova-super-conductor
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-api
+    - nova-api-deploy
+    - nova-api-upgrade
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - role: nova
+      when: enable_nova | bool
+
+# Standard {{ kolla_action }}.yml for nova-cell role.
+- name: Apply role nova-cell
+  gather_facts: false
+  hosts:
+    - compute
+    - nova-conductor
+    - nova-novncproxy
+    - nova-serialproxy
+    - nova-spicehtml5proxy
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-cell
+    - nova-cell-deploy
+    - nova-cell-upgrade
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - role: nova-cell
+      when: enable_nova | bool
+
+# Reload nova scheduler to pick up new cells.
+# TODO(mgoddard): Ideally we'd only do this when one or more cells have been
+# created or updated.
+- name: Refresh nova scheduler cell cache
+  gather_facts: false
+  hosts:
+    - nova-scheduler
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-api
+    - nova-refresh-scheduler-cell-cache
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        name: nova
+        tasks_from: refresh_scheduler_cell_cache
+      when:
+        - enable_nova | bool
+        - kolla_action in ['deploy', 'reconfigure']
+
+# Following an upgrade, Nova services must be restarted once all compute
+# services have registered themselves, to remove the RPC version pin.
+# Also, when nova_safety_upgrade is true, this starts services which were
+# stopped during the upgrade.  Nova upgrade documentation recommends starting
+# conductors first and API last.
+
+- name: Reload global Nova super conductor services
+  gather_facts: false
+  hosts:
+    - nova-super-conductor
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-reload
+    - nova-api
+    - nova-api-reload
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        name: nova
+        tasks_from: reload_super_conductor
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+- name: Reload Nova cell services
+  gather_facts: false
+  hosts:
+    - compute
+    - nova-conductor
+    - nova-novncproxy
+    - nova-serialproxy
+    - nova-spicehtml5proxy
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-reload
+    - nova-cell
+    - nova-cell-reload
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        role: nova-cell
+        tasks_from: reload
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+- name: Reload global Nova API services
+  gather_facts: false
+  hosts:
+    - nova-api
+    - nova-scheduler
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-reload
+    - nova-api
+    - nova-api-reload
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        name: nova
+        tasks_from: reload_api
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+# Following an upgrade, data migrations should be performed for the API
+# database.  This should be done once all cells have been upgraded.
+
+- name: Run Nova API online data migrations
+  gather_facts: false
+  hosts:
+    - nova-api
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-api
+    - nova-online-data-migrations
+    - nova-api-online-data-migrations
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        role: nova
+        tasks_from: online_data_migrations
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'
+
+# Following an upgrade, data migrations should be performed for each cell
+# database.  This should be done once all hosts in the cell have been upgraded,
+# and ideally once all hosts in the cloud have been upgraded.
+
+- name: Run Nova cell online data migrations
+  gather_facts: false
+  hosts:
+    - nova-conductor
+    - '&enable_nova_True'
+  tags:
+    - nova
+    - nova-cell
+    - nova-online-data-migrations
+    - nova-cell-online-data-migrations
+  serial: '{{ kolla_serial|default("0") }}'
+  tasks:
+    - import_role:
+        role: nova-cell
+        tasks_from: online_data_migrations
+      when:
+        - enable_nova | bool
+        - kolla_action == 'upgrade'

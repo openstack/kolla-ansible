@@ -1,0 +1,19 @@
+---
+# Configure HAProxy for all cells for a particular proxy type.
+# Iterate over each cell group, creating HAProxy config for that cell.
+
+- name: "Configure HAProxy for {{ cell_proxy_service_name }}"
+  include_tasks: cell_proxy_loadbalancer.yml
+  vars:
+    # NOTE(mgoddard): Defining this here rather than in
+    # cell_proxy_loadbalancer.yml due to a weird issue seen on Ansible 2.8. If
+    # project_name is specified as a role variable for the import, it seems to
+    # get stuck and override the variable for subsequent imports of the
+    # haproxy-config role for other services. By that point
+    # cell_proxy_service_name is no longer defined, so it fails.
+    project_name: "nova-cell:{{ cell_proxy_service_name }}"
+  with_items: "{{ cell_proxy_groups }}"
+  when: groups[cell_proxy_group] | length > 0
+  loop_control:
+    loop_var: cell_proxy_group
+  tags: always

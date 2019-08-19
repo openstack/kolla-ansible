@@ -1,0 +1,12 @@
+---
+# Configure HAProxy for one cell for a particular console proxy type.
+- import_role:
+    role: haproxy-config
+  vars:
+    project_services: "{{ cell_proxy_project_services | namespace_haproxy_for_cell(cell_name) }}"
+    # Default is necessary because this play may not be targetting the hosts in
+    # the cell_proxy_group group, and therefore they would not have role
+    # defaults defined. If we put this variable in group_vars, then it cannot
+    # be overridden by the inventory.
+    cell_name: "{{ hostvars[groups[cell_proxy_group][0]]['nova_cell_name'] | default('') }}"
+  tags: always

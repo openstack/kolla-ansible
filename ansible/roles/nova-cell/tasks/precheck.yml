@@ -3,55 +3,26 @@
   become: true
   kolla_container_facts:
     name:
-      - nova_api
+      - nova_libvirt
       - nova_novncproxy
       - nova_serialproxy
       - nova_spicehtml5proxy
       - nova_ssh
-      - nova_libvirt
   register: container_facts
 
 - name: Checking available compute nodes in inventory
   vars:
-    nova_compute_ironic: "{{ nova_services['nova-compute-ironic'] }}"
+    nova_compute_ironic: "{{ nova_cell_services['nova-compute-ironic'] }}"
   fail:
     msg: >
       At least 1 compute node required in inventory when ironic is disabled.
   when:
-    - groups['compute'] | length < 1
+    - groups[nova_cell_compute_group] | length < 1
     - not nova_compute_ironic.enabled | bool
-
-- name: Checking free port for Nova API
-  vars:
-    nova_api: "{{ nova_services['nova-api'] }}"
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ nova_api_listen_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups[nova_api.group]
-    - nova_api.enabled | bool
-
-- name: Checking free port for Nova Metadata
-  vars:
-    nova_api: "{{ nova_services['nova-api'] }}"
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ nova_metadata_listen_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups[nova_api.group]
-    - nova_api.enabled | bool
 
 - name: Checking free port for Nova NoVNC Proxy
   vars:
-    nova_novncproxy: "{{ nova_services['nova-novncproxy'] }}"
+    nova_novncproxy: "{{ nova_cell_services['nova-novncproxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_novncproxy_listen_port }}"
@@ -65,7 +36,7 @@
 
 - name: Checking free port for Nova Serial Proxy
   vars:
-    nova_serialproxy: "{{ nova_services['nova-serialproxy'] }}"
+    nova_serialproxy: "{{ nova_cell_services['nova-serialproxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_serialproxy_listen_port }}"
@@ -79,7 +50,7 @@
 
 - name: Checking free port for Nova Spice HTML5 Proxy
   vars:
-    nova_spicehtml5proxy: "{{ nova_services['nova-spicehtml5proxy'] }}"
+    nova_spicehtml5proxy: "{{ nova_cell_services['nova-spicehtml5proxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_spicehtml5proxy_listen_port }}"
@@ -93,7 +64,7 @@
 
 - name: Checking free port for Nova SSH
   vars:
-    nova_ssh: "{{ nova_services['nova-ssh'] }}"
+    nova_ssh: "{{ nova_cell_services['nova-ssh'] }}"
   wait_for:
     host: "{{ migration_interface_address }}"
     port: "{{ nova_ssh_port }}"
@@ -107,7 +78,7 @@
 
 - name: Checking free port for Nova Libvirt
   vars:
-    nova_libvirt: "{{ nova_services['nova-libvirt'] }}"
+    nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_libvirt_port }}"
@@ -121,7 +92,7 @@
 
 - name: Checking that libvirt is not running
   vars:
-    nova_libvirt: "{{ nova_services['nova-libvirt'] }}"
+    nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
   stat: path=/var/run/libvirt/libvirt-sock
   register: result
   failed_when: result.stat.exists
@@ -129,11 +100,3 @@
     - nova_compute_virt_type in ['kvm', 'qemu']
     - container_facts['nova_libvirt'] is not defined
     - inventory_hostname in groups[nova_libvirt.group]
-
-# TODO(mgoddard): Remove this task in the Ussuri cycle.
-- name: Check that legacy upgrade is not enabled
-  fail:
-    msg: >
-      Legacy upgrade support has been removed. 'nova_enable_rolling_upgrade'
-      should no longer be set.
-  when: not nova_enable_rolling_upgrade | default(true) | bool

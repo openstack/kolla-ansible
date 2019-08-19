@@ -6,14 +6,6 @@ log_dir = /var/log/kolla/nova
 
 state_path = /var/lib/nova
 
-osapi_compute_listen = {{ api_interface_address }}
-osapi_compute_listen_port = {{ nova_api_listen_port }}
-osapi_compute_workers = {{ openstack_service_workers }}
-metadata_workers = {{ openstack_service_workers }}
-
-metadata_listen = {{ api_interface_address }}
-metadata_listen_port = {{ nova_metadata_listen_port }}
-
 allow_resize_to_same_host = true
 
 {% if service_name == "nova-compute-ironic" %}
@@ -47,17 +39,7 @@ compute_monitors=nova.compute.monitors.cpu.virt_driver
 {% endif %}
 {% endif %}
 
-transport_url = {{ rpc_transport_url }}
-
-{% if enable_blazar | bool %}
-[filter_scheduler]
-available_filters = nova.scheduler.filters.all_filters
-available_filters = blazarnova.scheduler.filters.blazar_filter.BlazarFilter
-enabled_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter,BlazarFilter
-{% endif %}
-
-[api]
-use_forwarded_for = true
+transport_url = {{ nova_cell_rpc_transport_url }}
 
 [conductor]
 workers = {{ openstack_service_workers }}
@@ -71,8 +53,8 @@ novncproxy_host = {{ api_interface_address }}
 novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups['compute'] %}
-novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn }}:{{ nova_novncproxy_port }}/vnc_auto.html
+{% if inventory_hostname in groups[nova_cell_compute_group] %}
+novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn | put_address_in_context('url') }}:{{ nova_novncproxy_port }}/vnc_auto.html
 {% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
@@ -83,8 +65,8 @@ enabled = false
 enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups['compute'] %}
-html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
+{% if inventory_hostname in groups[nova_cell_compute_group] %}
+html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
 {% endif %}
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
@@ -97,7 +79,7 @@ enabled = false
 {% if enable_nova_serialconsole_proxy | bool %}
 [serial_console]
 enabled = true
-base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn }}:{{ nova_serialproxy_port }}/
+base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn | put_address_in_context('url') }}:{{ nova_serialproxy_port }}/
 serialproxy_host = {{ api_interface_address }}
 serialproxy_port = {{ nova_serialproxy_listen_port }}
 proxyclient_address = {{ api_interface_address }}
@@ -112,19 +94,16 @@ auth_type = password
 project_name = service
 user_domain_name = {{ default_user_domain_name }}
 project_domain_name = {{ default_project_domain_name }}
-endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn }}:{{ ironic_api_port }}/v1
+endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}/v1
 {% endif %}
 
-[oslo_middleware]
-enable_proxy_headers_parsing = True
 
 [oslo_concurrency]
 lock_path = /var/lib/nova/tmp
 
 [glance]
-api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn }}:{{ glance_api_port }}
-
-num_retries = {{ groups['glance-api'] | length }}
+api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}
+num_retries = 3
 
 {% if enable_cinder | bool %}
 [cinder]
@@ -150,35 +129,17 @@ valid_interfaces = internal
 
 {% if not service_name.startswith('nova-compute') %}
 [database]
-connection = mysql+pymysql://{{ nova_database_user }}:{{ nova_database_password }}@{{ nova_database_address }}/{{ nova_database_name }}
+connection = mysql+pymysql://{{ nova_cell_database_user }}:{{ nova_cell_database_password }}@{{ nova_cell_database_address | put_address_in_context('url') }}:{{ nova_cell_database_port }}/{{ nova_cell_database_name }}
 max_pool_size = 50
 max_overflow = 1000
 max_retries = -1
 
+{% if service_name == 'nova-cell-bootstrap' or (service_name == 'nova-conductor' and nova_cell_conductor_has_api_database | bool) %}
 [api_database]
 connection = mysql+pymysql://{{ nova_api_database_user }}:{{ nova_api_database_password }}@{{ nova_api_database_address }}/{{ nova_api_database_name }}
 max_retries = -1
 {% endif %}
-
-[cache]
-backend = oslo_cache.memcache_pool
-enabled = True
-memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
-
-[keystone_authtoken]
-www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
-auth_type = password
-project_domain_id = {{ default_project_domain_id }}
-user_domain_id = {{ default_user_domain_id }}
-project_name = service
-username = {{ nova_keystone_user }}
-password = {{ nova_keystone_password }}
-
-memcache_security_strategy = ENCRYPT
-memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 
 {% if service_name == 'nova-compute' %}
 {% if nova_compute_virt_type in ['kvm', 'qemu'] %}
@@ -205,7 +166,7 @@ ca_file = /etc/nova/vmware_ca
 compute = auto
 
 [oslo_messaging_notifications]
-transport_url = {{ notify_transport_url }}
+transport_url =  {{ nova_cell_notify_transport_url }}
 {% if nova_enabled_notification_topics %}
 driver = messagingv2
 topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',') }}
@@ -213,7 +174,7 @@ topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',')
 driver = noop
 {% endif %}
 
-{% if nova_policy_file is defined %}
+{% if service_name in nova_cell_services_require_policy_json and nova_policy_file is defined %}
 [oslo_policy]
 policy_file = {{ nova_policy_file }}
 {% endif %}
@@ -226,23 +187,6 @@ debug = {{ nova_logging_debug }}
 
 [guestfs]
 debug = {{ nova_logging_debug }}
-
-[wsgi]
-api_paste_config = /etc/nova/api-paste.ini
-{% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
-secure_proxy_ssl_header = HTTP_X_FORWARDED_PROTO
-{% endif %}
-
-[scheduler]
-max_attempts = 10
-# NOTE(yoctozepto): kolla-ansible handles cell mapping by itself on each deploy
-# periodic run must be disabled to avoid random failures (where both try to map)
-# -1 is default and means periodic discovery is disabled
-discover_hosts_in_cells_interval = -1
-
-{% if enable_nova_fake | bool %}
-default_filters = RetryFilter,AvailabilityZoneFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter
-{% endif %}
 
 [placement]
 auth_type = password
@@ -285,4 +229,16 @@ ovs_integration_bridge = br-int
 connection_password = {{ xenserver_password }}
 connection_username = {{ xenserver_username }}
 connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
+{% endif %}
+
+# Cell specific settings from DevStack:
+# https://opendev.org/openstack/devstack/src/branch/master/lib/nova#L874
+{% if service_name.startswith("nova-compute") and enable_cells | bool %}
+[workarounds]
+disable_group_policy_check_upcall = true
+
+[filter_scheduler]
+# When in superconductor mode, nova-compute can't send instance
+# info updates to the scheduler, so just disable it.
+track_instance_changes = false
 {% endif %}

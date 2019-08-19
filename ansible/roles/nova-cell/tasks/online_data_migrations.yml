@@ -1,21 +1,19 @@
 ---
-- name: Running Nova cell bootstrap container
-  become: true
+- name: Run Nova cell online database migrations
   vars:
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
+  become: true
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
     environment:
-      KOLLA_UPGRADE:
+      KOLLA_OSM:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
     image: "{{ nova_conductor.image }}"
     labels:
       BOOTSTRAP:
-    name: "nova_cell_bootstrap"
-    restart_policy: no
+    name: "nova_cell_online_data_migrations"
+    restart_policy: "no"
     volumes: "{{ nova_cell_bootstrap_default_volumes + nova_cell_bootstrap_extra_volumes }}"
-  register: bootstrap_result
-  changed_when: bootstrap_result.stdout | default("") | length > 0
   when: inventory_hostname == groups[nova_cell_conductor_group][0]
