@@ -68,6 +68,22 @@
 # that it does not start back up after being shut down.
 # TODO(mgoddard): Remove this task in Train.
 
+- name: check if slave mariadb is running
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_container_facts:
+    name:
+      - "{{ service.container_name }}"
+  register: initial_mariadb_container_facts
+  when:
+    - kolla_action != "config"
+    - has_cluster | bool
+    - inventory_hostname != master_host
+    - not mariadb_recover | default(false)
+  listen: restart mariadb
+
 - name: remove restart policy from slave mariadb
   vars:
     service_name: "mariadb"
@@ -79,6 +95,7 @@
     - has_cluster | bool
     - inventory_hostname != master_host
     - not mariadb_recover | default(false)
+    - service.container_name in initial_mariadb_container_facts
   listen: restart mariadb
 
 - name: shutdown slave mariadb
@@ -108,6 +125,7 @@
     - has_cluster | bool
     - inventory_hostname != master_host
     - not mariadb_recover | default(false)
+    - service.container_name in initial_mariadb_container_facts
   listen: restart mariadb
 
 - name: wait for slave mariadb shutdown
@@ -123,6 +141,7 @@
     - has_cluster | bool
     - inventory_hostname != master_host
     - not mariadb_recover | default(false)
+    - service.container_name in initial_mariadb_container_facts
   listen: restart mariadb
   register: mariadb_container_facts
   # Don't fail if the container is still up - we will stop it in the next task.
@@ -148,6 +167,7 @@
     - has_cluster | bool
     - inventory_hostname != master_host
     - not mariadb_recover | default(false)
+    - service.container_name in initial_mariadb_container_facts
   listen: restart mariadb
 
 - name: replace restart policy on slave mariadb
@@ -162,6 +182,7 @@
     - has_cluster | bool
     - inventory_hostname != master_host
     - not mariadb_recover | default(false)
+    - service.container_name in initial_mariadb_container_facts
   listen: restart mariadb
 
 - name: restart slave mariadb
