@@ -207,6 +207,11 @@ Nova
 Put ceph.conf, nova client keyring file and cinder client keyring file into
 ``/etc/kolla/config/nova``:
 
+.. warning::
+
+   If you are using ceph-ansible - please copy ceph.client.cinder.keyring
+   as /etc/kolla/config/nova/ceph.client.nova.keyring
+
 .. code-block:: console
 
    $ ls /etc/kolla/config/nova
