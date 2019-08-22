@@ -216,10 +216,6 @@ nova_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ 
 nova_conductor_tag: "{{ nova_tag }}"
 nova_conductor_image_full: "{{ nova_conductor_image }}:{{ nova_conductor_tag }}"
 
-nova_consoleauth_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-consoleauth"
-nova_consoleauth_tag: "{{ nova_tag }}"
-nova_consoleauth_image_full: "{{ nova_consoleauth_image }}:{{ nova_consoleauth_tag }}"
-
 nova_novncproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-novncproxy"
 nova_novncproxy_tag: "{{ nova_tag }}"
 nova_novncproxy_image_full: "{{ nova_novncproxy_image }}:{{ nova_novncproxy_tag }}"
@@ -251,7 +247,6 @@ nova_serialproxy_image_full: "{{ nova_serialproxy_image }}:{{ nova_serialproxy_t
 nova_libvirt_dimensions: "{{ default_container_dimensions }}"
 nova_ssh_dimensions: "{{ default_container_dimensions }}"
 nova_api_dimensions: "{{ default_container_dimensions }}"
-nova_consoleauth_dimensions: "{{ default_container_dimensions }}"
 nova_novncproxy_dimensions: "{{ default_container_dimensions }}"
 nova_scheduler_dimensions: "{{ default_container_dimensions }}"
 nova_spicehtml5proxy_dimensions: "{{ default_container_dimensions }}"
@@ -284,11 +279,6 @@ nova_api_default_volumes:
   - "{{ node_config_directory }}/nova-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "/lib/modules:/lib/modules:ro"
-  - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
-nova_consoleauth_default_volumes:
-  - "{{ node_config_directory }}/nova-consoleauth/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python2.7/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_novncproxy_default_volumes:
@@ -338,7 +328,6 @@ nova_extra_volumes: "{{ default_extra_volumes }}"
 nova_libvirt_extra_volumes: "{{ nova_extra_volumes }}"
 nova_ssh_extra_volumes: "{{ nova_extra_volumes }}"
 nova_api_extra_volumes: "{{ nova_extra_volumes }}"
-nova_consoleauth_extra_volumes: "{{ nova_extra_volumes }}"
 nova_novncproxy_extra_volumes: "{{ nova_extra_volumes }}"
 nova_scheduler_extra_volumes: "{{ nova_extra_volumes }}"
 nova_spicehtml5proxy_extra_volumes: "{{ nova_extra_volumes }}"
@@ -381,7 +370,6 @@ nova_services_require_nova_conf:
   - nova-compute
   - nova-compute-ironic
   - nova-conductor
-  - nova-consoleauth
   - nova-novncproxy
   - nova-serialproxy
   - nova-scheduler
