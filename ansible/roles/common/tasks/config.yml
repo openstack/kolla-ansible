@@ -26,6 +26,32 @@
     - "fluentd/filter"
   when: enable_fluentd | bool
 
+- name: Ensure fluentd image is present for label check
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "ensure_image"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ service.image }}"
+  when: enable_fluentd | bool
+
+- name: Fetch fluentd image labels
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+  become: true
+  docker_image_facts:
+    name: "{{ service.image }}"
+  register: fluentd_labels
+  when: enable_fluentd | bool
+
+- name: Set fluentd facts
+  set_fact:
+    fluentd_binary: "{% if fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary is not defined %}{% if kolla_base_distro in 'ubuntu' and ansible_architecture == 'x86_64' %}td-agent{% else %}fluentd{% endif %}{% else %}{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}{% endif %}"
+  when: enable_fluentd | bool
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -199,6 +225,7 @@
 - name: Copying over fluentd filter config files
   vars:
     customised_filter_files: "{{ find_custom_fluentd_filters.files | map(attribute='path') | map('basename') | list }}"
+    fluentd_version: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_version | default('0.12') }}"
   template:
     src: "conf/filter/{{ item.src }}.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/filter/{{ item.dest }}.conf"
@@ -207,7 +234,7 @@
   with_items:
     - src: 00-record_transformer
       dest: 00-record_transformer
-    - src: "{{ '01-rewrite-0.14' if kolla_base_distro in ['debian', 'ubuntu'] else '01-rewrite-0.12' }}"
+    - src: "{{ '01-rewrite-0.14' if fluentd_version == '0.14' else '01-rewrite-0.12' }}"
       dest: 01-rewrite
   when:
     - enable_fluentd | bool
