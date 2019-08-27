@@ -1,0 +1,16 @@
+---
+# Explicitly wait for the database to be accessible via the load balancer.
+# Sometimes it can reject connections even when all database services are up,
+# due to the health check polling in HAProxy.
+- name: wait for MariaDB to be available via HAProxy
+  wait_for:
+    host: "{{ database_address }}"
+    port: "{{ database_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port is success
+  retries: 10
+  delay: 6
+  run_once: True
