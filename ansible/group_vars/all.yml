@@ -110,6 +110,9 @@ docker_restart_policy_retry: "10"
 docker_configure_for_zun: "no"
 docker_zun_options: -H fd:// -H tcp://{{ api_interface_address }}:2375 --cluster-store=etcd://{% for host in groups.get('etcd', []) %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
 
+# Timeout after Docker sends SIGTERM before sending SIGKILL.
+docker_graceful_timeout: 60
+
 # Common options used throughout Docker
 docker_common_options:
   auth_email: "{{ docker_registry_email }}"
@@ -120,6 +123,7 @@ docker_common_options:
     KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
   restart_policy: "{{ docker_restart_policy }}"
   restart_retries: "{{ docker_restart_policy_retry }}"
+  graceful_timeout: "{{ docker_graceful_timeout }}"
 
 ####################
 # Dimensions options
