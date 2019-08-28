@@ -9,7 +9,8 @@
         password={{ swift_keystone_password }}
         role=admin
         region_name={{ openstack_region_name }}
-        auth={{ '{{ openstack_swift_auth }}' }}"
+        auth={{ '{{ openstack_swift_auth }}' }}
+        {% if openstack_cacert != '' %}cacert={{ openstack_cacert }}{% endif %}"
     -e "{'openstack_swift_auth':{{ openstack_swift_auth }}}"
   register: swift_sanity
   changed_when: swift_sanity.stdout.find('localhost | SUCCESS => ') != -1 and (swift_sanity.stdout.split('localhost | SUCCESS => ')[1]|from_json).changed
