@@ -63,6 +63,46 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Check if the folder ["{{ node_custom_config }}/ceilometer/{{ ceilometer_dynamic_pollsters_local_folder }}"] for dynamic pollsters definitions exist
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/{{ ceilometer_dynamic_pollsters_local_folder }}"
+  delegate_to: localhost
+  register: ceilometer_dynamic_pollsters_folder
+  run_once: True
+
+- name: Set the variable that control the copy of dynamic pollsters definitions
+  set_fact:
+    should_copy_dynamic_pollster_definitions: "{{ ceilometer_dynamic_pollsters_folder.stat.exists and ceilometer_dynamic_pollsters_folder.stat.isdir }}"
+
+- name: Clean default folder for dynamic pollsters definitions
+  file:
+    state: absent
+    path: "{{ node_config_directory }}/ceilometer-central/pollsters.d/"
+
+- name: Create default folder for dynamic pollsters definitions
+  file:
+    path: "{{ node_config_directory }}/ceilometer-central/pollsters.d"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - should_copy_dynamic_pollster_definitions
+    - inventory_hostname in groups['ceilometer-central']
+
+- name: Copying dynamic pollsters definitions
+  copy:
+    src: "{{ node_custom_config }}/ceilometer/{{ ceilometer_dynamic_pollsters_local_folder }}/"
+    dest: "{{ node_config_directory }}/ceilometer-central/pollsters.d/"
+    mode: "0660"
+  become: true
+  when:
+    - should_copy_dynamic_pollster_definitions
+    - inventory_hostname in groups['ceilometer-central']
+  notify:
+    - "Restart ceilometer-central container"
+
 - name: Check if custom polling.yaml exists
   stat:
     path: "{{ node_custom_config }}/ceilometer/polling.yaml"
