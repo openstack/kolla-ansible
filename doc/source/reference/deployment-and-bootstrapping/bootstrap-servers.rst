@@ -162,7 +162,7 @@ The ``docker_storage_driver`` variable is optional. If set, it defines the
 use for Docker.
 
 The ``docker_runtime_directory`` variable is optional. If set, it defines the
-runtime (``--graph``) directory for Docker.
+runtime (``data-root``) directory for Docker.
 
 The ``docker_registry`` variable, which is not set by default, defines the
 address of the Docker registry. If the variable is not set, Dockerhub will be
@@ -178,8 +178,16 @@ maximum number of log files to retain per container. The
 ``docker_log_max_size`` variable, which defaults to ``50m``, defines the
 maximum size of each rotated log file per container.
 
-The ``docker_custom_option`` variable is optional. If set, it defines
-additional options to pass to the Docker engine via the Systemd unit file.
+Additional options for the Docker engine can be passed in
+``docker_custom_config`` variable. It will be stored in ``daemon.json`` config
+file. Example:
+
+.. code-block:: json
+
+    {
+        "experimental": false
+    }
+
 
 Disabling firewalls
 ~~~~~~~~~~~~~~~~~~~
