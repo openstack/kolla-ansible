@@ -1,3 +1,5 @@
+# Clear any old environment that may conflict.
+for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
 export OS_PROJECT_DOMAIN_NAME=Default
 export OS_USER_DOMAIN_NAME=Default
 export OS_PROJECT_NAME={{ keystone_admin_project }}
@@ -6,6 +8,10 @@ export OS_USERNAME={{ keystone_admin_user }}
 export OS_PASSWORD={{ keystone_admin_password }}
 export OS_AUTH_URL={{ keystone_admin_url }}/v3
 export OS_INTERFACE=internal
+export OS_ENDPOINT_TYPE=internalURL
+{% if enable_manila | bool %}
+export OS_MANILA_ENDPOINT_TYPE=internalURL
+{% endif %}
 export OS_IDENTITY_API_VERSION=3
 export OS_REGION_NAME={{ openstack_region_name }}
 export OS_AUTH_PLUGIN=password
