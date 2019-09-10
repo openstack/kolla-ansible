@@ -20,6 +20,7 @@ following variables:
    enable_zun: "yes"
    enable_kuryr: "yes"
    enable_etcd: "yes"
+   enable_placement: "yes"
    docker_configure_for_zun: "yes"
 
 Docker reconfiguration requires reboostrapping before deploy.
