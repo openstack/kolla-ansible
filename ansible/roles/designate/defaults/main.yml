@@ -71,7 +71,7 @@ designate_services:
 ####################
 designate_database_name: "designate"
 designate_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}designate{% endif %}"
-designate_database_address: "{{ database_address }}:{{ database_port }}"
+designate_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -164,9 +164,9 @@ designate_sink_extra_volumes: "{{ designate_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-designate_admin_endpoint: "{{ admin_protocol }}://{{ designate_internal_fqdn }}:{{ designate_api_port }}"
-designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn }}:{{ designate_api_port }}"
-designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn }}:{{ designate_api_port }}"
+designate_admin_endpoint: "{{ admin_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
+designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
+designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 
 designate_logging_debug: "{{ openstack_logging_debug }}"
 

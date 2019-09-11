@@ -65,7 +65,7 @@ ceph_client_manila_keyring_caps:
 #####################
 manila_database_name: "manila"
 manila_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}manila{% endif %}"
-manila_database_address: "{{ database_address }}:{{ database_port }}"
+manila_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 #####################
@@ -129,12 +129,12 @@ manila_data_extra_volumes: "{{ manila_extra_volumes }}"
 #####################
 ## OpenStack
 #####################
-manila_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ manila_api_port }}/v1/%(tenant_id)s"
-manila_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ manila_api_port }}/v1/%(tenant_id)s"
-manila_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ manila_api_port }}/v1/%(tenant_id)s"
-manila_v2_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ manila_api_port }}/v2/%(tenant_id)s"
-manila_v2_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ manila_api_port }}/v2/%(tenant_id)s"
-manila_v2_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ manila_api_port }}/v2/%(tenant_id)s"
+manila_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v1/%(tenant_id)s"
+manila_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v1/%(tenant_id)s"
+manila_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v1/%(tenant_id)s"
+manila_v2_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v2/%(tenant_id)s"
+manila_v2_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v2/%(tenant_id)s"
+manila_v2_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}/v2/%(tenant_id)s"
 
 manila_logging_debug: "{{ openstack_logging_debug }}"
 

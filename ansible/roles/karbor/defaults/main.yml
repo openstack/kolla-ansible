@@ -41,7 +41,7 @@ karbor_services:
 ####################
 karbor_database_name: "karbor"
 karbor_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}karbor{% endif %}"
-karbor_database_address: "{{ database_address }}:{{ database_port }}"
+karbor_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -87,9 +87,9 @@ karbor_api_extra_volumes: "{{ karbor_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-karbor_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ karbor_api_port }}/v1/%(project_id)s"
-karbor_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ karbor_api_port }}/v1/%(project_id)s"
-karbor_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ karbor_api_port }}/v1/%(project_id)s"
+karbor_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ karbor_api_port }}/v1/%(project_id)s"
+karbor_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ karbor_api_port }}/v1/%(project_id)s"
+karbor_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ karbor_api_port }}/v1/%(project_id)s"
 
 karbor_logging_debug: "{{ openstack_logging_debug }}"
 

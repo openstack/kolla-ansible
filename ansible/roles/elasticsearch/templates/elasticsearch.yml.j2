@@ -2,12 +2,12 @@
 {% set minimum_master_nodes = (num_nodes / 2 + 1) | round(0, 'floor') | int if num_nodes > 2 else 1 %}
 {% set recover_after_nodes = (num_nodes * 2 / 3) | round(0, 'floor') | int if num_nodes > 1 else 1 %}
 node.name: "{{ api_interface_address }}"
-network.host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+network.host: "{{ 'api' | kolla_address }}"
 
 cluster.name: "{{ elasticsearch_cluster_name }}"
 node.master: true
 node.data: true
-discovery.zen.ping.unicast.hosts: [{% for host in groups['elasticsearch'] %}"{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}"{% if not loop.last %},{% endif %}{% endfor %}]
+discovery.zen.ping.unicast.hosts: [{% for host in groups['elasticsearch'] %}"{{ 'api' | kolla_address(host) }}"{% if not loop.last %},{% endif %}{% endfor %}]
 
 discovery.zen.minimum_master_nodes: {{ minimum_master_nodes }}
 http.port: {{ elasticsearch_port }}

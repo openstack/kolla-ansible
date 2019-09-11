@@ -11,8 +11,8 @@ default_pool_id = {{ designate_pool_id }}
 workers = {{ openstack_service_workers }}
 
 [service:api]
-listen = {{ api_interface_address }}:{{ designate_api_listen_port }}
-api_base_uri = {{ internal_protocol }}://{{ designate_internal_fqdn }}:{{ designate_api_port }}
+listen = {{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}
+api_base_uri = {{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}
 workers = {{ openstack_service_workers }}
 enable_api_admin = True
 enable_host_header = True
@@ -32,7 +32,7 @@ service_token_roles_required = True
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [service:sink]
 enabled_notification_handlers = nova_fixed, neutron_floatingip
@@ -40,7 +40,7 @@ workers = {{ openstack_service_workers }}
 
 {% if service_name == 'designate-mdns' %}
 [service:mdns]
-listen = {{ hostvars[inventory_hostname]['ansible_' + dns_interface]['ipv4']['address'] }}:{{ designate_mdns_port }}
+listen = {{ 'dns' | kolla_address | put_address_in_context('url') }}:{{ designate_mdns_port }}
 workers = {{ openstack_service_workers }}
 {% endif %}
 
@@ -104,5 +104,5 @@ policy_file = {{ designate_policy_file }}
 backend_url = {{ redis_connection_string }}
 {% elif designate_coordination_backend == 'etcd' %}
 # NOTE(noxoid): python-etcd3 does not support multiple endpoints
-backend_url = etcd3://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+backend_url = etcd3://{{ 'api' | kolla_address(groups['etcd'][0]) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endif %}

@@ -41,7 +41,7 @@ congress_services:
 ####################
 congress_database_name: "congress"
 congress_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}congress{% endif %}"
-congress_database_address: "{{ database_address }}:{{ database_port }}"
+congress_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -90,9 +90,9 @@ congress_datasource_extra_volumes: "{{ congress_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-congress_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ congress_api_port }}"
-congress_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ congress_api_port }}"
-congress_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ congress_api_port }}"
+congress_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ congress_api_port }}"
+congress_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ congress_api_port }}"
+congress_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ congress_api_port }}"
 
 congress_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -3,8 +3,8 @@ debug = {{ heat_logging_debug }}
 
 log_dir = /var/log/kolla/heat
 
-heat_metadata_server_url = {{ public_protocol }}://{{ heat_cfn_external_fqdn }}:{{ heat_api_cfn_port }}
-heat_waitcondition_server_url = {{ public_protocol }}://{{ heat_cfn_external_fqdn }}:{{ heat_api_cfn_port }}/v1/waitcondition
+heat_metadata_server_url = {{ public_protocol }}://{{ heat_cfn_external_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}
+heat_waitcondition_server_url = {{ public_protocol }}://{{ heat_cfn_external_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1/waitcondition
 
 heat_stack_user_role = {{ heat_stack_user_role }}
 
@@ -52,13 +52,13 @@ password = {{ heat_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 
 [cache]
 backend = oslo_cache.memcache_pool
 enabled = True
-memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcache_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 
 [trustee]

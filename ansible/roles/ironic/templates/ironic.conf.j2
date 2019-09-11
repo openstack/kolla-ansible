@@ -66,7 +66,7 @@ valid_interfaces = internal
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
 {% if enable_cinder | bool %}
@@ -151,7 +151,7 @@ region_name = {{ openstack_region_name }}
 valid_interfaces = internal
 {% else %}
 auth_type = none
-endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn }}:{{ ironic_api_port }}
+endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}
 {% endif %}
 
 [agent]

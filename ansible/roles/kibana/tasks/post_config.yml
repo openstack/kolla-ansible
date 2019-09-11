@@ -7,7 +7,7 @@
 
 - name: Register the kibana index in elasticsearch
   uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana"
     method: PUT
     body: "{{ kibana_default_index_options | to_json }}"
     body_format: json
@@ -22,7 +22,7 @@
 
 - name: Wait for kibana to register in elasticsearch
   uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana"
     status_code: 200
   register: result
   until: result.status == 200
@@ -32,7 +32,7 @@
 
 - name: Change kibana config to set index as defaultIndex
   uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana/config/*"
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana/config/*"
     method: PUT
     body:
       defaultIndex: "{{ kibana_default_index_pattern }}"
@@ -44,7 +44,7 @@
   uri:
     headers:
       Content-Type: application/json
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana"
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana"
     method: GET
   register: kibana_default_indexes
   run_once: true
@@ -60,7 +60,7 @@
 
 - name: Add index pattern to kibana
   uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}/.kibana/index-pattern/{{ kibana_default_index_pattern }}"
+    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}/.kibana/index-pattern/{{ kibana_default_index_pattern }}"
     method: PUT
     body: "{{ kibana_default_index | to_json }}"
     body_format: json

@@ -69,7 +69,7 @@ swift_admin_tenant_name: "admin"
 ####################
 gnocchi_database_name: "gnocchi"
 gnocchi_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}gnocchi{% endif %}"
-gnocchi_database_address: "{{ database_address }}:{{ database_port }}"
+gnocchi_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -120,9 +120,9 @@ gnocchi_statsd_extra_volumes: "{{ gnocchi_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-gnocchi_admin_endpoint: "{{ admin_protocol }}://{{ gnocchi_internal_fqdn }}:{{ gnocchi_api_port }}"
-gnocchi_internal_endpoint: "{{ internal_protocol }}://{{ gnocchi_internal_fqdn }}:{{ gnocchi_api_port }}"
-gnocchi_public_endpoint: "{{ public_protocol }}://{{ gnocchi_external_fqdn }}:{{ gnocchi_api_port }}"
+gnocchi_admin_endpoint: "{{ admin_protocol }}://{{ gnocchi_internal_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
+gnocchi_internal_endpoint: "{{ internal_protocol }}://{{ gnocchi_internal_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
+gnocchi_public_endpoint: "{{ public_protocol }}://{{ gnocchi_external_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
 
 gnocchi_logging_debug: "{{ openstack_logging_debug }}"
 

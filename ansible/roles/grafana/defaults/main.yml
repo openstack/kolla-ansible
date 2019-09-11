@@ -26,7 +26,7 @@ grafana_services:
 ####################
 grafana_database_name: "grafana"
 grafana_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}grafana{% endif %}"
-grafana_database_address: "{{ database_address }}:{{ database_port }}"
+grafana_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
 # Datasource
@@ -39,7 +39,7 @@ grafana_data_sources:
       database: "telegraf"
       name: "telegraf"
       type: "influxdb"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ influxdb_http_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ influxdb_http_port }}"
       access: "proxy"
       basicAuth: false
   elasticsearch:
@@ -48,7 +48,7 @@ grafana_data_sources:
       name: "elasticsearch"
       type: "elasticsearch"
       access: "proxy"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ elasticsearch_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
       database: "flog-*"
       jsonData:
         esVersion: 5

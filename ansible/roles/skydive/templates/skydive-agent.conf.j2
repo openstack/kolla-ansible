@@ -15,21 +15,21 @@ etcd:
   servers:
 {% if enable_etcd | bool %}
 {% for host in groups['etcd'] %}
-    - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+    - http://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endfor %}
 {% else %}
 {% for host in groups['skydive-analyzer'] %}
-  - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+  - http://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endfor %}
 {% endif %}
 
 analyzers:
 {% for host in groups['skydive-analyzer'] %}
-  - {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ skydive_analyzer_port }}
+  - {{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ skydive_analyzer_port }}
 {% endfor %}
 
 agent:
-  listen: {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}:{{ skydive_agents_port }}
+  listen: {{ 'api' | kolla_address | put_address_in_context('url') }}:{{ skydive_agents_port }}
   flow:
     probes:
       - gopacket

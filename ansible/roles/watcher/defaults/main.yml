@@ -41,7 +41,7 @@ watcher_services:
 ####################
 watcher_database_name: "watcher"
 watcher_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}watcher{% endif %}"
-watcher_database_address: "{{ database_address }}:{{ database_port }}"
+watcher_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -90,9 +90,9 @@ watcher_engine_extra_volumes: "{{ watcher_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-watcher_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ watcher_api_port }}"
-watcher_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ watcher_api_port }}"
-watcher_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ watcher_api_port }}"
+watcher_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ watcher_api_port }}"
+watcher_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ watcher_api_port }}"
+watcher_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ watcher_api_port }}"
 
 watcher_logging_debug: "{{ openstack_logging_debug }}"
 

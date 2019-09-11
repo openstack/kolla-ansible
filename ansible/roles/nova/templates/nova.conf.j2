@@ -72,7 +72,7 @@ novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups['compute'] %}
-novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn }}:{{ nova_novncproxy_port }}/vnc_auto.html
+novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn | put_address_in_context('url') }}:{{ nova_novncproxy_port }}/vnc_auto.html
 {% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
@@ -84,7 +84,7 @@ enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups['compute'] %}
-html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
+html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
 {% endif %}
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
@@ -97,7 +97,7 @@ enabled = false
 {% if enable_nova_serialconsole_proxy | bool %}
 [serial_console]
 enabled = true
-base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn }}:{{ nova_serialproxy_port }}/
+base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn | put_address_in_context('url') }}:{{ nova_serialproxy_port }}/
 serialproxy_host = {{ api_interface_address }}
 serialproxy_port = {{ nova_serialproxy_listen_port }}
 proxyclient_address = {{ api_interface_address }}
@@ -112,7 +112,7 @@ auth_type = password
 project_name = service
 user_domain_name = {{ default_user_domain_name }}
 project_domain_name = {{ default_project_domain_name }}
-endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn }}:{{ ironic_api_port }}/v1
+endpoint_override = {{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}/v1
 {% endif %}
 
 [oslo_middleware]
@@ -122,7 +122,7 @@ enable_proxy_headers_parsing = True
 lock_path = /var/lib/nova/tmp
 
 [glance]
-api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn }}:{{ glance_api_port }}
+api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}
 
 num_retries = {{ groups['glance-api'] | length }}
 
@@ -163,7 +163,7 @@ max_retries = -1
 [cache]
 backend = oslo_cache.memcache_pool
 enabled = True
-memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcache_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 
 [keystone_authtoken]
@@ -178,7 +178,7 @@ password = {{ nova_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 {% if service_name == 'nova-compute' %}
 {% if nova_compute_virt_type in ['kvm', 'qemu'] %}

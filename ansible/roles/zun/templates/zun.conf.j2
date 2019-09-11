@@ -42,7 +42,7 @@ region_name = {{ openstack_region_name }}
 {% if enable_memcached | bool %}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
 # NOTE(yoctozepto): despite what the docs say, both keystone_auth and
@@ -63,7 +63,7 @@ region_name = {{ openstack_region_name }}
 {% if enable_memcached | bool %}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
 [zun_client]
@@ -104,10 +104,10 @@ host_shared_with_nova = {{ inventory_hostname in groups['compute'] and enable_no
 [websocket_proxy]
 wsproxy_host = {{ api_interface_address }}
 wsproxy_port = {{ zun_wsproxy_port }}
-base_url = ws://{{ kolla_external_fqdn }}:{{ zun_wsproxy_port }}
+base_url = ws://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ zun_wsproxy_port }}
 
 [docker]
 docker_remote_api_version = 1.24
-api_url = tcp://{{ api_interface_address }}:2375
+api_url = tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
 docker_remote_api_host = {{ api_interface_address }}
 docker_remote_api_port = 2375

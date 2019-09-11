@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 {% if enable_opendaylight | bool %}
-/usr/bin/ovs-vsctl --no-wait -- set-manager {% for host in groups['opendaylight'] %}tcp:{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ opendaylight_ovsdb_port }} {% endfor %}
+/usr/bin/ovs-vsctl --no-wait -- set-manager {% for host in groups['opendaylight'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ opendaylight_ovsdb_port }} {% endfor %}
 
-/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:local_ip={{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['tunnel_interface']]['ipv4']['address'] }}
+/usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:local_ip={{ 'tunnel' | kolla_address }}
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . other_config:provider_mappings=physnet1:{{ neutron_bridge_name }}
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:system-id=`cat /proc/sys/kernel/random/uuid`
 /usr/bin/ovs-vsctl --no-wait -- set Open_vSwitch . external_ids:odl_os_hostconfig_config_odl_l2='{"supported_vnic_types": [{"vnic_type": "normal", "vif_type": "ovs", "vif_details": {} }], "allowed_network_types": [{{ opendaylight_allowed_network_types }}], "datapath_types": ["netdev", "system"], "bridge_mappings": {"physnet1":"{{ neutron_bridge_name }}"} }'

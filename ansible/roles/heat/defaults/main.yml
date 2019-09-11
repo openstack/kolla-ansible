@@ -55,7 +55,7 @@ heat_services:
 ####################
 heat_database_name: "heat"
 heat_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}heat{% endif %}"
-heat_database_address: "{{ database_address }}:{{ database_port }}"
+heat_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -104,12 +104,12 @@ heat_engine_extra_volumes: "{{ heat_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-heat_admin_endpoint: "{{ admin_protocol }}://{{ heat_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_internal_endpoint: "{{ internal_protocol }}://{{ heat_internal_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_public_endpoint: "{{ public_protocol }}://{{ heat_external_fqdn }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_cfn_admin_endpoint: "{{ admin_protocol }}://{{ heat_cfn_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
-heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ heat_cfn_internal_fqdn }}:{{ heat_api_cfn_port }}/v1"
-heat_cfn_public_endpoint: "{{ public_protocol }}://{{ heat_cfn_external_fqdn }}:{{ heat_api_cfn_port }}/v1"
+heat_admin_endpoint: "{{ admin_protocol }}://{{ heat_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_internal_endpoint: "{{ internal_protocol }}://{{ heat_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_public_endpoint: "{{ public_protocol }}://{{ heat_external_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_cfn_admin_endpoint: "{{ admin_protocol }}://{{ heat_cfn_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ heat_cfn_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_public_endpoint: "{{ public_protocol }}://{{ heat_cfn_external_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1"
 
 heat_logging_debug: "{{ openstack_logging_debug }}"
 

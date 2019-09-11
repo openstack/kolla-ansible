@@ -29,7 +29,7 @@ cyborg_services:
 ####################
 cyborg_database_name: "cyborg"
 cyborg_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}cyborg{% endif %}"
-cyborg_database_address: "{{ database_address }}:{{ database_port }}"
+cyborg_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
 # Docker
@@ -77,9 +77,9 @@ cyborg_conductor_extra_volumes: "{{ cyborg_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-cyborg_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ cyborg_api_port }}"
-cyborg_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ cyborg_api_port }}"
-cyborg_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ cyborg_api_port }}"
+cyborg_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cyborg_api_port }}"
+cyborg_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cyborg_api_port }}"
+cyborg_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ cyborg_api_port }}"
 
 cyborg_logging_debug: "{{ openstack_logging_debug }}"
 

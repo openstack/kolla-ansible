@@ -33,7 +33,7 @@ tacker_services:
 ####################
 tacker_database_name: "tacker"
 tacker_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}tacker{% endif %}"
-tacker_database_address: "{{ database_address }}:{{ database_port }}"
+tacker_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ########
 # Docker
@@ -70,9 +70,9 @@ tacker_conductor_extra_volumes: "{{ tacker_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-tacker_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ tacker_server_port }}"
-tacker_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ tacker_server_port }}"
-tacker_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ tacker_server_port }}"
+tacker_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ tacker_server_port }}"
+tacker_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ tacker_server_port }}"
+tacker_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ tacker_server_port }}"
 
 tacker_logging_debug: "{{ openstack_logging_debug }}"
 

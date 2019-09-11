@@ -190,11 +190,11 @@ ceph_client_nova_keyring_caps:
 ####################
 nova_database_name: "nova"
 nova_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova{% endif %}"
-nova_database_address: "{{ database_address }}:{{ database_port }}"
+nova_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 nova_api_database_name: "nova_api"
 nova_api_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova_api{% endif %}"
-nova_api_database_address: "{{ database_address }}:{{ database_port }}"
+nova_api_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
 # Docker
@@ -345,13 +345,13 @@ haproxy_nova_serialconsole_proxy_tunnel_timeout: "10m"
 # OpenStack
 ####################
 
-nova_legacy_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
-nova_legacy_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
-nova_legacy_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn }}:{{ nova_api_port }}/v2/%(tenant_id)s"
+nova_legacy_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2/%(tenant_id)s"
+nova_legacy_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2/%(tenant_id)s"
+nova_legacy_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2/%(tenant_id)s"
 
-nova_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2.1"
-nova_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn }}:{{ nova_api_port }}/v2.1"
-nova_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn }}:{{ nova_api_port }}/v2.1"
+nova_admin_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2.1"
+nova_internal_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2.1"
+nova_public_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}/v2.1"
 
 nova_logging_debug: "{{ openstack_logging_debug }}"
 

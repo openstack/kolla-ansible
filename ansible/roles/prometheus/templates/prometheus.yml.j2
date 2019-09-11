@@ -17,7 +17,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups['prometheus'] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ prometheus_port }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ prometheus_port }}'
 {% endfor %}
 
 {% if enable_prometheus_node_exporter | bool %}
@@ -25,7 +25,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups['prometheus-node-exporter'] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -34,7 +34,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups['prometheus-mysqld-exporter'] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -43,7 +43,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups['prometheus-haproxy-exporter'] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -52,7 +52,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups['prometheus-memcached-exporter'] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -61,7 +61,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups["prometheus-cadvisor"] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -71,7 +71,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups["ceph-mgr"] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_ceph_mgr_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_ceph_mgr_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -82,7 +82,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups["prometheus-openstack-exporter"] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_openstack_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_openstack_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -92,7 +92,7 @@ scrape_configs:
     static_configs:
       - targets:
 {% for host in groups["prometheus-elasticsearch-exporter"] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
 {% endfor %}
 {% endif %}
 
@@ -123,7 +123,7 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: '{{ api_interface_address }}:{{ prometheus_blackbox_exporter_port }}'
+        replacement: '{{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_blackbox_exporter_port }}'
 {% endif %}
 
 {% if enable_prometheus_alertmanager | bool %}
@@ -132,6 +132,6 @@ alerting:
   - static_configs:
     - targets:
 {% for host in groups["prometheus-alertmanager"] %}
-        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
 {% endfor %}
 {% endif %}

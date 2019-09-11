@@ -64,10 +64,10 @@ container_proxy:
 
 # By default, Kolla API services bind to the network address assigned
 # to the api_interface.  Allow the bind address to be an override.
-api_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+api_interface_address: "{{ 'api' | kolla_address }}"
 
 # This is used to get the ip corresponding to the storage_interface.
-storage_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }}"
+storage_interface_address: "{{ 'storage' | kolla_address }}"
 
 ################
 # Chrony options
@@ -109,9 +109,9 @@ docker_restart_policy_retry: "10"
 
 # Extra docker options for Zun
 docker_configure_for_zun: "no"
-docker_zun_options: -H tcp://{{ api_interface_address }}:2375
+docker_zun_options: -H tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
 docker_zun_config:
-  cluster-store: etcd://{% for host in groups.get('etcd', []) %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
+  cluster-store: etcd://{% for host in groups.get('etcd', []) %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
 
 # Timeout after Docker sends SIGTERM before sending SIGKILL.
 docker_graceful_timeout: 60
@@ -165,7 +165,7 @@ om_rpc_port: "{{ rabbitmq_port }}"
 om_rpc_group: "rabbitmq"
 om_rpc_vhost: "/"
 
-rpc_transport_url: "{{ om_rpc_transport }}://{% for host in groups[om_rpc_group] %}{{ om_rpc_user }}:{{ om_rpc_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ om_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_rpc_vhost }}"
+rpc_transport_url: "{{ om_rpc_transport }}://{% for host in groups[om_rpc_group] %}{{ om_rpc_user }}:{{ om_rpc_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ om_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_rpc_vhost }}"
 
 # oslo.messaging notify transport valid options are [ rabbit ]
 om_notify_transport: "rabbit"
@@ -175,7 +175,7 @@ om_notify_port: "{{ rabbitmq_port }}"
 om_notify_group: "rabbitmq"
 om_notify_vhost: "/"
 
-notify_transport_url: "{{ om_notify_transport }}://{% for host in groups[om_notify_group] %}{{ om_notify_user }}:{{ om_notify_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ om_notify_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_notify_vhost }}"
+notify_transport_url: "{{ om_notify_transport }}://{% for host in groups[om_notify_group] %}{{ om_notify_user }}:{{ om_notify_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ om_notify_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_notify_vhost }}"
 
 ####################
 # Networking options
@@ -193,9 +193,24 @@ tunnel_interface: "{{ network_interface }}"
 octavia_network_interface: "{{ api_interface }}"
 bifrost_network_interface: "{{ network_interface }}"
 dns_interface: "{{ network_interface }}"
-migration_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + migration_interface]['ipv4']['address'] }}"
-tunnel_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + tunnel_interface]['ipv4']['address'] }}"
-octavia_network_interface_address: "{{ hostvars[inventory_hostname]['ansible_' + octavia_network_interface]['ipv4']['address'] }}"
+
+# Configure the address family (AF) per network.
+# Valid options are [ ipv4, ipv6 ]
+network_address_family: "ipv4"
+api_address_family: "{{ network_address_family }}"
+storage_address_family: "{{ network_address_family }}"
+cluster_address_family: "{{ network_address_family }}"
+swift_storage_address_family: "{{ storage_address_family }}"
+swift_replication_address_family: "{{ swift_storage_address_family }}"
+migration_address_family: "{{ network_address_family }}"
+tunnel_address_family: "{{ network_address_family }}"
+octavia_network_address_family: "{{ api_address_family }}"
+bifrost_network_address_family: "{{ network_address_family }}"
+dns_address_family: "{{ network_address_family }}"
+
+migration_interface_address: "{{ 'migration' | kolla_address }}"
+tunnel_interface_address: "{{ 'tunnel' | kolla_address }}"
+octavia_network_interface_address: "{{ 'octavia_network' | kolla_address }}"
 
 # Valid options are [ openvswitch, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_dvs, opendaylight ]
 neutron_plugin_agent: "openvswitch"
@@ -715,14 +730,14 @@ enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bo
 ####################
 # Redis options
 ####################
-redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&db=0&socket_timeout=60&retry_on_timeout=yes"
+redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&db=0&socket_timeout=60&retry_on_timeout=yes"
 
 ####################
 # Osprofiler options
 ####################
 # valid values: ["elasticsearch", "redis"]
 osprofiler_backend: "elasticsearch"
-elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}"
+elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
 osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else elasticsearch_connection_string }}"
 
 ####################
@@ -762,9 +777,9 @@ kibana_log_prefix: "flog"
 ####################
 keystone_internal_fqdn: "{{ kolla_internal_fqdn }}"
 keystone_external_fqdn: "{{ kolla_external_fqdn }}"
-keystone_admin_url: "{{ admin_protocol }}://{{ keystone_internal_fqdn }}:{{ keystone_admin_port }}"
-keystone_internal_url: "{{ internal_protocol }}://{{ keystone_internal_fqdn }}:{{ keystone_public_port }}"
-keystone_public_url: "{{ public_protocol }}://{{ keystone_external_fqdn }}:{{ keystone_public_port }}"
+keystone_admin_url: "{{ admin_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_admin_port }}"
+keystone_internal_url: "{{ internal_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
+keystone_public_url: "{{ public_protocol }}://{{ keystone_external_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
 
 keystone_admin_user: "admin"
 keystone_admin_project: "admin"

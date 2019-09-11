@@ -2,6 +2,7 @@
 kolla_base_distro: "{{ base_distro }}"
 kolla_install_type: "{{ install_type }}"
 network_interface: "{{ api_interface_name }}"
+network_address_family: "{{ address_family }}"
 docker_restart_policy: "no"
 # TODO(mgoddard): Always do this in Ussuri cycle.
 {% if not is_previous_release or previous_release != 'stein' %}
@@ -25,7 +26,10 @@ openstack_service_workers: "1"
 {% if need_build_image and not is_previous_release %}
 # NOTE(Jeffrey4l): use different a docker namespace name in case it pull image from hub.docker.io when deplying
 docker_namespace: "lokolla"
-docker_registry: "{{ primary_address }}:4000"
+# NOTE(yoctozepto): use hostname or FQDN to be compatible between IPv4 and IPv6
+# docker does not support referencing registry via an IPv6 address
+# see: https://github.com/moby/moby/issues/39033
+docker_registry: "primary:4000"
 openstack_release: "{{ build_image_tag }}"
 {% else %}
 # use docker hub images
@@ -35,7 +39,7 @@ docker_namespace: "kolla"
 # will be the source of images during the upgrade.
 # NOTE(yoctozepto): this is required here for CI because we run templating
 # of docker systemd command only once
-docker_custom_option: "--insecure-registry {{ primary_address }}:4000"
+docker_custom_option: "--insecure-registry primary:4000"
 {% endif %}
 {% if not is_previous_release %}
 openstack_release: "{{ zuul.branch | basename }}"
@@ -53,6 +57,13 @@ enable_ceph_nfs: "yes"
 enable_cinder: "yes"
 ceph_pool_pg_num: 8
 ceph_pool_pgp_num: 8
+{% if address_family == 'ipv6' %}
+# NOTE(yoctozepto): ceph won't accept IPv6 address as hostname (due to ':', '.' were fine)
+# hence use inventory name as the others do
+# this is Train feature so would fail upgrades from Stein
+ceph_mon_host_type: "INVENTORY"
+ceph_osd_host_type: "INVENTORY"
+{% endif %}
 # This is experimental feature, disable if gate fail.
 # In multinode jobs without ceph rolling upgrade fails.
 glance_enable_rolling_upgrade: "yes"

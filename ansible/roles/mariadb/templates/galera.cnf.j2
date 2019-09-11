@@ -26,12 +26,12 @@ character-set-server = utf8
 
 datadir=/var/lib/mysql/
 
-wsrep_cluster_address=gcomm://{% if (groups['mariadb'] | length) > 1 %}{% for host in groups['mariadb'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_wsrep_port }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
+wsrep_cluster_address=gcomm://{% if (groups['mariadb'] | length) > 1 %}{% for host in groups['mariadb'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
 
-wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address }}:{{ mariadb_ist_port }}
+wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }}
 
-wsrep_node_address={{ api_interface_address }}:{{ mariadb_wsrep_port }}
-wsrep_sst_receive_address={{ api_interface_address }}:{{ mariadb_sst_port }}
+wsrep_node_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}
+wsrep_sst_receive_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_sst_port }}
 
 wsrep_provider={{ wsrep_driver }}
 wsrep_cluster_name="{{ database_cluster_name }}"
@@ -61,3 +61,12 @@ innodb_lock_schedule_algorithm = FCFS
 
 [server]
 pid-file=/var/lib/mysql/mariadb.pid
+
+[sst]
+{% if sst_method == 'mariabackup' and api_address_family == 'ipv6' %}
+# NOTE(yoctozepto): for IPv6 we need to tweak sockopt for socat (mariabackup sst backend)
+# see: https://mariadb.com/kb/en/library/xtrabackup-v2-sst-method/#performing-ssts-with-ipv6-addresses
+# and: https://jira.mariadb.org/browse/MDEV-18797
+# this can be removed when MDEV-18797 is resolved
+sockopt=",pf=ip6"
+{% endif %}

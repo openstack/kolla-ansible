@@ -7,7 +7,7 @@ transport_url = {{ rpc_transport_url }}
 [api]
 port = {{ searchlight_api_port }}
 bind_host = {{ api_interface_address }}
-public_endpoint = {{ public_protocol }}://{{ kolla_external_fqdn }}:{{ searchlight_api_port }}
+public_endpoint = {{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ searchlight_api_port }}
 workers = {{ openstack_service_workers }}
 
 [elasticsearch]
@@ -32,7 +32,7 @@ auth_type = password
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
@@ -63,7 +63,7 @@ auth_plugin = password
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [resource_plugin:os_cinder_volume]
 enabled = {{ enable_cinder | bool }}

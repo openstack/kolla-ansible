@@ -34,7 +34,7 @@ murano_services:
 ####################
 murano_database_name: "murano"
 murano_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}murano{% endif %}"
-murano_database_address: "{{ database_address }}:{{ database_port }}"
+murano_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -72,9 +72,9 @@ murano_engine_extra_volumes: "{{ murano_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-murano_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ murano_api_port }}"
-murano_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ murano_api_port }}"
-murano_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ murano_api_port }}"
+murano_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}"
+murano_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}"
+murano_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}"
 
 murano_logging_debug: "{{ openstack_logging_debug }}"
 

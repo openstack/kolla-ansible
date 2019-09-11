@@ -141,11 +141,11 @@ monasca_influxdb_retention_policy:
 ####################
 # Monasca
 ####################
-monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}'{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
+monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ 'api' | kolla_address(host) }}'{% if not loop.last %},{% endif %}{% endfor %}"
 # NOTE(dszumski): Only one NTP server is currently supported by the Monasca Agent plugin
 monasca_ntp_server: "{{ external_ntp_servers | first }}"
 
@@ -189,7 +189,7 @@ monasca_grafana_data_sources:
       name: "Monasca API"
       type: "monasca-datasource"
       access: "proxy"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address }}:{{ monasca_api_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ monasca_api_port }}"
       isDefault: True
       basicAuth: false
       jsonData:
@@ -329,13 +329,13 @@ monasca_agent_authorized_roles:
 monasca_delegate_authorized_roles:
   - admin
 
-monasca_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
-monasca_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_api_port }}/v2.0"
-monasca_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_api_port }}/v2.0"
+monasca_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}/v2.0"
+monasca_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}/v2.0"
+monasca_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}/v2.0"
 
-monasca_log_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}"
-monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ monasca_log_api_port }}"
-monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_log_api_port }}"
+monasca_log_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 
 monasca_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -10,7 +10,7 @@ copy_logs() {
     # Don't save the IPA images.
     rm ${LOG_DIR}/kolla_configs/config/ironic/ironic-agent.{kernel,initramfs}
     mkdir ${LOG_DIR}/system_configs/
-    cp -rL /etc/{hostname,hosts,resolv.conf,nsswitch.conf,docker,systemd} ${LOG_DIR}/system_configs/
+    cp -rL /etc/{hostname,hosts,host.conf,resolv.conf,nsswitch.conf,docker,systemd} ${LOG_DIR}/system_configs/
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
 
 
@@ -32,9 +32,15 @@ copy_logs() {
 
     (set -x
     ip a
+    ip m
     ip l
     ip r
-    ping -c 4 ${KOLLA_INTERNAL_VIP_ADDRESS}) &> ${LOG_DIR}/system_logs/ip.txt
+    ip -6 r
+    ip neigh
+    ping -c 4 $(hostname)
+    ping6 -c 4 $(hostname)
+    ping -c 4 ${KOLLA_INTERNAL_VIP_ADDRESS}
+    ping6 -c 4 ${KOLLA_INTERNAL_VIP_ADDRESS}) &> ${LOG_DIR}/system_logs/ip.txt
 
     (set -x
     iptables -t raw -v -n -L
@@ -48,7 +54,15 @@ copy_logs() {
     ip6tables -t nat -v -n -L
     ip6tables -t filter -v -n -L) &> ${LOG_DIR}/system_logs/ip6tables.txt
 
-    ss -putona > ${LOG_DIR}/system_logs/ss.txt
+    ss -nep > ${LOG_DIR}/system_logs/ss.txt
+
+    ss -nep -l > ${LOG_DIR}/system_logs/ss_l.txt
+
+    (set -x
+    getent ahostsv4 $(hostname)
+    getent ahostsv6 $(hostname)) &> ${LOG_DIR}/system_logs/getent_ahostsvX.txt
+
+    sysctl -a &> ${LOG_DIR}/system_logs/sysctl.txt
 
     if [ `command -v dpkg` ]; then
         dpkg -l > ${LOG_DIR}/system_logs/dpkg-l.txt

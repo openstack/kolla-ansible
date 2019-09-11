@@ -50,6 +50,6 @@ requirepass {{ redis_master_password }}
 masterauth {{ redis_master_password }}
 
 {% if inventory_hostname != groups['redis'][0] %}
-{% set redis_master_address = hostvars[groups['redis'][0]]['ansible_' + hostvars[groups['redis'][0]]['api_interface']]['ipv4']['address'] %}
+{% set redis_master_address = 'api' | kolla_address(groups['redis'][0]) %}
 slaveof {{ redis_master_address }} 6379
 {% endif %}

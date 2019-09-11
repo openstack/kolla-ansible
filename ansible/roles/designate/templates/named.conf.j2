@@ -1,9 +1,9 @@
 #jinja2: trim_blocks: False
 include "/etc/rndc.key";
 options {
-        listen-on port {{ designate_bind_port }} { {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }}; };
+        listen-on port {{ designate_bind_port }} { {{ 'api' | kolla_address }}; };
         {% if api_interface != dns_interface %}
-        listen-on port {{ designate_bind_port }} { {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['dns_interface']]['ipv4']['address'] }}; };
+        listen-on port {{ designate_bind_port }} { {{ 'dns' | kolla_address }}; };
         {% endif %}
         directory       "/var/lib/named";
         allow-new-zones yes;
@@ -15,9 +15,9 @@ options {
         forwarders { {{ designate_forwarders_addresses }}; };
         {% endif %}
         minimal-responses yes;
-        allow-notify { {% for host in groups['designate-worker'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }};{% endfor %} };
+        allow-notify { {% for host in groups['designate-worker'] %}{{ 'api' | kolla_address(host) }};{% endfor %} };
 };
 
 controls {
-        inet {{ hostvars[inventory_hostname]['ansible_' + hostvars[inventory_hostname]['api_interface']]['ipv4']['address'] }} port {{ designate_rndc_port }} allow { {% for host in groups['designate-worker'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}; {% endfor %} } keys { "rndc-key"; };
+        inet {{ 'api' | kolla_address }} port {{ designate_rndc_port }} allow { {% for host in groups['designate-worker'] %}{{ 'api' | kolla_address(host) }}; {% endfor %} } keys { "rndc-key"; };
 };

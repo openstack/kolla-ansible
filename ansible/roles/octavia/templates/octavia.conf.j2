@@ -33,7 +33,7 @@ project_domain_name = {{ default_project_domain_name }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [keystone_authtoken]
 www_authenticate_uri = {{ keystone_internal_url }}
@@ -47,13 +47,13 @@ password = {{ octavia_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [health_manager]
 bind_port = {{ octavia_health_manager_port }}
 bind_ip = {{ octavia_network_interface_address }}
 heartbeat_key = insecure
-controller_ip_port_list = {% for host in groups['octavia-health-manager'] %}{{ hostvars[host]['ansible_' + hostvars[host]['octavia_network_interface']]['ipv4']['address'] }}:{{ octavia_health_manager_port }}{% if not loop.last %},{% endif %}{% endfor %}
+controller_ip_port_list = {% for host in groups['octavia-health-manager'] %}{{ 'octavia_network' | kolla_address(host) | put_address_in_context('url') }}:{{ octavia_health_manager_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [controller_worker]
 amp_boot_network_list = {{ octavia_amp_boot_network_list }}

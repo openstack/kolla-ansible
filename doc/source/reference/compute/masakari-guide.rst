@@ -31,4 +31,4 @@ The setting is overridable using custom config, put the content in
 .. code-block:: ini
 
    [libvirt]
-   connection_uri = "xen://{{ migration_interface_address }}/system"
+   connection_uri = "xen://{{ migration_interface_address | put_address_in_context('url') }}/system"

@@ -45,7 +45,7 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################

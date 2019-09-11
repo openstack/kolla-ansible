@@ -14,7 +14,7 @@
 {% if enable_influxdb | bool %}
 {% for host in groups['influxdb'] %}
 [[outputs.influxdb]]
-  urls = ["{{ influxdb_proto }}://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address']}}:{{ influxdb_http_port }}"]
+  urls = ["{{ influxdb_proto }}://{{ 'api' | kolla_address(host) }}:{{ influxdb_http_port }}"]
   database = "telegraf" # required
   retention_policy = "autogen"
   write_consistency = "any"
@@ -27,7 +27,7 @@
   fielddrop = ["time_*"]
 {% if enable_collectd | bool and inventory_hostname in groups['collectd'] %}
 [[inputs.socket_listener]]
-  service_address = "udp://{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ collectd_udp_port }}"
+  service_address = "udp://{{ 'api' | kolla_address | put_address_in_context('url') }}:{{ collectd_udp_port }}"
   name_prefix = "collectd_"
   data_format = "collectd"
   collectd_typesdb = ["/usr/share/collectd/types.db"]
@@ -37,7 +37,7 @@
 [[inputs.diskio]]
 {% if inventory_hostname in groups['influxdb'] and enable_influxdb | bool %}
 [[inputs.influxdb]]
-  urls = ["{{ influxdb_proto }}://{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ influxdb_http_port }}/debug/vars"]
+  urls = ["{{ influxdb_proto }}://{{ 'api' | kolla_address | put_address_in_context('url') }}:{{ influxdb_http_port }}/debug/vars"]
 {% endif %}
 [[inputs.kernel]]
 [[inputs.mem]]
@@ -52,45 +52,45 @@
 {% endif %}
 {% if inventory_hostname in groups['haproxy'] and enable_haproxy | bool %}
 [[inputs.haproxy]]
-  servers = ["{{ haproxy_proto }}://{{ haproxy_user }}:{{ haproxy_password }}@{{ api_interface_address }}:{{ haproxy_stats_port }}"]
+  servers = ["{{ haproxy_proto }}://{{ haproxy_user }}:{{ haproxy_password }}@{{ api_interface_address | put_address_in_context('url') }}:{{ haproxy_stats_port }}"]
 {% endif %}
 {% if inventory_hostname in groups['memcached'] and enable_memcached | bool %}
 [[inputs.memcached]]
-  servers = ["{{ api_interface_address }}:{{ memcached_port }}"]
+  servers = ["{{ api_interface_address | put_address_in_context('url') }}:{{ memcached_port }}"]
 {% endif %}
 {% if inventory_hostname in groups['elasticsearch'] and enable_elasticsearch | bool %}
 [[inputs.elasticsearch]]
-  servers = ["{{ elasticsearch_proto }}://{{ api_interface_address }}:{{ elasticsearch_port }}"]
+  servers = ["{{ elasticsearch_proto }}://{{ api_interface_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"]
   local = true
   cluster_health = true
 {% endif %}
 {% if inventory_hostname in groups['rabbitmq'] and enable_rabbitmq | bool %}
 [[inputs.rabbitmq]]
-  url = "{{ rabbitmq_proto }}://{{ api_interface_address }}:{{ rabbitmq_management_port }}"
+  url = "{{ rabbitmq_proto }}://{{ api_interface_address | put_address_in_context('url') }}:{{ rabbitmq_management_port }}"
   username = "{{ rabbitmq_user }}"
   password = "{{ rabbitmq_password }}"
 {% endif %}
 {% if inventory_hostname in groups['outward-rabbitmq'] and enable_outward_rabbitmq | bool %}
 [[inputs.rabbitmq]]
-  url = "{{ outward_rabbitmq_proto }}://{{ api_interface_address }}:{{ outward_rabbitmq_management_port }}"
+  url = "{{ outward_rabbitmq_proto }}://{{ api_interface_address | put_address_in_context('url') }}:{{ outward_rabbitmq_management_port }}"
   username = "{{ outward_rabbitmq_user }}"
   password = "{{ outward_rabbitmq_password }}"
 {% endif %}
 {% if inventory_hostname in groups['redis'] and enable_redis | bool %}
 [[inputs.redis]]
-  servers = ["tcp://:{{ redis_master_password }}@{{ api_interface_address }}:{{ redis_port }}"]
+  servers = ["tcp://:{{ redis_master_password }}@{{ api_interface_address | put_address_in_context('url') }}:{{ redis_port }}"]
 {% endif %}
 {% if inventory_hostname in groups['zookeeper'] and enable_zookeeper | bool %}
 [[inputs.zookeeper]]
-  servers = ["{{ api_interface_address }}:{{ zookeeper_port }}"]
+  servers = ["{{ api_interface_address | put_address_in_context('url') }}:{{ zookeeper_port }}"]
 {% endif %}
 {% if inventory_hostname in groups['kafka'] and enable_kafka | bool %}
 [[inputs.kafka_consumer]]
-  brokers = ["{{ api_interface_address }}:{{ kafka_port }}"]
+  brokers = ["{{ api_interface_address | put_address_in_context('url') }}:{{ kafka_port }}"]
 {% endif %}
 {% if inventory_hostname in groups['mariadb'] and (enable_mariadb or enable_external_mariadb_load_balancer) | bool %}
 [[inputs.mysql]]
-  servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address }}:{{ database_port }})/"]
+  servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address | put_address_in_context('url') }}:{{ database_port }})/"]
   perf_events_statements_digest_text_limit  = 120
   perf_events_statements_limit              = 250
   perf_events_statements_time_limit         = 86400

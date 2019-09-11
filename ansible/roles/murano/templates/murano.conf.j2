@@ -30,7 +30,7 @@ password = {{ murano_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [murano_auth]
 auth_uri = {{ keystone_internal_url }}/v3
@@ -43,7 +43,7 @@ username = {{ murano_keystone_user }}
 password = {{ murano_keystone_password }}
 
 [murano]
-url = {{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ murano_api_port }}
+url = {{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}
 api_workers = {{ openstack_service_workers }}
 
 [oslo_messaging_notifications]

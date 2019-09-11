@@ -51,9 +51,12 @@
         api_interface_tunnel_vni: 10001
         tunnel_local_address: "{{ nodepool.private_ipv4 }}"
 
+    # NOTE(yoctozepto): CI VXLAN must use a different port than neutron-openvswitch-agent
+    # which defaults to 4789 (the default is used in CI)
+    # hence using port 4790
     - name: Create VXLAN interface
       become: true
-      command: ip link add {{ api_interface_name }} type vxlan id {{ api_interface_tunnel_vni }} local {{ tunnel_local_address }} dstport 4789
+      command: ip link add {{ api_interface_name }} type vxlan id {{ api_interface_tunnel_vni }} local {{ tunnel_local_address }} dstport 4790
 
     - name: Set VXLAN interface MTU
       become: true
@@ -78,7 +81,7 @@
       with_inventory_hostnames: all
       when: item != inventory_hostname
 
-    - name: Add IP address for VXLAN network
+    - name: Add IPv4 address for VXLAN network
       become: true
       vars:
         api_network_cidr: "{{ api_interface_address }}/{{ api_network_prefix_length }}"
@@ -88,21 +91,65 @@
         # broadcast address which fails checks logic
         api_network_broadcast_address: "{{ api_network_cidr | ipaddr('broadcast') }}"
       command: ip address add {{ api_network_cidr }} broadcast {{ api_network_broadcast_address }} dev {{ api_interface_name }}
+      when: address_family == 'ipv4'
 
-    - name: Accept traffic on the VXLAN network
+    # NOTE(yoctozepto): IPv6 has no broadcast address, let's not create confusion by setting it
+    - name: Add IPv6 address for VXLAN network
+      become: true
+      command: ip address add {{ api_interface_address }}/{{ api_network_prefix_length }} dev {{ api_interface_name }}
+      when: address_family == 'ipv6'
+
+    - name: Accept traffic on the VXLAN network (IN)
       become: true
       iptables:
         state: present
         action: insert
         chain: INPUT
-        ip_version: ipv4
+        ip_version: "{{ address_family }}"
         in_interface: "{{ api_interface_name }}"
+        jump: ACCEPT
+
+    # NOTE(yoctozepto): the default policy is ACCEPT but it is nicer to get statistics
+    - name: Accept traffic on the VXLAN network (OUT)
+      become: true
+      iptables:
+        state: present
+        action: insert
+        chain: OUTPUT
+        ip_version: "{{ address_family }}"
+        out_interface: "{{ api_interface_name }}"
         jump: ACCEPT
 
     - name: Bring VXLAN interface up
       become: true
       command: ip link set {{ api_interface_name }} up
 
+    # NOTE(yoctozepto): IPv6 DAD may delay proper address assignment
+    # this task will wait until DAD is done and addresses are no longer tentative
+    # we assign addresses uniquely so DAD can only move it to preferred
+    # hence we only check whether it's no longer tentative
+    - name: Ensure IPv6 addresses on VXLAN are no longer tentative
+      become: true
+      command: ip -o address show tentative dev {{ api_interface_name }}
+      register: tentative_addresses
+      until: tentative_addresses.stdout == ''
+      retries: 30
+      delay: 2
+      when:
+        - address_family == 'ipv6'
+
     - name: Ping across VXLAN
-      command: ping -c1 {{ hostvars[item].api_interface_address }}
+      vars:
+        ping_command: "{{ 'ping' if address_family == 'ipv4' else 'ping6' }}"
+      command: "{{ ping_command }} -c1 {{ hostvars[item].api_interface_address }}"
       with_inventory_hostnames: all
+
+    # NOTE(yoctozepto): CentOS 7 image uses myhostname plugin for NSS
+    # which creates issues with IPv6-only deployment by providing
+    # an IPv4 address for the current hostname (affects rabbitmq)
+    - name: Disable myhostname NSS plugin
+      become: true
+      replace:
+        path: /etc/nsswitch.conf
+        regexp: ' myhostname'
+        replace: ''

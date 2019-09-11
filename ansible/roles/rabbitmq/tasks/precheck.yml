@@ -51,8 +51,20 @@
     - container_facts['rabbitmq'] is not defined
     - inventory_hostname in groups['rabbitmq']
 
+- name: Set NSS database for IPv4
+  set_fact:
+    nss_database: 'ahostsv4'
+  when:
+    - api_address_family == 'ipv4'
+
+- name: Set NSS database for IPv6
+  set_fact:
+    nss_database: 'ahostsv6'
+  when:
+    - api_address_family == 'ipv6'
+
 - name: Check if all rabbit hostnames are resolvable
-  command: "getent ahostsv4 {{ hostvars[item]['ansible_hostname'] }}"
+  command: "getent {{ nss_database }} {{ hostvars[item]['ansible_hostname'] }}"
   changed_when: false
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
@@ -60,7 +72,7 @@
 - fail: msg="Hostname has to resolve to IP address of api_interface"
   with_items: "{{ rabbitmq_hostnames.results }}"
   when:
-    - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
+    - "item.stdout.find('api' | kolla_address(item['item'])) == -1"
 
 - name: Checking free port for outward RabbitMQ
   wait_for:
@@ -107,7 +119,7 @@
     - container_facts['outward_rabbitmq'] is not defined
 
 - name: Check if all outward rabbit hostnames are resolvable
-  command: "getent ahostsv4 {{ hostvars[item]['ansible_hostname'] }}"
+  command: "getent {{ nss_database }} {{ hostvars[item]['ansible_hostname'] }}"
   changed_when: false
   register: outward_rabbitmq_hostnames
   with_items: "{{ groups['outward-rabbitmq'] }}"
@@ -118,4 +130,4 @@
   with_items: "{{ outward_rabbitmq_hostnames.results }}"
   when:
     - enable_outward_rabbitmq | bool
-    - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
+    - "item.stdout.find('api' | kolla_address(item['item'])) == -1"

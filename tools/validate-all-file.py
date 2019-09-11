@@ -24,6 +24,9 @@ import jinja2
 import yaml
 
 
+from kolla_ansible.put_address_in_context import put_address_in_context
+
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 NEWLINE_EOF_INCLUDE_PATTERNS = ['*.j2', '*.yml', '*.py', '*.sh']
@@ -36,6 +39,19 @@ JSON_J2_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git']
 YAML_INCLUDE_PATTERNS = ['*.yml']
 YAML_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git',
                          'defaults', 'templates', 'vars']
+
+KOLLA_NETWORKS = [
+    'api',
+    'storage',
+    'cluster',
+    'swift_storage',
+    'swift_replication',
+    'migration',
+    'tunnel',
+    'octavia_network',
+    'bifrost_network',
+    'dns',  # designate
+]
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -78,6 +94,15 @@ def check_json_j2():
     def basename_filter(text):
         return text.split('\\')[-1]
 
+    def kolla_address_filter_mock(network_name, hostname=None):
+        # no validation is possible for the hostname
+
+        if network_name not in KOLLA_NETWORKS:
+            raise ValueError("{network_name} not in KOLLA_NETWORKS"
+                             .format(network_name=network_name))
+
+        return "127.0.0.1"
+
     # Mock ansible hostvars variable, which is a nested dict
     def hostvars():
         return collections.defaultdict(hostvars)
@@ -91,6 +116,9 @@ def check_json_j2():
             loader=jinja2.FileSystemLoader(root))
         env.filters['bool'] = bool_filter
         env.filters['basename'] = basename_filter
+        env.filters['kolla_address'] = kolla_address_filter_mock
+        env.filters['put_address_in_context'] = \
+            put_address_in_context
         template = env.get_template(filename)
         # Mock ansible variables.
         context = {
