@@ -113,9 +113,9 @@ function setup_ansible {
 
     # Test latest ansible version on Ubuntu, minimum supported on others.
     if [[ $BASE_DISTRO == "ubuntu" ]]; then
-        ANSIBLE_VERSION=">=2.5"
+        ANSIBLE_VERSION=">=2.6"
     else
-        ANSIBLE_VERSION="<2.6"
+        ANSIBLE_VERSION="<2.7"
     fi
 
     # TODO(SamYaple): Move to virtualenv
