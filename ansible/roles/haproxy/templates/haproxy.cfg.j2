@@ -165,12 +165,6 @@ listen glance_api_external
 {% endif %}
 
 {% if enable_influxdb | bool %}
-listen influxdb_admin
-  bind {{ kolla_internal_vip_address }}:{{ influxdb_admin_port }}
-{% for host in groups['influxdb'] %}
-  server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ influxdb_admin_port }} check inter 2000 rise 2 fall 5
-{% endfor %}
-
 listen influxdb_http
   bind {{ kolla_internal_vip_address }}:{{ influxdb_http_port }}
 {% for host in groups['influxdb'] %}
