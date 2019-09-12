@@ -272,6 +272,34 @@ S3 API
 
 The Swift S3 API can be enabled by setting ``enable_swift_s3api`` to ``true``
 in ``globals.yml``. It is disabled by default. In order to use this API it is
-necessary to obtain EC2 credentials from Keystone. See the `Swift documentation
-<https://docs.openstack.org/swift/latest/middleware.html#module-swift.common.middleware.s3api.s3api>`__
-for details.
+necessary to obtain EC2 credentials from Keystone. See the :swift-doc:`the
+Swift documentation
+<admin/middleware.html#module-swift.common.middleware.s3api.s3api>` for
+details.
+
+Swift Recon
+~~~~~~~~~~~
+
+Enable Swift Recon in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_swift_recon : "yes"
+
+
+The Swift role in Kolla-Ansible is still using the old role format. Unlike many
+other Kolla Ansible roles, it won't automatically add the new volume to the
+containers in existing deployments when running `kolla-ansible reconfigure`.
+Instead we must use the `kolla-ansible upgrade` command, which will remove the
+existing containers and then put them back again.
+
+Example usage:
+
+.. code-block:: console
+
+   $ sudo docker exec swift_object_server swift-recon --all`
+
+
+
+For more information, see :swift-doc:`the Swift documentation
+<admin/objectstorage-monitoring.html>`.

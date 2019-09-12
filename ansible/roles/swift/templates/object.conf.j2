@@ -16,7 +16,13 @@ workers = {{ openstack_service_workers }}
 {% if service_name == 'swift-object-expirer' %}
 pipeline = proxy-server
 {% else %}
-pipeline = object-server
+pipeline = {% if enable_swift_recon %}recon {% endif %}object-server
+{% endif %}
+
+{% if enable_swift_recon %}
+[filter:recon]
+use = egg:swift#recon
+recon_cache_path = /var/cache/swift
 {% endif %}
 
 [app:object-server]
