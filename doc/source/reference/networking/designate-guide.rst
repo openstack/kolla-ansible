@@ -37,6 +37,13 @@ Configure Designate options in ``/etc/kolla/globals.yml``
    dns_interface: "eth1"
    designate_ns_record: "sample.openstack.org"
 
+.. important::
+
+   If multiple nodes are assigned to be Designate workers then you must
+   enable a supported coordination backend, currently either 'redis' or
+   'etcd'. The backend choice can be overridden by the
+   ``designate_coordination_backend`` variable.
+
 The following additional variables are required depending on which backend you
 intend to use:
 
