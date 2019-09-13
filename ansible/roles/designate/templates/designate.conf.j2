@@ -114,3 +114,11 @@ enable_proxy_headers_parsing = True
 [oslo_policy]
 policy_file = {{ designate_policy_file }}
 {% endif %}
+
+[coordination]
+{% if designate_coordination_backend == 'redis' %}
+backend_url = {{ redis_connection_string }}
+{% elif designate_coordination_backend == 'etcd' %}
+# NOTE(noxoid): python-etcd3 does not support multiple endpoints
+backend_url = etcd3://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+{% endif %}
