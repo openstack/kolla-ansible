@@ -44,10 +44,6 @@ workers = {{ openstack_service_workers }}
 {% endif %}
 
 [service:worker]
-# TODO (egonzalez): Remove enabled option in worker section once https://bugs.launchpad.net/designate/+bug/1676827
-# is fixed. Enabled is deprecated but without explicitly enabling worker service not start
-enabled = True
-notify = True
 workers = {{ openstack_service_workers }}
 
 [service:producer]
@@ -56,21 +52,8 @@ threads = 1000
 enabled_tasks = None
 export_synchronous = True
 
-[service:pool_manager]
-cache_driver = sqlalchemy
-pool_id = {{ designate_pool_id }}
-workers = {{ openstack_service_workers }}
-
 [network_api:neutron]
 endpoint_type = internalURL
-
-[pool_manager_cache:sqlalchemy]
-connection = mysql+pymysql://{{ designate_pool_manager_database_user }}:{{ designate_pool_manager_database_password }}@{{ designate_pool_manager_database_address }}/{{ designate_pool_manager_database_name }}
-max_retries = 10
-idle_timeout = 3600
-
-[pool_manager_cache:memcache]
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [storage:sqlalchemy]
 connection = mysql+pymysql://{{ designate_database_user }}:{{ designate_database_password }}@{{ designate_database_address }}/{{ designate_database_name }}
