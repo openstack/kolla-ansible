@@ -136,3 +136,28 @@ heat_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 heat_enabled_notification_topics: "{{ heat_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+heat_ks_services:
+  - name: "heat"
+    type: "orchestration"
+    description: "Orchestration"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ heat_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ heat_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ heat_public_endpoint }}'}
+  - name: "heat-cfn"
+    type: "cloudformation"
+    description: "Orchestration"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ heat_cfn_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ heat_cfn_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ heat_cfn_public_endpoint }}'}
+
+heat_ks_users:
+  - project: "service"
+    user: "{{ heat_keystone_user }}"
+    password: "{{ heat_keystone_password }}"
+    role: "admin"

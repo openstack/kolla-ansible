@@ -1,39 +1,11 @@
 ---
-- name: Creating the Octavia service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "octavia"
-      service_type: "load-balancer"
-      description: "Octavia Load Balancing Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_octavia_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ octavia_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ octavia_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ octavia_public_endpoint }}'}
-
-- name: Creating the Octavia project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ octavia_keystone_user }}"
-      password: "{{ octavia_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_octavia_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_octavia_auth }}"
+    service_ks_register_services: "{{ octavia_ks_services }}"
+    service_ks_register_users: "{{ octavia_ks_users }}"
+  tags: always
 
 - name: Adding octavia user into admin project
   become: true

@@ -1,36 +1,8 @@
 ---
-- name: Creating the blazar service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "blazar"
-      service_type: "reservation"
-      description: "OpenStack Reservation Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_blazar_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ blazar_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ blazar_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ blazar_public_endpoint }}'}
-
-- name: Creating the blazar project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ blazar_keystone_user }}"
-      password: "{{ blazar_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_blazar_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_blazar_auth }}"
+    service_ks_register_services: "{{ blazar_ks_services }}"
+    service_ks_register_users: "{{ blazar_ks_users }}"
+  tags: always

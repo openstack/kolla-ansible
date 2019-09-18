@@ -89,3 +89,21 @@ nova_api_database_name: "nova_api"
 nova_api_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova_api{% endif %}"
 nova_api_database_host: "{{ database_address }}"
 placement_database_host: "{{ database_address }}"
+
+####################
+# Keystone
+####################
+placement_ks_services:
+  - name: "placement"
+    type: "placement"
+    description: "Placement Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ placement_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ placement_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ placement_public_endpoint }}'}
+
+placement_ks_users:
+  - project: "service"
+    user: "{{ placement_keystone_user }}"
+    password: "{{ placement_keystone_password }}"
+    role: "admin"

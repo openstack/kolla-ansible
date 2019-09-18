@@ -120,3 +120,21 @@ trove_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 trove_enabled_notification_topics: "{{ trove_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+trove_ks_services:
+  - name: "trove"
+    type: "database"
+    description: "Trove Database Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ trove_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ trove_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ trove_public_endpoint }}'}
+
+trove_ks_users:
+  - project: "service"
+    user: "{{ trove_keystone_user }}"
+    password: "{{ trove_keystone_password }}"
+    role: "admin"

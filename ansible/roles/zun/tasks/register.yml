@@ -1,36 +1,8 @@
 ---
-- name: Creating the Zun service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "zun"
-      service_type: "container"
-      description: "Container Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_zun_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ zun_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ zun_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ zun_public_endpoint }}'}
-
-- name: Creating the Zun project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ zun_keystone_user }}"
-      password: "{{ zun_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_zun_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_zun_auth }}"
+    service_ks_register_services: "{{ zun_ks_services }}"
+    service_ks_register_users: "{{ zun_ks_users }}"
+  tags: always

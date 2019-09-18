@@ -96,3 +96,21 @@ cyborg_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 cyborg_enabled_notification_topics: "{{ cyborg_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+cyborg_ks_services:
+  - name: "cyborg"
+    type: "cyborg"
+    description: "OpenStack Cyborg Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ cyborg_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ cyborg_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ cyborg_public_endpoint }}'}
+
+cyborg_ks_users:
+  - project: "service"
+    user: "{{ cyborg_keystone_user }}"
+    password: "{{ cyborg_keystone_password }}"
+    role: "admin"

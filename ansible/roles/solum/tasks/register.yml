@@ -1,57 +1,8 @@
 ---
-- name: Creating the Solum image builder service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "solum_image_builder"
-      service_type: "image_builder"
-      description: "Openstack Solum Image Builder"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_solum_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ solum_image_builder_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ solum_image_builder_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ solum_image_builder_public_endpoint }}'}
-
-- name: Creating the Solum application deployment service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "solum_application_deployment"
-      service_type: "application_deployment"
-      description: "Openstack Solum Application Deployment"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_solum_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ solum_application_deployment_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ solum_application_deployment_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ solum_application_deployment_public_endpoint }}'}
-
-- name: Creating the Solum project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ solum_keystone_user }}"
-      password: "{{ solum_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_solum_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_solum_auth }}"
+    service_ks_register_services: "{{ solum_ks_services }}"
+    service_ks_register_users: "{{ solum_ks_users }}"
+  tags: always

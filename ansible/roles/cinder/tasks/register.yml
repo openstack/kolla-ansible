@@ -1,39 +1,8 @@
 ---
-- name: Creating the Cinder service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "{{ item.service_name }}"
-      service_type: "{{ item.service_type }}"
-      description: "Openstack Block Storage"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_cinder_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ cinder_v2_admin_endpoint }}', 'service_name': 'cinderv2', 'service_type': 'volumev2'}
-    - {'interface': 'internal', 'url': '{{ cinder_v2_internal_endpoint }}', 'service_name': 'cinderv2', 'service_type': 'volumev2'}
-    - {'interface': 'public', 'url': '{{ cinder_v2_public_endpoint }}', 'service_name': 'cinderv2', 'service_type': 'volumev2'}
-    - {'interface': 'admin', 'url': '{{ cinder_v3_admin_endpoint }}', 'service_name': 'cinderv3', 'service_type': 'volumev3'}
-    - {'interface': 'internal', 'url': '{{ cinder_v3_internal_endpoint }}', 'service_name': 'cinderv3', 'service_type': 'volumev3'}
-    - {'interface': 'public', 'url': '{{ cinder_v3_public_endpoint }}', 'service_name': 'cinderv3', 'service_type': 'volumev3'}
-
-- name: Creating the Cinder project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ cinder_keystone_user }}"
-      password: "{{ cinder_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_cinder_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_cinder_auth }}"
+    service_ks_register_services: "{{ cinder_ks_services }}"
+    service_ks_register_users: "{{ cinder_ks_users }}"
+  tags: always

@@ -1,60 +1,12 @@
 ---
-- name: Creating monasca-api service and endpoints
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "monasca-api"
-      service_type: "monitoring"
-      description: "Monasca monitoring as a service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ monasca_openstack_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ monasca_api_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ monasca_api_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ monasca_api_public_endpoint }}'}
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ monasca_openstack_auth }}"
+    service_ks_register_services: "{{ monasca_ks_services }}"
+    service_ks_register_users: "{{ monasca_ks_users }}"
+  tags: always
 
-- name: Creating monasca-log-api service and endpoints
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "monasca-log-api"
-      service_type: "logging"
-      description: "Monasca logging as a service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ monasca_openstack_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ monasca_log_api_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ monasca_log_api_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ monasca_log_api_public_endpoint }}'}
-
-- name: Creating the monasca keystone user
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ monasca_keystone_user }}"
-      password: "{{ monasca_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ monasca_openstack_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
 
 - name: Creating monasca roles
   become: true
@@ -72,18 +24,3 @@
     - "{{ monasca_agent_authorized_roles }}"
     - "{{ monasca_read_only_authorized_roles }}"
     - "{{ monasca_delegate_authorized_roles }}"
-
-- name: Creating the monasca agent user
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "{{ monasca_control_plane_project }}"
-      user: "{{ monasca_agent_user }}"
-      password: "{{ monasca_agent_password }}"
-      role: "{{ monasca_agent_authorized_roles | first }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ monasca_openstack_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True

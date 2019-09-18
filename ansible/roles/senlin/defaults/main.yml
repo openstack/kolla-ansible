@@ -101,3 +101,21 @@ senlin_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 senlin_enabled_notification_topics: "{{ senlin_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+senlin_ks_services:
+  - name: "senlin"
+    type: "clustering"
+    description: "Senlin Clustering Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ senlin_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ senlin_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ senlin_public_endpoint }}'}
+
+senlin_ks_users:
+  - project: "service"
+    user: "{{ senlin_keystone_user }}"
+    password: "{{ senlin_keystone_password }}"
+    role: "admin"

@@ -115,3 +115,22 @@ magnum_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 magnum_enabled_notification_topics: "{{ magnum_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+
+####################
+# Keystone
+####################
+magnum_ks_services:
+  - name: "magnum"
+    type: "container-infra"
+    description: "Container Infrastructure Management Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ magnum_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ magnum_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ magnum_public_endpoint }}'}
+
+magnum_ks_users:
+  - project: "service"
+    user: "{{ magnum_keystone_user }}"
+    password: "{{ magnum_keystone_password }}"
+    role: "admin"

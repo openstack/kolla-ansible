@@ -8,28 +8,13 @@
   run_once: True
   with_items: "{{ multiple_regions_names }}"
 
-# NOTE(jeffrey4l): Since keystone-manage bootstrap cloud not update the endpoint,
-# run kolla_keystone_service module again.
-- name: Creating the Keystone service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "keystone"
-      service_type: "identity"
-      description: "Openstack Identity Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_keystone_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_keystone_auth }}"
+    service_ks_register_services: "{{ keystone_ks_services }}"
+  tags: always
   run_once: True
-  with_items:
-    - { interface: admin, url: "{{ keystone_admin_url }}" }
-    - { interface: internal, url: "{{ keystone_internal_url }}" }
-    - { interface: public, url: "{{ keystone_public_url }}" }
 
 - name: Creating default user role
   become: true

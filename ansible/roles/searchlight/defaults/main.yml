@@ -85,3 +85,21 @@ searchlight_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 searchlight_enabled_notification_topics: "{{ searchlight_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+searchlight_ks_services:
+  - name: "searchlight"
+    type: "search"
+    description: "Openstack Index Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ searchlight_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ searchlight_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ searchlight_public_endpoint }}'}
+
+searchlight_ks_users:
+  - project: "service"
+    user: "{{ searchlight_keystone_user }}"
+    password: "{{ searchlight_keystone_password }}"
+    role: "admin"

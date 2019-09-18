@@ -118,3 +118,21 @@ watcher_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 watcher_enabled_notification_topics: "{{ watcher_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+watcher_ks_services:
+  - name: "watcher"
+    type: "infra-optim"
+    description: "Infrastructure Optimization service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ watcher_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ watcher_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ watcher_public_endpoint }}'}
+
+watcher_ks_users:
+  - project: "service"
+    user: "{{ watcher_keystone_user }}"
+    password: "{{ watcher_keystone_password }}"
+    role: "admin"

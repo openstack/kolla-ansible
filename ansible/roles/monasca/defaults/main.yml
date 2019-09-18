@@ -338,3 +338,32 @@ monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_
 monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ monasca_log_api_port }}"
 
 monasca_logging_debug: "{{ openstack_logging_debug }}"
+
+####################
+# Keystone
+####################
+monasca_ks_services:
+  - name: "monasca-api"
+    type: "monitoring"
+    description: "Monasca monitoring as a service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ monasca_api_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ monasca_api_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ monasca_api_public_endpoint }}'}
+  - name: "monasca-log-api"
+    type: "logging"
+    description: "Monasca logging as a service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ monasca_log_api_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ monasca_log_api_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ monasca_log_api_public_endpoint }}'}
+
+monasca_ks_users:
+  - project: "service"
+    user: "{{ monasca_keystone_user }}"
+    password: "{{ monasca_keystone_password }}"
+    role: "admin"
+  - project: "{{ monasca_control_plane_project }}"
+    user: "{{ monasca_agent_user }}"
+    password: "{{ monasca_agent_password }}"
+    role: "{{ monasca_agent_authorized_roles | first }}"

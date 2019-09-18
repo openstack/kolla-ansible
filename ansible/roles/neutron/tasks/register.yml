@@ -1,36 +1,8 @@
 ---
-- name: Creating the Neutron service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "neutron"
-      service_type: "network"
-      description: "Openstack Networking"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_neutron_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ neutron_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ neutron_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ neutron_public_endpoint }}'}
-
-- name: Creating the Neutron project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ neutron_keystone_user }}"
-      password: "{{ neutron_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_neutron_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_neutron_auth }}"
+    service_ks_register_services: "{{ neutron_ks_services }}"
+    service_ks_register_users: "{{ neutron_ks_users }}"
+  tags: always

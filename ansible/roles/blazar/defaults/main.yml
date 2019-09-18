@@ -105,3 +105,21 @@ blazar_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 blazar_enabled_notification_topics: "{{ blazar_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+blazar_ks_services:
+  - name: "blazar"
+    type: "reservation"
+    description: "OpenStack Reservation Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ blazar_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ blazar_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ blazar_public_endpoint }}'}
+
+blazar_ks_users:
+  - project: "service"
+    user: "{{ blazar_keystone_user }}"
+    password: "{{ blazar_keystone_password }}"
+    role: "admin"

@@ -1,36 +1,8 @@
 ---
-- name: Creating the Senlin service and endpoint
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_service"
-    module_args:
-      service_name: "senlin"
-      service_type: "clustering"
-      description: "Senlin Clustering Service"
-      endpoint_region: "{{ openstack_region_name }}"
-      url: "{{ item.url }}"
-      interface: "{{ item.interface }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_senlin_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-  with_items:
-    - {'interface': 'admin', 'url': '{{ senlin_admin_endpoint }}'}
-    - {'interface': 'internal', 'url': '{{ senlin_internal_endpoint }}'}
-    - {'interface': 'public', 'url': '{{ senlin_public_endpoint }}'}
-
-- name: Creating the Senlin project, user, and role
-  become: true
-  kolla_toolbox:
-    module_name: "kolla_keystone_user"
-    module_args:
-      project: "service"
-      user: "{{ senlin_keystone_user }}"
-      password: "{{ senlin_keystone_password }}"
-      role: "admin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_senlin_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_senlin_auth }}"
+    service_ks_register_services: "{{ senlin_ks_services }}"
+    service_ks_register_users: "{{ senlin_ks_users }}"
+  tags: always

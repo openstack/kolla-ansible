@@ -106,3 +106,21 @@ karbor_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 karbor_enabled_notification_topics: "{{ karbor_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+karbor_ks_services:
+  - name: "karbor"
+    type: "data-protect"
+    description: "Application Data Protection Service"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ karbor_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ karbor_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ karbor_public_endpoint }}'}
+
+karbor_ks_users:
+  - project: "service"
+    user: "{{ karbor_keystone_user }}"
+    password: "{{ karbor_keystone_password }}"
+    role: "admin"

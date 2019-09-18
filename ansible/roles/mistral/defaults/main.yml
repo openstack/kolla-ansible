@@ -135,3 +135,21 @@ mistral_notification_topics:
     enabled: "{{ enable_ceilometer | bool }}"
 
 mistral_enabled_notification_topics: "{{ mistral_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
+# Keystone
+####################
+mistral_ks_services:
+  - name: "mistral"
+    type: "workflowv2"
+    description: "Openstack Workflow"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ mistral_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ mistral_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ mistral_public_endpoint }}'}
+
+mistral_ks_users:
+  - project: "service"
+    user: "{{ mistral_keystone_user }}"
+    password: "{{ mistral_keystone_password }}"
+    role: "admin"
