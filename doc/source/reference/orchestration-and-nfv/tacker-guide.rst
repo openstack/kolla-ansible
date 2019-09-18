@@ -32,13 +32,9 @@ Compatibility
 
 Tacker is supported by the following distros and install_types.
 
-* Centos, Redhat and Oraclelinux.
+* CentOS and RHEL: Source and binary images.
 
-  * Source and binary images.
-
-* Debian and Ubuntu.
-
-  * Only source images.
+* Debian and Ubuntu: Only source images.
 
 Preparation and Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

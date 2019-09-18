@@ -107,7 +107,7 @@ the environment variable and create ``/etc/kolla/config/swift`` directory:
 .. code-block:: console
 
    STORAGE_NODES=(192.168.0.2 192.168.0.3 192.168.0.4)
-   KOLLA_SWIFT_BASE_IMAGE="kolla/oraclelinux-source-swift-base:4.0.0"
+   KOLLA_SWIFT_BASE_IMAGE="kolla/centos-source-swift-base:4.0.0"
    mkdir -p /etc/kolla/config/swift
 
 Generate Object Ring

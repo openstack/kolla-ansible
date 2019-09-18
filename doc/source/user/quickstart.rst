@@ -368,7 +368,6 @@ There are a few options that are required to deploy Kolla-Ansible:
 
   - CentOS
   - Ubuntu
-  - Oracle Linux
   - Debian
   - RHEL
 
