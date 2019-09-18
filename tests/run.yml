@@ -12,6 +12,7 @@
         logs_dir: "/tmp/logs"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+        infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         is_upgrade: "{{ 'upgrade' in scenario }}"
@@ -88,12 +89,13 @@
       become: "{{ item.become | default(false) }}"
       vars:
         is_previous_release: "{{ is_upgrade }}"
-        infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
       with_items:
         # Docker daemon.json
+        # TODO(mgoddard): Remove templating of docker daemon.json in Ussuri cycle.
         - src: "tests/templates/docker_daemon.json.j2"
           dest: "/etc/docker/daemon.json"
           become: true
+          when: "{{ is_previous_release and previous_release == 'stein' }}"
         # Ansible inventory
         - src: "tests/templates/inventory.j2"
           dest: "{{ kolla_inventory_path }}"
