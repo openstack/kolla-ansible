@@ -155,9 +155,9 @@ Contributors
 ============
 
 Check out who's `contributing
-code <http://stackalytics.com/?module=kolla-group&metric=commits>`__ and
+code <https://stackalytics.com/?module=kolla-group&metric=commits>`__ and
 `contributing
-reviews <http://stackalytics.com/?module=kolla-group&metric=marks>`__.
+reviews <https://stackalytics.com/?module=kolla-group&metric=marks>`__.
 
 Notices
 =======
