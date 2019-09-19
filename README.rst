@@ -95,22 +95,22 @@ Kolla-Ansible deploys containers for the following infrastructure components:
   `Telegraf <https://docs.influxdata.com/telegraf/>`__,
   `InfluxDB <https://influxdata.com/time-series-platform/influxdb/>`__,
   `Prometheus <https://prometheus.io/>`__, and
-  `Grafana <https://grafana.org/>`__ for performance monitoring.
+  `Grafana <https://grafana.com/>`__ for performance monitoring.
 - `Elasticsearch <https://www.elastic.co/de/products/elasticsearch/>`__ and
   `Kibana <https://www.elastic.co/de/products/kibana/>`__ to search, analyze,
   and visualize log messages.
-- `Etcd <https://coreos.com/etcd/>`__ a distributed reliable key-value store.
+- `Etcd <https://etcd.io/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
   for unified logging layer.
 - `Gnocchi <https://gnocchi.xyz/>`__ A time-series storage database.
 - `HAProxy <https://www.haproxy.org/>`__ and
-  `Keepalived <http://www.keepalived.org/>`__ for high availability of services
+  `Keepalived <https://www.keepalived.org/>`__ for high availability of services
   and their endpoints.
 - `MariaDB and Galera Cluster <https://mariadb.com/kb/en/mariadb/galera-cluster/>`__
   for highly available MySQL databases.
 - `Memcached <https://memcached.org/>`__ a distributed memory object caching system.
 - `MongoDB <https://www.mongodb.org/>`__ as a database back end for Panko.
-- `Open vSwitch <http://openvswitch.org/>`__ and Linuxbridge backends for Neutron.
+- `Open vSwitch <https://openvswitch.org/>`__ and Linuxbridge backends for Neutron.
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
 - `Redis <https://redis.io/>`__ an in-memory data structure store.
