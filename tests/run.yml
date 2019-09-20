@@ -75,19 +75,28 @@
         dest: /etc/kolla/template_overrides.j2
       when: need_build_image  # only then kolla sources are available (and used)
 
-    # Use the initial repo to generate config files. For upgrade jobs, this
-    # repo is only available on the remote node, so use the remote-template
-    # role.
+    - name: Ensure /etc/docker exists
+      file:
+        path: "/etc/docker"
+        state: directory
+      become: true
+
+    - name: Ensure configuration directories exist
+      file:
+        path: "/etc/kolla/config/{{ item }}"
+        state: directory
+      loop:
+        - nova
+        - bifrost
+
     - name: generate configuration files
-      include_role:
-        role: remote-template
+      template:
+        src: "{{ kolla_ansible_local_src_dir }}/{{ item.src }}"
+        dest: "{{ item.dest }}"
+      become: "{{ item.become | default(false) }}"
       vars:
         is_previous_release: "{{ is_upgrade }}"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
-        # Role variables.
-        remote_template_src: "{{ kolla_ansible_src_dir }}/{{ item.src }}"
-        remote_template_dest: "{{ item.dest }}"
-        remote_template_become: "{{ item.become | default(false) }}"
       with_items:
         # Docker daemon.json
         - src: "tests/templates/docker_daemon.json.j2"
@@ -288,9 +297,6 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
-        # Use the new kolla-ansible repo to generate config files.
-        # This is the branch checked out on the executor, so we can use
-        # template directly rather than the remote-template role.
         - name: Generate configuration files
           template:
             src: "{{ kolla_ansible_local_src_dir }}/{{ item.src }}"
