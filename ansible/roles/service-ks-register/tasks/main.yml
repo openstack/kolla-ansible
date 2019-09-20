@@ -14,6 +14,10 @@
   run_once: True
   loop: "{{ service_ks_register_services }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
 
 - name: Creating the {{ project_name }} endpoints
   become: true
@@ -33,6 +37,10 @@
     - "{{ service_ks_register_services }}"
     - endpoints
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
 
 - name: Creating the {{ project_name }} service project
   become: true
@@ -48,6 +56,10 @@
   run_once: True
   with_items: "{{ service_ks_register_users | map(attribute='project') | unique | list }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
 
 - name: Creating the {{ project_name }} service users
   become: true
@@ -69,6 +81,10 @@
     label:
       user: "{{ item.user }}"
       project: "{{ item.project }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
 
 - name: Creating the {{ project_name }} service roles
   become: true
@@ -83,6 +99,10 @@
   run_once: True
   with_items: "{{ service_ks_register_users | map(attribute='role') | unique | list }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
 
 - name: Granting the {{ project_name }} service user roles
   become: true
@@ -105,3 +125,7 @@
       user: "{{ item.user }}"
       role: "{{ item.role }}"
       project: "{{ item.project }}"
+  register: service_ks_register_result
+  until: service_ks_register_result is success
+  retries: "{{ service_ks_register_retries }}"
+  delay: "{{ service_ks_register_delay }}"
