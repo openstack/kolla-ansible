@@ -12,6 +12,7 @@
       - prometheus_alertmanager
       - prometheus_openstack_exporter
       - prometheus_elasticsearch_exporter
+      - prometheus_blackbox_exporter
   register: container_facts
 
 - name: Checking free port for Prometheus server
@@ -127,3 +128,17 @@
     - enable_prometheus_elasticsearch_exporter | bool
   with_items:
     - "{{ prometheus_elasticsearch_exporter_port }}"
+
+- name: Checking free ports for Prometheus blackbox-exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_blackbox_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-blackbox-exporter']
+    - enable_prometheus_blackbox_exporter | bool
+  with_items:
+    - "{{ prometheus_blackbox_exporter_port }}"

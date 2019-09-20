@@ -123,6 +123,24 @@
   notify:
     - Restart prometheus-openstack-exporter container
 
+- name: Copying config file for blackbox exporter
+  become: true
+  vars:
+    service: "{{ prometheus_services['prometheus-blackbox-exporter'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-blackbox-exporter/prometheus-blackbox-exporter.yml"
+    mode: "0660"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-blackbox-exporter.yml"
+    - "{{ node_custom_config }}/prometheus/prometheus-blackbox-exporter.yml"
+    - "{{ role_path }}/templates/prometheus-blackbox-exporter.yml.j2"
+  notify:
+    - Restart prometheus-blackbox-exporter container
+
 - name: Check prometheus containers
   become: true
   kolla_docker:
