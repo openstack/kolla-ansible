@@ -10,7 +10,7 @@ copy_logs() {
     # Don't save the IPA images.
     rm ${LOG_DIR}/kolla_configs/config/ironic/ironic-agent.{kernel,initramfs}
     mkdir ${LOG_DIR}/system_configs/
-    cp -rL /etc/{docker,systemd} ${LOG_DIR}/system_configs/
+    cp -rL /etc/{hostname,hosts,resolv.conf,nsswitch.conf,docker,systemd} ${LOG_DIR}/system_configs/
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
 
 
