@@ -1,0 +1,42 @@
+---
+- block:
+    - name: "{{ project_name }} | Ensure RabbitMQ vhosts exist"
+      kolla_toolbox:
+        module_name: rabbitmq_vhost
+        module_args:
+          name: "{{ item }}"
+        user: rabbitmq
+      loop: "{{ service_rabbitmq_users | map(attribute='vhost') | unique | reject('equalto', '/') | list }}"
+      register: service_rabbitmq_result
+      until: service_rabbitmq_result is success
+      retries: "{{ service_rabbitmq_retries }}"
+      delay: "{{ service_rabbitmq_delay }}"
+
+    - name: "{{ project_name }} | Ensure RabbitMQ users exist"
+      kolla_toolbox:
+        module_name: rabbitmq_user
+        module_args:
+          user: "{{ item.user }}"
+          password: "{{ item.password }}"
+          update_password: always
+          vhost: "{{ item.vhost }}"
+          configure_priv: ".*"
+          read_priv: ".*"
+          write_priv: ".*"
+        user: rabbitmq
+      loop: "{{ service_rabbitmq_users }}"
+      loop_control:
+        label:
+          user: "{{ item.user }}"
+          vhost: "{{ item.vhost }}"
+      register: service_rabbitmq_result
+      until: service_rabbitmq_result is success
+      retries: "{{ service_rabbitmq_retries }}"
+      delay: "{{ service_rabbitmq_delay }}"
+
+  become: true
+  when: service_rabbitmq_when | bool
+  delegate_to: "{{ service_rabbitmq_delegate_host }}"
+  run_once: "{{ service_rabbitmq_run_once }}"
+  tags:
+    - service-rabbitmq

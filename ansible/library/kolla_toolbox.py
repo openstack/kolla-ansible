@@ -45,6 +45,11 @@ options:
       - The extra variables used by the module
     required: False
     type: str or dict
+  user:
+    description:
+      - The user to execute Ansible inside kolla_toolbox with
+    required: False
+    type: str
   api_version:
     description:
       - The version of the API for docker-py to use when contacting Docker
@@ -132,6 +137,7 @@ def main():
         module_extra_vars=dict(type='json'),
         api_version=dict(required=False, type='str', default='auto'),
         timeout=dict(required=False, type='int', default=180),
+        user=dict(required=False, type='str'),
     )
     module = AnsibleModule(argument_spec=specs, bypass_checks=True)
     client = get_docker_client()(
@@ -144,6 +150,9 @@ def main():
         module.fail_json(msg='kolla_toolbox container is not running.')
 
     kolla_toolbox = kolla_toolbox[0]
+    kwargs = {}
+    if 'user' in module.params:
+        kwargs['user'] = module.params['user']
 
     # NOTE(mgoddard): Docker 1.12 has API version 1.24, and was installed by
     # kolla-ansible bootstrap-servers on Rocky and earlier releases. This API
@@ -158,7 +167,7 @@ def main():
         environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
                        "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
         job = client.exec_create(kolla_toolbox, command_line,
-                                 environment=environment)
+                                 environment=environment, **kwargs)
         json_output = client.exec_start(job)
 
         try:
@@ -192,7 +201,7 @@ def main():
         # Remove Ansible's internal variables from returned fields.
         ret.pop('_ansible_no_log', None)
     else:
-        job = client.exec_create(kolla_toolbox, command_line)
+        job = client.exec_create(kolla_toolbox, command_line, **kwargs)
         output = client.exec_start(job)
 
         for exp in [JSON_REG, NON_JSON_REG]:
