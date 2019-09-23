@@ -11,4 +11,5 @@ logging and monitoring services available in kolla.
    central-logging-guide
    monasca-guide
    osprofiler-guide
+   prometheus-guide
    skydive-guide
