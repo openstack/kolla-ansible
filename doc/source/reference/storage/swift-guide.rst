@@ -215,6 +215,16 @@ Enable Swift in ``/etc/kolla/globals.yml``:
 
    enable_swift : "yes"
 
+If you are to deploy multiple policies, override the variable
+``swift_extra_ring_files`` with the list of your custom ring files, .builder
+and .ring.gz all together. This will append them to the list of default rings.
+
+.. code-block:: yaml
+
+   swift_extra_ring_files:
+      - object-1.builder
+      - object-1.ring.gz
+
 Once the rings are in place, deploying Swift is the same as any other Kolla
 Ansible service:
 
