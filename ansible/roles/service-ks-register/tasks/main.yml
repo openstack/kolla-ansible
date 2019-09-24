@@ -1,5 +1,5 @@
 ---
-- name: Creating the {{ project_name }} service
+- name: "{{ project_name }} | Creating services"
   become: true
   kolla_toolbox:
     module_name: "os_keystone_service"
@@ -14,12 +14,16 @@
   run_once: True
   loop: "{{ service_ks_register_services }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  loop_control:
+    label:
+      name: "{{ item.name }}"
+      service_type: "{{ item.type }}"
   register: service_ks_register_result
   until: service_ks_register_result is success
   retries: "{{ service_ks_register_retries }}"
   delay: "{{ service_ks_register_delay }}"
 
-- name: Creating the {{ project_name }} endpoints
+- name: "{{ project_name }} | Creating endpoints"
   become: true
   kolla_toolbox:
     module_name: "os_keystone_endpoint"
@@ -37,12 +41,17 @@
     - "{{ service_ks_register_services }}"
     - endpoints
   delegate_to: "{{ service_ks_register_delegate_host }}"
+  loop_control:
+    label:
+      service: "{{ item.0.name }}"
+      url: "{{ item.1.url }}"
+      interface: "{{ item.1.interface }}"
   register: service_ks_register_result
   until: service_ks_register_result is success
   retries: "{{ service_ks_register_retries }}"
   delay: "{{ service_ks_register_delay }}"
 
-- name: Creating the {{ project_name }} service project
+- name: "{{ project_name }} | Creating projects"
   become: true
   kolla_toolbox:
     module_name: "os_project"
@@ -61,7 +70,7 @@
   retries: "{{ service_ks_register_retries }}"
   delay: "{{ service_ks_register_delay }}"
 
-- name: Creating the {{ project_name }} service users
+- name: "{{ project_name }} | Creating users"
   become: true
   kolla_toolbox:
     module_name: "os_user"
@@ -86,7 +95,7 @@
   retries: "{{ service_ks_register_retries }}"
   delay: "{{ service_ks_register_delay }}"
 
-- name: Creating the {{ project_name }} service roles
+- name: "{{ project_name }} | Creating roles"
   become: true
   kolla_toolbox:
     module_name: "os_keystone_role"
@@ -97,14 +106,14 @@
       interface: "{{ service_ks_register_interface }}"
       cacert: "{{ service_ks_cacert }}"
   run_once: True
-  with_items: "{{ service_ks_register_users | map(attribute='role') | unique | list }}"
+  with_items: "{{ service_ks_register_users | map(attribute='role') | unique | list + service_ks_register_roles }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
   register: service_ks_register_result
   until: service_ks_register_result is success
   retries: "{{ service_ks_register_retries }}"
   delay: "{{ service_ks_register_delay }}"
 
-- name: Granting the {{ project_name }} service user roles
+- name: "{{ project_name }} | Granting user roles"
   become: true
   kolla_toolbox:
     module_name: "os_user_role"
@@ -118,7 +127,7 @@
       interface: "{{ service_ks_register_interface }}"
       cacert: "{{ service_ks_cacert }}"
   run_once: True
-  with_items: "{{ service_ks_register_users }}"
+  with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
   delegate_to: "{{ service_ks_register_delegate_host }}"
   loop_control:
     label:

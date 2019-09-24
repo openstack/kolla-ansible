@@ -5,40 +5,6 @@
     service_ks_register_auth: "{{ openstack_heat_auth }}"
     service_ks_register_services: "{{ heat_ks_services }}"
     service_ks_register_users: "{{ heat_ks_users }}"
+    service_ks_register_roles: "{{ heat_ks_roles }}"
+    service_ks_register_user_roles: "{{ heat_ks_user_roles }}"
   tags: always
-
-- name: Creating the heat_stack_user role
-  become: true
-  kolla_toolbox:
-    module_name: os_keystone_role
-    module_args:
-      name: "{{ heat_stack_user_role }}"
-      auth: "{{ openstack_heat_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-
-- name: Creating the heat_stack_owner role
-  become: true
-  kolla_toolbox:
-    module_name: os_keystone_role
-    module_args:
-      name: "{{ heat_stack_owner_role }}"
-      auth: "{{ openstack_heat_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
-
-- name: Add the heat_stack_owner role to the admin project
-  become: true
-  kolla_toolbox:
-    module_name: "os_user_role"
-    module_args:
-      project: "{{ openstack_auth.project_name }}"
-      user: "{{ openstack_auth.username }}"
-      role: "{{ heat_stack_owner_role }}"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_heat_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  run_once: True
