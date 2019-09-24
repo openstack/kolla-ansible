@@ -16,7 +16,6 @@
 
 import docker
 import json
-import re
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -90,13 +89,6 @@ EXAMPLES = '''
 '''
 
 
-JSON_REG = re.compile('^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
-                      re.MULTILINE | re.DOTALL)
-NON_JSON_REG = re.compile(('^(?P<host>\w+) \| (?P<status>\w+)!? \| '
-                           'rc=(?P<exit_code>\d+) >>\n(?P<stdout>.*)\n$'),
-                          re.MULTILINE | re.DOTALL)
-
-
 def gen_commandline(params):
     command = ['ansible', 'localhost']
     if params.get('module_name'):
@@ -138,23 +130,43 @@ def main():
         module.fail_json(msg='kolla_toolbox container is not running.')
 
     kolla_toolbox = kolla_toolbox[0]
-    job = client.exec_create(kolla_toolbox, command_line)
-    output = client.exec_start(job)
+    # Use the JSON output formatter, so that we can parse it.
+    environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
+                   "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
+    job = client.exec_create(kolla_toolbox, command_line,
+                             environment=environment)
+    json_output = client.exec_start(job)
 
-    for exp in [JSON_REG, NON_JSON_REG]:
-        m = exp.match(output)
-        if m:
-            inner_output = m.groupdict().get('stdout')
-            break
-    else:
-        module.fail_json(
-            msg='Can not parse the inner module output: %s' % output)
-
-    ret = dict()
     try:
-        ret = json.loads(inner_output)
-    except ValueError:
-        ret['stdout'] = inner_output
+        output = json.loads(json_output)
+    except Exception as e:
+        module.fail_json(
+            msg='Can not parse the inner module output: %s' % json_output)
+
+    # Expected format is the following:
+    # {
+    #   "plays": [
+    #     {
+    #       "tasks": [
+    #         {
+    #           "hosts": {
+    #             "localhost": {
+    #               <module result>
+    #             }
+    #           }
+    #         }
+    #       ]
+    #     {
+    #   ]
+    # }
+    try:
+        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
+    except (KeyError, IndexError) as e:
+        module.fail_json(
+            msg='Ansible JSON output has unexpected format: %s' % output)
+
+    # Remove Ansible's internal variables from returned fields.
+    ret.pop('_ansible_no_log', None)
 
     module.exit_json(**ret)
 

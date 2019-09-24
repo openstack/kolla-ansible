@@ -1,0 +1,81 @@
+---
+- name: Test the kolla_toolbox module
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Test successful & unchanged
+      kolla_toolbox:
+        module_name: debug
+        module_args:
+          msg: hi
+      register: result
+
+    - name: Assert result is successful
+      assert:
+        that: result is successful
+
+    - name: Assert result is not changed
+      assert:
+        that: result is not changed
+
+    - name: Test successful & changed
+      kolla_toolbox:
+        module_name: command
+        module_args:
+          echo hi
+      register: result
+
+    - name: Assert result is successful
+      assert:
+        that: result is successful
+
+    - name: Assert result is changed
+      assert:
+        that: result is changed
+
+    - name: Test unsuccessful
+      kolla_toolbox:
+        module_name: command
+        module_args:
+          foo
+      register: result
+      ignore_errors: true
+
+    - name: Assert result is failed
+      assert:
+        that: result is failed
+
+    - name: Test invalid module parameters
+      kolla_toolbox:
+        module_name: debug
+        module_args:
+          foo: bar
+      register: result
+      ignore_errors: true
+
+    - name: Assert result is failed
+      assert:
+        that: result is failed
+
+    - name: Setup for Test successful & changed (JSON format)
+      kolla_toolbox:
+        module_name: file
+        module_args:
+          path: /tmp/foo
+          state: absent
+
+    - name: Test successful & changed (JSON format)
+      kolla_toolbox:
+        module_name: file
+        module_args:
+          path: /tmp/foo
+          state: directory
+      register: result
+
+    - name: Assert result is successful
+      assert:
+        that: result is successful
+
+    - name: Assert result is changed
+      assert:
+        that: result is changed
