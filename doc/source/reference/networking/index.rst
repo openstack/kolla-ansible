@@ -12,6 +12,7 @@ Networking-SFC, QoS, and so on.
 
    designate-guide
    dpdk
+   neutron
    neutron-extensions
    opendaylight
    provider-networks
