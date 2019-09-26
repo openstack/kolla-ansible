@@ -64,228 +64,175 @@ Configuring External Ceph
 Glance
 ------
 
-Configuring Glance for Ceph includes three steps:
+Configuring Glance for Ceph includes the following steps:
 
 #. Configure RBD back end in ``glance-api.conf``
-#. Create Ceph configuration file in ``/etc/ceph/ceph.conf``
-#. Create Ceph keyring file in ``/etc/ceph/ceph.client.<username>.keyring``
 
-Step 1 is done by using Kolla's INI merge mechanism: Create a file in
-``/etc/kolla/config/glance/glance-api.conf`` with the following contents:
+   .. path /etc/kolla/config/glance/glance-api.conf
+   .. code-block:: ini
 
-.. code-block:: ini
+      [glance_store]
+      stores = rbd
+      default_store = rbd
+      rbd_store_pool = images
+      rbd_store_user = glance
+      rbd_store_ceph_conf = /etc/ceph/ceph.conf
 
-   [glance_store]
-   stores = rbd
-   default_store = rbd
-   rbd_store_pool = images
-   rbd_store_user = glance
-   rbd_store_ceph_conf = /etc/ceph/ceph.conf
+#. Copy Ceph configuration file to ``/etc/kolla/config/glance/ceph.conf``
 
-Now put ceph.conf and the keyring file (name depends on the username created in
-Ceph) into the same directory, for example:
+   .. path /etc/kolla/config/glance/ceph.conf
+   .. code-block:: ini
 
-.. path /etc/kolla/config/glance/ceph.conf
-.. code-block:: ini
+      [global]
+      fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
+      mon_initial_members = ceph-0
+      mon_host = 192.168.0.56
+      auth_cluster_required = cephx
+      auth_service_required = cephx
+      auth_client_required = cephx
 
-   [global]
-   fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
-   mon_initial_members = ceph-0
-   mon_host = 192.168.0.56
-   auth_cluster_required = cephx
-   auth_service_required = cephx
-   auth_client_required = cephx
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-.. code-block:: console
+   * ``ceph_glance_keyring`` (default: ``ceph.client.glance.keyring``)
 
-   $ cat /etc/kolla/config/glance/ceph.client.glance.keyring
-
-   [client.glance]
-   key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
-
-Kolla will pick up all files named ``ceph.*`` in this directory and copy them
-to the ``/etc/ceph/`` directory of the container.
+#. Copy Ceph keyring to ``/etc/kolla/config/glance/<ceph_glance_keyring>``
 
 Cinder
 ------
 
-Configuring external Ceph for Cinder works very similar to
-Glance.
+Configuring Cinder for Ceph includes following steps:
 
-Modify ``/etc/kolla/config/cinder/cinder-volume.conf`` file according to
-the following configuration:
+#. Configure RBD backend in ``cinder-volume.conf`` and ``cinder-backup.conf``
 
-.. code-block:: ini
+   .. path /etc/kolla/config/cinder/cinder-volume.conf
+   .. code-block:: ini
 
-   [DEFAULT]
-   enabled_backends=rbd-1
+      [DEFAULT]
+      enabled_backends=rbd-1
 
-   [rbd-1]
-   rbd_ceph_conf=/etc/ceph/ceph.conf
-   rbd_user=cinder
-   backend_host=rbd:volumes
-   rbd_pool=volumes
-   volume_backend_name=rbd-1
-   volume_driver=cinder.volume.drivers.rbd.RBDDriver
-   rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
+      [rbd-1]
+      rbd_ceph_conf=/etc/ceph/ceph.conf
+      rbd_user=cinder
+      backend_host=rbd:volumes
+      rbd_pool=volumes
+      volume_backend_name=rbd-1
+      volume_driver=cinder.volume.drivers.rbd.RBDDriver
+      rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 
-.. note::
+   .. note::
 
-   ``cinder_rbd_secret_uuid`` can be found in ``/etc/kolla/passwords.yml`` file.
+      ``cinder_rbd_secret_uuid`` can be found in ``/etc/kolla/passwords.yml``.
 
-Modify ``/etc/kolla/config/cinder/cinder-backup.conf`` file according to
-the following configuration:
+   .. path /etc/kolla/config/cinder/cinder-backup.conf
+   .. code-block:: ini
 
-.. code-block:: ini
+      [DEFAULT]
+      backup_ceph_conf=/etc/ceph/ceph.conf
+      backup_ceph_user=cinder-backup
+      backup_ceph_chunk_size = 134217728
+      backup_ceph_pool=backups
+      backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
+      backup_ceph_stripe_unit = 0
+      backup_ceph_stripe_count = 0
+      restore_discard_excess_bytes = true
 
-   [DEFAULT]
-   backup_ceph_conf=/etc/ceph/ceph.conf
-   backup_ceph_user=cinder-backup
-   backup_ceph_chunk_size = 134217728
-   backup_ceph_pool=backups
-   backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
-   backup_ceph_stripe_unit = 0
-   backup_ceph_stripe_count = 0
-   restore_discard_excess_bytes = true
+   For more information about the Cinder backup configuration, see
+   :cinder-doc:`Ceph backup driver
+   <configuration/block-storage/backup/ceph-backup-driver.html>`.
 
-For more information about the Cinder backup configuration, see
-:cinder-doc:`Ceph backup driver <configuration/block-storage/backup/ceph-backup-driver.html>`.
+#. Copy Ceph configuration file to ``/etc/kolla/config/cinder/ceph.conf``
 
-Next, copy the ``ceph.conf`` file into ``/etc/kolla/config/cinder/``:
+   Separate configuration options can be configured for
+   cinder-volume and cinder-backup by adding ceph.conf files to
+   ``/etc/kolla/config/cinder/cinder-volume`` and
+   ``/etc/kolla/config/cinder/cinder-backup`` respectively. They
+   will be merged with ``/etc/kolla/config/cinder/ceph.conf``.
 
-.. code-block:: ini
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
+   * ``ceph_cinder_keyring`` (default: ``ceph.client.cinder.keyring``)
+   * ``ceph_cinder_backup_keyring``
+   (default: ``ceph.client.cinder-backup.keyring``)
 
-   [global]
-   fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
-   mon_initial_members = ceph-0
-   mon_host = 192.168.0.56
-   auth_cluster_required = cephx
-   auth_service_required = cephx
-   auth_client_required = cephx
-
-Separate configuration options can be configured for
-cinder-volume and cinder-backup by adding ceph.conf files to
-``/etc/kolla/config/cinder/cinder-volume`` and
-``/etc/kolla/config/cinder/cinder-backup`` respectively. They
-will be merged with ``/etc/kolla/config/cinder/ceph.conf``.
-
-Ceph keyrings are deployed per service and placed into
-``cinder-volume`` and ``cinder-backup`` directories, put the keyring files
-to these directories, for example:
+#. Copy Ceph keyring files to:
+   * ``/etc/kolla/config/cinder/cinder-volume/<ceph_cinder_keyring>``
+   * ``/etc/kolla/config/cinder/cinder-backup/<ceph_cinder_keyring>``
+   * ``/etc/kolla/config/cinder/cinder-backup/<ceph_cinder_backup_keyring>``
 
 .. note::
 
     ``cinder-backup`` requires two keyrings for accessing volumes
     and backup pool.
 
-.. code-block:: console
-
-   $ cat /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring
-
-   [client.cinder]
-   key = AQAg5YRXpChaGRAAlTSCleesthCRmCYrfQVX1w==
-
-.. code-block:: console
-
-   $ cat /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring
-
-   [client.cinder-backup]
-   key = AQC9wNBYrD8MOBAAwUlCdPKxWZlhkrWIDE1J/w==
-
-.. code-block:: console
-
-   $ cat /etc/kolla/config/cinder/cinder-volume/ceph.client.cinder.keyring
-
-   [client.cinder]
-   key = AQAg5YRXpChaGRAAlTSCleesthCRmCYrfQVX1w==
-
-It is important that the files are named ``ceph.client*``.
-
 Nova
 ----
 
-Put ceph.conf, nova client keyring file and cinder client keyring file into
-``/etc/kolla/config/nova``:
+Configuring Nova for Ceph includes following steps:
 
-.. warning::
+#. Copy Ceph configuration file to ``/etc/kolla/config/nova/ceph.conf``
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-   If you are using ceph-ansible - please copy ceph.client.cinder.keyring
-   as /etc/kolla/config/nova/ceph.client.nova.keyring
+   * ``ceph_cinder_keyring`` (default: ``ceph.client.cinder.keyring``)
+   * ``ceph_nova_keyring`` (by default it's the same as ceph_cinder_keyring)
 
-.. code-block:: console
+#. Copy Ceph keyring file(s) to:
 
-   $ ls /etc/kolla/config/nova
-   ceph.client.cinder.keyring ceph.client.nova.keyring ceph.conf
+   * ``/etc/kolla/config/nova/<ceph_cinder_keyring>``
+   * ``/etc/kolla/config/nova/<ceph_nova_keyring>`` (if your Ceph deployment
+     created one)
 
-Configure nova-compute to use Ceph as the ephemeral back end by creating
-``/etc/kolla/config/nova/nova-compute.conf`` and adding the following
-configurations:
+   .. warning::
 
-.. code-block:: ini
+      If you are using ceph-ansible or another deployment tool that doesn't
+      create separate key for Nova just copy the Cinder key.
 
-   [libvirt]
-   images_rbd_pool=vms
-   images_type=rbd
-   images_rbd_ceph_conf=/etc/ceph/ceph.conf
-   rbd_user=nova
+#. Configure nova-compute to use Ceph as the ephemeral back end by creating
+   ``/etc/kolla/config/nova/nova-compute.conf`` and adding the following
+   configurations:
 
-.. note::
+   .. code-block:: ini
 
-   ``rbd_user`` might vary depending on your environment.
+      [libvirt]
+      images_rbd_pool=vms
+      images_type=rbd
+      images_rbd_ceph_conf=/etc/ceph/ceph.conf
 
 Gnocchi
 -------
 
-Modify ``/etc/kolla/config/gnocchi.conf`` file according to
-the following configuration:
+Configuring Gnocchi for Ceph includes following steps:
 
-.. code-block:: ini
+#. Copy Ceph configuration file to ``/etc/kolla/config/gnocchi/ceph.conf``
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-   [storage]
-   driver = ceph
-   ceph_username = gnocchi
-   ceph_keyring = /etc/ceph/ceph.client.gnocchi.keyring
-   ceph_conffile = /etc/ceph/ceph.conf
+   * ``ceph_gnocchi_keyring``
+     (default: ``ceph.client.gnocchi.keyring``)
 
-Put ceph.conf and gnocchi client keyring file in
-``/etc/kolla/config/gnocchi``:
+#. Copy Ceph keyring to ``/etc/kolla/config/gnocchi/<ceph_gnocchi_keyring>``
+#. Modify ``/etc/kolla/config/gnocchi.conf`` file according to the following
+   configuration:
 
-.. code-block:: console
+   .. code-block:: ini
 
-   $ ls /etc/kolla/config/gnocchi
-   ceph.client.gnocchi.keyring ceph.conf gnocchi.conf
+      [storage]
+      driver = ceph
+      ceph_username = gnocchi
+      ceph_keyring = /etc/ceph/ceph.client.gnocchi.keyring
+      ceph_conffile = /etc/ceph/ceph.conf
 
 Manila
 ------
 
-Configuring Manila for Ceph includes four steps:
+Configuring Manila for Ceph includes following steps:
 
-#. Configure CephFS backend, setting ``enable_manila_backend_cephfs_native``
-#. Create Ceph configuration file in ``/etc/ceph/ceph.conf``
-#. Create Ceph keyring file in ``/etc/ceph/ceph.client.<username>.keyring``
+#. Configure CephFS backend by setting ``enable_manila_backend_cephfs_native``
+   to ``true``
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
+
+   * ``ceph_manila_keyring`` (default: ``ceph.client.manila.keyring``)
+
+#. Copy Ceph configuration file to ``/etc/kolla/config/manila/ceph.conf``
+#. Copy Ceph keyring to ``/etc/kolla/config/manila/<ceph_manila_keyring>``
 #. Setup Manila in the usual way
-
-Step 1 is done by using setting ``enable_manila_backend_cephfs_native=true``
-
-Now put ceph.conf and the keyring file (name depends on the username created
-in Ceph) into the same directory, for example:
-
-.. path /etc/kolla/config/manila/ceph.conf
-.. code-block:: ini
-
-   [global]
-   fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
-   mon_host = 192.168.0.56
-   auth_cluster_required = cephx
-   auth_service_required = cephx
-   auth_client_required = cephx
-
-.. code-block:: console
-
-   $ cat /etc/kolla/config/manila/ceph.client.manila.keyring
-
-   [client.manila]
-   key = AQAg5YRXS0qxLRAAXe6a4R1a15AoRx7ft80DhA==
 
 For more details on the rest of the Manila setup, such as creating the share
 type ``default_share_type``, please see :doc:`Manila in Kolla <manila-guide>`.

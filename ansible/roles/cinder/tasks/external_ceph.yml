@@ -21,12 +21,10 @@
 
 - name: Copy over Ceph keyring files for cinder-volume
   copy:
-    src: "{{ item }}"
+    src: "{{ node_custom_config }}/cinder/cinder-volume/{{ ceph_cinder_keyring }}"
     dest: "{{ node_config_directory }}/cinder-volume/"
     mode: "0660"
   become: true
-  with_fileglob:
-    - "{{ node_custom_config }}/cinder/cinder-volume/ceph.client*"
   when:
     - external_ceph_cephx_enabled | bool
     - inventory_hostname in groups['cinder-volume']
@@ -36,13 +34,14 @@
 
 - name: Copy over Ceph keyring files for cinder-backup
   copy:
-    src: "{{ item }}"
+    src: "{{ node_custom_config }}/cinder/{{ item }}"
     dest: "{{ node_config_directory }}/cinder-backup/"
     mode: "0660"
   become: true
   register: cinder_backup_ceph_keyring
-  with_fileglob:
-    - "{{ node_custom_config }}/cinder/cinder-backup/ceph.client*"
+  with_items:
+    - "cinder-backup/{{ ceph_cinder_keyring }}"
+    - "cinder-backup/{{ ceph_cinder_backup_keyring }}"
   when:
     - external_ceph_cephx_enabled | bool
     - inventory_hostname in groups['cinder-backup']

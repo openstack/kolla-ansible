@@ -11,7 +11,7 @@
 
 - name: Check nova keyring file
   stat:
-    path: "{{ node_custom_config }}/nova/ceph.client.nova.keyring"
+    path: "{{ node_custom_config }}/nova/{{ ceph_nova_keyring }}"
   delegate_to: localhost
   run_once: True
   register: nova_cephx_keyring_file
@@ -22,7 +22,7 @@
 
 - name: Check cinder keyring file
   stat:
-    path: "{{ node_custom_config }}/nova/ceph.client.cinder.keyring"
+    path: "{{ node_custom_config }}/nova/{{ ceph_cinder_keyring }}"
   delegate_to: localhost
   run_once: True
   register: cinder_cephx_keyring_file
@@ -39,7 +39,6 @@
   become: true
   with_items:
     - nova-compute
-    - nova-libvirt
   when:
     - inventory_hostname in groups[nova_cell_compute_group]
     - nova_backend == "rbd"
