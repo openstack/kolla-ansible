@@ -3,24 +3,32 @@
 # Check for CRITICAL, ERROR or WARNING messages in log files.
 
 set -o errexit
+set -o pipefail
 
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
 
+function check_file_for_level {
+    # $1: file
+    # $2: log level
+    # Filter out false positives from logged config options.
+    sudo egrep " $2 " $1 | egrep -v "(logging_exception_prefix|rate_limit_except_level)"
+}
+
+any_critical=0
 for level in CRITICAL ERROR WARNING; do
     all_file=/tmp/logs/kolla/all-${level}.log
     any_matched=0
-    any_critical=0
     echo "Checking for $level log messages"
     for f in $(sudo find /var/log/kolla/ -type f); do
-        if sudo egrep "^.* .* .* $level" $f >/dev/null; then
+        if check_file_for_level $f $level >/dev/null; then
             any_matched=1
             if [[ $level = CRITICAL ]]; then
                 any_critical=1
             fi
             echo $f >> $all_file
-            sudo egrep "^.* .* .* $level" $f >> $all_file
+            check_file_for_level $f $level >> $all_file
             echo >> $all_file
         fi
     done
