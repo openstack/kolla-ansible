@@ -145,6 +145,7 @@ def main():
         m = exp.match(output)
         if m:
             inner_output = m.groupdict().get('stdout')
+            status = m.groupdict().get('status')
             break
     else:
         module.fail_json(
@@ -154,7 +155,14 @@ def main():
     try:
         ret = json.loads(inner_output)
     except ValueError:
+        # Some modules (e.g. command) do not produce a JSON output. Instead,
+        # check the status, and assume changed on success.
         ret['stdout'] = inner_output
+        if status != "SUCCESS":
+            ret['failed'] = True
+        else:
+            # No way to know whether changed - assume yes.
+            ret['changed'] = True
 
     module.exit_json(**ret)
 
