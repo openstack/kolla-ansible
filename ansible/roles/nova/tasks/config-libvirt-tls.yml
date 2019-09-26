@@ -1,0 +1,14 @@
+---
+- name: Copying over libvirt TLS keys {{ file }}
+  become: true
+  copy:
+    src: "{{ first_found }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ file }}"
+    mode: "0600"
+  with_first_found:
+    - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ file }}"
+    - "{{ node_custom_config }}/nova/nova-libvirt/{{ file }}"
+  loop_control:
+    loop_var: first_found
+  notify:
+    - Restart {{ service_name }} container
