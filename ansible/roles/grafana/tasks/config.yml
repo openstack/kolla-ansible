@@ -60,7 +60,7 @@
   with_items:
     - "{{ check_extra_conf_grafana.files }}"
   notify:
-    - Restart {{ item.key }} container
+    - Restart grafana container
 
 - name: Check if custom grafana home dashboard exists
   local_action: "stat path={{ node_custom_config }}/grafana/grafana_home_dashboard.json"
@@ -74,7 +74,7 @@
     mode: "0660"
   when: grafana_custom_dashboard_file.stat.exists
   notify:
-    - Restart {{ item.key }} container
+    - Restart grafana container
 
 - name: Configuring Prometheus as data source for Grafana
   vars:
@@ -93,7 +93,7 @@
     - "{{ node_custom_config }}/grafana/prometheus.yaml"
     - "prometheus.yaml.j2"
   notify:
-    - Restart {{ item.key }} container
+    - Restart grafana container
 
 - name: Check grafana containers
   become: true
