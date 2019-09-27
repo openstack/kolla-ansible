@@ -256,7 +256,7 @@ kolla_internal_vip_address: "10.10.10.254"
 #enable_horizon_watcher: "{{ enable_watcher | bool }}"
 #enable_horizon_zun: "{{ enable_zun | bool }}"
 #enable_hyperv: "no"
-#enable_influxdb: "no"
+#enable_influxdb: "{{ enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb') }}"
 #enable_ironic: "no"
 #enable_ironic_ipxe: "no"
 #enable_ironic_neutron_agent: "no"
@@ -427,6 +427,17 @@ glance_enable_rolling_upgrade: "no"
 #cinder_backup_share: ""
 #cinder_backup_mount_options_nfs: ""
 
+#######################
+# Cloudkitty options
+#######################
+# Valid option is gnocchi
+#cloudkitty_collector_backend: "gnocchi"
+# Valid options are 'sqlalchemy' or 'influxdb'. The default value is
+# 'influxdb', which matches the default in Cloudkitty since the Stein release.
+# When the backend is "influxdb", we also enable Influxdb.
+# Also, when using 'influxdb' as the backend, we trigger the configuration/use
+# of Cloudkitty storage backend version 2.
+#cloudkitty_storage_backend: "influxdb"
 
 ###################
 # Designate options
