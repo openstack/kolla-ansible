@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from distutils.version import StrictVersion
 import docker
 import json
+import re
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -89,6 +91,13 @@ EXAMPLES = '''
 '''
 
 
+JSON_REG = re.compile('^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
+                      re.MULTILINE | re.DOTALL)
+NON_JSON_REG = re.compile(('^(?P<host>\w+) \| (?P<status>\w+)!? \| '
+                           'rc=(?P<exit_code>\d+) >>\n(?P<stdout>.*)\n$'),
+                          re.MULTILINE | re.DOTALL)
+
+
 def gen_commandline(params):
     command = ['ansible', 'localhost']
     if params.get('module_name'):
@@ -111,6 +120,11 @@ def get_docker_client():
     return docker.APIClient
 
 
+def docker_supports_environment_in_exec(client):
+    docker_version = StrictVersion(client.api_version)
+    return docker_version >= StrictVersion('1.25')
+
+
 def main():
     specs = dict(
         module_name=dict(required=True, type='str'),
@@ -130,43 +144,79 @@ def main():
         module.fail_json(msg='kolla_toolbox container is not running.')
 
     kolla_toolbox = kolla_toolbox[0]
-    # Use the JSON output formatter, so that we can parse it.
-    environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
-                   "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
-    job = client.exec_create(kolla_toolbox, command_line,
-                             environment=environment)
-    json_output = client.exec_start(job)
 
-    try:
-        output = json.loads(json_output)
-    except Exception as e:
-        module.fail_json(
-            msg='Can not parse the inner module output: %s' % json_output)
+    # NOTE(mgoddard): Docker 1.12 has API version 1.24, and was installed by
+    # kolla-ansible bootstrap-servers on Rocky and earlier releases. This API
+    # version does not have support for specifying environment variables for
+    # exec jobs, which is necessary to use the Ansible JSON output formatter.
+    # While we continue to support this version of Docker, fall back to the old
+    # regex-based method for API version 1.24 and earlier.
+    # TODO(mgoddard): Remove this conditional (keep the if) when we require
+    # Docker API version 1.25+.
+    if docker_supports_environment_in_exec(client):
+        # Use the JSON output formatter, so that we can parse it.
+        environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
+                       "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
+        job = client.exec_create(kolla_toolbox, command_line,
+                                 environment=environment)
+        json_output = client.exec_start(job)
 
-    # Expected format is the following:
-    # {
-    #   "plays": [
-    #     {
-    #       "tasks": [
-    #         {
-    #           "hosts": {
-    #             "localhost": {
-    #               <module result>
-    #             }
-    #           }
-    #         }
-    #       ]
-    #     {
-    #   ]
-    # }
-    try:
-        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
-    except (KeyError, IndexError) as e:
-        module.fail_json(
-            msg='Ansible JSON output has unexpected format: %s' % output)
+        try:
+            output = json.loads(json_output)
+        except Exception as e:
+            module.fail_json(
+                msg='Can not parse the inner module output: %s' % json_output)
 
-    # Remove Ansible's internal variables from returned fields.
-    ret.pop('_ansible_no_log', None)
+        # Expected format is the following:
+        # {
+        #   "plays": [
+        #     {
+        #       "tasks": [
+        #         {
+        #           "hosts": {
+        #             "localhost": {
+        #               <module result>
+        #             }
+        #           }
+        #         }
+        #       ]
+        #     {
+        #   ]
+        # }
+        try:
+            ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
+        except (KeyError, IndexError) as e:
+            module.fail_json(
+                msg='Ansible JSON output has unexpected format: %s' % output)
+
+        # Remove Ansible's internal variables from returned fields.
+        ret.pop('_ansible_no_log', None)
+    else:
+        job = client.exec_create(kolla_toolbox, command_line)
+        output = client.exec_start(job)
+
+        for exp in [JSON_REG, NON_JSON_REG]:
+            m = exp.match(output)
+            if m:
+                inner_output = m.groupdict().get('stdout')
+                status = m.groupdict().get('status')
+                break
+        else:
+            module.fail_json(
+                msg='Can not parse the inner module output: %s' % output)
+
+        ret = dict()
+        try:
+            ret = json.loads(inner_output)
+        except ValueError:
+            # Some modules (e.g. command) do not produce a JSON output.
+            # Instead, check the status, and assume changed on success.
+            ret['stdout'] = inner_output
+            if status != "SUCCESS":
+                ret['failed'] = True
+            else:
+                # No way to know whether changed - assume yes.
+                ret['changed'] = True
 
     module.exit_json(**ret)
 
