@@ -1,0 +1,17 @@
+---
+- name: Check monasca containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    pid_mode: "{{ item.value.pid_mode|default('') }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ monasca_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

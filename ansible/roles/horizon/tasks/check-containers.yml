@@ -1,0 +1,19 @@
+---
+- name: Deploy horizon container
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ horizon.container_name }}"
+    image: "{{ horizon.image }}"
+    environment: "{{ horizon.environment }}"
+    volumes: "{{ horizon.volumes }}"
+    dimensions: "{{ horizon.dimensions }}"
+  when:
+    - inventory_hostname in groups[horizon.group]
+    - horizon.enabled | bool
+  with_dict: "{{ horizon_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

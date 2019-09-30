@@ -1,0 +1,17 @@
+---
+- name: Deploy haproxy containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ haproxy_services }}"
+  notify:
+    - "Restart {{ item.key }} container"

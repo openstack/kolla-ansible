@@ -124,20 +124,5 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Check glance containers
-  become: true
-  kolla_docker:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    environment: "{{ item.value.environment | default(omit) }}"
-    volumes: "{{ item.value.volumes|reject('equalto', '')|list }}"
-    dimensions: "{{ item.value.dimensions }}"
-  when:
-    - kolla_action != "config"
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
-  with_dict: "{{ glance_services }}"
-  notify:
-    - Restart {{ item.key }} container
+- include_tasks: check-containers.yml
+  when: kolla_action != "config"

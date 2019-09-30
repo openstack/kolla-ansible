@@ -25,19 +25,5 @@
     - service.enabled | bool
   notify: Restart memcached container
 
-- name: Check memcached container
-  vars:
-    service: "{{ memcached_services.memcached }}"
-  become: true
-  kolla_docker:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify: Restart memcached container
+- include_tasks: check-containers.yml
+  when: kolla_action != "config"
