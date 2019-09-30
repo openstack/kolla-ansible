@@ -16,12 +16,12 @@
 import imp
 import os
 
+from ansible.errors import AnsibleModuleError
 from oslotest import base
 
 PROJECT_DIR = os.path.abspath(os.path.join(os. path.dirname(__file__), '../'))
 MERGE_YAML_FILE = os.path.join(PROJECT_DIR,
                                'ansible/action_plugins/merge_yaml.py')
-
 merge_yaml = imp.load_source('merge_yaml', MERGE_YAML_FILE)
 
 
@@ -126,3 +126,51 @@ class MergeYamlConfigTest(base.BaseTestCase):
             }
         }
         self.assertDictEqual(actual, expected)
+
+    def test_merge_nested_extend_lists(self):
+        initial_conf = {
+            'level0': {
+                'level1': {
+                    "mylist": ["one", "two"]
+                },
+            }
+        }
+
+        extension = {
+            'level0': {
+                'level1': {
+                    "mylist": ["three"]
+                },
+            }
+        }
+
+        actual = merge_yaml.Utils.update_nested_conf(
+            initial_conf, extension, extend_lists=True)
+        expected = {
+            'level0': {
+                'level1': {
+                    "mylist": ["one", "two", "three"]
+                },
+            }
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_merge_nested_extend_lists_mismatch_types(self):
+        initial_conf = {
+            'level0': {
+                'level1': {
+                    "mylist": ["one", "two"]
+                },
+            }
+        }
+
+        extension = {
+            'level0': {
+                'level1': {
+                    "mylist": "three"
+                },
+            }
+        }
+        with self.assertRaisesRegex(AnsibleModuleError, "Failure merging key"):
+            merge_yaml.Utils.update_nested_conf(
+                initial_conf, extension, extend_lists=True)
