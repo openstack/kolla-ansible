@@ -340,6 +340,16 @@
   notify:
     - Restart cron container
 
+- name: Ensure RabbitMQ Erlang cookie exists
+  become: true
+  copy:
+    content: "{{ rabbitmq_cluster_cookie }}"
+    dest: "{{ node_config_directory }}/kolla-toolbox/rabbitmq-erlang.cookie"
+    mode: "0660"
+  when: enable_rabbitmq | bool
+  notify:
+    - Restart kolla-toolbox container
+
 - name: Ensuring config directories have correct owner and permission
   become: true
   file:
