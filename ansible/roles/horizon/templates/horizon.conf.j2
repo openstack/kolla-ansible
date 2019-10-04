@@ -15,7 +15,11 @@ TraceEnable off
     WSGIScriptReloading On
     WSGIDaemonProcess horizon-http processes={{ horizon_wsgi_processes }} threads={{ horizon_wsgi_threads }} user=horizon group=horizon display-name=%{GROUP} python-path={{ python_path }}
     WSGIProcessGroup horizon-http
+{% if kolla_base_distro in ['debian'] and horizon_install_type == 'binary' %}
+    WSGIScriptAlias / {{ python_path }}/wsgi.py
+{% else %}
     WSGIScriptAlias / {{ python_path }}/openstack_dashboard/wsgi/django.wsgi
+{% endif %}
     WSGIPassAuthorization On
     WSGIApplicationGroup %{GLOBAL}
 
@@ -23,7 +27,7 @@ TraceEnable off
         Require all granted
     </Location>
 
-{% if kolla_base_distro == 'ubuntu' and horizon_install_type == 'binary' %}
+{% if kolla_base_distro in ['debian', 'ubuntu'] and horizon_install_type == 'binary' %}
     Alias /static /var/lib/openstack-dashboard/static
 {% else %}
     Alias /static {{ python_path }}/static
