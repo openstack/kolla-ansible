@@ -37,6 +37,13 @@
         - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
 
+    # NOTE(hrw): we do not publish Debian images (yet)
+    - name: enable building images for Debian
+      set_fact:
+        need_build_image: true
+      when:
+        ansible_distribution == "Debian"
+
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images
       include_vars:
