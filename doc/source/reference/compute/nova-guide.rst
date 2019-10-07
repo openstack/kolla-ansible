@@ -52,6 +52,8 @@ The fake driver can be used for testing Nova's scaling properties without
 requiring access to a large amount of hardware resources. It is covered in
 :doc:`nova-fake-driver`.
 
+.. _nova-consoles:
+
 Consoles
 ========
 
@@ -59,3 +61,9 @@ The console driver may be selected via ``nova_console`` in ``globals.yml``.
 Valid options are ``none``, ``novnc``, ``spice``, or ``rdp``. Additionally,
 serial console support can be enabled by setting
 ``enable_nova_serialconsole_proxy`` to ``yes``.
+
+Cells
+=====
+
+Information on using Nova Cells V2 to scale out can be found in
+:doc:`nova-cells-guide`.

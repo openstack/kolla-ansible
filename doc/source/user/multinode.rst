@@ -145,6 +145,54 @@ grouped together and changing these around can break your deployment:
    [haproxy:children]
    network
 
+.. _multinode-host-and-group-variables:
+
+Host and group variables
+========================
+
+Typically, Kolla Ansible configuration is stored in the ``globals.yml`` file.
+Variables in this file apply to all hosts. In an environment with multiple
+hosts, it may become necessary to have different values for variables for
+different hosts. A common example of this is for network interface
+configuration, e.g. ``api_interface``.
+
+Ansible's host and group variables can be assigned in a `variety of ways
+<https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html>`_.
+Simplest is in the inventory file itself:
+
+.. code-block:: ini
+
+   # Host with a host variable.
+   [control]
+   control01 api_interface=eth3
+
+   # Group with a group variable.
+   [control:vars]
+   api_interface=eth4
+
+This can quickly start to become difficult to maintain, so it may be preferable
+to use ``host_vars`` or ``group_vars`` directories containing YAML files with
+host or group variables:
+
+.. code-block:: console
+
+   inventory/
+     group_vars/
+       control
+     host_vars/
+       control01
+     multinode
+
+`Ansible's variable precedence rules
+<https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#ansible-variable-precedence>`__
+are quite complex, but it is worth becoming familiar with them if using host
+and group variables. The playbook group variables in
+``ansible/group_vars/all.yml`` define global defaults, and these take
+precedence over variables defined in an inventory file and inventory
+``group_vars/all``, but not over inventory ``group_vars/*``. Variables in
+'extra' files (``globals.yml``) have the highest precedence, so any variables
+which must differ between hosts must not be in ``globals.yml``.
+
 Deploying Kolla
 ===============
 

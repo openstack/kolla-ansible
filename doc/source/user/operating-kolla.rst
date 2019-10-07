@@ -29,6 +29,11 @@ contained in the kolla-ansible package.
 Upgrade procedure
 ~~~~~~~~~~~~~~~~~
 
+.. note::
+
+   If you have set ``enable_cells`` to ``yes`` then you should read the
+   upgrade notes in the :ref:`Nova cells guide<nova-cells-upgrade>`.
+
 Kolla's strategy for upgrades is to never make a mess and to follow consistent
 patterns during deployment such that upgrades from one environment to the next
 are simple to automate.
