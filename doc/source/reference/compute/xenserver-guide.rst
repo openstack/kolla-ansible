@@ -1,8 +1,8 @@
 .. _XenServer-guide:
 
-=========
-XenServer
-=========
+======================================
+XenServer - Nova Virtualisation Driver
+======================================
 
 Overview
 ========
