@@ -1,0 +1,240 @@
+---
+- name: Restart nova-conductor container
+  vars:
+    service_name: "nova-conductor"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-ssh container
+  vars:
+    service_name: "nova-ssh"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    pid_mode: "{{ service.pid_mode | default('') }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-libvirt container
+  vars:
+    service_name: "nova-libvirt"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    pid_mode: "{{ service.pid_mode | default('') }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  register: restart_nova_libvirt
+  # NOTE(Jeffrey4l): retry 5 to remove nova_libvirt container because when
+  # guests running, nova_libvirt will raise error even though it is removed.
+  retries: 5
+  until: restart_nova_libvirt is success
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-scheduler container
+  vars:
+    service_name: "nova-scheduler"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-novncproxy container
+  vars:
+    service_name: "nova-novncproxy"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-spicehtml5proxy container
+  vars:
+    service_name: "nova-spicehtml5proxy"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-serialproxy container
+  vars:
+    service_name: "nova-serialproxy"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-api container
+  vars:
+    service_name: "nova-api"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-compute container
+  vars:
+    service_name: "nova-compute"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    environment: "{{ service.environment | default(omit) }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    ipc_mode: "{{ service.ipc_mode | default(omit) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart nova-compute-ironic container
+  vars:
+    service_name: "nova-compute-ironic"
+    service: "{{ nova_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+# nova-compute-fake is special. It will start multi numbers of container
+# so put all variables here rather than defaults/main.yml file
+- name: Restart nova-compute-fake containers
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "nova_compute_fake_{{ item }}"
+    image: "{{ nova_compute_image_full }}"
+    privileged: True
+    volumes:
+      - "{{ node_config_directory }}/nova-compute-fake-{{ item }}/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/lib/modules:/lib/modules:ro"
+      - "/run:/run:shared"
+      - "kolla_logs:/var/log/kolla/"
+  with_sequence: start=1 end={{ num_nova_fake_per_node }}
+  when:
+    - kolla_action != "config"
+
+# NOTE(mgoddard): After upgrading nova-compute, services will have an RPC
+# version cap in place.  We need to restart all services that communicate with
+# nova-compute in order to allow them to use the latest RPC version. Ideally,
+# there would be a way to check whether all nova services are using the latest
+# version, but currently there is not. Instead, wait a short time for all nova
+# compute services to update the version of their service in the database.
+# This seems to take around 10 seconds, but the default is 30 to allow room
+# for slowness.
+
+- name: Wait for nova-compute services to update service versions
+  pause:
+    seconds: "{{ nova_compute_startup_delay }}"
+  run_once: true
+  when:
+    - kolla_action == 'upgrade'
+  listen:
+    - Restart nova-compute container
+    - Restart nova-compute-ironic container
+    - Restart nova-compute-fake containers
+
+# NOTE(mgoddard): Currently (just prior to Stein release), sending SIGHUP to
+# nova compute services leaves them in a broken state in which they cannot
+# start new instances. The following error is seen in the logs:
+# "In shutdown, no new events can be scheduled"
+# To work around this we restart the nova-compute services.
+# Speaking to the nova team, this seems to be an issue in oslo.service,
+# with a fix proposed here: https://review.openstack.org/#/c/641907.
+# This issue also seems to affect the proxy services, which exit non-zero in
+# reponse to a SIGHUP, so restart those too.
+# The issue actually affects all nova services, since they remain with RPC
+# version pinned to the previous release:
+# https://bugs.launchpad.net/kolla-ansible/+bug/1833069.
+# TODO(mgoddard): Use SIGHUP when this bug has been fixed.
+
+- name: Restart nova services to remove RPC version cap
+  become: true
+  kolla_docker:
+    action: restart_container
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+  when:
+    - kolla_action == 'upgrade'
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - item.key in nova_services_require_nova_conf
+  with_dict: "{{ nova_services }}"
+  listen:
+    - Restart nova-compute container
+    - Restart nova-compute-ironic container
+    - Restart nova-compute-fake containers
