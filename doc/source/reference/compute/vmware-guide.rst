@@ -1,8 +1,8 @@
 .. _vmware-guide:
 
-======
-VMware
-======
+===================================
+VMware - Nova Virtualisation Driver
+===================================
 
 Overview
 ~~~~~~~~

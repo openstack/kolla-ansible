@@ -1,6 +1,28 @@
 .. libvirt-tls-guide:
 
-===========
+====================================
+Libvirt - Nova Virtualisation Driver
+====================================
+
+Overview
+========
+
+Libvirt is the most commonly used virtualisation driver in OpenStack. It uses
+libvirt, backed by QEMU and when available, KVM. Libvirt is executed in the
+``nova_libvirt`` container.
+
+Hardware Virtualisation
+=======================
+
+Two values are supported for ``nova_compute_virt_type`` with libvirt -
+``kvm`` and ``qemu``, with ``kvm`` being the default.
+
+For optimal performance, ``kvm`` is preferable, since many aspects of
+virtualisation can be offloaded to hardware.  If it is not possible to enable
+hardware virtualisation (e.g. Virtualisation Technology (VT) BIOS configuration
+on Intel systems), ``qemu`` may be used to provide less performant
+software-emulated virtualisation.
+
 Libvirt TLS
 ===========
 

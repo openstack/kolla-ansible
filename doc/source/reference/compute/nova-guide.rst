@@ -1,0 +1,61 @@
+======================
+Nova - Compute Service
+======================
+
+Nova is a core service in OpenStack, and provides compute services. Typically
+this is via Virtual Machines (VMs), but may also be via bare metal servers if
+Nova is coupled with Ironic.
+
+Nova is enabled by default, but may be disabled by setting ``enable_nova`` to
+``no`` in ``globals.yml``.
+
+Virtualisation Drivers
+======================
+
+The virtualisation driver may be selected via ``nova_compute_virt_type`` in
+``globals.yml``. Supported options are ``qemu``, ``kvm``, ``vmware``, and
+``xenapi``. The default is ``kvm``.
+
+HyperV
+------
+
+Information on using Nova with HyperV can be found in :doc:`hyperv-guide`.
+
+Libvirt
+-------
+
+Information on the libvirt-based drivers ``kvm`` and ``qemu`` can be found in
+:doc:`libvirt-guide`.
+
+VMware
+------
+
+Information on the VMware-based driver ``vmware`` can be found in
+:doc:`vmware-guide`.
+
+XenServer
+---------
+
+Information on the XenServer-based driver ``xenapi`` can be found in
+:doc:`xenserver-guide`.
+
+Bare Metal
+----------
+
+Information on using Nova with Ironic to deploy compute instances to bare metal
+can be found in :doc:`../bare-metal/ironic-guide`.
+
+Fake Driver
+-----------
+
+The fake driver can be used for testing Nova's scaling properties without
+requiring access to a large amount of hardware resources. It is covered in
+:doc:`nova-fake-driver`.
+
+Consoles
+========
+
+The console driver may be selected via ``nova_console`` in ``globals.yml``.
+Valid options are ``none``, ``novnc``, ``spice``, or ``rdp``. Additionally,
+serial console support can be enabled by setting
+``enable_nova_serialconsole_proxy`` to ``yes``.
