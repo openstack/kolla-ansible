@@ -66,3 +66,64 @@ will be merged with any files in ``{{ node_custom_config }}/prometheus/prometheu
 so in order to override a list value instead of extending it, you will need to make
 sure that no files in ``{{ node_custom_config }}/prometheus/prometheus.yml.d``
 set a key with an equivalent hierarchical path.
+
+Extra files
+~~~~~~~~~~~
+
+Sometimes it is necessary to reference additional files from within
+``prometheus.yml``, for example, when defining file service discovery
+configuration. To enable you to do this, kolla-ansible will resursively
+discover any files in ``{{ node_custom_config }}/prometheus/extras`` and
+template them. The templated output is then copied to
+``/etc/prometheus/extras`` within the container on startup. For example to
+configure `ipmi_exporter <https://github.com/soundcloud/ipmi_exporter>`_, using
+the default value for ``node_custom_config``, you could create the following
+files:
+
+- ``/etc/kolla/config/prometheus/prometheus.yml.d/ipmi-exporter.yml``:
+
+    .. code-block:: jinja
+
+        ---
+        scrape_configs:
+        - job_name: ipmi
+          params:
+            module: ["default"]
+            scrape_interval: 1m
+            scrape_timeout: 30s
+            metrics_path: /ipmi
+            scheme: http
+            file_sd_configs:
+              - files:
+                  - /etc/prometheus/extras/file_sd/ipmi-exporter-targets.yml
+            refresh_interval: 5m
+            relabel_configs:
+              - source_labels: [__address__]
+                separator: ;
+                regex: (.*)
+                target_label: __param_target
+                replacement: ${1}
+                action: replace
+              - source_labels: [__param_target]
+                separator: ;
+                regex: (.*)
+                target_label: instance
+                replacement: ${1}
+                action: replace
+              - separator: ;
+                regex: .*
+                target_label: __address__
+                replacement: "{{ ipmi_exporter_listen_address }}:9290"
+                action: replace
+
+  where ``ipmi_exporter_listen_address`` is a variable containing the IP address of
+  the node where the exporter is running.
+
+-  ``/etc/kolla/config/prometheus/extras/file_sd/ipmi-exporter-targets.yml``:
+    .. code-block:: yaml
+
+        ---
+        - targets:
+          - 192.168.1.1
+        labels:
+            job: ipmi_exporter
