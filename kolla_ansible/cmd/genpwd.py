@@ -80,7 +80,7 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
                     uuidutils.generate_uuid().encode(), ''.encode(), md5)
                     .hexdigest())
             elif k in fernet_keys:
-                passwords[k] = fernet.Fernet.generate_key()
+                passwords[k] = fernet.Fernet.generate_key().decode()
             else:
                 passwords[k] = ''.join([
                     random.SystemRandom().choice(
