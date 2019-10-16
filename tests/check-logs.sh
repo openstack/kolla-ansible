@@ -19,6 +19,8 @@ function check_file_for_level {
 any_critical=0
 for level in CRITICAL ERROR WARNING; do
     all_file=/tmp/logs/kolla/all-${level}.log
+    # remove the file to avoid collecting duplicates (upgrade, post)
+    rm -f $all_file
     any_matched=0
     echo "Checking for $level log messages"
     for f in $(sudo find /var/log/kolla/ -type f); do
