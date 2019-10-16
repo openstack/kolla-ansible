@@ -17,7 +17,7 @@ vrrp_instance kolla_internal_vip_{{ keepalived_virtual_router_id }} {
 {% if groups['haproxy'] | length > 1 %}
     unicast_peer {
 {% for host in groups['haproxy'] %}
-{% set ip_addr = hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] %}
+{% set ip_addr = 'api' | kolla_address(host) %}
 {% if ip_addr != api_interface_address %}
         {{ ip_addr }}
 {% endif %}

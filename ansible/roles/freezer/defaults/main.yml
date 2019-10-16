@@ -34,7 +34,7 @@ freezer_services:
 freezer_database_backend: "mariadb"
 freezer_database_name: "freezer"
 freezer_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}freezer{% endif %}"
-freezer_database_address: "{{ database_address }}:{{ database_port }}"
+freezer_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 freezer_elasticsearch_replicas: "1"
 freezer_es_protocol:
 freezer_es_address:
@@ -77,9 +77,9 @@ freezer_scheduler_extra_volumes: "{{ freezer_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-freezer_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ freezer_api_port }}"
-freezer_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ freezer_api_port }}"
-freezer_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ freezer_api_port }}"
+freezer_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ freezer_api_port }}"
+freezer_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ freezer_api_port }}"
+freezer_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ freezer_api_port }}"
 
 freezer_logging_debug: "{{ openstack_logging_debug }}"
 

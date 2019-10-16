@@ -2,6 +2,8 @@ RABBITMQ_NODENAME=rabbit@{{ ansible_hostname }}
 RABBITMQ_LOG_BASE=/var/log/kolla/{{ project_name }}
 RABBITMQ_DIST_PORT={{ role_rabbitmq_cluster_port }}
 RABBITMQ_PID_FILE={{ rabbitmq_pid_file }}
+RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-kernel inetrc '/etc/rabbitmq/erl_inetrc' {% if api_address_family == 'ipv6' %}-proto_dist inet6_tcp {% endif %}"
+RABBITMQ_CTL_ERL_ARGS="{% if api_address_family == 'ipv6' %}-proto_dist inet6_tcp {% endif %}"
 
 export ERL_EPMD_ADDRESS={{ api_interface_address }}
 export ERL_EPMD_PORT={{ role_rabbitmq_epmd_port }}

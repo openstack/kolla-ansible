@@ -55,7 +55,7 @@ octavia_required_roles:
 ####################
 octavia_database_name: "octavia"
 octavia_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia{% endif %}"
-octavia_database_address: "{{ database_address }}:{{ database_port }}"
+octavia_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -111,9 +111,9 @@ octavia_worker_extra_volumes: "{{ octavia_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-octavia_admin_endpoint: "{{ admin_protocol }}://{{ octavia_internal_fqdn }}:{{ octavia_api_port }}"
-octavia_internal_endpoint: "{{ internal_protocol }}://{{ octavia_internal_fqdn }}:{{ octavia_api_port }}"
-octavia_public_endpoint: "{{ public_protocol }}://{{ octavia_external_fqdn }}:{{ octavia_api_port }}"
+octavia_admin_endpoint: "{{ admin_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
+octavia_internal_endpoint: "{{ internal_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
+octavia_public_endpoint: "{{ public_protocol }}://{{ octavia_external_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 
 octavia_logging_debug: "{{ openstack_logging_debug }}"
 

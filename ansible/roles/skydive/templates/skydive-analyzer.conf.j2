@@ -19,7 +19,7 @@ logging:
 
 analyzers:
 {% for host in groups['skydive-analyzer'] %}
-  - {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ skydive_analyzer_port }}
+  - {{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ skydive_analyzer_port }}
 {% endfor %}
 
 etcd:
@@ -28,19 +28,19 @@ etcd:
   embedded: false
   servers:
 {% for host in groups['etcd'] %}
-    - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+    - http://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endfor %}
 {% else %}
   embedded: true
   servers:
 {% for host in groups['skydive-analyzer'] %}
-  - http://{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+  - http://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endfor %}
-  listen: {{ api_interface_address }}:{{ etcd_client_port }}
+  listen: {{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endif %}
 
 analyzer:
-  listen: {{ api_interface_address }}:{{ skydive_analyzer_port }}
+  listen: {{ api_interface_address | put_address_in_context('url') }}:{{ skydive_analyzer_port }}
   storage:
     backend: elasticsearch
 {% if groups['skydive-agent'] | length > 1 %}
@@ -57,7 +57,7 @@ analyzer:
 
 storage:
   elasticsearch:
-    host: {{ elasticsearch_address }}:{{ elasticsearch_port }}
+    host: {{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}
     maxconns: 10
     retry: 60
 

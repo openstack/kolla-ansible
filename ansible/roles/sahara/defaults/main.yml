@@ -35,7 +35,7 @@ sahara_services:
 ####################
 sahara_database_name: "sahara"
 sahara_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}sahara{% endif %}"
-sahara_database_address: "{{ database_address }}:{{ database_port }}"
+sahara_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -76,9 +76,9 @@ sahara_engine_extra_volumes: "{{ sahara_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-sahara_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ sahara_api_port }}"
-sahara_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ sahara_api_port }}"
-sahara_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ sahara_api_port }}"
+sahara_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ sahara_api_port }}"
+sahara_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ sahara_api_port }}"
+sahara_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ sahara_api_port }}"
 
 sahara_logging_debug: "{{ openstack_logging_debug }}"
 

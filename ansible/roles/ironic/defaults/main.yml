@@ -81,11 +81,11 @@ ironic_services:
 ####################
 ironic_database_name: "ironic"
 ironic_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}ironic{% endif %}"
-ironic_database_address: "{{ database_address }}:{{ database_port }}"
+ironic_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ironic_inspector_database_name: "ironic_inspector"
 ironic_inspector_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}ironic_inspector{% endif %}"
-ironic_inspector_database_address: "{{ database_address }}:{{ database_port }}"
+ironic_inspector_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -173,13 +173,13 @@ ironic_dnsmasq_extra_volumes: "{{ ironic_extra_volumes }}"
 ####################
 ironic_inspector_keystone_user: "ironic-inspector"
 
-ironic_admin_endpoint: "{{ admin_protocol }}://{{ ironic_internal_fqdn }}:{{ ironic_api_port }}"
-ironic_internal_endpoint: "{{ internal_protocol }}://{{ ironic_internal_fqdn }}:{{ ironic_api_port }}"
-ironic_public_endpoint: "{{ public_protocol }}://{{ ironic_external_fqdn }}:{{ ironic_api_port }}"
+ironic_admin_endpoint: "{{ admin_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
+ironic_internal_endpoint: "{{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
+ironic_public_endpoint: "{{ public_protocol }}://{{ ironic_external_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
 
-ironic_inspector_admin_endpoint: "{{ admin_protocol }}://{{ ironic_inspector_internal_fqdn }}:{{ ironic_inspector_port }}"
-ironic_inspector_internal_endpoint: "{{ internal_protocol }}://{{ ironic_inspector_internal_fqdn }}:{{ ironic_inspector_port }}"
-ironic_inspector_public_endpoint: "{{ public_protocol }}://{{ ironic_inspector_external_fqdn }}:{{ ironic_inspector_port }}"
+ironic_inspector_admin_endpoint: "{{ admin_protocol }}://{{ ironic_inspector_internal_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
+ironic_inspector_internal_endpoint: "{{ internal_protocol }}://{{ ironic_inspector_internal_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
+ironic_inspector_public_endpoint: "{{ public_protocol }}://{{ ironic_inspector_external_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
 
 ironic_logging_debug: "{{ openstack_logging_debug }}"
 
@@ -197,7 +197,7 @@ ironic_dnsmasq_default_gateway:
 ironic_dnsmasq_boot_file: "{% if enable_ironic_ipxe | bool %}undionly.kpxe{% else %}pxelinux.0{% endif %}"
 ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
-ironic_ipxe_url: http://{{ api_interface_address }}:{{ ironic_ipxe_port }}
+ironic_ipxe_url: http://{{ api_interface_address | put_address_in_context('url') }}:{{ ironic_ipxe_port }}
 ironic_enable_rolling_upgrade: "yes"
 ironic_inspector_kernel_cmdline_extras: []
 ironic_inspector_pxe_filter: "{% if enable_neutron | bool %}dnsmasq{% else %}none{% endif %}"

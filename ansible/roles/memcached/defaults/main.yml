@@ -25,7 +25,7 @@ memcached_services:
 ####################
 # HAProxy
 ####################
-haproxy_members: "{% for host in groups['memcached'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+haproxy_members: "{% for host in groups['memcached'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ memcached_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker

@@ -91,7 +91,7 @@ ceph_client_cinder_backup_keyring_caps:
 ####################
 cinder_database_name: "cinder"
 cinder_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}cinder{% endif %}"
-cinder_database_address: "{{ database_address }}:{{ database_port }}"
+cinder_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 # Max number of object to consider
 # when run online data migration
@@ -164,12 +164,12 @@ cinder_volume_extra_volumes: "{{ cinder_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-cinder_v2_admin_endpoint: "{{ admin_protocol }}://{{ cinder_internal_fqdn }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
-cinder_v2_internal_endpoint: "{{ internal_protocol }}://{{ cinder_internal_fqdn }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
-cinder_v2_public_endpoint: "{{ public_protocol }}://{{ cinder_external_fqdn }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
-cinder_v3_admin_endpoint: "{{ admin_protocol }}://{{ cinder_internal_fqdn }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
-cinder_v3_internal_endpoint: "{{ internal_protocol }}://{{ cinder_internal_fqdn }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
-cinder_v3_public_endpoint: "{{ public_protocol }}://{{ cinder_external_fqdn }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
+cinder_v2_admin_endpoint: "{{ admin_protocol }}://{{ cinder_internal_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
+cinder_v2_internal_endpoint: "{{ internal_protocol }}://{{ cinder_internal_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
+cinder_v2_public_endpoint: "{{ public_protocol }}://{{ cinder_external_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v2/%(tenant_id)s"
+cinder_v3_admin_endpoint: "{{ admin_protocol }}://{{ cinder_internal_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
+cinder_v3_internal_endpoint: "{{ internal_protocol }}://{{ cinder_internal_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
+cinder_v3_public_endpoint: "{{ public_protocol }}://{{ cinder_external_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}/v3/%(tenant_id)s"
 
 cinder_logging_debug: "{{ openstack_logging_debug }}"
 

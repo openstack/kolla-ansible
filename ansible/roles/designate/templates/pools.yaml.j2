@@ -9,7 +9,7 @@
   nameservers:
 {% if designate_backend == 'bind9' %}
 {% for host in groups['designate-backend-bind9'] %}
-    - host: {{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}
+    - host: {{ 'api' | kolla_address(host) }}
       port: {{ designate_bind_port }}
 {% endfor %}
 {% elif designate_backend_external == 'bind9' %}
@@ -22,16 +22,16 @@
 {% if designate_backend == 'bind9' %}
 {% for bind_host in groups['designate-backend-bind9'] %}
     - type: bind9
-      description: BIND9 Server {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+      description: BIND9 Server {{ 'api' | kolla_address(bind_host) }}
       masters:
 {% for mdns_host in groups['designate-mdns'] %}
-        - host: {{ hostvars[mdns_host]['ansible_' + hostvars[mdns_host]['dns_interface']]['ipv4']['address'] }}
+        - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
 {% endfor %}
       options:
-        host: {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+        host: {{ 'api' | kolla_address(bind_host) }}
         port: {{ designate_bind_port }}
-        rndc_host: {{ hostvars[bind_host]['ansible_' + hostvars[bind_host]['api_interface']]['ipv4']['address'] }}
+        rndc_host: {{ 'api' | kolla_address(bind_host) }}
         rndc_port: {{ designate_rndc_port }}
         rndc_key_file: /etc/designate/rndc.key
 {% endfor %}
@@ -41,7 +41,7 @@
       description: BIND9 Server {{ bind_host }}
       masters:
 {% for mdns_host in groups['designate-mdns'] %}
-        - host: {{ hostvars[mdns_host]['ansible_' + hostvars[mdns_host]['dns_interface']]['ipv4']['address'] }}
+        - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
 {% endfor %}
       options:
@@ -71,7 +71,7 @@
       description: Default Infoblox Pool
       masters:
 {% for mdns_host in groups['designate-mdns'] %}
-        - host: {{ hostvars[mdns_host]['ansible_' + hostvars[mdns_host]['dns_interface']]['ipv4']['address'] }}
+        - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
 {% endfor %}
       options:

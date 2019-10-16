@@ -34,7 +34,7 @@ cloudkitty_services:
 ####################
 cloudkitty_database_name: "cloudkitty"
 cloudkitty_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}cloudkitty{% endif %}"
-cloudkitty_database_address: "{{ database_address }}:{{ database_port }}"
+cloudkitty_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -72,9 +72,9 @@ cloudkitty_api_extra_volumes: "{{ cloudkitty_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-cloudkitty_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ cloudkitty_api_port }}"
-cloudkitty_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ cloudkitty_api_port }}"
-cloudkitty_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ cloudkitty_api_port }}"
+cloudkitty_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"
+cloudkitty_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"
+cloudkitty_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"
 
 cloudkitty_logging_debug: "{{ openstack_logging_debug }}"
 

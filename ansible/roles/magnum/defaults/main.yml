@@ -37,7 +37,7 @@ magnum_services:
 ####################
 magnum_database_name: "magnum"
 magnum_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}magnum{% endif %}"
-magnum_database_address: "{{ database_address }}:{{ database_port }}"
+magnum_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -85,9 +85,9 @@ magnum_conductor_extra_volumes: "{{ magnum_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-magnum_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn }}:{{ magnum_api_port }}/v1"
-magnum_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ magnum_api_port }}/v1"
-magnum_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn }}:{{ magnum_api_port }}/v1"
+magnum_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ magnum_api_port }}/v1"
+magnum_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ magnum_api_port }}/v1"
+magnum_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ magnum_api_port }}/v1"
 
 magnum_logging_debug: "{{ openstack_logging_debug }}"
 

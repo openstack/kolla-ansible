@@ -1,13 +1,22 @@
+# NOTE(yoctozepto): ironic-dnsmasq is used to deliver DHCP(v6) service
+# DNS service is disabled:
 port=0
+
 interface={{ ironic_dnsmasq_interface }}
+bind-interfaces
+
 dhcp-range={{ ironic_dnsmasq_dhcp_range }}
+dhcp-sequential-ip
+
+{% if api_address_family == 'ipv6' %}
+{# TODO(yoctozepto): IPv6-only support - DHCPv6 PXE support #}
+{# different options must be used here #}
+{% else %}{# ipv4 #}
 {% if ironic_dnsmasq_default_gateway is not none %}
 dhcp-option=3,{{ ironic_dnsmasq_default_gateway }}
 {% endif %}
 dhcp-option=option:tftp-server,{{ api_interface_address }}
 dhcp-option=option:server-ip-address,{{ api_interface_address }}
-bind-interfaces
-dhcp-sequential-ip
 dhcp-option=210,/tftpboot/
 {% if enable_ironic_ipxe | bool %}
 dhcp-match=ipxe,175
@@ -20,6 +29,8 @@ dhcp-option=tag:ipxe,option:bootfile-name,{{ ironic_ipxe_url }}/inspector.ipxe
 dhcp-option=tag:efi,tag:!ipxe,option:bootfile-name,ipxe.efi
 {% endif %}
 dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
+{% endif %}{# ipv6/ipv4 #}
+
 {% if ironic_inspector_pxe_filter == 'dnsmasq' %}
 dhcp-hostsdir=/etc/dnsmasq/dhcp-hostsdir
 {% endif %}

@@ -13,7 +13,7 @@ my_ip = {{ api_interface_address }}
 osapi_volume_workers = {{ openstack_service_workers }}
 volume_name_template = volume-%s
 
-glance_api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn }}:{{ glance_api_port }}
+glance_api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}
 
 glance_num_retries = {{ groups['glance-api'] | length }}
 glance_api_version = 2
@@ -42,7 +42,7 @@ backup_share = {{ cinder_backup_share }}
 backup_file_size = 327680000
 {% elif enable_swift | bool and cinder_backup_driver == "swift" %}
 backup_driver = cinder.backup.drivers.swift.SwiftBackupDriver
-backup_swift_url = {{ internal_protocol }}://{{ swift_internal_fqdn }}:{{ swift_proxy_server_port }}/v1/AUTH_
+backup_swift_url = {{ internal_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1/AUTH_
 backup_swift_auth = per_user
 backup_swift_auth_version = 1
 backup_swift_user =
@@ -103,7 +103,7 @@ password = {{ cinder_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 
 [oslo_concurrency]
@@ -210,5 +210,5 @@ auth_endpoint = {{ keystone_internal_url }}
 backend_url = {{ redis_connection_string }}
 {% elif cinder_coordination_backend == 'etcd' %}
 # NOTE(jeffrey4l): python-etcd3 module do not support multi endpoint here.
-backend_url = etcd3://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
+backend_url = etcd3://{{ 'api' | kolla_address(groups['etcd'][0]) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endif %}

@@ -33,7 +33,7 @@ password = {{ freezer_keystone_password }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 {% if freezer_policy_file is defined %}
 [oslo_policy]
@@ -63,7 +63,7 @@ backend = elasticsearch
 driver = elasticsearch
 
 [elasticsearch]
-hosts = {{ freezer_es_protocol }}://{{ freezer_es_address }}:{{ freezer_es_port }}
+hosts = {{ freezer_es_protocol }}://{{ freezer_es_address | put_address_in_context('url') }}:{{ freezer_es_port }}
 number_of_replicas = {{ freezer_elasticsearch_replicas }}
 index = freezer
 {% endif %}

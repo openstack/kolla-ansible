@@ -46,7 +46,7 @@ max_active_keys = {{ ((fernet_token_expiry | int +
 [cache]
 backend = oslo_cache.memcache_pool
 enabled = True
-memcache_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+memcache_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
@@ -68,5 +68,5 @@ connection_string = {{ osprofiler_backend_connection_string }}
 
 {% if enable_grafana | bool %}
 [cors]
-allowed_origin = {{ public_protocol }}://{{ kolla_external_fqdn }}:{{ grafana_server_port }}
+allowed_origin = {{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ grafana_server_port }}
 {% endif %}

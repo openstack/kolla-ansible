@@ -65,6 +65,25 @@
     - Restart rabbitmq container (first node)
     - Restart rabbitmq container (rest of nodes)
 
+- name: Copying over erl_inetrc
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/erl_inetrc"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/erl_inetrc"
+    - "{{ node_custom_config }}/rabbitmq/erl_inetrc"
+    - "erl_inetrc.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart rabbitmq container (first node)
+    - Restart rabbitmq container (rest of nodes)
+
 - name: Copying over definitions.json
   become: true
   vars:

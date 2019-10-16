@@ -160,7 +160,7 @@ neutron_services:
 ####################
 neutron_database_name: "neutron"
 neutron_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}neutron{% endif %}"
-neutron_database_address: "{{ database_address }}:{{ database_port }}"
+neutron_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 
 ####################
@@ -322,9 +322,9 @@ ironic_neutron_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 dhcp_agents_per_network: 2
 max_l3_agents_per_router: 3
 
-neutron_admin_endpoint: "{{ admin_protocol }}://{{ neutron_internal_fqdn }}:{{ neutron_server_port }}"
-neutron_internal_endpoint: "{{ internal_protocol }}://{{ neutron_internal_fqdn }}:{{ neutron_server_port }}"
-neutron_public_endpoint: "{{ public_protocol }}://{{ neutron_external_fqdn }}:{{ neutron_server_port }}"
+neutron_admin_endpoint: "{{ admin_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
+neutron_internal_endpoint: "{{ internal_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
+neutron_public_endpoint: "{{ public_protocol }}://{{ neutron_external_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
 
 neutron_logging_debug: "{{ openstack_logging_debug }}"
 
