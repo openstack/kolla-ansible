@@ -283,7 +283,16 @@
         - include_role:
             role: nova
             tasks_from: loadbalancer
-          tags: nova
+          tags:
+            - nova
+            - nova-api
+          when: enable_nova | bool
+        - include_role:
+            role: nova-cell
+            tasks_from: loadbalancer
+          tags:
+            - nova
+            - nova-cell
           when: enable_nova | bool
         - include_role:
             role: octavia
@@ -704,21 +713,9 @@
         tags: placement,
         when: enable_placement | bool }
 
-- name: Apply role nova
-  gather_facts: false
-  hosts:
-    - ceph-mon
-    - compute
-    - nova-api
-    - nova-conductor
-    - nova-novncproxy
-    - nova-scheduler
-    - '&enable_nova_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: nova,
-        tags: nova,
-        when: enable_nova | bool }
+# Nova deployment is more complicated than other services, so is covered in its
+# own playbook.
+- import_playbook: nova.yml
 
 - name: Apply role opendaylight
   gather_facts: false

@@ -30,6 +30,21 @@
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
 
+{% if scenario == 'cells' %}
+{% for host in hostvars %}
+{% set cell_name = 'cell' ~ loop.index %}
+[{{ cell_name }}]
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+
+[{{ cell_name }}:vars]
+nova_cell_name = {{ cell_name }}
+nova_cell_compute_group = {{ cell_name }}
+nova_cell_conductor_group = {{ cell_name }}
+nova_cell_novncproxy_group = {{ cell_name }}
+nova_novncproxy_port = {{ 6080 + loop.index0 }}
+
+{% endfor %}
+{% endif %}
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
 [chrony-server:children]
@@ -261,6 +276,9 @@ glance
 nova
 
 [nova-conductor:children]
+nova
+
+[nova-super-conductor:children]
 nova
 
 # TODO(yoctozepto): Remove completely in the Ussuri cycle.

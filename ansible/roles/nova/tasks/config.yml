@@ -1,16 +1,4 @@
 ---
-- name: Setting sysctl values
-  become: true
-  sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
-  with_items:
-    - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
-    - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1}
-    - { name: "net.ipv4.conf.all.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
-    - { name: "net.ipv4.conf.default.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
-  when:
-    - set_sysctl | bool
-    - inventory_hostname in groups['compute']
-
 - name: Ensuring config directories exist
   become: true
   file:
@@ -23,21 +11,6 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ nova_services }}"
-
-- include_tasks: ceph.yml
-  when:
-    - enable_ceph | bool and nova_backend == "rbd"
-    - inventory_hostname in groups['ceph-mon'] or
-        inventory_hostname in groups['compute'] or
-        inventory_hostname in groups['nova-api'] or
-        inventory_hostname in groups['nova-conductor'] or
-        inventory_hostname in groups['nova-novncproxy'] or
-        inventory_hostname in groups['nova-scheduler']
-
-- include_tasks: external_ceph.yml
-  when:
-    - not enable_ceph | bool and (nova_backend == "rbd" or cinder_backend_ceph | bool)
-    - inventory_hostname in groups['compute']
 
 - name: Check if policies shall be overwritten
   local_action: stat path="{{ item }}"
@@ -69,13 +42,6 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Set XenAPI facts
-  set_fact:
-    xenapi_facts: "{{ lookup('file', xenapi_facts_root + '/' + inventory_hostname + '/' + xenapi_facts_file) | from_json }}"
-  when:
-    - nova_compute_virt_type == 'xenapi'
-    - inventory_hostname in groups['compute']
-
 - name: Copying over nova.conf
   become: true
   vars:
@@ -92,127 +58,12 @@
   when:
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
-    - item.key in nova_services_require_nova_conf
   with_dict: "{{ nova_services }}"
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying over libvirt configuration
-  become: true
-  vars:
-    service: "{{ nova_services['nova-libvirt'] }}"
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ node_config_directory }}/nova-libvirt/{{ item.dest }}"
-    mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - { src: "qemu.conf.j2", dest: "qemu.conf" }
-    - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
-  notify:
-    - Restart nova-libvirt container
-
-- name: Copying over libvirt TLS keys (nova-libvirt)
-  include_tasks: "config-libvirt-tls.yml"
-  vars:
-    service: "{{ nova_services['nova-libvirt'] }}"
-    service_name: nova-libvirt
-    file: "{{ item }}"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - libvirt_tls | bool
-    - libvirt_tls_manage_certs | bool
-  with_items:
-    - cacert.pem
-    - servercert.pem
-    - serverkey.pem
-    - clientcert.pem
-    - clientkey.pem
-
-- name: Copying over libvirt TLS keys (nova-compute)
-  include_tasks: "config-libvirt-tls.yml"
-  vars:
-    service: "{{ nova_services['nova-compute'] }}"
-    service_name: nova-compute
-    file: "{{ item }}"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - libvirt_tls | bool
-    - libvirt_tls_manage_certs | bool
-  with_items:
-    - cacert.pem
-    - clientcert.pem
-    - clientkey.pem
-
-- name: Copying files for nova-ssh
-  become: true
-  vars:
-    service: "{{ nova_services['nova-ssh'] }}"
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ node_config_directory }}/nova-ssh/{{ item.dest }}"
-    mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - { src: "sshd_config.j2", dest: "sshd_config" }
-    - { src: "id_rsa", dest: "id_rsa" }
-    - { src: "id_rsa.pub", dest: "id_rsa.pub" }
-    - { src: "ssh_config.j2", dest: "ssh_config" }
-  notify:
-    - Restart nova-ssh container
-
-- name: Copying VMware vCenter CA file
-  vars:
-    service: "{{ nova_services['nova-compute'] }}"
-  copy:
-    src: "{{ node_custom_config }}/vmware_ca"
-    dest: "{{ node_config_directory }}/nova-compute/vmware_ca"
-    mode: "0660"
-  when:
-    - nova_compute_virt_type == "vmware"
-    - not vmware_vcenter_insecure | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart nova-compute container
-
-- name: Copying 'release' file for nova_compute
-  vars:
-    service: "{{ nova_services['nova-compute'] }}"
-  copy:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/nova-compute/release"
-    mode: "0660"
-  with_first_found:
-    - files:
-        - "{{ node_custom_config }}/nova_compute/{{ inventory_hostname }}/release"
-        - "{{ node_custom_config }}/nova_compute/release"
-        - "{{ node_custom_config }}/nova/release"
-      skip: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart nova-compute container
-
 - name: Copying over existing policy file
   become: true
-  vars:
-    services_require_policy_json:
-      - nova-api
-      - nova-compute
-      - nova-compute-ironic
-      - nova-conductor
-      - nova-novncproxy
-      - nova-serialproxy
-      - nova-scheduler
-      - nova-spicehtml5proxy
   template:
     src: "{{ nova_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ nova_policy_file }}"
@@ -221,7 +72,7 @@
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
     - nova_policy_file is defined
-    - item.key in services_require_policy_json
+    - item.key in nova_services_require_policy_json
   with_dict: "{{ nova_services }}"
   notify:
     - "Restart {{ item.key }} container"

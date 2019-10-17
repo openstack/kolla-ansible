@@ -1,53 +1,41 @@
 ---
-- name: Creating Nova databases
+- name: Creating Nova cell database
   become: true
   kolla_toolbox:
     module_name: mysql_db
     module_args:
-      login_host: "{{ database_address }}"
-      login_port: "{{ database_port }}"
-      login_user: "{{ database_user }}"
-      login_password: "{{ database_password }}"
-      name: "{{ item }}"
-  run_once: True
-  delegate_to: "{{ groups['nova-api'][0] }}"
-  with_items:
-    - "{{ nova_database_name }}"
-    - "{{ nova_database_name }}_cell0"
-    - "{{ nova_api_database_name }}"
+      login_host: "{{ nova_cell_database_address }}"
+      login_port: "{{ nova_cell_database_port }}"
+      login_user: "{{ nova_cell_database_admin_user }}"
+      login_password: "{{ nova_cell_database_admin_password }}"
+      name: "{{ nova_cell_database_name }}"
   when:
     - not use_preconfigured_databases | bool
+    - inventory_hostname == groups[nova_cell_conductor_group][0]
 
-- name: Creating Nova databases user and setting permissions
+- name: Creating Nova cell database user and setting permissions
   become: true
   kolla_toolbox:
     module_name: mysql_user
     module_args:
-      login_host: "{{ database_address }}"
-      login_port: "{{ database_port }}"
-      login_user: "{{ database_user }}"
-      login_password: "{{ database_password }}"
-      name: "{{ item.database_username }}"
-      password: "{{ item.database_password }}"
+      login_host: "{{ nova_cell_database_address }}"
+      login_port: "{{ nova_cell_database_port }}"
+      login_user: "{{ nova_cell_database_admin_user }}"
+      login_password: "{{ nova_cell_database_admin_password }}"
+      name: "{{ nova_cell_database_user }}"
+      password: "{{ nova_cell_database_password }}"
       host: "%"
-      priv: "{{ item.database_name }}.*:ALL"
+      priv: "{{ nova_cell_database_name }}.*:ALL"
       append_privs: "yes"
-  with_items:
-    - database_name: "{{ nova_database_name }}"
-      database_username: "{{ nova_database_user }}"
-      database_password: "{{ nova_database_password }}"
-    - database_name: "{{ nova_database_name }}_cell0"
-      database_username: "{{ nova_database_user }}"
-      database_password: "{{ nova_database_password }}"
-    - database_name: "{{ nova_api_database_name }}"
-      database_username: "{{ nova_api_database_user }}"
-      database_password: "{{ nova_api_database_password }}"
-  loop_control:
-    label: "{{ item.database_name }}"
-  run_once: True
-  delegate_to: "{{ groups['nova-api'][0] }}"
   when:
     - not use_preconfigured_databases | bool
+    - inventory_hostname == groups[nova_cell_conductor_group][0]
   no_log: true
 
-- include_tasks: bootstrap_service.yml
+- import_tasks: rabbitmq.yml
+
+- import_tasks: config_bootstrap.yml
+
+- import_tasks: bootstrap_service.yml
+
+- import_tasks: create_cells.yml

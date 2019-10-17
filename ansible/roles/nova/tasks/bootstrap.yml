@@ -10,10 +10,8 @@
       login_password: "{{ database_password }}"
       name: "{{ item }}"
   run_once: True
-  delegate_to: "{{ groups['nova-api'][0] }}"
   with_items:
-    - "{{ nova_database_name }}"
-    - "{{ nova_database_name }}_cell0"
+    - "{{ nova_cell0_database_name }}"
     - "{{ nova_api_database_name }}"
   when:
     - not use_preconfigured_databases | bool
@@ -33,21 +31,21 @@
       priv: "{{ item.database_name }}.*:ALL"
       append_privs: "yes"
   with_items:
-    - database_name: "{{ nova_database_name }}"
-      database_username: "{{ nova_database_user }}"
-      database_password: "{{ nova_database_password }}"
-    - database_name: "{{ nova_database_name }}_cell0"
-      database_username: "{{ nova_database_user }}"
-      database_password: "{{ nova_database_password }}"
+    - database_name: "{{ nova_cell0_database_name }}"
+      database_username: "{{ nova_cell0_database_user }}"
+      database_password: "{{ nova_cell0_database_password }}"
     - database_name: "{{ nova_api_database_name }}"
       database_username: "{{ nova_api_database_user }}"
       database_password: "{{ nova_api_database_password }}"
   loop_control:
     label: "{{ item.database_name }}"
   run_once: True
-  delegate_to: "{{ groups['nova-api'][0] }}"
   when:
     - not use_preconfigured_databases | bool
   no_log: true
 
-- include_tasks: bootstrap_service.yml
+- import_tasks: config_bootstrap.yml
+
+- import_tasks: bootstrap_service.yml
+
+- import_tasks: map_cell0.yml

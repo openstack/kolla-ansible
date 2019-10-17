@@ -15,6 +15,18 @@
     first_nova_api_host: "{{ groups['nova-api'][0] }}"
   when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] not in [0, 1]
 
+- name: Stopping top level nova services
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+  with_dict: "{{ nova_services }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - nova_safety_upgrade | bool
+
 - include_tasks: rolling_upgrade.yml
 
 # NOTE(jeffrey4l): Remove this task in U cycle.

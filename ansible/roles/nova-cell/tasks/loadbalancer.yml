@@ -1,7 +1,123 @@
 ---
-- name: "Configure haproxy for {{ project_name }}"
-  import_role:
-    role: haproxy-config
+# NOTE(mgoddard): Load balancer configuration for this role works a little
+# differently than usual. We need to configure an HAProxy frontend for each
+# enabled console proxy service (novnc, spicehtml5, serial), in each cell. We
+# do this by configuring a unique port for each service in each cell, and
+# proxying traffic on that port to the set of console proxies in the cell.
+#
+# We currently don't have a global list of all cells, so we are using the
+# group membership as a guide. We'll take novncproxy as an example. We find the
+# set of unique values of the 'nova_cell_novncproxy_group' variable for hosts
+# in the global 'nova-novncproxy' group - there should be one for each cell.
+# Then for each of those groups, we run the haproxy-config role, using the
+# proxy configuration for a host in that group. This allows us to have
+# different ports for each cell, and potentially a different console type
+# (nova_console) also.
+#
+# Here we depend on the lazy nature of Jinja, referencing the variable
+# 'cell_proxy_group' in 'cell_proxy_project_services' that will be the loop_var
+# in proxy_loadbalancer.yml.
+
+- import_tasks: proxy_loadbalancer.yml
   vars:
-    project_services: "{{ nova_services }}"
+    # Default is necessary because this play may not be targetting the hosts in
+    # the nova-novncproxy group, and therefore they would not have role
+    # defaults defined. If we put these variables in group_vars, then they
+    # cannot be overridden by the inventory.
+    cell_proxy_groups: >-
+      {{ groups['nova-novncproxy'] |
+         map('extract', hostvars, 'nova_cell_novncproxy_group') |
+         map('default', 'nova-novncproxy') |
+         unique |
+         list }}
+    cell_proxy_service_name: nova-novncproxy
+    cell_proxy_project_services:
+      nova-novncproxy:
+        group: "{{ cell_proxy_group }}"
+        enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'novnc' }}"
+        haproxy:
+          nova_novncproxy:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'novnc' }}"
+            mode: "http"
+            external: false
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_novncproxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_novncproxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel 1h"
+          nova_novncproxy_external:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'novnc' }}"
+            mode: "http"
+            external: true
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_novncproxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_novncproxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel 1h"
+  tags: always
+
+- import_tasks: proxy_loadbalancer.yml
+  vars:
+    # Default is necessary because this play may not be targetting the hosts in
+    # the nova-spicehtml5proxy group, and therefore they would not have role
+    # defaults defined. If we put these variables in group_vars, then they
+    # cannot be overridden by the inventory.
+    cell_proxy_groups: >-
+      {{ groups['nova-spicehtml5proxy'] |
+         map('extract', hostvars, 'nova_cell_spicehtml5proxy_group') |
+         map('default', 'nova-spicehtml5proxy') |
+         unique |
+         list }}
+    cell_proxy_service_name: nova-spicehtml5proxy
+    cell_proxy_project_services:
+      nova-spicehtml5proxy:
+        group: "{{ nova_cell_spicehtml5proxy_group }}"
+        enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'spice' }}"
+        haproxy:
+          nova_spicehtml5proxy:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'spice' }}"
+            mode: "http"
+            external: false
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_listen_port'] }}"
+          nova_spicehtml5proxy_external:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'spice' }}"
+            mode: "http"
+            external: true
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_listen_port'] }}"
+  tags: always
+
+- import_tasks: proxy_loadbalancer.yml
+  vars:
+    # Default is necessary because this play may not be targetting the hosts in
+    # the nova-serialproxy group, and therefore they would not have role
+    # defaults defined. If we put these variables in group_vars, then they
+    # cannot be overridden by the inventory.
+    cell_proxy_groups: >-
+      {{ groups['nova-serialproxy'] |
+         map('extract', hostvars, 'nova_cell_serialproxy_group') |
+         map('default', 'nova-serialproxy') |
+         unique |
+         list }}
+    cell_proxy_service_name: nova-serialproxy
+    cell_proxy_project_services:
+      nova-serialproxy:
+        group: "{{ nova_cell_serialproxy_group }}"
+        enabled: "{{ hostvars[groups[cell_proxy_group][0]]['enable_nova_serialconsole_proxy'] | bool }}"
+        haproxy:
+          nova_serialconsole_proxy:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['enable_nova_serialconsole_proxy'] | bool }}"
+            mode: "http"
+            external: false
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_serialproxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_serialproxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
+          nova_serialconsole_proxy_external:
+            enabled: "{{ hostvars[groups[cell_proxy_group][0]]['enable_nova_serialconsole_proxy'] | bool }}"
+            mode: "http"
+            external: true
+            port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_serialproxy_port'] }}"
+            listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_serialproxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel {{ haproxy_nova_serialconsole_proxy_tunnel_timeout }}"
   tags: always

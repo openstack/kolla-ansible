@@ -1,0 +1,40 @@
+---
+# NOTE(mgoddard): Currently (just prior to Stein release), sending SIGHUP to
+# nova compute services leaves them in a broken state in which they cannot
+# start new instances. The following error is seen in the logs:
+# "In shutdown, no new events can be scheduled"
+# To work around this we restart the nova-compute services.
+# Speaking to the nova team, this seems to be an issue in oslo.service,
+# with a fix proposed here: https://review.openstack.org/#/c/641907.
+# This issue also seems to affect the proxy services, which exit non-zero in
+# reponse to a SIGHUP, so restart those too.
+# The issue actually affects all nova services, since they remain with RPC
+# version pinned to the previous release:
+# https://bugs.launchpad.net/kolla-ansible/+bug/1833069.
+# TODO(mgoddard): Use SIGHUP when this bug has been fixed.
+
+# NOTE(mgoddard): We use recreate_or_restart_container to cover the case where
+# nova_safety_upgrade is "yes", and we need to recreate all containers.
+
+# FIXME(mgoddard): Need to always do this since nova-compute handlers will not
+# generally fire on controllers.
+- name: Reload nova cell services to remove RPC version cap
+  vars:
+    service: "{{ nova_cell_services[item] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment|default(omit) }}"
+    pid_mode: "{{ service.pid_mode|default('') }}"
+    ipc_mode: "{{ service.ipc_mode|default(omit) }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action == 'upgrade'
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items: "{{ nova_cell_services_require_nova_conf }}"

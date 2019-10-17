@@ -1,0 +1,28 @@
+---
+# Create RabbitMQ users and vhosts.
+- block:
+    - import_role:
+        name: service-rabbitmq
+      vars:
+        service_rabbitmq_users: "{{ nova_cell_rpc_rabbitmq_users }}"
+        # Create users for cells in parallel.
+        service_rabbitmq_run_once: false
+        service_rabbitmq_when: "{{ inventory_hostname == groups[nova_cell_conductor_group][0] | default }}"
+        # Delegate to a host in the RPC group.
+        service_rabbitmq_delegate_host: "{{ groups[nova_cell_rpc_group_name][0] | default }}"
+
+    - import_role:
+        name: service-rabbitmq
+      vars:
+        service_rabbitmq_users: "{{ nova_cell_notify_rabbitmq_users }}"
+        # Create users for cells in parallel.
+        service_rabbitmq_run_once: false
+        service_rabbitmq_when: "{{ inventory_hostname == groups[nova_cell_conductor_group][0] | default }}"
+        # Delegate to a host in the notify group.
+        service_rabbitmq_delegate_host: "{{ groups[nova_cell_notify_group_name][0] | default }}"
+      when:
+        - nova_cell_rpc_group_name != nova_cell_notify_group_name or
+          nova_cell_rpc_rabbitmq_users != nova_cell_notify_rabbitmq_users
+
+  when: nova_cell_rpc_transport == 'rabbit'
+  tags: always

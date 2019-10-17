@@ -7,7 +7,7 @@
   become: true
   with_items:
     - "nova-libvirt/secrets"
-  when: inventory_hostname in groups['compute']
+  when: inventory_hostname in groups[nova_cell_compute_group]
 
 - name: Copying over ceph.conf(s)
   vars:
@@ -23,7 +23,7 @@
   with_items:
     - "nova-compute"
     - "nova-libvirt"
-  when: inventory_hostname in groups['compute']
+  when: inventory_hostname in groups[nova_cell_compute_group]
   notify:
     - Restart {{ item }} container
 
@@ -64,7 +64,7 @@
     dest: "{{ node_config_directory }}/nova-compute/ceph.client.nova.keyring"
     mode: "0600"
   become: true
-  when: inventory_hostname in groups['compute']
+  when: inventory_hostname in groups[nova_cell_compute_group]
   notify:
     - Restart nova-compute container
 
@@ -75,7 +75,7 @@
     mode: "0600"
   become: true
   when:
-    - inventory_hostname in groups['compute']
+    - inventory_hostname in groups[nova_cell_compute_group]
     - item.enabled | bool
   with_items:
     - uuid: "{{ rbd_secret_uuid }}"
@@ -94,7 +94,7 @@
     mode: "0600"
   become: true
   when:
-    - inventory_hostname in groups['compute']
+    - inventory_hostname in groups[nova_cell_compute_group]
     - item.enabled | bool
   with_items:
     - uuid: "{{ rbd_secret_uuid }}"
@@ -116,4 +116,4 @@
   with_items:
     - "nova-compute"
     - "nova-libvirt/secrets"
-  when: inventory_hostname in groups['compute']
+  when: inventory_hostname in groups[nova_cell_compute_group]

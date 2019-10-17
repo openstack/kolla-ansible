@@ -1,0 +1,35 @@
+---
+# Generate configuration for bootstrapping containers.
+
+- name: Ensuring config directories exist
+  become: true
+  file:
+    path: "{{ node_config_directory }}/nova-cell-bootstrap"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  when: inventory_hostname == groups[nova_cell_conductor_group][0]
+
+- name: Copying over config.json files for nova-cell-bootstrap
+  become: true
+  template:
+    src: "nova-cell-bootstrap.json.j2"
+    dest: "{{ node_config_directory }}/nova-cell-bootstrap/config.json"
+    mode: "0660"
+  when: inventory_hostname == groups[nova_cell_conductor_group][0]
+
+- name: Copying over nova.conf for nova-cell-bootstrap
+  become: true
+  vars:
+    service_name: "nova-cell-bootstrap"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/nova.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/nova.conf"
+      - "{{ node_custom_config }}/nova/nova-conductor.conf"
+      - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/nova.conf"
+    dest: "{{ node_config_directory }}/nova-cell-bootstrap/nova.conf"
+    mode: "0660"
+  when: inventory_hostname == groups[nova_cell_conductor_group][0]
