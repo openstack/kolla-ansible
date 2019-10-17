@@ -123,3 +123,43 @@ commits and rabbitmq.
 This becomes especially relevant when ``enable_central_logging`` and
 ``openstack_logging_debug`` are both set to true, as fully loaded 130 node
 cluster produced 30-50GB of logs daily.
+
+High Availability (HA) and scalability
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+HA is an important topic in production systems.
+HA concerns itself with redundant instances of services so that the overall
+service can be provided with close-to-zero interruption in case of failure.
+Scalability often works hand-in-hand with HA to provide load sharing by
+the use of load balancers.
+
+OpenStack services
+------------------
+
+Multinode Kolla Ansible deployments provide HA and scalability for services.
+OpenStack API endpoints are a prime example here: redundant ``haproxy``
+instances provide HA with ``keepalived`` while the backends are also
+deployed redundantly to enable both HA and load balancing.
+
+Other core services
+-------------------
+
+The core non-OpenStack components required by most deployments: the SQL
+database provided by ``mariadb`` and message queue provided by
+``rabbitmq`` are also deployed in a HA way. Care has to be taken, however,
+as unlike previously described services, these have more complex HA
+mechanisms. The reason for that is that they provide the central, persistent
+storage of information about the cloud that each other service assumes to
+have a consistent state (aka integrity).
+This assumption leads to the requirement of quorum establishment
+(look up the CAP theorem for greater insight).
+
+Quorum needs a majority vote and hence deploying 2 instances of these
+do not provide (by default) any HA as a failure of one causes a failure
+of the other one. Hence the recommended number of instances is ``3``,
+where 1 node failure is acceptable. For scaling purposes and better
+resilience it is possible to use ``5`` nodes and have 2 failures
+acceptable.
+Note, however, that higher numbers usually provide no benefits due to amount
+of communication between quorum members themselves and the non-zero
+probability of the communication medium failure happening instead.
