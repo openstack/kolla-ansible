@@ -30,6 +30,8 @@ neutron_services:
     image: "{{ neutron_openvswitch_agent_image_full }}"
     enabled: "{{ neutron_plugin_agent == 'openvswitch' and not enable_onos | bool }}"
     privileged: True
+    environment:
+      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
       ( (inventory_hostname in groups['compute'] and nova_compute_virt_type != 'xenapi')
@@ -67,6 +69,7 @@ neutron_services:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
       NEUTRON_BRIDGE: "br-ex"
       NEUTRON_INTERFACE: "{{ neutron_external_interface }}"
+      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['compute']
@@ -91,6 +94,8 @@ neutron_services:
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
     enabled: "{{ neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] and not enable_opendaylight_l3 | bool and not enable_onos | bool }}"
+    environment:
+      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
