@@ -17,19 +17,9 @@
     - container_facts['qdrouterd'] is not defined
     - inventory_hostname in groups['qdrouterd']
 
-- name: Set NSS database for IPv4
-  set_fact:
-    nss_database: 'ahostsv4'
-  when:
-    - api_address_family == 'ipv4'
-
-- name: Set NSS database for IPv6
-  set_fact:
-    nss_database: 'ahostsv6'
-  when:
-    - api_address_family == 'ipv6'
-
 - name: Check if all qdrouterd hostnames are resolvable
+  vars:
+    nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
   command: "getent {{ nss_database }} {{ hostvars[item]['ansible_hostname'] }}"
   changed_when: false
   register: qdrouterd_hostnames
