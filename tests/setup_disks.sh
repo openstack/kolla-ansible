@@ -7,7 +7,7 @@ set -o errexit
 
 mkdir -p /opt/data/kolla
 
-if [ $1 = 'cinder-lvm' ]; then
+if [ $1 = 'cinder-lvm' ] || [ $1 = 'zun' ]; then
     # cinder-volumes volume group
     free_device=$(losetup -f)
     fallocate -l 5G /var/lib/cinder_data.img

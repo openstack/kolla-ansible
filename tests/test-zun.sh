@@ -47,6 +47,57 @@ function test_zun_logged {
     done
 
     echo "SUCCESS: Zun"
+
+    echo "TESTING: Zun Cinder volume attachment"
+    openstack volume create --size 2 zun_test_volume
+    attempt=1
+    while [[ $(openstack volume show zun_test_volume -f value -c status) != "available" ]]; do
+        echo "Volume not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to become available"
+            openstack volume show zun_test_volume
+            return 1
+        fi
+        sleep 10
+    done
+    openstack appcontainer run --name test2 --mount source=zun_test_volume,destination=/data alpine sleep 1000
+    attempt=1
+    while [[ $(openstack volume show zun_test_volume -f value -c status) != "in-use" ]]; do
+        echo "Volume not attached yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to attach"
+            openstack volume show zun_test_volume
+            return 1
+        fi
+        sleep 10
+    done
+    attempt=1
+    while [[ $(openstack appcontainer show test2 -f value -c status) != "Running" ]]; do
+        echo "Container not running yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Container failed to start"
+            openstack appcontainer show test2
+            return 1
+        fi
+        sleep 10
+    done
+    openstack appcontainer delete --stop test2
+    attempt=1
+    while [[ $(openstack volume show zun_test_volume -f value -c status) != "available" ]]; do
+        echo "Volume not detached yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to detach"
+            openstack volume show zun_test_volume
+            return 1
+        fi
+        sleep 10
+    done
+    openstack volume delete zun_test_volume
+    echo "SUCCESS: Zun Cinder volume attachment"
 }
 
 function test_zun {
