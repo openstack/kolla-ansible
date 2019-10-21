@@ -93,7 +93,7 @@
 - name: Warn about docker default iptables
   debug:
     msg: >-
-      Docker default iptables rules will be disabled by default from the Victoria 11.0.0
+      Docker default iptables rules will be disabled by default from the Wallaby 12.0.0
       release. If you have any non-Kolla containers that need this functionality, you should
       plan a migration for this change, or set docker_disable_default_iptables_rules to false.
   when: not docker_disable_default_iptables_rules | bool
@@ -102,6 +102,20 @@
   set_fact:
     docker_config: "{{ docker_config | combine({'iptables': false}) }}"
   when: docker_disable_default_iptables_rules | bool
+
+- name: Warn about docker default networking
+  debug:
+    msg: >-
+      Docker default network on docker0 will be disabled by default from the
+      Wallaby 12.0.0 release. If you have any non-Kolla containers that need
+      this functionality, you should plan a migration for this change, or set
+      docker_disable_default_network to false.
+  when: not docker_disable_default_network | bool
+
+- name: Disable docker default network on docker0
+  set_fact:
+    docker_config: "{{ docker_config | combine({'bridge': 'none'}) }}"
+  when: docker_disable_default_network | bool
 
 - name: Merge custom docker config
   set_fact:
