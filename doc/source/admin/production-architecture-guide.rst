@@ -94,6 +94,59 @@ In Kolla operators should configure following network interfaces:
    in example ``br-ex`` or ``bond-0`` cannot be used because ansible will read
    them as ``br_ex`` and ``bond_0`` respectively.
 
+.. _address-family-configuration:
+
+Address family configuration (IPv4/IPv6)
+----------------------------------------
+
+Starting with the Train release, Kolla Ansible allows operators to deploy
+the control plane using IPv6 instead of IPv4. Each Kolla Ansible network
+(as represented by interfaces) provides a choice of two address families.
+Both internal and external VIP addresses can be configured using an IPv6
+address as well.
+IPv6 is tested on Debian and Ubuntu.
+
+.. warning::
+
+   While Kolla Ansible Train requires Ansible 2.6 or later, IPv6 support requires
+   Ansible 2.8 or later due to a bug:
+   https://github.com/ansible/ansible/issues/63227
+
+.. note::
+
+   Currently there is no dual stack support. IPv4 can be mixed with IPv6 only
+   when on different networks. This constraint arises from services requiring
+   common single address family addressing.
+
+For example, ``network_address_family`` accepts either ``ipv4`` or ``ipv6``
+as its value and defines the default address family for all networks just
+like ``network_interface`` defines the default interface.
+Analogically, ``api_adress_family`` changes the address family for the API
+network. Current listing of networks is available in ``globals.yml`` file.
+
+.. note::
+
+   While IPv6 support introduced in Train is broad, some services are known
+   not to work yet with IPv6 or have some known quirks:
+
+   * CentOS 7 images suffer from IPv6 connectivity issues:
+     https://bugs.launchpad.net/kolla-ansible/+bug/1848444
+
+   * Bifrost does not support IPv6:
+     https://storyboard.openstack.org/#!/story/2006689
+
+   * Docker does not allow IPv6 registry address:
+     https://github.com/moby/moby/issues/39033
+     - the workaround is to use the hostname
+
+   * RabbitMQ in provided images prefers IPv4 addresses when resolving names:
+     https://bugs.launchpad.net/kolla-ansible/+bug/1848452
+     - the workaround is to ensure that the hostname resolves uniquely
+     to an IPv6 address
+
+   * Ironic DHCP server, dnsmasq, is not currently automatically configured
+     to offer DHCPv6: https://bugs.launchpad.net/kolla-ansible/+bug/1848454
+
 Docker configuration
 ~~~~~~~~~~~~~~~~~~~~
 
