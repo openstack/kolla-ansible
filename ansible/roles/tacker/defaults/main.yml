@@ -5,6 +5,7 @@ tacker_services:
   tacker-server:
     container_name: "tacker_server"
     group: "tacker-server"
+    host_in_groups: "{{ inventory_hostname in groups['tacker-server'] }}"
     enabled: true
     image: "{{ tacker_server_image_full }}"
     volumes: "{{ tacker_server_default_volumes + tacker_server_extra_volumes }}"
@@ -23,6 +24,7 @@ tacker_services:
   tacker-conductor:
     container_name: "tacker_conductor"
     group: "tacker-conductor"
+    host_in_groups: "{{ inventory_hostname in tacker_conductor_hosts }}"
     enabled: true
     image: "{{ tacker_conductor_image_full }}"
     volumes: "{{ tacker_conductor_default_volumes + tacker_conductor_extra_volumes }}"
@@ -62,10 +64,14 @@ tacker_conductor_default_volumes:
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
+  - "kolla_tacker_vnfpackages:/var/lib/tacker/vnfpackages/"
+  - "kolla_tacker_csar_files:/var/lib/tacker/csar_files/"
 
 tacker_extra_volumes: "{{ default_extra_volumes }}"
 tacker_server_extra_volumes: "{{ tacker_extra_volumes }}"
 tacker_conductor_extra_volumes: "{{ tacker_extra_volumes }}"
+
+tacker_conductor_hosts: "{{ [groups['tacker-conductor']|first] }}"
 
 ####################
 # OpenStack

@@ -62,6 +62,13 @@ In order to enable them, you need to edit the file
    and any request made to a different tacker-server will fail with a
    similar error as ``No such file or directory /etc/tacker/vim/fernet_keys``
 
+.. warning::
+
+   In Train, Tacker Conductor started using local filesystem to store VNF
+   packages and CSAR files.
+   Kolla Ansible provides no shared filesystem capabilities, hence only
+   one instance of Tacker Conductor is deployed.
+
 Deploy tacker and related services.
 
 .. code-block:: console

@@ -8,7 +8,7 @@
     mode: "0770"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
   with_dict: "{{ tacker_services }}"
 
@@ -37,7 +37,7 @@
   become: true
   with_dict: "{{ tacker_services }}"
   when:
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled
   notify:
     - Restart {{ item.key }} container
@@ -57,7 +57,7 @@
   become: true
   with_dict: "{{ tacker_services }}"
   when:
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
   notify:
     - Restart {{ item.key }} container
@@ -69,7 +69,7 @@
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
+    - item.value.host_in_groups | bool
     - item.value.enabled | bool
     - tacker_policy_file is defined
   with_dict: "{{ tacker_services }}"
