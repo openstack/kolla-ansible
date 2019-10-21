@@ -11,6 +11,7 @@ compute services like HyperV, XenServer and so on.
    hyperv-guide
    libvirt-guide
    masakari-guide
+   nova-cells-guide
    nova-fake-driver
    nova-guide
    qinling-guide
