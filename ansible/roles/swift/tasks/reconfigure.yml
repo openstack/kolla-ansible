@@ -1,4 +1,34 @@
 ---
+- name: Prepare Swift containers list
+  set_fact:
+    swift_containers:
+      - { name: swift_account_server, group: swift-account-server }
+      - { name: swift_account_auditor, group: swift-account-server }
+      - { name: swift_account_replicator, group: swift-account-server }
+      - { name: swift_account_reaper, group: swift-account-server }
+      - { name: swift_rsyncd, group: swift-account-server }
+      - { name: swift_container_server, group: swift-container-server }
+      - { name: swift_container_auditor, group: swift-container-server }
+      - { name: swift_container_replicator, group: swift-container-server }
+      - { name: swift_container_updater, group: swift-container-server }
+      - { name: swift_rsyncd, group: swift-container-server }
+      - { name: swift_object_server, group: swift-object-server }
+      - { name: swift_object_auditor, group: swift-object-server }
+      - { name: swift_object_replicator, group: swift-object-server }
+      - { name: swift_object_updater, group: swift-object-server }
+      - { name: swift_object_expirer, group: swift-object-server }
+      - { name: swift_rsyncd, group: swift-object-server }
+      - { name: swift_proxy_server, group: swift-proxy-server }
+    swift_replication_server_containers:
+      - { name: swift_account_replication_server, group: swift-account-server }
+      - { name: swift_container_replication_server, group: swift-container-server }
+      - { name: swift_object_replication_server, group: swift-object-server }
+
+- name: Add _replication_server containers to the list
+  set_fact:
+    swift_containers: "{{ swift_containers + swift_replication_server_containers }}"
+  when: swift_has_replication_network
+
 - name: Ensuring the containers up
   become: true
   kolla_docker:
@@ -8,26 +38,7 @@
   failed_when: container_state.Running == false
   when: inventory_hostname in groups[item.group]
   with_items:
-    - { name: swift_account_server, group: swift-account-server }
-    - { name: swift_account_auditor, group: swift-account-server }
-    - { name: swift_account_replication_server, group: swift-account-server }
-    - { name: swift_account_replicator, group: swift-account-server }
-    - { name: swift_account_reaper, group: swift-account-server }
-    - { name: swift_rsyncd, group: swift-account-server }
-    - { name: swift_container_server, group: swift-container-server }
-    - { name: swift_container_auditor, group: swift-container-server }
-    - { name: swift_container_replication_server, group: swift-container-server }
-    - { name: swift_container_replicator, group: swift-container-server }
-    - { name: swift_container_updater, group: swift-container-server }
-    - { name: swift_rsyncd, group: swift-container-server }
-    - { name: swift_object_server, group: swift-object-server }
-    - { name: swift_object_auditor, group: swift-object-server }
-    - { name: swift_object_replication_server, group: swift-object-server }
-    - { name: swift_object_replicator, group: swift-object-server }
-    - { name: swift_object_updater, group: swift-object-server }
-    - { name: swift_object_expirer, group: swift-object-server }
-    - { name: swift_rsyncd, group: swift-object-server }
-    - { name: swift_proxy_server, group: swift-proxy-server }
+    - "{{ swift_containers }}"
 
 - include_tasks: config.yml
 
@@ -39,26 +50,7 @@
   register: check_results
   when: inventory_hostname in groups[item.group]
   with_items:
-    - { name: swift_account_server, group: swift-account-server }
-    - { name: swift_account_auditor, group: swift-account-server }
-    - { name: swift_account_replication_server, group: swift-account-server }
-    - { name: swift_account_replicator, group: swift-account-server }
-    - { name: swift_account_reaper, group: swift-account-server }
-    - { name: swift_rsyncd, group: swift-account-server }
-    - { name: swift_container_server, group: swift-container-server }
-    - { name: swift_container_auditor, group: swift-container-server }
-    - { name: swift_container_replication_server, group: swift-container-server }
-    - { name: swift_container_replicator, group: swift-container-server }
-    - { name: swift_container_updater, group: swift-container-server }
-    - { name: swift_rsyncd, group: swift-container-server }
-    - { name: swift_object_server, group: swift-object-server }
-    - { name: swift_object_auditor, group: swift-object-server }
-    - { name: swift_object_replication_server, group: swift-object-server }
-    - { name: swift_object_replicator, group: swift-object-server }
-    - { name: swift_object_updater, group: swift-object-server }
-    - { name: swift_object_expirer, group: swift-object-server }
-    - { name: swift_rsyncd, group: swift-object-server }
-    - { name: swift_proxy_server, group: swift-proxy-server }
+    - "{{ swift_containers }}"
 
 # NOTE(jeffrey4l): when config_strategy == 'COPY_ALWAYS'
 # and container env['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE',
@@ -71,26 +63,7 @@
   register: container_envs
   when: inventory_hostname in groups[item.group]
   with_items:
-    - { name: swift_account_server, group: swift-account-server }
-    - { name: swift_account_auditor, group: swift-account-server }
-    - { name: swift_account_replication_server, group: swift-account-server }
-    - { name: swift_account_replicator, group: swift-account-server }
-    - { name: swift_account_reaper, group: swift-account-server }
-    - { name: swift_rsyncd, group: swift-account-server }
-    - { name: swift_container_server, group: swift-container-server }
-    - { name: swift_container_auditor, group: swift-container-server }
-    - { name: swift_container_replication_server, group: swift-container-server }
-    - { name: swift_container_replicator, group: swift-container-server }
-    - { name: swift_container_updater, group: swift-container-server }
-    - { name: swift_rsyncd, group: swift-container-server }
-    - { name: swift_object_server, group: swift-object-server }
-    - { name: swift_object_auditor, group: swift-object-server }
-    - { name: swift_object_replication_server, group: swift-object-server }
-    - { name: swift_object_replicator, group: swift-object-server }
-    - { name: swift_object_updater, group: swift-object-server }
-    - { name: swift_object_expirer, group: swift-object-server }
-    - { name: swift_rsyncd, group: swift-object-server }
-    - { name: swift_proxy_server, group: swift-proxy-server }
+    - "{{ swift_containers }}"
 
 - name: Remove the containers
   become: true
@@ -103,26 +76,7 @@
     - config_strategy == "COPY_ONCE" or item[1]['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE'
     - item[2]['rc'] == 1
   with_together:
-    - [{ name: swift_account_server, group: swift-account-server },
-       { name: swift_account_auditor, group: swift-account-server },
-       { name: swift_account_replication_server, group: swift-account-server },
-       { name: swift_account_replicator, group: swift-account-server },
-       { name: swift_account_reaper, group: swift-account-server },
-       { name: swift_rsyncd, group: swift-account-server },
-       { name: swift_container_server, group: swift-container-server },
-       { name: swift_container_auditor, group: swift-container-server },
-       { name: swift_container_replication_server, group: swift-container-server },
-       { name: swift_container_replicator, group: swift-container-server },
-       { name: swift_container_updater, group: swift-container-server },
-       { name: swift_rsyncd, group: swift-container-server },
-       { name: swift_object_server, group: swift-object-server },
-       { name: swift_object_auditor, group: swift-object-server },
-       { name: swift_object_replication_server, group: swift-object-server },
-       { name: swift_object_replicator, group: swift-object-server },
-       { name: swift_object_updater, group: swift-object-server },
-       { name: swift_object_expirer, group: swift-object-server },
-       { name: swift_rsyncd, group: swift-object-server },
-       { name: swift_proxy_server, group: swift-proxy-server }]
+    - "{{ swift_containers }}"
     - "{{ container_envs.results }}"
     - "{{ check_results.results }}"
 
@@ -142,25 +96,6 @@
     - item[1]['KOLLA_CONFIG_STRATEGY'] != 'COPY_ONCE'
     - item[2]['rc'] == 1
   with_together:
-    - [{ name: swift_account_server, group: swift-account-server },
-       { name: swift_account_auditor, group: swift-account-server },
-       { name: swift_account_replication_server, group: swift-account-server },
-       { name: swift_account_replicator, group: swift-account-server },
-       { name: swift_account_reaper, group: swift-account-server },
-       { name: swift_rsyncd, group: swift-account-server },
-       { name: swift_container_server, group: swift-container-server },
-       { name: swift_container_auditor, group: swift-container-server },
-       { name: swift_container_replication_server, group: swift-container-server },
-       { name: swift_container_replicator, group: swift-container-server },
-       { name: swift_container_updater, group: swift-container-server },
-       { name: swift_rsyncd, group: swift-container-server },
-       { name: swift_object_server, group: swift-object-server },
-       { name: swift_object_auditor, group: swift-object-server },
-       { name: swift_object_replication_server, group: swift-object-server },
-       { name: swift_object_replicator, group: swift-object-server },
-       { name: swift_object_updater, group: swift-object-server },
-       { name: swift_object_expirer, group: swift-object-server },
-       { name: swift_rsyncd, group: swift-object-server },
-       { name: swift_proxy_server, group: swift-proxy-server }]
+    - "{{ swift_containers }}"
     - "{{ container_envs.results }}"
     - "{{ check_results.results }}"
