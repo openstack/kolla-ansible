@@ -170,10 +170,6 @@ in the ``/etc/kolla/certificates/`` directory.
 OpenStack Service Configuration in Kolla
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-   As of now kolla only supports config overrides for ini based configs.
-
 An operator can change the location where custom config files are read from by
 editing ``/etc/kolla/globals.yml`` and adding the following line.
 
@@ -183,10 +179,29 @@ editing ``/etc/kolla/globals.yml`` and adding the following line.
    node_custom_config: "/etc/kolla/config"
 
 Kolla allows the operator to override configuration of services. Kolla will
-look for a file in ``/etc/kolla/config/<< service name >>/<< config file >>``.
-This can be done per-project, per-service or per-service-on-specified-host.
-For example to override scheduler_max_attempts in nova scheduler, the operator
-needs to create ``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
+generally look for a file in ``/etc/kolla/config/<< config file >>``,
+``/etc/kolla/config/<< service name >>/<< config file >>`` or
+``/etc/kolla/config/<< service name >>/<< hostname >>/<< config file >>``,
+but these locations sometimes vary and you should check the config task in
+the appropriate Ansible role for a full list of supported locations. For
+example, in the case of ``nova.conf`` the following locations are supported,
+assuming that you have services using ``nova.conf`` running on hosts
+called ``controller-0001``, ``controller-0002`` and ``controller-0003``:
+
+* ``/etc/kolla/config/nova.conf``
+* ``/etc/kolla/config/nova/nova.conf``
+* ``/etc/kolla/config/nova/controller-0001/nova.conf``
+* ``/etc/kolla/config/nova/controller-0002/nova.conf``
+* ``/etc/kolla/config/nova/controller-0003/nova.conf``
+* ``/etc/kolla/config/nova/nova-scheduler.conf``
+
+Using this mechansim, overrides can be configured per-project,
+per-project-service or per-project-service-on-specified-host.
+
+Overriding an option is as simple as setting the option under the relevant
+section. For example, to set ``override scheduler_max_attempts`` in nova
+scheduler, the operator could create
+``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
 
 .. path /etc/kolla/config/nova/nova-scheduler.conf
 .. code-block:: ini
@@ -204,6 +219,40 @@ on host myhost, the operator needs to create file
    [DEFAULT]
    cpu_allocation_ratio = 16.0
    ram_allocation_ratio = 5.0
+
+This method of merging configuration sections is supported for all services
+using Oslo Config, which includes the vast majority of OpenStack services,
+and in some cases for services using YAML configuration. Since the INI format
+is an informal standard, not all INI files can be merged in this way. In
+these cases Kolla supports overriding the entire config file.
+
+Additional flexibility can be introduced by using Jinja conditionals in the
+config files.  For example, you may create Nova cells which are homogeneous
+with respect to the hypervisor model. In each cell, you may wish to configure
+the hypervisors differently, for example the following override shows one way
+of setting the ``bandwidth_poll_interval`` variable as a function of the cell:
+
+.. path /etc/kolla/config/nova.conf
+.. code-block:: ini
+
+   [DEFAULT]
+   {% if 'cell0001' in group_names %}
+   bandwidth_poll_interval = 100
+   {% elif 'cell0002' in group_names %}
+   bandwidth_poll_interval = -1
+   {% else %}
+   bandwidth_poll_interval = 300
+   {% endif %}
+
+An alternative to Jinja conditionals would be to define a variable for the
+``bandwidth_poll_interval`` and set it in according to your requirements
+in the inventory group or host vars:
+
+.. path /etc/kolla/config/nova.conf
+.. code-block:: ini
+
+   [DEFAULT]
+   bandwidth_poll_interval = {{ bandwidth_poll_interval }}
 
 Kolla allows the operator to override configuration globally for all services.
 It will look for a file called ``/etc/kolla/config/global.conf``.
