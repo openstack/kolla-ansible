@@ -77,8 +77,7 @@ Configure Designate options in ``/etc/kolla/passwords.yml``
     designate_infoblox_auth_password: "password"
 
 For more information about how the Infoblox backend works, see
-`Infoblox backend
-<https://docs.openstack.org/designate/latest/admin/backends/infoblox.html>`__.
+:designate-doc:`Infoblox backend <admin/backends/infoblox.html>`.
 
 Neutron and Nova Integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

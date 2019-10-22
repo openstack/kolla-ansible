@@ -143,10 +143,13 @@ the following configuration:
    backup_ceph_user=cinder-backup
    backup_ceph_chunk_size = 134217728
    backup_ceph_pool=backups
-   backup_driver = cinder.backup.drivers.ceph
+   backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
    backup_ceph_stripe_unit = 0
    backup_ceph_stripe_count = 0
    restore_discard_excess_bytes = true
+
+For more information about the Cinder backup configuration, see
+:cinder-doc:`Ceph backup driver <configuration/block-storage/backup/ceph-backup-driver.html>`.
 
 Next, copy the ``ceph.conf`` file into ``/etc/kolla/config/cinder/``:
 
@@ -282,5 +285,5 @@ in Ceph) into the same directory, for example:
 For more details on the rest of the Manila setup, such as creating the share
 type ``default_share_type``, please see :doc:`Manila in Kolla <manila-guide>`.
 
-For more details on the CephFS Native driver, please see `CephFS driver
-<https://docs.openstack.org/manila/latest/admin/cephfs_driver.html>`__.
+For more details on the CephFS Native driver, please see
+:manila-doc:`CephFS driver <admin/cephfs_driver.html>`.

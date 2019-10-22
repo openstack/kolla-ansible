@@ -34,12 +34,6 @@ Note that this is independent from the use of a virtual environment for remote
 execution, which is described in
 :kolla-ansible-doc:`Virtual Environments <user/virtual-environments.html>`.
 
-#. For CentOS, install EPEL.
-
-   .. code-block:: console
-
-      sudo yum install epel-release
-
 #. For Ubuntu, update the package index.
 
    .. code-block:: console
@@ -48,7 +42,7 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS, run:
+   For CentOS or RHEL, run:
 
    .. code-block:: console
 
@@ -113,7 +107,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      sudo yum install python-pip
+      sudo easy_install pip
 
    For Ubuntu, run:
 
@@ -177,7 +171,7 @@ Install Kolla-ansible for deployment or evaluation
 
       cp -r /path/to/virtualenv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 
-   If not using a virtual environment on CentOS, run:
+   If not using a virtual environment on CentOS or RHEL, run:
 
    .. code-block:: console
 
@@ -198,7 +192,7 @@ Install Kolla-ansible for deployment or evaluation
 
       cp /path/to/virtualenv/share/kolla-ansible/ansible/inventory/* .
 
-   If not using a virtual environment on CentOS, run:
+   If not using a virtual environment on CentOS or RHEL, run:
 
    .. code-block:: console
 
@@ -367,18 +361,18 @@ There are a few options that are required to deploy Kolla-Ansible:
   User has to specify images that are going to be used for our deployment.
   In this guide `DockerHub <https://hub.docker.com/u/kolla/>`__ provided
   pre-built images are going to be used. To learn more about building
-  mechanism, please refer `image building documentation
-  <https://docs.openstack.org/kolla/latest/admin/image-building.html>`_.
+  mechanism, please refer :kolla-doc:`Building Container Images
+  <admin/image-building.html>`.
 
   Kolla provides choice of several Linux distributions in containers:
 
-  - Centos
+  - CentOS
   - Ubuntu
-  - Oraclelinux
+  - Oracle Linux
   - Debian
   - RHEL
 
-  For newcomers, we recommend to use CentOS 7 or Ubuntu 16.04.
+  For newcomers, we recommend to use CentOS 7 or Ubuntu 18.04.
 
   .. code-block:: console
 
@@ -444,8 +438,9 @@ There are a few options that are required to deploy Kolla-Ansible:
 
      neutron_external_interface: "eth1"
 
-  To learn more about network configuration, refer `Network overview
-  <https://docs.openstack.org/kolla-ansible/latest/admin/production-architecture-guide.html#network-configuration>`_.
+  To learn more about network configuration, refer
+  :kolla-ansible-doc:`Network overview
+  <admin/production-architecture-guide.html#network-configuration>`.
 
   Next we need to provide floating IP for management traffic. This IP will be
   managed by keepalived to provide high availability, and should be set to be
@@ -470,8 +465,8 @@ There are a few options that are required to deploy Kolla-Ansible:
   `a list of available services
   <https://github.com/openstack/kolla-ansible/blob/master/README.rst#openstack-services>`_.
   For more information about service configuration, Please refer to the
-  `Services Reference Guide
-  <https://docs.openstack.org/kolla-ansible/latest/reference/index.html>`_.
+  :kolla-ansible-doc:`Services Reference Guide
+  <reference/index.html>`.
 
 * Virtual environment
 
@@ -535,7 +530,7 @@ accordingly.
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to
-`troubleshooting guide <https://docs.openstack.org/kolla-ansible/latest/user/troubleshooting.html>`_.
+:kolla-ansible-doc:`troubleshooting guide <user/troubleshooting.html>`.
 
 Using OpenStack
 ~~~~~~~~~~~~~~~
@@ -568,7 +563,7 @@ Using OpenStack
    create example networks, images, and so on.
 
    * For deployment or evaluation,
-     run ``init-runonce`` script on CentOS:
+     run ``init-runonce`` script on CentOS or RHEL:
 
      .. code-block:: console
 

@@ -1,43 +1,9 @@
 ---
-- include_tasks: config.yml
-
-# NOTE(jeffrey4l): client.admin caps should be update when upgrade from Jewel
-# to Luminous
-- name: configuring client.admin caps
-  become: true
-  kolla_ceph_keyring:
-    name: client.admin
-    caps: "{{ ceph_client_admin_keyring_caps }}"
-  run_once: True
-  delegate_to: "{{ groups['ceph-mon'][0] }}"
-
-- include_tasks: start_mons.yml
-  when: inventory_hostname in groups['ceph-mon']
-
-- include_tasks: start_mgrs.yml
-  when: inventory_hostname in groups['ceph-mgr']
-
-- include_tasks: start_osds.yml
-  when: inventory_hostname in groups['ceph-osd']
-
-- include_tasks: start_rgws.yml
-  when:
-    - enable_ceph_rgw | bool
-    - inventory_hostname in groups['ceph-rgw']
-
-- include_tasks: start_mdss.yml
-  when:
-    - enable_ceph_mds | bool
-    - inventory_hostname in groups['ceph-mds']
-
-- include_tasks: start_nfss.yml
-  when:
-    - enable_ceph_nfs | bool
-    - inventory_hostname in groups['ceph-nfs']
+- include_tasks: deploy.yml
 
 - name: Check final release (as running on MONs)
   become: true
-  shell: docker exec ceph_mon ceph version | cut -d' ' -f5
+  command: "docker exec ceph_mon ceph -m {{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }} versions"
   changed_when: false
   register: ceph_release_command
   delegate_to: "{{ groups['ceph-mon'][0] }}"
@@ -45,7 +11,7 @@
 
 - name: Finalize the upgrade by disallowing older OSDs
   become: true
-  command: docker exec ceph_mon ceph osd require-osd-release {{ ceph_release_command.stdout }}
+  command: "docker exec ceph_mon ceph -m {{ hostvars[inventory_hostname]['ansible_' + storage_interface]['ipv4']['address'] }} osd require-osd-release {{ ((ceph_release_command.stdout|from_json).mon | string).split(' ')[4] }}"
   changed_when: false
   delegate_to: "{{ groups['ceph-mon'][0] }}"
   run_once: true

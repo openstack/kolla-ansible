@@ -20,8 +20,8 @@ Verification
 ------------
 
 For setting up a testbed environment and creating a port chain, please refer
-to `networking-sfc documentation
-<https://docs.openstack.org/networking-sfc/latest/contributor/system_design_and_workflow.html>`__.
+to :networking-sfc-doc:`networking-sfc documentation
+<contributor/system_design_and_workflow.html>`.
 
 Neutron VPNaaS (VPN-as-a-Service)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,5 +76,5 @@ Two VMs can now be booted, one on vpn_east, the other on vpn_west, and
 encrypted ping packets observed being sent from one to the other.
 
 For more information on this and VPNaaS in Neutron refer to the
-`Neutron VPNaaS Testing <https://docs.openstack.org/neutron-vpnaas/latest/contributor/index.html#testing>`__
+:neutron-vpnaas-doc:`Neutron VPNaaS Testing <contributor/index.html#testing>`
 and the `OpenStack wiki <https://wiki.openstack.org/wiki/Neutron/VPNaaS>`_.

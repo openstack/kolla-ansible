@@ -7,7 +7,7 @@ Running tests
 Kolla-ansible contains a suit of tests in the ``tests`` directory.
 
 Any proposed code change in gerrit is automatically rejected by the
-`OpenStack Jenkins server <https://docs.openstack.org/infra/system-config/jjb.html>`__
+`Zuul CI system <https://docs.openstack.org/infra/system-config/zuulv3.html>`__
 if the change causes test failures.
 
 It is recommended for developers to run the test suite before submitting patch
@@ -44,7 +44,7 @@ To run multiple tests separate items by commas:
 
 .. code-block:: console
 
-   tox -e py27,py35,pep8
+   tox -e py27,py37,pep8
 
 Running a subset of tests
 -------------------------
@@ -98,6 +98,5 @@ Then run ``tox`` with the debug environment as one of the following:
    tox -e debug
    tox -e debug test_file_name.TestClass.test_name
 
-For more information, see the `oslotest documentation
-<https://docs.openstack.org/oslotest/latest/user/features.html#debugging-with-oslo-debug-helper>`_.
-
+For more information, see the :oslotest-doc:`oslotest documentation
+<user/features.html#debugging-with-oslo-debug-helper>`.

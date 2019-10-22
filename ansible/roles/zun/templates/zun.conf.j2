@@ -11,34 +11,25 @@ transport_url = {{ rpc_transport_url }}
 
 state_path = /var/lib/zun
 container_driver = docker.driver.DockerDriver
-db_type = sql
 
 [network]
 driver = kuryr
-
-[oslo_messaging_notifications]
-transport_url = {{ notify_transport_url }}
-driver = messaging
 
 [api]
 host_ip = {{ api_interface_address }}
 port = {{ zun_api_port }}
 workers = {{ openstack_service_workers }}
-
-[compute]
-topic = zun-compute
+enable_image_validation = false
 
 [database]
 connection = mysql+pymysql://{{ zun_database_user }}:{{ zun_database_password }}@{{ zun_database_address }}/{{ zun_database_name }}
 max_retries = -1
 
-[zun_client]
-version = 1
-service_type = container
-service_name = zun
-
+# NOTE(yoctozepto): despite what the docs say, both keystone_auth and
+# keystone_authtoken sections are used and Zun internals may use either -
+# - best keep them both in sync
 [keystone_auth]
-auth_uri = {{ keystone_internal_url }}
+www_authenticate_uri = {{ keystone_internal_url }}
 auth_url = {{ keystone_admin_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
@@ -46,11 +37,18 @@ user_domain_id = {{ default_user_domain_id }}
 project_name = service
 username = {{ zun_keystone_user }}
 password = {{ zun_keystone_password }}
+service_token_roles_required = True
+region_name = {{ openstack_region_name }}
 
+{% if enable_memcached | bool %}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 
+# NOTE(yoctozepto): despite what the docs say, both keystone_auth and
+# keystone_authtoken sections are used and Zun internals may use either -
+# - best keep them both in sync
 [keystone_authtoken]
 www_authenticate_uri = {{ keystone_internal_url }}
 auth_url = {{ keystone_admin_url }}
@@ -61,32 +59,27 @@ project_name = service
 username = {{ zun_keystone_user }}
 password = {{ zun_keystone_password }}
 service_token_roles_required = True
+region_name = {{ openstack_region_name }}
 
+{% if enable_memcached | bool %}
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+
+[zun_client]
+region_name = {{ openstack_region_name }}
+endpoint_type = internalURL
 
 [glance_client]
-auth_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
-auth_type = password
-project_domain_id = {{ default_project_domain_id }}
-user_domain_id = {{ default_user_domain_id }}
-project_name = service
-username = {{ zun_keystone_user }}
-password = {{ zun_keystone_password }}
 region_name = {{ openstack_region_name }}
 endpoint_type = internalURL
 
 [neutron_client]
-auth_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
-auth_type = password
-project_domain_id = {{ default_project_domain_id }}
-user_domain_id = {{ default_user_domain_id }}
-project_name = service
-username = {{ zun_keystone_user }}
-password = {{ zun_keystone_password }}
+region_name = {{ openstack_region_name }}
+endpoint_type = internalURL
+
+[cinder_client]
 region_name = {{ openstack_region_name }}
 endpoint_type = internalURL
 
@@ -114,3 +107,5 @@ base_url = ws://{{ kolla_external_fqdn }}:{{ zun_wsproxy_port }}
 [docker]
 docker_remote_api_version = 1.24
 api_url = tcp://{{ api_interface_address }}:2375
+docker_remote_api_host = {{ api_interface_address }}
+docker_remote_api_port = 2375

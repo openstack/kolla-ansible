@@ -165,8 +165,8 @@ dmesg on the compute node where the instance was placed.
    [ 2896.850028] ixgbe 0000:05:00.0: Setting VLAN 1000, QOS 0x0 on VF 3
    [ 2897.403367] vfio-pci 0000:05:10.4: enabling device (0000 -> 0002)
 
-For more information see `OpenStack SRIOV documentation
-<https://docs.openstack.org/neutron/latest/admin/config-sriov.html>`_.
+For more information see :neutron-doc:`OpenStack SRIOV documentation
+<admin/config-sriov.html>`.
 
 Nova SRIOV
 ~~~~~~~~~~
@@ -222,5 +222,5 @@ Start a new instance using the flavor:
 Verify VF devices were created and the instance starts successfully as in
 the Neutron SRIOV case.
 
-For more information see `OpenStack PCI passthrough documentation
-<https://docs.openstack.org/nova/latest/admin/pci-passthrough.html>`_.
+For more information see :nova-doc:`OpenStack PCI passthrough documentation
+<admin/pci-passthrough.html>`.

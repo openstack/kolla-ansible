@@ -1,5 +1,3 @@
-.. vagrant-dev-env:
-
 ====================================
 Development Environment with Vagrant
 ====================================
@@ -155,9 +153,9 @@ Find a location in the system's home directory and checkout Kolla repos:
 
 .. code-block:: console
 
-   git clone https://git.openstack.org/openstack/kolla-cli
-   git clone https://git.openstack.org/openstack/kolla-ansible
-   git clone https://git.openstack.org/openstack/kolla
+   git clone https://opendev.org/openstack/kolla-cli
+   git clone https://opendev.org/openstack/kolla-ansible
+   git clone https://opendev.org/openstack/kolla
 
 All repos must share the same parent directory so the bootstrap code can
 locate them.
@@ -203,8 +201,8 @@ Once logged on the **operator** VM call the ``kolla-build`` utility:
 
    kolla-build
 
-``kolla-build`` accept arguments as documented in `Building Container Images
-<https://docs.openstack.org/kolla/latest/admin/image-building.html>`_.
+``kolla-build`` accept arguments as documented in
+:kolla-doc:`Building Container Images <admin/image-building.html>`.
 It builds Docker images and pushes them to the local registry if the **push**
 option is enabled (in Vagrant this is the default behaviour).
 

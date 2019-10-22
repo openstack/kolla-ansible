@@ -49,7 +49,7 @@ kolla_enable_sanity_cinder: "{{ kolla_enable_sanity_checks }}"
 kolla_enable_sanity_swift: "{{ kolla_enable_sanity_checks }}"
 
 kolla_dev_repos_directory: "/opt/stack/"
-kolla_dev_repos_git: "https://git.openstack.org/openstack"
+kolla_dev_repos_git: "https://opendev.org/openstack"
 kolla_dev_repos_pull: "no"
 kolla_dev_mode: "no"
 kolla_source_version: "stein"
@@ -104,6 +104,10 @@ docker_restart_policy: "unless-stopped"
 
 # '0' means unlimited retries
 docker_restart_policy_retry: "10"
+
+# Extra docker options for Zun
+docker_configure_for_zun: "no"
+docker_zun_options: -H fd:// -H tcp://{{ api_interface_address }}:2375 --cluster-store=etcd://{% for host in groups.get('etcd', []) %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
 
 # Common options used throughout Docker
 docker_common_options:
@@ -328,6 +332,7 @@ nova_spicehtml5proxy_listen_port: "{{ nova_spicehtml5proxy_port }}"
 nova_serialproxy_fqdn: "{{ kolla_external_fqdn }}"
 nova_serialproxy_port: "6083"
 nova_serialproxy_listen_port: "{{ nova_serialproxy_port }}"
+nova_serialproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'ws' }}"
 
 octavia_internal_fqdn: "{{ kolla_internal_fqdn }}"
 octavia_external_fqdn: "{{ kolla_external_fqdn }}"
@@ -564,7 +569,7 @@ enable_horizon_vitrage: "{{ enable_vitrage | bool }}"
 enable_horizon_watcher: "{{ enable_watcher | bool }}"
 enable_horizon_zun: "{{ enable_zun | bool }}"
 enable_hyperv: "no"
-enable_influxdb: "{{ enable_monasca | bool }}"
+enable_influxdb: "{{ enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb') }}"
 enable_ironic: "no"
 enable_ironic_ipxe: "no"
 enable_ironic_neutron_agent: "{{ enable_neutron | bool and enable_ironic | bool }}"
@@ -597,6 +602,7 @@ enable_neutron_segments: "no"
 enable_neutron_sfc: "no"
 enable_neutron_metering: "no"
 enable_neutron_infoblox_ipam_agent: "no"
+enable_neutron_port_forwarding: "no"
 enable_nova_serialconsole_proxy: "no"
 enable_nova_ssh: "yes"
 enable_octavia: "no"
@@ -681,7 +687,7 @@ enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bo
 ####################
 # Redis options
 ####################
-redis_address: "{{ kolla_internal_fqdn }}"
+redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}admin:{{ redis_master_password }}@{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}&socket_timeout=60&retry_on_timeout=yes"
 
 ####################
 # Osprofiler options
@@ -689,7 +695,6 @@ redis_address: "{{ kolla_internal_fqdn }}"
 # valid values: ["elasticsearch", "redis"]
 osprofiler_backend: "elasticsearch"
 elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address }}:{{ elasticsearch_port }}"
-redis_connection_string: "redis://:{{ redis_master_password }}@{{ redis_address }}:{{ redis_port }}"
 osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else elasticsearch_connection_string }}"
 
 ####################
@@ -816,6 +821,9 @@ cinder_volume_group: "cinder-volumes"
 cinder_iscsi_helper: "tgtadm"
 cinder_target_helper: "{{ cinder_iscsi_helper }}"
 
+# Valid options are [ '', redis, etcd ]
+cinder_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
+
 # Valid options are [ nfs, swift, ceph ]
 cinder_backup_driver: "ceph"
 cinder_backup_share: ""
@@ -826,6 +834,12 @@ cinder_backup_mount_options_nfs: ""
 #######################
 # Valid option is gnocchi
 cloudkitty_collector_backend: "gnocchi"
+# Valid options are 'sqlalchemy' or 'influxdb'. The default value is
+# 'influxdb', which matches the default in Cloudkitty since the Stein release.
+# When the backend is "influxdb", we also enable Influxdb.
+# Also, when using 'influxdb' as the backend, we trigger the configuration/use
+# of Cloudkitty storage backend version 2.
+cloudkitty_storage_backend: "influxdb"
 
 #######################
 # Designate options
@@ -1018,8 +1032,14 @@ enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enabl
 prometheus_alertmanager_user: "admin"
 prometheus_openstack_exporter_interval: "60s"
 prometheus_elasticsearch_exporter_interval: "60s"
+prometheus_cmdline_extras:
 
 ############
 # Vitrage
 ############
 enable_vitrage_prometheus_datasource: "{{ enable_prometheus | bool }}"
+
+####################
+# InfluxDB options
+####################
+influxdb_address: "{{ kolla_internal_fqdn }}"

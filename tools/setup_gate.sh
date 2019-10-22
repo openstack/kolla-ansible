@@ -8,6 +8,19 @@ export PYTHONUNBUFFERED=1
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
+function setup_openstack_clients {
+    # Prepare virtualenv for openstack deployment tests
+    virtualenv ~/openstackclient-venv
+    ~/openstackclient-venv/bin/pip install -U pip
+    ~/openstackclient-venv/bin/pip install python-openstackclient
+    if [[ $ACTION == zun ]]; then
+        ~/openstackclient-venv/bin/pip install python-zunclient
+    fi
+    if [[ $ACTION == ironic ]]; then
+        ~/openstackclient-venv/bin/pip install python-ironicclient
+    fi
+}
+
 function setup_config {
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
@@ -41,6 +54,9 @@ EOF
 
     if [[ $ACTION == "scenario_nfv" ]]; then
         GATE_IMAGES+=",tacker,mistral,redis,barbican"
+    fi
+    if [[ $ACTION == "ironic" ]]; then
+        GATE_IMAGES+=",dnsmasq,ironic,iscsid"
     fi
 
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
@@ -95,11 +111,10 @@ function setup_ansible {
     else
         ANSIBLE_VERSION="<2.6"
     fi
+
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara<1.0.0" "cmd2<0.9.0"
-    if [[ $ACTION == "zun" ]]; then
-        sudo -H pip install -U "python-zunclient"
-    fi
+    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0"
+
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -128,6 +143,7 @@ function prepare_images {
     popd
 }
 
+setup_openstack_clients
 
 setup_ansible
 setup_config

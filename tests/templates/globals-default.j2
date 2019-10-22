@@ -9,7 +9,7 @@ docker_restart_policy: "no"
 keepalived_virtual_router_id: "{{ 250 | random(1) }}"
 
 {% if enable_core_openstack | bool %}
-kolla_internal_vip_address: "{{ api_interface_address if hostvars | length > 2 else '169.254.169.10' }}"
+kolla_internal_vip_address: "{{ kolla_internal_vip_address }}"
 enable_haproxy: "{{ 'no' if hostvars | length > 2 else 'yes' }}"
 # TODO(mgoddard): Remove this in the Train cycle when heat is enabled in the
 # initial deployment.
@@ -41,18 +41,27 @@ openstack_release: "{{ previous_release }}"
 
 {% if is_ceph %}
 enable_ceph: "yes"
+enable_ceph_mds: "yes"
+enable_ceph_rgw: "yes"
+enable_ceph_rgw_keystone: "yes"
+enable_ceph_nfs: "yes"
 enable_cinder: "yes"
 ceph_pool_pg_num: 8
 ceph_pool_pgp_num: 8
 # This is experimental feature, disable if gate fail.
 # In multinode jobs without ceph rolling upgrade fails.
 glance_enable_rolling_upgrade: "yes"
+{% else %}
+# NOTE(yoctozepto): in case ceph is *not* used, we have to use the ansible node (primary)
+# to avoid random errors due to inventory randomness in Zuul (YAML format)
+# because we use primary as the API endpoint and there is currently no HAProxy in CI
+# and the default behavior is to pick the "first" node (issue affects only multinode)
+glance_api_hosts: ["{{ inventory_hostname }}"]
 {% endif %}
 
 {% if scenario == "cinder-lvm" %}
 enable_cinder: "yes"
 enable_cinder_backend_lvm: "yes"
-glance_api_hosts: ["{{ inventory_hostname }}"]
 {% endif %}
 
 {% if scenario == "zun" %}
@@ -63,10 +72,14 @@ docker_custom_option: " -H unix:///var/run/docker.sock -H tcp://{{ api_interface
 {% endif %}
 
 {% if scenario == "scenario_nfv" %}
-glance_api_hosts: ["{{ inventory_hostname }}"]
 enable_tacker: "yes"
 enable_neutron_sfc: "yes"
 enable_mistral: "yes"
 enable_redis: "yes"
 enable_barbican: "yes"
+{% endif %}
+
+{% if scenario == "ironic" %}
+enable_ironic: "yes"
+ironic_dnsmasq_dhcp_range: "10.42.0.2,10.42.0.254"
 {% endif %}

@@ -458,9 +458,9 @@ done remotely with :command:`ipmitool` and Serial Over LAN. For example
 References
 ~~~~~~~~~~
 
-* `Bifrost documentation <https://docs.openstack.org/bifrost/latest/>`__
+* :bifrost-doc:`Bifrost documentation <>`
 
-* `Bifrost troubleshooting guide <https://docs.openstack.org/bifrost/latest/user/troubleshooting.html>`__
+* :bifrost-doc:`Bifrost troubleshooting guide <user/troubleshooting.html>`
 
 * `Bifrost code repository <https://github.com/openstack/bifrost>`__
 

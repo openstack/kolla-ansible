@@ -147,7 +147,7 @@ workflow <https://docs.openstack.org/infra/manual/developers.html>`__.
    `Launchpad <https://launchpad.net/kolla-ansible>`__.
 -  Attend weekly
    `meetings <https://wiki.openstack.org/wiki/Meetings/Kolla>`__.
--  Contribute `code <https://git.openstack.org/openstack/kolla-ansible>`__.
+-  Contribute `code <https://opendev.org/openstack/kolla-ansible>`__.
 
 Contributors
 ============
