@@ -195,7 +195,7 @@ called ``controller-0001``, ``controller-0002`` and ``controller-0003``:
 * ``/etc/kolla/config/nova/controller-0003/nova.conf``
 * ``/etc/kolla/config/nova/nova-scheduler.conf``
 
-Using this mechansim, overrides can be configured per-project,
+Using this mechanism, overrides can be configured per-project,
 per-project-service or per-project-service-on-specified-host.
 
 Overriding an option is as simple as setting the option under the relevant
