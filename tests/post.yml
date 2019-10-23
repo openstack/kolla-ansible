@@ -8,6 +8,14 @@
         content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
         dest: "{{ logs_dir }}/facts.json"
 
+    # NOTE(yoctozepto): this might not have been run during the
+    # regular run due to some earlier failure, yet logs content may
+    # still provide insight into that other, breaking issue
+    - name: Run check-logs.sh script
+      script: check-logs.sh
+      failed_when: false
+      when: not zuul_success | bool
+
     - name: Run diagnostics script
       environment:
         KOLLA_INTERNAL_VIP_ADDRESS: "{{ kolla_internal_vip_address }}"
