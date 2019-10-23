@@ -16,7 +16,7 @@
 
 - import_tasks: wait_for_loadbalancer.yml
 
-- name: Creating the Percona XtraBackup database
+- name: Creating the Mariabackup database
   become: true
   kolla_toolbox:
     module_name: mysql_db
@@ -28,7 +28,7 @@
       name: "{{ mariadb_backup_database_schema }}"
   run_once: True
   when:
-    - enable_xtrabackup | bool
+    - enable_mariabackup | bool
 
 - name: Creating database backup user and setting permissions
   become: true
@@ -46,9 +46,9 @@
       append_privs: True
   run_once: True
   when:
-    - enable_xtrabackup | bool
+    - enable_mariabackup | bool
 
-- name: Granting permissions on XtraBackup database to backup user
+- name: Granting permissions on Mariabackup database to backup user
   become: true
   kolla_toolbox:
     module_name: mysql_user
@@ -64,7 +64,7 @@
       append_privs: True
   run_once: True
   when:
-    - enable_xtrabackup | bool
+    - enable_mariabackup | bool
 
 - name: Cleaning up facts
   set_fact:
