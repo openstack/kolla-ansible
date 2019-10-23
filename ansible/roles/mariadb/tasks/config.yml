@@ -14,29 +14,29 @@
 
 - name: Ensuring database backup config directory exists
   file:
-    path: "{{ node_config_directory }}xtrabackup"
+    path: "{{ node_config_directory }}/mariabackup"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
   when:
-    - enable_xtrabackup | bool
+    - enable_mariabackup | bool
     - inventory_hostname == mariadb_backup_host
 
-- name: Copying over my.cnf for xtrabackup
+- name: Copying over my.cnf for mariabackup
   merge_configs:
     sources:
       - "{{ role_path }}/templates/backup.my.cnf.j2"
       - "{{ node_custom_config }}/backup.my.cnf"
       - "{{ node_custom_config }}/mariadb/{{ inventory_hostname }}/backup.my.cnf"
-    dest: "{{ node_config_directory }}xtrabackup/my.cnf"
+    dest: "{{ node_config_directory }}/mariabackup/my.cnf"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0660"
   become: true
   when:
-    - enable_xtrabackup | bool
+    - enable_mariabackup | bool
     - inventory_hostname == mariadb_backup_host
 
 - name: Copying over config.json files for services
@@ -53,6 +53,18 @@
     - service.enabled | bool
   notify:
     - restart mariadb
+
+- name: Copying over config.json files for mariabackup
+  vars:
+    service_name: "mariabackup"
+  template:
+    src: "{{ service_name }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ service_name }}/config.json"
+    mode: "0660"
+  become: true
+  when:
+    - enable_mariabackup | bool
+    - inventory_hostname == mariadb_backup_host
 
 - name: Copying over galera.cnf
   vars:
