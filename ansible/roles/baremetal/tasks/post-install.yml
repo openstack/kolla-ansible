@@ -71,7 +71,7 @@
   debug:
     msg: >
       docker_custom_option is deprecated in favor of docker_custom_config
-  when: docker_custom_option
+  when: docker_custom_option | length > 0
 
 - name: Setup docker insecure registries
   vars:
@@ -83,12 +83,12 @@
 - name: Setup docker storage driver
   set_fact:
     docker_config: "{{ docker_config | combine({'storage-driver': docker_storage_driver}) }}"
-  when: docker_storage_driver
+  when: docker_storage_driver | length > 0
 
 - name: Setup docker runtime directory
   set_fact:
     docker_config: "{{ docker_config | combine({'data-root': docker_runtime_directory}) }}"
-  when: docker_runtime_directory
+  when: docker_runtime_directory | length > 0
 
 - name: Merge custom docker config
   set_fact:
@@ -117,14 +117,14 @@
     path: /etc/systemd/system/docker.service.d
     state: directory
     recurse: yes
-  when: docker_custom_option or docker_configure_for_zun|bool
+  when: docker_custom_option | length > 0 or docker_configure_for_zun|bool
 
 - name: Configure docker service
   become: True
   template:
     src: docker_systemd_service.j2
     dest: /etc/systemd/system/docker.service.d/kolla.conf
-  when: docker_custom_option or docker_configure_for_zun|bool
+  when: docker_custom_option | length > 0 or docker_configure_for_zun|bool
 
 - name: Reload docker service file
   become: True
