@@ -6,6 +6,10 @@ ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
+{% if freezer_logging_debug | bool %}
+LogLevel info
+{% endif %}
+
 <VirtualHost *:{{ freezer_api_port }}>
     WSGIDaemonProcess freezer-api processes={{ openstack_service_workers }} threads=1 user=freezer display-name=%{GROUP}
     WSGIProcessGroup freezer-api
@@ -15,7 +19,6 @@ TraceEnable off
     ErrorLog {{ freezer_log_dir }}/freezer-api.log
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog {{ freezer_log_dir }}/freezer-api_access.log logformat
-    LogLevel info
 
     <Directory {{ python_path }}/freezer_api>
       Options Indexes FollowSymLinks MultiViews
