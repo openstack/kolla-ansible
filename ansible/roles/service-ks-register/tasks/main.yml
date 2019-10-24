@@ -1,140 +1,126 @@
 ---
-- name: "{{ project_name }} | Creating services"
-  become: true
-  kolla_toolbox:
-    module_name: "os_keystone_service"
-    module_args:
-      name: "{{ item.name }}"
-      service_type: "{{ item.type }}"
-      description: "{{ item.description }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
-  run_once: True
-  loop: "{{ service_ks_register_services }}"
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  loop_control:
-    label:
-      name: "{{ item.name }}"
-      service_type: "{{ item.type }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
+- block:
+    - name: "{{ project_name }} | Creating services"
+      kolla_toolbox:
+        module_name: "os_keystone_service"
+        module_args:
+          name: "{{ item.name }}"
+          service_type: "{{ item.type }}"
+          description: "{{ item.description }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      loop: "{{ service_ks_register_services }}"
+      loop_control:
+        label:
+          name: "{{ item.name }}"
+          service_type: "{{ item.type }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
 
-- name: "{{ project_name }} | Creating endpoints"
-  become: true
-  kolla_toolbox:
-    module_name: "os_keystone_endpoint"
-    module_args:
-      service: "{{ item.0.name }}"
-      url: "{{ item.1.url }}"
-      endpoint_interface: "{{ item.1.interface }}"
-      region: "{{ service_ks_register_endpoint_region }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
-  run_once: True
-  with_subelements:
-    - "{{ service_ks_register_services }}"
-    - endpoints
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  loop_control:
-    label:
-      service: "{{ item.0.name }}"
-      url: "{{ item.1.url }}"
-      interface: "{{ item.1.interface }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
+    - name: "{{ project_name }} | Creating endpoints"
+      kolla_toolbox:
+        module_name: "os_keystone_endpoint"
+        module_args:
+          service: "{{ item.0.name }}"
+          url: "{{ item.1.url }}"
+          endpoint_interface: "{{ item.1.interface }}"
+          region: "{{ service_ks_register_endpoint_region }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      with_subelements:
+        - "{{ service_ks_register_services }}"
+        - endpoints
+      loop_control:
+        label:
+          service: "{{ item.0.name }}"
+          url: "{{ item.1.url }}"
+          interface: "{{ item.1.interface }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
 
-- name: "{{ project_name }} | Creating projects"
-  become: true
-  kolla_toolbox:
-    module_name: "os_project"
-    module_args:
-      name: "{{ item }}"
-      domain: "{{ service_ks_register_domain }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
-  run_once: True
-  with_items: "{{ service_ks_register_users | map(attribute='project') | unique | list }}"
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
+    - name: "{{ project_name }} | Creating projects"
+      kolla_toolbox:
+        module_name: "os_project"
+        module_args:
+          name: "{{ item }}"
+          domain: "{{ service_ks_register_domain }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      with_items: "{{ service_ks_register_users | map(attribute='project') | unique | list }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
 
-- name: "{{ project_name }} | Creating users"
-  become: true
-  kolla_toolbox:
-    module_name: "os_user"
-    module_args:
-      default_project: "{{ item.project }}"
-      name: "{{ item.user }}"
-      password: "{{ item.password }}"
-      domain: "{{ service_ks_register_domain }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
-  run_once: True
-  with_items: "{{ service_ks_register_users }}"
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  loop_control:
-    label:
-      user: "{{ item.user }}"
-      project: "{{ item.project }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
+    - name: "{{ project_name }} | Creating users"
+      kolla_toolbox:
+        module_name: "os_user"
+        module_args:
+          default_project: "{{ item.project }}"
+          name: "{{ item.user }}"
+          password: "{{ item.password }}"
+          domain: "{{ service_ks_register_domain }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      with_items: "{{ service_ks_register_users }}"
+      loop_control:
+        label:
+          user: "{{ item.user }}"
+          project: "{{ item.project }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
 
-- name: "{{ project_name }} | Creating roles"
-  become: true
-  kolla_toolbox:
-    module_name: "os_keystone_role"
-    module_args:
-      name: "{{ item }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
-  run_once: True
-  with_items: "{{ service_ks_register_users | map(attribute='role') | unique | list + service_ks_register_roles }}"
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
+    - name: "{{ project_name }} | Creating roles"
+      kolla_toolbox:
+        module_name: "os_keystone_role"
+        module_args:
+          name: "{{ item }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      with_items: "{{ service_ks_register_users | map(attribute='role') | unique | list + service_ks_register_roles }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
 
-- name: "{{ project_name }} | Granting user roles"
+    - name: "{{ project_name }} | Granting user roles"
+      kolla_toolbox:
+        module_name: "os_user_role"
+        module_args:
+          user: "{{ item.user }}"
+          role: "{{ item.role }}"
+          project: "{{ item.project }}"
+          domain: "{{ service_ks_register_domain }}"
+          region_name: "{{ service_ks_register_region_name }}"
+          auth: "{{ service_ks_register_auth }}"
+          interface: "{{ service_ks_register_interface }}"
+          cacert: "{{ service_ks_cacert }}"
+      with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
+      loop_control:
+        label:
+          user: "{{ item.user }}"
+          role: "{{ item.role }}"
+          project: "{{ item.project }}"
+      register: service_ks_register_result
+      until: service_ks_register_result is success
+      retries: "{{ service_ks_register_retries }}"
+      delay: "{{ service_ks_register_delay }}"
+
   become: true
-  kolla_toolbox:
-    module_name: "os_user_role"
-    module_args:
-      user: "{{ item.user }}"
-      role: "{{ item.role }}"
-      project: "{{ item.project }}"
-      domain: "{{ service_ks_register_domain }}"
-      region_name: "{{ service_ks_register_region_name }}"
-      auth: "{{ service_ks_register_auth }}"
-      interface: "{{ service_ks_register_interface }}"
-      cacert: "{{ service_ks_cacert }}"
   run_once: True
-  with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
-  delegate_to: "{{ service_ks_register_delegate_host }}"
-  loop_control:
-    label:
-      user: "{{ item.user }}"
-      role: "{{ item.role }}"
-      project: "{{ item.project }}"
-  register: service_ks_register_result
-  until: service_ks_register_result is success
-  retries: "{{ service_ks_register_retries }}"
-  delay: "{{ service_ks_register_delay }}"
