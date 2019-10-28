@@ -283,18 +283,30 @@ ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else ''
 ironic_neutron_agent_tag: "{{ neutron_tag }}"
 ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
 
-neutron_dhcp_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_l3_agent_dimensions: "{{ default_container_dimensions }}"
+# TODO(wszumski): This is a workaround for: https://bugs.launchpad.net/oslo.rootwrap/+bug/1760471
+# and should be removed once we use python 3 for all distibutions.
+neutron_agent_dimensions_python2:
+  # Values taken from TripleO: https://review.opendev.org/#/c/651137/
+  ulimits:
+    nofile:
+      soft: 16384
+      hard: 16384
+
+neutron_agent_dimensions: >-
+  {{ default_container_dimensions | combine(neutron_agent_dimensions_python2) }}
+
+neutron_dhcp_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_l3_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_lbaas_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_sriov_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_linuxbridge_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_metadata_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_openvswitch_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_sriov_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_linuxbridge_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_openvswitch_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_server_dimensions: "{{ default_container_dimensions }}"
 neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
 neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_openvswitch_agent_xenapi_dimensions: "{{ default_container_dimensions }}"
-neutron_metering_agent_dimensions: "{{ default_container_dimensions }}"
+neutron_openvswitch_agent_xenapi_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
 
