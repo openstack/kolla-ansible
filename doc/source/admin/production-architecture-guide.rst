@@ -157,9 +157,8 @@ several Docker configuration details relevant to Kolla operators.
 Storage driver
 --------------
 
-In certain distributions Docker storage driver defaults to devicemapper, which
-can heavily hit performance of builds and deploys. We suggest to use btrfs or
-aufs as driver. More details on which storage driver to use in
+While the default storage driver should be fine for most users, Docker offers
+more options to consider. For details please refer to
 `Docker documentation <https://docs.docker.com/engine/userguide/storagedriver/selectadriver/>`_.
 
 Volumes

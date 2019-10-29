@@ -49,13 +49,7 @@ Limitations and Recommendations
    Varying degrees of success have been reported with upgrading the libvirt
    container with a running virtual machine in it. The libvirt upgrade still
    needs a bit more validation, but the Kolla community feels confident this
-   mechanism can be used with the correct Docker graph driver.
-
-.. note::
-
-   The Kolla community recommends the btrfs or aufs graph drivers for storing
-   data as sometimes the LVM graph driver loses track of its reference counting
-   and results in an unremovable container.
+   mechanism can be used with the correct Docker storage driver.
 
 .. note::
 
