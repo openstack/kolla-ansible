@@ -90,6 +90,19 @@
     docker_config: "{{ docker_config | combine({'data-root': docker_runtime_directory}) }}"
   when: docker_runtime_directory | length > 0
 
+- name: Warn about docker default iptables
+  debug:
+    msg: >-
+      Docker default iptables rules will be disabled by default from the Victoria 11.0.0
+      release. If you have any non-Kolla containers that need this functionality, you should
+      plan a migration for this change, or set docker_disable_default_iptables_rules to false.
+  when: not docker_disable_default_iptables_rules | bool
+
+- name: Disable docker default iptables rules
+  set_fact:
+    docker_config: "{{ docker_config | combine({'iptables': false}) }}"
+  when: docker_disable_default_iptables_rules | bool
+
 - name: Merge custom docker config
   set_fact:
     docker_config: "{{ docker_config | combine(docker_custom_config) }}"
