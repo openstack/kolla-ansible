@@ -57,7 +57,11 @@ Synced)
 Donor)
     # enabling donor only if xtrabackup configured
     SST_METHOD=`get_sst_method`
-    [[ $SST_METHOD =~ 'xtrabackup' ]] && CMD=$ENABLE_LB || CMD=$DISABLE_LB
+    if [[ $SST_METHOD =~ (mariabackup|xtrabackup) ]]; then
+        CMD=$ENABLE_LB
+    else
+        CMD=$DISABLE_LB
+    fi
     ;;
 Undefined)
     # shutting down database: do nothing
