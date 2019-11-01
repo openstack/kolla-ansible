@@ -83,9 +83,9 @@ function detect_distro {
 function setup_ansible {
     RAW_INVENTORY=/etc/kolla/inventory
 
-    # Test latest ansible version on Ubuntu, minimum supported on others.
+    # Test Ansible 2.8.x on Ubuntu, minimum supported on others.
     if [[ $BASE_DISTRO == "ubuntu" ]]; then
-        ANSIBLE_VERSION=">=2.4"
+        ANSIBLE_VERSION=">=2.4,<2.9"
         ARA_VERSION="<1.0.0"
     else
         ANSIBLE_VERSION="<2.5"
