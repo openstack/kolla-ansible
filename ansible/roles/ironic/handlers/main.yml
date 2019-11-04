@@ -30,6 +30,22 @@
   when:
     - kolla_action != "config"
 
+# Due to a bug in the ironic client, ironic inspector fails to start if ironic
+# API is not accessible. https://storyboard.openstack.org/#!/story/2006393
+# TODO(mgoddard): remove this task when
+# https://storyboard.openstack.org/#!/story/2006393 has been fixed.
+- name: Wait for ironic-api to be accessible
+  uri:
+    url: "{{ ironic_internal_endpoint }}"
+  register: result
+  until: result is success
+  retries: 12
+  delay: 5
+  listen: Restart ironic-api container
+  when:
+    - kolla_action != "config"
+  run_once: True
+
 - name: Restart ironic-inspector container
   vars:
     service_name: "ironic-inspector"
