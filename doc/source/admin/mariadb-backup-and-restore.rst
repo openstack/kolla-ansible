@@ -5,7 +5,7 @@ MariaDB database backup and restore
 ===================================
 
 Kolla-Ansible can facilitate either full or incremental backups of data
-hosted in MariaDB. It achieves this using Percona's Xtrabackup, a tool
+hosted in MariaDB. It achieves this using Mariabackup, a tool
 designed to allow for 'hot backups' - an approach which means that consistent
 backups can be taken without any downtime for your database or your cloud.
 
@@ -27,7 +27,7 @@ Firstly, enable backups via ``globals.yml``:
 
 .. code-block:: console
 
-   enable_xtrabackup: "yes"
+   enable_mariabackup: "yes"
 
 Then, kick off a reconfiguration of MariaDB:
 
@@ -67,38 +67,49 @@ backups scheduled via a cron job.
 Restoring backups
 ~~~~~~~~~~~~~~~~~
 
-Owing to the way in which XtraBackup performs hot backups, there are some
+Owing to the way in which Mariabackup performs hot backups, there are some
 steps that must be performed in order to prepare your data before it can be
 copied into place for use by MariaDB. This process is currently manual, but
-the Kolla XtraBackup image includes the tooling necessary to successfully
+the Kolla Mariabackup image includes the tooling necessary to successfully
 prepare backups. Two examples are given below.
 
 Full
 ----
 
-For a full backup, start a new container using the XtraBackup image with the
+For a full backup, start a new container using the Mariabackup image with the
 following options on the master database node:
 
 .. code-block:: console
 
-   docker run -it --volumes-from mariadb --name dbrestore \
-      -v mariadb_backup:/backup kolla/centos-binary-xtrabackup:rocky \
+   docker run --rm -it --volumes-from mariadb --name dbrestore \
+      --volume mariadb_backup:/backup \
+      kolla/centos-binary-mariadb:train \
       /bin/bash
-   cd /backup
-   mkdir -p /restore/full
-   cat mysqlbackup-04-10-2018.xbc.xbs | xbstream -x -C /restore/full/
-   innobackupex --decompress /restore/full
-   find /restore -name *.qp -exec rm {} \;
-   innobackupex --apply-log /restore/full
+   (dbrestore) $ cd /backup
+   (dbrestore) $ rm -rf /backup/restore
+   (dbrestore) $ mkdir -p /backup/restore/full
+   (dbrestore) $ gunzip mysqlbackup-04-10-2018.xbc.xbs.gz
+   (dbrestore) $ mbstream -x -C /backup/restore/full/ < mysqlbackup-04-10-2018.xbc.xbs
+   (dbrestore) $ mariabackup --prepare --target-dir /backup/restore/full
 
-Then stop the MariaDB instance, delete the old data files (or move
-them elsewhere), and copy the backup into place:
+Stop the MariaDB instance.
 
 .. code-block:: console
 
    docker stop mariadb
-   rm -rf /var/lib/mysql/* /var/lib/mysql/.*
-   innobackupex --copy-back /restore/full
+
+Delete the old data files (or move them elsewhere), and copy the backup into
+place:
+
+.. code-block:: console
+
+   docker run --rm -it --volumes-from mariadb --name dbrestore \
+      --volume mariadb_backup:/backup \
+      kolla/centos-binary-mariadb:train \
+      /bin/bash
+   (dbrestore) $ rm -rf /var/lib/mysql/*
+   (dbrestore) $ rm -rf /var/lib/mysql/\.[^\.]*
+   (dbrestore) $ mariabackup --copy-back --target-dir /backup/restore/full
 
 Then you can restart MariaDB with the restored data in place:
 
@@ -121,20 +132,20 @@ incremental backup,
 
 .. code-block:: console
 
-   docker run -it --volumes-from mariadb --name dbrestore \
-      -v mariadb_backup:/backup kolla/centos-binary-xtrabackup:rocky \
+   docker run --rm -it --volumes-from mariadb --name dbrestore \
+      --volume mariadb_backup:/backup --tmpfs /backup/restore \
+      kolla/centos-binary-mariadb:train \
       /bin/bash
-   cd /backup
-   mkdir -p /restore/full
-   mkdir -p /restore/inc/11
-   cat mysqlbackup-06-11-2018-1541505206.qp.xbc.xbs | xbstream -x -C /restore/full/
-   cat incremental-11-mysqlbackup-06-11-2018-1541505223.qp.xbc.xbs | xbstream -x -C /restore/inc/11
-   innobackupex --decompress /restore/full
-   innobackupex --decompress /restore/inc/11
-   find /restore -name *.qp -exec rm {} \;
-   innobackupex --apply-log --redo-only /restore/full
-   innobackupex --apply-log --redo-only --incremental-dir=/restore/inc/11 /restore/full
-   innobackupex --apply-log /restore/full
+   (dbrestore) $ cd /backup
+   (dbrestore) $ rm -rf /backup/restore
+   (dbrestore) $ mkdir -p /backup/restore/full
+   (dbrestore) $ mkdir -p /backup/restore/inc
+   (dbrestore) $ gunzip mysqlbackup-06-11-2018-1541505206.qp.xbc.xbs.gz
+   (dbrestore) $ gunzip incremental-11-mysqlbackup-06-11-2018-1541505223.qp.xbc.xbs.gz
+   (dbrestore) $ mbstream -x -C /backup/restore/full/ < mysqlbackup-06-11-2018-1541505206.qp.xbc.xbs
+   (dbrestore) $ mbstream -x -C /backup/restore/inc < incremental-11-mysqlbackup-06-11-2018-1541505223.qp.xbc.xbs
+   (dbrestore) $ mariabackup --prepare --target-dir /backup/restore/full
+   (dbrestore) $ mariabackup --prepare --incremental-dir=/backup/restore/inc --target-dir /backup/restore/full
 
 At this point the backup is prepared and ready to be copied back into place,
 as per the previous example.
