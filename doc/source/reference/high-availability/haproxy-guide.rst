@@ -82,3 +82,13 @@ To set weight of backend per service, modify inventory file as below:
    server1 haproxy_nova_api_weight=10
    server2 haproxy_nova_api_weight=2 haproxy_keystone_internal_weight=10
    server3 haproxy_keystone_admin_weight=50
+
+HTTP/2 Support
+---------------
+
+HAProxy with HTTP/2 frontend support is enabled by default. It may be
+disabled by setting the following in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   haproxy_enable_http2: "no"

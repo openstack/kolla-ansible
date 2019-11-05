@@ -1,6 +1,8 @@
 #jinja2: lstrip_blocks: True
 {%- set external_tls_bind_info = 'ssl crt /etc/haproxy/haproxy.pem' if kolla_enable_tls_external|bool else '' %}
+{%- set external_tls_bind_info = "%s %s" % (external_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_external|bool and haproxy_enable_http2|bool else external_tls_bind_info %}
 {%- set internal_tls_bind_info = 'ssl crt /etc/haproxy/haproxy-internal.pem' if kolla_enable_tls_internal|bool else '' %}
+{%- set internal_tls_bind_info = "%s %s" % (internal_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_internal|bool and haproxy_enable_http2|bool else external_tls_bind_info %}
 
 {%- macro userlist_macro(service_name, auth_user, auth_pass) %}
 userlist {{ service_name }}-user
