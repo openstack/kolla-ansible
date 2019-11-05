@@ -3,10 +3,6 @@ debug = {{ senlin_logging_debug }}
 
 log_dir = /var/log/kolla/senlin
 
-{% if service_name == 'senlin-engine' %}
-num_engine_workers = {{ openstack_service_workers }}
-{% endif %}
-
 transport_url = {{ rpc_transport_url }}
 
 {% if service_name == 'senlin-api' %}
@@ -24,9 +20,24 @@ service_project_name = service
 service_user_domain = default
 service_project_domain = default
 
+{% if service_name == 'senlin-conductor' %}
+[conductor]
+workers = {{ openstack_service_workers }}
+{% endif %}
+
 [database]
 connection = mysql+pymysql://{{ senlin_database_user }}:{{ senlin_database_password }}@{{ senlin_database_address }}/{{ senlin_database_name }}
 max_retries = -1
+
+{% if service_name == 'senlin-engine' %}
+[engine]
+workers = {{ openstack_service_workers }}
+{% endif %}
+
+{% if service_name == 'senlin-health-manager' %}
+[health_manager]
+workers = {{ openstack_service_workers }}
+{% endif %}
 
 [keystone_authtoken]
 www_authenticate_uri = {{ keystone_internal_url }}

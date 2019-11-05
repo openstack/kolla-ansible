@@ -1,0 +1,24 @@
+{
+    "command": "senlin-health-manager --config-file /etc/senlin/senlin.conf",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/senlin.conf",
+            "dest": "/etc/senlin/senlin.conf",
+            "owner": "senlin",
+            "perm": "0600"
+        }{% if senlin_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ senlin_policy_file }}",
+            "dest": "/etc/senlin/{{ senlin_policy_file }}",
+            "owner": "senlin",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/senlin",
+            "owner": "senlin:senlin",
+            "recurse": true
+        }
+    ]
+}
