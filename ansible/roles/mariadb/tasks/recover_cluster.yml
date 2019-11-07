@@ -200,15 +200,10 @@
   kolla_docker:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    environment:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      BOOTSTRAP_ARGS: " "
-    image: "{{ mariadb_service.image }}"
-    labels:
-      BOOTSTRAP:
     name: "{{ mariadb_service.container_name }}"
-    restart_policy: "never"
+    image: "{{ mariadb_service.image }}"
     volumes: "{{ mariadb_service.volumes }}"
+    dimensions: "{{ mariadb_service.dimensions }}"
   when:
     - bootstrap_host is defined
     - bootstrap_host != inventory_hostname
@@ -227,5 +222,33 @@
   when:
     - bootstrap_host is defined
     - bootstrap_host != inventory_hostname
+
+- name: Restart master MariaDB container
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ mariadb_service.container_name }}"
+    image: "{{ mariadb_service.image }}"
+    volumes: "{{ mariadb_service.volumes }}"
+    dimensions: "{{ mariadb_service.dimensions }}"
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
+
+- name: Wait for master mariadb
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port is success
+  retries: 10
+  delay: 6
+  when:
+    - bootstrap_host is defined
+    - bootstrap_host == inventory_hostname
 
 - import_tasks: wait_for_loadbalancer.yml
