@@ -85,7 +85,14 @@ function prepare_images {
     fi
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
     pushd "${KOLLA_SRC_DIR}"
-    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    # TODO(mgoddard): Remove this if block when CentOS 7 is no longer
+    # supported.
+    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
+        kolla_base_distro=centos8
+    else
+        kolla_base_distro=${BASE_DISTRO}
+    fi
+    sudo tox -e "build-${kolla_base_distro}-${INSTALL_TYPE}"
     # NOTE(yoctozepto): due to debian buster we push after images are built
     # see https://github.com/docker/for-linux/issues/711
     if [[ "debian" == $BASE_DISTRO ]]; then
