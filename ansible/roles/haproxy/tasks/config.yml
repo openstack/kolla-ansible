@@ -67,6 +67,22 @@
   notify:
     - Restart haproxy container
 
+- name: Copying over custom haproxy services configuration
+  vars:
+    service: "{{ haproxy_services['haproxy'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/haproxy/services.d/"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_fileglob:
+    - "{{ node_custom_config }}/haproxy/services.d/*.cfg"
+  notify:
+    - Restart haproxy container
+
 - name: Load and persist keepalived module
   import_role:
     role: module-load
