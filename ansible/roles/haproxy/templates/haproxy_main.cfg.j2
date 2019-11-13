@@ -7,7 +7,7 @@ global
     log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_haproxy_facility }}
     maxconn {{ haproxy_max_connections }}
     nbproc {{ haproxy_processes }}
-    {% if haproxy_processes > 1 and haproxy_process_cpu_map | bool %}
+    {% if (haproxy_processes | int > 1) and (haproxy_process_cpu_map | bool) %}
         {% for cpu_idx in range(0, haproxy_processes) %}
     cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
         {% endfor %}
