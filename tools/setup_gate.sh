@@ -58,6 +58,12 @@ function setup_config {
         GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
     fi
 
+    # NOTE(yoctozepto): we cannot build and push at the same time on debian
+    # buster see https://github.com/docker/for-linux/issues/711.
+    PUSH="true"
+    if [[ "debian" == $BASE_DISTRO ]]; then
+        PUSH="false"
+    fi
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 namespace = lokolla
@@ -66,7 +72,7 @@ install_type = ${INSTALL_TYPE}
 tag = ${TAG}
 profile = gate
 registry = 127.0.0.1:4000
-push = true
+push = ${PUSH}
 logs_dir = /tmp/logs/build
 template_override = /etc/kolla/template_overrides.j2
 
@@ -109,6 +115,13 @@ function prepare_images {
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
     pushd "${KOLLA_SRC_DIR}"
     sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    # NOTE(yoctozepto): due to debian buster we push after images are built
+    # see https://github.com/docker/for-linux/issues/711
+    if [[ "debian" == $BASE_DISTRO ]]; then
+        for img in $(sudo docker image ls --format '{{ .Repository }}:{{ .Tag }}' | grep lokolla/); do
+            sudo docker push $img;
+        done
+    fi
     popd
 }
 
