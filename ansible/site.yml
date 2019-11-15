@@ -63,7 +63,6 @@
         - enable_neutron_{{ enable_neutron | bool }}
         - enable_nova_{{ enable_nova | bool }}
         - enable_octavia_{{ enable_octavia | bool }}
-        - enable_opendaylight_{{ enable_opendaylight | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_panko_{{ enable_panko | bool }}
@@ -299,11 +298,6 @@
             tasks_from: loadbalancer
           tags: octavia
           when: enable_octavia | bool
-        - include_role:
-            role: opendaylight
-            tasks_from: loadbalancer
-          tags: opendaylight
-          when: enable_opendaylight | bool
         - include_role:
             role: panko
             tasks_from: loadbalancer
@@ -716,17 +710,6 @@
 # Nova deployment is more complicated than other services, so is covered in its
 # own playbook.
 - import_playbook: nova.yml
-
-- name: Apply role opendaylight
-  gather_facts: false
-  hosts:
-    - opendaylight
-    - '&enable_opendaylight_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: opendaylight,
-        tags: opendaylight,
-        when: enable_opendaylight | bool }
 
 - name: Apply role openvswitch
   gather_facts: false
