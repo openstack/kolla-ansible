@@ -10,6 +10,10 @@ export PYTHONUNBUFFERED=1
 function test_smoke {
     openstack --debug compute service list
     openstack --debug network agent list
+    openstack --debug orchestration service list
+    if [[ $ACTION =~ "ceph" ]] || [[ $ACTION == "cinder-lvm" ]]; then
+        openstack --debug volume service list
+    fi
 }
 
 function test_instance_boot {
