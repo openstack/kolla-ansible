@@ -13,6 +13,7 @@ function setup_openstack_clients {
     virtualenv ~/openstackclient-venv
     ~/openstackclient-venv/bin/pip install -U pip
     ~/openstackclient-venv/bin/pip install python-openstackclient
+    ~/openstackclient-venv/bin/pip install python-heatclient
     if [[ $ACTION == zun ]]; then
         ~/openstackclient-venv/bin/pip install python-zunclient
     fi
