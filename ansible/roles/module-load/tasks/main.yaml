@@ -10,7 +10,7 @@
         path: /etc/modules-load.d
       register: modules_load_stat
 
-    - name: "Load modules"
+    - name: Load modules
       become: true
       modprobe:
         name: "{{ item.name }}"
@@ -20,11 +20,11 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: "Persist modules via modules-load.d"
+    - name: Persist modules via modules-load.d
       become: true
       template:
-        dest: "/etc/modules-load.d/{{ item.name }}.conf"
         src: module-load.conf.j2
+        dest: "/etc/modules-load.d/{{ item.name }}.conf"
       loop: "{{ modules }}"
       loop_control:
         label: "{{ item.name }}"
@@ -32,7 +32,7 @@
         - modules_load_stat.stat.exists
         - (item.state | default('present')) == 'present'
 
-    - name: "Drop module persistence"
+    - name: Drop module persistence
       become: true
       file:
         path: "/etc/modules-load.d/{{ item.name }}.conf"
@@ -44,7 +44,7 @@
         - modules_load_stat.stat.exists
         - (item.state | default('present')) == 'absent'
 
-    - name: "Persist modules via /etc/modules"
+    - name: Persist modules via /etc/modules
       become: true
       lineinfile:
         dest: /etc/modules
