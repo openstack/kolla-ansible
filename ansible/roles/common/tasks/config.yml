@@ -49,7 +49,7 @@
 
 - name: Set fluentd facts
   set_fact:
-    fluentd_binary: "{% if fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary is not defined %}{% if kolla_base_distro in 'ubuntu' and ansible_architecture == 'x86_64' %}td-agent{% else %}fluentd{% endif %}{% else %}{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}{% endif %}"
+    fluentd_binary: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}"
   when: enable_fluentd | bool
 
 - name: Copying over config.json files for services
@@ -64,12 +64,12 @@
     - "Restart {{ item.key }} container"
 
 - name: Find custom fluentd input config files
-  local_action:
-    module: find
+  find:
     path: "{{ node_custom_config }}/fluentd/input"
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_inputs
+  delegate_to: localhost
   when:
     - enable_fluentd | bool
 
@@ -115,12 +115,12 @@
                 not enable_monasca | bool }}"
 
 - name: Find custom fluentd output config files
-  local_action:
-    module: find
+  find:
     path: "{{ node_custom_config }}/fluentd/output"
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_outputs
+  delegate_to: localhost
   when:
     - enable_fluentd | bool
 
@@ -175,12 +175,12 @@
     - Restart fluentd container
 
 - name: Find custom fluentd format config files
-  local_action:
-    module: find
+  find:
     path: "{{ node_custom_config }}/fluentd/format"
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_format
+  delegate_to: localhost
   when:
     - enable_fluentd | bool
 
@@ -213,12 +213,12 @@
     - Restart fluentd container
 
 - name: Find custom fluentd filter config files
-  local_action:
-    module: find
+  find:
     path: "{{ node_custom_config }}/fluentd/filter"
     pattern: "*.conf"
   run_once: True
   register: find_custom_fluentd_filters
+  delegate_to: localhost
   when: enable_fluentd | bool
 
 - name: Copying over fluentd filter config files
