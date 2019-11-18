@@ -14,6 +14,5 @@ Networking-SFC, QoS, and so on.
    dpdk
    neutron
    neutron-extensions
-   opendaylight
    provider-networks
    sriov

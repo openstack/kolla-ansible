@@ -24,7 +24,7 @@ rpc_state_report_workers = {{ openstack_service_rpc_workers }}
 # in it is because we are sharing this socket in a volume which is it's own dir
 metadata_proxy_socket = /var/lib/neutron/kolla/metadata_proxy
 
-{% if neutron_plugin_agent == "openvswitch" or neutron_plugin_agent == "opendaylight" %}
+{% if neutron_plugin_agent == "openvswitch" %}
 interface_driver = openvswitch
 {% elif neutron_plugin_agent == "linuxbridge" %}
 interface_driver = linuxbridge
@@ -158,11 +158,6 @@ enabled = true
 trace_sqlalchemy = true
 hmac_keys = {{ osprofiler_secret }}
 connection_string = {{ osprofiler_backend_connection_string }}
-{% endif %}
-
-{% if enable_opendaylight_qos | bool %}
-[qos]
-notification_drivers = {{ neutron_notification_drivers|map(attribute='name')|join(',') }}
 {% endif %}
 
 [placement]
