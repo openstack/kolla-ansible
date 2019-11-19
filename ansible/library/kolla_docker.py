@@ -733,6 +733,11 @@ class DockerWorker(object):
         # If config_strategy is COPY_ONCE or container's parameters are
         # changed, try to start a new one.
         if config_strategy == 'COPY_ONCE' or self.check_container_differs():
+            # NOTE(mgoddard): Pull the image if necessary before stopping the
+            # container, otherwise a failure to pull the image will leave the
+            # container stopped.
+            if not self.check_image():
+                self.pull_image()
             self.stop_container()
             self.remove_container()
             self.start_container()

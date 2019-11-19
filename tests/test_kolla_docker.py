@@ -510,12 +510,15 @@ class TestContainer(base.BaseTestCase):
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
         self.dw.check_container = mock.Mock(
             return_value=self.fake_data['containers'][0])
+        self.dw.check_image = mock.Mock(
+            return_value=self.fake_data['images'][0])
         self.dw.start_container = mock.Mock()
         self.dw.remove_container = mock.Mock()
         self.dw.check_container_differs = mock.Mock(return_value=True)
 
         self.dw.recreate_or_restart_container()
 
+        self.dw.check_image.assert_called_once_with()
         self.dw.remove_container.assert_called_once_with()
         self.dw.start_container.assert_called_once_with()
 
@@ -524,11 +527,32 @@ class TestContainer(base.BaseTestCase):
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ONCE')})
         self.dw.check_container = mock.Mock(
             return_value=self.fake_data['containers'][0])
+        self.dw.check_image = mock.Mock(
+            return_value=self.fake_data['images'][0])
         self.dw.start_container = mock.Mock()
         self.dw.remove_container = mock.Mock()
 
         self.dw.recreate_or_restart_container()
 
+        self.dw.check_image.assert_called_once_with()
+        self.dw.remove_container.assert_called_once_with()
+        self.dw.start_container.assert_called_once_with()
+
+    def test_recreate_or_restart_container_pull_before_stop(self):
+        # Testing fix for https://launchpad.net/bugs/1852572.
+        self.dw = get_DockerWorker({
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ONCE')})
+        self.dw.check_container = mock.Mock(
+            return_value=self.fake_data['containers'][0])
+        self.dw.check_image = mock.Mock(return_value=None)
+        self.dw.pull_image = mock.Mock()
+        self.dw.start_container = mock.Mock()
+        self.dw.remove_container = mock.Mock()
+
+        self.dw.recreate_or_restart_container()
+
+        self.dw.check_image.assert_called_once_with()
+        self.dw.pull_image.assert_called_once_with()
         self.dw.remove_container.assert_called_once_with()
         self.dw.start_container.assert_called_once_with()
 
