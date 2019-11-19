@@ -83,6 +83,15 @@
 # daemon to come up and start all previously running containers.
 
 - block:
+    # At some point (at least on CentOS 7) Docker CE stopped starting
+    # automatically after an upgrade from legacy docker . Start it manually.
+    - name: Start docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      become: True
+
     - name: Wait for Docker to start
       command: docker info
       become: true
