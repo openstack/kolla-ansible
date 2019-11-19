@@ -5,13 +5,12 @@
       --os-auth-url={{ openstack_auth.auth_url }}
       --os-password={{ openstack_auth.password }}
       --os-username={{ openstack_auth.username }}
-      --os-project-name={{ openstack_auth.project_name }}
       --os-identity-api-version=3
-      --os-interface {{ openstack_interface }}
-      --os-project-domain-name {{ openstack_auth.domain_name }}
-      --os-user-domain-name {{ openstack_auth.domain_name }}
-      --os-region-name {{ openstack_region_name }}
-      {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+      --os-interface={{ openstack_interface }}
+      --os-system-scope={{ openstack_auth.system_scope }}
+      --os-user-domain-name={{ openstack_auth.user_domain_name }}
+      --os-region-name={{ openstack_region_name }}
+      {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping list -c ID --format value
   run_once: True
   become: True
@@ -27,13 +26,13 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping delete {{ item }}
   run_once: True
   become: true
@@ -62,13 +61,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
     --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping create
     --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     {{ item.name }}
@@ -84,15 +82,14 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping set
-    --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
+    --rules="{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     {{ item.name }}
   run_once: True
   when:
@@ -106,13 +103,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     identity provider list -c ID --format value
   run_once: True
   register: existing_idps_register
@@ -128,13 +124,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     identity provider delete {{ item }}
   run_once: True
   with_items: "{{ existing_idps }}"
@@ -149,13 +144,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name{{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     identity provider create
     --description "{{ item.public_name }}"
     --remote-id "{{ item.identifier }}"
@@ -173,11 +167,10 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
     --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
+    --os-system-scope {{ openstack_auth.system_scope }}
+    --os-user-domain-name {{ openstack_auth.user_domain_name }}
     --os-region-name {{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
     identity provider set
@@ -196,13 +189,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     federation protocol create
     --mapping {{ item.attribute_mapping }}
     --identity-provider {{ item.name }}
@@ -219,13 +211,12 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
     --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-project-domain-name {{ openstack_auth.domain_name }}
-    --os-user-domain-name {{ openstack_auth.domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
+    --os-interface={{ openstack_interface }}
+    --os-system-scope={{ openstack_auth.system_scope }}
+    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-region-name={{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     federation protocol set
     --identity-provider {{ item.name }}
     --mapping {{ item.attribute_mapping }}

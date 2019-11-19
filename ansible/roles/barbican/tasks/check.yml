@@ -7,7 +7,7 @@
     --os-auth-url={{ openstack_auth.auth_url }} \
     --os-password={{ openstack_auth.password }} \
     --os-username={{ openstack_auth.username }} \
-    --os-project-name={{ openstack_auth.project_name }} \
+    --os-system-scope={{ openstack_auth.system_scope }}
     secret store -f value -p kolla | head -1
   register: barbican_store_secret
   run_once: True
@@ -20,7 +20,7 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
+    --os-system-scope={{ openstack_auth.system_scope }}
     secret get -f value -p {{ barbican_store_secret.stdout }}
   register: barbican_get_secret
   failed_when: barbican_get_secret.stdout != 'kolla'
@@ -34,7 +34,7 @@
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
     --os-username={{ openstack_auth.username }}
-    --os-project-name={{ openstack_auth.project_name }}
+    --os-system-scope={{ openstack_auth.system_scope }}
     secret delete {{ barbican_store_secret.stdout }}
   run_once: True
   when: kolla_enable_sanity_barbican | bool

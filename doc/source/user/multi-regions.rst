@@ -73,11 +73,11 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
    keystone_internal_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_public_port }}"
 
    openstack_auth:
-       auth_url: "{{ admin_protocol }}://{{ kolla_internal_fqdn_r1 }}:{{ keystone_admin_port }}"
-       username: "admin"
+       auth_url: "{{ keystone_admin_url }}"
+       username: "{{ keystone_admin_user }}"
        password: "{{ keystone_admin_password }}"
-       project_name: "admin"
-       domain_name: "default"
+       user_domain_name: "{{ default_user_domain_name }}"
+       system_scope: "all"
 
 .. note::
 
