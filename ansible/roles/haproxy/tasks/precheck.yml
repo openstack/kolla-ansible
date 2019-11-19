@@ -8,7 +8,10 @@
   register: container_facts
 
 - name: Clearing temp kolla_keepalived_running file
-  local_action: file path=/tmp/kolla_keepalived_running state=absent
+  file:
+    path: /tmp/kolla_keepalived_running
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: true
@@ -16,15 +19,23 @@
     - enable_keepalived | bool
 
 - name: Create empty temp kolla_keepalived_running file
-  local_action: copy content=None dest=/tmp/kolla_keepalived_running mode=0644
+  copy:
+    content: None
+    dest: /tmp/kolla_keepalived_running
+    mode: 0644
   changed_when: False
+  delegate_to: localhost
   check_mode: no
   run_once: true
   when:
     - enable_keepalived | bool
 
 - name: Getting hosts who is running keepalived
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_keepalived_running mode=0644
+  copy:
+    content: "{{ ansible_hostname }}"
+    dest: /tmp/kolla_keepalived_running
+    mode: 0644
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   when:
@@ -39,7 +50,10 @@
     - enable_keepalived | bool
 
 - name: Clearing temp kolla_keepalived_running file
-  local_action: file path=/tmp/kolla_keepalived_running state=absent
+  file:
+    path: /tmp/kolla_keepalived_running
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: true
@@ -47,19 +61,30 @@
     - enable_keepalived | bool
 
 - name: Clearing temp kolla_haproxy_running file
-  local_action: file path=/tmp/kolla_haproxy_running state=absent
+  file:
+    path: /tmp/kolla_haproxy_running
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: true
 
 - name: Create empty temp kolla_haproxy_running file
-  local_action: copy content=None dest=/tmp/kolla_haproxy_running mode=0644
+  copy:
+    content: None
+    dest: /tmp/kolla_haproxy_running
+    mode: 0644
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: true
 
 - name: Getting hosts who is running haproxy
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_haproxy_running mode=0644
+  copy:
+    content: "{{ ansible_hostname }}"
+    dest: /tmp/kolla_haproxy_running
+    mode: 0644
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   when:
@@ -72,35 +97,44 @@
     host_running_haproxy: "{{ lookup('file', '/tmp/kolla_haproxy_running') }}"
 
 - name: Clearing temp kolla_haproxy_running file
-  local_action: file path=/tmp/kolla_haproxy_running state=absent
+  file:
+    path: /tmp/kolla_haproxy_running
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: true
 
 - name: Checking if external haproxy certificate exists
   run_once: true
-  local_action: stat path={{ kolla_external_fqdn_cert }}
+  stat:
+    path: "{{ kolla_external_fqdn_cert }}"
+  delegate_to: localhost
   register: haproxy_cert_file
   changed_when: false
   when: kolla_enable_tls_external | bool
 
 - name: Fail if external haproxy certificate is absent
   run_once: true
-  local_action: fail msg="External haproxy certificate file is not found. It is configured via 'kolla_external_fqdn_cert'"
+  fail:
+    msg: "External haproxy certificate file is not found. It is configured via 'kolla_external_fqdn_cert'"
   when:
     - kolla_enable_tls_external | bool
     - haproxy_cert_file.stat.exists == false
 
 - name: Checking if internal haproxy certificate exists
   run_once: true
-  local_action: stat path={{ kolla_internal_fqdn_cert }}
+  stat:
+    path: "{{ kolla_internal_fqdn_cert }}"
+  delegate_to: localhost
   register: haproxy_internal_cert_file
   changed_when: false
   when: kolla_enable_tls_internal | bool
 
 - name: Fail if internal haproxy certificate is absent
   run_once: true
-  local_action: fail msg="Internal haproxy certificate file is not found. It is configured via 'kolla_internal_fqdn_cert'"
+  fail:
+    msg: "Internal haproxy certificate file is not found. It is configured via 'kolla_internal_fqdn_cert'"
   when:
     - kolla_enable_tls_internal | bool
     - haproxy_internal_cert_file.stat.exists == false

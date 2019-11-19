@@ -59,13 +59,13 @@
     - service.enabled | bool
 
 - name: Find monasca-agent-collector plugin configuration files
-  local_action:
-    module: find
+  find:
     paths:
       - "{{ role_path }}/templates/monasca-agent-collector/plugins/"
       - "{{ node_custom_config }}/monasca/agent_plugins/"
       - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/agent_plugins/"
     patterns: '*.yaml'
+  delegate_to: localhost
   register: agent_plugins
 
 - name: Copying over monasca-agent-collector plugins
@@ -221,10 +221,10 @@
     - service.enabled | bool
 
 - name: Find custom logstash patterns
-  local_action:
-    module: find
+  find:
     path: "{{ node_custom_config }}/monasca/logstash_patterns"
     pattern: "*"
+  delegate_to: localhost
   run_once: True
   register: monasca_custom_logstash_patterns
 
@@ -356,7 +356,9 @@
     - Restart monasca-notification container
 
 - name: Check for monasca-notification templates
-  local_action: stat path="{{ node_custom_config }}/monasca/notification_templates"
+  stat:
+    path: "{{ node_custom_config }}/monasca/notification_templates"
+  delegate_to: localhost
   run_once: True
   register: notification_templates
 

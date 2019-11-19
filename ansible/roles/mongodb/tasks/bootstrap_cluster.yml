@@ -1,6 +1,9 @@
 ---
 - name: Copying the mongodb replication set bootstrap script
-  local_action: template src=bootstrap_cluster.js.j2 dest=/tmp/mongodb_bootstrap_replication_set.js
+  template:
+    src: bootstrap_cluster.js.j2
+    dest: /tmp/mongodb_bootstrap_replication_set.js
+  delegate_to: localhost
   run_once: True
 
 - name: Bootstrapping the mongodb replication set
@@ -12,7 +15,10 @@
   run_once: True
 
 - name: Deleting the mongodb replication set bootstrap script
-  local_action: file path=/tmp/mongodb_bootstrap_replication_set.js state=absent
+  file:
+    path: /tmp/mongodb_bootstrap_replication_set.js
+    state: absent
+  delegate_to: localhost
   changed_when: false
   failed_when: false
   run_once: True

@@ -1,12 +1,20 @@
 ---
 - name: Cleaning up temp file on localhost
-  local_action: file path=/tmp/kolla_mariadb_cluster state=absent
+  file:
+    path: /tmp/kolla_mariadb_cluster
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: True
 
+# NOTE(mnasiadka): Due to the way that we are setting fact has_cluster - content needs to be ''
 - name: Creating temp file on localhost
-  local_action: copy content='' dest=/tmp/kolla_mariadb_cluster mode=0644
+  copy:
+    content: ''
+    dest: /tmp/kolla_mariadb_cluster
+    mode: 0644
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: True
@@ -20,7 +28,11 @@
   register: mariadb_volume
 
 - name: Writing hostname of host with existing cluster files to temp file
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_mariadb_cluster mode=0644
+  copy:
+    content: "{{ ansible_hostname }}"
+    dest: /tmp/kolla_mariadb_cluster
+    mode: 0644
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   when: mariadb_volume is not changed
@@ -30,7 +42,10 @@
     has_cluster: "{{ lookup('file', '/tmp/kolla_mariadb_cluster') | length > 0 }}"
 
 - name: Cleaning up temp file on localhost
-  local_action: file path=/tmp/kolla_mariadb_cluster state=absent
+  file:
+    path: /tmp/kolla_mariadb_cluster
+    state: absent
+  delegate_to: localhost
   changed_when: False
   check_mode: no
   run_once: True

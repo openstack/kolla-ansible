@@ -13,7 +13,9 @@
   with_dict: "{{ cyborg_services }}"
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ item }}"
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: cyborg_policy
   with_first_found:
@@ -79,7 +81,9 @@
 - name: Checking whether cyborg-api-paste.ini file exists
   vars:
     service: "{{ cyborg_services['cyborg-api'] }}"
-  local_action: stat path="{{ node_custom_config }}/cyborg/cyborg-api-paste.ini"
+  stat:
+    path: "{{ node_custom_config }}/cyborg/cyborg-api-paste.ini"
+  delegate_to: localhost
   run_once: True
   register: check_cyborg_api_paste_ini
   when:

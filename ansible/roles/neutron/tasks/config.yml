@@ -26,7 +26,9 @@
   with_dict: "{{ neutron_services }}"
 
 - name: Check if extra ml2 plugins exists
-  local_action: find path="{{ node_custom_config }}/neutron/plugins/"
+  find:
+    path: "{{ node_custom_config }}/neutron/plugins/"
+  delegate_to: localhost
   run_once: True
   changed_when: False
   register: check_extra_ml2_plugins
@@ -313,7 +315,9 @@
     - "Restart {{ service_name }} container"
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ node_custom_config }}/neutron/policy.json"
+  stat:
+    path: "{{ node_custom_config }}/neutron/policy.json"
+  delegate_to: localhost
   run_once: True
   register: neutron_policy
 

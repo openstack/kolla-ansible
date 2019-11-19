@@ -13,7 +13,9 @@
   with_dict: "{{ grafana_services }}"
 
 - name: Check if extra configuration file exists
-  local_action: find path="{{ node_custom_config }}/grafana/"
+  find:
+    path: "{{ node_custom_config }}/grafana/"
+  delegate_to: localhost
   changed_when: False
   run_once: True
   register: check_extra_conf_grafana
@@ -63,7 +65,9 @@
     - Restart grafana container
 
 - name: Check if custom grafana home dashboard exists
-  local_action: "stat path={{ node_custom_config }}/grafana/grafana_home_dashboard.json"
+  stat:
+    path: "{{ node_custom_config }}/grafana/grafana_home_dashboard.json"
+  delegate_to: localhost
   register: grafana_custom_dashboard_file
   run_once: True
 

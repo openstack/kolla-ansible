@@ -30,7 +30,9 @@
     - inventory_hostname in groups['octavia-health-manager']
 
 - name: Checking certificate files exist for octavia
-  local_action: stat path="{{ node_custom_config }}/octavia/{{ item }}"
+  stat:
+    path: "{{ node_custom_config }}/octavia/{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: result
   failed_when: not result.stat.exists

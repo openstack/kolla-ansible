@@ -13,8 +13,10 @@
   with_dict: "{{ tacker_services }}"
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ item }}"
+  stat:
+    path: "{{ item }}"
   run_once: True
+  delegate_to: localhost
   register: tacker_policy
   with_first_found:
     - files: "{{ supported_policy_format_list }}"

@@ -11,10 +11,10 @@
   check_mode: no
 
 - name: Cleaning up temp file on localhost
-  local_action:
-    module: file
+  file:
     path: /tmp/kolla_mariadb_recover_inventory_name
     state: absent
+  delegate_to: localhost
   changed_when: false
   check_mode: no
   run_once: true
@@ -81,7 +81,11 @@
       changed_when: false
 
     - name: Writing hostname of host with the largest seqno to temp file
-      local_action: copy content={{ inventory_hostname }} dest=/tmp/kolla_mariadb_recover_inventory_name mode=0644
+      copy:
+        content: "{{ inventory_hostname }}"
+        dest: /tmp/kolla_mariadb_recover_inventory_name
+        mode: 0644
+      delegate_to: localhost
       changed_when: false
       when: seqno_compare.results | map(attribute='stdout') | join('') == ""
 
