@@ -14,47 +14,47 @@ function setup_openstack_clients {
     ~/openstackclient-venv/bin/pip install -U pip
     ~/openstackclient-venv/bin/pip install python-openstackclient
     ~/openstackclient-venv/bin/pip install python-heatclient
-    if [[ $ACTION == zun ]]; then
+    if [[ $SCENARIO == zun ]]; then
         ~/openstackclient-venv/bin/pip install python-zunclient
     fi
-    if [[ $ACTION == ironic ]]; then
+    if [[ $SCENARIO == ironic ]]; then
         ~/openstackclient-venv/bin/pip install python-ironicclient
     fi
-    if [[ $ACTION == masakari ]]; then
+    if [[ $SCENARIO == masakari ]]; then
         ~/openstackclient-venv/bin/pip install python-masakariclient
     fi
 }
 
 function setup_config {
-    if [[ $ACTION != "bifrost" ]]; then
+    if [[ $SCENARIO != "bifrost" ]]; then
         GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon,chrony,heat,placement"
     else
         GATE_IMAGES="bifrost"
     fi
 
-    if [[ $ACTION =~ "ceph" ]]; then
+    if [[ $SCENARIO == "ceph" ]]; then
         GATE_IMAGES+=",ceph,cinder"
     fi
 
-    if [[ $ACTION == "cinder-lvm" ]]; then
+    if [[ $SCENARIO == "cinder-lvm" ]]; then
         GATE_IMAGES+=",cinder,iscsid,tgtd"
     fi
 
-    if [[ $ACTION == "zun" ]]; then
+    if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",zun,kuryr,etcd"
     fi
 
-    if [[ $ACTION == "scenario_nfv" ]]; then
+    if [[ $SCENARIO == "scenario_nfv" ]]; then
         GATE_IMAGES+=",tacker,mistral,redis,barbican"
     fi
-    if [[ $ACTION == "ironic" ]]; then
+    if [[ $SCENARIO == "ironic" ]]; then
         GATE_IMAGES+=",dnsmasq,ironic,iscsid"
     fi
-    if [[ $ACTION == "masakari" ]]; then
+    if [[ $SCENARIO == "masakari" ]]; then
         GATE_IMAGES+=",masakari"
     fi
 
-    if [[ $ACTION == "mariadb" ]]; then
+    if [[ $SCENARIO == "mariadb" ]]; then
         GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
     fi
 

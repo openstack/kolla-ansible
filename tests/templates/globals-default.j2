@@ -13,7 +13,11 @@ docker_custom_config:
 # in the CI gate.
 keepalived_virtual_router_id: "{{ 250 | random(1) }}"
 
-{% if enable_core_openstack | bool %}
+enable_openstack_core: "{{ openstack_core_enabled }}"
+enable_horizon: "{{ dashboard_enabled }}"
+enable_heat: "{{ openstack_core_tested }}"
+
+{% if scenario != 'bifrost' %}
 kolla_internal_vip_address: "{{ kolla_internal_vip_address }}"
 neutron_external_interface: "fake_interface"
 openstack_logging_debug: "True"
@@ -45,7 +49,7 @@ openstack_release: "{{ previous_release }}"
 {% endif %}
 {% endif %}
 
-{% if is_ceph %}
+{% if scenario == "ceph" %}
 enable_ceph: "yes"
 enable_ceph_mds: "yes"
 enable_ceph_rgw: "yes"
@@ -86,6 +90,7 @@ enable_neutron_sfc: "yes"
 enable_mistral: "yes"
 enable_redis: "yes"
 enable_barbican: "yes"
+enable_heat: "yes"
 {% endif %}
 
 {% if scenario == "ironic" %}
@@ -106,6 +111,5 @@ enable_chrony: "no"
 enable_fluentd: "no"
 enable_mariadb: "yes"
 enable_memcached: "no"
-enable_openstack_core: "no"
 enable_rabbitmq: "no"
 {% endif %}
