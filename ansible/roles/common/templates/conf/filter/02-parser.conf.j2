@@ -1,0 +1,27 @@
+# Parse MariaDB logs with 6 digit date format (mysqld_safe)
+<filter infra.mariadb.mysqld_safe>
+    @type parser
+    format /^(?<Timestamp>\d{6} {1,2}\d{1,2}:\d{1,2}:\d{1,2}) +(?<Payload>mysqld_safe .*)/
+    time_format %y%m%d %k:%M:%S
+    time_key Timestamp
+    key_name Payload
+    reserve_data true
+</filter>
+
+# Parse MariaDB logs with 8 digit date format (mysqld)
+<filter infra.mariadb.mysqld>
+    @type parser
+    format /^(?<Timestamp>\d{4}-\d{2}-\d{2} {1,2}\d{1,2}:\d{1,2}:\d{1,2}) +(?<Payload>\w+ +(\[(?<log_level>\w+)\]|\w+: +(?<log_level>\w+):).*)/
+    time_format %Y-%m-%d %k:%M:%S
+    time_key Timestamp
+    key_name Payload
+    reserve_data true
+</filter>
+
+# Re-add timestamp record now that the log date has been parsed
+<filter infra.mariadb.*>
+  @type record_transformer
+  <record>
+    timestamp ${time}
+  </record>
+</filter>
