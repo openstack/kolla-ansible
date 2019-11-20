@@ -11,8 +11,6 @@ overlay_ip_version = 6
 {% if neutron_plugin_agent == "openvswitch" %}
 {% if enable_hyperv | bool %}
 mechanism_drivers = openvswitch,hyperv
-{% elif enable_onos | bool %}
-mechanism_drivers = onos_ml2
 {% else %}
 mechanism_drivers = openvswitch,{% if enable_ironic_neutron_agent | bool %}baremetal,{% endif %}l2population
 {% endif %}
@@ -24,13 +22,6 @@ mechanism_drivers = linuxbridge,l2population
 extension_drivers = {{ neutron_extension_drivers|map(attribute='name')|join(',') }}
 {% elif enable_hyperv | bool %}
 extension_drivers = port_security
-{% endif %}
-
-{% if enable_onos | bool %}
-[onos]
-url_path = {{ onos_url }}
-username = {{ onos_username }}
-password = {{ onos_password }}
 {% endif %}
 
 [ml2_type_vlan]
