@@ -30,6 +30,22 @@ function test_zun_logged {
     openstack appcontainer list
     openstack appcontainer show test
     openstack appcontainer delete --force --stop test
+
+    # NOTE(yoctozepto): We have to wait for the container to be deleted due to
+    # check-failure.sh checking stopped containers and failing.
+    # It is also nice to test that deleting actually works.
+    attempt=1
+    while openstack appcontainer show test; do
+        echo "Container not deleted yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Zun failed to delete the container"
+            openstack appcontainer show test
+            return 1
+        fi
+        sleep 10
+    done
+
     echo "SUCCESS: Zun"
 }
 
