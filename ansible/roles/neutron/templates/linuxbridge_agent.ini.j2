@@ -1,0 +1,15 @@
+[agent]
+{% if neutron_agent_extensions %}
+extensions = {{ neutron_agent_extensions|map(attribute='name')|join(',') }}
+{% endif %}
+
+[linux_bridge]
+physical_interface_mappings = physnet1:{{ neutron_external_interface }}
+
+[security_group]
+firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
+
+[vxlan]
+l2_population = true
+local_ip = {{ tunnel_interface_address }}
+arp_responder = true

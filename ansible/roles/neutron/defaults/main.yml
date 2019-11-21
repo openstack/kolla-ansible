@@ -350,19 +350,36 @@ openstack_neutron_auth: "{{ openstack_auth }}"
 neutron_l3_agent_host_rp_filter_mode: 0
 
 ####################
+# Mechanism drivers
+####################
+mechanism_drivers:
+  - name: "linuxbridge"
+    enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
+  - name: "openvswitch"
+    enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+  - name: "hyperv"
+    enabled: "{{ enable_hyperv | bool }}"
+  - name: "baremetal"
+    enabled: "{{ enable_ironic_neutron_agent | bool }}"
+  - name: "l2population"
+    enabled: "{{ not enable_hyperv | bool }}"
+
+neutron_mechanism_drivers: "{{ mechanism_drivers | selectattr('enabled', 'equalto', true) | list }}"
+
+####################
 # Extension drivers
 ####################
 extension_drivers:
   - name: "qos"
-    enabled: "{{ enable_neutron_qos | bool }}"
+    enabled: "{{ enable_neutron_qos | bool and not enable_hyperv | bool }}"
   - name: "port_security"
     enabled: true
   - name: "dns"
-    enabled: "{{ enable_designate | bool }}"
+    enabled: "{{ enable_designate | bool and not enable_hyperv | bool }}"
   - name: "sfc"
-    enabled: "{{ enable_neutron_sfc | bool }}"
+    enabled: "{{ enable_neutron_sfc | bool and not enable_hyperv | bool }}"
 
-neutron_extension_drivers: "{{ extension_drivers|selectattr('enabled', 'equalto', true)|list }}"
+neutron_extension_drivers: "{{ extension_drivers | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Neutron upgrade
@@ -395,7 +412,7 @@ service_plugins:
   - name: "port_forwarding"
     enabled: "{{ enable_neutron_port_forwarding | bool }}"
 
-neutron_service_plugins: "{{ service_plugins|selectattr('enabled', 'equalto', true)|list }}"
+neutron_service_plugins: "{{ service_plugins | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Notification
@@ -486,7 +503,7 @@ infoblox_wapi_max_results: "-50000"
 ######################
 notification_drivers: []
 
-neutron_notification_drivers: "{{ notification_drivers|selectattr('enabled', 'equalto', true)|list }}"
+neutron_notification_drivers: "{{ notification_drivers | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Kolla

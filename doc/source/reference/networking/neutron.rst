@@ -50,7 +50,7 @@ When using Open vSwitch on a compatible kernel (4.3+ upstream, consult the
 documentation of your distribution for support details), you can switch
 to using the native OVS firewall driver by employing a configuration override
 (see :ref:`service-config`). You can set it in
-``/etc/kolla/config/neutron/ml2_conf.ini``:
+``/etc/kolla/config/neutron/openvswitch_agent.ini``:
 
 .. code-block:: ini
 

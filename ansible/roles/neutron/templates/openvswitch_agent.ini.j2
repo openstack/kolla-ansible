@@ -1,0 +1,25 @@
+#jinja2: trim_blocks: False
+[agent]
+tunnel_types = vxlan
+l2_population = true
+arp_responder = true
+{% if enable_neutron_dvr | bool %}
+enable_distributed_routing = True
+{% endif %}
+{% if neutron_agent_extensions %}
+extensions = {{ neutron_agent_extensions|map(attribute='name')|join(',') }}
+{% endif %}
+
+[securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+
+[ovs]
+{% if inventory_hostname in groups["network"] or (inventory_hostname in groups["compute"] and computes_need_external_bridge | bool ) %}
+bridge_mappings = {% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+datapath_type = {{ ovs_datapath }}
+ovsdb_connection = tcp:127.0.0.1:{{ ovsdb_port }}
+local_ip = {{ tunnel_interface_address }}
+{% if enable_nova_fake | bool %}
+integration_bridge = br-int-{{ item }}
+{% endif %}
