@@ -43,7 +43,9 @@
     - inventory_hostname in groups['ironic-ipxe']
 
 - name: Checking ironic-agent files exist for Ironic Inspector
-  local_action: stat path="{{ node_custom_config }}/ironic/{{ item }}"
+  stat:
+    path: "{{ node_custom_config }}/ironic/{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: result
   failed_when: not result.stat.exists

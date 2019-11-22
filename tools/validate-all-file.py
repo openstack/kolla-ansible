@@ -172,13 +172,19 @@ def check_docker_become():
                                       "task %s in %s",
                                       module, task['name'], fullpath)
                     for module in cmd_modules:
-                        if (module in task and
-                                task[module].startswith('docker') and
-                                not task.get('become')):
-                            return_code = 1
-                            LOG.error("Use of docker in %s module without "
-                                      "become in task %s in %s",
-                                      module, task['name'], fullpath)
+                        docker_without_become = False
+                        if (module in task and not task.get('become')):
+                            if (isinstance(task[module], str) and
+                                    (task[module]).startswith('docker')):
+                                docker_without_become = True
+                            if (isinstance(task[module], dict) and
+                                    task[module]['cmd'].startswith('docker')):
+                                docker_without_become = True
+                            if docker_without_become:
+                                return_code = 1
+                                LOG.error("Use of docker in %s module without "
+                                          "become in task %s in %s",
+                                          module, task['name'], fullpath)
 
     return return_code
 

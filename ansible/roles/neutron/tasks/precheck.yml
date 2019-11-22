@@ -18,7 +18,8 @@
     - inventory_hostname in groups['neutron-server']
 
 - name: Checking number of network agents
-  local_action: fail msg="Number of network agents are less than two when enabling agent ha"
+  fail:
+    msg: "Number of network agents are less than two when enabling agent ha"
   changed_when: false
   run_once: True
   when:
@@ -30,14 +31,16 @@
   vars:
     type_drivers: "{{ neutron_type_drivers.replace(' ', '').split(',') | reject('equalto', '') | list }}"
     tenant_network_types: "{{ neutron_tenant_network_types.replace(' ', '').split(',') | reject('equalto', '') | list }}"
-  local_action: fail msg="Tenant network type '{{ item }}' is not in type drivers [{{ neutron_type_drivers }}]"
+  fail:
+    msg: "Tenant network type '{{ item }}' is not in type drivers [{{ neutron_type_drivers }}]"
   changed_when: false
   when: item not in type_drivers
   run_once: true
   with_items: "{{ tenant_network_types }}"
 
 - name: Checking whether Ironic enabled
-  local_action: fail msg="Ironic must be enabled when using networking-baremetal/ironic-neutron-agent"
+  fail:
+    msg: "Ironic must be enabled when using networking-baremetal/ironic-neutron-agent"
   changed_when: false
   run_once: True
   when:

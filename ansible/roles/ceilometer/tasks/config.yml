@@ -13,7 +13,9 @@
   with_dict: "{{ ceilometer_services }}"
 
 - name: Check if the folder for custom meter definitions exist
-  local_action: stat path="{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}"
+  delegate_to: localhost
   register: ceilometer_custom_meters_folder
 
 - name: Set variable that indicates if we have a folder for custom meter YAML files
@@ -21,7 +23,10 @@
     custom_meter_folder_exist: "{{ ceilometer_custom_meters_folder.stat.exists and ceilometer_custom_meters_folder.stat.isdir }}"
 
 - name: Find all *.yaml files in custom meter definitions folder (if the folder exist)
-  local_action: find paths="{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}" patterns="*.yaml"
+  find:
+    paths: "{{ node_custom_config }}/ceilometer/{{ ceilometer_custom_meters_local_folder }}"
+    patterns: "*.yaml"
+  delegate_to: localhost
   register: ceilometer_custom_meters_folder_found_files
   when: custom_meter_folder_exist
 
@@ -59,7 +64,9 @@
     - "Restart {{ item.key }} container"
 
 - name: Check if custom polling.yaml exists
-  local_action: stat path="{{ node_custom_config }}/ceilometer/polling.yaml"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/polling.yaml"
+  delegate_to: localhost
   register: ceilometer_polling_file
 
 - name: Copying over polling.yaml
@@ -84,7 +91,9 @@
     - ceilometer_polling_file.stat.exists
 
 - name: Check custom gnocchi_resources.yaml exists
-  local_action: stat path="{{ node_custom_config }}/ceilometer/gnocchi_resources.yaml"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/gnocchi_resources.yaml"
+  delegate_to: localhost
   register: ceilometer_gnocchi_resources_file
 
 - name: Copying over gnocchi_resources.yaml
@@ -109,7 +118,9 @@
     - ceilometer_gnocchi_resources_file.stat.exists
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ item }}"
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: ceilometer_policy
   with_first_found:
@@ -159,7 +170,9 @@
     - "Restart {{ item.key }} container"
 
 - name: Check custom event_definitions.yaml exists
-  local_action: stat path="{{ node_custom_config }}/ceilometer/event_definitions.yaml"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/event_definitions.yaml"
+  delegate_to: localhost
   register: ceilometer_event_definitions_file
 
 - name: Copying over event_definitions.yaml
@@ -196,7 +209,9 @@
     - Restart ceilometer-notification container
 
 - name: Check custom event_pipeline.yaml exists
-  local_action: stat path="{{ node_custom_config }}/ceilometer/event_pipeline.yaml"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/event_pipeline.yaml"
+  delegate_to: localhost
   register: ceilometer_event_pipeline_file
 
 - name: Copying over event_pipeline.yaml
@@ -232,7 +247,9 @@
     - Restart ceilometer-notification container
 
 - name: Check custom pipeline.yaml exists
-  local_action: stat path="{{ node_custom_config }}/ceilometer/pipeline.yaml"
+  stat:
+    path: "{{ node_custom_config }}/ceilometer/pipeline.yaml"
+  delegate_to: localhost
   register: ceilometer_pipeline_file
 
 - name: Copying over pipeline.yaml

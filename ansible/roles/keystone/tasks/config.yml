@@ -13,7 +13,9 @@
   with_dict: "{{ keystone_services }}"
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ item }}"
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: keystone_policy
   with_first_found:
@@ -30,7 +32,9 @@
     - keystone_policy.results
 
 - name: Check if Keystone domain-specific config is supplied
-  local_action: stat path="{{ node_custom_config }}/keystone/domains"
+  stat:
+    path: "{{ node_custom_config }}/keystone/domains"
+  delegate_to: localhost
   run_once: True
   register: keystone_domain_directory
 
@@ -82,7 +86,11 @@
     - keystone_domain_directory.stat.exists
 
 - name: Get file list in custom domains folder
-  local_action: find path="{{ node_custom_config }}/keystone/domains" recurse=no file_type=file
+  find:
+    path: "{{ node_custom_config }}/keystone/domains"
+    recurse: no
+    file_type: file
+  delegate_to: localhost
   register: keystone_domains
   when: keystone_domain_directory.stat.exists
 
@@ -139,7 +147,9 @@
 - name: Checking whether keystone-paste.ini file exists
   vars:
     keystone: "{{ keystone_services.keystone }}"
-  local_action: stat path="{{ node_custom_config }}/keystone/keystone-paste.ini"
+  stat:
+    path: "{{ node_custom_config }}/keystone/keystone-paste.ini"
+  delegate_to: localhost
   run_once: True
   register: check_keystone_paste_ini
   when:

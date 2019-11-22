@@ -13,7 +13,9 @@
   with_dict: "{{ cloudkitty_services }}"
 
 - name: Check if policies shall be overwritten
-  local_action: stat path="{{ item }}"
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
   run_once: True
   register: cloudkitty_policy
   with_first_found:
@@ -30,7 +32,9 @@
     - cloudkitty_policy.results
 
 - name: Check if custom {{ cloudkitty_custom_metrics_yaml_file }} exists
-  local_action: stat path="{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
+  stat:
+    path: "{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
+  delegate_to: localhost
   register: cloudkitty_custom_metrics_file
 
 - name: Copying {{ cloudkitty_custom_metrics_yaml_file }} if it exists

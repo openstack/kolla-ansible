@@ -17,7 +17,9 @@
     - inventory_hostname in groups['vitrage-api']
 
 - name: Checking custom prometheus_conf.yaml exists
-  local_action: stat path="{{ node_custom_config }}/vitrage/prometheus_conf.yaml"
+  stat:
+    path: "{{ node_custom_config }}/vitrage/prometheus_conf.yaml"
+  delegate_to: localhost
   register: result
   run_once: true
   failed_when: not result.stat.exists
