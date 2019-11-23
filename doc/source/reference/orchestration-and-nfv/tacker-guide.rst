@@ -64,10 +64,10 @@ In order to enable them, you need to edit the file
 
 .. warning::
 
-   In Train, Tacker Conductor started using local filesystem to store VNF
+   In Train, Tacker started using local filesystem to store VNF
    packages and CSAR files.
    Kolla Ansible provides no shared filesystem capabilities, hence only
-   one instance of Tacker Conductor is deployed.
+   one instance of each Tacker service is deployed and all on the same host.
 
 Deploy tacker and related services.
 

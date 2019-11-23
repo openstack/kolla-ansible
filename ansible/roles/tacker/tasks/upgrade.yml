@@ -1,4 +1,35 @@
 ---
+- name: Warn about Train upgrade
+  debug:
+    msg: >-
+      In Train, Tacker started using local filesystem to store VNF
+      packages and CSAR files.
+      Kolla Ansible provides no shared filesystem capabilities, hence only
+      one instance of each Tacker service is deployed and all on the same host.
+      Previous multinode deployments will be descaled when running upgrade.
+
+- name: Stop and remove extra tacker-conductor containers
+  vars:
+    service_name: "tacker-conductor"
+    service: "{{ tacker_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "stop_and_remove_container"
+    name: "{{ service.container_name }}"
+  when:
+    - inventory_hostname not in tacker_hosts
+
+- name: Stop and remove extra tacker-server containers
+  vars:
+    service_name: "tacker-server"
+    service: "{{ tacker_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "stop_and_remove_container"
+    name: "{{ service.container_name }}"
+  when:
+    - inventory_hostname not in tacker_hosts
+
 - include_tasks: config.yml
 
 - include_tasks: bootstrap_service.yml
