@@ -1,0 +1,33 @@
+---
+# NOTE(zdenek-dvorak):
+# Restart of nova services is needed for correct RPC version selection.
+# Nova service containers can run on one or multiple hosts.
+# This depends on installation. Goal is to restart services on all
+# relevant hosts. Service nova-compute must be restarted as last service.
+# Therefore nova-compute service is restarted in separate step.
+
+- name: Restart nova services on all hosts
+  block:
+  - name: Restart nova services excluding nova-compute
+    kolla_docker:
+      action: "restart_container"
+      common_options: "{{ docker_common_options }}"
+      name: "{{ nova_services[item].container_name  }}"
+
+    when:
+      - kolla_action == 'upgrade'
+      - inventory_hostname in groups[nova_services[item].group]
+      - item != 'placement-api'
+      - nova_services[item].enabled | bool
+    with_items: "{{ nova_services_require_nova_conf | difference(['nova-compute', 'nova-compute-ironic']) }}"
+
+  - name: Restart nova-compute service
+    kolla_docker:
+      action: "restart_container"
+      common_options: "{{ docker_common_options }}"
+      name: "{{nova_services[item].container_name}}"
+    when:
+      - kolla_action == 'upgrade'
+      - inventory_hostname in groups[nova_services[item].group]
+      - nova_services[item].enabled | bool
+    with_items: "{{ ['nova-compute', 'nova-compute-ironic'] }}"
