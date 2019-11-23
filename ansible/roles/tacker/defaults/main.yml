@@ -5,7 +5,7 @@ tacker_services:
   tacker-server:
     container_name: "tacker_server"
     group: "tacker-server"
-    host_in_groups: "{{ inventory_hostname in groups['tacker-server'] }}"
+    host_in_groups: "{{ inventory_hostname in tacker_hosts }}"
     enabled: true
     image: "{{ tacker_server_image_full }}"
     volumes: "{{ tacker_server_default_volumes + tacker_server_extra_volumes }}"
@@ -16,15 +16,17 @@ tacker_services:
         mode: "http"
         external: false
         port: "{{ tacker_server_port }}"
+        custom_member_list: "{{ tacker_haproxy_members.split(';') }}"
       tacker_server_external:
         enabled: "{{ enable_tacker }}"
         mode: "http"
         external: true
         port: "{{ tacker_server_port }}"
+        custom_member_list: "{{ tacker_haproxy_members.split(';') }}"
   tacker-conductor:
     container_name: "tacker_conductor"
     group: "tacker-conductor"
-    host_in_groups: "{{ inventory_hostname in tacker_conductor_hosts }}"
+    host_in_groups: "{{ inventory_hostname in tacker_hosts }}"
     enabled: true
     image: "{{ tacker_conductor_image_full }}"
     volumes: "{{ tacker_conductor_default_volumes + tacker_conductor_extra_volumes }}"
@@ -59,19 +61,27 @@ tacker_server_default_volumes:
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
+  # NOTE(yoctozepto): Starting in Train, this volume must be shared
+  # between all instances of both Tacker services (Server, Conductor)
+  - "kolla_tacker_csar_files:/var/lib/tacker/csar_files/"
 tacker_conductor_default_volumes:
   - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "kolla_tacker_vnfpackages:/var/lib/tacker/vnfpackages/"
+  # NOTE(yoctozepto): Starting in Train, this volume must be shared
+  # between all instances of both Tacker services (Server, Conductor)
   - "kolla_tacker_csar_files:/var/lib/tacker/csar_files/"
 
 tacker_extra_volumes: "{{ default_extra_volumes }}"
 tacker_server_extra_volumes: "{{ tacker_extra_volumes }}"
 tacker_conductor_extra_volumes: "{{ tacker_extra_volumes }}"
 
-tacker_conductor_hosts: "{{ [groups['tacker-conductor']|first] }}"
+# NOTE(yoctozepto): Starting in Train, this variable is used to co-locate all
+# Tacker services on one host since we do not provide shared filesystem
+# to satisfy kolla_tacker_csar_files volume needs.
+tacker_hosts: "{{ [groups['tacker']|first] }}"
 
 ####################
 # OpenStack
@@ -120,3 +130,8 @@ tacker_ks_users:
     user: "{{ tacker_keystone_user }}"
     password: "{{ tacker_keystone_password }}"
     role: "admin"
+
+####################
+# HAProxy
+####################
+tacker_haproxy_members: "{% for host in tacker_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ tacker_server_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
