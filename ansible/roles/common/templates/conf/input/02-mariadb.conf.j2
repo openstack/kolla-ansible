@@ -1,12 +1,13 @@
 {% set fluentd_dir = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+# mysqld and its wrapper script mysqld_safe output logs using a different timestamp.
+# Defer parsing the logs until the different formats have been retagged.
 <source>
   @type tail
   path /var/log/kolla/mariadb/mariadb.log
   pos_file /var/run/{{ fluentd_dir }}/mariadb.pos
   tag infra.mariadb
   format multiline
-  format_firstline /^\d{6}/
-  format1 /^(?<time>\d{6} \d{1,2}:\d{1,2}:\d{1,2}) (\[(?<log_level>\S+)\]|mysqld_safe) (?<Payload>.*)/
-  time_format %y%m%d %k:%M:%S
+  format_firstline /^(\d{4}-\d{2}-\d{2}|\d{6}) /
+  format1 /^(?<Payload>.*)/
   enable_watch_timer false
 </source>
