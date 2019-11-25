@@ -59,6 +59,10 @@ EOF
         GATE_IMAGES+=",dnsmasq,ironic,iscsid"
     fi
 
+    if [[ $ACTION == "mariadb" ]]; then
+        GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
+    fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
