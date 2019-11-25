@@ -102,10 +102,6 @@ EOF
     ansible all -i ${RAW_INVENTORY} -e ansible_user=$USER -m setup > /tmp/logs/ansible/initial-setup
 }
 
-function setup_node {
-    ansible-playbook -i ${RAW_INVENTORY} -e ansible_user=$USER tools/playbook-setup-nodes.yml
-}
-
 function prepare_images {
     if [[ "${BUILD_IMAGE}" == "False" ]]; then
         return
@@ -120,7 +116,6 @@ setup_openstack_clients
 
 setup_ansible
 setup_config
-setup_node
 
 tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
 prepare_images
