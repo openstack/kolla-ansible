@@ -247,15 +247,6 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "mariadb"
-
-        - name: Run reconfigure.sh script
-          script:
-            cmd: reconfigure.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            ACTION: "{{ scenario }}"
-          when: not is_upgrade
       when: scenario != "bifrost"
 
 # NOTE(yoctozepto): each host checks itself
@@ -393,6 +384,42 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
       when: scenario == "bifrost"
+
+# NOTE(yoctozepto): each host checks itself
+- hosts: all
+  any_errors_fatal: true
+  tasks:
+    - name: Run check-failure.sh script
+      shell:
+        cmd: tests/check-failure.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
+
+    - name: Run check-config.sh script
+      shell:
+        cmd: tests/check-config.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
+
+    - name: Run check-logs.sh script
+      shell:
+        cmd: tests/check-logs.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
+
+- hosts: primary
+  any_errors_fatal: true
+  tasks:
+    - name: Run reconfigure.sh script
+      script:
+        cmd: reconfigure.sh
+        executable: /bin/bash
+        chdir: "{{ kolla_ansible_src_dir }}"
+      environment:
+        ACTION: "{{ scenario }}"
+      when:
+        - not is_upgrade
+        - scenario != "bifrost"
 
 # NOTE(yoctozepto): each host checks itself
 - hosts: all
