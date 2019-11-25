@@ -107,11 +107,13 @@
     - item.enabled | bool
     - external_ceph_cephx_enabled | bool
   with_items:
+    # NOTE(yoctozepto): 'default' filter required due to eager evaluation of item content
+    # which will be undefined if the applicable condition is False
     - uuid: "{{ rbd_secret_uuid }}"
-      result: "{{ nova_cephx_raw_key }}"
+      result: "{{ nova_cephx_raw_key | default }}"
       enabled: "{{ nova_backend == 'rbd' }}"
     - uuid: "{{ cinder_rbd_secret_uuid }}"
-      result: "{{ cinder_cephx_raw_key }}"
+      result: "{{ cinder_cephx_raw_key | default }}"
       enabled: "{{ cinder_backend_ceph }}"
   notify:
     - Restart nova-libvirt container
