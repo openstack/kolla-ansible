@@ -106,7 +106,7 @@
         # nova-compute.conf
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
-          when: "{{ scenario != 'bifrost' }}"
+          when: "{{ scenario not in ['bifrost', 'mariadb'] }}"
         # ceph.conf
         - src: "tests/templates/ceph-overrides.j2"
           dest: /etc/kolla/config/ceph.conf
@@ -211,7 +211,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             ACTION: "{{ scenario }}"
-          when: scenario not in ['ironic', 'scenario_nfv']
+          when: scenario not in ['ironic', 'mariadb', 'scenario_nfv']
 
         - name: Run test-zun.sh script
           shell:
@@ -240,6 +240,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "masakari"
+
+        - name: Run test-mariadb.sh script
+          script:
+            cmd: test-mariadb.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "mariadb"
 
         - name: Run reconfigure.sh script
           script:
