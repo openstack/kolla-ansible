@@ -22,6 +22,8 @@
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'ceph', 'zun', 'cells', 'swift'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
+        # NOTE(mgoddard): Use Python 3 only for CentOS 8 on stable/train.
+        playbook_python_version: "{{ '3' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8' else '2' }}"
 
     - name: Install xfsprogs package for Swift filesystems
       become: true
@@ -165,10 +167,13 @@
           - "{{ kolla_ansible_src_dir }}"
           - "ansible{{ ansible_version_constraint }}"
           - "ara<1.0.0"
+        # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
+        executable: "pip{{ playbook_python_version }}"
       become: true
 
+    # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
-      command: "python -m ara.setup.callback_plugins"
+      command: "python{{ playbook_python_version }} -m ara.setup.callback_plugins"
       changed_when: false
       register: ara_callback_plugins
 
@@ -185,7 +190,7 @@
         remote_src: true
 
     - name: generate passwords
-      shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+      command: kolla-genpwd
 
     - name: slurp kolla passwords
       slurp:
@@ -397,6 +402,7 @@
         - name: upgrade kolla-ansible
           pip:
             name: "{{ kolla_ansible_src_dir }}"
+            executable: "pip{{ playbook_python_version }}"
           become: true
 
         # Update passwords.yml to include any new passwords added in this
@@ -411,11 +417,11 @@
             remote_src: true
 
         - name: generate new passwords
-          shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+          command: kolla-genpwd
 
         - name: merge old and new passwords
-          shell: >-
-            {{ kolla_ansible_src_dir }}/tools/merge_passwords.py
+          command: >-
+            kolla-mergepwd
             --old /etc/kolla/passwords.yml.old
             --new /etc/kolla/passwords.yml
             --final /etc/kolla/passwords.yml
