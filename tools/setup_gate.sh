@@ -10,7 +10,10 @@ GIT_PROJECT_DIR=$(mktemp -d)
 
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
-    virtualenv ~/openstackclient-venv
+    if [[ "debian" == $BASE_DISTRO ]]; then
+        sudo apt -y install python3-venv
+    fi
+    python3 -m venv ~/openstackclient-venv
     ~/openstackclient-venv/bin/pip install -U pip
     ~/openstackclient-venv/bin/pip install python-openstackclient
     ~/openstackclient-venv/bin/pip install python-heatclient
