@@ -17,9 +17,9 @@ import imp
 import os
 import sys
 
+from io import StringIO
 import mock
 from oslotest import base
-from six import StringIO
 
 
 PROJECT_DIR = os.path.abspath(os.path.join(os. path.dirname(__file__), '../'))
