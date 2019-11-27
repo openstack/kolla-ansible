@@ -107,8 +107,6 @@
   vars:
     service_name: "{{ item.key }}"
     services_need_ml2_conf_ini:
-      - "neutron-linuxbridge-agent"
-      - "neutron-openvswitch-agent"
       - "neutron-infoblox-ipam-agent"
       - "neutron-server"
   merge_configs:
@@ -126,29 +124,67 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying over ml2_conf.ini for XenAPI
+- name: Copying over linuxbridge_agent.ini
   become: true
   vars:
-    service_name: "{{ item.key }}"
-    services_need_ml2_conf_ini:
-      - "neutron-openvswitch-agent-xenapi"
+    service_name: "neutron-linuxbridge-agent"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/linuxbridge_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/linuxbridge_agent.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/linuxbridge_agent.ini"
+      # TODO(mnasiadka): Remove in V - left to not break existing deployments
+      - "{{ node_custom_config }}/neutron/ml2_conf.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/linuxbridge_agent.ini"
+    mode: "0660"
+  when:
+    - neutron_services[service_name].enabled | bool
+    - neutron_services[service_name].host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over openvswitch_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-openvswitch-agent"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/openvswitch_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/openvswitch_agent.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/openvswitch_agent.ini"
+      # TODO(mnasiadka): Remove in V - left to not break existing deployments
+      - "{{ node_custom_config }}/neutron/ml2_conf.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/openvswitch_agent.ini"
+    mode: "0660"
+  when:
+    - neutron_services[service_name].enabled | bool
+    - neutron_services[service_name].host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over openvswitch_agent.ini for XenAPI
+  become: true
+  vars:
+    service_name: "neutron-openvswitch-agent-xenapi"
     os_xenapi_variables: "{{ lookup('file', xenapi_facts_root + '/' + inventory_hostname + '/' + xenapi_facts_file) | from_json }}"
   merge_configs:
     sources:
-      - "{{ role_path }}/templates/ml2_conf.ini.j2"
-      - "{{ role_path }}/templates/ml2_conf_xenapi.ini.j2"
+      - "{{ role_path }}/templates/openvswitch_agent_xenapi.ini.j2"
+      - "{{ node_custom_config }}/neutron/openvswitch_agent_xenapi.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/openvswitch_agent_xenapi.ini"
+      - "{{ node_custom_config }}/neutron/{{ service_name }}/openvswitch_agent_xenapi.ini"
+      # TODO(mnasiadka): Remove in V - left to not break existing deployments
       - "{{ node_custom_config }}/neutron/ml2_conf.ini"
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/ml2_conf.ini"
-      - "{{ node_custom_config }}/neutron/{{ service_name }}/ml2_conf.ini"
-    dest: "{{ node_config_directory }}/{{ service_name }}/ml2_conf.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/openvswitch_agent.ini"
     mode: "0660"
   when:
-    - item.key in services_need_ml2_conf_ini
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+    - neutron_services[service_name].enabled | bool
+    - neutron_services[service_name].host_in_groups | bool
   notify:
-    - "Restart {{ item.key }} container"
+    - "Restart {{ service_name }} container"
 
 - name: Copying over sriov_agent.ini
   vars:
