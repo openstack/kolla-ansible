@@ -1,15 +1,12 @@
-========================
-Team and repository tags
-========================
+=============
+Kolla-Ansible
+=============
 
 .. image:: https://governance.openstack.org/tc/badges/kolla-ansible.svg
     :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 .. Change things from this point on
 
-======================
-Kolla-Ansible Overview
-======================
 
 The Kolla-Ansible is a deliverable project separated from Kolla project.
 
