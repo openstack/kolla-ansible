@@ -8,6 +8,9 @@
 
     # NOTE(yoctozepto): setting vars as facts for all to have them around in all the plays
     - name: set facts for commonly used variables
+      vars:
+        # NOTE(yoctozepto): needed here to use in other facts too
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -16,15 +19,16 @@
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
-        is_upgrade: "{{ 'upgrade' in scenario }}"
-        is_ceph: "{{ 'ceph' in scenario }}"
+        openstack_core_enabled: "{{ openstack_core_enabled }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'cinder-lvm', 'cells'] }}"
+        dashboard_enabled: "{{ openstack_core_enabled }}"
 
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario == "cinder-lvm" or is_ceph
+      when: scenario in ['cinder-lvm', 'ceph']
       become: true
       vars:
-        disk_type: "{{ ceph_storetype if is_ceph else 'cinder-lvm' }}"
+        disk_type: "{{ ceph_storetype if scenario == 'ceph' else 'cinder-lvm' }}"
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
@@ -100,15 +104,16 @@
         # nova-compute.conf
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
-          when: "{{ scenario not in ['bifrost', 'mariadb'] }}"
+          when: "{{ openstack_core_enabled }}"
         # ceph.conf
         - src: "tests/templates/ceph-overrides.j2"
           dest: /etc/kolla/config/ceph.conf
-          when: "{{ is_ceph }}"
+          when: "{{ scenario == 'ceph' }}"
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
           when: "{{ scenario == 'bifrost' }}"
+        # ironic.conf
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
           when: "{{ scenario == 'ironic' }}"
@@ -180,7 +185,7 @@
     # job).
     - name: Run setup_gate.sh script
       script:
-        cmd: ../tools/setup_gate.sh
+        cmd: setup_gate.sh
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
@@ -189,7 +194,7 @@
         BUILD_IMAGE: "{{ need_build_image }}"
         TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
-        ACTION: "{{ scenario }}"
+        SCENARIO: "{{ scenario }}"
 
     # At this point we have generated all necessary configuration, and are
     # ready to deploy the control plane services. Control flow now depends on
@@ -202,24 +207,39 @@
             cmd: deploy.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            ACTION: "{{ scenario }}"
 
-        - name: Run test-openstack.sh script
+        # NOTE(yoctozepto): this is nice as the first step after the deployment
+        # because it waits for the services to stabilize well enough so that
+        # the dashboard is able to show the login prompt
+        - name: Run test-dashboard.sh script
           script:
-            cmd: test-openstack.sh
+            cmd: test-dashboard.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: dashboard_enabled
+
+        - name: Run init-core-openstack.sh script
+          script:
+            cmd: init-core-openstack.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: openstack_core_tested or scenario in ['ironic', 'scenario_nfv', 'zun']
+
+        - name: Run test-core-openstack.sh script
+          script:
+            cmd: test-core-openstack.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
-            ACTION: "{{ scenario }}"
-          when: scenario not in ['ironic', 'mariadb', 'scenario_nfv']
+            SCENARIO: "{{ scenario }}"
+          when: openstack_core_tested
 
         - name: Run test-zun.sh script
-          shell:
-            cmd: tests/test-zun.sh
+          script:
+            cmd: test-zun.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
-          when: "{{ 'zun' in scenario }}"
+          when: scenario == 'zun'
 
         - name: Run test-scenario-nfv.sh script
           script:
@@ -311,7 +331,7 @@
             # ceph.conf
             - src: "tests/templates/ceph-overrides.j2"
               dest: /etc/kolla/config/ceph.conf
-              when: "{{ is_ceph }}"
+              when: "{{ scenario == 'ceph' }}"
           when: item.when | default(true)
 
         - name: upgrade kolla-ansible
@@ -346,23 +366,25 @@
             cmd: tests/upgrade.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            ACTION: "{{ scenario }}"
 
-        - name: Run test-openstack.sh script
+        # NOTE(yoctozepto): this is nice as the first step after the upgrade
+        # because it waits for the services to stabilize well enough so that
+        # the dashboard is able to show the login prompt
+        - name: Run test-dashboard.sh script
           shell:
-            cmd: tests/test-openstack.sh
+            cmd: tests/test-dashboard.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: dashboard_enabled
+
+        - name: Run test-core-openstack.sh script
+          shell:
+            cmd: tests/test-core-openstack.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
-            ACTION: "{{ scenario }}"
-
-        - name: Run test-zun.sh script
-          shell:
-            cmd: tests/test-zun.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: "{{ 'zun' in scenario }}"
+            SCENARIO: "{{ scenario }}"
+          when: openstack_core_tested
       when: is_upgrade
 
     # Bifrost testing.
@@ -390,23 +412,25 @@
 - hosts: all
   any_errors_fatal: true
   tasks:
-    - name: Run check-failure.sh script
-      shell:
-        cmd: tests/check-failure.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+    - name: Post-deploy/upgrade sanity checks
+      block:
+        - name: Run check-failure.sh script
+          shell:
+            cmd: tests/check-failure.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
 
-    - name: Run check-config.sh script
-      shell:
-        cmd: tests/check-config.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+        - name: Run check-config.sh script
+          shell:
+            cmd: tests/check-config.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
 
-    - name: Run check-logs.sh script
-      shell:
-        cmd: tests/check-logs.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+        - name: Run check-logs.sh script
+          shell:
+            cmd: tests/check-logs.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
 
 - hosts: primary
   any_errors_fatal: true
@@ -416,8 +440,6 @@
         cmd: reconfigure.sh
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
-      environment:
-        ACTION: "{{ scenario }}"
       when:
         - not is_upgrade
         - scenario != "bifrost"
@@ -426,20 +448,25 @@
 - hosts: all
   any_errors_fatal: true
   tasks:
-    - name: Run check-failure.sh script
-      shell:
-        cmd: tests/check-failure.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+    - name: Post-reconfigure sanity checks
+      block:
+        - name: Run check-failure.sh script
+          shell:
+            cmd: tests/check-failure.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
 
-    - name: Run check-config.sh script
-      shell:
-        cmd: tests/check-config.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+        - name: Run check-config.sh script
+          shell:
+            cmd: tests/check-config.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
 
-    - name: Run check-logs.sh script
-      shell:
-        cmd: tests/check-logs.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
+        - name: Run check-logs.sh script
+          shell:
+            cmd: tests/check-logs.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+      when:
+        - not is_upgrade
+        - scenario != "bifrost"
