@@ -1,3 +1,4 @@
+{% set masakari_log_dir = '/var/log/kolla/masakari' %}
 {% if kolla_base_distro in ['debian', 'ubuntu'] %}
     {% set python_path = '/usr/lib/python3/dist-packages' if masakari_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 {% else %}
@@ -10,6 +11,11 @@ Listen {{ api_interface_address | put_address_in_context('url') }}:{{ masakari_a
 ServerSignature Off
 ServerTokens Prod
 TraceEnable off
+
+ErrorLog "{{ masakari_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ masakari_log_dir }}/apache-access.log" common
+</IfModule>
 
 {% if masakari_logging_debug | bool %}
 LogLevel info
@@ -24,9 +30,9 @@ LogLevel info
 
 <VirtualHost *:{{ masakari_api_port }}>
   ## Logging
-  ErrorLog "/var/log/kolla/masakari/masakari_wsgi_error.log"
+  ErrorLog "{{ masakari_log_dir }}/masakari_wsgi_error.log"
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
-  CustomLog "/var/log/kolla/masakari/masakari_wsgi_access.log" logformat
+  CustomLog "{{ masakari_log_dir }}/masakari_wsgi_access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess masakari group=masakari processes={{ openstack_service_workers }} threads=1 user=masakari python-path={{ python_path }}
   WSGIProcessGroup masakari
