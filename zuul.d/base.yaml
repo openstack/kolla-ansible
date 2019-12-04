@@ -23,8 +23,8 @@
       - ^specs/
       - ^kolla_ansible/tests/
     vars:
-      scenario: aio
-      enable_core_openstack: yes
+      scenario: core
+      is_upgrade: no
       api_network_prefix: "192.0.2."
       api_network_prefix_length: "24"
       api_interface_name: vxlan0
@@ -38,7 +38,7 @@
     parent: kolla-ansible-base
     vars:
       previous_release: stein
-      scenario: upgrade
+      is_upgrade: yes
 
 - job:
     name: kolla-ansible-ipv6-base
@@ -56,7 +56,6 @@
     vars:
       scenario: bifrost
       install_type: source
-      enable_core_openstack: no
 
 - job:
     name: kolla-ansible-ironic-base
@@ -65,6 +64,7 @@
     files:
       - ^ansible/roles/(ironic|nova)/
       - ^tests/test-ironic.sh
+      - ^tests/test-dashboard.sh
     vars:
       scenario: ironic
 
@@ -75,5 +75,6 @@
     files:
       - ^ansible/roles/(zun|kuryr|etcd)/
       - ^tests/test-zun.sh
+      - ^tests/test-dashboard.sh
     vars:
       scenario: zun
