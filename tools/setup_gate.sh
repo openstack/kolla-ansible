@@ -83,31 +83,6 @@ EOF
     mkdir -p /tmp/logs/build
 }
 
-function setup_ansible {
-    RAW_INVENTORY=/etc/kolla/inventory
-
-    # Test latest ansible version on Ubuntu, minimum supported on others.
-    if [[ $BASE_DISTRO == "ubuntu" ]]; then
-        ANSIBLE_VERSION=">=2.6"
-    else
-        ANSIBLE_VERSION="<2.7"
-    fi
-
-    # TODO(SamYaple): Move to virtualenv
-    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0"
-
-    sudo mkdir /etc/ansible
-    ara_location=$(python -m ara.setup.callback_plugins)
-    sudo tee /etc/ansible/ansible.cfg<<EOF
-[defaults]
-callback_plugins = ${ara_location}
-host_key_checking = False
-EOF
-
-    # Record the running state of the environment as seen by the setup module
-    ansible all -i ${RAW_INVENTORY} -e ansible_user=$USER -m setup > /tmp/logs/ansible/initial-setup
-}
-
 function prepare_images {
     if [[ "${BUILD_IMAGE}" == "False" ]]; then
         return
@@ -127,8 +102,8 @@ function prepare_images {
 
 setup_openstack_clients
 
-setup_ansible
 setup_config
 
+RAW_INVENTORY=/etc/kolla/inventory
 tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
 prepare_images
