@@ -55,21 +55,23 @@
   register: apt_install_result
 
 - name: Install deltarpm packages
+  vars:
+    package_name: "{{ 'deltarpm' if ansible_distribution_major_version == '7' else 'drpm' }}"
   package:
-    name: deltarpm
+    name: "{{ package_name }}"
     state: present
     update_cache: yes
   become: True
   when: ansible_os_family == 'RedHat'
 
-- name: Install yum packages
+- name: Install RPM packages
   package:
     name: "{{ (redhat_pkg_install | join(' ')).split() }}"
     state: present
     update_cache: yes
   become: True
   when: ansible_os_family == 'RedHat'
-  register: yum_install_result
+  register: rpm_install_result
 
 # If any packages were updated, and any containers were running, wait for the
 # daemon to come up and start all previously running containers.
@@ -101,14 +103,7 @@
     - running_containers.rc == 0
     - running_containers.stdout != ''
   vars:
-    install_result: "{{ yum_install_result if ansible_os_family == 'RedHat' else apt_install_result }}"
-
-- name: Install virtualenv packages
-  package:
-    name: python-virtualenv
-    state: present
-  become: True
-  when: virtualenv is not none
+    install_result: "{{ rpm_install_result if ansible_os_family == 'RedHat' else apt_install_result }}"
 
 - name: Install pip
   easy_install:
@@ -124,15 +119,17 @@
     state: latest
     virtualenv: "{{ virtualenv }}"
     virtualenv_site_packages: "{{ virtualenv_site_packages }}"
+    virtualenv_python: "python{{ host_python_version }}"
   become: True
   when: virtualenv is not none
 
 - name: Install docker SDK for python
   pip:
     name: docker
-    state: latest
+    executable: "{{ virtualenv is none | ternary('pip' ~ host_python_major_version, omit) }}"
     virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
     virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
+    virtualenv_python: "{{ virtualenv is none | ternary(omit, 'python' ~ host_python_version) }}"
   become: True
 
 - name: Remove packages
