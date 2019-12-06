@@ -1,12 +1,4 @@
 ---
-# NOTE: raw install is required to support cloud images which do not have python installed
-- name: "Install python2"
-  become: True
-  raw: "yum install -y python || (apt-get update && apt-get install -y python2.7)"
-
-- name: Gather facts
-  setup:
-
 - name: Ensure localhost in /etc/hosts
   lineinfile:
     dest: /etc/hosts
@@ -133,6 +125,20 @@
             gpgcheck: "{{ docker_yum_gpgcheck | bool }}"
             gpgkey: "{{ docker_yum_gpgkey }}"
           become: True
+
+        # NOTE(yoctozepto): above cannot set this but we require it
+        # to install containerd.io due to runc being a modular package
+        # in CentOS 8
+        # see: https://bugzilla.redhat.com/show_bug.cgi?id=1734081
+        - name: Ensure module_hotfixes enabled for docker
+          lineinfile:
+            dest: /etc/yum.repos.d/docker.repo
+            regexp: "^module_hotfixes"
+            line: "module_hotfixes = True"
+            state: present
+          become: True
+          when:
+            - ansible_distribution_major_version == '8'
 
         - name: Install docker rpm gpg key
           rpm_key:
