@@ -1,0 +1,31 @@
+{% set cron_cmd = 'cron -f' if kolla_base_distro in ['ubuntu', 'debian'] else 'crond -s -n' %}
+{
+    "command": "{{ cron_cmd }}",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/elasticsearch-curator.crontab",
+            "dest": "/var/spool/cron/elasticsearch",
+            "owner": "root",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/elasticsearch-curator.yml",
+            "dest": "/etc/elasticsearch-curator/curator.yml",
+            "owner": "elasticsearch",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/elasticsearch-curator-actions.yml",
+            "dest": "/etc/elasticsearch-curator/actions.yml",
+            "owner": "elasticsearch",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/elasticsearch",
+            "owner": "elasticsearch:elasticsearch",
+            "recurse": true
+        }
+    ]
+}

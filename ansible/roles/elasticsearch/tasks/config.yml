@@ -34,9 +34,9 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Copying over elasticsearch.yml
+- name: Copying over elasticsearch service config files
   template:
-    src: "elasticsearch.yml.j2"
+    src: "{{ item.key }}.yml.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.yml"
     mode: "0660"
   become: true
@@ -46,6 +46,37 @@
   with_dict: "{{ elasticsearch_services }}"
   notify:
     - Restart {{ item.key }} container
+
+- name: Copying over elasticsearch curator actions
+  vars:
+    service: "{{ elasticsearch_services['elasticsearch-curator'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/elasticsearch-curator/elasticsearch-curator-actions.yml"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/elasticsearch/elasticsearch-curator-actions.yml"
+    - "{{ role_path }}/templates/elasticsearch-curator-actions.yml.j2"
+  notify:
+    - Restart elasticsearch-curator container
+
+- name: Copying over elasticsearch curator crontab
+  vars:
+    service: "{{ elasticsearch_services['elasticsearch-curator'] }}"
+  template:
+    src: "{{ role_path }}/templates/elasticsearch-curator.crontab.j2"
+    dest: "{{ node_config_directory }}/elasticsearch-curator/elasticsearch-curator.crontab"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
+  notify:
+    - Restart elasticsearch-curator container
 
 - include_tasks: check-containers.yml
   when: kolla_action != "config"

@@ -19,6 +19,13 @@ elasticsearch_services:
         port: "{{ elasticsearch_port }}"
         frontend_http_extra:
           - "option dontlog-normal"
+  elasticsearch-curator:
+    container_name: elasticsearch_curator
+    group: elasticsearch-curator
+    enabled: "{{ enable_elasticsearch_curator }}"
+    image: "{{ elasticsearch_curator_image_full }}"
+    volumes: "{{ elasticsearch_curator_default_volumes + elasticsearch_curator_extra_volumes }}"
+    dimensions: "{{ elasticsearch_curator_dimensions }}"
 
 
 ####################
@@ -28,6 +35,33 @@ elasticsearch_cluster_name: "kolla_logging"
 es_heap_size: "1g"
 es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }}{%endif%}"
 
+#######################
+# Elasticsearch Curator
+#######################
+
+# How frequently Curator runs. On multinode deployments of Curator
+# you may wish to override this in hostvars so that Curator does
+# not run simultaneously on all nodes. Defaults to every midnight.
+elasticsearch_curator_cron_schedule: "0 0 * * *"
+
+# When set to True, Curator will not modify Elasticsearch data, but
+# will print what it *would* do to the Curator log file. This is a
+# useful way of checking that Curator actions are working as expected.
+elasticsearch_curator_dry_run: false
+
+# Index prefix pattern. Any indices matching this regex will
+# be managed by Curator.
+elasticsearch_curator_index_pattern: "^{{ 'monasca' if enable_monasca|bool else kibana_log_prefix }}-.*"
+
+# Duration after which an index is staged for deletion. This is
+# implemented by closing the index. Whilst in this state the index
+# contributes negligible load on the cluster and may be manually
+# re-opened if required.
+elasticsearch_curator_soft_retention_period_days: 30
+
+# Duration after which an index is permanently erased from the cluster.
+elasticsearch_curator_hard_retention_period_days: 60
+
 ####################
 # Docker
 ####################
@@ -36,10 +70,21 @@ elasticsearch_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ d
 elasticsearch_tag: "{{ openstack_release }}"
 elasticsearch_image_full: "{{ elasticsearch_image }}:{{ elasticsearch_tag }}"
 
+elasticsearch_curator_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ elasticsearch_install_type }}-elasticsearch-curator"
+elasticsearch_curator_tag: "{{ openstack_release }}"
+elasticsearch_curator_image_full: "{{ elasticsearch_curator_image }}:{{ elasticsearch_curator_tag }}"
+
 elasticsearch_dimensions: "{{ default_container_dimensions }}"
+elasticsearch_curator_dimensions: "{{ default_container_dimensions }}"
 
 elasticsearch_default_volumes:
   - "{{ node_config_directory }}/elasticsearch/:{{ container_config_directory }}/"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ elasticsearch_datadir_volume }}:/var/lib/elasticsearch/data"
+elasticsearch_curator_default_volumes:
+  - "{{ node_config_directory }}/elasticsearch-curator/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla"
+
 elasticsearch_extra_volumes: "{{ default_extra_volumes }}"
+elasticsearch_curator_extra_volumes: "{{ default_extra_volumes }}"
