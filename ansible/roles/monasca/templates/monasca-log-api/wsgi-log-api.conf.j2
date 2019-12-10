@@ -1,3 +1,4 @@
+{% set monasca_log_path = '/var/log/kolla/monasca' %}
 {% set python_path = '/usr/lib/python2.7/site-packages' if monasca_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
 {% set wsgi_path = '/usr/bin' if monasca_install_type == 'binary' else '/monasca-log/monasca_log_api/app' %}
 
@@ -5,15 +6,20 @@ Listen {{ api_interface_address | put_address_in_context('url') }}:{{ monasca_lo
 
 TraceEnable off
 
+ErrorLog "{{ monasca_log_dir }}/apache-logapi-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ monasca_log_dir }}/apache-logapi-access.log" common
+</IfModule>
+
 {% if monasca_logging_debug | bool %}
 LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ monasca_log_api_port }}>
 
-    ErrorLog "/var/log/kolla/monasca/monasca-log-api-error.log"
+    ErrorLog "{{ monasca_log_dir }}/monasca-log-api-error.log"
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
-    CustomLog "/var/log/kolla/monasca/monasca-log-api-access.log" logformat
+    CustomLog "{{ monasca_log_dir }}/monasca-log-api-access.log" logformat
     WSGIApplicationGroup %{GLOBAL}
     WSGIDaemonProcess monasca-log-api group=monasca processes={{ openstack_service_workers }} threads=1 user=monasca python-path={{ python_path }}
     WSGIProcessGroup  monasca-log-api

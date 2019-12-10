@@ -1,3 +1,4 @@
+{% set cloudkitty_log_dir = '/var/log/kolla/cloudkitty' %}
 {% set python_path = '/usr/lib/python2.7/site-packages' if cloudkitty_install_type == 'binary' else '/var/lib/kolla/venv/lib/python2.7/site-packages' %}
 {% set binary_path = '/usr/bin' if cloudkitty_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ cloudkitty_api_port }}
@@ -6,15 +7,20 @@ ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
+ErrorLog "{{ cloudkitty_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ cloudkitty_log_dir }}/apache-access.log" common
+</IfModule>
+
 {% if cloudkitty_logging_debug | bool %}
 LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ cloudkitty_api_port }}>
 
-  ErrorLog "/var/log/kolla/cloudkitty/cloudkitty-api-error.log"
+  ErrorLog "{{ cloudkitty_log_dir }}/cloudkitty-api-error.log"
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
-  CustomLog "/var/log/kolla/cloudkitty/cloudkitty-api-access.log" logformat
+  CustomLog "{{ cloudkitty_log_dir }}/cloudkitty-api-access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess cloudkitty group=cloudkitty processes={{ openstack_service_workers }} threads=1 user=cloudkitty python-path={{ python_path }}
   WSGIProcessGroup cloudkitty

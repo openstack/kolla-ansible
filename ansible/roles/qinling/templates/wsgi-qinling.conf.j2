@@ -1,3 +1,4 @@
+{% set qinling_log_dir = '/var/log/kolla/qinling' %}
 {% if kolla_base_distro == 'ubuntu' %}
     {% set python_path = '/usr/lib/python3/dist-packages' if qinling_install_type == 'binary' else '/var/lib/kolla/venv/lib/python3.6/site-packages' %}
 {% else %}
@@ -9,6 +10,11 @@ Listen {{ api_interface_address | put_address_in_context('url') }}:{{ qinling_ap
 ServerSignature Off
 ServerTokens Prod
 TraceEnable off
+
+ErrorLog "{{ qinling_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ qinling_log_dir }}/apache-access.log" common
+</IfModule>
 
 {% if qinling_logging_debug | bool %}
 LogLevel info
@@ -27,9 +33,9 @@ LogLevel info
   </Directory>
 
   ## Logging
-  ErrorLog "/var/log/kolla/qinling/qinling_api_wsgi_error.log"
+  ErrorLog "{{ qinling_log_dir }}/qinling_api_wsgi_error.log"
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
-  CustomLog "/var/log/kolla/qinling/qinling_api_wsgi_access.log" logformat
+  CustomLog "{{ qinling_log_dir }}/qinling_api_wsgi_access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess qinling group=qinling processes={{ openstack_service_workers }} threads=1 user=qinling python-path={{ python_path }}
   WSGIProcessGroup qinling
