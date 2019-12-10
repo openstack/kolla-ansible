@@ -22,6 +22,8 @@
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'ceph', 'cinder-lvm', 'cells'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
+        # TODO(mgoddard): Remove when previous_release is ussuri.
+        playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' else '3' }}"
 
     - name: Prepare disks for Ceph or LVM
       script: "setup_disks.sh {{ disk_type }}"
@@ -152,10 +154,13 @@
           - "{{ kolla_ansible_src_dir }}"
           - "ansible{{ ansible_version_constraint }}"
           - "ara<1.0.0"
+        # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
+        executable: "pip{{ playbook_python_version }}"
       become: true
 
+    # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
-      command: "python -m ara.setup.callback_plugins"
+      command: "python{{ playbook_python_version }} -m ara.setup.callback_plugins"
       changed_when: false
       register: ara_callback_plugins
 
@@ -172,7 +177,7 @@
         remote_src: true
 
     - name: generate passwords
-      shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+      command: kolla-genpwd
 
     - name: slurp kolla passwords
       slurp:
@@ -194,13 +199,6 @@
       with_inventory_hostnames:
         - all
       delegate_to: "{{ item }}"
-
-    - name: Install Python 3 package for Kolla
-      package:
-        name: python3
-      when:
-        need_build_image
-      become: true
 
     - name: Record the running state of the environment as seen by the setup module
       shell:
@@ -361,9 +359,43 @@
               when: "{{ scenario == 'ceph' }}"
           when: item.when | default(true)
 
+        # TODO(mgoddard): Remove this block when previous_release is ussuri.
+        - block:
+            - name: remove ansible and ARA for python 2
+              pip:
+                name:
+                  - ansible
+                  - ara
+                executable: pip2
+                state: absent
+              become: true
+
+            - name: install ansible and ARA for python 3
+              vars:
+                # Test latest ansible version on Ubuntu, minimum supported on others.
+                ansible_version_constraint: "{{ '>=2.6' if base_distro == 'ubuntu' else '<2.7' }}"
+              pip:
+                name:
+                  - "ansible{{ ansible_version_constraint }}"
+                  - "ara<1.0.0"
+                executable: pip3
+              become: true
+
+            - name: get ARA callback plugin path
+              command: "python3 -m ara.setup.callback_plugins"
+              changed_when: false
+              register: ara_callback_plugins
+
+            - name: template ansible.cfg
+              template:
+                src: "{{ kolla_ansible_local_src_dir }}/tests/templates/ansible.cfg.j2"
+                dest: /etc/ansible/ansible.cfg
+              become: true
+
         - name: upgrade kolla-ansible
           pip:
             name: "{{ kolla_ansible_src_dir }}"
+            executable: pip3
           become: true
 
         # Update passwords.yml to include any new passwords added in this
@@ -378,11 +410,11 @@
             remote_src: true
 
         - name: generate new passwords
-          shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+          command: kolla-genpwd
 
         - name: merge old and new passwords
-          shell: >-
-            {{ kolla_ansible_src_dir }}/tools/merge_passwords.py
+          command: >-
+            kolla-mergepwd
             --old /etc/kolla/passwords.yml.old
             --new /etc/kolla/passwords.yml
             --final /etc/kolla/passwords.yml
