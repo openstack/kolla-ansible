@@ -88,6 +88,7 @@ Commands:
     upgrade             Upgrades existing OpenStack Environment
     upgrade-bifrost     Upgrades an existing bifrost container
     genconfig           Generate configuration files for enabled OpenStack services
+    prune-images        Prune orphaned Kolla images
 EOF
 }
 
@@ -126,6 +127,7 @@ certificates
 upgrade
 upgrade-bifrost
 genconfig
+prune-images
 EOF
 }
 
@@ -390,6 +392,18 @@ EOF
 (genconfig)
         ACTION="Generate configuration files for enabled OpenStack services"
         EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=config"
+        ;;
+(prune-images)
+        ACTION="Prune orphaned Kolla images"
+        PLAYBOOK="${BASEDIR}/ansible/prune-images.yml"
+        if [[ "${DANGER_CONFIRM}" != "--yes-i-really-really-mean-it" ]]; then
+            cat << EOF
+WARNING:
+    This will PERMANENTLY DELETE all orphaned kolla images. To confirm, please add the following option:
+    --yes-i-really-really-mean-it
+EOF
+            exit 1
+        fi
         ;;
 (bash-completion)
         bash_completion
