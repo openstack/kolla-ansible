@@ -4,10 +4,26 @@ set -o errexit
 set -o pipefail
 
 # Get data on the fernet tokens
-TOKEN_CHECK=$(/usr/bin/python{{ distro_python_version }} /usr/bin/fetch_fernet_tokens.py -t {{ fernet_token_expiry }} -n {{ (groups['keystone'] | length) + 1 }})
+# NOTE(mnasiadka): Check for existence of at least two tokens (should exist after bootstrap)
+TOKEN_CHECK=$(/usr/bin/python{{ distro_python_version }} /usr/bin/fetch_fernet_tokens.py -t {{ fernet_token_expiry }} -n 2)
+
+# Ensure tokens are populated
+n=0
+while /usr/bin/python{{ distro_python_version }} /usr/bin/fetch_fernet_tokens.py -t 86400 -n 1 | grep -q '"populated": false'; do
+    if [ $n -lt 10 ]; then
+        n=$(( n + 1 ))
+        echo "ERROR: Fernet tokens have not been populated, rechecking in 1 minute"
+        echo "DEBUG: /etc/keystone/fernet-keys contents:"
+        ls -l /etc/keystone/fernet-keys/
+        sleep 60
+    else
+        echo "CRITICAL: Waited for 10 minutes - failing"
+        exit 1
+    fi
+done
 
 # Ensure the primary token exists and is not stale
-if $(echo "$TOKEN_CHECK" | grep -q '"update_required":"false"'); then
+if $(echo "$TOKEN_CHECK" | grep -q '"update_required": false'); then
     exit 0;
 fi
 

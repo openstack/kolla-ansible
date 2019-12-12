@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -o errexit
+set -o pipefail
+
 {% for host in groups['keystone'] %}
 {% if inventory_hostname != host %}
 /usr/bin/rsync -az -e 'ssh -i /var/lib/keystone/.ssh/id_rsa -p {{ hostvars[host]['keystone_ssh_port'] }} -F /var/lib/keystone/.ssh/config' --delete /etc/keystone/fernet-keys/ keystone@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:/etc/keystone/fernet-keys
