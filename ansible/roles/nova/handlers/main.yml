@@ -54,7 +54,7 @@
     service_name: "nova-libvirt"
     service: "{{ nova_services[service_name] }}"
     config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else none }}"
+    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else '' }}"
     nova_libvirt_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
   kolla_docker:
@@ -78,7 +78,7 @@
     - config_json.changed | bool
       or nova_libvirt_confs.changed | bool
       or nova_libvirt_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
+      or ( ceph_conf is mapping and ceph_conf.changed | bool )
       or ( nova_ceph_keyring is defined and nova_ceph_keyring.changed | bool )
       or ( libvirt_secrets_xml is defined and libvirt_secrets_xml.changed | bool )
       or ( libvirt_secrets_key is defined and libvirt_secrets_key.changed | bool )
@@ -245,7 +245,7 @@
     service: "{{ nova_services[service_name] }}"
     config_json: "{{ config_jsons.results|selectattr('item.key', 'equalto', service_name)|first }}"
     nova_conf: "{{ nova_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else none }}"
+    ceph_conf: "{{ ceph_confs.results|selectattr('item', 'equalto', service_name)|first if ceph_confs is defined else '' }}"
     policy_overwriting: "{{ nova_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     nova_compute_container: "{{ check_nova_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
@@ -269,7 +269,7 @@
       or vcenter_ca_file | bool
       or nova_compute_release_file | bool
       or nova_compute_container.changed | bool
-      or ( ceph_conf is not none and ceph_conf.changed | bool )
+      or ( ceph_conf is mapping and ceph_conf.changed | bool )
       or ( nova_ceph_keyring is defined and nova_ceph_keyring.changed | bool )
 
 - name: Restart nova-compute-ironic container
