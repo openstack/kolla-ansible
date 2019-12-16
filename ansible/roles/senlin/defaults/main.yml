@@ -22,6 +22,13 @@ senlin_services:
         external: true
         port: "{{ senlin_api_port }}"
         listen_port: "{{ senlin_api_listen_port }}"
+  senlin-conductor:
+    container_name: senlin_conductor
+    group: senlin-conductor
+    enabled: true
+    image: "{{ senlin_conductor_image_full }}"
+    volumes: "{{ senlin_conductor_default_volumes + senlin_conductor_extra_volumes }}"
+    dimensions: "{{ senlin_conductor_dimensions }}"
   senlin-engine:
     container_name: senlin_engine
     group: senlin-engine
@@ -29,6 +36,13 @@ senlin_services:
     image: "{{ senlin_engine_image_full }}"
     volumes: "{{ senlin_engine_default_volumes + senlin_engine_extra_volumes }}"
     dimensions: "{{ senlin_engine_dimensions }}"
+  senlin-health-manager:
+    container_name: senlin_health_manager
+    group: senlin-health-manager
+    enabled: true
+    image: "{{ senlin_health_manager_image_full }}"
+    volumes: "{{ senlin_health_manager_default_volumes + senlin_health_manager_extra_volumes }}"
+    dimensions: "{{ senlin_health_manager_dimensions }}"
 
 ####################
 # Database
@@ -44,19 +58,34 @@ senlin_database_address: "{{ database_address | put_address_in_context('url') }}
 senlin_install_type: "{{ kolla_install_type }}"
 senlin_tag: "{{ openstack_release }}"
 
+senlin_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-conductor"
+senlin_conductor_tag: "{{ senlin_tag }}"
+senlin_conductor_image_full: "{{ senlin_conductor_image }}:{{ senlin_conductor_tag }}"
+
 senlin_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-engine"
 senlin_engine_tag: "{{ senlin_tag }}"
 senlin_engine_image_full: "{{ senlin_engine_image }}:{{ senlin_engine_tag }}"
+
+senlin_health_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-health-manager"
+senlin_health_manager_tag: "{{ senlin_tag }}"
+senlin_health_manager_image_full: "{{ senlin_health_manager_image }}:{{ senlin_health_manager_tag }}"
 
 senlin_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-api"
 senlin_api_tag: "{{ senlin_tag }}"
 senlin_api_image_full: "{{ senlin_api_image }}:{{ senlin_api_tag }}"
 
 senlin_api_dimensions: "{{ default_container_dimensions }}"
+senlin_conductor_dimensions: "{{ default_container_dimensions }}"
 senlin_engine_dimensions: "{{ default_container_dimensions }}"
+senlin_health_manager_dimensions: "{{ default_container_dimensions }}"
 
 senlin_api_default_volumes:
   - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+senlin_conductor_default_volumes:
+  - "{{ node_config_directory }}/senlin-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
@@ -65,10 +94,17 @@ senlin_engine_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
+senlin_health_manager_default_volumes:
+  - "{{ node_config_directory }}/senlin-health-manager/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python2.7/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
 
 senlin_extra_volumes: "{{ default_extra_volumes }}"
 senlin_api_extra_volumes: "{{ senlin_extra_volumes }}"
+senlin_conductor_extra_volumes: "{{ senlin_extra_volumes }}"
 senlin_engine_extra_volumes: "{{ senlin_extra_volumes }}"
+senlin_health_manager_extra_volumes: "{{ senlin_extra_volumes }}"
 
 ####################
 # OpenStack
