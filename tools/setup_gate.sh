@@ -44,7 +44,7 @@ function setup_config {
     fi
 
     if [[ $SCENARIO == "zun" ]]; then
-        GATE_IMAGES+=",zun,kuryr,etcd"
+        GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid,tgtd"
     fi
 
     if [[ $SCENARIO == "scenario_nfv" ]]; then
