@@ -6,8 +6,13 @@
   when: inventory_hostname in groups['baremetal']
   failed_when: result is failed or result.stdout is version(docker_py_version_min, '<')
 
+# NOTE(osmanlicilegi): ansible_version.full includes patch number that's useless
+# to check. as ansible_version does not provide major.minor in dict, we need to
+# set it as variable.
 - name: Checking Ansible version
+  vars:
+    ansible_version_host: "{{ ansible_version.major }}.{{ ansible_version.minor }}"
   fail:
-    msg: "Current Ansible version {{ ansible_version.full }} is less than {{ ansible_version_min }}"
+    msg: "Ansible version should be between {{ ansible_version_min }} and {{ ansible_version_max }}. Current version is {{ ansible_version.full }} which is not supported."
   run_once: true
-  when: ansible_version.full is version(ansible_version_min, '<')
+  when: ansible_version_host is version(ansible_version_min, '<') or ansible_version_host is version(ansible_version_max, '>')
