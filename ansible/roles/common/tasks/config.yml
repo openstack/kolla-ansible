@@ -363,5 +363,26 @@
     - item.key != "kolla-toolbox"
   with_dict: "{{ common_services }}"
 
+- name: Copy rabbitmq-env.conf to kolla toolbox
+  copy:
+    content: |
+      RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
+      export ERL_INETRC=/etc/rabbitmq/erl_inetrc
+    dest: /etc/kolla/kolla-toolbox/rabbitmq-env.conf
+    mode: "0600"
+  become: true
+  when:
+    api_address_family == "ipv6"
+
+- name: Copy rabbitmq erl_intr to kolla toolbox
+  copy:
+    content: |
+      {inet6,true}.
+    dest: /etc/kolla/kolla-toolbox/erl_inetrc
+    mode: "0600"
+  become: true
+  when:
+    api_address_family == "ipv6"
+
 - include_tasks: check-containers.yml
   when: kolla_action != "config"
