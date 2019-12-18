@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    When 'kolla_copy_ca_into_containers' is configured to 'yes', the
+    certificate authority files in /etc/kolla/certificates/ca will be copied
+    into service containers to enable trust for those CA certificates. This
+    is required for any certificates that are either self-signed or signed by
+    a private CA, and are not already present in the service image trust store.
+    Otherwise, either CA validation will need to be explicitly disabled or the
+    path to the CA certificate must be configured in the service using
+    the ``openstack_cacert`` parameter.
+
+issues:
+  - |
+    Python <= 2.7.9 will not trust self-signed or privately signed CAs even
+    if they are added into the OS trusted CA folder and update-ca-trust is
+    executed. This is also true for the Python Requests library, regardless of
+    Python version. For services that run Python <= 2.7.9 or rely on the
+    Python Requests library, either CA verification must be explicitly disabled
+    in the service or the path to the CA certificate must be configured using
+    the ``openstack_cacert`` parameter.

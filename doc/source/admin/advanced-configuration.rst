@@ -165,6 +165,32 @@ configuration file:
 The files haproxy.pem and haproxy-ca.pem will be generated and stored
 in the ``/etc/kolla/certificates/`` directory.
 
+Adding CA Certificates to the Service Containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To copy CA certificate files to the service containers
+
+.. code-block:: yaml
+
+   kolla_copy_ca_into_containers: "yes"
+
+When ``kolla_copy_ca_into_containers`` is configured to "yes", the
+CA certificate files in /etc/kolla/certificates/ca will be copied into
+service containers to enable trust for those CA certificates. This is required
+for any certificates that are either self-signed or signed by a private CA,
+and are not already present in the service image trust store.
+
+All certificate file names will have the "kolla-customca-" prefix appended to
+it when it is copied into the containers. For example, if a certificate file is
+named "internal.crt", it will be named "kolla-customca-internal.crt" in the
+containers.
+
+For Debian and Ubuntu containers, the certificate files will be copied to
+the ``/usr/local/share/ca-certificates/`` directory.
+
+For Centos and Red Hat Linux containers, the certificate files will be copied
+to the ``/etc/pki/ca-trust/source/anchors/`` directory.
+
 .. _service-config:
 
 OpenStack Service Configuration in Kolla
