@@ -1,0 +1,30 @@
+---
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    name:
+      - ovn_nb_db
+      - ovn_sb_db
+  register: container_facts
+
+- name: Checking free port for OVN northbound db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_nb_db_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['ovn_nb_db'] is not defined
+    - inventory_hostname in groups['ovn-nb-db']
+
+- name: Checking free port for OVN southbound db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_sb_db_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['ovn_sb_db'] is not defined
+    - inventory_hostname in groups['ovn-sb-db']

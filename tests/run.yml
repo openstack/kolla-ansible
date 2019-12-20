@@ -23,7 +23,7 @@
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift', 'linuxbridge'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift', 'linuxbridge', 'ovn'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' and not is_centos8 else '3' }}"
@@ -422,6 +422,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "masakari"
+
+        - name: Run test-ovn.sh script
+          script:
+            cmd: test-ovn.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "ovn"
 
         - name: Run test-mariadb.sh script
           script:

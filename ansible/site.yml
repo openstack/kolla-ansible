@@ -60,6 +60,7 @@
         - enable_octavia_{{ enable_octavia | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
+        - enable_ovn_{{ enable_ovn | bool }}
         - enable_panko_{{ enable_panko | bool }}
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
@@ -707,6 +708,20 @@
         tags: ovs-dpdk,
         when: "(enable_openvswitch | bool) and (enable_ovs_dpdk | bool)"}
 
+- name: Apply role ovn
+  gather_facts: false
+  hosts:
+    - ovn-controller
+    - ovn-nb-db
+    - ovn-northd
+    - ovn-sb-db
+    - '&enable_ovn_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: ovn,
+        tags: ovn,
+        when: enable_ovn | bool }
+
 - name: Apply role nova-hyperv
   gather_facts: false
   hosts:
@@ -728,6 +743,7 @@
     - neutron-l3-agent
     - ironic-neutron-agent
     - neutron-metadata-agent
+    - neutron-ovn-metadata-agent
     - neutron-metering-agent
     - compute
     - manila-share

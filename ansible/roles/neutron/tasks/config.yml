@@ -57,6 +57,7 @@
       - "neutron-l3-agent"
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
+      - "neutron-ovn-metadata-agent"
       - "neutron-metering-agent"
       - "neutron-openvswitch-agent"
       - "neutron-openvswitch-agent-xenapi"
@@ -297,6 +298,23 @@
   when:
     - neutron_metadata_agent.enabled | bool
     - neutron_metadata_agent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over neutron_ovn_metadata_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-ovn-metadata-agent"
+    neutron_ovn_metadata_agent: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/neutron_ovn_metadata_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/neutron_ovn_metadata_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/neutron_ovn_metadata_agent.ini"
+    mode: "0660"
+  when:
+    - neutron_ovn_metadata_agent.enabled | bool
+    - neutron_ovn_metadata_agent.host_in_groups | bool
   notify:
     - "Restart {{ service_name }} container"
 
