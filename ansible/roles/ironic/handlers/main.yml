@@ -35,8 +35,11 @@
 # TODO(mgoddard): remove this task when
 # https://storyboard.openstack.org/#!/story/2006393 has been fixed.
 - name: Wait for ironic-api to be accessible
-  uri:
-    url: "{{ ironic_internal_endpoint }}"
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ ironic_internal_endpoint }}"
   register: result
   until: result is success
   retries: 12

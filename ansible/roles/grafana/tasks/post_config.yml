@@ -1,8 +1,11 @@
 ---
 - name: Wait for grafana application ready
-  uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/login"
-    status_code: 200
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/login"
+      status_code: 200
   register: result
   until: result.get('status') == 200
   retries: 30
@@ -10,15 +13,18 @@
   run_once: true
 
 - name: Enable grafana datasources
-  uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/datasources"
-    method: POST
-    user: "{{ grafana_admin_username }}"
-    password: "{{ grafana_admin_password }}"
-    body: "{{ item.value.data | to_json }}"
-    body_format: json
-    force_basic_auth: yes
-    status_code: 200, 409
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/datasources"
+      method: POST
+      user: "{{ grafana_admin_username }}"
+      password: "{{ grafana_admin_password }}"
+      body: "{{ item.value.data | to_json }}"
+      body_format: json
+      force_basic_auth: yes
+      status_code: 200, 409
   register: response
   run_once: True
   changed_when: response.status == 200
@@ -28,13 +34,16 @@
   when: item.value.enabled | bool
 
 - name: Disable Getting Started panel
-  uri:
-    url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/user/helpflags/1"
-    method: PUT
-    user: "{{ grafana_admin_username }}"
-    password: "{{ grafana_admin_password }}"
-    force_basic_auth: yes
-    status_code: 200
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/user/helpflags/1"
+      method: PUT
+      user: "{{ grafana_admin_username }}"
+      password: "{{ grafana_admin_password }}"
+      force_basic_auth: yes
+      status_code: 200
   register: grafana_response
   changed_when: grafana_response.status == 200
   run_once: true
