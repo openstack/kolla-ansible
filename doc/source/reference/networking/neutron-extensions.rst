@@ -91,3 +91,51 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 .. code-block:: yaml
 
    enable_neutron_trunk: "yes"
+
+Neutron Logging Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Preparation and deployment
+--------------------------
+
+Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
+
+.. code-block:: yaml
+
+   enable_neutron_packet_logging: "yes"
+
+For OVS deployment, you need to override the firewall driver in
+`openvswitch_agent.ini` to:
+
+.. code-block:: ini
+
+   [security_group]
+   firewall_driver = openvswitch
+
+Verification
+------------
+
+Verify that loggable resources are properly registered:
+
+.. code-block:: console
+
+   # openstack network loggable resources list
+   +-----------------+
+   | Supported types |
+   +-----------------+
+   | security_group  |
+   +-----------------+
+
+The output shows security groups logging is now enabled.
+
+You may now create a network logging rule to log all events based on a
+security group object:
+
+.. code-block:: console
+
+   # openstack network log create --resource-type security_group \
+   --description "Collecting all security events" \
+   --event ALL Log_Created
+
+More examples and information can be found at:
+https://docs.openstack.org/neutron/latest/admin/config-logging.html
