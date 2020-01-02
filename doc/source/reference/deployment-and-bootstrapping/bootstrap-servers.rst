@@ -157,7 +157,7 @@ Configuration
 -------------
 
 The ``docker_storage_driver`` variable is optional. If set, it defines the
-`storage (graph) driver
+`storage driver
 <https://docs.docker.com/storage/storagedriver/select-storage-driver/>`__ to
 use for Docker.
 
