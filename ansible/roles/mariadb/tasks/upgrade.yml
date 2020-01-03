@@ -1,2 +1,66 @@
 ---
 - include_tasks: deploy.yml
+
+- name: Run upgrade in MariaDB container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    dimensions: "{{ service.dimensions }}"
+    environment:
+      KOLLA_UPGRADE:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      DB_HOST: "{{ api_interface_address }}"
+      DB_PORT: "{{ mariadb_port }}"
+      DB_ROOT_PASSWORD: "{{ database_password }}"
+    image: "{{ service.image }}"
+    labels:
+      UPGRADE:
+    name: "upgrade_mariadb"
+    restart_policy: no
+    volumes: "{{ service.volumes }}"
+  no_log: true
+
+# NOTE(yoctozepto): due to older (<=10.1) MariaDB releases defaulting to
+# non-dynamic (compact) row format, we have to change tables on upgrade
+# to dynamic to allow for current migrations to pass
+# see also https://bugs.launchpad.net/nova/+bug/1856296 and
+# https://mariadb.com/kb/en/library/troubleshooting-row-size-too-large-errors-with-innodb
+
+- name: Find tables to change row format to DYNAMIC
+  vars:
+    service_name: "mariadb"
+    mariadb_service: "{{ mariadb_services[service_name] }}"
+  become: True
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e "SELECT NAME
+    FROM information_schema.INNODB_SYS_TABLES
+    WHERE ROW_FORMAT IN('Redundant', 'Compact')
+    AND NAME NOT IN('SYS_DATAFILES', 'SYS_FOREIGN', 'SYS_FOREIGN_COLS', 'SYS_TABLESPACES', 'SYS_VIRTUAL', 'SYS_ZIP_DICT', 'SYS_ZIP_DICT_COLS');"
+  changed_when: False
+  register: tables_needing_row_format_change
+  run_once: True
+  no_log: True
+
+- name: Change row format to DYNAMIC for legacy tables
+  vars:
+    service_name: "mariadb"
+    mariadb_service: "{{ mariadb_services[service_name] }}"
+  become: True
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e "{% for table in tables_needing_row_format_change.stdout_lines %}ALTER TABLE {{ table | regex_replace('/', '.') }} ROW_FORMAT=DYNAMIC;{% endfor %}"
+  changed_when: True
+  run_once: True
+  no_log: True
+  when:
+    - tables_needing_row_format_change.stdout != ''

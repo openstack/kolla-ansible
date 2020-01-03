@@ -1,17 +1,5 @@
 ---
-- name: Cleaning up temp file on localhost
-  local_action: file path=/tmp/kolla_mariadb_cluster state=absent
-  changed_when: False
-  check_mode: no
-  run_once: True
-
-- name: Creating temp file on localhost
-  local_action: copy content='' dest=/tmp/kolla_mariadb_cluster mode=0644
-  changed_when: False
-  check_mode: no
-  run_once: True
-
-- name: Creating mariadb volume
+- name: Create MariaDB volume
   become: true
   kolla_docker:
     action: "create_volume"
@@ -19,18 +7,69 @@
     name: "mariadb"
   register: mariadb_volume
 
-- name: Writing hostname of host with existing cluster files to temp file
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_mariadb_cluster mode=0644
-  changed_when: False
-  check_mode: no
-  when: mariadb_volume is not changed
+- name: Divide hosts by their MariaDB volume availability
+  group_by:
+    key: mariadb_had_volume_{{ mariadb_volume is not changed }}
 
-- name: Registering host from temp file
+- name: Establish whether the cluster has already existed
   set_fact:
-    has_cluster: "{{ lookup('file', '/tmp/kolla_mariadb_cluster') | length > 0 }}"
+    mariadb_cluster_exists: "{{ groups.mariadb_had_volume_True is defined }}"
 
-- name: Cleaning up temp file on localhost
-  local_action: file path=/tmp/kolla_mariadb_cluster state=absent
-  changed_when: False
-  check_mode: no
-  run_once: True
+- block:
+    - name: Check MariaDB service port liveness
+      wait_for:
+        host: "{{ api_interface_address }}"
+        port: "{{ mariadb_port }}"
+        connect_timeout: 1
+        timeout: 10
+        search_regex: "MariaDB"
+      register: check_mariadb_port_liveness
+      ignore_errors: yes
+
+    - name: Divide hosts by their MariaDB service port liveness
+      group_by:
+        key: mariadb_port_alive_{{ check_mariadb_port_liveness is success }}
+
+    - name: Fail on existing but stopped cluster
+      fail:
+        msg: MariaDB cluster exists but is stopped. Please start it using kolla-ansible mariadb_recovery
+      when:
+        # NOTE(yoctozepto): we allow single-node cluster to start
+        - groups['mariadb'] | length > 1
+        - mariadb_cluster_exists
+        - groups.mariadb_port_alive_True is not defined
+
+    - block:
+        - name: Check MariaDB service WSREP sync status
+          become: true
+          command: >-
+            docker exec {{ mariadb_service.container_name }}
+            mysql -uroot -p{{ database_password }}
+            --silent --skip-column-names
+            -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
+          changed_when: false
+          register: check_mariadb_sync_status
+          no_log: true
+
+        # NOTE(yoctozepto): this is extracted separately to properly escape
+        # the TAB character which likes to go wrong due to interaction between
+        # Python/Ansible/Jinja2/YAML, the way below works
+        - name: Extract MariaDB service WSREP sync status
+          set_fact:
+            mariadb_sync_status: "{{ check_mariadb_sync_status.stdout.split('\t')[1] }}"
+      when:
+        - groups.mariadb_port_alive_True is defined
+        - inventory_hostname in groups.mariadb_port_alive_True
+
+    - name: Divide hosts by their MariaDB service WSREP sync status
+      group_by:
+        key: mariadb_sync_status_{{ mariadb_sync_status | default('NA') }}
+
+    - name: Fail when MariaDB services are not synced across the whole cluster
+      fail:
+        msg: MariaDB cluster is not synced. Please wait for WSREP sync before proceeding.
+      when:
+        - groups.mariadb_port_alive_True is defined
+        - groups.mariadb_sync_status_Synced is not defined or
+          groups.mariadb_port_alive_True | sort != groups.mariadb_sync_status_Synced | sort
+  when: not mariadb_recover | default(False)
