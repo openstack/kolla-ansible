@@ -1,0 +1,46 @@
+---
+- name: Restart MariaDB container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+
+# NOTE(yoctozepto): We have to loop this to avoid breaking on connection resets
+- name: Wait for MariaDB service port liveness
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port is success
+  retries: 10
+  delay: 6
+
+- name: Wait for MariaDB service to sync WSREP
+  become: true
+  command: >-
+    docker exec {{ mariadb_service.container_name }}
+    mysql -uroot -p{{ database_password }}
+    --silent --skip-column-names
+    -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
+  changed_when: false
+  register: result
+  until: result.stdout == "wsrep_local_state_comment\tSynced"
+  retries: 10
+  delay: 6
+  no_log: true
+  when:
+    # NOTE(yoctozepto): we don't want to wait for new nodes to fully sync
+    # with an existing cluster as this could take time
+    - not mariadb_cluster_exists or
+      (groups.mariadb_port_alive_True is defined and
+      inventory_hostname in groups.mariadb_port_alive_True)
