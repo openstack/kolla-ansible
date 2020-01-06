@@ -98,5 +98,5 @@ put the content in ``/etc/kolla/config/qinling/qinling-engine.conf``.
    cert_file = /etc/qinling/pki/kubernetes/qinling.crt
    key_file = /etc/qinling/pki/kubernetes/qinling.key
 
-``kube_host`` is the the Kubernetes cluster API address, ``https`` protocol
+``kube_host`` is the Kubernetes cluster API address, ``https`` protocol
 has to be defined.
