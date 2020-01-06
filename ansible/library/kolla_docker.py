@@ -500,7 +500,7 @@ class DockerWorker(object):
         current_dimensions = container_info['HostConfig']
         for key1, key2 in dimension_map.items():
             # NOTE(mgoddard): If a resource has been explicitly requested,
-            # check for a match. Otherwise, ensure is is set to the default.
+            # check for a match. Otherwise, ensure it is set to the default.
             if key1 in new_dimensions:
                 if key1 == 'ulimits':
                     if self.compare_ulimits(new_dimensions[key1],

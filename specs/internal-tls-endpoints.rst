@@ -22,7 +22,7 @@ https://blueprints.launchpad.net/kolla-ansible/+spec/add-ssl-internal-network
 This proposal describes implementation of the internal TLS encryption for
 OpenStack services deployed with kolla-ansible, i.e. adding support to make
 OpenStack internal and admin endpoints encrypted, as well as encrypting traffic
-between HAProxy and OpenStack services. Other services that are are out of scope of this
+between HAProxy and OpenStack services. Other services are out of scope of this
 document. Also, more workflows (using company CA, using certificates already
 provisioned on the hosts) are out of the scope, and shall be discussed separately.
 
