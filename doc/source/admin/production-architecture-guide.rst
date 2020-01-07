@@ -104,7 +104,7 @@ the control plane using IPv6 instead of IPv4. Each Kolla Ansible network
 (as represented by interfaces) provides a choice of two address families.
 Both internal and external VIP addresses can be configured using an IPv6
 address as well.
-IPv6 is tested on Debian and Ubuntu.
+IPv6 is tested on all supported platforms.
 
 .. warning::
 
@@ -129,20 +129,12 @@ network. Current listing of networks is available in ``globals.yml`` file.
    While IPv6 support introduced in Train is broad, some services are known
    not to work yet with IPv6 or have some known quirks:
 
-   * CentOS 7 images suffer from IPv6 connectivity issues:
-     https://bugs.launchpad.net/kolla-ansible/+bug/1848444
-
    * Bifrost does not support IPv6:
      https://storyboard.openstack.org/#!/story/2006689
 
    * Docker does not allow IPv6 registry address:
      https://github.com/moby/moby/issues/39033
      - the workaround is to use the hostname
-
-   * RabbitMQ in provided images prefers IPv4 addresses when resolving names:
-     https://bugs.launchpad.net/kolla-ansible/+bug/1848452
-     - the workaround is to ensure that the hostname resolves uniquely
-     to an IPv6 address
 
    * Ironic DHCP server, dnsmasq, is not currently automatically configured
      to offer DHCPv6: https://bugs.launchpad.net/kolla-ansible/+bug/1848454
