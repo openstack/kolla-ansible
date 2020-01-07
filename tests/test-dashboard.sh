@@ -11,7 +11,15 @@ function check_dashboard {
     # page.
     DASHBOARD_URL=${OS_AUTH_URL%:*}
     output_path=$1
-    if ! curl --include --location --fail $DASHBOARD_URL > $output_path; then
+    args=(
+        --include
+        --location
+        --fail
+    )
+    if [[ "$TLS_ENABLED" = "True" ]]; then
+        args+=(--cacert $OS_CACERT)
+    fi
+    if ! curl "${args[@]}" $DASHBOARD_URL > $output_path; then
         return 1
     fi
     if ! grep Login $output_path >/dev/null; then
