@@ -31,7 +31,6 @@ except ImportError:
 
 from ansible import constants
 from ansible.plugins import action
-import six
 
 DOCUMENTATION = '''
 ---
@@ -149,7 +148,7 @@ class ActionModule(action.ActionBase):
 class Utils(object):
     @staticmethod
     def update_nested_conf(conf, update):
-        for k, v in six.iteritems(update):
+        for k, v in update.items():
             if isinstance(v, dict):
                 conf[k] = Utils.update_nested_conf(conf.get(k, {}), v)
             else:

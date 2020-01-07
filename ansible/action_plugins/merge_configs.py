@@ -22,7 +22,7 @@ import tempfile
 
 from ansible import constants
 from ansible.plugins import action
-from six import StringIO
+from io import StringIO
 
 from oslo_config import iniparser
 
@@ -112,7 +112,7 @@ class OverrideConfigParser(iniparser.BaseParser):
                     if index == 0:
                         fp.write('{} = {}\n'.format(key, value))
                     else:
-                        fp.write('{}   {}\n'.format(len(key)*' ', value))
+                        fp.write('{}   {}\n'.format(len(key) * ' ', value))
 
         def write_section(section):
             for key, values in section.items():
