@@ -34,7 +34,7 @@ docker_namespace: "lokolla"
 # docker does not support referencing registry via an IPv6 address
 # see: https://github.com/moby/moby/issues/39033
 docker_registry: "primary:4000"
-openstack_release: "{{ build_image_tag }}"
+openstack_tag: "{{ build_image_tag }}"
 {% else %}
 # use docker hub images
 docker_namespace: "kolla"
@@ -45,9 +45,7 @@ docker_namespace: "kolla"
 # of docker systemd command only once
 docker_custom_option: "--insecure-registry primary:4000"
 {% endif %}
-{% if not is_previous_release %}
-openstack_release: "{{ zuul.branch | basename }}"
-{% else %}
+{% if is_previous_release %}
 openstack_release: "{{ previous_release }}"
 {% endif %}
 {% endif %}
