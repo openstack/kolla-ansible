@@ -5,7 +5,7 @@
     name: "{{ item.name }}"
     action: "get_container_state"
   register: ceph_mon_container_state
-  failed_when: ceph_mon_container_state.Running == false
+  failed_when: not ceph_mon_container_state.Running
   when: inventory_hostname in groups[item.group]
   with_items:
     - { name: ceph_mon, group: ceph-mon }
@@ -39,7 +39,7 @@
     name: "ceph_osd_{{ item.stdout }}"
     action: "get_container_state"
   register: ceph_osd_container_state
-  failed_when: ceph_osd_container_state.Running == false
+  failed_when: not ceph_osd_container_state.Running
   when: inventory_hostname in groups['ceph-osd']
   with_items: "{{ osd_ids.results|default({}) }}"
 
@@ -49,7 +49,7 @@
     name: "{{ item.name }}"
     action: "get_container_state"
   register: ceph_rgw_container_state
-  failed_when: ceph_rgw_container_state.Running == false
+  failed_when: not ceph_rgw_container_state.Running
   when:
     - enable_ceph_rgw | bool
     - inventory_hostname in groups[item.group]
