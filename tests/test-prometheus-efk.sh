@@ -8,8 +8,8 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function check_kibana {
-    # Query kibana, and check that the returned page looks like a kibana page.
-    KIBANA_URL=${OS_AUTH_URL%:*}:5601
+    # Perform and validate a basic status page check
+    KIBANA_URL=${OS_AUTH_URL%:*}:5601/api/status
     output_path=$1
     kibana_password=$(awk '$1 == "kibana_password:" { print $2 }' /etc/kolla/passwords.yml)
     args=(
@@ -25,7 +25,25 @@ function check_kibana {
     if ! curl "${args[@]}" $KIBANA_URL > $output_path; then
         return 1
     fi
-    if ! grep '<title>Kibana</title>' $output_path >/dev/null; then
+    if ! grep 'Looking good' $output_path >/dev/null; then
+        return 1
+    fi
+}
+
+function check_elasticsearch {
+    # Verify that we see a healthy index created due to Fluentd forwarding logs
+    ELASTICSEARCH_URL=${OS_AUTH_URL%:*}:9200/_cluster/health
+    output_path=$1
+    args=(
+        --include
+        --location
+        --fail
+    )
+    if ! curl "${args[@]}" $ELASTICSEARCH_URL > $output_path; then
+        return 1
+    fi
+    # NOTE(mgoddard): Status is yellow because no indices have been created.
+    if ! grep '"status":"yellow"' $output_path >/dev/null; then
         return 1
     fi
 }
@@ -75,7 +93,6 @@ function check_prometheus {
 }
 
 function test_kibana {
-    # TODO(mgoddard): Query elasticsearch for logs.
     echo "TESTING: Kibana"
     output_path=$(mktemp)
     attempt=1
@@ -90,6 +107,23 @@ function test_kibana {
         sleep 10
     done
     echo "SUCCESS: Kibana"
+}
+
+function test_elasticsearch {
+    echo "TESTING: Elasticsearch"
+    output_path=$(mktemp)
+    attempt=1
+    while ! check_elasticsearch $output_path; do
+        echo "Elasticsearch not accessible yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 12 ]]; then
+            echo "FAILED: Elasticsearch did not become accessible. Response:"
+            cat $output_path
+            return 1
+        fi
+        sleep 10
+    done
+    echo "SUCCESS: Elasticsearch"
 }
 
 function test_grafana {
@@ -131,6 +165,7 @@ function test_prometheus_efk_logged {
     . /etc/kolla/admin-openrc.sh
 
     test_kibana
+    test_elasticsearch
     test_grafana
     test_prometheus
 }
