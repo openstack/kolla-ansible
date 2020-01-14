@@ -1,7 +1,7 @@
 ---
 
-# Update policy file name
-- set_fact:
+- name: Update policy file name
+  set_fact:
     supported_policy_files: "{{ supported_policy_format_list | map('regex_replace', '(.+)', '{{ project_name }}_\\1') | list }}"
 
 - name: Check if policies shall be overwritten
@@ -18,7 +18,8 @@
   loop_control:
     loop_var: fullpath
 
-- set_fact:
+- name: Update custom policy file name
+  set_fact:
     custom_policy: "{{ custom_policy }} + [ '{{ overwritten_files.results.0.stat.path }}' ]"
   when:
     - overwritten_files.results
