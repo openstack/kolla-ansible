@@ -9,7 +9,10 @@
     - kolla_action != "config"
 
 - name: Create qdrouterd sasl user
-  shell: echo {{ qdrouterd_password }} | docker exec -u root -i qdrouterd saslpasswd2 -c -p -f /var/lib/qdrouterd/qdrouterd.sasldb -u AMQP {{ qdrouterd_user }}
+  shell: >
+    set -o pipefail && \
+    echo {{ qdrouterd_password }} | \
+    docker exec -u root -i qdrouterd saslpasswd2 -c -p -f /var/lib/qdrouterd/qdrouterd.sasldb -u AMQP {{ qdrouterd_user }}
   run_once: true
   changed_when: true
   when:
