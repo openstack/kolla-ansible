@@ -25,7 +25,8 @@
   set_fact:
     osds_cache_bootstrap: "{{ (osd_cache_lookup.stdout.split('localhost | SUCCESS => ')[1]|from_json).disks|from_json }}"
 
-- pause:
+- name: Prompting before wiping existing partitions
+  pause:
     prompt: |
      WARNING: It seems {{ item.device }} is marked to be wiped and partitioned for Ceph data and
               a co-located journal, but appears to contain other existing partitions (>1).
@@ -86,7 +87,8 @@
       - "kolla_logs:/var/log/kolla/"
   with_indexed_items: "{{ osds_bootstrap|default([]) }}"
 
-- pause:
+- name: Prompting before wiping existing partitions
+  pause:
     prompt: |
      WARNING: It seems {{ item.device }} is marked to be wiped and partitioned for Ceph data and
               a co-located journal, but appears to contain other existing partitions (>1).

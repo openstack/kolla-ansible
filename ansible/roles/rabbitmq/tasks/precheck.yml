@@ -59,7 +59,9 @@
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
 
-- fail: msg="Hostname has to resolve to IP address of api_interface"
+- name: Check if rabbit hostname resolves to IP address of api_interface
+  fail:
+    msg: "Hostname has to resolve to IP address of api_interface"
   with_items: "{{ rabbitmq_hostnames.results }}"
   when:
     - "item.stdout.find('api' | kolla_address(item['item'])) == -1"
@@ -118,7 +120,9 @@
   when:
     - enable_outward_rabbitmq | bool
 
-- fail: msg="Hostname has to resolve to IP address of api_interface"
+- name: Check if rabbit hostname resolves to IP address of api_interface
+  fail:
+    msg: "Hostname has to resolve to IP address of api_interface"
   with_items: "{{ outward_rabbitmq_hostnames.results }}"
   when:
     - enable_outward_rabbitmq | bool

@@ -25,7 +25,9 @@
   register: qdrouterd_hostnames
   with_items: "{{ groups['qdrouterd'] }}"
 
-- fail: msg="Hostname has to resolve to IP address of api_interface"
+- name: Check if hostname resolves to IP address of api_interface
+  fail:
+    msg: "Hostname has to resolve to IP address of api_interface"
   with_items: "{{ qdrouterd_hostnames.results }}"
   when:
     - "item.stdout.find('api' | kolla_address(item['item'])) == -1"
