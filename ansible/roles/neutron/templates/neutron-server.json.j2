@@ -19,27 +19,13 @@
             "owner": "neutron",
             "perm": "0600"
         },
-        {
-            "source": "{{ container_config_directory }}/ml2_conf.ini",
-            "dest": "/etc/neutron/plugins/ml2/ml2_conf.ini",
+        {% if neutron_policy_file is defined %}{
+            "source": "{{ container_config_directory }}/{{ neutron_policy_file }}",
+            "dest": "/etc/neutron/{{ neutron_policy_file }}",
             "owner": "neutron",
             "perm": "0600"
-        },
-{% if check_extra_ml2_plugins is defined and check_extra_ml2_plugins.matched > 0 %}{% for plugin in check_extra_ml2_plugins.files %}
-        {
-            "source": "{{ container_config_directory }}/{{ plugin.path | basename }}",
-            "dest": "/etc/neutron/plugins/ml2/{{ plugin.path | basename }}",
-            "owner": "neutron",
-            "perm": "0600"
-        },
-{% endfor %}{% endif %}
-        {
-            "source": "{{ container_config_directory }}/policy.json",
-            "dest": "/etc/neutron/policy.json",
-            "owner": "neutron",
-            "perm": "0600",
-            "optional": true
-        }{% if neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] -%},
+        },{% endif %}
+{% if neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] -%}
         {
             "source": "{{ container_config_directory }}/nsx.ini",
             "dest": "/etc/neutron/plugins/vmware/nsx.ini",
@@ -47,6 +33,19 @@
             "optional": {{ (neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs']) | string | lower }},
             "perm": "0600"
         }{% endif %}
+{% if check_extra_ml2_plugins is defined and check_extra_ml2_plugins.matched > 0 %}{% for plugin in check_extra_ml2_plugins.files %}
+        {
+            "source": "{{ container_config_directory }}/{{ plugin.path | basename }}",
+            "dest": "/etc/neutron/plugins/ml2/{{ plugin.path | basename }}",
+            "owner": "neutron",
+            "perm": "0600"
+        },{% endfor %}{% endif %}
+        {
+            "source": "{{ container_config_directory }}/ml2_conf.ini",
+            "dest": "/etc/neutron/plugins/ml2/ml2_conf.ini",
+            "owner": "neutron",
+            "perm": "0600"
+        }
     ],
     "permissions": [
         {

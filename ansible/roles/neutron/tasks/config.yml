@@ -34,6 +34,39 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Check if policies shall be overwritten
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
+  run_once: True
+  register: neutron_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/neutron/"
+      skip: true
+
+- name: Set neutron policy file
+  set_fact:
+    neutron_policy_file: "{{ neutron_policy.results.0.stat.path | basename }}"
+    neutron_policy_file_path: "{{ neutron_policy.results.0.stat.path }}"
+  when:
+    - neutron_policy.results
+
+- name: Copying over existing policy file
+  template:
+    src: "{{ neutron_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ neutron_policy_file }}"
+    mode: "0660"
+  become: true
+  when:
+    - neutron_policy_file is defined
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ neutron_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
 - name: Copying over config.json files for services
   become: true
   template:
@@ -351,13 +384,6 @@
   notify:
     - "Restart {{ service_name }} container"
 
-- name: Check if policies shall be overwritten
-  stat:
-    path: "{{ node_custom_config }}/neutron/policy.json"
-  delegate_to: localhost
-  run_once: True
-  register: neutron_policy
-
 - name: Copying over nsx.ini
   vars:
     service_name: "neutron-server"
@@ -375,33 +401,6 @@
     - neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs']
   notify:
     - "Restart {{ service_name }} container"
-
-- name: Copying over existing policy.json
-  become: true
-  vars:
-    service_name: "{{ item.key }}"
-    services_need_policy_json:
-      - "neutron-dhcp-agent"
-      - "neutron-l3-agent"
-      - "neutron-linuxbridge-agent"
-      - "neutron-metadata-agent"
-      - "neutron-metering-agent"
-      - "neutron-openvswitch-agent"
-      - "neutron-openvswitch-agent-xenapi"
-      - "neutron-server"
-      - "neutron-bgp-dragent"
-      - "neutron-sriov-agent"
-  template:
-    src: "{{ node_custom_config }}/neutron/policy.json"
-    dest: "{{ node_config_directory }}/{{ service_name }}/policy.json"
-    mode: "0660"
-  when:
-    - neutron_policy.stat.exists
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copy neutron-l3-agent-wrapper script
   become: true
