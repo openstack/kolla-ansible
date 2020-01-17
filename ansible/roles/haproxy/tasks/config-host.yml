@@ -1,0 +1,20 @@
+---
+- name: Setting sysctl values
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+  become: true
+  with_items:
+    - { name: "net.ipv4.ip_nonlocal_bind", value: 1}
+    - { name: "net.ipv6.ip_nonlocal_bind", value: 1}
+    - { name: "net.unix.max_dgram_qlen", value: 128}
+  when:
+    - set_sysctl | bool
+
+- name: Load and persist keepalived module
+  import_role:
+    name: module-load
+  vars:
+    modules:
+      - {'name': ip_vs }
