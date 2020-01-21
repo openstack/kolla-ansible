@@ -2,7 +2,7 @@
 - name: Cheching for mariadb cluster
   fail:
     msg: "MariaDB cluster was not found. Is your inventory correct?"
-  when: not has_cluster | bool
+  when: not mariadb_cluster_exists
 
 - name: Cleaning up temp file on mariadb hosts
   file:
@@ -99,8 +99,6 @@
 - name: Store bootstrap and master hostnames into facts
   set_fact:
     bootstrap_host: "{{ mariadb_recover_inventory_name }}"
-    master_host: "{{ mariadb_recover_inventory_name }}"
-  changed_when: true
 
 - name: Copying grastate.dat file from MariaDB container in bootstrap host
   become: true

@@ -1,13 +1,9 @@
 ---
-- name: Set a fact about the master host
-  set_fact:
-    master_host: "{{ groups['mariadb'][0] }}"
-
 - include_tasks: lookup_cluster.yml
 
 - include_tasks: bootstrap_cluster.yml
   when:
-    - not has_cluster | bool
+    - not mariadb_cluster_exists
     - inventory_hostname == groups['mariadb'][0]
 
 - include_tasks: recover_cluster.yml
