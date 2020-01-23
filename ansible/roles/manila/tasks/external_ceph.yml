@@ -12,12 +12,10 @@
 
 - name: Copy over Ceph keyring files for manila
   copy:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/manila-share/"
+    src: "{{ node_custom_config }}/manila/{{ ceph_manila_keyring }}"
+    dest: "{{ node_config_directory }}/manila-share/{{ ceph_manila_keyring }}"
     mode: "0600"
   become: true
-  with_fileglob:
-    - "{{ node_custom_config }}/manila/ceph.client*"
   when:
     - inventory_hostname in groups['manila-share']
   notify:
