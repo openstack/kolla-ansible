@@ -7,7 +7,6 @@
     ceilometer_conf: "{{ ceilometer_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
     ceilometer_pipeline: "{{ ceilometer_pipelines.results|selectattr('item.key', 'equalto', service_name)|first }}"
     policy_overwriting: "{{ ceilometer_policy_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
-    polling_overwriting: "{{ ceilometer_polling_overwriting.results|selectattr('item.key', 'equalto', service_name)|first }}"
     ceilometer_notification_container: "{{ check_ceilometer_containers.results|selectattr('item.key', 'equalto', service_name)|first }}"
     panko_conf: "{{ panko_confs.results|selectattr('item.key', 'equalto', service_name)|first }}"
   become: true
@@ -56,6 +55,7 @@
       or ceilometer_conf.changed | bool
       or ceilometer_pipeline.changed | bool
       or policy_overwriting.changed | bool
+      or polling_overwriting.changed | bool
       or ceilometer_central_container.changed | bool
 
 - name: Restart ceilometer-compute container
@@ -85,5 +85,6 @@
       or ceilometer_conf.changed | bool
       or ceilometer_pipeline.changed | bool
       or policy_overwriting.changed | bool
+      or polling_overwriting.changed | bool
       or vcenter_ca_file.changed | bool
       or ceilometer_compute_container.changed | bool
