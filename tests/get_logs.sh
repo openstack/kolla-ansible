@@ -109,7 +109,7 @@ copy_logs() {
     fi
 
     for container in $(docker ps -a --format "{{.Names}}"); do
-        docker logs --tail all ${container} &> ${LOG_DIR}/docker_logs/${container}.txt
+        docker logs --timestamps --tail all ${container} &> ${LOG_DIR}/docker_logs/${container}.txt
     done
 
     # Rename files to .txt; this is so that when displayed via
