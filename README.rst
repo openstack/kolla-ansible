@@ -99,7 +99,7 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 - `Etcd <https://etcd.io/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
   for unified logging layer.
-- `Gnocchi <https://gnocchi.xyz/>`__ A time-series storage database.
+- `Gnocchi <https://gnocchi.osci.io/>`__ A time-series storage database.
 - `HAProxy <https://www.haproxy.org/>`__ and
   `Keepalived <https://www.keepalived.org/>`__ for high availability of services
   and their endpoints.
