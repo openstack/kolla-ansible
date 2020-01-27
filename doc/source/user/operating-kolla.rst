@@ -191,6 +191,9 @@ tests.
 ``kolla-ansible -i INVENTORY deploy-containers`` is used to check and if
 necessary update containers, without generating configuration.
 
+``kolla-ansible -i INVENTORY prune-images`` is used to prune orphaned Docker
+images on hosts.
+
 .. note::
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
