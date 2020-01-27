@@ -23,6 +23,7 @@
       - ^specs/
       - ^kolla_ansible/tests/
     vars:
+      previous_release: train
       scenario: core
       is_upgrade: no
       api_network_prefix: "192.0.2."
@@ -34,11 +35,18 @@
       - zuul: zuul/zuul-jobs
 
 - job:
-    name: kolla-ansible-upgrade-base
+    name: kolla-ansible-ceph-base
     parent: kolla-ansible-base
+    voting: false
     vars:
-      previous_release: train
-      is_upgrade: yes
+      scenario: ceph
+    host-vars:
+      primary:
+        ceph_osd_storetype: filestore
+      secondary1:
+        ceph_osd_storetype: bluestore
+      secondary2:
+        ceph_osd_storetype: bluestore
 
 - job:
     name: kolla-ansible-ipv6-base
@@ -53,6 +61,10 @@
 - job:
     name: kolla-ansible-bifrost-base
     parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/bifrost/
+      - ^tests/test-bifrost.sh
     vars:
       scenario: bifrost
       install_type: source
@@ -98,9 +110,63 @@
     name: kolla-ansible-ceph-ansible-base
     parent: kolla-ansible-base
     voting: false
+    files:
+      - ^ansible/roles/(cinder|glance|gnocchi|nova-cell)/
+      - ^tests/deploy-ceph-ansible.sh
     vars:
       scenario: ceph-ansible
       ceph_osd_storetype: ceph-lvm
     required-projects:
       - name: github.com/ceph/ceph-ansible
         override-checkout: v4.0.7
+
+- job:
+    name: kolla-ansible-cinder-lvm-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/(cinder|iscsi)/
+      - ^tests/setup_disks.sh
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: cinder-lvm
+
+- job:
+    name: kolla-ansible-masakari-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/masakari/
+      - ^tests/test-masakari.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: masakari
+
+- job:
+    name: kolla-ansible-mariadb-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/mariadb/
+      - ^tests/test-mariadb.sh
+    vars:
+      scenario: mariadb
+
+- job:
+    name: kolla-ansible-scenario-nfv-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/(barbican|heat|mistral|redis|tacker)/
+      - ^tests/test-scenario-nfv.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: scenario_nfv
+
+- job:
+    name: kolla-ansible-cells-base
+    parent: kolla-ansible-base
+    voting: false
+    vars:
+      scenario: cells
