@@ -39,6 +39,10 @@ function setup_config {
         GATE_IMAGES+=",ceph,cinder"
     fi
 
+    if [[ $SCENARIO == "ceph-ansible" ]]; then
+        GATE_IMAGES+=",cinder"
+    fi
+
     if [[ $SCENARIO == "cinder-lvm" ]]; then
         GATE_IMAGES+=",cinder,iscsid"
         if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then

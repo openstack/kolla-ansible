@@ -78,13 +78,20 @@ copy_logs() {
     (docker info && docker images && docker ps -a && docker network ls && docker inspect $(docker ps -aq)) > ${LOG_DIR}/system_logs/docker-info.txt
 
     # ceph related logs
-    if [[ $(docker ps --filter name=ceph_mon --format "{{.Names}}") ]]; then
-        docker exec ceph_mon ceph --connect-timeout 5 -s > ${LOG_DIR}/kolla/ceph/ceph_s.txt
+    # NOTE(mnasiadka): regex to match both ceph_mon and ceph-mon-$hostname
+    for container in $(docker ps --filter name=ceph.\?mon --format "{{.Names}}"); do
+        if [ $container == "ceph_mon" ]; then
+            CEPH_LOG_DIR="${LOG_DIR}/kolla/ceph"
+        else
+            CEPH_LOG_DIR="${LOG_DIR}/ceph"
+            mkdir -p ${CEPH_LOG_DIR}
+        fi
+        docker exec ${container} ceph --connect-timeout 5 -s > ${CEPH_LOG_DIR}/ceph_s.txt
         # NOTE(yoctozepto): osd df removed on purpose to avoid CI POST_FAILURE due to a possible hang:
         # as of ceph mimic it hangs when MON is operational but MGR not
         # its usefulness is mediocre and having POST_FAILUREs is bad
-        docker exec ceph_mon ceph --connect-timeout 5 osd tree > ${LOG_DIR}/kolla/ceph/ceph_osd_tree.txt
-    fi
+        docker exec ${container} ceph --connect-timeout 5 osd tree > ${CEPH_LOG_DIR}/ceph_osd_tree.txt
+    done
 
     # bifrost related logs
     if [[ $(docker ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then

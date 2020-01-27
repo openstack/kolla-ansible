@@ -54,6 +54,13 @@ elif [ $1 = 'bluestore' ]; then
     LOOP=$(losetup -f)
     losetup $LOOP /opt/data/kolla/ceph-osd0-d.img
     parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_OSD0_D 1 -1
+elif [ $1 = 'ceph-lvm' ]; then
+    free_device=$(losetup -f)
+    fallocate -l 10G /var/lib/ceph-osd1.img
+    losetup $free_device /var/lib/ceph-osd1.img
+    pvcreate $free_device
+    vgcreate cephvg $free_device
+    lvcreate -l 100%FREE -n cephlv cephvg
 else
     echo "Unknown type" >&2
     exit 1
