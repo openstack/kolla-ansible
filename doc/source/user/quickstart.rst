@@ -388,7 +388,7 @@ There are a few options that are required to deploy Kolla-Ansible:
 
   .. note::
 
-     This only affects OpenStack services. Infrastructure services like Ceph are
+     This only affects OpenStack services. Infrastructure services are
      always "binary".
 
   .. note::

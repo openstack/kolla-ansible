@@ -21,7 +21,7 @@
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'ceph-ansible', 'zun', 'cells', 'swift'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' else '3' }}"
@@ -34,10 +34,10 @@
 
     - name: Prepare disks for a storage service
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ['ceph', 'ceph-ansible', 'zun', 'swift']
+      when: scenario in ['ceph-ansible', 'zun', 'swift']
       become: true
       vars:
-        disk_type: "{{ ceph_storetype if scenario in ['ceph', 'ceph-ansible'] else scenario }}"
+        disk_type: "{{ ceph_storetype if scenario in ['ceph-ansible'] else scenario }}"
         ceph_storetype: "{{ hostvars[inventory_hostname].get('ceph_osd_storetype') }}"
 
 - hosts: primary
@@ -124,10 +124,6 @@
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
           when: "{{ openstack_core_enabled }}"
-        # ceph.conf
-        - src: "tests/templates/ceph-overrides.j2"
-          dest: /etc/kolla/config/ceph.conf
-          when: "{{ scenario == 'ceph' }}"
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
@@ -471,10 +467,6 @@
             # nova-compute.conf
             - src: "tests/templates/nova-compute-overrides.j2"
               dest: /etc/kolla/config/nova/nova-compute.conf
-            # ceph.conf
-            - src: "tests/templates/ceph-overrides.j2"
-              dest: /etc/kolla/config/ceph.conf
-              when: "{{ scenario == 'ceph' }}"
           when: item.when | default(true)
 
         # TODO(mgoddard): Remove this block when previous_release is ussuri.

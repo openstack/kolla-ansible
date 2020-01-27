@@ -17,7 +17,7 @@
 
 [storage]
 {% for host in hostvars %}
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }} ceph_osd_store_type={{ 'filestore' if host == 'primary' else 'bluestore' }}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
 
 [monitoring]
@@ -156,8 +156,11 @@ control
 [murano:children]
 control
 
+{# TODO(mnasiadka): Remove in Victoria #}
+{% if scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' %}
 [ceph:children]
 control
+{% endif %}
 
 [ironic:children]
 control
@@ -321,6 +324,8 @@ neutron
 [ironic-neutron-agent:children]
 neutron
 
+{# TODO(mnasiadka): Remove in Victoria #}
+{% if scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' %}
 # Ceph
 [ceph-mds:children]
 ceph
@@ -339,6 +344,7 @@ ceph
 
 [ceph-osd:children]
 storage
+{% endif %}
 
 # Cinder
 [cinder-api:children]

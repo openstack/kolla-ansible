@@ -36,15 +36,9 @@
     - kolla_copy_ca_into_containers | bool
   with_dict: "{{ nova_cell_services }}"
 
-- include_tasks: ceph.yml
-  when:
-    - enable_ceph | bool and nova_backend == "rbd"
-    - inventory_hostname in groups[nova_cell_conductor_group] or
-        inventory_hostname in groups[nova_cell_compute_group]
-
 - include_tasks: external_ceph.yml
   when:
-    - not enable_ceph | bool and (nova_backend == "rbd" or cinder_backend_ceph | bool)
+    - (nova_backend == "rbd" or cinder_backend_ceph | bool)
     - inventory_hostname in groups[nova_cell_compute_group]
 
 - name: Check if policies shall be overwritten

@@ -22,17 +22,8 @@ creating the pool and keyrings with appropriate permissions for each service.
 Enabling External Ceph
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Using external Ceph with Kolla means not to deploy Ceph via Kolla. Therefore,
-disable Ceph deployment in ``/etc/kolla/globals.yml``
-
-.. code-block:: yaml
-
-   enable_ceph: "no"
-
-There are flags indicating individual services to use ceph or not which default
-to the value of ``enable_ceph``. Those flags now need to be activated in order
-to activate external Ceph integration. This can be done individually per
-service in ``/etc/kolla/globals.yml``:
+To activate external Ceph integration you need to enable Ceph backend.
+This can be done individually per service in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
@@ -41,9 +32,6 @@ service in ``/etc/kolla/globals.yml``:
    nova_backend_ceph: "yes"
    gnocchi_backend_storage: "ceph"
    enable_manila_backend_cephfs_native: "yes"
-
-The combination of ``enable_ceph: "no"`` and ``<service>_backend_ceph: "yes"``
-triggers the activation of external ceph mechanism in Kolla.
 
 Edit the Inventory File
 ~~~~~~~~~~~~~~~~~~~~~~~

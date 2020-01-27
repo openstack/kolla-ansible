@@ -8,7 +8,6 @@ supported by kolla.
 .. toctree::
    :maxdepth: 1
 
-   ceph-guide
    external-ceph-guide
    cinder-guide
    cinder-guide-hnas

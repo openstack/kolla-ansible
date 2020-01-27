@@ -35,12 +35,11 @@ services are properly working.
 Preparation and Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Cinder and Ceph are required, enable it in ``/etc/kolla/globals.yml``:
+Cinder is required, enable it in ``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
    enable_cinder: "yes"
-   enable_ceph: "yes"
 
 Enable Manila and generic back end in ``/etc/kolla/globals.yml``:
 

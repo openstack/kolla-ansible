@@ -12,17 +12,8 @@
     - item.value.enabled | bool
   with_dict: "{{ manila_services }}"
 
-- include_tasks: ceph.yml
-  when:
-    - enable_ceph | bool
-    - enable_ceph_mds | bool
-    - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
-    - inventory_hostname in groups['manila-share']
-
 - include_tasks: external_ceph.yml
   when:
-    - not enable_ceph| bool
-    - not enable_ceph_mds| bool
     - (enable_manila_backend_cephfs_native | bool) or (enable_manila_backend_cephfs_nfs | bool)
     - inventory_hostname in groups['manila-share']
 

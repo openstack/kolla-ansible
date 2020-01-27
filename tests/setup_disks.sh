@@ -22,38 +22,6 @@ elif [ $1 = 'swift' ]; then
     parted $free_device -s -- mklabel gpt mkpart KOLLA_SWIFT_DATA 1 -1
     free_partition=${free_device}p1
     mkfs.xfs -L d0 $free_partition
-elif [ $1 = 'filestore' ]; then
-    #setup devices for Kolla Ceph filestore OSD
-    dd if=/dev/zero of=/opt/data/kolla/ceph-osd1.img bs=5M count=1000
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-osd1.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_OSD1 1 -1
-
-    dd if=/dev/zero of=/opt/data/kolla/ceph-journal1.img bs=5M count=512
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-journal1.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_OSD1_J 1 -1
-elif [ $1 = 'bluestore' ]; then
-    # Setup devices for Kolla Ceph bluestore OSD
-    dd if=/dev/zero of=/opt/data/kolla/ceph-osd0.img bs=5M count=100
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-osd0.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_OSD0 1 -1
-
-    dd if=/dev/zero of=/opt/data/kolla/ceph-osd0-b.img bs=5M count=1000
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-osd0-b.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_OSD0_B 1 -1
-
-    dd if=/dev/zero of=/opt/data/kolla/ceph-osd0-w.img bs=5M count=200
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-osd0-w.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_OSD0_W 1 -1
-
-    dd if=/dev/zero of=/opt/data/kolla/ceph-osd0-d.img bs=5M count=200
-    LOOP=$(losetup -f)
-    losetup $LOOP /opt/data/kolla/ceph-osd0-d.img
-    parted $LOOP -s -- mklabel gpt mkpart KOLLA_CEPH_OSD_BOOTSTRAP_BS_OSD0_D 1 -1
 elif [ $1 = 'ceph-lvm' ]; then
     free_device=$(losetup -f)
     fallocate -l 10G /var/lib/ceph-osd1.img

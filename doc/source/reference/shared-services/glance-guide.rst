@@ -39,10 +39,10 @@ Usage of glance file backend under shared filesystem:
 Ceph backend
 ~~~~~~~~~~~~
 
-To make use of ``ceph`` backend in glance, simply enable ceph or external ceph.
+To make use of ``ceph`` backend in glance, simply enable external ceph.
 By default will enable backend ceph automatically.
-Please refer to :doc:`../storage/ceph-guide`
-or :doc:`../storage/external-ceph-guide` on how to configure this backend.
+Please refer to :doc:`../storage/external-ceph-guide`
+on how to configure this backend.
 
 To enable the ceph backend manually:
 

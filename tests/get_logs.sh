@@ -77,20 +77,14 @@ copy_logs() {
     # docker related information
     (docker info && docker images && docker ps -a && docker network ls && docker inspect $(docker ps -aq)) > ${LOG_DIR}/system_logs/docker-info.txt
 
-    # ceph related logs
-    # NOTE(mnasiadka): regex to match both ceph_mon and ceph-mon-$hostname
-    for container in $(docker ps --filter name=ceph.\?mon --format "{{.Names}}"); do
-        if [ $container == "ceph_mon" ]; then
-            CEPH_LOG_DIR="${LOG_DIR}/kolla/ceph"
-        else
-            CEPH_LOG_DIR="${LOG_DIR}/ceph"
-            mkdir -p ${CEPH_LOG_DIR}
-        fi
-        docker exec ${container} ceph --connect-timeout 5 -s > ${CEPH_LOG_DIR}/ceph_s.txt
+    # ceph-ansible related logs
+    mkdir -p ${LOG_DIR}/ceph
+    for container in $(docker ps --filter name=ceph-mon --format "{{.Names}}"); do
+        docker exec ${container} ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
         # NOTE(yoctozepto): osd df removed on purpose to avoid CI POST_FAILURE due to a possible hang:
         # as of ceph mimic it hangs when MON is operational but MGR not
         # its usefulness is mediocre and having POST_FAILUREs is bad
-        docker exec ${container} ceph --connect-timeout 5 osd tree > ${CEPH_LOG_DIR}/ceph_osd_tree.txt
+        docker exec ${container} ceph --connect-timeout 5 osd tree > ${LOG_DIR}/ceph/ceph_osd_tree.txt
     done
 
     # bifrost related logs

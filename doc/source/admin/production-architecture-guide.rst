@@ -25,7 +25,7 @@ A basic Kolla inventory consists of several types of nodes, known in Ansible as
 * Compute - Compute nodes for compute services. This is where guest VMs
   live.
 
-* Storage - Storage nodes, for cinder-volume, LVM or ceph-osd.
+* Storage - Storage nodes for cinder-volume, LVM or Swift.
 
 * Monitoring - Monitor nodes which host monitoring services.
 
