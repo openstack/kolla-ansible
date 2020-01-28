@@ -30,45 +30,45 @@ function setup_openstack_clients {
 
 function setup_config {
     if [[ $SCENARIO != "bifrost" ]]; then
-        GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon,chrony,heat,placement"
+        GATE_IMAGES="^cron,^fluentd,^glance,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^neutron,^nova-,^openvswitch,^rabbitmq,^horizon,^chrony,^heat,^placement"
     else
         GATE_IMAGES="bifrost"
     fi
 
     if [[ $SCENARIO == "ceph" ]]; then
-        GATE_IMAGES+=",ceph,cinder"
+        GATE_IMAGES+=",^ceph,^cinder"
     fi
 
     if [[ $SCENARIO == "ceph-ansible" ]]; then
-        GATE_IMAGES+=",cinder"
+        GATE_IMAGES+=",^cinder"
     fi
 
     if [[ $SCENARIO == "cinder-lvm" ]]; then
-        GATE_IMAGES+=",cinder,iscsid"
+        GATE_IMAGES+=",^cinder,^iscsid"
         if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
-            GATE_IMAGES+=",tgtd"
+            GATE_IMAGES+=",^tgtd"
         fi
     fi
 
     if [[ $SCENARIO == "zun" ]]; then
-        GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid"
+        GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
         if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
-            GATE_IMAGES+=",tgtd"
+            GATE_IMAGES+=",^tgtd"
         fi
     fi
 
     if [[ $SCENARIO == "scenario_nfv" ]]; then
-        GATE_IMAGES+=",tacker,mistral,redis,barbican"
+        GATE_IMAGES+=",^tacker,^mistral,^redis,^barbican"
     fi
     if [[ $SCENARIO == "ironic" ]]; then
-        GATE_IMAGES+=",dnsmasq,ironic,iscsid"
+        GATE_IMAGES+=",^dnsmasq,^ironic,^iscsid"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
-        GATE_IMAGES+=",masakari"
+        GATE_IMAGES+=",^masakari"
     fi
 
     if [[ $SCENARIO == "mariadb" ]]; then
-        GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
+        GATE_IMAGES="^cron,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
     # NOTE(yoctozepto): we cannot build and push at the same time on debian
