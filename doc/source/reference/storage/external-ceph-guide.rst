@@ -93,11 +93,12 @@ Cinder
 Configuring Cinder for Ceph includes following steps:
 
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
+
    * ``ceph_cinder_keyring`` (default: ``ceph.client.cinder.keyring``)
    * ``ceph_cinder_user`` (default: ``cinder``)
    * ``ceph_cinder_pool_name`` (default: ``volumes``)
    * ``ceph_cinder_backup_keyring``
-   (default: ``ceph.client.cinder-backup.keyring``)
+     (default: ``ceph.client.cinder-backup.keyring``)
    * ``ceph_cinder_backup_user`` (default: ``cinder-backup``)
    * ``ceph_cinder_backup_pool_name`` (default: ``backups``)
 
@@ -110,6 +111,7 @@ Configuring Cinder for Ceph includes following steps:
    will be merged with ``/etc/kolla/config/cinder/ceph.conf``.
 
 #. Copy Ceph keyring files to:
+
    * ``/etc/kolla/config/cinder/cinder-volume/<ceph_cinder_keyring>``
    * ``/etc/kolla/config/cinder/cinder-backup/<ceph_cinder_keyring>``
    * ``/etc/kolla/config/cinder/cinder-backup/<ceph_cinder_backup_keyring>``
