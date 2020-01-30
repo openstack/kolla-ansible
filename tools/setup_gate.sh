@@ -67,6 +67,10 @@ function setup_config {
         GATE_IMAGES+=",^masakari"
     fi
 
+    if [[ $SCENARIO == "swift" ]]; then
+        GATE_IMAGES+=",^swift"
+    fi
+
     if [[ $SCENARIO == "mariadb" ]]; then
         GATE_IMAGES="^cron,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
