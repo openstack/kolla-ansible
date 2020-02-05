@@ -21,7 +21,7 @@
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'ceph-ansible', 'cinder-lvm', 'cells', 'swift'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph', 'ceph-ansible', 'zun', 'cells', 'swift'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' else '3' }}"
@@ -34,7 +34,7 @@
 
     - name: Prepare disks for a storage service
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ['cinder-lvm', 'ceph', 'ceph-ansible', 'zun', 'swift']
+      when: scenario in ['ceph', 'ceph-ansible', 'zun', 'swift']
       become: true
       vars:
         disk_type: "{{ ceph_storetype if scenario in ['ceph', 'ceph-ansible'] else scenario }}"
