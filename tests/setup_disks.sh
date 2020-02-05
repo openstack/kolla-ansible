@@ -7,8 +7,8 @@ set -o errexit
 
 mkdir -p /opt/data/kolla
 
-if [ $1 = 'cinder-lvm' ] || [ $1 = 'zun' ]; then
-    # cinder-volumes volume group
+if [ $1 = 'zun' ]; then
+    # create cinder-volumes volume group for cinder lvm backend
     free_device=$(losetup -f)
     fallocate -l 5G /var/lib/cinder_data.img
     losetup $free_device /var/lib/cinder_data.img

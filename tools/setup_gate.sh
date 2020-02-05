@@ -36,10 +36,6 @@ function setup_config {
         GATE_IMAGES+=",ceph,cinder"
     fi
 
-    if [[ $SCENARIO == "cinder-lvm" ]]; then
-        GATE_IMAGES+=",cinder,iscsid,tgtd"
-    fi
-
     if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid,tgtd"
     fi
