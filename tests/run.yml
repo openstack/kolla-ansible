@@ -94,11 +94,14 @@
         state: directory
       become: true
 
+    # TODO(mnasiadka): remove cinder and glance in Victoria
     - name: Ensure configuration directories exist
       file:
         path: "/etc/kolla/config/{{ item }}"
         state: directory
       loop:
+        - cinder
+        - glance
         - nova
         - bifrost
         - swift
@@ -141,6 +144,22 @@
         - src: "tests/templates/ceph-ansible.j2"
           dest: /etc/kolla/ceph-ansible.yml
           when: "{{ scenario == 'ceph-ansible' }}"
+
+        ### TODO(mnasiadka): Remove following ceph-ansible block in Victoria
+        # external ceph: glance-api.conf on upgrade from Train
+        - src: "tests/templates/ceph-ansible-upgrade/glance-api.conf.j2"
+          dest: /etc/kolla/config/glance/glance-api.conf
+          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
+        # external ceph: cinder-volume.conf on upgrade from Train
+        - src: "tests/templates/ceph-ansible-upgrade/cinder-volume.conf.j2"
+          dest: /etc/kolla/config/cinder/cinder-volume.conf
+          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
+        # external ceph: cinder-backup.conf on upgrade from Train
+        - src: "tests/templates/ceph-ansible-upgrade/cinder-backup.conf.j2"
+          dest: /etc/kolla/config/cinder/cinder-backup.conf
+          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
+      ### TODO(mnasiadka): End of remove block for ceph-ansible in Victoria
+
       when: item.when | default(true)
 
     - block:
@@ -425,6 +444,16 @@
               echo "kolla-ansible checked out to:"
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
+
+        # TODO(mnasiadka): Remove in Victoria
+        - name: Remove not needed external ceph required configs
+          file:
+            name: "{{ item }}"
+            state: absent
+          with_items:
+            - /etc/kolla/config/glance/glance-api.conf
+            - /etc/kolla/config/cinder/cinder-volume.conf
+            - /etc/kolla/config/cinder/cinder-backup.conf
 
         - name: Generate configuration files
           template:
