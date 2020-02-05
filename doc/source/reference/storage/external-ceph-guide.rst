@@ -173,6 +173,11 @@ Configuring Manila for Ceph includes following steps:
    * ``ceph_manila_keyring`` (default: ``ceph.client.manila.keyring``)
    * ``ceph_manila_user`` (default: ``manila``)
 
+   .. note::
+
+      Required Ceph identity caps for manila user are documented in
+      :manila-doc:`CephFS Native driver <admin/cephfs_driver.html#authorizing-the-driver-to-communicate-with-ceph>`.
+
 #. Copy Ceph configuration file to ``/etc/kolla/config/manila/ceph.conf``
 #. Copy Ceph keyring to ``/etc/kolla/config/manila/<ceph_manila_keyring>``
 #. Setup Manila in the usual way
@@ -181,4 +186,4 @@ For more details on the rest of the Manila setup, such as creating the share
 type ``default_share_type``, please see :doc:`Manila in Kolla <manila-guide>`.
 
 For more details on the CephFS Native driver, please see
-:manila-doc:`CephFS driver <admin/cephfs_driver.html>`.
+:manila-doc:`CephFS Native driver <admin/cephfs_driver.html>`.
