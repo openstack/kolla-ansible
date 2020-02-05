@@ -1,0 +1,19 @@
+---
+- name: Waiting for Keystone SSH port to be UP
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ keystone_ssh_port }}"
+    connect_timeout: 1
+  register: check_keystone_ssh_port
+  until: check_keystone_ssh_port is success
+  retries: 10
+  delay: 5
+
+- name: Run key distribution
+  become: true
+  command: docker exec -t keystone_fernet /usr/bin/fernet-push.sh
+  run_once: True
+  delegate_to: >-
+    {% if groups['keystone_fernet_running'] is defined -%}
+    {{ groups['keystone_fernet_running'][0] }}
+    {%- else -%}{{ groups['keystone'][0] }}{%- endif %}
