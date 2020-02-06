@@ -193,6 +193,12 @@ options:
     required: False
     default: False
     type: bool
+  client_timeout:
+    description:
+      - Docker client timeout in seconds
+    required: False
+    default: 120
+    type: int
 author: Sam Yaple
 '''
 
@@ -244,7 +250,8 @@ class DockerWorker(object):
         # tls_config = self.generate_tls()
 
         options = {
-            'version': self.params.get('api_version')
+            'version': self.params.get('api_version'),
+            'timeout': self.params.get('client_timeout'),
         }
 
         self.dc = get_docker_client()(**options)
@@ -733,6 +740,11 @@ class DockerWorker(object):
         # If config_strategy is COPY_ONCE or container's parameters are
         # changed, try to start a new one.
         if config_strategy == 'COPY_ONCE' or self.check_container_differs():
+            # NOTE(mgoddard): Pull the image if necessary before stopping the
+            # container, otherwise a failure to pull the image will leave the
+            # container stopped.
+            if not self.check_image():
+                self.pull_image()
             self.stop_container()
             self.remove_container()
             self.start_container()
@@ -926,6 +938,7 @@ def generate_module():
         volumes_from=dict(required=False, type='list'),
         dimensions=dict(required=False, type='dict', default=dict()),
         tty=dict(required=False, type='bool', default=False),
+        client_timeout=dict(required=False, type='int', default=120),
     )
     required_if = [
         ['action', 'pull_image', ['image']],

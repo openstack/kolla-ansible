@@ -102,7 +102,7 @@
         # nova-compute.conf
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
-          when: scenario != "bifrost"
+          when: "{{ scenario not in ['bifrost', 'mariadb'] }}"
         # ceph.conf
         - src: "tests/templates/ceph-overrides.j2"
           dest: /etc/kolla/config/ceph.conf
@@ -110,7 +110,7 @@
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
           dest: /etc/kolla/config/bifrost/dib.yml
-          when: scenario == "bifrost"
+          when: "{{ scenario == 'bifrost' }}"
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
           when: "{{ scenario == 'ironic' }}"
@@ -208,7 +208,7 @@
           environment:
             ACTION: "{{ scenario }}"
             DASHBOARD_URL: "http://{{ kolla_internal_vip_address }}"
-          when: scenario not in ['ironic', 'scenario_nfv']
+          when: scenario not in ['ironic', 'mariadb', 'scenario_nfv']
 
         - name: Run test-scenario-nfv.sh script
           script:
@@ -223,6 +223,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "ironic"
+
+        - name: Run test-mariadb.sh script
+          script:
+            cmd: test-mariadb.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "mariadb"
 
         - name: Run reconfigure.sh script
           script:

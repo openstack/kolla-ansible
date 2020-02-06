@@ -59,6 +59,10 @@ EOF
         GATE_IMAGES+=",dnsmasq,ironic,iscsid"
     fi
 
+    if [[ $ACTION == "mariadb" ]]; then
+        GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
+    fi
+
     cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
 [DEFAULT]
 include_header = /etc/kolla/header
@@ -108,6 +112,12 @@ function setup_ansible {
     # Test latest ansible version on Ubuntu, minimum supported on others.
     if [[ $BASE_DISTRO == "ubuntu" ]]; then
         ANSIBLE_VERSION=">=2.5"
+        # When upgrading from Rocky and earlier, we have to limit the version
+        # due to version_compare being gone from Ansible 2.9
+        # see https://review.opendev.org/692575 for change in Rocky
+        if [[ $ACTION =~ "upgrade" ]]; then
+            ANSIBLE_VERSION="$ANSIBLE_VERSION,<2.9"
+        fi
     else
         ANSIBLE_VERSION="<2.6"
     fi

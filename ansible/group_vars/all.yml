@@ -94,6 +94,8 @@ docker_registry:
 docker_namespace: "kolla"
 docker_registry_username:
 docker_registry_insecure: "{{ 'yes' if docker_registry else 'no' }}"
+# Docker client timeout in seconds.
+docker_client_timeout: 120
 
 # Retention settings for Docker logs
 docker_log_max_file: 5
@@ -119,6 +121,7 @@ docker_common_options:
     KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
   restart_policy: "{{ docker_restart_policy }}"
   restart_retries: "{{ docker_restart_policy_retry }}"
+  client_timeout: "{{ docker_client_timeout }}"
 
 ####################
 # Dimensions options
@@ -259,7 +262,6 @@ heat_api_cfn_listen_port: "{{ heat_api_cfn_port }}"
 horizon_port: "80"
 horizon_listen_port: "{{ horizon_port }}"
 
-influxdb_admin_port: "8083"
 influxdb_http_port: "8086"
 
 ironic_internal_fqdn: "{{ kolla_internal_fqdn }}"
@@ -584,6 +586,9 @@ enable_manila_backend_generic: "no"
 enable_manila_backend_hnas: "no"
 enable_manila_backend_cephfs_native: "no"
 enable_manila_backend_cephfs_nfs: "no"
+# TODO(mgoddard): Change this to a plain "no" when support enable_xtrabackup
+# has been removed.
+enable_mariabackup: "{{ enable_xtrabackup | default('no') }}"
 enable_mistral: "no"
 enable_monasca: "no"
 enable_mongodb: "no"
@@ -631,7 +636,6 @@ enable_trove_singletenant: "no"
 enable_vitrage: "no"
 enable_vmtp: "no"
 enable_watcher: "no"
-enable_xtrabackup: "no"
 enable_zookeeper: "{{ enable_kafka | bool }}"
 enable_zun: "no"
 
@@ -642,6 +646,7 @@ neutron_keystone_user: "neutron"
 nova_keystone_user: "nova"
 placement_keystone_user: "placement"
 murano_keystone_user: "murano"
+cinder_keystone_user: "cinder"
 
 # Nova fake driver and the number of fake driver per compute node
 enable_nova_fake: "no"
@@ -854,6 +859,8 @@ designate_backend: "bind9"
 designate_ns_record: "sample.openstack.org"
 designate_backend_external: "no"
 designate_backend_external_bind9_nameservers: ""
+# Valid options are [ '', redis, etcd ]
+designate_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
 
 #######################
 # Neutron options
