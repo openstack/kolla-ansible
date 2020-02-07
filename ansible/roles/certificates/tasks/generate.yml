@@ -1,53 +1,130 @@
 ---
-- name: Ensuring config directories exist
-  become: true
+- name: Ensuring private internal directory exist
   file:
-    path: "{{ certificates_dir }}/private"
+    path: "{{ certificates_dir }}/private/internal"
     state: "directory"
     recurse: yes
+    mode: "0770"
 
-- name: Creating SSL configuration file
-  become: true
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ certificates_dir }}/{{ item }}"
-  with_items:
-    - "openssl-kolla.cnf"
-
-- name: Creating Key
-  become: true
-  command: creates="{{ item }}" openssl genrsa -out {{ item }}
-  with_items:
-    - "{{ certificates_dir }}/private/haproxy.key"
-
-- name: Setting permissions on key
-  become: true
+- name: Ensuring private external directory exist
   file:
-    path: "{{ certificates_dir }}/private/haproxy.key"
-    mode: 0600
-    state: file
+    path: "{{ certificates_dir }}/private/external"
+    state: "directory"
+    recurse: yes
+    mode: "0770"
 
-- name: Creating Server Certificate
-  become: true
-  command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
-    -subj "/C=US/ST=NC/L=RTP/O=kolla/CN={{ kolla_external_fqdn }}" \
-    -config {{ certificates_dir }}/openssl-kolla.cnf \
-    -days 3650 \
-    -extensions v3_req \
-    -key {{ certificates_dir }}/private/haproxy.key \
-    -out {{ item }}
-  with_items:
-    - "{{ certificates_dir }}/private/haproxy.crt"
+- name: Ensuring ca directory exist
+  file:
+    path: "{{ certificates_dir }}/ca"
+    state: "directory"
+    recurse: yes
+    mode: "0770"
 
-- name: Creating CA Certificate File
-  become: true
-  copy:
-    src: "{{ certificates_dir }}/private/haproxy.crt"
-    dest: "{{ kolla_external_fqdn_cacert }}"
+- block:
+    - name: Creating external SSL configuration file
+      template:
+        src: "{{ item }}.j2"
+        dest: "{{ certificates_dir }}/{{ item }}"
+        mode: "0660"
+      with_items:
+        - "openssl-kolla.cnf"
+    - name: Creating external Key
+      command: creates="{{ item }}" openssl genrsa -out {{ item }}
+      with_items:
+        - "{{ certificates_dir }}/private/external/external.key"
+    - name: Setting permissions on external key
+      file:
+        path: "{{ certificates_dir }}/private/external/external.key"
+        mode: "0660"
+        state: file
+    - name: Creating external Server Certificate
+      command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
+        -config {{ certificates_dir }}/openssl-kolla.cnf \
+        -days 3650 \
+        -extensions v3_req \
+        -key {{ certificates_dir }}/private/external/external.key \
+        -out {{ item }}
+      with_items:
+        - "{{ certificates_dir }}/private/external/external.crt"
+    - name: Creating external CA Certificate File
+      copy:
+        src: "{{ certificates_dir }}/private/external/external.crt"
+        dest: "{{ kolla_external_fqdn_cacert }}"
+        mode: "0660"
+    - name: Creating external Server PEM File
+      assemble:
+        src: "{{ certificates_dir }}/private/external"
+        dest: "{{ kolla_external_fqdn_cert }}"
+        mode: "0660"
+  when:
+    - kolla_enable_tls_external | bool
 
-- name: Creating Server PEM File
-  become: true
-  assemble:
-    src: "{{ certificates_dir }}/private"
-    dest: "{{ kolla_external_fqdn_cert }}"
-    mode: 0600
+- block:
+    - name: Copy the external certificate crt to be the internal when internal + external are same network
+      copy:
+        src: "{{ certificates_dir }}/private/external/external.crt"
+        dest: "{{ certificates_dir }}/private/internal/internal.crt"
+        remote_src: yes
+        mode: "0660"
+    - name: Copy the external certificate key to be the internal when internal + external are same network
+      copy:
+        src: "{{ certificates_dir }}/private/external/external.key"
+        dest: "{{ certificates_dir }}/private/internal/internal.key"
+        remote_src: yes
+        mode: "0660"
+    - name: Copy the external PEM file to be the internal when internal + external are same network
+      copy:
+        src: "{{ kolla_external_fqdn_cert }}"
+        dest: "{{ kolla_internal_fqdn_cert }}"
+        remote_src: yes
+        mode: "0660"
+    - name: Copy the external CA Certificate file to be the internal when internal + external are same network
+      copy:
+        src: "{{ kolla_external_fqdn_cacert }}"
+        dest: "{{ kolla_internal_fqdn_cacert }}"
+        remote_src: yes
+        mode: "0660"
+  when:
+    - kolla_enable_tls_external | bool
+    - kolla_enable_tls_internal | bool
+    - kolla_same_external_internal_vip | bool
+
+- block:
+    - name: Creating internal SSL configuration file
+      template:
+        src: "{{ item }}.j2"
+        dest: "{{ certificates_dir }}/{{ item }}"
+        mode: "0660"
+      with_items:
+        - "openssl-kolla-internal.cnf"
+    - name: Creating internal Key
+      command: creates="{{ item }}" openssl genrsa -out {{ item }}
+      with_items:
+        - "{{ certificates_dir }}/private/internal/internal.key"
+    - name: Setting permissions on internal key
+      file:
+        path: "{{ certificates_dir }}/private/internal/internal.key"
+        mode: "0660"
+        state: file
+    - name: Creating internal Server Certificate
+      command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
+        -config {{ certificates_dir }}/openssl-kolla-internal.cnf \
+        -days 3650 \
+        -extensions v3_req \
+        -key {{ certificates_dir }}/private/internal/internal.key \
+        -out {{ item }}
+      with_items:
+        - "{{ certificates_dir }}/private/internal/internal.crt"
+    - name: Creating internal CA Certificate File
+      copy:
+        src: "{{ certificates_dir }}/private/internal/internal.crt"
+        dest: "{{ kolla_internal_fqdn_cacert }}"
+        mode: "0660"
+    - name: Creating internal Server PEM File
+      assemble:
+        src: "{{ certificates_dir }}/private/internal"
+        dest: "{{ kolla_internal_fqdn_cert }}"
+        mode: "0660"
+  when:
+    - kolla_enable_tls_internal | bool
+    - not kolla_same_external_internal_vip | bool

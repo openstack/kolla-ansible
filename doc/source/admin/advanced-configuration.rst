@@ -140,7 +140,7 @@ have settings similar to this:
    export OS_PASSWORD=demo-password
    export OS_AUTH_URL=https://mykolla.example.net:5000
    # os_cacert is optional for trusted certificates
-   export OS_CACERT=/etc/pki/mykolla-cacert.crt
+   export OS_CACERT=/etc/pki/ca/mykolla-cacert.crt
    export OS_IDENTITY_API_VERSION=3
 
 Self-Signed Certificates
@@ -162,8 +162,9 @@ configuration file:
 
    kolla-ansible certificates
 
-The files haproxy.pem and haproxy-ca.pem will be generated and stored
-in the ``/etc/kolla/certificates/`` directory.
+The certificate file haproxy.pem will be generated and stored in the
+``/etc/kolla/certificates/`` directory, and the CA cert will be in the
+``/etc/kolla/certificates/ca/`` directory.
 
 Adding CA Certificates to the Service Containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
