@@ -23,6 +23,13 @@
         vxlan_interface_name: "{{ neutron_external_interface_name }}"
         vxlan_vni: 10001
   tasks:
+    # NOTE(yoctozepto): we use gawk to add time to each logged line
+    # outside of Ansible (e.g. for init-runonce)
+    - name: Install gawk
+      package:
+        name: gawk
+      become: true
+
     - name: Ensure /tmp/logs/ dir
       file:
         path: "{{ logs_dir }}"

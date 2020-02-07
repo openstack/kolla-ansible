@@ -2,6 +2,7 @@
 
 set -o xtrace
 set -o errexit
+set -o pipefail
 
 export PYTHONUNBUFFERED=1
 
@@ -11,7 +12,7 @@ function init_runonce {
     . ~/openstackclient-venv/bin/activate
 
     echo "Initialising OpenStack resources via init-runonce"
-    tools/init-runonce &> /tmp/logs/ansible/init-runonce
+    KOLLA_DEBUG=1 tools/init-runonce |& gawk '{ print strftime("%F %T"), $0; }' &> /tmp/logs/ansible/init-runonce
 
     echo "Setting address on the external network bridge"
     if [[ $SCENARIO == "linuxbridge" ]]; then
