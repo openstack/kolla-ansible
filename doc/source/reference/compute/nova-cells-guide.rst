@@ -432,13 +432,13 @@ the database schema migrations.
 
 .. code-block:: console
 
-   kolla-bootstrap upgrade --tags nova-bootstrap
+   kolla-ansible upgrade --tags nova-bootstrap
 
 Next, we upgrade the global services.
 
 .. code-block:: console
 
-   kolla-bootstrap upgrade --tags nova-api-upgrade
+   kolla-ansible upgrade --tags nova-api-upgrade
 
 Now the cell services can be upgraded. This can be performed in batches of
 one or more cells at a time, using ``--limit``. For example, to upgrade
@@ -446,7 +446,7 @@ services in ``cell03``:
 
 .. code-block:: console
 
-   kolla-bootstrap upgrade --tags nova-cell-upgrade --limit cell03
+   kolla-ansible upgrade --tags nova-cell-upgrade --limit cell03
 
 At this stage, we might wish to perform testing of the new services, to check
 that they are functioning correctly before proceeding to other cells.
@@ -456,6 +456,6 @@ version pinning, and perform online data migrations.
 
 .. code-block:: console
 
-   kolla-bootstrap upgrade --tags nova-reload,nova-online-data-migrations
+   kolla-ansible upgrade --tags nova-reload,nova-online-data-migrations
 
 The nova upgrade is now complete, and upgrading of other services may continue.
