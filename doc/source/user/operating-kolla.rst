@@ -217,3 +217,8 @@ For example:
    kolla-genpwd -p passwords.yml.new
    kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
 
+.. note::
+
+   ``kolla-mergepwd``, by default, keeps old, unused passwords intact.
+   To alter this behavior, and remove such entries, use the ``--clean``
+   argument when invoking ``kolla-mergepwd``.

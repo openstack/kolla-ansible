@@ -16,14 +16,21 @@ import argparse
 import yaml
 
 
-def mergepwd(old, new, final):
+def mergepwd(old, new, final, clean=False):
     with open(old, "r") as old_file:
         old_passwords = yaml.safe_load(old_file)
 
     with open(new, "r") as new_file:
         new_passwords = yaml.safe_load(new_file)
 
-    new_passwords.update(old_passwords)
+    if clean:
+        # keep only new keys
+        for key in new_passwords:
+            if key in old_passwords:
+                new_passwords[key] = old_passwords[key]
+    else:
+        # old behavior
+        new_passwords.update(old_passwords)
 
     with open(final, "w") as destination:
         yaml.safe_dump(new_passwords, destination, default_flow_style=False)
@@ -34,8 +41,11 @@ def main():
     parser.add_argument("--old", help="old password file", required=True)
     parser.add_argument("--new", help="new password file", required=True)
     parser.add_argument("--final", help="merged password file", required=True)
+    parser.add_argument("--clean",
+                        help="clean (keep only new keys)",
+                        action='store_true')
     args = parser.parse_args()
-    mergepwd(args.old, args.new, args.final)
+    mergepwd(args.old, args.new, args.final, args.clean)
 
 
 if __name__ == '__main__':
