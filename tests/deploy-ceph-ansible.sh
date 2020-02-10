@@ -7,12 +7,13 @@ set -o errexit
 export PYTHONUNBUFFERED=1
 
 function setup_ceph_ansible {
-    # FIXME(mnasiadka): Use python3 when we move to CentOS 8
-    # (there are no python3 selinux bindings for 3 on C7)
-    # see https://bugs.centos.org/view.php?id=16389
-
     # Prepare virtualenv for ceph-ansible deployment
-    virtualenv --system-site-packages ~/ceph-venv
+    # NOTE(mnasiadka): Use python2 on centos7 due to missing python3 selinux bindings
+    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
+        virtualenv --system-site-packages ~/ceph-venv
+    else
+        virtualenv -p `which python2` --system-site-packages ~/ceph-venv
+    fi
     ~/ceph-venv/bin/pip install -Ir requirements.txt
     ~/ceph-venv/bin/pip install -IU selinux
 }
