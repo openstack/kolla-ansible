@@ -146,7 +146,9 @@ values for the kernel, ramdisk, and MAC address for your baremetal node)
     --driver-info deploy_kernel=15f3c95f-d778-43ad-8e3e-9357be09ca3d \
     --driver-info deploy_ramdisk=9b1e1ced-d84d-440a-b681-39c216f24121
 
-  openstack baremetal port create 52:54:00:ff:15:55 --node 57aa574a-5fea-4468-afcf-e2551d464412
+  openstack baremetal port create 52:54:00:ff:15:55 \
+    --node 57aa574a-5fea-4468-afcf-e2551d464412 \
+    --physical-network physnet1
 
 Make the baremetal node available to nova:
 
