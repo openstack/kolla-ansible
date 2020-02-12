@@ -144,21 +144,11 @@ new images.
 Tips and Tricks
 ~~~~~~~~~~~~~~~
 
-Kolla ships with several utilities intended to facilitate ease of operation.
+Kolla Ansible CLI
+-----------------
 
-``tools/cleanup-containers`` is used to remove deployed containers from the
-system. This can be useful when you want to do a new clean deployment. It will
-preserve the registry and the locally built images in the registry, but will
-remove all running Kolla containers from the local Docker daemon. It also
-removes the named volumes.
-
-``tools/cleanup-host`` is used to remove remnants of network changes
-triggered on the Docker host when the neutron-agents containers are launched.
-This can be useful when you want to do a new clean deployment, particularly one
-changing the network topology.
-
-``tools/cleanup-images --all`` is used to remove all Docker images built by
-Kolla from the local Docker cache.
+When running the ``kolla-ansible`` CLI, additional arguments may be passed to
+``ansible-playbook`` via the ``EXTRA_OPTS`` environment variable.
 
 ``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
 containers.
@@ -198,6 +188,11 @@ images on hosts.
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
 
+Passwords
+---------
+
+The following commands manage the Kolla Ansible passwords file.
+
 ``kolla-mergepwd --old OLD_PASSWDS --new NEW_PASSWDS --final FINAL_PASSWDS``
 is used to merge passwords from old installation with newly generated
 passwords during upgrade of Kolla release. The workflow is:
@@ -222,3 +217,22 @@ For example:
    ``kolla-mergepwd``, by default, keeps old, unused passwords intact.
    To alter this behavior, and remove such entries, use the ``--clean``
    argument when invoking ``kolla-mergepwd``.
+
+Tools
+-----
+
+Kolla ships with several utilities intended to facilitate ease of operation.
+
+``tools/cleanup-containers`` is used to remove deployed containers from the
+system. This can be useful when you want to do a new clean deployment. It will
+preserve the registry and the locally built images in the registry, but will
+remove all running Kolla containers from the local Docker daemon. It also
+removes the named volumes.
+
+``tools/cleanup-host`` is used to remove remnants of network changes
+triggered on the Docker host when the neutron-agents containers are launched.
+This can be useful when you want to do a new clean deployment, particularly one
+changing the network topology.
+
+``tools/cleanup-images --all`` is used to remove all Docker images built by
+Kolla from the local Docker cache.
