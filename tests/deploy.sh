@@ -15,6 +15,10 @@ function deploy {
 
     #TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
     sudo chmod -R 777 /etc/kolla
+    # generate self-signed certificates for the optional internal TLS tests
+    if [[ "$TLS_ENABLED" = "True" ]]; then
+        tools/kolla-ansible -i ${RAW_INVENTORY} -vvv certificates > /tmp/logs/ansible/certificates
+    fi
     # Actually do the deployment
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/deploy-prechecks
     # TODO(jeffrey4l): add pull action when we have a local registry

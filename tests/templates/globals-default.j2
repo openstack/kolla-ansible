@@ -128,3 +128,16 @@ cinder_backend_ceph: "yes"
 nova_backend_ceph: "yes"
 ceph_nova_user: "cinder"
 {% endif %}
+
+{% if tls_enabled %}
+kolla_enable_tls_external: "yes"
+kolla_enable_tls_internal: "yes"
+kolla_verify_internal_ca_certs: "no"
+kolla_copy_ca_into_containers: "yes"
+{% if base_distro == "ubuntu" or base_distro == "debian" %}
+openstack_cacert: "/usr/local/share/ca-certificates/kolla-customca-haproxy-internal.crt"
+{% endif %}
+{% if base_distro == "centos" %}
+openstack_cacert: "/etc/pki/ca-trust/source/anchors/kolla-customca-haproxy-internal.crt"
+{% endif %}
+{% endif %}
