@@ -20,7 +20,6 @@
         - enable_barbican_{{ enable_barbican | bool }}
         - enable_blazar_{{ enable_blazar | bool }}
         - enable_ceilometer_{{ enable_ceilometer | bool }}
-        - enable_ceph_{{ enable_ceph | bool }}
         - enable_chrony_{{ enable_chrony | bool }}
         - enable_cinder_{{ enable_cinder | bool }}
         - enable_cloudkitty_{{ enable_cloudkitty | bool }}
@@ -133,11 +132,6 @@
             tasks_from: loadbalancer
           tags: blazar
           when: enable_blazar | bool
-        - include_role:
-            role: ceph
-            tasks_from: loadbalancer
-          tags: ceph
-          when: enable_ceph | bool
         - include_role:
             role: cinder
             tasks_from: loadbalancer
@@ -590,22 +584,6 @@
         tags: keystone,
         when: enable_keystone | bool }
 
-- name: Apply role ceph
-  gather_facts: false
-  hosts:
-    - ceph-mds
-    - ceph-mgr
-    - ceph-mon
-    - ceph-nfs
-    - ceph-osd
-    - ceph-rgw
-    - '&enable_ceph_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: ceph,
-        tags: ceph,
-        when: enable_ceph | bool }
-
 - name: Apply role kafka
   gather_facts: false
   hosts:
@@ -656,7 +634,6 @@
 - name: Apply role glance
   gather_facts: false
   hosts:
-    - ceph-mon
     - glance-api
     - '&enable_glance_True'
   serial: '{{ kolla_serial|default("0") }}'
@@ -682,7 +659,6 @@
 - name: Apply role cinder
   gather_facts: false
   hosts:
-    - ceph-mon
     - cinder-api
     - cinder-backup
     - cinder-scheduler
@@ -897,7 +873,6 @@
 - name: Apply role manila
   gather_facts: false
   hosts:
-    - ceph-mon
     - manila-api
     - manila-data
     - manila-share
@@ -912,7 +887,6 @@
 - name: Apply role gnocchi
   gather_facts: false
   hosts:
-    - ceph-mon
     - gnocchi-api
     - gnocchi-metricd
     - gnocchi-statsd

@@ -150,8 +150,7 @@ def check_docker_become():
                           for x in YAML_INCLUDE_PATTERNS])
     excludes = r'|'.join([fnmatch.translate(x)
                           for x in YAML_EXCLUDE_PATTERNS])
-    docker_modules = ('kolla_docker', 'kolla_ceph_keyring',
-                      'kolla_container_facts', 'kolla_toolbox')
+    docker_modules = ('kolla_docker', 'kolla_container_facts', 'kolla_toolbox')
     cmd_modules = ('command', 'shell')
     return_code = 0
     roles_path = os.path.join(PROJECT_ROOT, 'ansible', 'roles')

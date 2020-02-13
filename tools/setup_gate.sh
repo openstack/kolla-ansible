@@ -35,10 +35,6 @@ function setup_config {
         GATE_IMAGES="bifrost"
     fi
 
-    if [[ $SCENARIO == "ceph" ]]; then
-        GATE_IMAGES+=",^ceph,^cinder"
-    fi
-
     if [[ $SCENARIO == "ceph-ansible" ]]; then
         GATE_IMAGES+=",^cinder"
     fi

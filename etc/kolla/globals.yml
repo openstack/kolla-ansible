@@ -232,11 +232,6 @@
 #enable_ceilometer_ipmi: "no"
 #enable_cells: "no"
 #enable_central_logging: "no"
-#enable_ceph: "no"
-#enable_ceph_mds: "no"
-#enable_ceph_rgw: "no"
-#enable_ceph_nfs: "no"
-#enable_ceph_dashboard: "{{ enable_ceph | bool }}"
 #enable_chrony: "yes"
 #enable_cinder: "no"
 #enable_cinder_backup: "yes"
@@ -367,37 +362,34 @@
 # to configure IPv6 in RabbitMQ server.
 #rabbitmq_server_additional_erl_args: ""
 
-##############
-# Ceph options
-##############
-# Ceph can be setup with a caching to improve performance. To use the cache you
-# must provide separate disks than those for the OSDs
-#ceph_enable_cache: "no"
-
-# Set to no if using external Ceph without cephx.
+#######################
+# External Ceph options
+#######################
+# External Ceph - cephx auth enabled (this is the standard nowadays, defaults to yes)
 #external_ceph_cephx_enabled: "yes"
 
-# Ceph is not able to determine the size of a cache pool automatically,
-# so the configuration on the absolute size is required here, otherwise the flush/evict will not work.
-#ceph_target_max_bytes: ""
-#ceph_target_max_objects: ""
-
-# Valid options are [ forward, none, writeback ]
-#ceph_cache_mode: "writeback"
-
-# A requirement for using the erasure-coded pools is you must setup a cache tier
-# Valid options are [ erasure, replicated ]
-#ceph_pool_type: "replicated"
-
-# Integrate ceph rados object gateway with openstack keystone
-#enable_ceph_rgw_keystone: "no"
-
-# Set the pgs and pgps for pool
-# WARNING! These values are dependant on the size and shape of your cluster -
-# the default values are not suitable for production use. Please refer to the
-# Kolla Ceph documentation for more information.
-#ceph_pool_pg_num: 8
-#ceph_pool_pgp_num: 8
+# Glance
+#ceph_glance_keyring: "ceph.client.glance.keyring"
+#ceph_glance_user: "glance"
+#ceph_glance_pool_name: "images"
+# Cinder
+#ceph_cinder_keyring: "ceph.client.cinder.keyring"
+#ceph_cinder_user: "cinder"
+#ceph_cinder_pool_name: "volumes"
+#ceph_cinder_backup_keyring: "ceph.client.cinder-backup.keyring"
+#ceph_cinder_backup_user: "cinder-backup"
+#ceph_cinder_backup_pool_name: "backups"
+# Nova
+#ceph_nova_keyring: "{{ ceph_cinder_keyring }}"
+#ceph_nova_user: "nova"
+#ceph_nova_pool_name: "vms"
+# Gnocchi
+#ceph_gnocchi_keyring: "ceph.client.gnocchi.keyring"
+#ceph_gnocchi_user: "gnocchi"
+#ceph_gnocchi_pool_name: "gnocchi"
+# Manila
+#ceph_manila_keyring: "ceph.client.manila.keyring"
+#ceph_manila_user: "manila"
 
 #############################
 # Keystone - Identity Options
@@ -455,7 +447,7 @@
 # Gnocchi options
 #################
 # Valid options are [ file, ceph ]
-#gnocchi_backend_storage: "{{ 'ceph' if enable_ceph|bool else 'file' }}"
+#gnocchi_backend_storage: "file"
 
 # Valid options are [redis, '']
 #gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
@@ -464,7 +456,7 @@
 # Cinder - Block Storage Options
 ################################
 # Enable / disable Cinder backends
-#cinder_backend_ceph: "{{ enable_ceph }}"
+#cinder_backend_ceph: "no"
 #cinder_backend_vmwarevc_vmdk: "no"
 #cinder_volume_group: "cinder-volumes"
 # Valid options are [ '', redis, etcd ]
@@ -499,7 +491,7 @@
 ########################
 # Nova - Compute Options
 ########################
-#nova_backend_ceph: "{{ enable_ceph }}"
+#nova_backend_ceph: "no"
 
 # Valid options are [ qemu, kvm, vmware, xenapi ]
 #nova_compute_virt_type: "kvm"
@@ -632,13 +624,19 @@
 #enable_prometheus_cadvisor: "{{ enable_prometheus | bool }}"
 #enable_prometheus_memcached: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
-#enable_prometheus_ceph_mgr_exporter: "{{ enable_prometheus | bool and enable_ceph | bool }}"
+#enable_prometheus_ceph_mgr_exporter: "no"
 #enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
 #enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
 
 # List of extra parameters passed to prometheus. You can add as many to the list.
 #prometheus_cmdline_extras:
+
+# Example of setting endpoints for prometheus ceph mgr exporter.
+# You should add all ceph mgr's in your external ceph deployment.
+#prometheus_ceph_mgr_exporter_endpoints:
+#  - host1:port1
+#  - host2:port2
 
 #########
 # Freezer

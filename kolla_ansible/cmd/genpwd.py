@@ -103,8 +103,7 @@ def main():
     passwords_file = os.path.expanduser(args.passwords)
 
     # These keys should be random uuids
-    uuid_keys = ['ceph_cluster_fsid',
-                 'rbd_secret_uuid',
+    uuid_keys = ['rbd_secret_uuid',
                  'cinder_rbd_secret_uuid',
                  'gnocchi_project_id',
                  'gnocchi_resource_id',

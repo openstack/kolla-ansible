@@ -394,7 +394,6 @@ prometheus_node_exporter_port: "9100"
 prometheus_mysqld_exporter_port: "9104"
 prometheus_haproxy_exporter_port: "9101"
 prometheus_memcached_exporter_port: "9150"
-prometheus_ceph_mgr_exporter_port: "9283"
 # Default cadvisor port of 8080 already in use
 prometheus_cadvisor_port: "18080"
 
@@ -549,11 +548,6 @@ enable_ceilometer: "no"
 enable_ceilometer_ipmi: "no"
 enable_cells: "no"
 enable_central_logging: "no"
-enable_ceph: "no"
-enable_ceph_mds: "no"
-enable_ceph_rgw: "no"
-enable_ceph_nfs: "no"
-enable_ceph_dashboard: "{{ enable_ceph | bool }}"
 enable_chrony: "yes"
 enable_cinder: "no"
 enable_cinder_backup: "yes"
@@ -812,15 +806,11 @@ openstack_auth:
 #######################
 # Glance options
 #######################
-# Using glance_backend_ceph rather than enable_ceph to determine whether to
-# use the file backend, as this allows for the external ceph case, where
-# enable_ceph is False.
 glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_swift | bool or glance_backend_vmware | bool) }}"
-glance_backend_ceph: "{{ enable_ceph }}"
+glance_backend_ceph: "no"
 glance_backend_vmware: "no"
 enable_glance_image_cache: "no"
-# ceph backend has priority over swift in all-ceph clusters
-glance_backend_swift: "{{ not (enable_ceph | bool) and enable_swift | bool }}"
+glance_backend_swift: "{{ enable_swift | bool }}"
 glance_file_datadir_volume: "glance"
 glance_enable_rolling_upgrade: "no"
 glance_api_hosts: "{{ [groups['glance-api']|first] if glance_backend_file | bool and glance_file_datadir_volume == 'glance' else groups['glance-api'] }}"
@@ -844,7 +834,7 @@ panko_database_type: "mysql"
 #################
 # Valid options are [ file, ceph, swift ]
 # Defaults to file if ceph and swift are enabled; explicitly set to either if required.
-gnocchi_backend_storage: "{% if enable_ceph | bool and not enable_swift | bool %}ceph{% elif enable_swift | bool and not enable_ceph | bool %}swift{% else %}file{% endif %}"
+gnocchi_backend_storage: "{% if enable_swift | bool %}swift{% else %}file{% endif %}"
 
 # Valid options are [redis, '']
 gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
@@ -854,7 +844,7 @@ gnocchi_metric_datadir_volume: "gnocchi"
 #################################
 # Cinder options
 #################################
-cinder_backend_ceph: "{{ enable_ceph }}"
+cinder_backend_ceph: "no"
 cinder_backend_vmwarevc_vmdk: "no"
 cinder_volume_group: "cinder-volumes"
 cinder_target_helper: "{{ 'lioadm' if ansible_os_family == 'RedHat' and ansible_distribution_major_version is version_compare('8', '>=') else 'tgtadm' }}"
@@ -913,7 +903,7 @@ neutron_legacy_iptables: "no"
 #######################
 # Nova options
 #######################
-nova_backend_ceph: "{{ enable_ceph }}"
+nova_backend_ceph: "no"
 nova_backend: "{{ 'rbd' if nova_backend_ceph | bool else 'default' }}"
 # Valid options are [ kvm, qemu, vmware, xenapi ]
 nova_compute_virt_type: "kvm"
@@ -964,43 +954,12 @@ octavia_amp_flavor_id:
 qinling_kubernetes_certificates: "no"
 
 ###################
-# Ceph options
+# External Ceph options
 ###################
-# Ceph can be setup with a caching to improve performance. To use the cache you
-# must provide separate disks than those for the OSDs
-ceph_enable_cache: "no"
-
+# External Ceph - cephx auth enabled (this is the standard nowadays, defaults to yes)
 external_ceph_cephx_enabled: "yes"
 
-# Ceph is not able to determine the size of a cache pool automatically,
-# so the configuration on the absolute size is required here, otherwise the flush/evict will not work.
-ceph_target_max_bytes: ""
-ceph_target_max_objects: ""
-
-# Valid options are [ forward, none, writeback ]
-ceph_cache_mode: "writeback"
-
-# Valid options are [ ext4, btrfs, xfs ]
-ceph_osd_filesystem: "xfs"
-
-# Set to 'yes-i-really-really-mean-it' to force wipe disks with existing partitions for OSDs. Only
-# set if you understand the consequences!
-ceph_osd_wipe_disk: ""
-
-# These are /etc/fstab options. Comma separated, no spaces (see fstab(8))
-ceph_osd_mount_options: "defaults,noatime"
-
-# A requirement for using the erasure-coded pools is you must setup a cache tier
-# Valid options are [ erasure, replicated ]
-ceph_pool_type: "replicated"
-
-# Integrate Ceph Rados Object Gateway with OpenStack keystone
-enable_ceph_rgw_keystone: "no"
-
-# Enable/disable ceph-rgw compatibility with OpenStack Swift
-# Valid options are [ True, False ]
-ceph_rgw_compatibility: "False"
-
+# External Ceph pool names
 ceph_cinder_pool_name: "volumes"
 ceph_cinder_backup_pool_name: "backups"
 ceph_glance_pool_name: "images"
@@ -1014,38 +973,13 @@ ceph_gnocchi_user: "gnocchi"
 ceph_manila_user: "manila"
 ceph_nova_user: "nova"
 
-ceph_erasure_profile: "k=4 m=2 ruleset-failure-domain=host"
-ceph_rule: "default host {{ 'indep' if ceph_pool_type == 'erasure' else 'firstn' }}"
-ceph_cache_rule: "cache host firstn"
-
-# Set the pgs and pgps for pool
-# WARNING! These values are dependant on the size and shape of your cluster -
-# the default values are not suitable for production use. Please refer to the
-# Kolla Ceph documentation for more information.
-ceph_pool_pg_num: 8
-ceph_pool_pgp_num: 8
-
-# Set the store type for ceph OSD
-# Valid options are [ filestore, bluestore]
-ceph_osd_store_type: "bluestore"
-
-# Set the host type for ceph daemons
-# Valid options are [ IP, HOSTNAME, FQDN, INVENTORY ]
-# Note: For existing clusters, please don't modify this parameter. Otherwise,
-# the existing mon will be invalidated, and the existing osd crush map will
-# be changed.
-ceph_mon_host_type: "IP"
-ceph_mgr_host_type: "INVENTORY"
-ceph_osd_host_type: "IP"
-ceph_mds_host_type: "INVENTORY"
-
 # External Ceph keyrings
 ceph_cinder_keyring: "ceph.client.cinder.keyring"
 ceph_cinder_backup_keyring: "ceph.client.cinder-backup.keyring"
 ceph_glance_keyring: "ceph.client.glance.keyring"
 ceph_gnocchi_keyring: "ceph.client.gnocchi.keyring"
 ceph_manila_keyring: "ceph.client.manila.keyring"
-ceph_nova_keyring: "{% if enable_ceph | bool %}ceph.client.nova.keyring{% else %}{{ ceph_cinder_keyring }}{% endif %}"
+ceph_nova_keyring: "{{ ceph_cinder_keyring }}"
 
 #####################
 # VMware support
@@ -1088,7 +1022,7 @@ enable_prometheus_node_exporter: "{{ enable_prometheus | bool }}"
 enable_prometheus_memcached_exporter: "{{ enable_memcached | bool }}"
 enable_prometheus_cadvisor: "{{ enable_prometheus | bool }}"
 enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
-enable_prometheus_ceph_mgr_exporter: "{{ enable_ceph | bool and enable_prometheus | bool }}"
+enable_prometheus_ceph_mgr_exporter: "no"
 enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
 enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
 enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
@@ -1097,6 +1031,7 @@ prometheus_alertmanager_user: "admin"
 prometheus_openstack_exporter_interval: "60s"
 prometheus_elasticsearch_exporter_interval: "60s"
 prometheus_cmdline_extras:
+prometheus_ceph_mgr_exporter_endpoints: []
 
 ############
 # Vitrage

@@ -87,7 +87,6 @@ Infrastructure components
 
 Kolla-Ansible deploys containers for the following infrastructure components:
 
-- `Ceph <https://ceph.com/>`__ implementation for Cinder, Glance and Nova.
 - `Collectd <https://collectd.org/>`__,
   `Telegraf <https://docs.influxdata.com/telegraf/>`__,
   `InfluxDB <https://influxdata.com/time-series-platform/influxdb/>`__,
