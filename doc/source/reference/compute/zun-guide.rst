@@ -21,6 +21,7 @@ following variables:
    enable_kuryr: "yes"
    enable_etcd: "yes"
    docker_configure_for_zun: "yes"
+   containerd_configure_for_zun: "yes"
 
 Docker reconfiguration requires reboostrapping before deploy.
 Make sure you understand the consequences of restarting Docker.

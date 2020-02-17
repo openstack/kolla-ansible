@@ -17,6 +17,7 @@ copy_logs() {
     if [[ -x "$(command -v journalctl)" ]]; then
         journalctl --no-pager > ${LOG_DIR}/system_logs/syslog.txt
         journalctl --no-pager -u docker.service > ${LOG_DIR}/system_logs/docker.log
+        journalctl --no-pager -u containerd.service > ${LOG_DIR}/system_logs/containerd.log
     else
         cp /var/log/upstart/docker.log ${LOG_DIR}/system_logs/docker.log
     fi

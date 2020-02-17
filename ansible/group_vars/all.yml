@@ -115,6 +115,14 @@ docker_zun_options: -H tcp://{{ api_interface_address | put_address_in_context('
 docker_zun_config:
   cluster-store: etcd://{% for host in groups.get('etcd', []) %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['etcd_client_port'] }}{% if not loop.last %},{% endif %}{% endfor %}
 
+# Extra containerd options for Zun
+containerd_configure_for_zun: "no"
+
+# 42463 is the static group id of the zun user in the Zun image.
+# If users customize this value on building the Zun images,
+# they need to change this config accordingly.
+containerd_grpc_gid: 42463
+
 # Timeout after Docker sends SIGTERM before sending SIGKILL.
 docker_graceful_timeout: 60
 
@@ -474,6 +482,7 @@ zookeeper_quorum_port: "3888"
 
 zun_api_port: "9517"
 zun_wsproxy_port: "6784"
+zun_cni_daemon_port: "9036"
 
 vitrage_api_port: "8999"
 

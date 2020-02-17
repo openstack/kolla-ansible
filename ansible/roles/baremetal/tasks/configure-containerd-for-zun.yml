@@ -1,0 +1,50 @@
+---
+- name: Ensuring CNI config directory exist
+  file:
+    path: "{{ cni_config_dir }}"
+    state: "directory"
+    mode: "0770"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  become: True
+
+- name: Copying CNI config file
+  template:
+    src: "10-zun-cni.conf.j2"
+    dest: "{{ cni_config_dir }}/10-zun-cni.conf"
+    mode: "0660"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  become: True
+  register: cni_configured
+
+- name: Ensuring CNI bin directory exist
+  file:
+    path: "{{ cni_bin_dir }}"
+    state: "directory"
+    mode: "0770"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  become: True
+
+- name: Copy zun-cni script
+  template:
+    src: "zun-cni.j2"
+    dest: "{{ cni_bin_dir }}/zun-cni"
+    mode: "0775"
+  become: True
+
+- name: Copying over containerd config
+  template:
+    src: "containerd_config.toml.j2"
+    dest: "/etc/containerd/config.toml"
+    mode: "0660"
+  become: true
+  register: containerd_configured
+
+- name: Restart containerd
+  service:
+    name: containerd
+    state: restarted
+  become: True
+  when: cni_configured.changed or containerd_configured.changed

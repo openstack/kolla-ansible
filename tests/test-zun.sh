@@ -98,6 +98,48 @@ function test_zun_logged {
     done
     openstack volume delete zun_test_volume
     echo "SUCCESS: Zun Cinder volume attachment"
+
+    echo "TESTING: Zun capsule"
+    cat >/tmp/capsule.yaml <<EOF
+capsuleVersion: beta
+kind: capsule
+metadata:
+  name: capsule-test
+spec:
+  containers:
+  - image: alpine
+    command:
+    - sleep
+    - "1000"
+EOF
+    zun capsule-create -f /tmp/capsule.yaml
+    attempt=1
+    while [[ $(zun capsule-describe capsule-test | awk '/ status /{print $4}') != "Running" ]]; do
+        echo "Capsule not running yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Capsule failed to start"
+            zun capsule-describe capsule-test
+            return 1
+        fi
+        sleep 10
+    done
+    zun capsule-list
+    zun capsule-describe capsule-test
+    zun capsule-delete capsule-test
+
+    attempt=1
+    while zun capsule-describe capsule-test; do
+        echo "Capsule not deleted yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Zun failed to delete the capsule"
+            zun capsule-describe capsule-test
+            return 1
+        fi
+        sleep 10
+    done
+    echo "SUCCESS: Zun capsule"
 }
 
 function test_zun {

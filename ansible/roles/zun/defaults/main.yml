@@ -46,6 +46,14 @@ zun_services:
     privileged: True
     volumes: "{{ zun_compute_default_volumes + zun_compute_extra_volumes }}"
     dimensions: "{{ zun_compute_dimensions }}"
+  zun-cni-daemon:
+    container_name: zun_cni_daemon
+    group: zun-cni-daemon
+    enabled: true
+    image: "{{ zun_cni_daemon_image_full }}"
+    privileged: True
+    volumes: "{{ zun_cni_daemon_default_volumes + zun_cni_daemon_extra_volumes }}"
+    dimensions: "{{ zun_cni_daemon_dimensions }}"
 
 ####################
 ## Database
@@ -73,9 +81,15 @@ zun_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 zun_compute_tag: "{{ zun_tag }}"
 zun_compute_image_full: "{{ zun_compute_image }}:{{ zun_compute_tag }}"
 
+zun_cni_daemon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-cni-daemon"
+zun_cni_daemon_tag: "{{ zun_tag }}"
+zun_cni_daemon_image_full: "{{ zun_cni_daemon_image }}:{{ zun_cni_daemon_tag }}"
+
+
 zun_api_dimensions: "{{ default_container_dimensions }}"
 zun_wsproxy_dimensions: "{{ default_container_dimensions }}"
 zun_compute_dimensions: "{{ default_container_dimensions }}"
+zun_cni_daemon_dimensions: "{{ default_container_dimensions }}"
 
 zun_api_default_volumes:
   - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
@@ -101,11 +115,18 @@ zun_compute_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "/dev:/dev"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+zun_cni_daemon_default_volumes:
+  - "{{ node_config_directory }}/zun-cni-daemon/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/zun/zun:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/zun' if zun_dev_mode | bool else '' }}"
 
 zun_extra_volumes: "{{ default_extra_volumes }}"
 zun_api_extra_volumes: "{{ zun_extra_volumes }}"
 zun_wsproxy_extra_volumes: "{{ zun_extra_volumes }}"
 zun_compute_extra_volumes: "{{ zun_extra_volumes }}"
+zun_cni_daemon_extra_volumes: "{{ zun_extra_volumes }}"
 
 ####################
 ## OpenStack

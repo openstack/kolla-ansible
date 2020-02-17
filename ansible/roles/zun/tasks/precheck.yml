@@ -11,6 +11,7 @@
     name:
       - zun_api
       - zun_wsproxy
+      - zun_cni_daemon
   register: container_facts
 
 - name: Checking free port for Zun API
@@ -34,6 +35,17 @@
   when:
     - container_facts['zun_wsproxy'] is not defined
     - inventory_hostname in groups['zun-wsproxy']
+
+- name: Checking free port for zun-cni-daemon
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ zun_cni_daemon_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['zun_cni_daemon'] is not defined
+    - inventory_hostname in groups['zun-cni-daemon']
 
 - name: Ensure kuryr enabled for zun
   fail:

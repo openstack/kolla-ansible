@@ -12,6 +12,8 @@
     privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ service.dimensions }}"
+  listen:
+    - zun-api container changed
   when:
     - kolla_action != "config"
 
@@ -28,6 +30,8 @@
     privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ service.dimensions }}"
+  listen:
+    - zun-wsproxy container changed
   when:
     - kolla_action != "config"
 
@@ -44,5 +48,37 @@
     privileged: "{{ service.privileged | default(False) }}"
     volumes: "{{ service.volumes|reject('equalto', '')|list }}"
     dimensions: "{{ service.dimensions }}"
+  listen:
+    - zun-compute container changed
   when:
     - kolla_action != "config"
+
+- name: Restart zun-cni-daemon container
+  vars:
+    service_name: "zun-cni-daemon"
+    service: "{{ zun_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  listen:
+    - zun-cni-daemon container changed
+  when:
+    - kolla_action != "config"
+
+- name: Copy loopback binary from zun-cni-daemon container to host
+  vars:
+    service_name: "zun-cni-daemon"
+    service: "{{ zun_services[service_name] }}"
+  become: true
+  command: "docker cp {{ service.container_name }}:/opt/loopback /opt/cni/bin/"
+  # NOTE(yoctozepto): it would be cleaner to listen only on image change
+  # but there is no such mechanism (yet) and container change should be
+  # good enough (better than including config change triggers)
+  listen:
+    - zun-cni-daemon container changed

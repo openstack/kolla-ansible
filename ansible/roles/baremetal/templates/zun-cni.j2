@@ -1,0 +1,12 @@
+#!/bin/bash
+
+env_list=""
+for line in $(env | grep "CNI_")
+do
+    key=$(echo "$line" | cut -d "=" -f 1)
+    value=$(echo "$line" | cut -d "=" -f 2-)
+    env_list="$env_list --env ${key}=\"${value}\""
+done
+
+cmd="docker exec -i $env_list zun_cni_daemon zun-cni <&0"
+eval "$cmd"
