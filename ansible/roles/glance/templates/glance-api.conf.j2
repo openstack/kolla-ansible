@@ -9,6 +9,10 @@ bind_host = {{ api_interface_address }}
 bind_port = {{ glance_api_listen_port }}
 workers = {{ openstack_service_workers }}
 
+{% if glance_store_backends %}
+enabled_backends = {% for key in glance_store_backends %}{{ key.name }}:{{ key.type }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+
 {% if glance_backend_ceph | bool %}
 show_multiple_locations = True
 {% endif %}
@@ -46,27 +50,27 @@ flavor = {% if enable_glance_image_cache | bool %}keystone+cachemanagement{% els
 
 [glance_store]
 {% if glance_backend_vmware | bool %}
-default_store = vsphere
+default_backend = vmware
 {% elif glance_backend_ceph | bool %}
-default_store = rbd
+default_backend = rbd
 {% elif glance_backend_swift | bool %}
-default_store = swift+http
+default_backend = swift
 {% else %}
-default_store = file
-filesystem_store_datadir = /var/lib/glance/images/
+default_backend = file
 {% endif %}
 
-{% if glance_store_backends %}
-stores = {{ glance_store_backends|map(attribute='name')|join(',') }}
-{% endif %}
+[file]
+filesystem_store_datadir = /var/lib/glance/images/
 
 {% if glance_backend_ceph | bool %}
+[rbd]
 rbd_store_user = {{ ceph_glance_user }}
 rbd_store_pool = {{ ceph_glance_pool_name }}
 rbd_store_chunk_size = 8
 {% endif %}
 
 {% if glance_backend_swift | bool %}
+[swift]
 swift_store_container = glance
 swift_store_multiple_containers_seed = 0
 swift_store_multi_tenant = False
@@ -78,12 +82,19 @@ swift_store_auth_insecure = True
 {% endif %}
 
 {% if glance_backend_vmware | bool %}
+[vmware]
 vmware_server_host = {{ vmware_vcenter_host_ip }}
 vmware_server_username = {{ vmware_vcenter_host_username }}
 vmware_server_password = {{ vmware_vcenter_host_password }}
 vmware_datastores = {{ vmware_vcenter_name }}:{{ vmware_datastore_name }}
 vmware_insecure = True
 {% endif %}
+
+[os_glance_tasks_store]
+filesystem_store_datadir = /var/lib/glance/tasks_work_dir
+
+[os_glance_staging_store]
+filesystem_store_datadir = /var/lib/glance/staging
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True
