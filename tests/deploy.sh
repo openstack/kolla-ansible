@@ -10,9 +10,6 @@ export PYTHONUNBUFFERED=1
 function deploy {
     RAW_INVENTORY=/etc/kolla/inventory
 
-    # Create dummy interface for neutron
-    ansible -m shell -i ${RAW_INVENTORY} -b -a "ip l a fake_interface type dummy" all
-
     #TODO(inc0): Post-deploy complains that /etc/kolla is not writable. Probably we need to include become there
     sudo chmod -R 777 /etc/kolla
     # generate self-signed certificates for the optional internal TLS tests
