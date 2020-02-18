@@ -21,7 +21,7 @@
         need_build_image: false
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift', 'linuxbridge'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' else '3' }}"
@@ -102,6 +102,7 @@
       loop:
         - cinder
         - glance
+        - neutron
         - nova
         - bifrost
         - swift
@@ -123,6 +124,10 @@
         # nova-compute.conf
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
+          when: "{{ openstack_core_enabled }}"
+        # neutron.conf
+        - src: "tests/templates/neutron-server-overrides.j2"
+          dest: /etc/kolla/config/neutron.conf
           when: "{{ openstack_core_enabled }}"
         # bifrost/dib.yml
         - src: "tests/templates/bifrost-dib-overrides.j2"
