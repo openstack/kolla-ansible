@@ -4,9 +4,16 @@
 External Ceph
 =============
 
-Sometimes it is necessary to connect OpenStack services to an existing Ceph
-cluster instead of deploying it with Kolla. This can be achieved with only a
-few configuration steps in Kolla.
+Kolla Ansible does not provide support for provisioning and configuring a
+Ceph cluster directly. Instead, administrators should use a tool dedicated
+to this purpose, such as:
+
+* `ceph-ansible <https://docs.ceph.com/ceph-ansible>`_
+* `ceph-deploy <https://docs.ceph.com/docs/master/start/>`_
+* `cephadm <https://docs.ceph.com/docs/master/bootstrap/>`_
+
+The desired pool(s) and keyrings should then be created via the Ceph CLI
+or similar.
 
 Requirements
 ~~~~~~~~~~~~
