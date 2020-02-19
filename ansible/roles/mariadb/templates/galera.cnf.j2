@@ -32,9 +32,9 @@ wsrep_cluster_address=gcomm://{% if (groups['mariadb'] | length) > 1 %}{% for ho
 # FIXME(jeffrey4l): Revert when using C8 (CentOS+Ussuri)
 # Use [::] to avoid galera issue.
 # for more info see https://github.com/codership/galera/issues/534#issuecomment-472607544
-wsrep_provider_options=gmcast.listen_addr=tcp://[::]:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }}
+wsrep_provider_options=gmcast.listen_addr=tcp://[::]:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
 {% else %}
-wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }}
+wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
 {% endif %}
 
 wsrep_node_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}
