@@ -1,0 +1,50 @@
+---
+# Not all variables have sensible defaults, let's ensure these are set.
+- name: Ensure mandatory variables are defined
+  assert:
+    that:
+      - vxlan_interface_name is defined
+      - vxlan_vni is defined
+
+# We have had cases where the nodepool private IP address is not assigned,
+# which causes hard to diagnose errors later on. Catch it early.
+- name: Assert that the nodepool private IPv4 address is assigned
+  assert:
+    that: nodepool.private_ipv4 in ansible_all_ipv4_addresses
+    fail_msg: >-
+      The nodepool private IP address {{ nodepool.private_ipv4 }} is not assigned
+
+- name: Set VXLAN interface facts
+  set_fact:
+    tunnel_local_address: "{{ nodepool.private_ipv4 }}"
+
+- name: Create VXLAN interface
+  become: true
+  command: ip link add {{ vxlan_interface_name }} type vxlan id {{ vxlan_vni }} local {{ tunnel_local_address }} dstport {{ vxlan_dstport }}
+
+- name: Set VXLAN interface MTU
+  become: true
+  vars:
+    # Find the parent interface
+    parent_interface: >-
+      {{ ansible_interfaces |
+          map('extract', ansible_facts) |
+          selectattr('ipv4.address', 'defined') |
+          selectattr('ipv4.address', 'equalto', tunnel_local_address) |
+          first }}
+    # Allow 50 bytes overhead for VXLAN headers.
+    mtu: "{{ parent_interface.mtu | int - 50 }}"
+  command: ip link set {{ vxlan_interface_name }} mtu {{ mtu }}
+
+# emulate BUM by multiplicating traffic to unicast targets
+- name: Add fdb entries for BUM traffic
+  become: true
+  vars:
+    dest_ip: "{{ hostvars[item].tunnel_local_address }}"
+  command: bridge fdb append 00:00:00:00:00:00 dev {{ vxlan_interface_name }} dst {{ dest_ip }}
+  with_inventory_hostnames: all
+  when: item != inventory_hostname
+
+- name: Bring VXLAN interface up
+  become: true
+  command: ip link set {{ vxlan_interface_name }} up

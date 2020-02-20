@@ -1,0 +1,72 @@
+---
+# Not all variables have sensible defaults, let's ensure these are set.
+- name: Ensure mandatory variables are defined
+  assert:
+    that:
+      - managed_interface_name is defined
+      - managed_network_prefix is defined
+      - managed_network_prefix_length is defined
+      - managed_network_address_family is defined
+
+- name: Set managed interface facts
+  set_fact:
+    managed_interface_address: "{{ managed_network_prefix }}{{ groups['all'].index(inventory_hostname) + 1 }}"
+
+- name: Add IPv4 address for managed network
+  become: true
+  vars:
+    managed_network_cidr: "{{ managed_interface_address }}/{{ managed_network_prefix_length }}"
+    # NOTE(yoctozepto): we have to compute and explicitly set the broadcast address,
+    # otherwise bifrost fails its pre-bootstrap sanity checks due to missing
+    # broadcast address as ansible picks up scope ('global') as the interface's
+    # broadcast address which fails checks logic
+    managed_network_broadcast_address: "{{ managed_network_cidr | ipaddr('broadcast') }}"
+  command: ip address add {{ managed_network_cidr }} broadcast {{ managed_network_broadcast_address }} dev {{ managed_interface_name }}
+  when: managed_network_address_family == 'ipv4'
+
+# NOTE(yoctozepto): IPv6 has no broadcast address, let's not create confusion by setting it
+- name: Add IPv6 address for managed network
+  become: true
+  command: ip address add {{ managed_interface_address }}/{{ managed_network_prefix_length }} dev {{ managed_interface_name }}
+  when: managed_network_address_family == 'ipv6'
+
+- name: Accept traffic on the managed network (IN)
+  become: true
+  iptables:
+    state: present
+    action: insert
+    chain: INPUT
+    ip_version: "{{ managed_network_address_family }}"
+    in_interface: "{{ managed_interface_name }}"
+    jump: ACCEPT
+
+# NOTE(yoctozepto): the default policy is ACCEPT but it is nicer to get statistics
+- name: Accept traffic on the managed network (OUT)
+  become: true
+  iptables:
+    state: present
+    action: insert
+    chain: OUTPUT
+    ip_version: "{{ managed_network_address_family }}"
+    out_interface: "{{ managed_interface_name }}"
+    jump: ACCEPT
+
+# NOTE(yoctozepto): IPv6 DAD may delay proper address assignment
+# this task will wait until DAD is done and addresses are no longer tentative
+# we assign addresses uniquely so DAD can only move it to preferred
+# hence we only check whether it's no longer tentative
+- name: Ensure IPv6 addresses on the managed interface are no longer tentative
+  become: true
+  command: ip -o address show tentative dev {{ managed_interface_name }}
+  register: tentative_addresses
+  until: tentative_addresses.stdout == ''
+  retries: 30
+  delay: 2
+  when:
+    - managed_network_address_family == 'ipv6'
+
+- name: Ping across the managed network
+  vars:
+    ping_command: "{{ 'ping' if managed_network_address_family == 'ipv4' else 'ping6' }}"
+  command: "{{ ping_command }} -c1 {{ hostvars[item].managed_interface_address }}"
+  with_inventory_hostnames: all
