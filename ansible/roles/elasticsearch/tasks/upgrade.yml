@@ -3,6 +3,8 @@
 # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/restart-upgrade.html
 - name: Disable shard allocation
   become: true
+  vars:
+    elasticsearch_shard_body: {"transient": {"cluster.routing.allocation.enable": "none"}}
   kolla_toolbox:
     module_name: uri
     module_args:
@@ -10,7 +12,7 @@
       method: PUT
       status_code: 200
       return_content: yes
-      body: {"transient": {"cluster.routing.allocation.enable": "none"}}
+      body: "{{ elasticsearch_shard_body | to_json }}"
       body_format: json
   delegate_to: "{{ groups['elasticsearch'][0] }}"
   run_once: true
