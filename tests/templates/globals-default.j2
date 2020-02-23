@@ -1,9 +1,11 @@
 ---
-# Force the use of python2 on Ubuntu/Debian and CentOS7 remote hosts. This is
-# necessary for delegate_to: localhost, which will otherwise use the local
-# python interpreter (python3).  On CentOS 7, that fails due to a lack of
-# python3 bindings for SELinux.  https://bugs.centos.org/view.php?id=16389
-ansible_python_interpreter: /usr/bin/python{{ '2' if ansible_os_family != 'RedHat' or ansible_distribution_major_version == '7' else '3' }}
+{% if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7' %}
+# Force the use of python2 on CentOS7 remote hosts. This is necessary for
+# delegate_to: localhost, which will otherwise use the local python interpreter
+# (python3).  On CentOS 7, that fails due to a lack of python3 bindings for
+# SELinux.  https://bugs.centos.org/view.php?id=16389
+ansible_python_interpreter: /usr/bin/python2
+{% endif %}
 
 kolla_base_distro: "{{ base_distro }}"
 kolla_install_type: "{{ install_type }}"
