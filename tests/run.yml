@@ -356,6 +356,13 @@
             cmd: init-core-openstack.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            EXT_NET_CIDR: "{{ neutron_external_network_prefix }}0/{{ neutron_external_network_prefix_length }}"
+            EXT_NET_RANGE: "start={{ neutron_external_network_prefix }}150,end={{ neutron_external_network_prefix }}199"
+            EXT_NET_GATEWAY: "{{ neutron_external_network_prefix }}1"
+            EXT_NET_LOCAL_ADDR: "{{ neutron_external_network_prefix }}1/{{ neutron_external_network_prefix_length }}"
+            EXT_NET_SLAVE_DEVICE: "{{ neutron_external_interface_name }}"
+            SCENARIO: "{{ scenario }}"
           when: openstack_core_tested or scenario in ['ironic', 'scenario_nfv', 'zun']
 
         - name: Run test-core-openstack.sh script
