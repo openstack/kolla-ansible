@@ -10,22 +10,22 @@ GIT_PROJECT_DIR=$(mktemp -d)
 
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
+    local packages=(python-openstackclient python-heatclient)
+    if [[ $SCENARIO == zun ]]; then
+        packages+=(python-zunclient)
+    fi
+    if [[ $SCENARIO == ironic ]]; then
+        packages+=(python-ironicclient)
+    fi
+    if [[ $SCENARIO == masakari ]]; then
+        packages+=(python-masakariclient)
+    fi
     if [[ "debian" == $BASE_DISTRO ]]; then
         sudo apt -y install python3-venv
     fi
     python3 -m venv ~/openstackclient-venv
     ~/openstackclient-venv/bin/pip install -U pip
-    ~/openstackclient-venv/bin/pip install python-openstackclient
-    ~/openstackclient-venv/bin/pip install python-heatclient
-    if [[ $SCENARIO == zun ]]; then
-        ~/openstackclient-venv/bin/pip install python-zunclient
-    fi
-    if [[ $SCENARIO == ironic ]]; then
-        ~/openstackclient-venv/bin/pip install python-ironicclient
-    fi
-    if [[ $SCENARIO == masakari ]]; then
-        ~/openstackclient-venv/bin/pip install python-masakariclient
-    fi
+    ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
 }
 
 function setup_config {
