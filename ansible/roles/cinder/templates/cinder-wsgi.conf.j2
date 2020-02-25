@@ -3,6 +3,13 @@
 {% else %}
     {% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 {% endif %}
+{% if cinder_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ cinder_api_listen_port }}
 
 ServerSignature Off
@@ -25,4 +32,9 @@ LogLevel info
     ErrorLog /var/log/kolla/cinder/cinder-api.log
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog /var/log/kolla/cinder/cinder-api-access.log logformat
+{% if cinder_enable_tls_backend | bool %}
+    SSLEngine On
+    SSLCertificateFile /etc/cinder/certs/cinder-cert.pem
+    SSLCertificateKeyFile /etc/cinder/certs/cinder-key.pem
+{% endif %}
 </VirtualHost>
