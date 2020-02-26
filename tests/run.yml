@@ -150,9 +150,32 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
-    - name: install kolla-ansible
+    - name: ensure /etc/ansible exists
+      file:
+        path: /etc/ansible
+        state: directory
+      become: true
+
+    - name: install kolla-ansible and dependencies
+      vars:
+        # Test latest ansible version on Ubuntu, minimum supported on others.
+        ansible_version_constraint: "{{ '>=2.6' if base_distro == 'ubuntu' else '<2.7' }}"
       pip:
-        name: "{{ kolla_ansible_src_dir }}"
+        name:
+          - "{{ kolla_ansible_src_dir }}"
+          - "ansible{{ ansible_version_constraint }}"
+          - "ara<1.0.0"
+      become: true
+
+    - name: get ARA callback plugin path
+      command: "python -m ara.setup.callback_plugins"
+      changed_when: false
+      register: ara_callback_plugins
+
+    - name: template ansible.cfg
+      template:
+        src: "{{ kolla_ansible_local_src_dir }}/tests/templates/ansible.cfg.j2"
+        dest: /etc/ansible/ansible.cfg
       become: true
 
     - name: copy passwords.yml file
@@ -190,6 +213,10 @@
         # NOTE(yoctozepto): no support for upgrades for now
         docker_image_tag: "{{ build_image_tag if need_build_image else zuul.branch | basename }}"
         docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else 'kolla/' }}"
+
+    - name: Record the running state of the environment as seen by the setup module
+      shell:
+        cmd: ansible all -i {{ kolla_inventory_path }} -e ansible_user={{ ansible_user }} -m setup > /tmp/logs/ansible/initial-setup
 
     # NOTE(mgoddard): We are using the script module here and later to ensure
     # we use the local copy of these scripts, rather than the one on the remote
