@@ -10,7 +10,7 @@ export PYTHONUNBUFFERED=1
 function upgrade {
     RAW_INVENTORY=/etc/kolla/inventory
     # generate self-signed certificates for the optional internal TLS tests
-    if [[ $SCENARIO == "tls" ]]; then
+    if [[ "$TLS_ENABLED" = "True" ]]; then
         tools/kolla-ansible -i ${RAW_INVENTORY} -vvv certificates > /tmp/logs/ansible/certificates
     fi
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/upgrade-prechecks
