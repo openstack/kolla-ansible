@@ -89,3 +89,19 @@
 - name: Ensure MariaDB is running normally on bootstrap host
   include_tasks: 'restart_services.yml'
   listen: Bootstrap MariaDB cluster
+
+- name: Restart mariadb-clustercheck container
+  vars:
+    service_name: "mariadb-clustercheck"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ service.image }}"
+    name: "{{ service.container_name }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment }}"
+  listen:
+    - restart mariadb-clustercheck
