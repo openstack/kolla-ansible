@@ -70,6 +70,31 @@ function test_instance_boot {
         echo "SUCCESS: Cinder volume attachment"
     fi
 
+    echo "TESTING: Floating ip allocation"
+    fip_addr=$(openstack floating ip create public1 -f value -c floating_ip_address)
+    openstack server add floating ip kolla_boot_test ${fip_addr}
+    echo "SUCCESS: Floating ip allocation"
+
+    echo "TESTING: PING&SSH to floating ip"
+    attempts=6
+    for i in $(seq 1 ${attempts}); do
+        if ping -c1 -W1 ${fip_addr} && ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no cirros@${fip_addr} hostname; then
+            break
+        elif [[ $i -eq ${attempts} ]]; then
+            echo "Failed to access server via SSH after ${attempts} attempts"
+            return 1
+        else
+            echo "Cannot access server - retrying"
+        fi
+        sleep 10
+    done
+    echo "SUCCESS: PING&SSH to floating ip"
+
+    echo "TESTING: Floating ip deallocation"
+    openstack server remove floating ip kolla_boot_test ${fip_addr}
+    openstack floating ip delete ${fip_addr}
+    echo "SUCCESS: Floating ip deallocation"
+
     echo "TESTING: Server deletion"
     openstack server delete --wait kolla_boot_test
     echo "SUCCESS: Server deletion"
