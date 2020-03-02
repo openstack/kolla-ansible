@@ -160,8 +160,11 @@
 
     - name: install kolla-ansible and dependencies
       vars:
-        # Test latest ansible version on Ubuntu, minimum supported on others.
-        ansible_version_constraint: "{{ '>=2.6' if base_distro == 'ubuntu' else '<2.7' }}"
+        # Test latest ansible version on Ubuntu and CentOS 8, minimum supported on others.
+        ansible_version_latest: >-
+          {{ base_distro == 'ubuntu' or
+             (base_distro == 'centos' and ansible_distribution_major_version | int == 8) }}
+        ansible_version_constraint: "{{ '>=2.6' if ansible_version_latest else '<2.7' }}"
       pip:
         name:
           - "{{ kolla_ansible_src_dir }}"
