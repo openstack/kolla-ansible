@@ -11,7 +11,7 @@ function test_smoke {
     openstack --debug compute service list
     openstack --debug network agent list
     openstack --debug orchestration service list
-    if [[ $SCENARIO == "ceph-ansible" ]] | [[ $SCENARIO == "zun" ]]; then
+    if [[ $SCENARIO == "ceph-ansible" ]] || [[ $SCENARIO == "zun" ]]; then
         openstack --debug volume service list
     fi
 }
