@@ -187,6 +187,12 @@ control
 [solum:children]
 control
 
+{# TODO(mnasiadka): Remove in Victoria #}
+{% if scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' %}
+[ceph:children]
+control
+{% endif %}
+
 [ironic:children]
 control
 
@@ -343,6 +349,29 @@ neutron
 
 [ironic-neutron-agent:children]
 neutron
+
+
+{# TODO(mnasiadka): Remove in Victoria #}
+{% if scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' %}
+# Ceph
+[ceph-mds:children]
+ceph
+
+[ceph-mgr:children]
+ceph
+
+[ceph-nfs:children]
+ceph
+
+[ceph-mon:children]
+ceph
+
+[ceph-rgw:children]
+ceph
+
+[ceph-osd:children]
+storage
+{% endif %}
 
 # Cinder
 [cinder-api:children]
