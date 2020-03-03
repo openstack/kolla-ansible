@@ -81,6 +81,9 @@ registry = 127.0.0.1:4000
 push = ${PUSH}
 logs_dir = /tmp/logs/build
 template_override = /etc/kolla/template_overrides.j2
+# NOTE(yoctozepto): to avoid issues with IPv6 not enabled in the docker daemon
+# and since we don't need isolated networks here, use host networking
+network_mode = host
 
 [profiles]
 gate = ${GATE_IMAGES}
