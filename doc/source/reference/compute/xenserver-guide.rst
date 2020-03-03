@@ -4,6 +4,10 @@
 XenServer - Nova Virtualisation Driver
 ======================================
 
+.. note::
+
+   XenAPI support has been deprecated and will be removed in the Victoria cycle.
+
 Overview
 ========
 

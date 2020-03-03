@@ -4,6 +4,10 @@
 Nova HyperV
 ===========
 
+.. note::
+
+   Hyper-V support has been deprecated and will be removed in the Victoria cycle.
+
 Overview
 ~~~~~~~~
 Currently, Kolla can deploy the following OpenStack services for Hyper-V:

@@ -19,6 +19,10 @@ The virtualisation driver may be selected via ``nova_compute_virt_type`` in
 HyperV
 ------
 
+.. note::
+
+   Hyper-V support has been deprecated and will be removed in the Victoria cycle.
+
 Information on using Nova with HyperV can be found in :doc:`hyperv-guide`.
 
 Libvirt
@@ -30,11 +34,19 @@ Information on the libvirt-based drivers ``kvm`` and ``qemu`` can be found in
 VMware
 ------
 
+.. note::
+
+   VMware support has been deprecated and will be removed in the Victoria cycle.
+
 Information on the VMware-based driver ``vmware`` can be found in
 :doc:`vmware-guide`.
 
 XenServer
 ---------
+
+.. note::
+
+   XenAPI support has been deprecated and will be removed in the Victoria cycle.
 
 Information on the XenServer-based driver ``xenapi`` can be found in
 :doc:`xenserver-guide`.
