@@ -123,7 +123,7 @@ function setup_ansible {
     fi
 
     # TODO(SamYaple): Move to virtualenv
-    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0"
+    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0" "pyfakefs<4"
 
     detect_distro
 
