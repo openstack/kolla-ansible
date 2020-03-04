@@ -92,7 +92,7 @@ function setup_ansible {
         ARA_VERSION="<0.16"
     fi
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara${ARA_VERSION}" "cmd2<0.9.0"
+    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara${ARA_VERSION}" "cmd2<0.9.0" "pyfakefs<4"
     if [[ $ACTION == "zun" ]]; then
         sudo -H pip install -U "python-zunclient"
     fi
