@@ -10,7 +10,8 @@
         logs_dir: "/tmp/logs"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
-        need_build_image: false
+        # FIXME: TESTING
+        need_build_image: true
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         is_upgrade: "{{ 'upgrade' in scenario }}"
         is_ceph: "{{ 'ceph' in scenario }}"
@@ -43,13 +44,6 @@
         - item.project.short_name == "kolla"
         - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
-
-    - name: Ensure tox is installed
-      pip:
-        name: tox
-        virtualenv: "{{ ansible_env.HOME }}/tox-venv"
-      when: need_build_image
-      become: true
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images

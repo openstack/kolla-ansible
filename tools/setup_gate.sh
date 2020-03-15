@@ -2,11 +2,11 @@
 
 set -o xtrace
 set -o errexit
+set -o pipefail
 
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-GIT_PROJECT_DIR=$(mktemp -d)
 
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
@@ -95,7 +95,6 @@ EOF
 apt_sources_list = /etc/kolla/sources.list
 EOF
         sudo cp /etc/apt/sources.list /etc/kolla/sources.list
-        sudo cat /etc/apt/sources.list.available.d/ubuntu-cloud-archive-pike.list | sudo tee -a /etc/kolla/sources.list
         # Append non-infra provided repos to list
         cat << EOF | sudo tee -a /etc/kolla/sources.list
 deb http://nyc2.mirrors.digitalocean.com/mariadb/repo/10.0/ubuntu xenial main
@@ -151,11 +150,27 @@ function prepare_images {
     if [[ "${BUILD_IMAGE}" == "False" ]]; then
         return
     fi
+
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
-    pushd "${KOLLA_SRC_DIR}"
-    sudo $TOX_VENV/bin/tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
-    popd
+
+    virtualenv ~/kolla-venv
+    . ~/kolla-venv/bin/activate
+
+    pip install -c $UPPER_CONSTRAINTS "${KOLLA_SRC_DIR}"
+
+    sudo ~/kolla-venv/bin/kolla-build
+
+    # NOTE(yoctozepto): due to debian buster we push after images are built
+    # see https://github.com/docker/for-linux/issues/711
+    if [[ "debian" == $BASE_DISTRO ]]; then
+        for img in $(sudo docker image ls --format '{{ .Repository }}:{{ .Tag }}' | grep lokolla/); do
+            sudo docker push $img;
+        done
+    fi
+
+    deactivate
 }
+
 
 setup_openstack_clients
 
