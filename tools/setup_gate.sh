@@ -2,11 +2,11 @@
 
 set -o xtrace
 set -o errexit
+set -o pipefail
 
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-GIT_PROJECT_DIR=$(mktemp -d)
 
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
@@ -28,7 +28,11 @@ function setup_openstack_clients {
     ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
 }
 
-function setup_config {
+function prepare_images {
+    if [[ "${BUILD_IMAGE}" == "False" ]]; then
+        return
+    fi
+
     if [[ $SCENARIO != "bifrost" ]]; then
         GATE_IMAGES="^cron,^fluentd,^glance,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^neutron,^nova-,^openvswitch,^rabbitmq,^horizon,^chrony,^heat,^placement"
     else
@@ -74,7 +78,8 @@ function setup_config {
     if [[ "debian" == $BASE_DISTRO ]]; then
         PUSH="false"
     fi
-    cat <<EOF | sudo tee /etc/kolla/kolla-build.conf
+
+    sudo tee /etc/kolla/kolla-build.conf <<EOF
 [DEFAULT]
 namespace = lokolla
 base = ${BASE_DISTRO}
@@ -85,28 +90,32 @@ registry = 127.0.0.1:4000
 push = ${PUSH}
 logs_dir = /tmp/logs/build
 template_override = /etc/kolla/template_overrides.j2
+EOF
 
+    # TODO(mgoddard): Remove this if block when CentOS 7 is no longer
+    # supported.
+    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
+        sudo tee -a /etc/kolla/kolla-build.conf <<EOF
+base_tag = 8
+EOF
+    fi
+
+    sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}
 EOF
 
     mkdir -p /tmp/logs/build
-}
 
-function prepare_images {
-    if [[ "${BUILD_IMAGE}" == "False" ]]; then
-        return
-    fi
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
-    pushd "${KOLLA_SRC_DIR}"
-    # TODO(mgoddard): Remove this if block when CentOS 7 is no longer
-    # supported.
-    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
-        kolla_base_distro=centos8
-    else
-        kolla_base_distro=${BASE_DISTRO}
-    fi
-    sudo $TOX_VENV/bin/tox -e "build-${kolla_base_distro}-${INSTALL_TYPE}"
+
+    virtualenv ~/kolla-venv
+    . ~/kolla-venv/bin/activate
+
+    pip install -c $UPPER_CONSTRAINTS "${KOLLA_SRC_DIR}"
+
+    sudo ~/kolla-venv/bin/kolla-build
+
     # NOTE(yoctozepto): due to debian buster we push after images are built
     # see https://github.com/docker/for-linux/issues/711
     if [[ "debian" == $BASE_DISTRO ]]; then
@@ -114,13 +123,14 @@ function prepare_images {
             sudo docker push $img;
         done
     fi
-    popd
+
+    deactivate
 }
+
 
 setup_openstack_clients
 
-setup_config
-
 RAW_INVENTORY=/etc/kolla/inventory
 tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
+
 prepare_images
