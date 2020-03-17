@@ -12,6 +12,25 @@
     - item.value.enabled | bool
   with_dict: "{{ rabbitmq_services }}"
 
+- name: Reading cluster configuration file
+  become: True
+  slurp:
+    src: "{{ node_config_directory }}/{{ project_name }}/rabbitmq-clusterer.config"
+  register: cluster_config
+  failed_when: False
+
+- name: Establishing existing cluster version number
+  set_fact:
+    rabbitmq_cluster_version: "{{ cluster_config['content'] | b64decode | regex_search(regexp,'\\1', multiline=True) | first }}"
+  vars:
+    regexp: '\{version, (\d+)\},'
+  when: cluster_config['content'] is defined
+
+- name: Establishing default cluster version number
+  set_fact:
+    rabbitmq_cluster_version: 1
+  when: cluster_config['content'] is not defined
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -29,6 +48,7 @@
 - name: Copying over rabbitmq configs
   vars:
     service: "{{ rabbitmq_services['rabbitmq'] }}"
+    cluster_version: "{{ rabbitmq_cluster_version }}"
   template:
     src: "{{ item }}.j2"
     dest: "{{ node_config_directory }}/{{ project_name }}/{{ item }}"
@@ -43,6 +63,36 @@
     - "rabbitmq.config"
     - "rabbitmq-clusterer.config"
     - "definitions.json"
+  notify:
+    - Restart rabbitmq container
+
+- name: Bumping cluster version
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  set_fact:
+    rabbitmq_cluster_version: "{{ rabbitmq_cluster_version | int + 1 }}"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - rabbitmq_confs.changed | bool
+    - cluster_config['content'] is defined
+
+- name: Updating cluster version
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+    cluster_version: "{{ rabbitmq_cluster_version }}"
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ node_config_directory }}/{{ project_name }}/{{ item }}"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - rabbitmq_confs.changed | bool
+    - cluster_config['content'] is defined
+  with_items:
+    - "rabbitmq-clusterer.config"
   notify:
     - Restart rabbitmq container
 
