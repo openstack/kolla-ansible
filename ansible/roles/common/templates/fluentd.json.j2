@@ -13,6 +13,14 @@
     {% set fluentd_cmd = '/usr/sbin/td-agent' %}
 {% endif %}
 
+{%- macro config_directory_permissions(dir) -%}
+        {
+            "path": "{{ fluentd_dir }}/{{ dir }}",
+            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "perm": "0700"
+        }
+{%- endmacro -%}
+
 {
     "command": "{{ fluentd_cmd }}",
     "config_files": [
@@ -70,7 +78,12 @@
             "path": "/var/lib/fluentd/data",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
             "recurse": true
-        }
+        },
+        {# Allow Fluentd to read configuration from folders #}
+        {{ config_directory_permissions("input") }},
+        {{ config_directory_permissions("filter") }},
+        {{ config_directory_permissions("format") }},
+        {{ config_directory_permissions("output") }}
     ]
 
 }
