@@ -1,49 +1,8 @@
 #jinja2: trim_blocks: False
-{% set services = [
-    ( 'aodh', enable_aodh ),
-    ( 'barbican', enable_barbican ),
-    ( 'blazar', enable_blazar ),
-    ( 'ceilometer', enable_ceilometer ),
-    ( 'cinder', enable_cinder ),
-    ( 'cloudkitty', enable_cloudkitty ),
-    ( 'congress', enable_congress ),
-    ( 'cyborg', enable_cyborg ),
-    ( 'designate', enable_designate ),
-    ( 'freezer', enable_freezer ),
-    ( 'glance', enable_glance ),
-    ( 'gnocchi', enable_gnocchi ),
-    ( 'heat', enable_heat ),
-    ( 'horizon', enable_horizon ),
-    ( 'ironic', enable_ironic ),
-    ( 'ironic-inspector', enable_ironic ),
-    ( 'karbor', enable_karbor ),
-    ( 'keystone', enable_keystone ),
-    ( 'kuryr', enable_kuryr ),
-    ( 'magnum', enable_magnum ),
-    ( 'manila', enable_manila ),
-    ( 'masakari', enable_masakari ),
-    ( 'mistral', enable_mistral ),
-    ( 'monasca', enable_monasca ),
-    ( 'mongodb', enable_mongodb ),
-    ( 'murano', enable_murano ),
-    ( 'neutron', enable_neutron ),
-    ( 'nova', enable_nova ),
-    ( 'octavia', enable_octavia ),
-    ( 'panko', enable_panko ),
-    ( 'qinling', enable_qinling ),
-    ( 'rally', enable_rally ),
-    ( 'sahara', enable_sahara ),
-    ( 'searchlight', enable_searchlight ),
-    ( 'senlin', enable_senlin ),
-    ( 'solum', enable_solum ),
-    ( 'tacker', enable_tacker ),
-    ( 'trove', enable_trove ),
-    ( 'watcher', enable_watcher ),
-    ( 'zun', enable_zun )
-] %}
+{% if fluentd_enabled_input_openstack_services | length > 0 -%}
 <source>
   @type tail
-  path {% for service, enabled in services if enabled | bool %}/var/log/kolla/{{ service }}/*.log{% if not loop.last %},{% endif %}{% endfor %}
+  path {% for service in fluentd_enabled_input_openstack_services %}/var/log/kolla/{{ service }}/*.log{% if not loop.last %},{% endif %}{% endfor %}
   exclude_path ["/var/log/kolla/monasca/agent*.log",
                 "/var/log/kolla/monasca/grafana.log",
                 "/var/log/kolla/monasca/monasca-log-api.log",
@@ -63,3 +22,4 @@
   ignore_repeated_permission_error true
   enable_watch_timer false
 </source>
+{%- endif %}
