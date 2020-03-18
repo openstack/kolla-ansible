@@ -32,6 +32,9 @@
 
 - name: Create default control plane organisation if it doesn't exist
   become: true
+  vars:
+    monasca_orgs_body:
+      name: '{{ monasca_grafana_control_plane_org }}'
   kolla_toolbox:
     module_name: uri
     module_args:
@@ -40,8 +43,7 @@
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       body_format: json
-      body:
-        name: '{{ monasca_grafana_control_plane_org }}'
+      body: "{{ monasca_orgs_body | to_json }}"
       force_basic_auth: true
   run_once: True
   when: monasca_grafana_control_plane_org not in monasca_grafana_orgs.json|map(attribute='name')|unique
@@ -61,6 +63,10 @@
   register: monasca_grafana_conf_org
 
 - name: Add {{ monasca_grafana_admin_username }} user to control plane organisation
+  vars:
+    monasca_user_body:
+      loginOrEmail: '{{ monasca_grafana_admin_username }}'
+      role: Admin
   become: true
   kolla_toolbox:
     module_name: uri
@@ -69,9 +75,7 @@
       url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/orgs/{{ monasca_grafana_conf_org.json.id }}/users"
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
-      body:
-        loginOrEmail: '{{ monasca_grafana_admin_username }}'
-        role: Admin
+      body: "{{ monasca_user_body | to_json }}"
       force_basic_auth: true
       body_format: json
       status_code: 200, 409
