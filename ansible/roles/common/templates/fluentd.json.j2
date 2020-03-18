@@ -2,6 +2,15 @@
 {% set fluentd_dir = '/etc/td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else '/etc/fluentd' %}
 {% set fluentd_conf = 'td-agent.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluent.conf' %}
 {% set fluentd_user = 'td-agent' if kolla_base_distro in ['ubuntu', 'debian'] else 'fluentd' %}
+
+{%- macro config_directory_permissions(dir) -%}
+        {
+            "path": "{{ fluentd_dir }}/{{ dir }}",
+            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "perm": "0700"
+        }
+{%- endmacro -%}
+
 {
     "command": "{{ fluentd_cmd }}",
     "config_files": [
@@ -14,32 +23,32 @@
         {# Copy all configuration files in input/ directory to include #}
         {# custom input configs. #}
         {
-            "source": "{{ container_config_directory }}/input/*.conf",
-            "dest": "{{ fluentd_dir }}/input/",
+            "source": "{{ container_config_directory }}/input",
+            "dest": "{{ fluentd_dir }}/input",
             "owner": "{{ fluentd_user }}",
             "perm": "0600"
         },
         {# Copy all configuration files in filter/ directory to include #}
         {# custom filter configs. #}
         {
-            "source": "{{ container_config_directory }}/filter/*.conf",
-            "dest": "{{ fluentd_dir }}/filter/",
+            "source": "{{ container_config_directory }}/filter",
+            "dest": "{{ fluentd_dir }}/filter",
             "owner": "{{ fluentd_user }}",
             "perm": "0600"
         },
         {# Copy all configuration files in format/ directory to include #}
         {# custom format configs. #}
         {
-            "source": "{{ container_config_directory }}/format/*.conf",
-            "dest": "{{ fluentd_dir }}/format/",
+            "source": "{{ container_config_directory }}/format",
+            "dest": "{{ fluentd_dir }}/format",
             "owner": "{{ fluentd_user }}",
             "perm": "0600"
         },
         {# Copy all configuration files in output/ directory to include #}
         {# custom output configs. #}
         {
-            "source": "{{ container_config_directory }}/output/*.conf",
-            "dest": "{{ fluentd_dir }}/output/",
+            "source": "{{ container_config_directory }}/output",
+            "dest": "{{ fluentd_dir }}/output",
             "owner": "{{ fluentd_user }}",
             "perm": "0600"
         }
@@ -59,7 +68,12 @@
             "path": "/var/lib/fluentd/data",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
             "recurse": true
-        }
+        },
+        {# Allow Fluentd to read configuration from folders #}
+        {{ config_directory_permissions("input") }},
+        {{ config_directory_permissions("filter") }},
+        {{ config_directory_permissions("format") }},
+        {{ config_directory_permissions("output") }}
     ]
 
 }
