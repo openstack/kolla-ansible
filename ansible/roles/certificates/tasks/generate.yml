@@ -1,21 +1,33 @@
 ---
 - name: Ensuring private internal directory exist
   file:
-    path: "{{ certificates_dir }}/private/internal"
+    path: "{{ kolla_certificates_dir }}/private/internal"
     state: "directory"
     recurse: yes
     mode: "0770"
 
 - name: Ensuring private external directory exist
   file:
-    path: "{{ certificates_dir }}/private/external"
+    path: "{{ kolla_certificates_dir }}/private/external"
     state: "directory"
     recurse: yes
     mode: "0770"
 
+- name: Ensuring backend certificate and key directories exist
+  file:
+    path: "{{ item | dirname }}"
+    state: "directory"
+    recurse: yes
+    mode: "0770"
+  when:
+    - kolla_enable_tls_backend | bool
+  with_items:
+    - "{{ kolla_tls_backend_cert }}"
+    - "{{ kolla_tls_backend_key }}"
+
 - name: Ensuring ca directory exist
   file:
-    path: "{{ certificates_dir }}/ca"
+    path: "{{ kolla_certificates_dir }}/ca"
     state: "directory"
     recurse: yes
     mode: "0770"
@@ -24,36 +36,36 @@
     - name: Creating external SSL configuration file
       template:
         src: "{{ item }}.j2"
-        dest: "{{ certificates_dir }}/{{ item }}"
+        dest: "{{ kolla_certificates_dir }}/{{ item }}"
         mode: "0660"
       with_items:
         - "openssl-kolla.cnf"
     - name: Creating external Key
       command: creates="{{ item }}" openssl genrsa -out {{ item }}
       with_items:
-        - "{{ certificates_dir }}/private/external/external.key"
+        - "{{ kolla_certificates_dir }}/private/external/external.key"
     - name: Setting permissions on external key
       file:
-        path: "{{ certificates_dir }}/private/external/external.key"
+        path: "{{ kolla_certificates_dir }}/private/external/external.key"
         mode: "0660"
         state: file
     - name: Creating external Server Certificate
       command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
-        -config {{ certificates_dir }}/openssl-kolla.cnf \
+        -config {{ kolla_certificates_dir }}/openssl-kolla.cnf \
         -days 3650 \
         -extensions v3_req \
-        -key {{ certificates_dir }}/private/external/external.key \
+        -key {{ kolla_certificates_dir }}/private/external/external.key \
         -out {{ item }}
       with_items:
-        - "{{ certificates_dir }}/private/external/external.crt"
+        - "{{ kolla_certificates_dir }}/private/external/external.crt"
     - name: Creating external CA Certificate File
       copy:
-        src: "{{ certificates_dir }}/private/external/external.crt"
+        src: "{{ kolla_certificates_dir }}/private/external/external.crt"
         dest: "{{ kolla_external_fqdn_cacert }}"
         mode: "0660"
     - name: Creating external Server PEM File
       assemble:
-        src: "{{ certificates_dir }}/private/external"
+        src: "{{ kolla_certificates_dir }}/private/external"
         dest: "{{ kolla_external_fqdn_cert }}"
         mode: "0660"
   when:
@@ -62,14 +74,14 @@
 - block:
     - name: Copy the external certificate crt to be the internal when internal + external are same network
       copy:
-        src: "{{ certificates_dir }}/private/external/external.crt"
-        dest: "{{ certificates_dir }}/private/internal/internal.crt"
+        src: "{{ kolla_certificates_dir }}/private/external/external.crt"
+        dest: "{{ kolla_certificates_dir }}/private/internal/internal.crt"
         remote_src: yes
         mode: "0660"
     - name: Copy the external certificate key to be the internal when internal + external are same network
       copy:
-        src: "{{ certificates_dir }}/private/external/external.key"
-        dest: "{{ certificates_dir }}/private/internal/internal.key"
+        src: "{{ kolla_certificates_dir }}/private/external/external.key"
+        dest: "{{ kolla_certificates_dir }}/private/internal/internal.key"
         remote_src: yes
         mode: "0660"
     - name: Copy the external PEM file to be the internal when internal + external are same network
@@ -93,38 +105,72 @@
     - name: Creating internal SSL configuration file
       template:
         src: "{{ item }}.j2"
-        dest: "{{ certificates_dir }}/{{ item }}"
+        dest: "{{ kolla_certificates_dir }}/{{ item }}"
         mode: "0660"
       with_items:
         - "openssl-kolla-internal.cnf"
     - name: Creating internal Key
       command: creates="{{ item }}" openssl genrsa -out {{ item }}
       with_items:
-        - "{{ certificates_dir }}/private/internal/internal.key"
+        - "{{ kolla_certificates_dir }}/private/internal/internal.key"
     - name: Setting permissions on internal key
       file:
-        path: "{{ certificates_dir }}/private/internal/internal.key"
+        path: "{{ kolla_certificates_dir }}/private/internal/internal.key"
         mode: "0660"
         state: file
     - name: Creating internal Server Certificate
       command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
-        -config {{ certificates_dir }}/openssl-kolla-internal.cnf \
+        -config {{ kolla_certificates_dir }}/openssl-kolla-internal.cnf \
         -days 3650 \
         -extensions v3_req \
-        -key {{ certificates_dir }}/private/internal/internal.key \
+        -key {{ kolla_certificates_dir }}/private/internal/internal.key \
         -out {{ item }}
       with_items:
-        - "{{ certificates_dir }}/private/internal/internal.crt"
+        - "{{ kolla_certificates_dir }}/private/internal/internal.crt"
     - name: Creating internal CA Certificate File
       copy:
-        src: "{{ certificates_dir }}/private/internal/internal.crt"
+        src: "{{ kolla_certificates_dir }}/private/internal/internal.crt"
         dest: "{{ kolla_internal_fqdn_cacert }}"
         mode: "0660"
     - name: Creating internal Server PEM File
       assemble:
-        src: "{{ certificates_dir }}/private/internal"
+        src: "{{ kolla_certificates_dir }}/private/internal"
         dest: "{{ kolla_internal_fqdn_cert }}"
         mode: "0660"
   when:
     - kolla_enable_tls_internal | bool
     - not kolla_same_external_internal_vip | bool
+
+- block:
+    - name: Creating backend SSL configuration file
+      template:
+        src: "{{ item }}.j2"
+        dest: "{{ kolla_certificates_dir }}/{{ item }}"
+        mode: "0660"
+      with_items:
+        - "openssl-kolla-backend.cnf"
+    - name: Creating backend Key
+      command: creates="{{ item }}" openssl genrsa -out {{ item }}
+      with_items:
+        - "{{ kolla_tls_backend_key }}"
+    - name: Setting permissions on backend key
+      file:
+        path: "{{ kolla_tls_backend_key }}"
+        mode: "0660"
+        state: file
+    - name: Creating backend Server Certificate
+      command: creates="{{ item }}" openssl req -new -nodes -sha256 -x509 \
+        -config {{ kolla_certificates_dir }}/openssl-kolla-backend.cnf \
+        -days 3650 \
+        -extensions v3_req \
+        -key {{ kolla_tls_backend_key }} \
+        -out {{ item }}
+      with_items:
+        - "{{ kolla_tls_backend_cert }}"
+    - name: Creating backend Certificate file to be included in container trusted ca-certificates
+      copy:
+        src: "{{ kolla_tls_backend_cert }}"
+        dest: "{{ kolla_certificates_dir }}/ca/backend-cert.crt"
+        mode: "0660"
+  when:
+    - kolla_enable_tls_backend | bool

@@ -34,7 +34,19 @@
             "dest": "/etc/{{ keystone_dir }}/wsgi-keystone.conf",
             "owner": "keystone",
             "perm": "0600"
-        }
+        }{% if keystone_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/keystone-cert.pem",
+            "dest": "/etc/keystone/certs/keystone-cert.pem",
+            "owner": "keystone",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/keystone-key.pem",
+            "dest": "/etc/keystone/certs/keystone-key.pem",
+            "owner": "keystone",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {

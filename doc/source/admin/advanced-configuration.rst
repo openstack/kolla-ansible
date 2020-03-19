@@ -99,12 +99,12 @@ The default for TLS is disabled, to enable TLS networking:
 .. code-block:: yaml
 
    kolla_enable_tls_external: "yes"
-   kolla_external_fqdn_cert: "{{ node_config }}/certificates/mycert.pem"
+   kolla_external_fqdn_cert: "{{ kolla_certificates_dir }}/mycert.pem"
 
    and/or
 
    kolla_enable_tls_internal: "yes"
-   kolla_internal_fqdn_cert: "{{ node_config }}/certificates/mycert-internal.pem"
+   kolla_internal_fqdn_cert: "{{ kolla_certificates_dir }}/mycert-internal.pem"
 
 
 .. note::
@@ -181,7 +181,7 @@ service containers to enable trust for those CA certificates. This is required
 for any certificates that are either self-signed or signed by a private CA,
 and are not already present in the service image trust store.
 
-All certificate file names will have the "kolla-customca-" prefix appended to
+All certificate file names will have the "kolla-customca-" prefix prepended to
 it when it is copied into the containers. For example, if a certificate file is
 named "internal.crt", it will be named "kolla-customca-internal.crt" in the
 containers.
@@ -191,6 +191,11 @@ the ``/usr/local/share/ca-certificates/`` directory.
 
 For Centos and Red Hat Linux containers, the certificate files will be copied
 to the ``/etc/pki/ca-trust/source/anchors/`` directory.
+
+In addition, the ``openstack_cacert`` should be configured with the path to
+the cacert in the container. For example, if the self-signed certificate task
+was used and the deployment is on ubuntu, the path would be:
+"/etc/pki/ca-trust/source/anchors/kolla-customca-haproxy-internal.crt"
 
 .. _service-config:
 

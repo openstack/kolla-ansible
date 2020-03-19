@@ -142,6 +142,20 @@
   notify:
     - Restart haproxy container
 
+- name: Copying over extra CA certificates
+  vars:
+    service: "{{ haproxy_services['haproxy'] }}"
+  become: true
+  copy:
+    src: "{{ kolla_certificates_dir }}/ca/"
+    dest: "{{ node_config_directory }}/haproxy/ca-certificates"
+    mode: "0644"
+  when:
+    - inventory_hostname in groups[service.group]
+    - kolla_copy_ca_into_containers | bool
+  notify:
+    - Restart haproxy container
+
 - name: Copying over haproxy start script
   vars:
     service: "{{ haproxy_services['haproxy'] }}"
