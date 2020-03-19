@@ -61,7 +61,7 @@ function setup_config {
     fi
 
     if [[ $SCENARIO == "mariadb" ]]; then
-        GATE_IMAGES="^cron,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
+        GATE_IMAGES="^cron,^fluentd,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
     # NOTE(yoctozepto): we cannot build and push at the same time on debian
