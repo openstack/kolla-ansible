@@ -82,6 +82,8 @@ function test_instance_boot {
             break
         elif [[ $i -eq ${attempts} ]]; then
             echo "Failed to access server via SSH after ${attempts} attempts"
+            echo "Console log:"
+            openstack console log show kolla_boot_test
             return 1
         else
             echo "Cannot access server - retrying"
