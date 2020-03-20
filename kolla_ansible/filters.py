@@ -63,7 +63,7 @@ def service_mapped_to_host(context, service):
 
     group = service.get("group")
     if group is not None:
-        return group in context.get("groups")
+        return group in context.get("group_names")
 
     raise exception.FilterError(
         "Service definition for '%s' does not have a 'group' or "
