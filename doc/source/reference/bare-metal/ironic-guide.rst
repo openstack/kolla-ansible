@@ -6,7 +6,7 @@ Ironic - Bare Metal provisioning
 
 Overview
 ~~~~~~~~
-Ironic works well in Kolla, though it is not currently tested as part of Kolla
+Ironic works well in Kolla, though it is not thoroughly tested as part of Kolla
 CI, so may be subject to instability.
 
 Pre-deployment Configuration
@@ -112,8 +112,10 @@ initialise the cloud with some defaults (only to be used for demo purposes):
 
   tools/init-runonce
 
-Add the deploy kernel and ramdisk to Glance. Here we're reusing the same images
-that were fetched for the Inspector:
+The :ironic-doc:`Ironic documentation <install/configure-glance-images>`
+describes how to create the deploy kernel and ramdisk and register them with
+Glance. In this example we're reusing the same images that were fetched for the
+Inspector:
 
 .. code-block:: console
 
@@ -123,16 +125,22 @@ that were fetched for the Inspector:
   openstack image create --disk-format ari --container-format ari --public \
     --file /etc/kolla/config/ironic/ironic-agent.initramfs deploy-initrd
 
-Create a baremetal flavor:
+The :ironic-doc:`Ironic documentation <install/configure-nova-flavors>`
+describes how to create Nova flavors for bare metal.  For example:
 
 .. code-block:: console
 
   openstack flavor create --ram 512 --disk 1 --vcpus 1 my-baremetal-flavor
   openstack flavor set my-baremetal-flavor --property \
-    resources:CUSTOM_BAREMETAL_RESOURCE_CLASS=1
+    resources:CUSTOM_BAREMETAL_RESOURCE_CLASS=1 \
+    resources:resources:VCPU=0 \
+    resources:resources:MEMORY_MB=0 \
+    resources:resources:DISK_GB=0
 
-Create the baremetal node and associate a port. (Ensure to substitute correct
-values for the kernel, ramdisk, and MAC address for your baremetal node)
+The :ironic-doc:`Ironic documentation <install/enrollment>` describes how to
+enroll baremetal nodes and ports.  In the following example ensure to
+substitute correct values for the kernel, ramdisk, and MAC address for your
+baremetal node.
 
 .. code-block:: console
 
