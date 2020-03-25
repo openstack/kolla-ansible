@@ -7,75 +7,29 @@
       - keepalived
   register: container_facts
 
-- name: Clearing temp kolla_keepalived_running file
-  local_action: file path=/tmp/kolla_keepalived_running state=absent
-  changed_when: False
-  check_mode: no
-  run_once: true
+- name: Group hosts by whether they are running keepalived
+  group_by:
+    key: "keepalived_running_{{ container_facts['keepalived'] is defined }}"
   when:
     - enable_keepalived | bool
-
-- name: Create empty temp kolla_keepalived_running file
-  local_action: copy content=None dest=/tmp/kolla_keepalived_running mode=0644
-  changed_when: False
-  check_mode: no
-  run_once: true
-  when:
-    - enable_keepalived | bool
-
-- name: Getting hosts who is running keepalived
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_keepalived_running mode=0644
-  changed_when: False
-  check_mode: no
-  when:
     - inventory_hostname in groups['haproxy']
-    - container_facts['keepalived'] is defined
-    - enable_keepalived | bool
 
-- name: Registering host running keepalived
-  set_fact:
-    host_running_keepalived: "{{ lookup('file', '/tmp/kolla_keepalived_running') }}"
+- name: Group hosts by whether they are running HAProxy
+  group_by:
+    key: "haproxy_running_{{ container_facts['haproxy'] is defined }}"
   when:
-    - enable_keepalived | bool
-
-- name: Clearing temp kolla_keepalived_running file
-  local_action: file path=/tmp/kolla_keepalived_running state=absent
-  changed_when: False
-  check_mode: no
-  run_once: true
-  when:
-    - enable_keepalived | bool
-
-- name: Clearing temp kolla_haproxy_running file
-  local_action: file path=/tmp/kolla_haproxy_running state=absent
-  changed_when: False
-  check_mode: no
-  run_once: true
-
-- name: Create empty temp kolla_haproxy_running file
-  local_action: copy content=None dest=/tmp/kolla_haproxy_running mode=0644
-  changed_when: False
-  check_mode: no
-  run_once: true
-
-- name: Getting hosts who is running haproxy
-  local_action: copy content={{ ansible_hostname }} dest=/tmp/kolla_haproxy_running mode=0644
-  changed_when: False
-  check_mode: no
-  when:
-    - inventory_hostname in groups['haproxy']
-    - container_facts['haproxy'] is defined
     - enable_haproxy | bool
+    - inventory_hostname in groups['haproxy']
 
-- name: Registering host running haproxy
+- name: Set facts about whether we can run HAProxy and keepalived VIP prechecks
+  vars:
+    # NOTE(mgoddard): We can only reliably run this precheck if all hosts in
+    # the haproxy group are included in the batch. This may not be the case if
+    # using --limit or --serial.
+    all_hosts_in_batch: "{{ groups['haproxy'] | difference(ansible_play_batch) | list | length == 0 }}"
   set_fact:
-    host_running_haproxy: "{{ lookup('file', '/tmp/kolla_haproxy_running') }}"
-
-- name: Clearing temp kolla_haproxy_running file
-  local_action: file path=/tmp/kolla_haproxy_running state=absent
-  changed_when: False
-  check_mode: no
-  run_once: true
+    keepalived_vip_prechecks: "{{ all_hosts_in_batch and groups['keepalived_running_True'] is not defined }}"
+    haproxy_vip_prechecks: "{{ all_hosts_in_batch and groups['haproxy_running_True'] is not defined }}"
 
 - name: Checking if external haproxy certificate exists
   run_once: true
@@ -129,7 +83,7 @@
       command: "{{ 'ping' if kolla_external_vip_address|ipv4 else 'ping6' }}"
   when:
     - enable_keepalived | bool
-    - "host_running_keepalived == 'None'"
+    - keepalived_vip_prechecks
     - enable_haproxy | bool
 
 - name: Checking free port for HAProxy stats
@@ -165,7 +119,7 @@
     state: stopped
   when:
     - enable_haproxy | bool
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
     - inventory_hostname in groups['haproxy']
     - api_interface_address != kolla_internal_vip_address
 
@@ -205,7 +159,7 @@
     - enable_aodh | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('aodh_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Barbican API HAProxy
   wait_for:
@@ -218,7 +172,7 @@
     - enable_barbican | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('barbican_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Blazar API HAProxy
   wait_for:
@@ -231,7 +185,7 @@
     - enable_blazar | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('blazar_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Cinder API HAProxy
   wait_for:
@@ -244,7 +198,7 @@
     - enable_cinder | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('cinder_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Cloudkitty API HAProxy
   wait_for:
@@ -257,7 +211,7 @@
     - enable_cloudkitty | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('cloudkitty_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Congress API HAProxy
   wait_for:
@@ -270,7 +224,8 @@
     - enable_congress | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('congress_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
+
 
 - name: Checking free port for Cyborg API HAProxy
   wait_for:
@@ -283,6 +238,7 @@
     - enable_cyborg | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('cyborg_api') == -1
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Designate API HAProxy
   wait_for:
@@ -295,7 +251,7 @@
     - enable_designate | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('designate_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Elasticsearch HAProxy
   wait_for:
@@ -308,7 +264,7 @@
     - enable_elasticsearch | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('elasticsearch') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Glance API HAProxy
   wait_for:
@@ -321,7 +277,7 @@
     - enable_glance | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('glance_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Gnocchi API HAProxy
   wait_for:
@@ -334,7 +290,7 @@
     - enable_gnocchi | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('gnocchi_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Freezer API HAProxy
   wait_for:
@@ -347,7 +303,7 @@
     - enable_freezer | bool
     - haproxy_stat.find('freezer_api') == -1
     - inventory_hostname in groups['haproxy']
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Grafana server HAProxy
   wait_for:
@@ -360,7 +316,7 @@
     - enable_grafana | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('grafana_server') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Heat API HAProxy
   wait_for:
@@ -373,7 +329,7 @@
     - enable_heat | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('heat_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Heat API CFN HAProxy
   wait_for:
@@ -386,7 +342,7 @@
     - enable_heat | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('heat_api_cfn') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Horizon HAProxy
   wait_for:
@@ -399,7 +355,7 @@
     - enable_horizon | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('horizon') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Ironic API HAProxy
   wait_for:
@@ -412,7 +368,7 @@
     - enable_ironic | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('ironic_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Ironic Inspector HAProxy
   wait_for:
@@ -425,7 +381,7 @@
     - enable_ironic | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('ironic_inspector') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Karbor Admin HAProxy
   wait_for:
@@ -438,7 +394,7 @@
     - enable_karbor | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('karbor_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Keystone Admin HAProxy
   wait_for:
@@ -451,7 +407,7 @@
     - enable_keystone | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('keystone_admin') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Keystone Internal HAProxy
   wait_for:
@@ -464,7 +420,7 @@
     - enable_keystone | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('keystone_internal') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Keystone Public HAProxy
   wait_for:
@@ -478,7 +434,7 @@
     - enable_keystone | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('keystone_external') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Kibana HAProxy
   wait_for:
@@ -491,7 +447,7 @@
     - enable_kibana | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('kibana') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Magnum API HAProxy
   wait_for:
@@ -504,7 +460,7 @@
     - enable_magnum | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('magnum_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Manila API HAProxy
   wait_for:
@@ -517,7 +473,7 @@
     - enable_manila | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('manila_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for MariaDB HAProxy
   wait_for:
@@ -530,7 +486,7 @@
     - enable_mariadb | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('mariadb') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Masakari API HAProxy
   wait_for:
@@ -543,7 +499,7 @@
     - enable_masakari | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('masakari_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Mistral API HAProxy
   wait_for:
@@ -556,7 +512,7 @@
     - enable_mistral | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('mistral_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca API internal HAProxy
   wait_for:
@@ -569,7 +525,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca API public HAProxy
   wait_for:
@@ -583,7 +539,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_api_external') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca Log API internal HAProxy
   wait_for:
@@ -596,7 +552,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_log_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca Log API public HAProxy
   wait_for:
@@ -610,7 +566,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_log_api_external') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca Grafana API internal HAProxy
   wait_for:
@@ -623,7 +579,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_grafana_server') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Monasca Grafana API public HAProxy
   wait_for:
@@ -637,7 +593,7 @@
     - enable_monasca | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('monasca_grafana_server_external') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Mongodb HAProxy
   wait_for:
@@ -650,7 +606,7 @@
     - enable_mongodb | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('mongodb') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Murano API HAProxy
   wait_for:
@@ -663,7 +619,7 @@
     - enable_murano | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('murano_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Neutron Server HAProxy
   wait_for:
@@ -676,7 +632,7 @@
     - enable_neutron | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('neutron_server') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova API HAProxy
   wait_for:
@@ -689,7 +645,7 @@
     - enable_nova | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('nova_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova Metadata HAProxy
   wait_for:
@@ -702,7 +658,7 @@
     - enable_nova | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('nova_metadata') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova NoVNC HAProxy
   wait_for:
@@ -716,7 +672,7 @@
     - nova_console == 'novnc'
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('nova_novncproxy') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova Serial Proxy HAProxy
   wait_for:
@@ -730,7 +686,7 @@
     - haproxy_stat.find('nova_serialconsole_proxy') == -1
     - enable_nova_serialconsole_proxy | bool
     - inventory_hostname in groups['haproxy']
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova Spice HTML5 HAProxy
   wait_for:
@@ -744,7 +700,7 @@
     - nova_console == 'spice'
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('nova_spicehtml5proxy') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Nova Placement API HAProxy
   wait_for:
@@ -757,7 +713,7 @@
     - enable_nova | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('placement_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Octavia API HAProxy
   wait_for:
@@ -770,7 +726,7 @@
     - enable_octavia | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('octavia_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Panko API HAProxy
   wait_for:
@@ -783,7 +739,7 @@
     - enable_panko | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('panko_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Qinling API HAProxy
   wait_for:
@@ -796,7 +752,7 @@
     - enable_qinling | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('qinling_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for RabbitMQ Management HAProxy
   wait_for:
@@ -809,7 +765,7 @@
     - enable_rabbitmq | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('rabbitmq_management') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for outward RabbitMQ Management HAProxy
   wait_for:
@@ -821,7 +777,7 @@
     - enable_outward_rabbitmq | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('outward_rabbitmq_management') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for RadosGW HAProxy
   wait_for:
@@ -834,7 +790,7 @@
     - enable_ceph_rgw | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('radosgw') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Sahara API HAProxy
   wait_for:
@@ -847,7 +803,7 @@
     - enable_sahara | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('sahara_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Searchlight API HAProxy
   wait_for:
@@ -860,7 +816,7 @@
     - enable_searchlight | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('searchlight_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Senlin API HAProxy
   wait_for:
@@ -873,7 +829,7 @@
     - enable_senlin | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('senlin_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Solum Application Deployment HAProxy
   wait_for:
@@ -886,7 +842,7 @@
     - enable_solum | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('solum_application_deployment') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Solum Image Builder HAProxy
   wait_for:
@@ -899,7 +855,7 @@
     - enable_solum | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('solum_image_builder') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Swift Proxy Server HAProxy
   wait_for:
@@ -912,7 +868,7 @@
     - enable_swift | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('swift_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Tacker Server HAProxy
   wait_for:
@@ -925,7 +881,7 @@
     - enable_tacker | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('tacker_server') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Trove API HAProxy
   wait_for:
@@ -938,7 +894,7 @@
     - enable_trove | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('trove_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Watcher API HAProxy
   wait_for:
@@ -951,7 +907,7 @@
     - enable_watcher | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('watcher_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Zun API HAProxy
   wait_for:
@@ -964,7 +920,7 @@
     - enable_zun | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('zun_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
 
 - name: Checking free port for Vitrage API HAProxy
   wait_for:
@@ -976,4 +932,4 @@
     - enable_vitrage | bool
     - inventory_hostname in groups['haproxy']
     - haproxy_stat.find('vitrage_api') == -1
-    - "host_running_haproxy == 'None'"
+    - haproxy_vip_prechecks
