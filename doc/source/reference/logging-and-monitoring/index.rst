@@ -10,6 +10,7 @@ logging and monitoring services available in kolla.
 
    central-logging-guide
    influxdb-guide
+   kafka-guide
    monasca-guide
    osprofiler-guide
    prometheus-guide
