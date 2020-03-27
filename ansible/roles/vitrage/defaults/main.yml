@@ -41,6 +41,13 @@ vitrage_services:
     image: "{{ vitrage_ml_image_full }}"
     volumes: "{{ vitrage_ml_default_volumes + vitrage_ml_extra_volumes }}"
     dimensions: "{{ vitrage_ml_dimensions }}"
+  vitrage-persistor:
+    container_name: vitrage_persistor
+    group: vitrage-persistor
+    enabled: true
+    image: "{{ vitrage_persistor_image_full }}"
+    volumes: "{{ vitrage_persistor_default_volumes + vitrage_persistor_extra_volumes }}"
+    dimensions: "{{ vitrage_persistor_dimensions }}"
 
 ####################
 ## Database
@@ -72,10 +79,15 @@ vitrage_ml_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ dock
 vitrage_ml_tag: "{{ vitrage_tag }}"
 vitrage_ml_image_full: "{{ vitrage_ml_image }}:{{ vitrage_ml_tag }}"
 
+vitrage_persistor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-persistor"
+vitrage_persistor_tag: "{{ vitrage_tag }}"
+vitrage_persistor_image_full: "{{ vitrage_persistor_image }}:{{ vitrage_persistor_tag }}"
+
 vitrage_api_dimensions: "{{ default_container_dimensions }}"
 vitrage_notifier_dimensions: "{{ default_container_dimensions }}"
 vitrage_graph_dimensions: "{{ default_container_dimensions }}"
 vitrage_ml_dimensions: "{{ default_container_dimensions }}"
+vitrage_persistor_dimensions: "{{ default_container_dimensions }}"
 
 vitrage_api_default_volumes:
   - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
@@ -101,12 +113,19 @@ vitrage_ml_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
+vitrage_persistor_default_volumes:
+  - "{{ node_config_directory }}/vitrage-persistor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
+  - "kolla_logs:/var/log/kolla/"
 
 vitrage_extra_volumes: "{{ default_extra_volumes }}"
 vitrage_api_extra_volumes: "{{ vitrage_extra_volumes }}"
 vitrage_notifier_extra_volumes: "{{ vitrage_extra_volumes }}"
 vitrage_graph_extra_volumes: "{{ vitrage_extra_volumes }}"
 vitrage_ml_extra_volumes: "{{ vitrage_extra_volumes }}"
+vitrage_persistor_extra_volumes: "{{ vitrage_extra_volumes }}"
 
 ####################
 # OpenStack

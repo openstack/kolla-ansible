@@ -1,0 +1,24 @@
+{
+    "command": "vitrage-persistor --config-file /etc/vitrage/vitrage.conf",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/vitrage.conf",
+            "dest": "/etc/vitrage/vitrage.conf",
+            "owner": "vitrage",
+            "perm": "0644"
+        }{% if vitrage_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ vitrage_policy_file }}",
+            "dest": "/etc/vitrage/{{ vitrage_policy_file }}",
+            "owner": "vitrage",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/vitrage",
+            "owner": "vitrage:vitrage",
+            "recurse": true
+        }
+    ]
+}
