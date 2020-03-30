@@ -65,7 +65,7 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
-{% if enable_prometheus_ceph_mgr_exporter | bool %}
+{% if enable_prometheus_ceph_mgr_exporter | bool or enable_prometheus_external_ceph_mgr_exporter | bool %}
   - job_name: ceph_mgr_exporter
     honor_labels: true
     static_configs:
@@ -124,6 +124,27 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: '{{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_blackbox_exporter_port }}'
+{% endif %}
+
+{% if enable_prometheus_mtail | bool %}
+  - job_name: mtail
+    scrape_interval: {{ prometheus_mtail_interval }}
+    honor_labels: true
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-mtail"] %}
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mtail_port'] }}'
+{% endfor %}
+{% endif %}
+
+{% if enable_prometheus_libvirt_exporter | bool %}
+  - job_name: libvirt_exporter
+    scrape_interval: {{ prometheus_libvirt_exporter_interval }}
+    static_configs:
+      - targets:
+{% for host in groups["prometheus-libvirt-exporter"] %}
+        - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ hostvars[host]['prometheus_libvirt_exporter_port'] }}'
+{% endfor %}
 {% endif %}
 
 {% if enable_prometheus_alertmanager | bool %}

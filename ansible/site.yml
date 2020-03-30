@@ -141,7 +141,7 @@
             role: ceph
             tasks_from: loadbalancer
           tags: ceph
-          when: enable_ceph | bool
+          when: enable_ceph | bool or enable_ceph_rgw_external | bool
         - include_role:
             role: cinder
             tasks_from: loadbalancer
@@ -497,6 +497,7 @@
     - prometheus-openstack-exporter
     - prometheus-elasticsearch-exporter
     - prometheus-blackbox-exporter
+    - prometheus-mtail
     - '&enable_prometheus_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
@@ -1255,3 +1256,13 @@
     - { role: masakari,
         tags: masakari,
         when: enable_masakari | bool }
+
+- name: Apply role caso
+  gather_facts: false
+  hosts:
+    - caso
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: caso,
+        tags: caso,
+        when: enable_caso | bool }

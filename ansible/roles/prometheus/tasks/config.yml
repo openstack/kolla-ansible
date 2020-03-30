@@ -141,5 +141,83 @@
   notify:
     - Restart prometheus-blackbox-exporter container
 
+- name: Copying over built in mtail progs
+  vars:
+    service: "{{ prometheus_services['prometheus-mtail'] }}"
+  template:
+    src: "{{ role_path }}/templates/mtail_progs/{{ item }}.mtail.j2"
+    dest: "{{ node_config_directory }}/prometheus-mtail/{{ item }}.mtail"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - "syslog"
+  notify:
+    - Restart prometheus-mtail container
+
+- name: Find custom mtail progs
+  vars:
+    service: "{{ prometheus_services['prometheus-mtail'] }}"
+  local_action:
+    module: find
+    path: "{{ node_custom_config }}/mtail"
+    pattern: "*.mtail"
+  run_once: True
+  register: find_custom_mtail_progs
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Copying over custom mtail progs
+  vars:
+    service: "{{ prometheus_services['prometheus-mtail'] }}"
+  template:
+    src: "{{ item.path }}"
+    dest: "{{ node_config_directory }}/prometheus-mtail/{{ item.path | basename }}"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items: "{{ find_custom_mtail_progs.files }}"
+  notify:
+    - Restart prometheus-mtail container
+
+- name: Copying over prometheus jiralert config file
+  vars:
+    service: "{{ prometheus_services['prometheus-jiralert']}}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-jiralert/jiralert.yml"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-jiralert.yml"
+    - "{{ node_custom_config }}/prometheus/prometheus-jiralert.yml"
+    - "{{ role_path }}/templates/prometheus-jiralert.yml.j2"
+  notify:
+    - Restart prometheus-jiralert container
+
+- name: Copying over prometheus jiralert template file
+  vars:
+    service: "{{ prometheus_services['prometheus-jiralert']}}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-jiralert/jiralert.tmpl"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-jiralert.tmpl"
+    - "{{ node_custom_config }}/prometheus/prometheus-jiralert.tmpl"
+    - "{{ role_path }}/templates/prometheus-jiralert.tmpl"
+  notify:
+    - Restart prometheus-jiralert container
+
 - include_tasks: check-containers.yml
   when: kolla_action != "config"

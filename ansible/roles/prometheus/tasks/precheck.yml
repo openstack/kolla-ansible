@@ -13,6 +13,9 @@
       - prometheus_openstack_exporter
       - prometheus_elasticsearch_exporter
       - prometheus_blackbox_exporter
+      - prometheus_mtail
+      - prometheus_libvirt_exporter
+      - prometheus_jiralert
   register: container_facts
 
 - name: Checking free port for Prometheus server
@@ -142,3 +145,45 @@
     - enable_prometheus_blackbox_exporter | bool
   with_items:
     - "{{ prometheus_blackbox_exporter_port }}"
+
+- name: Checking free ports for Prometheus mtail
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_mtail'] is not defined
+    - inventory_hostname in groups['prometheus-mtail']
+    - enable_prometheus_mtail | bool
+  with_items:
+    - "{{ prometheus_mtail_port }}"
+
+- name: Checking free ports for Prometheus libvirt-exporter
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_libvirt_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-libvirt-exporter']
+    - enable_prometheus_libvirt_exporter | bool
+  with_items:
+    - "{{ prometheus_libvirt_exporter_port }}"
+
+- name: Checking free ports for Prometheus Jiralert
+  wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_jiralert'] is not defined
+    - inventory_hostname in groups['prometheus-jiralert']
+    - enable_prometheus_jiralert | bool
+  with_items:
+    - "{{ prometheus_jiralert_port }}"
