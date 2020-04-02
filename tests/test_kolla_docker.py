@@ -19,11 +19,8 @@ import copy
 import imp
 import os
 import sys
+from unittest import mock
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 from docker import errors as docker_error
 from docker.types import Ulimit
 from oslotest import base
