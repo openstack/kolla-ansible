@@ -116,7 +116,7 @@ function test_dashboard {
     while ! check_dashboard $output_path; do
         echo "Dashboard not accessible yet"
         attempt=$((attempt+1))
-        if [[ $attempt -eq 10 ]]; then
+        if [[ $attempt -eq 100 ]]; then
             echo "FAILED: Dashboard did not become accessible. Response:"
             cat $output_path
             return 1
