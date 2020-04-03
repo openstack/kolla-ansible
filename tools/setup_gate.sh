@@ -8,6 +8,15 @@ export PYTHONUNBUFFERED=1
 
 GIT_PROJECT_DIR=$(mktemp -d)
 
+function setup_openstack_clients {
+    # Prepare for openstack deployment tests
+    local packages=(python-openstackclient)
+    if [[ $SCENARIO == zun ]]; then
+        packages+=(python-zunclient)
+    fi
+    pip install --user -c $UPPER_CONSTRAINTS ${packages[@]}
+}
+
 function setup_config {
     # Use Infra provided pypi.
     # Wheel package mirror may be not compatible. So do not enable it.
@@ -92,10 +101,8 @@ function setup_ansible {
         ARA_VERSION="<0.16"
     fi
     # TODO(SamYaple): Move to virtualenv
-    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "python-openstackclient" "ara${ARA_VERSION}" "cmd2<0.9.0" "pyfakefs<4"
-    if [[ $ACTION == "zun" ]]; then
-        sudo -H pip install -U "python-zunclient"
-    fi
+    sudo -H pip install -U "ansible${ANSIBLE_VERSION}" "docker>=2.0.0" "ara${ARA_VERSION}" "cmd2<0.9.0" "pyfakefs<4"
+    setup_openstack_clients
     detect_distro
 
     sudo mkdir /etc/ansible
@@ -125,6 +132,9 @@ function prepare_images {
 }
 
 function sanity_check {
+    # Set PATH to access Python packages installed with --user
+    export PATH=~/.local/bin:$PATH
+
     # Wait for service ready
     sleep 15
     . /etc/kolla/admin-openrc.sh
