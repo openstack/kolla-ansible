@@ -96,10 +96,10 @@ EXAMPLES = '''
 '''
 
 
-JSON_REG = re.compile('^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
+JSON_REG = re.compile(r'^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
                       re.MULTILINE | re.DOTALL)
-NON_JSON_REG = re.compile(('^(?P<host>\w+) \| (?P<status>\w+)!? \| '
-                           'rc=(?P<exit_code>\d+) >>\n(?P<stdout>.*)\n$'),
+NON_JSON_REG = re.compile((r'^(?P<host>\w+) \| (?P<status>\w+)!? \| '
+                           r'rc=(?P<exit_code>\d+) >>\n(?P<stdout>.*)\n$'),
                           re.MULTILINE | re.DOTALL)
 
 
@@ -172,7 +172,7 @@ def main():
 
         try:
             output = json.loads(json_output)
-        except Exception as e:
+        except Exception:
             module.fail_json(
                 msg='Can not parse the inner module output: %s' % json_output)
 
@@ -194,7 +194,7 @@ def main():
         # }
         try:
             ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
-        except (KeyError, IndexError) as e:
+        except (KeyError, IndexError):
             module.fail_json(
                 msg='Ansible JSON output has unexpected format: %s' % output)
 
