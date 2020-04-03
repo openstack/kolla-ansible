@@ -27,6 +27,7 @@
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # TODO(mgoddard): Remove when previous_release is ussuri.
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' and not is_centos8 else '3' }}"
+        upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
 
     - name: Install xfsprogs package for Swift filesystems
       become: true
@@ -62,6 +63,7 @@
     - name: Ensure tox is installed
       pip:
         name: tox
+        extra_args: "-c {{ upper_constraints_file }}"
       when: need_build_image
       become: true
 
@@ -71,15 +73,24 @@
         file: "{{ zuul.executor.work_root }}/src/opendev.org/openstack/kolla/tests/vars/zuul.yml"
       when: need_build_image  # only then kolla sources are available (and used)
 
-    # NOTE(mgoddard): This only affects the remote copy of the repo, not the
-    # one on the executor.
-    - name: checkout the previous kolla-ansible branch
-      shell:
-        cmd: |
-          git checkout stable/{{ previous_release | lower }}
-          echo "kolla-ansible checked out to:"
-          git log --pretty=oneline  -1
-        chdir: "{{ kolla_ansible_src_dir }}"
+    - block:
+        # NOTE(mgoddard): This only affects the remote copy of the repo, not the
+        # one on the executor.
+        - name: checkout the previous kolla-ansible branch
+          shell:
+            cmd: |
+              git checkout stable/{{ previous_release | lower }}
+              echo "kolla-ansible checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ kolla_ansible_src_dir }}"
+
+        - name: checkout the previous requirements branch
+          shell:
+            cmd: |
+              git checkout stable/{{ previous_release | lower }}
+              echo "requirements checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
       when: is_upgrade
 
     - name: ensure /etc/kolla exists
@@ -206,6 +217,7 @@
           - "ara<1.0.0"
         # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
         executable: "pip{{ playbook_python_version }}"
+        extra_args: "-c {{ upper_constraints_file }}"
       become: true
 
     # TODO(mgoddard): Always use python3 when previous_release is ussuri.
@@ -277,7 +289,7 @@
         TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
         SCENARIO: "{{ scenario }}"
-        UPPER_CONSTRAINTS: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
+        UPPER_CONSTRAINTS: "{{ upper_constraints_file }}"
 
     - name: Run init-swift.sh script
       script:
@@ -468,6 +480,14 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
+        - name: checkout the current requirements branch
+          shell:
+            cmd: |
+              git checkout {{ zuul.branch }}
+              echo "requirements checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
+
         # TODO(mnasiadka): Remove in Victoria
         - name: Remove not needed external ceph required configs
           file:
@@ -517,6 +537,7 @@
                   - "ansible{{ ansible_version_constraint }}"
                   - "ara<1.0.0"
                 executable: pip3
+                extra_args: "-c {{ upper_constraints_file }}"
               become: true
 
             - name: get ARA callback plugin path
@@ -534,6 +555,7 @@
           pip:
             name: "{{ kolla_ansible_src_dir }}"
             executable: pip3
+            extra_args: "-c {{ upper_constraints_file }}"
           become: true
 
         # Update passwords.yml to include any new passwords added in this
