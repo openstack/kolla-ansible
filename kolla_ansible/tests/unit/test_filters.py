@@ -13,9 +13,9 @@
 # under the License.
 
 import unittest
+from unittest import mock
 
 import jinja2
-import mock
 
 from kolla_ansible import exception
 from kolla_ansible import filters

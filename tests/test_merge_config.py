@@ -16,9 +16,9 @@
 import imp
 import os
 import sys
+from unittest import mock
 
 from io import StringIO
-import mock
 from oslotest import base
 
 
