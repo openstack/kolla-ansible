@@ -59,7 +59,7 @@ lock_path = /var/lib/nova/tmp
 
 [glance]
 api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 num_retries = {{ groups['glance-api'] | length }}
 debug = {{ nova_logging_debug }}
 
@@ -74,7 +74,7 @@ user_domain_id = {{ default_user_domain_id }}
 project_name = service
 username = {{ cinder_keystone_user }}
 password = {{ cinder_keystone_password }}
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 {% endif %}
 
 [neutron]
@@ -92,7 +92,7 @@ username = {{ neutron_keystone_user }}
 password = {{ neutron_keystone_password }}
 region_name = {{ openstack_region_name }}
 valid_interfaces = internal
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 
 [database]
 connection = mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}
@@ -119,7 +119,7 @@ user_domain_id = {{ default_user_domain_id }}
 project_name = service
 username = {{ nova_keystone_user }}
 password = {{ nova_keystone_password }}
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 
 memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
@@ -170,7 +170,7 @@ user_domain_name = {{ default_user_domain_name }}
 project_name = service
 project_domain_name = {{ default_project_domain_name }}
 region_name = {{ openstack_region_name }}
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 valid_interfaces = internal
 
 [notifications]
@@ -195,5 +195,5 @@ connection_string = {{ osprofiler_backend_connection_string }}
 {% if enable_barbican | bool %}
 [barbican]
 auth_endpoint = {{ keystone_internal_url }}
-cafile = {{ openstack_cacert | default(omit) }}
+cafile = {{ openstack_cacert }}
 {% endif %}
