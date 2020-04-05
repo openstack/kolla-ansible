@@ -57,10 +57,10 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 sudo tee /etc/yum.repos.d/docker.repo << EOF
 [docker]
 name=Docker Main Repository
-baseurl=https://yum.dockerproject.org/repo/main/centos/7
+baseurl=https://mirrors.mediatemple.net/docker/centos/7
 enabled=1
 gpgcheck=1
-gpgkey=https://yum.dockerproject.org/gpg
+gpgkey=https://mirrors.aliyun.com/docker-engine/yum/gpg
 EOF
 
 sudo yum -y install libffi-devel openssl-devel docker-engine docker-engine-selinux btrfs-progs
