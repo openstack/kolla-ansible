@@ -96,7 +96,7 @@ class ModuleArgsTest(base.BaseTestCase):
             dimensions=dict(required=False, type='dict', default=dict()),
             tty=dict(required=False, type='bool', default=False),
             client_timeout=dict(required=False, type='int', default=120),
-            )
+        )
         required_if = [
             ['action', 'pull_image', ['image']],
             ['action', 'start_container', ['image', 'name']],

@@ -122,7 +122,7 @@ class TestFilters(unittest.TestCase):
 
     @mock.patch.object(filters, 'service_enabled')
     @mock.patch.object(filters, 'service_mapped_to_host')
-    def test_service_enabled_and_mapped_to_host(self,  mock_mapped,
+    def test_service_enabled_and_mapped_to_host(self, mock_mapped,
                                                 mock_enabled):
         service = {}
         mock_enabled.return_value = True
@@ -134,7 +134,7 @@ class TestFilters(unittest.TestCase):
 
     @mock.patch.object(filters, 'service_enabled')
     @mock.patch.object(filters, 'service_mapped_to_host')
-    def test_service_enabled_and_mapped_to_host_disabled(self,  mock_mapped,
+    def test_service_enabled_and_mapped_to_host_disabled(self, mock_mapped,
                                                          mock_enabled):
         service = {}
         mock_enabled.return_value = False
@@ -146,7 +146,7 @@ class TestFilters(unittest.TestCase):
 
     @mock.patch.object(filters, 'service_enabled')
     @mock.patch.object(filters, 'service_mapped_to_host')
-    def test_service_enabled_and_mapped_to_host_not_mapped(self,  mock_mapped,
+    def test_service_enabled_and_mapped_to_host_not_mapped(self, mock_mapped,
                                                            mock_enabled):
         service = {}
         mock_enabled.return_value = True

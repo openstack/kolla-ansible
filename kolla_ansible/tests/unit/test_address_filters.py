@@ -143,12 +143,12 @@ class TestKollaAddressFilter(unittest.TestCase):
                                 'prefix': 64,
                             },
                             {
-                                'address': addr+'1',
+                                'address': addr + '1',
                                 'scope': 'link',
                                 'prefix': 64,
                             },
                             {
-                                'address': addr+'2',
+                                'address': addr + '2',
                                 'scope': 'global',
                                 'prefix': 64,
                             },
@@ -175,7 +175,7 @@ class TestKollaAddressFilter(unittest.TestCase):
                                 'prefix': 64,
                             },
                             {
-                                'address': addr+'1',
+                                'address': addr + '1',
                                 'scope': 'link',
                                 'prefix': 64,
                             },
