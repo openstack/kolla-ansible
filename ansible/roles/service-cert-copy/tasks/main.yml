@@ -1,0 +1,54 @@
+---
+- name: "{{ project_name }} | Copying over extra CA certificates"
+  become: true
+  copy:
+    src: "{{ kolla_certificates_dir }}/ca/"
+    dest: "{{ node_config_directory }}/{{ item.key }}/ca-certificates"
+    mode: "0644"
+  when:
+    - kolla_copy_ca_into_containers | bool
+  with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: "{{ project_name }} | Copying over backend internal TLS certificate"
+  vars:
+    certs:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-cert.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
+      - "{{ kolla_certificates_dir }}/{{ project_name }}-cert.pem"
+      - "{{ kolla_tls_backend_cert }}"
+    backend_tls_cert: "{{ lookup('first_found', certs) }}"
+  copy:
+    src: "{{ backend_tls_cert }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ project_name }}-cert.pem"
+    mode: "0644"
+  become: true
+  when:
+    - item.value.haproxy is defined
+    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
+    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
+  with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: "{{ project_name }} | Copying over backend internal TLS key"
+  vars:
+    keys:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-key.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
+      - "{{ kolla_certificates_dir }}/{{ project_name }}-key.pem"
+      - "{{ kolla_tls_backend_key }}"
+    backend_tls_key: "{{ lookup('first_found', keys) }}"
+  copy:
+    src: "{{ backend_tls_key }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ project_name }}-key.pem"
+    mode: "0600"
+  become: true
+  when:
+    - item.value.haproxy is defined
+    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
+    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
+  with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"

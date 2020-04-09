@@ -38,19 +38,9 @@
   run_once: True
   register: keystone_domain_directory
 
-- name: Copying over extra CA certificates
-  become: true
-  copy:
-    src: "{{ node_config }}/certificates/ca/"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ca-certificates"
-    mode: "0644"
+- include_tasks: copy-certs.yml
   when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-    - kolla_copy_ca_into_containers | bool
-  with_dict: "{{ keystone_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+    - kolla_copy_ca_into_containers | bool or keystone_enable_tls_backend | bool
 
 - name: Copying over config.json files for services
   template:

@@ -53,7 +53,7 @@ frontend {{ service_name }}_front
 
 {%- macro backend_macro(service_name, listen_port, service_mode, host_group,
                         custom_member_list, backend_http_extra,
-                        backend_tcp_extra, auth_user, auth_pass) %}
+                        backend_tcp_extra, auth_user, auth_pass, tls_backend) %}
 backend {{ service_name }}_back
     {% if service_mode == 'redirect' %}
     mode http
@@ -79,10 +79,21 @@ backend {{ service_name }}_back
     {{ custom_member }}
         {% endfor %}
     {% else %}
+        {% set backend_tls_info = '' %}
+        {% if tls_backend|bool %}
+            {% set haproxy_health_check_final = haproxy_health_check_ssl %}
+            {% if kolla_verify_tls_backend|bool %}
+                {% set backend_tls_info = 'ssl verify required ca-file %s'|format(haproxy_backend_cacert) %}
+            {% else %}
+                {% set backend_tls_info = 'ssl verify none' %}
+            {% endif %}
+        {% else %}
+            {% set haproxy_health_check_final = haproxy_health_check %}
+        {% endif %}
         {% for host in groups[host_group] %}
             {% set host_name = hostvars[host]['ansible_hostname'] %}
             {% set host_ip = 'api' | kolla_address(host) %}
-    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check }}
+    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check_final }} {{ backend_tls_info }}
         {% endfor %}
     {% endif %}
 {% endmacro %}
@@ -107,6 +118,7 @@ backend {{ service_name }}_back
         {% set backend_tcp_extra = haproxy_service.backend_tcp_extra|default([]) %}
         {% set frontend_http_extra = haproxy_service.frontend_http_extra|default([]) + haproxy_frontend_http_extra %}
         {% set backend_http_extra = haproxy_service.backend_http_extra|default([]) %}
+        {% set tls_backend = haproxy_service.tls_backend|default(false) %}
         {# Allow for basic auth #}
         {% set auth_user = haproxy_service.auth_user|default() %}
         {% set auth_pass = haproxy_service.auth_pass|default() %}
@@ -119,7 +131,7 @@ backend {{ service_name }}_back
         {% if haproxy_service.mode != 'redirect' %}
 {{ backend_macro(haproxy_name, listen_port, mode, host_group,
                  custom_member_list, backend_http_extra, backend_tcp_extra,
-                 auth_user, auth_pass) }}
+                 auth_user, auth_pass, tls_backend) }}
         {% endif %}
     {% endif %}
 {%- endfor -%}

@@ -5,6 +5,9 @@
 {% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 {% endif %}
 {% set binary_path = '/usr/bin' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+{% if keystone_enable_tls_backend | bool %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_admin_listen_port }}
 
@@ -42,6 +45,12 @@ LogLevel info
     ErrorLog "{{ keystone_log_dir }}/keystone-apache-public-error.log"
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog "{{ keystone_log_dir }}/keystone-apache-public-access.log" logformat
+
+{% if keystone_enable_tls_backend | bool %}
+    SSLEngine on
+    SSLCertificateFile /etc/keystone/certs/keystone-cert.pem
+    SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
+{% endif %}
 </VirtualHost>
 
 <VirtualHost *:{{ keystone_admin_listen_port }}>
@@ -56,4 +65,10 @@ LogLevel info
     ErrorLog "{{ keystone_log_dir }}/keystone-apache-admin-error.log"
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog "{{ keystone_log_dir }}/keystone-apache-admin-access.log" logformat
+
+{% if keystone_enable_tls_backend | bool %}
+    SSLEngine on
+    SSLCertificateFile /etc/keystone/certs/keystone-cert.pem
+    SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
+{% endif %}
 </VirtualHost>

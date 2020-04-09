@@ -16,6 +16,8 @@ function check_config {
     for f in $(sudo find /etc/kolla \
                 -not -regex /etc/kolla/config.* \
                 -not -regex /etc/kolla/certificates.* \
+                -not -regex .*pem \
+                -not -regex .*key \
                 -not -regex ".*ca-certificates.*" \
                 -not -path /etc/kolla \
                 -not -name admin-openrc.sh \
