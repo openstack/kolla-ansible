@@ -76,7 +76,7 @@ function test_instance_boot {
     echo "SUCCESS: Floating ip allocation"
 
     echo "TESTING: PING&SSH to floating ip"
-    attempts=6
+    attempts=12
     for i in $(seq 1 ${attempts}); do
         if ping -c1 -W1 ${fip_addr} && ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no cirros@${fip_addr} hostname; then
             break
