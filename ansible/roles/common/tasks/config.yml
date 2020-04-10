@@ -52,18 +52,9 @@
     fluentd_binary: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}"
   when: enable_fluentd | bool
 
-- name: Copying over extra CA certificates
-  become: true
-  copy:
-    src: "{{ node_config }}/certificates/ca/"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ca-certificates"
-    mode: "0644"
+- include_tasks: copy-certs.yml
   when:
-    - item.value.enabled | bool
     - kolla_copy_ca_into_containers | bool
-  with_dict: "{{ common_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over config.json files for services
   template:
