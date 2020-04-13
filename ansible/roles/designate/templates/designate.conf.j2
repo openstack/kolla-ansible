@@ -115,10 +115,8 @@ policy_file = {{ designate_policy_file }}
 [coordination]
 {% if designate_coordination_backend == 'redis' %}
 backend_url = {{ redis_connection_string }}
-{% elif designate_coordination_backend == 'etcd' %}
-# NOTE(yoctozepto): etcd-compatible tooz drivers do not support multiple endpoints here (verified in Stein, Train)
-# NOTE(yoctozepto): we must use etcd3gw (aka etcd3+http) due to issues with alternative (etcd3) and eventlet (as used by designate)
-# see https://bugs.launchpad.net/kolla-ansible/+bug/1854932
-# and https://review.opendev.org/466098 for details
-backend_url = etcd3+http://{{ hostvars[groups['etcd'][0]]['ansible_' + hostvars[groups['etcd'][0]]['api_interface']]['ipv4']['address'] }}:{{ etcd_client_port }}
 {% endif %}
+{#
+  NOTE(yoctozepto): etcd is not supported due to lack of group membership
+                    support via tooz, see https://launchpad.net/bugs/1872205
+#}
