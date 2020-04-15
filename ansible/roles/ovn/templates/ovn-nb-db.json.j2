@@ -1,0 +1,12 @@
+{% set ovnctl_cmd = '/usr/share/ovn/scripts/ovn-ctl' %}
+
+{
+    "command": "{{ ovnctl_cmd }} run_nb_ovsdb --db-nb-create-insecure-remote=yes --db-nb-addr={{ api_interface_address }} --db-nb-cluster-local-addr={{ api_interface_address }} {% if groups['ovn-nb-db'] | length > 1 and inventory_hostname != groups['ovn-nb-db'][0] %} --db-nb-cluster-remote-addr={{ 'api' | kolla_address(groups['ovn-nb-db'][0]) }} {% endif %} --db-sock=/run/ovn/ovnnb_db.sock --db-nb-pid=/run/ovn/ovnnb_db.pid --db-nb-file=/var/lib/openvswitch/ovn-nb/ovnnb.db --ovn-nb-logfile=/var/log/kolla/openvswitch/ovn-nb-db.log",
+    "permissions": [
+        {
+            "path": "/var/log/kolla/openvswitch",
+            "owner": "root:root",
+            "recurse": true
+        }
+    ]
+}

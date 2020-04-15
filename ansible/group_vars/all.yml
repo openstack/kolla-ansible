@@ -374,6 +374,11 @@ octavia_api_port: "9876"
 octavia_api_listen_port: "{{ octavia_api_port }}"
 octavia_health_manager_port: "5555"
 
+ovn_nb_db_port: "6641"
+ovn_sb_db_port: "6642"
+ovn_nb_connection: "{% for host in groups['ovn-nb-db'] %}tcp:{{ 'api' | kolla_address(host) }}:{{ ovn_nb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+ovn_sb_connection: "{% for host in groups['ovn-sb-db'] %}tcp:{{ 'api' | kolla_address(host) }}:{{ ovn_sb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
 outward_rabbitmq_port: "5674"
 outward_rabbitmq_management_port: "15674"
 outward_rabbitmq_cluster_port: "25674"
@@ -634,6 +639,7 @@ enable_nova_serialconsole_proxy: "no"
 enable_nova_ssh: "yes"
 enable_octavia: "no"
 enable_openvswitch: "{{ enable_neutron | bool and neutron_plugin_agent != 'linuxbridge' }}"
+enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
 enable_ovs_dpdk: "no"
 enable_osprofiler: "no"
 enable_panko: "no"
@@ -889,20 +895,23 @@ designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 neutron_bgp_router_id: "1.1.1.1"
 neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br-ex' }}"
 # Comma-separated type of enabled ml2 type drivers
-neutron_type_drivers: "flat,vlan,vxlan"
+neutron_type_drivers: "flat,vlan,vxlan{% if neutron_plugin_agent == 'ovn' %},geneve{% endif %}"
 # Comma-separated types of tenant networks (should be listed in 'neutron_type_drivers')
 # NOTE: for ironic this list should also contain 'flat'
-neutron_tenant_network_types: "vxlan"
+neutron_tenant_network_types: "{% if neutron_plugin_agent == 'ovn' %}geneve{% else %}vxlan{% endif %}"
 
 # valid values: ["dvr", "dvr_no_external"]
 neutron_compute_dvr_mode: "dvr"
-computes_need_external_bridge: "{{ (enable_neutron_dvr | bool and neutron_compute_dvr_mode == 'dvr') or enable_neutron_provider_networks | bool }}"
+computes_need_external_bridge: "{{ (enable_neutron_dvr | bool and neutron_compute_dvr_mode == 'dvr') or enable_neutron_provider_networks | bool or neutron_ovn_distributed_fip | bool }}"
 
 # Default DNS resolvers for virtual networks
 neutron_dnsmasq_dns_servers: "1.1.1.1,8.8.8.8,8.8.4.4"
 
 # Set legacy iptables to allow kernels not supporting iptables-nft
 neutron_legacy_iptables: "no"
+
+# Enable distributed floating ip for OVN deployments
+neutron_ovn_distributed_fip: "no"
 
 #######################
 # Nova options

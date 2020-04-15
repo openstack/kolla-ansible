@@ -38,6 +38,9 @@ To use provider networks in instances you also need to set the following in
    ``enable_neutron_provider_networks`` ensures ``neutron_external_interface``
    is used on hosts in the ``compute`` group.
 
+OpenvSwitch (ml2/ovs)
+~~~~~~~~~~~~~~~~~~~~~
+
 By default ``kolla-ansible`` uses ``openvswitch`` as its underlying network
 mechanism, you can change that using the ``neutron_plugin_agent`` variable in
 ``/etc/kolla/globals.yml``:
@@ -56,4 +59,24 @@ to using the native OVS firewall driver by employing a configuration override
 
    [security_group]
    firewall_driver = openvswitch
+
+OVN (ml2/ovn)
+~~~~~~~~~~~~~
+
+In order to use ``OVN`` as mechanism driver for ``neutron``, you need to set
+the following:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_plugin_agent: "ovn"
+
+When using OVN - Kolla-Ansible will not enable distributed floating ip
+functionality (not enable external bridges on computes) by default.
+To change this behaviour you need to set the following:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_ovn_distributed_fip: "yes"
 

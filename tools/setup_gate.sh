@@ -64,6 +64,10 @@ function prepare_images {
         GATE_IMAGES+=",^swift"
     fi
 
+    if [[ $SCENARIO == "ovn" ]]; then
+        GATE_IMAGES+=",^ovn"
+    fi
+
     if [[ $SCENARIO == "mariadb" ]]; then
         GATE_IMAGES="^cron,^fluentd,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi

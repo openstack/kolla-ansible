@@ -1,0 +1,40 @@
+---
+- name: Create br-int bridge on OpenvSwitch
+  become: true
+  command: >
+    docker exec openvswitch_vswitchd ovs-vsctl --may-exist
+    add-br br-int -- set Bridge br-int fail-mode=secure
+  when: inventory_hostname in groups['ovn-controller']
+
+- name: Set OVN encapsulation settings
+  become: true
+  command: >
+    docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch .
+    external_ids:ovn-encap-ip={{ tunnel_interface_address }}
+    external_ids:ovn-encap-type=geneve
+    external_ids:ovn-remote={{ ovn_sb_connection }}
+  when: inventory_hostname in groups['ovn-controller']
+
+- name: Set OVN bridge mappings
+  vars:
+    ovn_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
+  become: true
+  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external_ids:ovn-bridge-mappings={{ ovn_mappings }}
+  when:
+    - inventory_hostname in groups["ovn-controller-network"]
+      or (inventory_hostname in groups["ovn-controller-compute"] and computes_need_external_bridge | bool)
+
+- name: Enable chassis as gateway
+  become: true
+  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external-ids:ovn-cms-options="enable-chassis-as-gw"
+  when:
+    - inventory_hostname in groups["ovn-controller-network"]
+      or (inventory_hostname in groups["ovn-controller-compute"] and neutron_ovn_distributed_fip | bool)
+
+- name: Set OVN remote probe interval
+  become: true
+  command: >
+    docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch .
+    external_ids:ovn-remote-probe-interval={{ ovn_remote_probe_interval }}
+  when:
+    - inventory_hostname in groups["ovn-controller"]

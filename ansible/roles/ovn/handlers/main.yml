@@ -1,0 +1,84 @@
+---
+- name: Restart ovn-nb-db container
+  vars:
+    service_name: "ovn-nb-db"
+    service: "{{ ovn_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart ovn-sb-db container
+  vars:
+    service_name: "ovn-sb-db"
+    service: "{{ ovn_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Wait for ovn-nb-db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_nb_db_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_ovn_nb_db_port
+  until: check_ovn_nb_db_port is success
+  retries: 10
+  delay: 6
+  listen: "Restart ovn-nb-db container"
+
+- name: Wait for ovn-sb-db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_sb_db_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_ovn_sb_db_port
+  until: check_ovn_sb_db_port is success
+  retries: 10
+  delay: 6
+  listen: "Restart ovn-sb-db container"
+
+- name: Restart ovn-northd container
+  vars:
+    service_name: "ovn-northd"
+    service: "{{ ovn_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart ovn-controller container
+  vars:
+    service_name: "ovn-controller"
+    service: "{{ ovn_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
