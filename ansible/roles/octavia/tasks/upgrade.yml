@@ -5,3 +5,17 @@
 
 - name: Flush handlers
   meta: flush_handlers
+
+# TODO(mgoddard): Remove this task in Victoria.
+- name: Removing octavia user from admin project
+  become: true
+  kolla_toolbox:
+    module_name: "os_user_role"
+    module_args:
+      user: "{{ octavia_keystone_user }}"
+      role: admin
+      state: absent
+      project: "{{ keystone_admin_project }}"
+      auth: "{{ openstack_octavia_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+  run_once: True
