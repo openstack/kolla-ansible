@@ -7,12 +7,12 @@
             "owner": "neutron",
             "perm": "0600"
         },
-        {
-            "source": "{{ container_config_directory }}/linuxbridge_agent.ini",
-            "dest": "/etc/neutron/plugins/ml2/linuxbridge_agent.ini",
+        {% if neutron_policy_file is defined %}{
+            "source": "{{ container_config_directory }}/{{ neutron_policy_file }}",
+            "dest": "/etc/neutron/{{ neutron_policy_file }}",
             "owner": "neutron",
             "perm": "0600"
-        },
+        },{% endif %}
 {% if check_extra_ml2_plugins is defined and check_extra_ml2_plugins.matched > 0 %}{% for plugin in check_extra_ml2_plugins.files %}
         {
             "source": "{{ container_config_directory }}/{{ plugin.path | basename }}",
@@ -22,11 +22,10 @@
         },
 {% endfor %}{% endif %}
         {
-            "source": "{{ container_config_directory }}/policy.json",
-            "dest": "/etc/neutron/policy.json",
+            "source": "{{ container_config_directory }}/linuxbridge_agent.ini",
+            "dest": "/etc/neutron/plugins/ml2/linuxbridge_agent.ini",
             "owner": "neutron",
-            "perm": "0600",
-            "optional": true
+            "perm": "0600"
         }
     ],
     "permissions": [
