@@ -1,0 +1,15 @@
+---
+- name: "{{ project_name }} | Validate inventory groups"
+  vars:
+    service_name: "{{ item.key }}"
+    service: "{{ item.value }}"
+  fail:
+    msg: >-
+      Ansible inventory does not contain the expected group {{ service.group }}
+      for service {{ service_name }} in {{ project_name }}.
+  loop: "{{ query('dict', service_precheck_services) }}"
+  when:
+    - "'group' in service"
+    - service.group not in groups
+  loop_control:
+    label: "{{ service_name }}"
