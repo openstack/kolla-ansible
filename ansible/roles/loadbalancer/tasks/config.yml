@@ -80,8 +80,10 @@
   become: true
   with_dict: "{{ loadbalancer_services }}"
   when:
+    - keepalived_track_script_enabled | bool
     - inventory_hostname in groups[service.group]
     - item.key != 'keepalived'
+    - item.key != 'haproxy-ssh'
     - not item.value.enabled | bool
       or not inventory_hostname in groups[item.value.group]
     - service.enabled | bool
@@ -102,6 +104,7 @@
     - inventory_hostname in groups[service.group]
     - inventory_hostname in groups[item.value.group]
     - item.key != 'keepalived'
+    - item.key != 'haproxy-ssh'
     - item.value.enabled | bool
     - service.enabled | bool
   notify:
@@ -214,6 +217,7 @@
     mode: "0660"
   become: true
   when:
+    - not enable_letsencrypt | bool
     - kolla_enable_tls_external | bool
     - not kolla_externally_managed_cert | bool
     - inventory_hostname in groups[service.group]
@@ -232,6 +236,7 @@
     mode: "0660"
   become: true
   when:
+    - not enable_letsencrypt | bool
     - kolla_enable_tls_internal | bool
     - not kolla_externally_managed_cert | bool
     - inventory_hostname in groups[service.group]
@@ -280,3 +285,20 @@
     - "proxysql/proxysql_run.sh.j2"
   notify:
     - Restart proxysql container
+
+- name: Copying files for haproxy-ssh
+  vars:
+    haproxy_ssh: "{{ loadbalancer_services['haproxy-ssh'] }}"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ node_config_directory }}/haproxy-ssh/{{ item.dest }}"
+    mode: "0600"
+  become: true
+  with_items:
+    - { src: "haproxy-ssh/sshd_config.j2", dest: "sshd_config" }
+    - { src: "haproxy-ssh/id_rsa.pub", dest: "id_rsa.pub" }
+  when:
+    - inventory_hostname in groups[haproxy_ssh.group]
+    - haproxy_ssh.enabled | bool
+  notify:
+    - Restart haproxy-ssh container

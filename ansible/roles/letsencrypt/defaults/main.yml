@@ -1,0 +1,60 @@
+---
+letsencrypt_services:
+  letsencrypt-lego:
+    container_name: letsencrypt_lego
+    group: letsencrypt-lego
+    enabled: true
+    image: "{{ letsencrypt_lego_image_full }}"
+    volumes: "{{ letsencrypt_lego_default_volumes + letsencrypt_lego_extra_volumes }}"
+    dimensions: "{{ letsencrypt_lego_dimensions }}"
+  letsencrypt-webserver:
+    container_name: letsencrypt_webserver
+    group: letsencrypt-webserver
+    enabled: true
+    image: "{{ letsencrypt_webserver_image_full }}"
+    volumes: "{{ letsencrypt_webserver_default_volumes + letsencrypt_webserver_extra_volumes }}"
+    dimensions: "{{ letsencrypt_webserver_dimensions }}"
+
+
+##############
+# LetsEncrypt
+##############
+letsencrypt_tag: "{{ openstack_tag }}"
+letsencrypt_logging_debug: "{{ openstack_logging_debug }}"
+
+letsencrypt_lego_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/letsencrypt-lego"
+letsencrypt_lego_tag: "{{ letsencrypt_tag }}"
+letsencrypt_lego_image_full: "{{ letsencrypt_lego_image }}:{{ letsencrypt_lego_tag }}"
+
+letsencrypt_webserver_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/letsencrypt-webserver"
+letsencrypt_webserver_tag: "{{ letsencrypt_tag }}"
+letsencrypt_webserver_image_full: "{{ letsencrypt_webserver_image }}:{{ letsencrypt_webserver_tag }}"
+
+letsencrypt_lego_dimensions: "{{ default_container_dimensions }}"
+letsencrypt_webserver_dimensions: "{{ default_container_dimensions }}"
+
+letsencrypt_lego_default_volumes:
+  - "{{ node_config_directory }}/letsencrypt-lego/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "letsencrypt:/etc/letsencrypt"
+  - "kolla_logs:/var/log/kolla/"
+letsencrypt_lego_extra_volumes: "{{ default_extra_volumes }}"
+
+letsencrypt_webserver_default_volumes:
+  - "{{ node_config_directory }}/letsencrypt-webserver/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "letsencrypt:/etc/letsencrypt"
+  - "kolla_logs:/var/log/kolla/"
+letsencrypt_webserver_extra_volumes: "{{ default_extra_volumes }}"
+
+letsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
+# attempt to renew Let's Encrypt certificate every 4 hours
+letsencrypt_cron_renew_schedule: "0 */4 * * *"
+# The email used for certificate registration and recovery contact. Required.
+letsencrypt_email: ""
+letsencrypt_cert_valid_days: "30"
+
+letsencrypt_external_fqdns:
+  - "{{ kolla_external_fqdn }}"
+letsencrypt_internal_fqdns:
+  - "{{ kolla_internal_fqdn }}"

@@ -41,6 +41,7 @@
         - enable_iscsid_{{ enable_iscsid | bool }}
         - enable_keystone_{{ enable_keystone | bool }}
         - enable_kuryr_{{ enable_kuryr | bool }}
+        - enable_letsencrypt_{{ enable_letsencrypt | bool }}
         - enable_loadbalancer_{{ enable_loadbalancer | bool }}
         - enable_magnum_{{ enable_magnum | bool }}
         - enable_manila_{{ enable_manila | bool }}
@@ -201,6 +202,11 @@
           tags: keystone
           when: enable_keystone | bool
         - include_role:
+            name: letsencrypt
+            tasks_from: loadbalancer
+          tags: letsencrypt
+          when: enable_letsencrypt | bool
+        - include_role:
             name: magnum
             tasks_from: loadbalancer
           tags: magnum
@@ -339,6 +345,16 @@
       when:
         - enable_haproxy | bool
         - kolla_action in ['deploy', 'reconfigure', 'upgrade', 'config']
+
+- name: Apply role letsencrypt
+  gather_facts: false
+  hosts:
+    - letsencrypt
+    - '&enable_letsencrypt_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: letsencrypt,
+        tags: letsencrypt }
 
 - name: Apply role collectd
   gather_facts: false

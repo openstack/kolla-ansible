@@ -1,7 +1,7 @@
 #jinja2: lstrip_blocks: True
-{%- set external_tls_bind_info = 'ssl crt /etc/haproxy/haproxy.pem' if kolla_enable_tls_external|bool else '' %}
+{%- set external_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy.pem' if kolla_enable_tls_external|bool else '' %}
 {%- set external_tls_bind_info = "%s %s" % (external_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_external|bool and haproxy_enable_http2|bool else external_tls_bind_info %}
-{%- set internal_tls_bind_info = 'ssl crt /etc/haproxy/haproxy-internal.pem' if kolla_enable_tls_internal|bool else '' %}
+{%- set internal_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy-internal.pem' if kolla_enable_tls_internal|bool else '' %}
 {%- set internal_tls_bind_info = "%s %s" % (internal_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_internal|bool and haproxy_enable_http2|bool else internal_tls_bind_info %}
 
 {%- macro userlist_macro(service_name, auth_user, auth_pass) %}
@@ -10,7 +10,7 @@ userlist {{ service_name }}-user
 {% endmacro %}
 
 {%- macro frontend_macro(service_name, service_port, service_mode, external,
-                         frontend_http_extra, frontend_tcp_extra) %}
+                         frontend_http_extra, frontend_redirect_extra, frontend_tcp_extra) %}
 frontend {{ service_name }}_front
     {% if service_mode == 'redirect' %}
     mode http
@@ -50,7 +50,10 @@ frontend {{ service_name }}_front
     {{ "bind %s:%s %s"|e|format(vip_address, service_port, tls_option)|trim() }}
     {# Redirect mode sets a redirect scheme instead of a backend #}
     {% if service_mode == 'redirect' %}
-    redirect scheme https code 301 if !{ ssl_fc }
+    redirect scheme https code 301 if !{ ssl_fc } !{ path_reg ^/.well-known/acme-challenge/.+ }
+        {% for redirect_option in frontend_redirect_extra %}
+    {{ redirect_option }}
+        {% endfor %}
     {% else %}
     default_backend {{ service_name }}_back
     {% endif %}
@@ -133,6 +136,7 @@ backend {{ service_name }}_back
         {% set frontend_tcp_extra = haproxy_service.frontend_tcp_extra|default([]) + haproxy_frontend_tcp_extra %}
         {% set backend_tcp_extra = haproxy_service.backend_tcp_extra|default([]) %}
         {% set frontend_http_extra = haproxy_service.frontend_http_extra|default([]) + haproxy_frontend_http_extra %}
+        {% set frontend_redirect_extra = haproxy_service.frontend_redirect_extra|default([]) + haproxy_frontend_redirect_extra %}
         {% set backend_http_extra = haproxy_service.backend_http_extra|default([]) %}
         {% set tls_backend = haproxy_service.tls_backend|default(false) %}
         {# Allow for basic auth #}
@@ -144,7 +148,7 @@ backend {{ service_name }}_back
         {% if with_frontend %}
             {% if not (external|bool and haproxy_single_external_frontend|bool and mode == 'http') %}
 {{ frontend_macro(haproxy_name, haproxy_service.port, mode, external,
-                  frontend_http_extra, frontend_tcp_extra) }}
+                  frontend_http_extra, frontend_redirect_extra, frontend_tcp_extra) }}
             {% endif %}
         {% endif %}
         {# Redirect (to https) is a special case, as it does not include a backend #}

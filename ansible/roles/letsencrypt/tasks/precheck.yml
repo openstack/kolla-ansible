@@ -1,0 +1,33 @@
+---
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - letsencrypt_webserver
+  register: container_facts
+
+- name: Checking free port for LetsEncrypt server
+  vars:
+    service: "{{ letsencrypt_services['letsencrypt-webserver'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ letsencrypt_webserver_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['letsencrypt_webserver'] is not defined
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Validating letsencrypt email variable
+  run_once: true
+  vars:
+    replace: "valid"
+  assert:
+    that: letsencrypt_email | regex_replace('.*@.*$', replace) == "valid"
+    fail_msg: "Letsencrypt contact email value didn't pass validation."
+  when:
+    - enable_letsencrypt | bool
+    - kolla_enable_tls_external | bool
