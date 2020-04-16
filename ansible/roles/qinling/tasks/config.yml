@@ -36,19 +36,9 @@
   when:
     - qinling_policy.results
 
-- name: Copying over extra CA certificates
-  become: true
-  copy:
-    src: "{{ node_config }}/certificates/ca/"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ca-certificates"
-    mode: "0644"
+- include_tasks: copy-certs.yml
   when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
     - kolla_copy_ca_into_containers | bool
-  with_dict: "{{ qinling_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over config.json files for services
   template:

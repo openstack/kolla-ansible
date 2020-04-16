@@ -20,19 +20,9 @@
   changed_when: False
   register: check_extra_ml2_plugins
 
-- name: Copying over extra CA certificates
-  become: true
-  copy:
-    src: "{{ node_config }}/certificates/ca/"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ca-certificates"
-    mode: "0644"
+- include_tasks: copy-certs.yml
   when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
     - kolla_copy_ca_into_containers | bool
-  with_dict: "{{ neutron_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Check if policies shall be overwritten
   stat:
