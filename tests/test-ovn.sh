@@ -8,12 +8,17 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_ovn_logged {
+    # NOTE(yoctozepto): could use real ini parsing but this is fine for now
+    local neutron_ml2_conf_path=/etc/kolla/neutron-server/ml2_conf.ini
+    ovn_nb_connection=$(sudo grep -P -o -e "(?<=^ovn_nb_connection = ).*" "$neutron_ml2_conf_path")
+    ovn_sb_connection=$(sudo grep -P -o -e "(?<=^ovn_sb_connection = ).*" "$neutron_ml2_conf_path")
+
     # List OVN NB/SB entries
     echo "OVN NB DB entries:"
-    sudo docker exec ovn_northd ovn-nbctl --db "tcp:192.0.2.1:6641,tcp:192.0.2.2:6641,tcp:192.0.2.3:6641" show
+    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
 
     echo "OVN SB DB entries:"
-    sudo docker exec ovn_northd ovn-sbctl --db "tcp:192.0.2.1:6642,tcp:192.0.2.2:6642,tcp:192.0.2.3:6642" show
+    sudo docker exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
 
     # Test OVSDB cluster state
     if [[ $BASE_DISTRO =~ ^(debian|ubuntu)$ ]]; then
