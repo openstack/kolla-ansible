@@ -20,8 +20,20 @@
             "dest": "/etc/cinder/{{ cinder_policy_file }}",
             "owner": "cinder",
             "perm": "0600"
-        }{% endif %}
-    ],
+        }{% endif %}{% if cinder_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/cinder-cert.pem",
+            "dest": "/etc/cinder/certs/cinder-cert.pem",
+            "owner": "cinder",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/cinder-key.pem",
+            "dest": "/etc/cinder/certs/cinder-key.pem",
+            "owner": "cinder",
+            "perm": "0600"
+        }
+    {% endif %}],
     "permissions": [
         {
             "path": "/var/lib/cinder",
