@@ -26,6 +26,8 @@ from docker.types import Ulimit
 from oslotest import base
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
+# FIXME(yoctozepto): this modifies global interpreter state and affects tests
+# from other files
 sys.modules['ansible'] = mock.MagicMock()
 sys.modules['ansible.module_utils'] = mock.MagicMock()
 sys.modules['ansible.module_utils.basic'] = mock.MagicMock()

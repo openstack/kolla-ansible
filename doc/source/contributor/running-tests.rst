@@ -28,11 +28,11 @@ so the only package you install is ``tox`` itself:
 For more information, see `the unit testing section of the Testing wiki page
 <https://wiki.openstack.org/wiki/Testing#Unit_Tests>`_. For example:
 
-To run the Python 2.7 tests:
+To run the Python 3.7 tests:
 
 .. code-block:: console
 
-   tox -e py27
+   tox -e py37
 
 To run the style tests:
 
@@ -44,7 +44,7 @@ To run multiple tests separate items by commas:
 
 .. code-block:: console
 
-   tox -e py27,py37,pep8
+   tox -e py37,pep8
 
 Running a subset of tests
 -------------------------
@@ -58,28 +58,28 @@ directory use:
 
 .. code-block:: console
 
-   tox -e py27 kolla-ansible.tests
+   tox -e py37 kolla-ansible.tests
 
 To run the tests of a specific file
 ``kolla-ansible/tests/test_kolla_docker.py``:
 
 .. code-block:: console
 
-   tox -e py27 test_kolla_docker
+   tox -e py37 test_kolla_docker
 
 To run the tests in the ``ModuleArgsTest`` class in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
-   tox -e py27 test_kolla_docker.ModuleArgsTest
+   tox -e py37 test_kolla_docker.ModuleArgsTest
 
 To run the ``ModuleArgsTest.test_module_args`` test method in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
-   tox -e py27 test_kolla_docker.ModuleArgsTest.test_module_args
+   tox -e py37 test_kolla_docker.ModuleArgsTest.test_module_args
 
 Debugging unit tests
 --------------------
