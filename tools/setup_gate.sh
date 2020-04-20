@@ -45,7 +45,7 @@ function prepare_images {
 
     if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
-        if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
+        if [[ $BASE_DISTRO != "centos" ]]; then
             GATE_IMAGES+=",^tgtd"
         fi
     fi

@@ -8,12 +8,7 @@ export PYTHONUNBUFFERED=1
 
 function setup_ceph_ansible {
     # Prepare virtualenv for ceph-ansible deployment
-    # NOTE(mnasiadka): Use python2 on centos7 due to missing python3 selinux bindings
-    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
-        virtualenv --system-site-packages ~/ceph-venv
-    else
-        virtualenv -p `which python2` --system-site-packages ~/ceph-venv
-    fi
+    virtualenv --system-site-packages ~/ceph-venv
     ~/ceph-venv/bin/pip install -Ir requirements.txt
     ~/ceph-venv/bin/pip install -IU selinux
 }
