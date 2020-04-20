@@ -35,18 +35,6 @@ docker_storage_driver: ""
 docker_custom_option: ""
 docker_custom_config: {}
 
-# Ubuntu 18+ does not have easy_install available due to
-# https://bugs.launchpad.net/ubuntu/+source/python-setuptools/+bug/1774419.
-# CentOS/RHEL 8 does not have easy_install.
-easy_install_available: >-
-  {{ not (ansible_distribution == 'Ubuntu' and
-          ansible_distribution_major_version is version(18, 'ge'))
-     and
-     not (ansible_distribution == 'Debian' and
-          ansible_distribution_major_version is version(10, 'ge'))
-     and
-     not ansible_os_family == 'RedHat' }}
-
 # Version of python used to execute Ansible modules.
 host_python_version: "{{ ansible_python.version.major }}.{{ ansible_python.version.minor }}"
 
@@ -54,14 +42,14 @@ debian_pkg_install:
  - "{{ docker_apt_package }}"
  - git
  - "python3-setuptools"
- - "{% if not easy_install_available %}python3-pip{% endif %}"
+ - "python3-pip"
  - "{% if virtualenv is not none %}python3-virtualenv{% endif %}"
  - "{% if enable_host_ntp | bool %}ntp{% endif %}"
 
 redhat_pkg_install:
  - "{{ docker_yum_package }}"
  - git
- - "{% if not easy_install_available %}python3-pip{% endif %}"
+ - "python3-pip"
  - "{% if virtualenv is not none %}python3-virtualenv{% endif %}"
  - "{% if enable_host_ntp | bool %}ntp{% endif %}"
  - sudo
