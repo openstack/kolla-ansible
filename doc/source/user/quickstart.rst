@@ -22,6 +22,9 @@ The host machine must satisfy the following minimum requirements:
 - 8GB main memory
 - 40GB disk space
 
+See the :kolla-ansible-doc:`support matrix <user/support-matrix>` for details
+of supported host Operating Systems.
+
 Install dependencies
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -371,7 +374,7 @@ There are a few options that are required to deploy Kolla-Ansible:
   - Debian
   - RHEL
 
-  For newcomers, we recommend to use CentOS 7 or Ubuntu 18.04.
+  For newcomers, we recommend to use CentOS 8 or Ubuntu 18.04.
 
   .. code-block:: console
 
