@@ -29,7 +29,7 @@ By default Elasticsearch is deployed on port ``9200``.
 .. note::
 
    Elasticsearch stores a lot of logs, so if you are running centralized logging,
-   remember to give ``/var/lib/docker`` an adequate space.
+   remember to give ``/var/lib/docker`` adequate space.
 
    Alternatively it is possible to use a local directory instead of the volume
    ``elasticsearch`` to store the data of Elasticsearch. The path can be set via
