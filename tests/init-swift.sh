@@ -44,7 +44,7 @@ function init_swift_logged {
             /etc/kolla/config/swift/$ring.builder
 
         # next ring = next port
-        (( next_port++ ))
+        next_port=$((next_port+1))
     done
 }
 
