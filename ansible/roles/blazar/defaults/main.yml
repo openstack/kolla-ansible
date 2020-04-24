@@ -10,6 +10,7 @@ blazar_services:
     volumes:
       - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
     dimensions: "{{ blazar_api_dimensions }}"
@@ -32,6 +33,7 @@ blazar_services:
     volumes:
       - "{{ node_config_directory }}/blazar-manager/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python2.7/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
     dimensions: "{{ blazar_manager_dimensions }}"

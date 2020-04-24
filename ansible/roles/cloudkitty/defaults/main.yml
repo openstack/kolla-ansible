@@ -10,6 +10,7 @@ cloudkitty_services:
     volumes:
       - "{{ node_config_directory }}/cloudkitty-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python2.7/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
     dimensions: "{{ cloudkitty_api_dimensions }}"
@@ -32,6 +33,7 @@ cloudkitty_services:
     volumes:
       - "{{ node_config_directory }}/cloudkitty-processor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python2.7/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
     dimensions: "{{ cloudkitty_processor_dimensions }}"

@@ -10,6 +10,7 @@ skydive_services:
     volumes:
       - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ skydive_analyzer_dimensions }}"
     haproxy:
@@ -32,6 +33,7 @@ skydive_services:
     volumes:
       - "{{ node_config_directory }}/skydive-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/var/run/openvswitch:/var/run/openvswitch:ro"
       - "/var/run/netns:/host/run:shared"
       - "kolla_logs:/var/log/kolla/"
