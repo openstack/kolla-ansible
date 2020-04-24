@@ -105,3 +105,58 @@
     </store>
 {% endif %}
 </match>
+
+<match syslog.{{ syslog_glance_tls_proxy_facility }}.**>
+  @type copy
+  <store>
+    @type file
+    path /var/log/kolla/glance-tls-proxy/glance-tls-proxy.*.log
+    output_tag false
+    output_time false
+    utc
+    append true
+    compress gzip
+  </store>
+{% if log_direct_to_elasticsearch %}
+  <store>
+       type elasticsearch
+       host {{ elasticsearch_address }}
+       port {{ elasticsearch_port }}
+       scheme {{ fluentd_elasticsearch_scheme }}
+{% if fluentd_elasticsearch_path != '' %}
+       path {{ fluentd_elasticsearch_path }}
+{% endif %}
+{% if fluentd_elasticsearch_scheme == 'https' %}
+       ssl_version {{ fluentd_elasticsearch_ssl_version }}
+       ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
+{% endif %}
+{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
+       user {{ fluentd_elasticsearch_user }}
+       password {{ fluentd_elasticsearch_password }}
+{% endif %}
+       logstash_format true
+       logstash_prefix {{ kibana_log_prefix }}
+       flush_interval 15s
+       reconnect_on_error true
+       buffer_type file
+       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ syslog_glance_tls_proxy_facility }}.*
+  </store>
+{% elif enable_monasca | bool %}
+    type copy
+    <store>
+       @type monasca
+       keystone_url {{ keystone_internal_url }}
+       monasca_log_api {{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}
+       monasca_log_api_version v3.0
+       username {{ monasca_agent_user }}
+       password {{ monasca_agent_password }}
+       domain_id default
+       project_name {{ monasca_control_plane_project }}
+       message_field_name Payload
+       buffer_type file
+       buffer_path /var/lib/fluentd/data/monasca.buffer/{{ syslog_glance_tls_proxy_facility }}.*
+       max_retry_wait 1800s
+       disable_retry_limit true
+    </store>
+{% endif %}
+</match>
