@@ -11,7 +11,7 @@ GIT_PROJECT_DIR=$(mktemp -d)
 function setup_openstack_clients {
     # Prepare for openstack deployment tests
     local packages=(python-openstackclient)
-    if [[ $SCENARIO == zun ]]; then
+    if [[ $ACTION == zun ]]; then
         packages+=(python-zunclient)
     fi
     pip install --user -c $UPPER_CONSTRAINTS ${packages[@]}
