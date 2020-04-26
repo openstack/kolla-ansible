@@ -99,12 +99,16 @@ function test_ironic_logged {
     . ~/openstackclient-venv/bin/activate
 
     # Smoke test ironic API.
-    if ! openstack baremetal driver list | grep fake-hardware; then
+    local baremetal_driver_list
+    baremetal_driver_list=$(openstack baremetal driver list)
+    openstack baremetal node list
+    openstack baremetal port list
+
+    # Sanity check.
+    if ! echo "$baremetal_driver_list" | grep fake-hardware; then
         echo "No active conductors with fake-hardware driver"
         exit 1
     fi
-    openstack baremetal node list
-    openstack baremetal port list
 
     create_resources
     wait_for_placement_resources
