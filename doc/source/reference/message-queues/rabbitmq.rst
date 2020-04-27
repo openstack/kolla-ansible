@@ -86,12 +86,25 @@ internal VIP. As such, traffic to this endpoint is encrypted when
 Passing arguments to RabbitMQ server's Erlang VM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Erlang programs run in Erlang VM (virtual machine) and use Erlang runtime.
-Erlang VM can be configured.
+Erlang programs run in an Erlang VM (virtual machine) and use the Erlang
+runtime.  The Erlang VM can be configured.
 
 Kolla Ansible makes it possible to pass arguments to the Erlang VM via the
-usage of ``rabbitmq_server_additional_erl_args`` variable. The contents of it
-are appended to ``RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`` environment variable
-passed to RabbitMQ server startup script. Kolla Ansible already configures
-RabbitMQ server for IPv6 (if necessary). Any argument can be passed there as
-documented in https://www.rabbitmq.com/runtime.html
+usage of the ``rabbitmq_server_additional_erl_args`` variable. The contents of
+it are appended to the ``RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS`` environment
+variable which is passed to the RabbitMQ server startup script. Kolla Ansible
+already configures RabbitMQ server for IPv6 (if necessary). Any argument can be
+passed there as documented in https://www.rabbitmq.com/runtime.html
+
+The default value for ``rabbitmq_server_additional_erl_args`` is ``+S 2:2 +sbwt
+none``.
+
+By default RabbitMQ starts N schedulers where N is the number of CPU cores,
+including hyper-threaded cores. This is fine when you assume all CPUs are
+dedicated to RabbitMQ. Its not a good idea in a typical Kolla Ansible setup.
+Here we go for two scheduler threads (``+S 2:2``).  More details can be found
+here: https://www.rabbitmq.com/runtime.html#scheduling and here:
+https://erlang.org/doc/man/erl.html#emulator-flags
+
+The ``+sbwt`` argument prevents busy waiting of the scheduler, for more details
+see: https://www.rabbitmq.com/runtime.html#busy-waiting.
