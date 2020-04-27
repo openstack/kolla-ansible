@@ -10,6 +10,7 @@ cyborg_services:
     volumes:
       - "{{ node_config_directory }}/cyborg-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "cyborg:/var/lib/cyborg/"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ cyborg_api_dimensions }}"
@@ -21,6 +22,7 @@ cyborg_services:
     volumes:
       - "{{ node_config_directory }}/cyborg-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ cyborg_agent_dimensions }}"
   cyborg-conductor:
@@ -31,6 +33,7 @@ cyborg_services:
     volumes:
       - "{{ node_config_directory }}/cyborg-conductor/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ cyborg_conductor_dimensions }}"
 

@@ -1,0 +1,26 @@
+---
+- name: Ensure /etc/localtime exist
+  stat:
+    path: /etc/localtime
+  register: etc_localtime
+
+- name: Fail if /etc/localtime is absent
+  fail:
+    msg: >-
+      /etc/localtime is not found. This file is used for system-wide time
+      settings and Kolla Ansible needs this file for mounting it to containers.
+  when: not etc_localtime.stat.exists
+
+- block:
+    - name: Ensure /etc/timezone exist
+      stat:
+        path: /etc/timezone
+      register: etc_timezone
+
+    - name: Fail if /etc/timezone is absent
+      fail:
+        msg: >-
+          /etc/timezone is not found. This file is used for system-wide timezone
+          settings and Kolla Ansible needs this file for mounting it to containers.
+      when: not etc_timezone.stat.exists
+  when: kolla_base_distro in ['ubuntu', 'debian']

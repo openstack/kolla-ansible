@@ -11,6 +11,7 @@ murano_services:
       - "{{ node_config_directory }}/murano-api/:{{ container_config_directory }}/:ro"
       - "{{ kolla_dev_repos_directory ~ '/murano/murano:/var/lib/kolla/venv/lib/python2.7/site-packages/murano' if murano_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ murano_api_dimensions }}"
     haproxy:
@@ -33,6 +34,7 @@ murano_services:
       - "{{ node_config_directory }}/murano-engine/:{{ container_config_directory }}/:ro"
       - "{{ kolla_dev_repos_directory ~ '/murano/murano:/var/lib/kolla/venv/lib/python2.7/site-packages/murano' if murano_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ murano_engine_dimensions }}"
 
