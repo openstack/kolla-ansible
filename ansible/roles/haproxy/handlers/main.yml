@@ -1,5 +1,51 @@
 ---
-- name: Restart haproxy container
+# NOTE(yoctozepto): this handler dance is to ensure we delay restarting master
+# keepalived and haproxy which control VIP address until we have working backups.
+# This could be improved by checking if backup keepalived do not report FAULT state.
+# Master node is handled specially to let it close down connections and only then
+# drop the VIP address by stopping keepalived service.
+
+# NOTE(yoctozepto): we need fresh VIP address placement info (facts may be old)
+- name: Check IP addresses on the API interface
+  vars:
+    version: "{{ '6' if api_address_family == 'ipv6' else '4' }}"
+  become: true
+  command: ip -{{ version }} -o addr show dev {{ api_interface }}
+  register: ip_addr_output
+  changed_when: false
+  when:
+    - kolla_action != "config"
+  listen:
+    - Restart haproxy container
+    - Restart keepalived container
+
+- name: Group HA nodes by status
+  vars:
+    re_safe_address: "{{ kolla_internal_vip_address | regex_escape }}"
+  group_by:
+    key: kolla_ha_is_master_{{ ip_addr_output.stdout is regex('\b' + re_safe_address + '\b') }}
+  when:
+    - kolla_action != "config"
+  listen:
+    - Restart haproxy container
+    - Restart keepalived container
+
+- name: Stop backup keepalived container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    # NOTE(yoctozepto): backup node might not have keepalived yet - ignore
+    ignore_missing: true
+    common_options: "{{ docker_common_options }}"
+    name: "keepalived"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+  listen:
+    - Restart keepalived container
+
+- name: Restart backup haproxy container
   vars:
     service_name: "haproxy"
     service: "{{ haproxy_services[service_name] }}"
@@ -14,12 +60,20 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+  listen:
+    - Restart haproxy container
+    - Restart keepalived container
   notify:
-    - Waiting for haproxy to start
+    - Wait for backup haproxy to start
 
-- name: Restart keepalived container
+- name: Wait for backup haproxy to start
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ haproxy_monitor_port }}"
+
+- name: Start backup keepalived container
   vars:
     service_name: "keepalived"
     service: "{{ haproxy_services[service_name] }}"
@@ -34,17 +88,92 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+  listen:
+    - Restart keepalived container
   notify:
-    - Waiting for virtual IP to appear
+    - Wait for virtual IP to appear
 
-- name: Waiting for haproxy to start
+# NOTE(yoctozepto): This is to ensure haproxy can close any open connections
+# to the VIP address.
+- name: Stop master haproxy container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "haproxy"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+  listen:
+    - Restart keepalived container
+
+- name: Stop master keepalived container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "keepalived"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+  listen:
+    - Restart keepalived container
+
+- name: Start master haproxy container
+  vars:
+    service_name: "haproxy"
+    service: "{{ haproxy_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+  listen:
+    - Restart haproxy container
+    - Restart keepalived container
+  notify:
+    - Wait for master haproxy to start
+
+- name: Wait for master haproxy to start
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ haproxy_monitor_port }}"
 
-- name: Waiting for virtual IP to appear
+- name: Start master keepalived container
+  vars:
+    service_name: "keepalived"
+    service: "{{ haproxy_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+  listen:
+    - Restart keepalived container
+  notify:
+    - Wait for virtual IP to appear
+
+- name: Wait for virtual IP to appear
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ haproxy_monitor_port }}"
