@@ -11,10 +11,10 @@ GIT_PROJECT_DIR=$(mktemp -d)
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
     local packages=(python-openstackclient)
-    if [[ $SCENARIO == zun ]]; then
+    if [[ $ACTION == zun ]]; then
         packages+=(python-zunclient)
     fi
-    if [[ $SCENARIO == ironic ]]; then
+    if [[ $ACTION == ironic ]]; then
         packages+=(python-ironicclient)
     fi
     virtualenv ~/openstackclient-venv
