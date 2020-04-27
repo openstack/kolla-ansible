@@ -6,6 +6,7 @@ User Guides
    :maxdepth: 2
 
    quickstart
+   support-matrix
    virtual-environments
    multinode
    multi-regions
