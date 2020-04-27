@@ -13,12 +13,7 @@
   notify:
     - Restart keepalived container
 
-# Upgrading master keepalived and haproxy
-- name: Flush handlers
-  meta: flush_handlers
-  when: kolla_internal_vip_address in secondary_addresses
-
-# Upgrading slave keepalived and haproxy
-- name: Flush handlers
-  meta: flush_handlers
-  when: kolla_internal_vip_address not in secondary_addresses
+# NOTE(yoctozepto): haproxy role handlers should not be flushed early.
+# site.yml handles all haproxy things in a dedicated play.
+# This is to avoid extra haproxy service restart.
+# See: https://bugs.launchpad.net/kolla-ansible/+bug/1875228
