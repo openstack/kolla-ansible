@@ -1,9 +1,16 @@
+{% set heat_api_cfn_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set wsgi_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "heat-api-cfn",
+    "command": "/usr/sbin/{{ heat_api_cfn_cmd }} -DFOREGROUND",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/heat.conf",
             "dest": "/etc/heat/heat.conf",
+            "owner": "heat",
+            "perm": "0600"
+        },{
+            "source": "{{ container_config_directory }}/wsgi-heat-api-cfn.conf",
+            "dest": "/etc/{{ wsgi_conf_dir }}/wsgi-heat-api-cfn.conf",
             "owner": "heat",
             "perm": "0600"
         }{% if heat_policy_file is defined %},
@@ -12,7 +19,20 @@
             "dest": "/etc/heat/{{ heat_policy_file }}",
             "owner": "heat",
             "perm": "0600"
-        }{% endif %}
+        }{% endif %}{% if heat_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/heat-cert.pem",
+            "dest": "/etc/heat/certs/heat-cert.pem",
+            "owner": "heat",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/heat-key.pem",
+            "dest": "/etc/heat/certs/heat-key.pem",
+            "owner": "heat",
+            "perm": "0600"
+        }
+        {% endif %}
     ],
     "permissions": [
         {
