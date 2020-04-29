@@ -161,6 +161,8 @@ nova_cell_rpc_port: "{{ om_rpc_port }}"
 nova_cell_rpc_group_name: "{{ om_rpc_group }}"
 nova_cell_rpc_transport: "{{ om_rpc_transport }}"
 nova_cell_rpc_vhost: "{{ 'nova_' ~ nova_cell_name if nova_cell_name else om_rpc_vhost }}"
+nova_cell_rpc_tags:
+  - "administrator"
 
 nova_cell_notify_user: "{{ nova_cell_rpc_user }}"
 nova_cell_notify_password: "{{ nova_cell_rpc_password }}"
@@ -168,6 +170,7 @@ nova_cell_notify_port: "{{ nova_cell_rpc_port }}"
 nova_cell_notify_group_name: "{{ nova_cell_rpc_group_name }}"
 nova_cell_notify_transport: "{{ nova_cell_rpc_transport }}"
 nova_cell_notify_vhost: "{{ nova_cell_rpc_vhost }}"
+nova_cell_notify_tags: "{{ nova_cell_rpc_tags }}"
 
 # External Rabbit users should override these
 nova_cell_rpc_transport_url: "{{ nova_cell_rpc_transport }}://{% for host in groups[nova_cell_rpc_group_name] %}{{ nova_cell_rpc_user }}:{{ nova_cell_rpc_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ nova_cell_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ nova_cell_rpc_vhost }}"
@@ -178,10 +181,12 @@ nova_cell_rpc_rabbitmq_users:
   - user: "{{ nova_cell_rpc_user }}"
     password: "{{ nova_cell_rpc_password }}"
     vhost: "{{ nova_cell_rpc_vhost }}"
+    tags: "{{ nova_cell_rpc_tags }}"
 nova_cell_notify_rabbitmq_users:
   - user: "{{ nova_cell_notify_user }}"
     password: "{{ nova_cell_notify_password }}"
     vhost: "{{ nova_cell_notify_vhost }}"
+    tags: "{{ nova_cell_notify_tags }}"
 
 ####################
 # Docker
