@@ -11,8 +11,8 @@ bind_port = {{ octavia_api_listen_port }}
 
 [certificates]
 ca_private_key_passphrase = {{ octavia_ca_password }}
-ca_private_key = /etc/octavia/certs/private/cakey.pem
-ca_certificate = /etc/octavia/certs/ca_01.pem
+ca_private_key = /etc/octavia/certs/server_ca.key.pem
+ca_certificate = /etc/octavia/certs/server_ca.cert.pem
 {% if enable_barbican | bool %}
 region_name = {{ openstack_region_name }}
 endpoint_type = internal
@@ -20,8 +20,8 @@ ca_certificates_file = {{ openstack_cacert }}
 {% endif %}
 
 [haproxy_amphora]
-server_ca = /etc/octavia/certs/ca_01.pem
-client_cert = /etc/octavia/certs/client.pem
+server_ca = /etc/octavia/certs/server_ca.cert.pem
+client_cert = /etc/octavia/certs/client.cert-and-key.pem
 
 [database]
 connection = mysql+pymysql://{{ octavia_database_user }}:{{ octavia_database_password }}@{{ octavia_database_address }}/{{ octavia_database_name }}
@@ -68,6 +68,7 @@ amp_image_tag = amphora
 amp_secgroup_list = {{ octavia_amp_secgroup_list }}
 amp_flavor_id = {{ octavia_amp_flavor_id }}
 amp_ssh_key_name = octavia_ssh_key
+client_ca = /etc/octavia/certs/client_ca.cert.pem
 network_driver = allowed_address_pairs_driver
 compute_driver = compute_nova_driver
 amphora_driver = amphora_haproxy_rest_driver
