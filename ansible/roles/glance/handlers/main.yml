@@ -15,3 +15,18 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
+
+- name: Restart glance-tls-proxy container
+  vars:
+    service_name: "glance-tls-proxy"
+    service: "{{ glance_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"

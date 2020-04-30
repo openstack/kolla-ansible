@@ -1,0 +1,37 @@
+#jinja2: lstrip_blocks: True
+global
+    chroot /var/lib/haproxy
+    user glance
+    group glance
+    daemon
+    log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_glance_tls_proxy_facility }}
+    maxconn {{ glance_tls_proxy_max_connections }}
+    nbproc {{ glance_tls_proxy_processes }}
+    {% if (glance_tls_proxy_processes | int > 1) and (glance_tls_proxy_process_cpu_map | bool) %}
+        {% for cpu_idx in range(0, glance_tls_proxy_processes) %}
+    cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
+        {% endfor %}
+    {% endif %}
+    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
+    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    tune.ssl.default-dh-param 4096
+
+defaults
+    log global
+    option redispatch
+    retries 3
+    timeout http-request {{ glance_tls_proxy_http_request_timeout }}
+    timeout queue {{ glance_tls_proxy_queue_timeout }}
+    timeout connect {{ glance_tls_proxy_connect_timeout }}
+    timeout client {{ glance_tls_proxy_client_timeout }}
+    timeout server {{ glance_tls_proxy_server_timeout }}
+    timeout check {{ glance_tls_proxy_check_timeout }}
+    balance {{ glance_tls_proxy_defaults_balance }}
+    maxconn {{ glance_tls_proxy_defaults_max_connections }}
+
+frontend glance_backend_tls
+    bind {{ api_interface_address }}:{{ glance_api_listen_port }} ssl crt /etc/glance/certs/glance-cert-and-key.pem
+    default_backend glance_api
+
+backend glance_api
+    server glance-api 127.0.0.1:{{ glance_api_listen_port }} check

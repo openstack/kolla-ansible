@@ -382,6 +382,10 @@ By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
    syslog_swift_facility: "local0"
    syslog_haproxy_facility: "local1"
 
+If Glance TLS backend is enabled (``glance_enable_tls_backend``), the syslog
+facility for the ``glance_tls_proxy`` service uses ``local2`` by default. This
+can be set via ``syslog_glance_tls_proxy_facility``.
+
 Mount additional Docker volumes in containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
