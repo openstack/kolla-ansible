@@ -5,7 +5,13 @@
     {% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 {% endif %}
 {% set wsgi_directory = '/usr/bin' if placement_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
-
+{% if placement_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ placement_api_listen_port }}
 
 ServerSignature Off
@@ -33,4 +39,9 @@ LogLevel info
             Require all granted
         </Files>
     </Directory>
+{% if placement_enable_tls_backend | bool %}
+    SSLEngine on
+    SSLCertificateFile /etc/placement/certs/placement-cert.pem
+    SSLCertificateKeyFile /etc/placement/certs/placement-key.pem
+{% endif %}
 </VirtualHost>

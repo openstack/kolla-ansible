@@ -1,5 +1,12 @@
 {% set python_path = '/usr/share/openstack-dashboard' if horizon_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 
+{% if horizon_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ horizon_listen_port }}
 
 ServerSignature Off
@@ -35,6 +42,12 @@ TraceEnable off
     <Location "/static">
         SetHandler None
     </Location>
+
+{% if horizon_enable_tls_backend | bool %}
+    SSLEngine On
+    SSLCertificateFile /etc/horizon/certs/horizon-cert.pem
+    SSLCertificateKeyFile /etc/horizon/certs/horizon-key.pem
+{% endif %}
 </VirtualHost>
 
 {# FIXME(yoctozepto): enabling of either tls will break the other if not enabled too #}
