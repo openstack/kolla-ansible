@@ -33,7 +33,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - kolla_copy_ca_into_containers | bool or nova_enable_tls_backend | bool
 
 - name: Copying over config.json files for services
   become: true
@@ -82,6 +82,18 @@
   with_dict: "{{ nova_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over nova-api-wsgi.conf
+  template:
+    src: "nova-api-wsgi.conf.j2"
+    dest: "{{ node_config_directory }}/nova-api/nova-api-wsgi.conf"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups["nova-api"]
+    - nova_services["nova-api"].enabled | bool
+  notify:
+    - "Restart nova-api container"
 
 - import_tasks: check-containers.yml
   when: kolla_action != "config"
