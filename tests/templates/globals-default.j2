@@ -1,9 +1,14 @@
 ---
+{% if base_distro == 'centos' and groups['all'] | map('extract', hostvars, 'ansible_distribution_major_version') | map('int') | unique | list | length > 1 %}
+# Use RabbitMQ 3.7.24 on CentOS 7 in a mixed 7 & 8 environment.
+rabbitmq_use_3_7_24_on_centos7: true
+{% else %}
 # Force the use of python2 on Ubuntu/Debian and CentOS7 remote hosts. This is
 # necessary for delegate_to: localhost, which will otherwise use the local
 # python interpreter (python3).  On CentOS 7, that fails due to a lack of
 # python3 bindings for SELinux.  https://bugs.centos.org/view.php?id=16389
 ansible_python_interpreter: /usr/bin/python{{ '2' if ansible_os_family != 'RedHat' or ansible_distribution_major_version == '7' else '3' }}
+{% endif %}
 
 kolla_base_distro: "{{ base_distro }}"
 kolla_install_type: "{{ install_type }}"
