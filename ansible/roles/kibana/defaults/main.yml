@@ -48,8 +48,12 @@ kibana_default_index_options:
 ####################
 # Docker
 ####################
+# The kibana6 image is available only for CentOS 7 and CentOS 8, and provides a
+# compatible migration point to CentOS 8, which only has Kibana 6.
+kibana_use_v6: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int >= 8 }}"
 kibana_install_type: "{{ kolla_install_type }}"
-kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kibana_install_type }}-kibana"
+kibana_image_name: "{{ 'kibana6' if kibana_use_v6 | bool else 'kibana' }}"
+kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kibana_install_type }}-{{ kibana_image_name }}"
 kibana_tag: "{{ openstack_tag }}"
 kibana_image_full: "{{ kibana_image }}:{{ kibana_tag }}"
 kibana_dimensions: "{{ default_container_dimensions }}"
