@@ -1,6 +1,9 @@
 [uwsgi]
-socket = {{ api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}
-protocol = http
+{% if barbican_enable_tls_backend | bool %}
+https-socket = {{ api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }},/etc/barbican/certs/barbican-cert.pem,/etc/barbican/certs/barbican-key.pem
+{% else %}
+http-socket = {{ api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}
+{% endif %}
 processes = {{ openstack_service_workers }}
 lazy = true
 vacuum = true
