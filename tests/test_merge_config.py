@@ -15,8 +15,6 @@
 
 import imp
 import os
-import sys
-from unittest import mock
 
 from io import StringIO
 from oslotest import base
@@ -26,9 +24,6 @@ PROJECT_DIR = os.path.abspath(os.path.join(os. path.dirname(__file__), '../'))
 MERGE_CONFIG_FILE = os.path.join(PROJECT_DIR,
                                  'ansible/action_plugins/merge_configs.py')
 
-# FIXME(yoctozepto): this modifies global interpreter state and affects tests
-# from other files
-sys.modules['ansible.plugins'] = mock.MagicMock()
 
 merge_configs = imp.load_source('merge_configs', MERGE_CONFIG_FILE)
 
