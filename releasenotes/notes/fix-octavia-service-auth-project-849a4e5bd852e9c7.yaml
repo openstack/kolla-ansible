@@ -1,0 +1,40 @@
+---
+fixes:
+  - |
+    In the previous stable release, the octavia user was no longer given the
+    admin role in the admin project, and a task was added to remove the role
+    during upgrades. However, the octavia configuration was not updated to use
+    the service project, causing load balancer creation to fail. See upgrade
+    notes for details.  `LP#1873176
+    <https://bugs.launchpad.net/kolla-ansible/+bug/1873176>`__
+upgrade:
+  - |
+    In the previous stable release, the octavia user was no longer given the
+    admin role in the admin project, and a task was added to remove the role
+    during upgrades. However, the octavia configuration was not updated to use
+    the service project, causing load balancer creation to fail.
+
+    There is also an issue for existing deployments in simply switching to the
+    service project. While existing load balancers appear to continue to work,
+    creating new load balancers fails due to the security group belonging to
+    the admin project. For this reason, Train and Stein have been reverted to
+    use the admin project by default, while from the Ussuri release the service
+    project will be used by default.
+
+    To provide flexibility, an ``octavia_service_auth_project`` variable has
+    been added. In the Train and Stein releases this is set to ``admin`` by
+    default, and from Ussuri it will be set to ``service`` by default.
+    For users of Train and Stein, ``octavia_service_auth_project`` may be set
+    to ``service`` in order to avoid a breaking change during the Ussuri
+    upgrade.
+
+    To switch an existing deployment from using the ``admin`` project to the
+    ``service`` project, it will at least be necessary to create the required
+    security group in the ``service`` project, and update
+    ``octavia_amp_secgroup_list`` to this group's ID. Ideally the Amphora
+    flavor and network would also be recreated in the ``service`` project,
+    although this does not appear to be necessary for operation, and will
+    impact existing Amphorae.
+
+    See `bug 1873176 <https://bugs.launchpad.net/kolla-ansible/+bug/1873176>`__
+    for details.
