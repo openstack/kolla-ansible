@@ -3,7 +3,20 @@ upgrade:
   - |
     The octavia user is no longer given the admin role in the admin
     project. Octavia does not require this role and instead uses octavia
-    user with admin role in service project. During an upgrade the octavia
-    user is removed from the admin project. See
-    `bug 1873176 <https://bugs.launchpad.net/kolla-ansible/+bug/1873176>`__
+    user with admin role in service project. During an upgrade the octavia user
+    is removed from the admin project.
+
+    For existing deployments this may cause problems, so a
+    ``octavia_service_auth_project`` variable has been added which may be set
+    to ``admin`` to return to the previous behaviour.
+
+    To switch an existing deployment from using the ``admin`` project to the
+    ``service`` project, it will at least be necessary to create the required
+    security group in the ``service`` project, and update
+    ``octavia_amp_secgroup_list`` to this group's ID. Ideally the Amphora
+    flavor and network would also be recreated in the ``service`` project,
+    although this does not appear to be necessary for operation, and will
+    impact existing Amphorae.
+
+    See `bug 1873176 <https://bugs.launchpad.net/kolla-ansible/+bug/1873176>`__
     for details.
