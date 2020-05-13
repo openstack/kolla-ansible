@@ -26,6 +26,10 @@ TraceEnable off
     </FilesMatch>
 </Directory>
 
+ErrorLog "{{ heat_log_dir }}/apache-cfn-error.log"
+<IfModule log_config_module>
+CustomLog "{{ heat_log_dir }}/apache-cfn-access.log" common
+</IfModule>
 
 <VirtualHost *:{{ heat_api_cfn_listen_port }}>
     WSGIDaemonProcess heat-api-cfn processes={{ openstack_service_workers }} threads=1 user=heat group=heat display-name=%{GROUP} python-path={{ python_path }}
@@ -38,7 +42,7 @@ TraceEnable off
     </IfVersion>
     ErrorLog "{{ heat_log_dir }}/heat-api-cfn-error.log"
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
-    CustomLog "{{ heat_log_dir }}/heat-api-cfn-error.log" logformat
+    CustomLog "{{ heat_log_dir }}/heat-api-cfn-access.log" logformat
 {% if heat_enable_tls_backend | bool %}
     SSLEngine On
     SSLCertificateFile /etc/heat/certs/heat-cert.pem
