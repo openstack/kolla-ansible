@@ -30,6 +30,7 @@ except ImportError:
 
 
 from ansible import constants
+from ansible import errors as ansible_errors
 from ansible.plugins import action
 
 DOCUMENTATION = '''
@@ -50,6 +51,20 @@ options:
     default: None
     required: True
     type: str
+  extend_lists:
+    description:
+      - For a given key referencing a list, this determines whether
+        the list items should be combined with the items in another
+        document if an equivalent key is found. An equivalent key
+        has the same parents and value as the first. The default
+        behaviour is to replace existing entries i.e if you have
+        two yaml documents that both define a list with an equivalent
+        key, the value from the document that appears later in the
+        list of sources will replace the value that appeared in the
+        earlier one.
+    default: False
+    required: False
+    type: bool
 author: Sean Mooney
 '''
 
@@ -107,10 +122,12 @@ class ActionModule(action.ActionBase):
 
         output = {}
         sources = self._task.args.get('sources', None)
+        extend_lists = self._task.args.get('extend_lists', False)
         if not isinstance(sources, list):
             sources = [sources]
         for source in sources:
-            Utils.update_nested_conf(output, self.read_config(source))
+            Utils.update_nested_conf(
+                output, self.read_config(source), extend_lists)
 
         # restore original vars
         self._templar.set_available_variables(old_vars)
@@ -124,7 +141,7 @@ class ActionModule(action.ActionBase):
 
             new_task = self._task.copy()
             new_task.args.pop('sources', None)
-
+            new_task.args.pop('extend_lists', None)
             new_task.args.update(
                 dict(
                     src=result_file
@@ -147,10 +164,22 @@ class ActionModule(action.ActionBase):
 
 class Utils(object):
     @staticmethod
-    def update_nested_conf(conf, update):
+    def update_nested_conf(conf, update, extend_lists=False):
         for k, v in update.items():
             if isinstance(v, dict):
-                conf[k] = Utils.update_nested_conf(conf.get(k, {}), v)
+                conf[k] = Utils.update_nested_conf(
+                    conf.get(k, {}), v, extend_lists)
+            elif k in conf and isinstance(conf[k], list) and extend_lists:
+                if not isinstance(v, list):
+                    errmsg = (
+                        "Failure merging key `%(key)s` in dictionary "
+                        "`%(dictionary)s`. Expecting a list, but received: "
+                        "`%(value)s`, which is of type: `%(type)s`" % {
+                            "key": k, "dictionary": conf,
+                            "value": v, "type": type(v)}
+                    )
+                    raise ansible_errors.AnsibleModuleError(errmsg)
+                conf[k].extend(v)
             else:
                 conf[k] = v
         return conf
