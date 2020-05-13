@@ -158,5 +158,49 @@
   notify:
     - Restart prometheus-blackbox-exporter container
 
+- block:
+    - name: Find extra prometheus server config files
+      find:
+        paths: "{{ node_custom_config }}/prometheus/extras/"
+        patterns: "*"
+        recurse: true
+      delegate_to: localhost
+      register: prometheus_config_extras_result
+      run_once: true
+
+    - name: Create subdirectories for extra config files
+      become: true
+      vars:
+        dirs: >-
+          {{ prometheus_config_extras_result.files | default([])
+          | map(attribute='path') | map('dirname') | unique
+          | map('relpath', base) | list }}
+      file:
+        path: "{{ node_config_directory }}/prometheus-server/{{ item }}"
+        state: "directory"
+        owner: "{{ config_owner_user }}"
+        group: "{{ config_owner_group }}"
+        mode: "0770"
+        recurse: true
+      with_items: "{{ dirs }}"
+
+    - name: Template extra prometheus server config files
+      become: true
+      vars:
+        relpath: "{{ item | relpath(base) }}"
+      template:
+        src: "{{ item }}"
+        dest: "{{ node_config_directory }}/prometheus-server/{{ relpath }}"
+        mode: "0660"
+      with_items: "{{ prometheus_config_extras_result.files | default([]) | map(attribute='path') | list }}"
+      notify:
+        - Restart prometheus-server container
+  vars:
+    base: "{{ node_custom_config }}/prometheus/"
+    service: "{{ prometheus_services['prometheus-server']}}"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
 - include_tasks: check-containers.yml
   when: kolla_action != "config"
