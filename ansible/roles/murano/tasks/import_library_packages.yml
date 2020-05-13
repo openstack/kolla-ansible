@@ -19,8 +19,9 @@
     --os-username {{ openstack_auth.username }}
     --os-password {{ keystone_admin_password }}
     --os-project-name {{ openstack_auth.project_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
     --os-auth-url {{ keystone_admin_url }}
-    --murano-url {{ admin_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ murano_api_port }}
+    --murano-url {{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}
     package-list
   register: status
   changed_when: False
@@ -34,8 +35,9 @@
     --os-username {{ openstack_auth.username }}
     --os-password {{ keystone_admin_password }}
     --os-project-name {{ openstack_auth.project_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
     --os-auth-url {{ keystone_admin_url }}
-    --murano-url {{ admin_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ murano_api_port }}
+    --murano-url {{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}
     package-import --exists-action u --is-public /io.murano.zip
   run_once: True
   delegate_to: "{{ groups['murano-api'][0] }}"
@@ -49,8 +51,9 @@
     --os-username {{ openstack_auth.username }}
     --os-password {{ keystone_admin_password }}
     --os-project-name {{ openstack_auth.project_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
     --os-auth-url {{ keystone_admin_url }}
-    --murano-url {{ admin_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ murano_api_port }}
+    --murano-url {{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}
     package-import --exists-action u --is-public /io.murano.applications.zip
   run_once: True
   delegate_to: "{{ groups['murano-api'][0] }}"
