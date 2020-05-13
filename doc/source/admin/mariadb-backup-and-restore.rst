@@ -88,8 +88,8 @@ following options on the master database node:
    (dbrestore) $ cd /backup
    (dbrestore) $ rm -rf /backup/restore
    (dbrestore) $ mkdir -p /backup/restore/full
-   (dbrestore) $ gunzip mysqlbackup-04-10-2018.xbc.xbs.gz
-   (dbrestore) $ mbstream -x -C /backup/restore/full/ < mysqlbackup-04-10-2018.xbc.xbs
+   (dbrestore) $ gunzip mysqlbackup-04-10-2018.qp.xbc.xbs.gz
+   (dbrestore) $ mbstream -x -C /backup/restore/full/ < mysqlbackup-04-10-2018.qp.xbc.xbs
    (dbrestore) $ mariabackup --prepare --target-dir /backup/restore/full
 
 Stop the MariaDB instance.
