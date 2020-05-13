@@ -19,7 +19,19 @@
             "owner": "barbican",
             "perm": "0600",
             "optional": true
-        }{% if barbican_policy_file is defined %},
+        }{% if barbican_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/barbican-cert.pem",
+            "dest": "/etc/barbican/certs/barbican-cert.pem",
+            "owner": "barbican",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/barbican-key.pem",
+            "dest": "/etc/barbican/certs/barbican-key.pem",
+            "owner": "barbican",
+            "perm": "0600"
+        }{% endif %}{% if barbican_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ barbican_policy_file }}",
             "dest": "/etc/barbican/{{ barbican_policy_file }}",
