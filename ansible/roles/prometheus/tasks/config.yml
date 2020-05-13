@@ -56,14 +56,27 @@
   notify:
     - Restart prometheus-server container
 
+- name: Find prometheus config overrides
+  find:
+    # NOTE(wszumski): Non-existent paths don't produce a failure
+    paths:
+      - "{{ node_custom_config }}/prometheus/prometheus.yml.d"
+      - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus.yml.d"
+    patterns: "*.yml"
+  delegate_to: localhost
+  register: prometheus_config_overrides_result
+  run_once: true
+
 - name: Copying over prometheus config file
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-  template:
-    src: "{{ item }}"
+    overrides: "{{ prometheus_config_overrides_result.files | map(attribute='path') | list }}"
+  merge_yaml:
+    sources: "{{ [prometheus_config_file] + overrides }}"
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
     mode: "0660"
+    extend_lists: true
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
