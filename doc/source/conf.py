@@ -98,6 +98,7 @@ openstack_projects = [
     'neutron',
     'nova',
     'octavia',
+    'oslo.messaging',
     'oslotest',
     'swift',
 ]

@@ -24,7 +24,19 @@
             "dest": "/etc/rabbitmq/definitions.json",
             "owner": "rabbitmq",
             "perm": "0600"
-        }
+        }{% if rabbitmq_enable_tls | bool %},
+        {
+            "source": "{{ container_config_directory }}/{{ project_name }}-cert.pem",
+            "dest": "/etc/rabbitmq/certs/{{ project_name }}-cert.pem",
+            "owner": "rabbitmq",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/{{ project_name }}-key.pem",
+            "dest": "/etc/rabbitmq/certs/{{ project_name }}-key.pem",
+            "owner": "rabbitmq",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {

@@ -69,6 +69,8 @@ RabbitMQ doesn't work with IP address, hence the IP address of
 ``api_interface`` should be resolvable by hostnames to make sure that
 all RabbitMQ Cluster hosts can resolve each others hostname beforehand.
 
+.. _tls-configuration:
+
 TLS Configuration
 ~~~~~~~~~~~~~~~~~
 

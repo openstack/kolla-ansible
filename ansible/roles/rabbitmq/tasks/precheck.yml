@@ -74,6 +74,32 @@
   when:
     - not item.1 is match('^'+('api' | kolla_address(item.0.item))+'\\b')
 
+- name: Check if TLS certificate exists for RabbitMQ
+  vars:
+    cert: "{{ query('first_found', paths, errors='ignore') }}"
+    paths:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/rabbitmq-cert.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
+      - "{{ kolla_certificates_dir }}/rabbitmq-cert.pem"
+  fail:
+    msg: No TLS certificate provided for RabbitMQ.
+  when:
+    - rabbitmq_enable_tls | bool
+    - cert | length == 0
+
+- name: Check if TLS key exists for RabbitMQ
+  vars:
+    key: "{{ query('first_found', paths, errors='ignore') }}"
+    paths:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/rabbitmq-key.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
+      - "{{ kolla_certificates_dir }}/rabbitmq-key.pem"
+  fail:
+    msg: No TLS key provided for RabbitMQ.
+  when:
+    - rabbitmq_enable_tls | bool
+    - key | length == 0
+
 - name: Checking free port for outward RabbitMQ
   wait_for:
     host: "{{ api_interface_address }}"
@@ -137,3 +163,31 @@
   when:
     - enable_outward_rabbitmq | bool
     - not item.1 is match('^'+('api' | kolla_address(item.0.item))+'\\b')
+
+- name: Check if TLS certificate exists for outward RabbitMQ
+  vars:
+    cert: "{{ query('first_found', paths, errors='ignore') }}"
+    paths:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/outward_rabbitmq-cert.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
+      - "{{ kolla_certificates_dir }}/outward_rabbitmq-cert.pem"
+  fail:
+    msg: No TLS certificate provided for outward RabbitMQ.
+  when:
+    - enable_outward_rabbitmq | bool
+    - rabbitmq_enable_tls | bool
+    - cert | length == 0
+
+- name: Check if TLS key exists for outward RabbitMQ
+  vars:
+    key: "{{ query('first_found', paths, errors='ignore') }}"
+    paths:
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/outward_rabbitmq-key.pem"
+      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
+      - "{{ kolla_certificates_dir }}/outward_rabbitmq-key.pem"
+  fail:
+    msg: No TLS key provided for outward RabbitMQ.
+  when:
+    - enable_outward_rabbitmq | bool
+    - rabbitmq_enable_tls | bool
+    - key | length == 0

@@ -1,6 +1,11 @@
 # NOTE(yoctozepto): rabbitmq uses the raw format (e.g. fd::) of IPv6 address;
 # despite specifying port via colon, the url format (e.g. [fd::]) is not accepted
+{% if rabbitmq_enable_tls | bool %}
+listeners.tcp = none
+listeners.ssl.1 = {{ api_interface_address }}:{{ role_rabbitmq_port }}
+{% else %}
 listeners.tcp.1 = {{ api_interface_address }}:{{ role_rabbitmq_port }}
+{% endif %}
 {# NOTE: to avoid split-brain #}
 cluster_partition_handling = pause_minority
 
@@ -12,3 +17,12 @@ cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
 {% for host in groups[role_rabbitmq_groups] %}
 cluster_formation.classic_config.nodes.{{ loop.index0 }} = rabbit@{{ hostvars[host]['ansible_hostname'] }}
 {% endfor %}
+
+{% if rabbitmq_enable_tls | bool %}
+# https://www.rabbitmq.com/ssl.html
+ssl_options.certfile = /etc/rabbitmq/certs/{{ project_name }}-cert.pem
+ssl_options.keyfile = /etc/rabbitmq/certs/{{ project_name }}-key.pem
+{% for key, value in rabbitmq_tls_options.items() %}
+ssl_options.{{ key }} = {{ value }}
+{% endfor %}
+{% endif %}
