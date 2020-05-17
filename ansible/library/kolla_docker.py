@@ -624,8 +624,8 @@ class DockerWorker(object):
 
             split_vol = vol.split(':')
 
-            if (len(split_vol) == 2
-               and ('/' not in split_vol[0] or '/' in split_vol[1])):
+            if (len(split_vol) == 2 and
+               ('/' not in split_vol[0] or '/' in split_vol[1])):
                 split_vol.append('rw')
 
             vol_list.append(split_vol[1])
