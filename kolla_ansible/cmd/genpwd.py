@@ -61,9 +61,9 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
 
     for k, v in passwords.items():
         if (k in ssh_keys and
-                (v is None
-                 or v.get('public_key') is None
-                 and v.get('private_key') is None)):
+                (v is None or
+                 v.get('public_key') is None and
+                 v.get('private_key') is None)):
             private_key, public_key = generate_RSA()
             passwords[k] = {
                 'private_key': private_key,
