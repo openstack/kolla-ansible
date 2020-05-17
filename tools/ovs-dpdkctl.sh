@@ -348,6 +348,9 @@ function unconfigure_kernel_modules {
 }
 
 function install {
+    if [ ! -e "$CONFIG_FILE" ]; then
+        gen_config
+    fi
     configure_kernel_modules
     if [ ! -e "$SERVICE_FILE" ]; then
         install_service
@@ -355,9 +358,6 @@ function install {
     if [ ! -e /bin/ovs-dpdkctl ]; then
         cp "$FULL_PATH" /bin/ovs-dpdkctl
         chmod +x /bin/ovs-dpdkctl
-    fi
-    if [ ! -e "$CONFIG_FILE" ]; then
-        gen_config
     fi
     systemctl start ovs-dpdkctl
     install_network_manager_conf
