@@ -65,7 +65,8 @@ Install dependencies
 
    .. end
 
-#. Install `Ansible <http://www.ansible.com>`__ from distribution packaging:
+#. Install `Ansible <http://www.ansible.com>`__ from distribution packaging.
+   Currently, Kolla Ansible requires Ansible 2.4 to 2.8:
 
    .. note::
 
@@ -92,13 +93,12 @@ Install dependencies
 
    .. end
 
-#. Use ``pip`` to install or upgrade Ansible to latest version:
+#. If the version of Ansible provided by the distribution does not meet the
+   above version requirements, install it via pip.
 
    .. code-block:: console
 
-      pip install -U ansible
-
-   .. end
+      sudo pip install -U 'ansible<2.9'
 
    .. note::
 
