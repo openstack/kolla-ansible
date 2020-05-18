@@ -28,6 +28,12 @@ so the only package you install is ``tox`` itself:
 For more information, see `the unit testing section of the Testing wiki page
 <https://wiki.openstack.org/wiki/Testing#Unit_Tests>`_. For example:
 
+To run the default set of tests:
+
+.. code-block:: console
+
+   tox
+
 To run the Python 3.7 tests:
 
 .. code-block:: console
@@ -38,13 +44,13 @@ To run the style tests:
 
 .. code-block:: console
 
-   tox -e pep8
+   tox -e linters
 
 To run multiple tests separate items by commas:
 
 .. code-block:: console
 
-   tox -e py37,pep8
+   tox -e py37,linters
 
 Running a subset of tests
 -------------------------
