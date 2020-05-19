@@ -20,17 +20,7 @@ import jinja2
 from kolla_ansible import exception
 from kolla_ansible import filters
 
-
-def _to_bool(value):
-    """Simplified version of the bool filter.
-
-    Avoids having a dependency on Ansible in unit tests.
-    """
-    if value == 'yes':
-        return True
-    if value == 'no':
-        return False
-    return bool(value)
+from kolla_ansible.tests.unit.helpers import _to_bool
 
 
 class TestFilters(unittest.TestCase):
