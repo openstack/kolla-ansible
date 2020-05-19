@@ -170,10 +170,28 @@ editing ``/etc/kolla/globals.yml`` and adding the following line.
    node_custom_config: "/etc/kolla/config"
 
 Kolla allows the operator to override configuration of services. Kolla will
-look for a file in ``/etc/kolla/config/<< service name >>/<< config file >>``.
-This can be done per-project, per-service or per-service-on-specified-host.
-For example to override scheduler_max_attempts in nova scheduler, the operator
-needs to create ``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
+generally look for a file in ``/etc/kolla/config/<< config file >>``,
+``/etc/kolla/config/<< service name >>/<< config file >>`` or
+``/etc/kolla/config/<< service name >>/<< hostname >>/<< config file >>``,
+but these locations sometimes vary and you should check the config task in
+the appropriate Ansible role for a full list of supported locations. For
+example, in the case of ``nova.conf`` the following locations are supported,
+assuming that you have services using ``nova.conf`` running on hosts
+called ``controller-0001``, ``controller-0002`` and ``controller-0003``:
+
+* ``/etc/kolla/config/nova.conf``
+* ``/etc/kolla/config/nova/controller-0001/nova.conf``
+* ``/etc/kolla/config/nova/controller-0002/nova.conf``
+* ``/etc/kolla/config/nova/controller-0003/nova.conf``
+* ``/etc/kolla/config/nova/nova-scheduler.conf``
+
+Using this mechanism, overrides can be configured per-project,
+per-project-service or per-project-service-on-specified-host.
+
+Overriding an option is as simple as setting the option under the relevant
+section. For example, to set ``override scheduler_max_attempts`` in nova
+scheduler, the operator could create
+``/etc/kolla/config/nova/nova-scheduler.conf`` with content:
 
 .. path /etc/kolla/config/nova/nova-scheduler.conf
 .. code-block:: ini
