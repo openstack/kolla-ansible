@@ -18,6 +18,7 @@ from jinja2.filters import contextfilter
 from jinja2.runtime import Undefined
 
 from kolla_ansible.exception import FilterError
+from kolla_ansible.helpers import _call_bool_filter
 
 
 @contextfilter
@@ -50,14 +51,15 @@ def kolla_address(context, network_name, hostname=None):
     if isinstance(hostvars, Undefined):
         raise FilterError("'hostvars' variable is unavailable")
 
-    del context  # remove for sanity
-
     host = hostvars.get(hostname)
     if isinstance(host, Undefined):
         raise FilterError("'{hostname}' not in 'hostvars'"
                           .format(hostname=hostname))
 
-    del hostvars  # remove for sanity (no 'Undefined' beyond this point)
+    del hostvars  # remove for clarity (no need for other hosts)
+
+    # NOTE(yoctozepto): variable "host" will *not* return Undefined
+    # same applies to all its children (act like plain dictionary)
 
     interface_name = host.get(network_name + '_interface')
     if interface_name is None:
@@ -101,11 +103,27 @@ def kolla_address(context, network_name, hostname=None):
         address = af_interface.get('address')
     elif address_family == 'ipv6':
         # ipv6 has no concept of a secondary address
-        # prefix 128 is the default from keepalived
-        # it needs to be excluded here
+        # explicitly exclude the vip addresses
+        # to avoid excluding all /128
+
+        haproxy_enabled = host.get('enable_haproxy')
+        if haproxy_enabled is None:
+            raise FilterError("'enable_haproxy' variable is unavailable")
+        haproxy_enabled = _call_bool_filter(context, haproxy_enabled)
+
+        if haproxy_enabled:
+            vip_addresses = [
+                host.get('kolla_internal_vip_address'),
+                host.get('kolla_external_vip_address'),
+            ]
+        else:
+            # no addresses are virtual (kolla-wise)
+            vip_addresses = []
+
         global_ipv6_addresses = [x for x in af_interface if
                                  x['scope'] == 'global' and
-                                 x['prefix'] != '128']
+                                 x['address'] not in vip_addresses]
+
         if global_ipv6_addresses:
             address = global_ipv6_addresses[0]['address']
         else:
