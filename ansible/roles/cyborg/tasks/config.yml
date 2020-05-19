@@ -76,26 +76,18 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Checking whether cyborg-api-paste.ini file exists
-  vars:
-    service: "{{ cyborg_services['cyborg-api'] }}"
-  local_action: stat path="{{ node_custom_config }}/cyborg/cyborg-api-paste.ini"
-  run_once: True
-  register: check_cyborg_api_paste_ini
-  when:
-    - service.enabled | bool
-
 - name: Copying over cyborg-api-paste.ini
   vars:
     service: "{{ cyborg_services['cyborg-api'] }}"
-  template:
-    src: "{{ node_custom_config }}/cyborg/cyborg-api-paste.ini"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/cyborg-api-paste.ini.j2"
+      - "{{ node_custom_config }}/cyborg/cyborg-api-paste.ini"
     dest: "{{ node_config_directory }}/cyborg-api/api-paste.ini"
     mode: "0660"
   when:
     - inventory_hostname in groups['cyborg-api']
     - service.enabled | bool
-    - check_cyborg_api_paste_ini.stat.exists
   notify:
     - Restart cyborg-api container
 
