@@ -46,7 +46,6 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Ceilometer <https://docs.openstack.org/ceilometer/latest/>`__
 - `Cinder <https://docs.openstack.org/cinder/latest/>`__
 - `CloudKitty <https://docs.openstack.org/cloudkitty/latest/>`__
-- `Congress <https://docs.openstack.org/congress/latest/>`__
 - `Cyborg <https://docs.openstack.org/cyborg/latest/>`__
 - `Designate <https://docs.openstack.org/designate/latest/>`__
 - `Freezer <https://docs.openstack.org/freezer/latest/>`__

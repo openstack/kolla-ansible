@@ -24,7 +24,6 @@
         - enable_cinder_{{ enable_cinder | bool }}
         - enable_cloudkitty_{{ enable_cloudkitty | bool }}
         - enable_collectd_{{ enable_collectd | bool }}
-        - enable_congress_{{ enable_congress | bool }}
         - enable_cyborg_{{ enable_cyborg | bool }}
         - enable_designate_{{ enable_designate | bool }}
         - enable_elasticsearch_{{ enable_elasticsearch | bool }}
@@ -142,11 +141,6 @@
             tasks_from: loadbalancer
           tags: cloudkitty
           when: enable_cloudkitty | bool
-        - include_role:
-            name: congress
-            tasks_from: loadbalancer
-          tags: congress
-          when: enable_congress | bool
         - include_role:
             name: cyborg
             tasks_from: loadbalancer
@@ -958,19 +952,6 @@
     - { role: barbican,
         tags: barbican,
         when: enable_barbican | bool }
-
-- name: Apply role congress
-  gather_facts: false
-  hosts:
-    - congress-api
-    - congress-policy-engine
-    - congress-datasource
-    - '&enable_congress_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: congress,
-        tags: congress,
-        when: enable_congress | bool }
 
 - name: Apply role cyborg
   gather_facts: false
