@@ -10,17 +10,18 @@ bind_host = {{ api_interface_address }}
 bind_port = {{ octavia_api_listen_port }}
 
 [certificates]
-ca_private_key_passphrase = {{ octavia_ca_password }}
+ca_private_key_passphrase = {{ octavia_server_ca_password }}
 ca_private_key = /etc/octavia/certs/server_ca.key.pem
 ca_certificate = /etc/octavia/certs/server_ca.cert.pem
+cert_generator = local_cert_generator
 {% if enable_barbican | bool %}
 region_name = {{ openstack_region_name }}
 endpoint_type = internal
 {% endif %}
 
 [haproxy_amphora]
+client_cert = /etc/octavia/certs/private/client.cert-and-key.pem
 server_ca = /etc/octavia/certs/server_ca.cert.pem
-client_cert = /etc/octavia/certs/client.cert-and-key.pem
 
 [database]
 connection = mysql+pymysql://{{ octavia_database_user }}:{{ octavia_database_password }}@{{ octavia_database_address }}/{{ octavia_database_name }}
@@ -72,6 +73,7 @@ amphora_driver = amphora_haproxy_rest_driver
 amp_active_retries = 100
 amp_active_wait_sec = 2
 loadbalancer_topology = {{ octavia_loadbalancer_topology }}
+client_ca = /etc/octavia/certs/client_ca.cert.pem
 
 [oslo_messaging]
 topic = octavia_prov
