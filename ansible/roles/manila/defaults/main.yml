@@ -10,6 +10,7 @@ manila_services:
     volumes:
       - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
     dimensions: "{{ manila_api_dimensions }}"
@@ -32,6 +33,7 @@ manila_services:
     volumes:
       - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python2.7/site-packages/manila' if manila_dev_mode | bool else '' }}"
     dimensions: "{{ manila_scheduler_dimensions }}"
@@ -44,6 +46,7 @@ manila_services:
     volumes:
       - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"
       - "/lib/modules:/lib/modules:ro"
@@ -58,6 +61,7 @@ manila_services:
     volumes:
       - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/dev/:/dev/"
       - "/run/:/run/:shared"
       - "kolla_logs:/var/log/kolla/"

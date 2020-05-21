@@ -57,10 +57,14 @@
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
 
-- fail: msg="Hostname has to resolve to IP address of api_interface"
-  with_items: "{{ rabbitmq_hostnames.results }}"
+- name: Check if each rabbit hostname resolves uniquely to the proper IP address
+  fail:
+    msg: Hostname has to resolve uniquely to the IP address of api_interface
+  with_subelements:
+    - "{{ rabbitmq_hostnames.results }}"
+    - stdout_lines
   when:
-    - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
+    - not item.1 is match('^'+hostvars[item.0.item]['ansible_' ~ hostvars[item.0.item]['api_interface']]['ipv4']['address']+'\\b')
 
 - name: Checking free port for outward RabbitMQ
   wait_for:
@@ -114,8 +118,12 @@
   when:
     - enable_outward_rabbitmq | bool
 
-- fail: msg="Hostname has to resolve to IP address of api_interface"
-  with_items: "{{ outward_rabbitmq_hostnames.results }}"
+- name: Check if each rabbit hostname resolves uniquely to the proper IP address
+  fail:
+    msg: Hostname has to resolve uniquely to the IP address of api_interface
+  with_subelements:
+    - "{{ outward_rabbitmq_hostnames.results }}"
+    - stdout_lines
   when:
     - enable_outward_rabbitmq | bool
-    - "item.stdout.find(hostvars[item['item']]['ansible_' ~ hostvars[item['item']]['api_interface']]['ipv4']['address']) == -1"
+    - not item.1 is match('^'+hostvars[item.0.item]['ansible_' ~ hostvars[item.0.item]['api_interface']]['ipv4']['address']+'\\b')

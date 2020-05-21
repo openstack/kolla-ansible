@@ -11,6 +11,7 @@ tacker_services:
       - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
       - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ tacker_server_dimensions }}"
     haproxy:
@@ -33,6 +34,7 @@ tacker_services:
       - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
       - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python2.7/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ tacker_conductor_dimensions }}"
 

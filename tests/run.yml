@@ -44,6 +44,12 @@
         - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
 
+    - name: Ensure tox is installed
+      pip:
+        name: tox
+      when: need_build_image
+      become: true
+
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images
       include_vars:
@@ -185,6 +191,7 @@
         TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
         ACTION: "{{ scenario }}"
+        UPPER_CONSTRAINTS: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
 
     # At this point we have generated all necessary configuration, and are
     # ready to deploy the control plane services. Control flow now depends on

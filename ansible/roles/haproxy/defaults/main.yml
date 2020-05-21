@@ -11,6 +11,7 @@ haproxy_services:
     volumes:
       - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "haproxy_socket:/var/lib/kolla/haproxy/"
     dimensions: "{{ haproxy_dimensions }}"
   keepalived:
@@ -22,6 +23,7 @@ haproxy_services:
     volumes:
       - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
       - "haproxy_socket:/var/lib/kolla/haproxy/"
     dimensions: "{{ keepalived_dimensions }}"

@@ -1,0 +1,12 @@
+---
+- name: Setting sysctl values
+  become: true
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+  with_items:
+    - { name: "vm.max_map_count", value: 262144}
+  when:
+    - set_sysctl | bool
+    - inventory_hostname in groups['elasticsearch']

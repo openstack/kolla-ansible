@@ -19,7 +19,8 @@ ovsdpdk_services:
     volumes:
       - "{{ node_config_directory }}/ovsdpdk-db/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+      - "/run/openvswitch:/run/openvswitch:shared"
       - "kolla_logs:/var/log/kolla/"
       - "ovsdpdk_db:/var/lib/openvswitch/"
     dimensions: "{{ ovsdpdk_db_dimensions }}"
@@ -39,8 +40,9 @@ ovsdpdk_services:
     volumes:
       - "{{ node_config_directory }}/ovsdpdk-vswitchd/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
+      - "/run/openvswitch:/run/openvswitch:shared"
       - "/dev:/dev:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ ovsdpdk_vswitchd_dimensions }}"

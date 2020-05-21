@@ -40,6 +40,7 @@ horizon_services:
       - "{{ kolla_dev_repos_directory ~ '/horizon/openstack_dashboard:/var/lib/kolla/venv/lib/python2.7/site-packages/openstack_dashboard' if horizon_dev_mode | bool else '' }}"
       - "{{ kolla_dev_repos_directory ~ '/murano-dashboard/muranodashboard:/var/lib/kolla/venv/lib/python2.7/site-packages/muranodashboard' if horizon_murano_dev_mode | bool else '' }}"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "/tmp:/tmp"
     dimensions: "{{ horizon_dimensions }}"
@@ -50,7 +51,7 @@ horizon_services:
         external: false
         port: "{{ horizon_port }}"
         listen_port: "{{ horizon_listen_port }}"
-        frontend_http_extra:
+        backend_http_extra:
           - "balance source"
       horizon_external:
         enabled: "{{ enable_horizon }}"
@@ -58,7 +59,7 @@ horizon_services:
         external: true
         port: "{% if kolla_enable_tls_external|bool %}443{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
-        frontend_http_extra:
+        backend_http_extra:
           - "balance source"
       horizon_external_redirect:
         enabled: "{{ enable_horizon|bool and kolla_enable_tls_external|bool }}"

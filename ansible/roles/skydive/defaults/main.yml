@@ -10,6 +10,7 @@ skydive_services:
     volumes:
       - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ skydive_analyzer_dimensions }}"
     haproxy:
@@ -32,6 +33,7 @@ skydive_services:
     volumes:
       - "{{ node_config_directory }}/skydive-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/var/run/openvswitch:/var/run/openvswitch:ro"
       - "/var/run/netns:/host/run:shared"
       - "kolla_logs:/var/log/kolla/"
@@ -45,6 +47,7 @@ skydive_analyzer_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 skydive_analyzer_tag: "{{ openstack_release }}"
 skydive_analyzer_image_full: "{{ skydive_analyzer_image }}:{{ skydive_analyzer_tag }}"
 
+skydive_admin_tenant_name: "{{ openstack_auth['project_name'] }}"
 skydive_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ skydive_install_type }}-skydive-agent"
 skydive_agent_tag: "{{ openstack_release }}"
 skydive_agent_image_full: "{{ skydive_agent_image }}:{{ skydive_agent_tag }}"

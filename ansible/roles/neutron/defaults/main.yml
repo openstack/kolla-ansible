@@ -11,6 +11,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-server/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_server_dimensions }}"
     haproxy:
@@ -51,8 +52,9 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-openvswitch-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
+      - "/run/openvswitch:/run/openvswitch:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
   neutron-openvswitch-agent-xenapi:
@@ -67,8 +69,9 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-openvswitch-agent-xenapi/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
+      - "/run/openvswitch:/run/openvswitch:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_openvswitch_agent_xenapi_dimensions }}"
   neutron-linuxbridge-agent:
@@ -91,8 +94,8 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-linuxbridge-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
   neutron-dhcp-agent:
@@ -105,8 +108,9 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run/:/run/:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "/run/netns:/run/netns:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_dhcp_agent_dimensions }}"
   neutron-l3-agent:
@@ -122,9 +126,10 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-l3-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "/lib/modules:/lib/modules:ro"
-      - "/run:/run:shared"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
+      - "/run/netns:/run/netns:shared"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_l3_agent_dimensions }}"
   neutron-lbaas-agent:
@@ -137,7 +142,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-lbaas-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_lbaas_agent_dimensions }}"
   neutron-sriov-agent:
@@ -149,7 +154,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
   neutron-metadata-agent:
@@ -165,7 +170,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-metadata-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run/:/run/:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "neutron_metadata_socket:/var/lib/neutron/kolla/"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_metadata_agent_dimensions }}"
@@ -179,7 +184,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-bgp-dragent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_bgp_dragent_dimensions }}"
   neutron-infoblox-ipam-agent:
@@ -192,7 +197,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-infoblox-ipam-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_infoblox_ipam_agent_dimensions }}"
   neutron-metering-agent:
@@ -205,7 +210,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/neutron-metering-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/run:/run:shared"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ neutron_metering_agent_dimensions }}"
   ironic-neutron-agent:
@@ -218,6 +223,7 @@ neutron_services:
     volumes:
       - "{{ node_config_directory }}/ironic-neutron-agent/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
       - "kolla_logs:/var/log/kolla/"
     dimensions: "{{ ironic_neutron_agent_dimensions }}"
 
@@ -308,7 +314,6 @@ neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_openvswitch_agent_xenapi_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
-
 
 ####################
 # OpenStack
