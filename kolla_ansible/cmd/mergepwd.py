@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import sys
 import yaml
 
 
@@ -22,6 +23,14 @@ def mergepwd(old, new, final):
 
     with open(new, "r") as new_file:
         new_passwords = yaml.safe_load(new_file)
+
+    if not isinstance(old_passwords, dict):
+        print("ERROR: Old passwords file not in expected key/value format")
+        sys.exit(1)
+
+    if not isinstance(new_passwords, dict):
+        print("ERROR: New passwords file not in expected key/value format")
+        sys.exit(1)
 
     new_passwords.update(old_passwords)
 
