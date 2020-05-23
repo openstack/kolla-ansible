@@ -81,6 +81,21 @@ After successful deployment, Kibana can be accessed using a browser on
 The default username is ``kibana``, the password can be located under
 ``<kibana_password>`` in ``/etc/kolla/passwords.yml``.
 
+First Login
+-----------
+
+When Kibana is opened for the first time, it requires creating a default index
+pattern. To view, analyse and search logs, at least one index pattern has to
+be created. To match indices stored in ElasticSearch, we suggest using the
+following configuration:
+
+#. Index pattern - flog-*
+#. Time Filter field name - @timestamp
+#. Expand index pattern when searching [DEPRECATED] - not checked
+#. Use event times to create index names [DEPRECATED] - not checked
+
+After setting parameters, one can create an index with the *Create* button.
+
 Search logs - Discover tab
 --------------------------
 
