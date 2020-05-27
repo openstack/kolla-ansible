@@ -407,6 +407,23 @@ There are a few options that are required to deploy Kolla-Ansible:
 
      kolla_install_type: "source"
 
+  To use DockerHub images, the default image tag has to be overridden. Images are
+  tagged with release names. For example to use stable Stein images set
+
+  .. code-block:: console
+
+     openstack_release: "stein"
+
+  It's important to use same version of images as kolla-ansible. That
+  means if pip was used to install kolla-ansible, that means it's latest stable
+  version so ``openstack_release`` should be set to stein. If git was used with
+  master branch, DockerHub also provides daily builds of master branch (which is
+  tagged as ``master``):
+
+  .. code-block:: console
+
+     openstack_release: "master"
+
 * Networking
 
   Kolla-Ansible requires a few networking options to be set.
@@ -570,3 +587,4 @@ Using OpenStack
      .. code-block:: console
 
         kolla-ansible/tools/init-runonce
+
