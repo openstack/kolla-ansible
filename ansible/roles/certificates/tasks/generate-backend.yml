@@ -1,0 +1,64 @@
+---
+- name: Ensuring private backend directory exist
+  file:
+    path: "{{ backend_dir }}"
+    state: "directory"
+    mode: "0770"
+
+- name: Creating backend SSL configuration file
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ kolla_certificates_dir }}/{{ item }}"
+    mode: "0660"
+  with_items:
+    - "openssl-kolla-backend.cnf"
+
+- name: Creating backend Server Certificate key
+  command: >
+    openssl genrsa
+    -out "{{ backend_dir }}/backend.key" 2048
+  args:
+    creates: "{{ kolla_tls_backend_key }}"
+
+- name: Creating backend Server Certificate signing request
+  command: >
+    openssl req
+    -new
+    -key "{{ backend_dir }}/backend.key"
+    -out "{{ backend_dir }}/backend.csr"
+    -config "{{ kolla_certificates_dir }}/openssl-kolla-backend.cnf"
+    -sha256
+  args:
+    creates: "{{ backend_dir }}/backend.csr"
+
+- name: Creating backend Server Certificate
+  command: >
+    openssl x509
+    -req
+    -in "{{ backend_dir }}/backend.csr"
+    -CA "{{ root_dir }}/root.crt"
+    -CAkey "{{ root_dir }}/root.key"
+    -CAcreateserial
+    -out "{{ backend_dir }}/backend.crt"
+    -days 500
+    -sha256
+  args:
+    creates: "{{ backend_dir }}/backend.crt"
+
+- name: Setting permissions on backend key
+  file:
+    path: "{{ backend_dir }}/backend.key"
+    mode: "0660"
+    state: file
+
+- name: Copy backend cert to default configuration location
+  copy:
+    src: "{{ backend_dir }}/backend.crt"
+    dest: "{{ kolla_certificates_dir }}/backend-cert.pem"
+    mode: "0660"
+
+- name: Copy backend key to default configuration location
+  copy:
+    src: "{{ backend_dir }}/backend.key"
+    dest: "{{ kolla_certificates_dir }}/backend-key.pem"
+    mode: "0660"
