@@ -2,12 +2,71 @@
 #
 # This script can be used to interact with kolla via ansible.
 
+function check_environment_coherence {
+    local ansible_path
+    ansible_path=$(which ansible)
+
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Ansible is not installed in the current (virtual) environment." >&2
+        exit 1
+    fi
+
+    local ansible_shebang_line
+    ansible_shebang_line=$(head -n1 "$ansible_path")
+
+    if ! echo "$ansible_shebang_line" | egrep "^#!" &>/dev/null; then
+        echo "ERROR: Ansible script is malformed (missing shebang line)." >&2
+        exit 1
+    fi
+
+    local ansible_python_cmdline
+    # NOTE(yoctozepto): may have multiple parts
+    ansible_python_cmdline=${ansible_shebang_line#\#\!}
+
+    if ! $ansible_python_cmdline --version &>/dev/null; then
+        echo "ERROR: Ansible Python is not functional." >&2
+        echo "Tried '$ansible_python_cmdline'" >&2
+        exit 1
+    fi
+
+    # Check for existence of kolla_ansible module using Ansible's Python.
+    if ! $ansible_python_cmdline -c 'import kolla_ansible' &>/dev/null; then
+        echo "ERROR: kolla_ansible has to be available in the Ansible PYTHONPATH." >&2
+        echo "Please install both in the same (virtual) environment." >&2
+        exit 1
+    fi
+
+    local ansible_version_output
+    ansible_full_version=$($ansible_python_cmdline -c 'import ansible; print(ansible.__version__)')
+
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to obtain Ansible version:" >&2
+        echo "$ansible_full_version" >&2
+        exit 1
+    fi
+
+    local ansible_version
+    ansible_version=$(echo "$ansible_full_version" | egrep -o '^[0-9]+\.[0-9]+')
+
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to parse Ansible version:" >&2
+        echo "$ansible_full_version" >&2
+        exit 1
+    fi
+
+    local ANSIBLE_VERSION_MIN=2.6
+    local ANSIBLE_VERSION_MAX=2.9
+
+    if [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | head -n1) != "$ANSIBLE_VERSION_MIN" ]] ||
+       [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | tail -n1) != "$ANSIBLE_VERSION_MAX" ]]; then
+        echo "ERROR: Ansible version should be between $ANSIBLE_VERSION_MIN and $ANSIBLE_VERSION_MAX. Current version is $ANSIBLE_VERSION_HOST which is not supported."
+        exit 1
+    fi
+}
+
 function find_base_dir {
-    # $1: Python interpreter
-    local python
-    python=$1
-    local real_path=$($python -c "import os;print(os.path.realpath('$0'))")
-    local dir_name="$(dirname "$real_path")"
+    local dir_name
+    dir_name=$(cd "$(dirname "$0")" &>/dev/null && pwd)
     if [ -z "$SNAP" ]; then
         if [[ ${dir_name} == "/usr/bin" ]]; then
             BASEDIR=/usr/share/kolla-ansible
@@ -117,23 +176,13 @@ genconfig
 EOF
 }
 
+check_environment_coherence
+
 SHORT_OPTS="hi:p:t:k:e:v"
 LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
-
-# Detect which python interpreter to use.
-for python in python3 python2; do
-    if $python -c 'import kolla_ansible' &>/dev/null; then
-        PYTHON=$python
-        break
-    fi
-done
-if [[ -z $PYTHON ]]; then
-    echo "ERROR: kolla_ansible has to be available in the PYTHONPATH (e.g. installed)" >&2
-    exit 1
-fi
 
 eval set -- "$ARGS"
 
