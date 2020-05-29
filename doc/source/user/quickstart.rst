@@ -45,11 +45,17 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS or RHEL, run:
+   For CentOS or RHEL 7, run:
 
    .. code-block:: console
 
       sudo yum install python-devel libffi-devel gcc openssl-devel libselinux-python
+
+   For CentOS or RHEL 8, run:
+
+   .. code-block:: console
+
+      sudo dnf install python3-devel libffi-devel gcc openssl-devel python3-libselinux
 
    For Ubuntu, run:
 
@@ -64,11 +70,17 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
 
 #. Install the virtualenv package.
 
-   For CentOS or RHEL, run:
+   For CentOS or RHEL 7, run:
 
    .. code-block:: console
 
       sudo yum install python-virtualenv
+
+   For CentOS or RHEL 8, run:
+
+   .. code-block:: console
+
+      sudo dnf install python3-virtualenv
 
    For Ubuntu, run:
 

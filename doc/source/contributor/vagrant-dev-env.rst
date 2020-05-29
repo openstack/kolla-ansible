@@ -40,13 +40,20 @@ choice. Various downloads can be found at the `Vagrant downloads
 
 Install required dependencies as follows:
 
-For CentOS 7 or later:
+For CentOS or RHEL 7:
 
 .. code-block:: console
 
    sudo yum install ruby-devel libvirt-devel zlib-devel libpng-devel gcc \
    qemu-kvm qemu-img libvirt libvirt-python libvirt-client virt-install \
    bridge-utils git
+
+For CentOS or RHEL 8:
+
+.. code-block:: console
+
+   sudo dnf install ruby-devel libvirt-devel zlib-devel libpng-devel gcc \
+   qemu-kvm qemu-img libvirt python3-libvirt libvirt-client virt-install git
 
 For Ubuntu 16.04 or later:
 
