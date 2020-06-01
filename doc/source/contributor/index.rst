@@ -12,7 +12,9 @@ We welcome everyone to join our project!
 .. toctree::
    :maxdepth: 1
 
-   CONTRIBUTING
+   contributing
+   adding-a-new-service
+   release-notes
    vagrant-dev-env
    running-tests
    kolla-for-openstack-development
