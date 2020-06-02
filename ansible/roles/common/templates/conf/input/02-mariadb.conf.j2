@@ -10,3 +10,17 @@
   format1 /^(?<Payload>.*)/
   enable_watch_timer false
 </source>
+<source>
+  @type tail
+  path /var/log/kolla/mariadb/xinetd.log
+  pos_file /var/run/{{ fluentd_binary }}/mariadb-xinetd.pos
+  tag infra.mariadb.xinetd
+  format multiline
+  format_firstline /^\d{2}/\d{1,2}/\d{1,2}@\d{1,2}:\d{1,2}:\d{1,2}\: (START|EXIT)\: /
+  format1 /^(?<Timestamp>\S+) (?<Payload>.*)?$/
+  time_key Timestamp
+  keep_time_key true
+  time_format %y/%-m/%-d@%T
+  ignore_repeated_permission_error true
+  enable_watch_timer false
+</source>
