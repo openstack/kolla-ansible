@@ -30,8 +30,12 @@
     - Restart {{ item.key }} container
 
 - name: Copying over skydive config file
-  template:
-    src: "{{ item.key }}.conf.j2"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/{{ item.key }}.conf.j2"
+      - "{{ node_custom_config }}/skydive.conf"
+      - "{{ node_custom_config }}/skydive/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/skydive/{{ inventory_hostname }}/{{ item.key }}.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/skydive.conf"
     mode: "0660"
   become: true
