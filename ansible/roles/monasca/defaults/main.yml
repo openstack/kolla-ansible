@@ -20,24 +20,6 @@ monasca_services:
         mode: "http"
         external: true
         port: "{{ monasca_api_port }}"
-  monasca-log-api:
-    container_name: monasca_log_api
-    group: monasca-log-api
-    enabled: true
-    image: "{{ monasca_log_api_image_full }}"
-    volumes: "{{ monasca_log_api_default_volumes + monasca_log_api_extra_volumes }}"
-    dimensions: "{{ monasca_log_api_dimensions }}"
-    haproxy:
-      monasca_log_api:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: false
-        port: "{{ monasca_log_api_port }}"
-      monasca_log_api_external:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: true
-        port: "{{ monasca_log_api_port }}"
   monasca-log-transformer:
     container_name: monasca_log_transformer
     group: monasca-log-transformer
@@ -211,10 +193,6 @@ monasca_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 monasca_api_tag: "{{ monasca_tag }}"
 monasca_api_image_full: "{{ monasca_api_image }}:{{ monasca_api_tag }}"
 
-monasca_log_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-log-api"
-monasca_log_api_tag: "{{ monasca_tag }}"
-monasca_log_api_image_full: "{{ monasca_log_api_image }}:{{ monasca_log_api_tag }}"
-
 monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-logstash"
 monasca_logstash_tag: "{{ monasca_tag }}"
 monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
@@ -268,11 +246,6 @@ monasca_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
-monasca_log_api_default_volumes:
-  - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
-  - "kolla_logs:/var/log/kolla"
 monasca_log_transformer_default_volumes:
   - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -315,7 +288,6 @@ monasca_agent_collector_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_agent_statsd_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_agent_forwarder_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_api_extra_volumes: "{{ monasca_extra_volumes }}"
-monasca_log_api_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_log_transformer_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_log_persister_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
