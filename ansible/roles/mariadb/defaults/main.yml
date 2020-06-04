@@ -21,7 +21,7 @@ mariadb_services:
         backend_tcp_extra:
           - "option srvtcpka"
           - "timeout server 3600s"
-          - "option mysql-check user haproxy post-41"
+          - "option {% if enable_mariadb_clustercheck | bool %}httpchk{% else %}mysql-check user haproxy post-41{% endif %}"
         custom_member_list: "{{ internal_haproxy_members.split(';') }}"
       mariadb_external_lb:
         enabled: "{{ enable_external_mariadb_load_balancer|bool }}"
@@ -35,6 +35,18 @@ mariadb_services:
           - "option srvtcpka"
           - "timeout server 3600s"
         custom_member_list: "{{ external_haproxy_members.split(';') }}"
+  mariadb-clustercheck:
+    container_name: mariadb_clustercheck
+    group: mariadb
+    enabled: "{{ enable_mariadb_clustercheck | bool }}"
+    image: "{{ mariadb_clustercheck_image_full }}"
+    volumes: "{{ mariadb_clustercheck_default_volumes + mariadb_clustercheck_extra_volumes }}"
+    dimensions: "{{ mariadb_clustercheck_dimensions }}"
+    environment:
+      MYSQL_USERNAME: "haproxy"
+      MYSQL_PASSWORD: ""
+      MYSQL_HOST: "{{ api_interface_address }}"
+      AVAILABLE_WHEN_DONOR: "1"
 
 ####################
 # Database
@@ -45,8 +57,8 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
-external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port}} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker
@@ -55,7 +67,14 @@ mariadb_install_type: "{{ kolla_install_type }}"
 mariadb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mariadb_install_type }}-mariadb"
 mariadb_tag: "{{ openstack_tag }}"
 mariadb_image_full: "{{ mariadb_image }}:{{ mariadb_tag }}"
+
+mariadb_clustercheck_install_type: "{{ kolla_install_type }}"
+mariadb_clustercheck_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mariadb_clustercheck_install_type }}-mariadb-clustercheck"
+mariadb_clustercheck_tag: "{{ openstack_tag }}"
+mariadb_clustercheck_image_full: "{{ mariadb_clustercheck_image }}:{{ mariadb_clustercheck_tag }}"
+
 mariadb_dimensions: "{{ default_container_dimensions }}"
+mariadb_clustercheck_dimensions: "{{ default_container_dimensions }}"
 
 mariadb_default_volumes:
   - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
@@ -63,7 +82,14 @@ mariadb_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "mariadb:/var/lib/mysql"
   - "kolla_logs:/var/log/kolla/"
+mariadb_clustercheck_default_volumes:
+  - "{{ node_config_directory }}/mariadb-clustercheck/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
 mariadb_extra_volumes: "{{ default_extra_volumes }}"
+mariadb_clustercheck_extra_volumes: "{{ default_extra_volumes }}"
 
 ########################################
 # Vars used within recover_cluster.yml
@@ -87,3 +113,8 @@ mariadb_backup_database_schema: "PERCONA_SCHEMA"
 mariadb_backup_database_user: "backup"
 mariadb_backup_database_address: "{{ database_address }}"
 mariadb_backup_type: "full"
+
+####################
+# Clustercheck
+####################
+enable_mariadb_clustercheck: "yes"
