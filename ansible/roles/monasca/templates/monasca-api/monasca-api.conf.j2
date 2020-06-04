@@ -3,6 +3,7 @@ log_file = monasca-api.log
 log_dir = /var/log/kolla/monasca
 debug = {{ monasca_logging_debug }}
 region = {{ openstack_region_name }}
+enable_logs_api = True
 
 [database]
 database = {{ monasca_database_name }}
@@ -14,7 +15,9 @@ ip_address = {{ monasca_influxdb_address }}
 port = {{ monasca_influxdb_http_port }}
 
 [kafka]
+legacy_kafka_client_enabled = False
 metrics_topic = {{ monasca_metrics_topic }}
+logs_topics = {{ monasca_raw_logs_topic }}
 uri = {{ monasca_kafka_servers }}
 
 [messaging]
@@ -58,3 +61,7 @@ dimension_values = monasca_api.v2.reference.metrics:DimensionValues
 dimension_names = monasca_api.v2.reference.metrics:DimensionNames
 notification_method_types = monasca_api.v2.reference.notificationstype:NotificationsType
 healthchecks = monasca_api.healthchecks:HealthChecks
+
+[log_publisher]
+# Increase the maximum payload size to slightly above the default Fluentd chunk size (8MB)
+max_log_size = 10485760
