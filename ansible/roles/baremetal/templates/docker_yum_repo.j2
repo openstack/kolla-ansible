@@ -1,7 +1,11 @@
 [docker-repo]
 name=Docker main Repository
-{% if (ansible_distribution | lower) == 'centos' %}
+{% if docker_yum_url == "https://mirrors.aliyun.com/docker-engine/yum" and (ansible_distribution | lower) == 'centos' %}
+{% if docker_yum_centos_url == "https://mirror.its.sfu.ca/mirror/docker" %}
+baseurl={{ docker_yum_centos_url }}
+{% else %}
 baseurl={{ docker_yum_centos_url }}/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version | lower }}
+{% endif %}
 {% else %}
 baseurl={{ docker_yum_url }}/repo/main/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version | lower }}
 {% endif %}
