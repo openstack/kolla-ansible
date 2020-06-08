@@ -3,11 +3,11 @@ Compute
 =======
 
 This section describes configuring nova hypervisors and
-compute services like HyperV, XenServer and so on.
+compute services like HyperV and so on.
 
 .. note::
 
-   Hyper-V, VMware, and XenAPI support have been deprecated and will
+   Hyper-V and VMware support have been deprecated and will
    be removed in the Victoria cycle.
 
 .. toctree::
@@ -21,5 +21,4 @@ compute services like HyperV, XenServer and so on.
    nova-guide
    qinling-guide
    vmware-guide
-   xenserver-guide
    zun-guide

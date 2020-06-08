@@ -13,8 +13,8 @@ Virtualisation Drivers
 ======================
 
 The virtualisation driver may be selected via ``nova_compute_virt_type`` in
-``globals.yml``. Supported options are ``qemu``, ``kvm``, ``vmware``, and
-``xenapi``. The default is ``kvm``.
+``globals.yml``. Supported options are ``qemu``, ``kvm``, and ``vmware``.
+The default is ``kvm``.
 
 HyperV
 ------
@@ -40,16 +40,6 @@ VMware
 
 Information on the VMware-based driver ``vmware`` can be found in
 :doc:`vmware-guide`.
-
-XenServer
----------
-
-.. note::
-
-   XenAPI support has been deprecated and will be removed in the Victoria cycle.
-
-Information on the XenServer-based driver ``xenapi`` can be found in
-:doc:`xenserver-guide`.
 
 Bare Metal
 ----------

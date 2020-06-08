@@ -16,19 +16,3 @@ provides an API service to manage and control the automated rescue mechanism.
 Kolla deploys Masakari API, Masakari Engine and Masakari Instance Monitor
 containers which are the main Masakari components only if ``enable_masakari``
 is set in ``/etc/kolla/globals.yml``.
-
-
-Connection URI to libvirtd
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-By default ``masakari-instancemonitor`` will connect to ``libvirt`` daemon
-using ``qemu+tcp://`` connection URI to get events of KVM-based virtual
-machines.
-
-The setting is overridable using custom config, put the content in
-``/etc/kolla/config/masakari/masakari-monitors.conf``.
-
-.. code-block:: ini
-
-   [libvirt]
-   connection_uri = "xen://{{ migration_interface_address | put_address_in_context('url') }}/system"
