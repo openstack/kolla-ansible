@@ -23,8 +23,6 @@
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'ceph-ansible', 'zun', 'cells', 'swift', 'linuxbridge', 'ovn'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
-        # TODO(mgoddard): Remove when previous_release is ussuri.
-        playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' and ansible_os_family != 'RedHat' else '3' }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
 
@@ -151,21 +149,6 @@
           dest: /etc/kolla/ceph-ansible.yml
           when: "{{ scenario == 'ceph-ansible' }}"
 
-        ### TODO(mnasiadka): Remove following ceph-ansible block in Victoria
-        # external ceph: glance-api.conf on upgrade from Train
-        - src: "tests/templates/ceph-ansible-upgrade/glance-api.conf.j2"
-          dest: /etc/kolla/config/glance/glance-api.conf
-          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
-        # external ceph: cinder-volume.conf on upgrade from Train
-        - src: "tests/templates/ceph-ansible-upgrade/cinder-volume.conf.j2"
-          dest: /etc/kolla/config/cinder/cinder-volume.conf
-          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
-        # external ceph: cinder-backup.conf on upgrade from Train
-        - src: "tests/templates/ceph-ansible-upgrade/cinder-backup.conf.j2"
-          dest: /etc/kolla/config/cinder/cinder-backup.conf
-          when: "{{ scenario == 'ceph-ansible' and is_previous_release and previous_release == 'train' }}"
-      ### TODO(mnasiadka): End of remove block for ceph-ansible in Victoria
-
       when: item.when | default(true)
 
     - block:
@@ -201,14 +184,12 @@
           - "{{ kolla_ansible_src_dir }}"
           - "ansible{{ ansible_version_constraint }}"
           - "ara<1.0.0"
-        # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
-        executable: "pip{{ playbook_python_version }}"
+        executable: "pip3"
         extra_args: "-c {{ upper_constraints_file }}"
       become: true
 
-    # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
-      command: "python{{ playbook_python_version }} -m ara.setup.callback_plugins"
+      command: "python3 -m ara.setup.callback_plugins"
       changed_when: false
       register: ara_callback_plugins
 
@@ -506,41 +487,6 @@
             - src: "tests/templates/nova-compute-overrides.j2"
               dest: /etc/kolla/config/nova/nova-compute.conf
           when: item.when | default(true)
-
-        # TODO(mgoddard): Remove this block when previous_release is ussuri.
-        - block:
-            - name: remove ansible and ARA for python 2
-              pip:
-                name:
-                  - ansible
-                  - ara
-                executable: pip2
-                state: absent
-              become: true
-              when: playbook_python_version == '2'
-
-            - name: install ansible and ARA for python 3
-              vars:
-                # Test latest ansible version on Ubuntu, minimum supported on others.
-                ansible_version_constraint: "{{ '==2.9.*,!=2.9.8' if base_distro == 'ubuntu' else '==2.8.*' }}"
-              pip:
-                name:
-                  - "ansible{{ ansible_version_constraint }}"
-                  - "ara<1.0.0"
-                executable: pip3
-                extra_args: "-c {{ upper_constraints_file }}"
-              become: true
-
-            - name: get ARA callback plugin path
-              command: "python3 -m ara.setup.callback_plugins"
-              changed_when: false
-              register: ara_callback_plugins
-
-            - name: template ansible.cfg
-              template:
-                src: "{{ kolla_ansible_local_src_dir }}/tests/templates/ansible.cfg.j2"
-                dest: /etc/ansible/ansible.cfg
-              become: true
 
         - name: upgrade kolla-ansible
           pip:
