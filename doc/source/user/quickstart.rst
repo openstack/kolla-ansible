@@ -453,6 +453,21 @@ There are a few options that are required to deploy Kolla-Ansible:
   :kolla-ansible-doc:`Services Reference Guide
   <reference/index.html>`.
 
+* Multiple globals files
+
+  For a more granular control, enabling any option from the main
+  ``globals.yml`` file can now be done using multiple yml files. Simply,
+  create a directory called ``globals.d`` under ``/etc/kolla/`` and place
+  all the relevant ``*.yml`` files in there. The ``kolla-ansible`` script
+  will, automatically, add all of them as arguments to the ``ansible-playbook``
+  command.
+
+  An example use case for this would be if an operator wants to enable cinder
+  and all its options, at a later stage than the initial deployment, without
+  tampering with the existing ``globals.yml`` file. That can be achieved, using
+  a separate ``cinder.yml`` file, placed under the ``/etc/kolla/globals.d/``
+  directory and adding all the relevant options in there.
+
 * Virtual environment
 
   It is recommended to use a virtual environment to execute tasks on the remote
