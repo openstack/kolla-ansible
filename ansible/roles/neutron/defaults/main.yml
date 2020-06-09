@@ -34,7 +34,7 @@ neutron_services:
       KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
-      ( (inventory_hostname in groups['compute'] and nova_compute_virt_type != 'xenapi')
+      ( inventory_hostname in groups['compute']
       or (enable_manila | bool and inventory_hostname in groups['manila-share'])
       or inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
@@ -49,17 +49,6 @@ neutron_services:
       }}
     volumes: "{{ neutron_openvswitch_agent_default_volumes + neutron_openvswitch_agent_extra_volumes }}"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
-  neutron-openvswitch-agent-xenapi:
-    container_name: "neutron_openvswitch_agent_xenapi"
-    image: "{{ neutron_openvswitch_agent_image_full }}"
-    enabled: "{{ neutron_plugin_agent == 'openvswitch' and nova_compute_virt_type == 'xenapi' }}"
-    privileged: True
-    host_in_groups: >-
-      {{
-       inventory_hostname in groups['compute']
-      }}
-    volumes: "{{ neutron_openvswitch_agent_xenapi_default_volumes + neutron_openvswitch_agent_xenapi_extra_volumes }}"
-    dimensions: "{{ neutron_openvswitch_agent_xenapi_dimensions }}"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
     image: "{{  neutron_linuxbridge_agent_image_full }}"
@@ -239,7 +228,6 @@ neutron_openvswitch_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_server_dimensions: "{{ default_container_dimensions }}"
 neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
 neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_openvswitch_agent_xenapi_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
@@ -313,14 +301,6 @@ neutron_infoblox_ipam_agent_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
-neutron_openvswitch_agent_xenapi_default_volumes:
-  - "{{ node_config_directory }}/neutron-openvswitch-agent-xenapi/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
-  - "/lib/modules:/lib/modules:ro"
-  - "/run/openvswitch:/run/openvswitch:shared"
-  - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
 neutron_metering_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-metering-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -344,7 +324,6 @@ neutron_openvswitch_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_server_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_bgp_dragent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_infoblox_ipam_agent_extra_volumes: "{{ neutron_extra_volumes }}"
-neutron_openvswitch_agent_xenapi_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metering_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 ironic_neutron_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 

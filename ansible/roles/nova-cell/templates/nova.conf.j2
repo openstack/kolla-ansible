@@ -19,11 +19,6 @@ host = {{ ansible_hostname }}_{{ service_name }}
 compute_driver = fake.FakeDriver
 {% elif nova_compute_virt_type == 'vmware' %}
 compute_driver = vmwareapi.VMwareVCDriver
-{% elif nova_compute_virt_type == 'xenapi' %}
-compute_driver = xenapi.XenAPIDriver
-{% if service_name == 'nova-compute' %}
-host = xenapi_facts['dom0_hostname']
-{% endif %}
 {% else %}
 compute_driver = libvirt.LibvirtDriver
 {% endif %}
@@ -228,14 +223,6 @@ connection_string = {{ osprofiler_backend_connection_string }}
 [barbican]
 auth_endpoint = {{ keystone_internal_url }}
 cafile = {{ openstack_cacert }}
-{% endif %}
-
-{% if nova_compute_virt_type == "xenapi" %}
-[xenserver]
-ovs_integration_bridge = br-int
-connection_password = {{ xenserver_password }}
-connection_username = {{ xenserver_username }}
-connection_url = {{ xenserver_connect_protocol }}://{{ xenserver_himn_ip }}
 {% endif %}
 
 # Cell specific settings from DevStack:
