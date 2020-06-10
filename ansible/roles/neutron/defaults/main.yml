@@ -357,12 +357,10 @@ mechanism_drivers:
     enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
   - name: "openvswitch"
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
-  - name: "hyperv"
-    enabled: "{{ enable_hyperv | bool }}"
   - name: "baremetal"
     enabled: "{{ enable_ironic_neutron_agent | bool }}"
   - name: "l2population"
-    enabled: "{{ not enable_hyperv | bool and neutron_plugin_agent != 'ovn' }}"
+    enabled: "{{ neutron_plugin_agent != 'ovn' }}"
   - name: "ovn"
     enabled: "{{ neutron_plugin_agent == 'ovn' }}"
 
@@ -373,13 +371,13 @@ neutron_mechanism_drivers: "{{ mechanism_drivers | selectattr('enabled', 'equalt
 ####################
 extension_drivers:
   - name: "qos"
-    enabled: "{{ enable_neutron_qos | bool and not enable_hyperv | bool }}"
+    enabled: "{{ enable_neutron_qos | bool }}"
   - name: "port_security"
     enabled: true
   - name: "dns"
-    enabled: "{{ enable_designate | bool and not enable_hyperv | bool }}"
+    enabled: "{{ enable_designate | bool }}"
   - name: "sfc"
-    enabled: "{{ enable_neutron_sfc | bool and not enable_hyperv | bool }}"
+    enabled: "{{ enable_neutron_sfc | bool }}"
 
 neutron_extension_drivers: "{{ extension_drivers | selectattr('enabled', 'equalto', true) | list }}"
 
