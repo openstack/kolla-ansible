@@ -105,7 +105,6 @@ Kolla-Ansible deploys containers for the following infrastructure components:
 - `MariaDB and Galera Cluster <https://mariadb.com/kb/en/mariadb/galera-cluster/>`__
   for highly available MySQL databases.
 - `Memcached <https://memcached.org/>`__ a distributed memory object caching system.
-- `MongoDB <https://www.mongodb.org/>`__ as a database back end for Panko.
 - `Open vSwitch <https://openvswitch.org/>`__ and Linuxbridge backends for Neutron.
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.

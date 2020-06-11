@@ -52,7 +52,6 @@
         - enable_memcached_{{ enable_memcached | bool }}
         - enable_mistral_{{ enable_mistral | bool }}
         - enable_monasca_{{ enable_monasca | bool }}
-        - enable_mongodb_{{ enable_mongodb | bool }}
         - enable_multipathd_{{ enable_multipathd | bool }}
         - enable_murano_{{ enable_murano | bool }}
         - enable_neutron_{{ enable_neutron | bool }}
@@ -253,11 +252,6 @@
             tasks_from: loadbalancer
           tags: monasca
           when: enable_monasca | bool
-        - include_role:
-            name: mongodb
-            tasks_from: loadbalancer
-          tags: mongodb
-          when: enable_mongodb | bool
         - include_role:
             name: murano
             tasks_from: loadbalancer
@@ -863,17 +857,6 @@
     - { role: sahara,
         tags: sahara,
         when: enable_sahara | bool }
-
-- name: Apply role mongodb
-  gather_facts: false
-  hosts:
-    - mongodb
-    - '&enable_mongodb_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: mongodb,
-        tags: mongodb,
-        when: enable_mongodb | bool }
 
 - name: Apply role panko
   gather_facts: false
