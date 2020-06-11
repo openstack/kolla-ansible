@@ -30,8 +30,12 @@
     - Restart {{ item.key }} container
 
 - name: Copying over elasticsearch service config files
-  template:
-    src: "{{ item.key }}.yml.j2"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/{{ item.key }}.yml.j2"
+      - "{{ node_custom_config }}/elasticsearch.yml"
+      - "{{ node_custom_config }}/elasticsearch/{{ item.key }}.yml"
+      - "{{ node_custom_config }}/elasticsearch/{{ inventory_hostname }}/{{ item.key }}.yml"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.yml"
     mode: "0660"
   become: true
