@@ -20,6 +20,9 @@ function setup_openstack_clients {
     if [[ $SCENARIO == masakari ]]; then
         packages+=(python-masakariclient)
     fi
+    if [[ $SCENARIO == scenario_nfv ]]; then
+        packages+=(python-tackerclient python-barbicanclient python-mistralclient)
+    fi
     if [[ "debian" == $BASE_DISTRO ]]; then
         sudo apt -y install python3-venv
     fi
