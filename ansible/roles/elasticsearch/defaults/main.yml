@@ -31,8 +31,13 @@ es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }
 ####################
 # Docker
 ####################
+# The elasticsearch6 image is available only for CentOS 7 and CentOS 8, and
+# provides a compatible migration point to CentOS 8, which only has
+# Elasticsearch 6.
+elasticsearch_use_v6: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int >= 8 }}"
 elasticsearch_install_type: "{{ kolla_install_type }}"
-elasticsearch_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ elasticsearch_install_type }}-elasticsearch"
+elasticsearch_image_name: "{{ 'elasticsearch6' if elasticsearch_use_v6 | bool else 'elasticsearch' }}"
+elasticsearch_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ elasticsearch_install_type }}-{{ elasticsearch_image_name }}"
 elasticsearch_tag: "{{ openstack_tag }}"
 elasticsearch_image_full: "{{ elasticsearch_image }}:{{ elasticsearch_tag }}"
 
