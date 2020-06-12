@@ -1,0 +1,99 @@
+---
+- name: Set fact for Elasticsearch URL
+  set_fact:
+    elasticsearch_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ elasticsearch_port }}"
+
+- name: Wait for Elasticsearch
+  become: true
+  uri:
+    url: "{{ elasticsearch_url }}"
+  delegate_to: "{{ groups['elasticsearch'][0] }}"
+  run_once: true
+  retries: 10
+  delay: 5
+  register: result
+  until: ('status' in result) and result.status == 200
+
+- name: Check state of migration
+  become: true
+  uri:
+    url: "{{ elasticsearch_url }}/.kibana/_mappings/doc"
+    status_code: [200, 404]
+  delegate_to: "{{ groups['elasticsearch'][0] }}"
+  run_once: true
+  register: kibana_6_index
+
+# The official procedure for migrating the Kibana index:
+# https://www.elastic.co/guide/en/kibana/6.x/migrating-6.0-index.html
+- name: Migrate Kibana index to 6.x
+  block:
+    - name: Set .kibana index to read-only
+      become: true
+      uri:
+        url: "{{ elasticsearch_url }}/.kibana/_settings"
+        method: PUT
+        status_code: 200
+        return_content: yes
+        body: |
+          {
+            "index.blocks.write": true
+          }
+        body_format: json
+      delegate_to: "{{ groups['elasticsearch'][0] }}"
+      run_once: true
+
+    - name: Create .kibana-6 index
+      become: true
+      uri:
+        url: "{{ elasticsearch_url }}/.kibana-6"
+        method: PUT
+        status_code: 200
+        return_content: yes
+        body: "{{ lookup('file', 'kibana-6-index.json') }}"
+        body_format: json
+      delegate_to: "{{ groups['elasticsearch'][0] }}"
+      run_once: true
+
+    - name: Reindex .kibana into .kibana-6
+      become: true
+      uri:
+        url: "{{ elasticsearch_url }}/_reindex"
+        method: POST
+        status_code: 200
+        return_content: yes
+        body: |
+          {
+            "source": {
+              "index": ".kibana"
+            },
+            "dest": {
+              "index": ".kibana-6"
+            },
+            "script": {
+              "inline": "ctx._source = [ ctx._type : ctx._source ]; ctx._source.type = ctx._type; ctx._id = ctx._type + \":\" + ctx._id; ctx._type = \"doc\"; ",
+              "lang": "painless"
+            }
+          }
+        body_format: json
+      delegate_to: "{{ groups['elasticsearch'][0] }}"
+      run_once: true
+
+    - name: Alias .kibana-6 to .kibana and remove legacy .kibana index
+      become: true
+      uri:
+        url: "{{ elasticsearch_url }}/_aliases"
+        method: POST
+        status_code: 200
+        return_content: yes
+        body: |
+          {
+            "actions" : [
+              { "add":  { "index": ".kibana-6", "alias": ".kibana" } },
+              { "remove_index": { "index": ".kibana" } }
+            ]
+          }
+        body_format: json
+      delegate_to: "{{ groups['elasticsearch'][0] }}"
+      run_once: true
+
+  when: ('status' in kibana_6_index) and kibana_6_index.status != 200
