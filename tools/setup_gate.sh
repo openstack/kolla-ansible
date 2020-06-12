@@ -17,6 +17,9 @@ function setup_openstack_clients {
     if [[ $ACTION == ironic ]]; then
         packages+=(python-ironicclient)
     fi
+    if [[ $SCENARIO == scenario_nfv ]]; then
+        packages+=(python-tackerclient python-barbicanclient python-mistralclient)
+    fi
     virtualenv ~/openstackclient-venv
     ~/openstackclient-venv/bin/pip install -U pip
     ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
