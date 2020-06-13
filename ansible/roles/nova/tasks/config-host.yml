@@ -10,3 +10,30 @@
   when:
     - set_sysctl | bool
     - inventory_hostname in groups['compute']
+
+# NOTE(yoctozepto): Part of bug #1681461 fix.
+# This part can actually run on any distro and lets us drop the hardcoded
+# chown and chmod from the nova-libvirt image extend_start and make the process
+# more robust.
+- name: Install udev kolla kvm rules
+  become: true
+  template:
+    src: "99-kolla-kvm.rules.j2"
+    dest: "/etc/udev/rules.d/99-kolla-kvm.rules"
+    mode: "0644"
+  when:
+    - nova_compute_virt_type == 'kvm'
+    - inventory_hostname in groups['compute']
+
+# NOTE(yoctozepto): Part of bug #1681461 fix.
+# This part only really makes sense on Ubuntu and would end up being confusing
+# on others. This service changes /dev/kvm permissions.
+- name: Mask qemu-kvm service
+  become: true
+  systemd:
+    name: qemu-kvm.service
+    masked: true
+  when:
+    - nova_compute_virt_type == 'kvm'
+    - ansible_distribution == 'Ubuntu'
+    - inventory_hostname in groups['compute']
