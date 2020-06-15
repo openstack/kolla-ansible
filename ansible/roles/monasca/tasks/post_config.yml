@@ -89,6 +89,7 @@
   run_once: True
   changed_when: monasca_grafana_datasource_response.status == 200
   failed_when: monasca_grafana_datasource_response.status not in [200, 409] or
-               monasca_grafana_datasource_response.status == 409 and ("Data source with same name already exists" not in  monasca_grafana_datasource_response.json.message|default(""))
+               (monasca_grafana_datasource_response.status == 409 and
+               "name already exists" not in monasca_grafana_datasource_response.json.message|default(""))
   with_dict: "{{ monasca_grafana_data_sources }}"
   when: item.value.enabled | bool
