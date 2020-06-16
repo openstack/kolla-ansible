@@ -1,0 +1,45 @@
+---
+- name: Ensuring ca directory exist
+  file:
+    path: "{{ kolla_certificates_dir }}/ca"
+    state: "directory"
+    mode: "0770"
+
+- name: Ensuring private root directory exist
+  file:
+    path: "{{ root_dir }}"
+    state: "directory"
+    mode: "0770"
+
+- name: Creating root Certificate key
+  command: >
+    openssl genrsa
+    -out "{{ root_dir }}/root.key"
+    4096
+  args:
+    creates: "{{ root_dir }}/root.key"
+
+- name: Creating and sign root Certificate
+  command: >
+    openssl req
+    -x509
+    -new -nodes
+    -key "{{ root_dir }}/root.key"
+    -sha256
+    -days 1024
+    -out "{{ root_dir }}/root.crt"
+    -subj "/CN=KollaTestCA/"
+  args:
+    creates: "{{ root_dir }}/root.crt"
+
+- name: Setting permissions on root key
+  file:
+    path: "{{ root_dir }}/root.key"
+    mode: "0660"
+    state: file
+
+- name: Creating root Certificate file to be included in container trusted ca-certificates
+  copy:
+    src: "{{ root_dir }}/root.crt"
+    dest: "{{ kolla_certificates_dir }}/ca/root.crt"
+    mode: "0660"
