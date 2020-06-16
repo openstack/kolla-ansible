@@ -39,7 +39,7 @@ grafana_data_sources:
       database: "telegraf"
       name: "telegraf"
       type: "influxdb"
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ influxdb_http_port }}"
+      url: "{{ infuxdb_internal_endpoint }}"
       access: "proxy"
       basicAuth: false
   elasticsearch:
@@ -48,7 +48,7 @@ grafana_data_sources:
       name: "elasticsearch"
       type: "elasticsearch"
       access: "proxy"
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ elasticsearch_port }}"
+      url: "{{ elasticsearch_internal_endpoint }}"
       database: "flog-*"
       jsonData:
         esVersion: 5
@@ -64,7 +64,6 @@ grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"
 
 grafana_dimensions: "{{ default_container_dimensions }}"
-
 grafana_default_volumes:
   - "{{ node_config_directory }}/grafana/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -72,3 +71,8 @@ grafana_default_volumes:
   - "grafana:/var/lib/grafana/"
   - "kolla_logs:/var/log/kolla/"
 grafana_extra_volumes: "{{ default_extra_volumes }}"
+
+############
+# Prometheus
+############
+grafana_prometheus_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_port }}"

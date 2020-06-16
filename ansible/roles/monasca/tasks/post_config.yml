@@ -4,7 +4,7 @@
   kolla_toolbox:
     module_name: uri
     module_args:
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/login"
+      url: "{{ monasca_grafana_internal_endpoint }}/login"
       status_code: 200
   register: result
   until: result.get('status') == 200
@@ -22,7 +22,7 @@
     module_name: uri
     module_args:
       method: GET
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/orgs"
+      url: "{{ monasca_grafana_internal_endpoint }}/api/orgs"
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       return_content: true
@@ -39,7 +39,7 @@
     module_name: uri
     module_args:
       method: POST
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/orgs"
+      url: "{{ monasca_grafana_internal_endpoint }}/api/orgs"
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       body_format: json
@@ -54,7 +54,7 @@
     module_name: uri
     module_args:
       method: GET
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/orgs/name/{{ monasca_grafana_control_plane_org }}"  # noqa 204
+      url: "{{ monasca_grafana_internal_endpoint }}/api/orgs/name/{{ monasca_grafana_control_plane_org }}"  # noqa 204
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       return_content: true
@@ -72,7 +72,7 @@
     module_name: uri
     module_args:
       method: POST
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/orgs/{{ monasca_grafana_conf_org.json.id }}/users"  # noqa 204
+      url: "{{ monasca_grafana_internal_endpoint }}/api/orgs/{{ monasca_grafana_conf_org.json.id }}/users"  # noqa 204
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       body: "{{ monasca_user_body | to_json }}"
@@ -91,7 +91,7 @@
     module_name: uri
     module_args:
       method: POST
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/user/using/{{ monasca_grafana_conf_org.json.id }}"  # noqa 204
+      url: "{{ monasca_grafana_internal_endpoint }}/api/user/using/{{ monasca_grafana_conf_org.json.id }}"  # noqa 204
       user: '{{ monasca_grafana_admin_username }}'
       password: '{{ monasca_grafana_admin_password }}'
       force_basic_auth: true
@@ -102,7 +102,7 @@
   kolla_toolbox:
     module_name: uri
     module_args:
-      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}/api/datasources"
+      url: "{{ monasca_grafana_internal_endpoint }}/api/datasources"
       method: POST
       user: "{{ monasca_grafana_admin_username }}"
       password: "{{ monasca_grafana_admin_password }}"

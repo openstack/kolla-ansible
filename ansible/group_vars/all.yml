@@ -168,6 +168,8 @@ keepalived_virtual_router_id: "51"
 es_heap_size: "1G"
 elasticsearch_datadir_volume: "elasticsearch"
 
+elasticsearch_internal_endpoint: "{{ internal_protocol }}://{{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
+
 ###################
 # Messaging options
 ###################
@@ -301,6 +303,7 @@ heat_api_cfn_port: "8000"
 heat_api_cfn_listen_port: "{{ heat_api_cfn_port }}"
 
 horizon_port: "80"
+horizon_tls_port: "443"
 horizon_listen_port: "{{ horizon_port }}"
 
 influxdb_http_port: "8086"
@@ -690,6 +693,13 @@ enable_destroy_images: "no"
 ####################
 # Monasca options
 ####################
+monasca_api_admin_base_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
+monasca_api_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
+monasca_api_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
+
+monasca_log_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 
 # The OpenStack username used by the Monasca Agent and the Fluentd Monasca
 # plugin to post logs and metrics from the control plane to Monasca.
@@ -786,6 +796,7 @@ kibana_log_prefix: "flog"
 ####################
 keystone_internal_fqdn: "{{ kolla_internal_fqdn }}"
 keystone_external_fqdn: "{{ kolla_external_fqdn }}"
+
 keystone_admin_url: "{{ admin_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_admin_port }}"
 keystone_internal_url: "{{ internal_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
 keystone_public_url: "{{ public_protocol }}://{{ keystone_external_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
@@ -837,12 +848,20 @@ glance_enable_property_protection: "no"
 glance_enable_interoperable_image_import: "no"
 glance_api_hosts: "{{ [groups['glance-api']|first] if glance_backend_file | bool and glance_file_datadir_volume == 'glance' else groups['glance-api'] }}"
 
+glance_admin_endpoint: "{{ admin_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
+glance_internal_endpoint: "{{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
+glance_public_endpoint: "{{ public_protocol }}://{{ glance_external_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
+
 #######################
 # Barbican options
 #######################
 # Valid options are [ simple_crypto, p11_crypto ]
 barbican_crypto_plugin: "simple_crypto"
 barbican_library_path: "/usr/lib/libCryptoki2_64.so"
+
+barbican_admin_endpoint: "{{ admin_protocol }}://{{ barbican_internal_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
+barbican_internal_endpoint: "{{ internal_protocol }}://{{ barbican_internal_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
+barbican_public_endpoint: "{{ public_protocol }}://{{ barbican_external_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
 
 #################
 # Gnocchi options
@@ -853,7 +872,6 @@ gnocchi_backend_storage: "{% if enable_swift | bool %}swift{% else %}file{% endi
 # Valid options are [redis, '']
 gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
 gnocchi_metric_datadir_volume: "gnocchi"
-
 
 #################################
 # Cinder options
@@ -893,6 +911,10 @@ designate_backend_external_bind9_nameservers: ""
 # Valid options are [ '', redis ]
 designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 
+designate_admin_endpoint: "{{ admin_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
+designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
+designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
+
 #######################
 # Neutron options
 #######################
@@ -916,6 +938,11 @@ neutron_legacy_iptables: "no"
 
 # Enable distributed floating ip for OVN deployments
 neutron_ovn_distributed_fip: "no"
+
+neutron_admin_endpoint: "{{ admin_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
+neutron_internal_endpoint: "{{ internal_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
+neutron_public_endpoint: "{{ public_protocol }}://{{ neutron_external_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
+
 
 #######################
 # Nova options
@@ -953,6 +980,8 @@ enable_heat_horizon_policy_file: "{{ enable_heat }}"
 enable_keystone_horizon_policy_file: "{{ enable_keystone }}"
 enable_neutron_horizon_policy_file: "{{ enable_neutron }}"
 enable_nova_horizon_policy_file: "{{ enable_nova }}"
+
+horizon_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ horizon_tls_port if kolla_enable_tls_internal | bool else horizon_port }}"
 
 #################
 # Octavia options
@@ -1044,11 +1073,14 @@ prometheus_openstack_exporter_endpoint_type: "internal"
 ############
 enable_vitrage_prometheus_datasource: "{{ enable_prometheus | bool }}"
 
+
 ####################
 # InfluxDB options
 ####################
 influxdb_address: "{{ kolla_internal_fqdn }}"
 influxdb_datadir_volume: "influxdb"
+
+infuxdb_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ influxdb_http_port }}"
 
 #################
 # Kafka options
@@ -1073,3 +1105,36 @@ distro_python_version: "{{ distro_python_version_map[kolla_base_distro] }}"
 # Configure telegraf to use the docker daemon itself as an input for
 # telemetry data.
 telegraf_enable_docker_input: "no"
+
+vitrage_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
+vitrage_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
+vitrage_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
+
+####################
+# Grafana
+####################
+grafana_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ grafana_server_port }}"
+grafana_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ grafana_server_port }}"
+
+#############
+# Ironic
+#############
+ironic_admin_endpoint: "{{ admin_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
+ironic_internal_endpoint: "{{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
+ironic_public_endpoint: "{{ public_protocol }}://{{ ironic_external_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
+
+########
+# Swift
+########
+swift_internal_base_endpoint: "{{ internal_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}"
+
+swift_admin_endpoint: "{{ admin_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1"
+swift_internal_endpoint: "{{ swift_internal_base_endpoint }}/v1/AUTH_%(tenant_id)s"
+swift_public_endpoint: "{{ public_protocol }}://{{ swift_external_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
+
+##########
+# Octavia
+##########
+octavia_admin_endpoint: "{{ admin_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
+octavia_internal_endpoint: "{{ internal_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
+octavia_public_endpoint: "{{ public_protocol }}://{{ octavia_external_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"

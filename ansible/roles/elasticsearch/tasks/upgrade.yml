@@ -1,8 +1,4 @@
 ---
-- name: Set fact for Elasticsearch URL
-  set_fact:
-    elasticsearch_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ elasticsearch_port }}"
-
 # The official procedure for upgrade elasticsearch:
 # https://www.elastic.co/guide/en/elasticsearch/reference/6.x/restart-upgrade.html
 - name: Disable shard allocation
@@ -12,7 +8,7 @@
   kolla_toolbox:
     module_name: uri
     module_args:
-      url: "{{ elasticsearch_url }}/_cluster/settings"
+      url: "{{ elasticsearch_internal_endpoint }}/_cluster/settings"
       method: PUT
       status_code: 200
       return_content: yes
@@ -26,7 +22,7 @@
   kolla_toolbox:
     module_name: uri
     module_args:
-      url: "{{ elasticsearch_url }}/_flush/synced"
+      url: "{{ elasticsearch_internal_endpoint }}/_flush/synced"
       method: POST
       status_code: 200
       return_content: yes

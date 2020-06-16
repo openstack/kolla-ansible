@@ -13,7 +13,7 @@ my_ip = {{ api_interface_address }}
 osapi_volume_workers = {{ openstack_service_workers }}
 volume_name_template = volume-%s
 
-glance_api_servers = {{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}
+glance_api_servers = {{ glance_internal_endpoint }}
 
 glance_num_retries = {{ groups['glance-api'] | length }}
 glance_api_version = 2
@@ -43,7 +43,7 @@ backup_share = {{ cinder_backup_share }}
 backup_file_size = 327680000
 {% elif enable_swift | bool and cinder_backup_driver == "swift" %}
 backup_driver = cinder.backup.drivers.swift.SwiftBackupDriver
-backup_swift_url = {{ internal_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1/AUTH_
+backup_swift_url = {{ swift_internal_base_endpoint }}/v1/AUTH_
 backup_swift_auth = per_user
 backup_swift_auth_version = 1
 backup_swift_user =

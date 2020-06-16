@@ -9,10 +9,10 @@ etcd_services:
     environment:
       ETCD_DATA_DIR: "/var/lib/etcd"
       ETCD_NAME: "{{ ansible_hostname }}"
-      ETCD_ADVERTISE_CLIENT_URLS: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}"
-      ETCD_LISTEN_CLIENT_URLS: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}"
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_peer_port }}"
-      ETCD_LISTEN_PEER_URLS: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_peer_port }}"
+      ETCD_ADVERTISE_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+      ETCD_LISTEN_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+      ETCD_LISTEN_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
       ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
       ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host]['ansible_hostname'] }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
       ETCD_INITIAL_CLUSTER_STATE: "new"
@@ -43,3 +43,9 @@ etcd_default_volumes:
   - "kolla_etcd:/var/lib/etcd/"
   - "kolla_logs:/var/log/kolla/"
 etcd_extra_volumes: "{{ default_extra_volumes }}"
+
+############
+# Endpoints
+############
+etcd_client_internal_endpoint: "{{ internal_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}"
+etcd_peer_internal_endpoint: "{{ internal_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_peer_port }}"
