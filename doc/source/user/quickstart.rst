@@ -37,7 +37,7 @@ Note that this is independent from the use of a virtual environment for remote
 execution, which is described in
 :kolla-ansible-doc:`Virtual Environments <user/virtual-environments.html>`.
 
-#. For Ubuntu, update the package index.
+#. For Debian or Ubuntu, update the package index.
 
    .. code-block:: console
 
@@ -51,37 +51,23 @@ execution, which is described in
 
       sudo dnf install python3-devel libffi-devel gcc openssl-devel python3-libselinux
 
-   For Ubuntu, run:
+   For Debian or Ubuntu, run:
 
    .. code-block:: console
 
-      sudo apt-get install python-dev libffi-dev gcc libssl-dev python-selinux python-setuptools
+      sudo apt-get install python3-dev libffi-dev gcc libssl-dev
 
 Install dependencies using a virtual environment
 ------------------------------------------------
 
 If not installing Kolla Ansible in a virtual environment, skip this section.
 
-#. Install the virtualenv package.
-
-   For CentOS or RHEL 8, run:
-
-   .. code-block:: console
-
-      sudo dnf install python3-virtualenv
-
-   For Ubuntu, run:
-
-   .. code-block:: console
-
-      sudo apt-get install python-virtualenv
-
 #. Create a virtual environment and activate it:
 
    .. code-block:: console
 
-      virtualenv /path/to/virtualenv
-      source /path/to/virtualenv/bin/activate
+      python3 -m venv /path/to/venv
+      source /path/to/venv/bin/activate
 
    The virtual environment should be activated before running any commands that
    depend on packages installed in it.
@@ -97,7 +83,7 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      pip install ansible
+      pip install 'ansible<2.10'
 
 Install dependencies not using a virtual environment
 ----------------------------------------------------
@@ -110,13 +96,13 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      sudo easy_install pip
+      sudo dnf install python3-pip
 
-   For Ubuntu, run:
+   For Debian or Ubuntu, run:
 
    .. code-block:: console
 
-      sudo apt-get install python-pip
+      sudo apt-get install python3-pip
 
 #. Ensure the latest version of pip is installed:
 
@@ -131,13 +117,21 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      sudo yum install ansible
+      sudo dnf install ansible
 
-   For Ubuntu, run:
+   For Debian or Ubuntu, run:
 
    .. code-block:: console
 
       sudo apt-get install ansible
+
+   .. note::
+
+      If the installed Ansible version does not meet the requirements, one can
+      use pip: ``sudo pip install -U 'ansible<2.10'``.
+      Beware system package upgrades might interfere with that so it
+      is recommended to uninstall the system package first. One might be better
+      off with the virtual environment method to avoid this pitfall.
 
 Install Kolla-ansible
 ~~~~~~~~~~~~~~~~~~~~~
@@ -172,7 +166,7 @@ Install Kolla-ansible for deployment or evaluation
 
    .. code-block:: console
 
-      cp -r /path/to/virtualenv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+      cp -r /path/to/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 
    If not using a virtual environment on CentOS or RHEL, run:
 
@@ -193,7 +187,7 @@ Install Kolla-ansible for deployment or evaluation
 
    .. code-block:: console
 
-      cp /path/to/virtualenv/share/kolla-ansible/ansible/inventory/* .
+      cp /path/to/venv/share/kolla-ansible/ansible/inventory/* .
 
    If not using a virtual environment on CentOS or RHEL, run:
 
@@ -329,9 +323,12 @@ than one node, edit ``multinode`` inventory:
 
    .. note::
 
-      Ubuntu might not come with python pre-installed. That will cause
-      errors in ping module. To quickly install python with ansible you
-      can run ``ansible -i multinode all -m raw -a "apt-get -y install python-dev"``
+      Distributions might not come with Python pre-installed. That will cause
+      errors in the ``ping`` module. To quickly install Python with Ansible you
+      can run: for Debian or Ubuntu:
+      ``ansible -i multinode all -m raw -a "apt-get -y install python3"``,
+      and for CentOS or RHEL:
+      ``ansible -i multinode all -m raw -a "dnf -y install python3"``.
 
 Kolla passwords
 ---------------
@@ -384,7 +381,7 @@ There are a few options that are required to deploy Kolla-Ansible:
   Choices are:
 
   binary
-   using repositories like apt or yum
+   using repositories like apt or dnf
 
   source
    using raw source archives, git repositories or local source directory
