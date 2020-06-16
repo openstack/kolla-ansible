@@ -15,11 +15,59 @@
         fail_msg: >-
           The nodepool private IP address {{ nodepool.private_ipv4 }} is not assigned
 
-    - name: Install dbus for debian system
-      apt: name=dbus
-      when:
-        - ansible_os_family == 'Debian'
+    - block:
+        # NOTE(mgoddard): The CentOS image used in CI has epel-release installed,
+        # but the configure-mirrors role used by Zuul disables epel. Since we
+        # install epel-release and expect epel to be enabled, enable it here.
+        - name: Ensure yum-utils is installed
+          package:
+            name: yum-utils
+            state: present
+
+        - name: Enable the EPEL repository
+          command: yum-config-manager --enable epel
       become: true
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version | int == 7
+
+    - name: Install Python2 modules
+      become: true
+      package:
+        name:
+          - python-pip
+          - python-setuptools
+          - python-virtualenv
+          - python-wheel
+      when:
+        - not (ansible_os_family == "RedHat" and ansible_distribution_major_version | int == 8)
+
+    # NOTE(hrw): On RedHat systems it is part of python3-virtualenv
+    - name: Install virtualenv on Debian systems
+      package:
+        name:
+          - virtualenv
+      become: true
+      when:
+        ansible_os_family == "Debian"
+
+    - name: Install Python3 modules on CentOS 8 systems
+      become: true
+      package:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - python3-virtualenv
+          - python3-wheel
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version | int == 8
+
+    - name: Ensure latest pip is installed
+      become: true
+      pip:
+        name: pip
+        state: latest
 
     - name: Ensure /tmp/logs/ dir
       file:
