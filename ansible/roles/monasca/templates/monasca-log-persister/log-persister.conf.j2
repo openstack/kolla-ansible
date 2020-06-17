@@ -1,5 +1,17 @@
 # Persist transformed logs to Elasticsearch
 
+{% if monasca_logstash_use_v6 | bool %}
+input {
+    kafka {
+        bootstrap_servers => "{{ monasca_kafka_servers }}"
+        topics => ["{{ monasca_transformed_logs_topic }}"]
+        group_id => "log_persister"
+        consumer_threads => "{{ monasca_log_pipeline_threads }}"
+        codec => json
+    }
+}
+{% else %}
+{# Logstash 2 #}
 input {
     kafka {
         zk_connect => "{{ monasca_zookeeper_servers }}"
@@ -9,6 +21,7 @@ input {
         consumer_threads => "{{ monasca_log_pipeline_threads }}"
     }
 }
+{% endif %}
 
 output {
     elasticsearch {

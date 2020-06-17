@@ -7,6 +7,18 @@
 # example, if HAProxy fails over, file system corruption is detected or
 # other scenarios of interest.
 
+{% if monasca_logstash_use_v6 | bool %}
+input {
+    kafka {
+        bootstrap_servers => "{{ monasca_kafka_servers }}"
+        topics => ["{{ monasca_transformed_logs_topic }}"]
+        group_id => "log_metrics"
+        consumer_threads => "{{ monasca_log_pipeline_threads }}"
+        codec => json
+    }
+}
+{% else %}
+{# Logstash 2 #}
 input {
     kafka {
         zk_connect => "{{ monasca_zookeeper_servers }}"
@@ -16,6 +28,7 @@ input {
         consumer_threads => "{{ monasca_log_pipeline_threads }}"
     }
 }
+{% endif %}
 
 filter {
     # Drop everything we don't want to create metrics for.
@@ -42,7 +55,12 @@ filter {
 
     # Convert the timestamp of the event to milliseconds since epoch.
     ruby {
+{% if monasca_logstash_use_v6 | bool %}
+        code => "event.set('[metric][timestamp]', event.get('[@timestamp]').to_i*1000)"
+{% else %}
+{# Logstash 2 #}
         code => "event['metric']['timestamp'] = event['@timestamp'].to_i * 1000"
+{% endif %}
     }
 
     # Clean up any fields which aren't required from the new metric to save space
@@ -66,6 +84,16 @@ filter {
     }
 }
 
+{% if monasca_logstash_use_v6 | bool %}
+output {
+    kafka {
+        codec => json
+        bootstrap_servers => "{{ monasca_kafka_servers }}"
+        topic_id => "{{ monasca_metrics_topic }}"
+    }
+}
+{% else %}
+{# Logstash 2 #}
 output {
     kafka {
         bootstrap_servers => "{{ monasca_kafka_servers }}"
@@ -74,3 +102,4 @@ output {
         workers => {{ monasca_log_pipeline_threads|int }}
     }
 }
+{% endif %}
