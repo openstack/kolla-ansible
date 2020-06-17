@@ -7,6 +7,20 @@
     service_ks_register_users: "{{ octavia_ks_users }}"
   tags: always
 
+- name: "Adding admin role to octavia user in {{ octavia_service_auth_project }} project"
+  become: true
+  kolla_toolbox:
+    module_name: "os_user_role"
+    module_args:
+      user: "{{ octavia_keystone_user }}"
+      role: admin
+      project: "{{ octavia_service_auth_project }}"
+      auth: "{{ openstack_octavia_auth }}"
+      endpoint_type: "{{ openstack_interface }}"
+      cacert: "{{ openstack_cacert }}"
+  run_once: True
+  when: octavia_service_auth_project != 'service'
+
 - name: Adding octavia related roles
   become: true
   kolla_toolbox:
