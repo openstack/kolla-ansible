@@ -8,7 +8,7 @@ export PYTHONUNBUFFERED=1
 
 function setup_ceph_ansible {
     # Prepare virtualenv for ceph-ansible deployment
-    virtualenv --system-site-packages ~/ceph-venv
+    python3 -m venv --system-site-packages ~/ceph-venv
     ~/ceph-venv/bin/pip install -Ir requirements.txt
     ~/ceph-venv/bin/pip install -IU selinux
 }
