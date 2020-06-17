@@ -56,24 +56,35 @@
   notify:
     - Restart prometheus-server container
 
-- name: Find prometheus config overrides
+- name: Find prometheus common config overrides
   find:
     # NOTE(wszumski): Non-existent paths don't produce a failure
     paths:
       - "{{ node_custom_config }}/prometheus/prometheus.yml.d"
+    patterns: "*.yml"
+  delegate_to: localhost
+  register: prometheus_common_config_overrides_result
+  run_once: true
+
+- name: Find prometheus host config overrides
+  find:
+    # NOTE(wszumski): Non-existent paths don't produce a failure
+    paths:
       - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus.yml.d"
     patterns: "*.yml"
   delegate_to: localhost
-  register: prometheus_config_overrides_result
-  run_once: true
+  register: prometheus_host_config_overrides_result
+  # NOTE(yoctozepto): this cannot be run_once
+  run_once: false
 
 - name: Copying over prometheus config file
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-    overrides: "{{ prometheus_config_overrides_result.files | map(attribute='path') | list }}"
+    common_overrides: "{{ prometheus_common_config_overrides_result.files | map(attribute='path') | list }}"
+    host_overrides: "{{ prometheus_host_config_overrides_result.files | map(attribute='path') | list }}"
   merge_yaml:
-    sources: "{{ [prometheus_config_file] + overrides }}"
+    sources: "{{ [item] + common_overrides + host_overrides }}"
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
     mode: "0660"
     extend_lists: true
