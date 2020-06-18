@@ -127,7 +127,7 @@ function prepare_images {
     fi
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
     pushd "${KOLLA_SRC_DIR}"
-    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    sudo ~/tox-venv/bin/tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
     popd
 }
 
