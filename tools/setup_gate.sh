@@ -99,7 +99,7 @@ function prepare_images {
     else
         kolla_base_distro=${BASE_DISTRO}
     fi
-    sudo tox -e "build-${kolla_base_distro}-${INSTALL_TYPE}"
+    sudo $TOX_VENV/bin/tox -e "build-${kolla_base_distro}-${INSTALL_TYPE}"
     # NOTE(yoctozepto): due to debian buster we push after images are built
     # see https://github.com/docker/for-linux/issues/711
     if [[ "debian" == $BASE_DISTRO ]]; then
