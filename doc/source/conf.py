@@ -102,6 +102,7 @@ openstack_projects = [
     'neutron-vpnaas',
     'neutron',
     'nova',
+    'octavia',
     'oslotest',
     'swift',
 ]

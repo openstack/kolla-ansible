@@ -13,6 +13,7 @@ LBaaS, Networking-SFC, QoS, and so on.
    designate-guide
    dpdk
    neutron-extensions
+   octavia
    opendaylight
    provider-networks
    sriov
