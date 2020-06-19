@@ -90,21 +90,25 @@ octavia_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' }}"
 octavia_health_manager_default_volumes:
   - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
 octavia_housekeeping_default_volumes:
   - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
 octavia_worker_default_volumes:
   - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
 
 octavia_extra_volumes: "{{ default_extra_volumes }}"
 octavia_api_extra_volumes: "{{ octavia_extra_volumes }}"
@@ -146,3 +150,11 @@ octavia_ks_users:
     user: "{{ octavia_keystone_user }}"
     password: "{{ octavia_keystone_password }}"
     role: "admin"
+
+####################
+# Kolla
+####################
+octavia_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+octavia_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+octavia_dev_mode: "{{ kolla_dev_mode }}"
+octavia_source_version: "{{ kolla_source_version }}"
