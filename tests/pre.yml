@@ -31,7 +31,6 @@
           - gawk
           - python3-pip
           - python3-setuptools
-          - python3-virtualenv
           - python3-wheel
       become: true
 
@@ -41,22 +40,12 @@
         name:
           - python-pip
           - python-setuptools
-          - python-virtualenv
           - python-wheel
       become: true
       when:
         - is_upgrade
         - previous_release == 'train'
         - not (ansible_os_family == "RedHat" and ansible_distribution_major_version | int == 8)
-
-    # NOTE(hrw): On RedHat systems it is part of python3-virtualenv
-    - name: Install virtualenv on Debian systems
-      package:
-        name:
-          - virtualenv
-      become: true
-      when:
-        ansible_os_family == "Debian"
 
     - name: Ensure /tmp/logs/ dir
       file:
