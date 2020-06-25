@@ -59,6 +59,10 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
     with open(passwords_file, 'r') as f:
         passwords = yaml.safe_load(f.read())
 
+    if not isinstance(passwords, dict):
+        print("ERROR: Passwords file not in expected key/value format")
+        sys.exit(1)
+
     for k, v in passwords.items():
         if (k in ssh_keys and
                 (v is None or
