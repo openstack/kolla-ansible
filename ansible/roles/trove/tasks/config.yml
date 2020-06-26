@@ -71,6 +71,27 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over trove-guestagent.conf
+  vars:
+    services_need_confs:
+      - trove-taskmanager
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/trove-guestagent.conf.j2"
+      - "{{ node_custom_config }}/trove-guestagent.conf"
+      - "{{ node_custom_config }}/trove/trove-guestagent.conf"
+      - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove-guestagent.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/trove-guestagent.conf"
+    mode: "0660"
+  become: true
+  when:
+    - item.key in services_need_confs
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ trove_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
 - name: Copying over trove.conf
   vars:
     service_name: "{{ item.key }}"
