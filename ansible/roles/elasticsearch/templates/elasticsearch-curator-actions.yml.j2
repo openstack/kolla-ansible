@@ -1,0 +1,33 @@
+actions:
+  1:
+    action: close
+    description: >-
+      Closes indices
+    options:
+      ignore_empty_list: True
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: "{{ elasticsearch_curator_index_pattern }}"
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: "{{ elasticsearch_curator_soft_retention_period_days }}"
+  2:
+    action: delete_indices
+    description: >-
+      Delete indicies
+    options:
+      ignore_empty_list: True
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: "{{ elasticsearch_curator_index_pattern }}"
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: "{{ elasticsearch_curator_hard_retention_period_days }}"
