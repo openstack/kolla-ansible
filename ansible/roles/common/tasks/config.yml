@@ -270,78 +270,82 @@
   notify:
     - Restart fluentd container
 
-- name: Copying over cron logrotate config files
+- name: Copying over cron logrotate config file
+  vars:
+    cron_logrotate_enabled_services: >-
+      {{ cron_logrotate_services |
+         selectattr('enabled') |
+         map(attribute='name') |
+         list }}
+    cron_logrotate_services:
+      - { name: "ansible", enabled: "yes" }
+      - { name: "aodh", enabled: "{{ enable_aodh | bool }}" }
+      - { name: "barbican", enabled: "{{ enable_barbican | bool }}" }
+      - { name: "blazar", enabled: "{{ enable_blazar | bool }}" }
+      - { name: "ceilometer", enabled: "{{ enable_ceilometer | bool }}" }
+      - { name: "chrony", enabled: "{{ enable_chrony | bool }}" }
+      - { name: "cinder", enabled: "{{ enable_cinder | bool }}" }
+      - { name: "cloudkitty", enabled: "{{ enable_cloudkitty | bool }}" }
+      - { name: "collectd", enabled: "{{ enable_collectd | bool }}" }
+      - { name: "congress", enabled: "{{ enable_congress | bool }}" }
+      - { name: "cyborg", enabled: "{{ enable_cyborg | bool }}" }
+      - { name: "designate", enabled: "{{ enable_designate | bool }}" }
+      - { name: "elasticsearch", enabled: "{{ enable_elasticsearch | bool }}" }
+      - { name: "etcd", enabled: "{{ enable_etcd | bool }}" }
+      - { name: "fluentd", enabled: "{{ enable_fluentd | bool }}" }
+      - { name: "freezer", enabled: "{{ enable_freezer | bool }}" }
+      - { name: "glance", enabled: "{{ enable_glance | bool }}" }
+      - { name: "glance-tls-proxy", enabled: "{{ enable_glance | bool }}" }
+      - { name: "gnocchi", enabled: "{{ enable_gnocchi | bool }}" }
+      - { name: "grafana", enabled: "{{ enable_grafana | bool }}" }
+      - { name: "haproxy", enabled: "{{ enable_haproxy | bool }}" }
+      - { name: "heat", enabled: "{{ enable_heat | bool }}" }
+      - { name: "horizon", enabled: "{{ enable_horizon | bool }}" }
+      - { name: "influxdb", enabled: "{{ enable_influxdb | bool }}" }
+      - { name: "ironic", enabled: "{{ enable_ironic | bool }}" }
+      - { name: "ironic-inspector", enabled: "{{ enable_ironic | bool }}" }
+      - { name: "iscsid", enabled: "{{ enable_iscsid | bool }}" }
+      - { name: "kafka", enabled: "{{ enable_kafka | bool }}" }
+      - { name: "karbor", enabled: "{{ enable_karbor | bool }}" }
+      - { name: "keepalived", enabled: "{{ enable_haproxy | bool }}" }
+      - { name: "keystone", enabled: "{{ enable_keystone | bool }}" }
+      - { name: "kibana", enabled: "{{ enable_kibana | bool }}" }
+      - { name: "kuryr", enabled: "{{ enable_kuryr | bool }}" }
+      - { name: "magnum", enabled: "{{ enable_magnum | bool }}" }
+      - { name: "manila", enabled: "{{ enable_manila | bool }}" }
+      - { name: "mariadb", enabled: "{{ enable_mariadb | bool }}" }
+      - { name: "masakari", enabled: "{{ enable_masakari | bool }}" }
+      - { name: "mistral", enabled: "{{ enable_mistral | bool }}" }
+      - { name: "monasca", enabled: "{{ enable_monasca | bool }}" }
+      - { name: "mongodb", enabled: "{{ enable_mongodb }}" }
+      - { name: "murano", enabled: "{{ enable_murano | bool }}" }
+      - { name: "neutron", enabled: "{{ enable_neutron | bool }}" }
+      - { name: "nova", enabled: "{{ enable_nova | bool }}" }
+      - { name: "octavia", enabled: "{{ enable_octavia | bool }}" }
+      - { name: "outward-rabbitmq", enabled: "{{ enable_outward_rabbitmq | bool }}" }
+      - { name: "panko", enabled: "{{ enable_panko | bool }}" }
+      - { name: "qinling", enabled: "{{ enable_qinling | bool }}" }
+      - { name: "rabbitmq", enabled: "{{ enable_rabbitmq | bool }}" }
+      - { name: "rally", enabled: "{{ enable_rally | bool }}" }
+      - { name: "sahara", enabled: "{{ enable_sahara | bool }}" }
+      - { name: "searchlight", enabled: "{{ enable_searchlight | bool }}" }
+      - { name: "senlin", enabled: "{{ enable_senlin | bool }}" }
+      - { name: "skydive", enabled: "{{ enable_skydive | bool }}" }
+      - { name: "solum", enabled: "{{ enable_solum | bool }}" }
+      - { name: "storm", enabled: "{{ enable_storm | bool }}" }
+      - { name: "swift", enabled: "{{ enable_swift | bool }}" }
+      - { name: "tacker", enabled: "{{ enable_tacker | bool }}" }
+      - { name: "tempest", enabled: "{{ enable_tempest | bool }}" }
+      - { name: "trove", enabled: "{{ enable_trove | bool }}" }
+      - { name: "vitrage", enabled: "{{ enable_vitrage | bool }}" }
+      - { name: "watcher", enabled: "{{ enable_watcher | bool }}" }
+      - { name: "zookeeper", enabled: "{{ enable_zookeeper | bool }}" }
+      - { name: "zun", enabled: "{{ enable_zun | bool }}" }
   template:
-    src: "cron-logrotate-{{ item.name }}.conf.j2"
-    dest: "{{ node_config_directory }}/cron/logrotate/{{ item.name }}.conf"
+    src: "cron-logrotate-global.conf.j2"
+    dest: "{{ node_config_directory }}/cron/logrotate.conf"
     mode: "0660"
   become: true
-  when: item.enabled | bool
-  with_items:
-    - { name: "ansible", enabled: "yes" }
-    - { name: "aodh", enabled: "{{ enable_aodh }}" }
-    - { name: "barbican", enabled: "{{ enable_barbican }}" }
-    - { name: "blazar", enabled: "{{ enable_blazar }}" }
-    - { name: "ceilometer", enabled: "{{ enable_ceilometer }}" }
-    - { name: "chrony", enabled: "{{ enable_chrony }}" }
-    - { name: "cinder", enabled: "{{ enable_cinder }}" }
-    - { name: "cloudkitty", enabled: "{{ enable_cloudkitty }}" }
-    - { name: "collectd", enabled: "{{ enable_collectd }}" }
-    - { name: "congress", enabled: "{{ enable_congress }}" }
-    - { name: "cyborg", enabled: "{{ enable_cyborg }}" }
-    - { name: "designate", enabled: "{{ enable_designate }}" }
-    - { name: "elasticsearch", enabled: "{{ enable_elasticsearch }}" }
-    - { name: "etcd", enabled: "{{ enable_etcd }}" }
-    - { name: "fluentd", enabled: "yes" }
-    - { name: "freezer", enabled: "{{ enable_freezer }}" }
-    - { name: "glance", enabled: "{{ enable_glance }}" }
-    - { name: "glance-tls-proxy", enabled: "{{ enable_glance }}" }
-    - { name: "global", enabled: "yes" }
-    - { name: "gnocchi", enabled: "{{ enable_gnocchi }}" }
-    - { name: "grafana", enabled: "{{ enable_grafana }}" }
-    - { name: "haproxy", enabled: "{{ enable_haproxy }}" }
-    - { name: "heat", enabled: "{{ enable_heat }}" }
-    - { name: "horizon", enabled: "{{ enable_horizon }}" }
-    - { name: "influxdb", enabled: "{{ enable_influxdb }}" }
-    - { name: "ironic", enabled: "{{ enable_ironic }}" }
-    - { name: "ironic-inspector", enabled: "{{ enable_ironic }}" }
-    - { name: "iscsid", enabled: "{{ enable_iscsid }}" }
-    - { name: "kafka", enabled: "{{ enable_kafka }}" }
-    - { name: "karbor", enabled: "{{ enable_karbor }}" }
-    - { name: "keepalived", enabled: "{{ enable_haproxy }}" }
-    - { name: "keystone", enabled: "{{ enable_keystone }}" }
-    - { name: "kibana", enabled: "{{ enable_kibana }}" }
-    - { name: "kuryr", enabled: "{{ enable_kuryr }}" }
-    - { name: "magnum", enabled: "{{ enable_magnum }}" }
-    - { name: "manila", enabled: "{{ enable_manila }}" }
-    - { name: "mariadb", enabled: "{{ enable_mariadb }}" }
-    - { name: "masakari", enabled: "{{ enable_masakari }}" }
-    - { name: "mistral", enabled: "{{ enable_mistral }}" }
-    - { name: "monasca", enabled: "{{ enable_monasca }}" }
-    - { name: "mongodb", enabled: "{{ enable_mongodb }}" }
-    - { name: "murano", enabled: "{{ enable_murano }}" }
-    - { name: "neutron", enabled: "{{ enable_neutron }}" }
-    - { name: "nova", enabled: "{{ enable_nova }}" }
-    - { name: "octavia", enabled: "{{ enable_octavia }}" }
-    - { name: "outward-rabbitmq", enabled: "{{ enable_outward_rabbitmq }}" }
-    - { name: "panko", enabled: "{{ enable_panko }}" }
-    - { name: "qinling", enabled: "{{ enable_qinling }}" }
-    - { name: "rabbitmq", enabled: "{{ enable_rabbitmq }}" }
-    - { name: "rally", enabled: "{{ enable_rally }}" }
-    - { name: "sahara", enabled: "{{ enable_sahara }}" }
-    - { name: "searchlight", enabled: "{{ enable_searchlight }}" }
-    - { name: "senlin", enabled: "{{ enable_senlin }}" }
-    - { name: "skydive", enabled: "{{ enable_skydive }}" }
-    - { name: "solum", enabled: "{{ enable_solum }}" }
-    - { name: "storm", enabled: "{{ enable_storm }}" }
-    - { name: "swift", enabled: "{{ enable_swift }}" }
-    - { name: "tacker", enabled: "{{ enable_tacker }}" }
-    - { name: "tempest", enabled: "{{ enable_tempest }}" }
-    - { name: "trove", enabled: "{{ enable_trove }}" }
-    - { name: "vitrage", enabled: "{{ enable_vitrage }}" }
-    - { name: "watcher", enabled: "{{ enable_watcher }}" }
-    - { name: "zookeeper", enabled: "{{ enable_zookeeper }}" }
-    - { name: "zun", enabled: "{{ enable_zun }}" }
   notify:
     - Restart cron container
 
