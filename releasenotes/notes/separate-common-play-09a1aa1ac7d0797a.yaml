@@ -1,0 +1,20 @@
+---
+features:
+  - |
+    Extracts the common role into a separate play. This provides a performance
+    benefit at scale, since the role dependency mechanism used previously had a
+    overhead. This change allows the only common role to be executed by
+    specifying the ``common`` tag.
+upgrade:
+  - |
+    The common role is now executed in a separate play. This introduces a few
+    small changes in behaviour:
+
+    * the common role is now run for all hosts at the beginning, rather than
+      prior to their first enabled service
+    * hosts must be in the necessary group for each of the common services
+      (``cron``, ``fluentd``, ``kolla-logs``, ``kolla-toolbox``) in order to
+      have that service deployed
+    * if tags are specified for another service e.g. nova, the common role
+      will *not* automatically run for matching hosts. The common tag must
+      be specified explicitly

@@ -20,10 +20,19 @@ localhost       ansible_connection=local
 
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
+
+[common:children]
+control
+network
+compute
+storage
+monitoring
+
 [chrony-server:children]
 haproxy
 
 [chrony:children]
+control
 network
 compute
 storage
@@ -249,6 +258,19 @@ control
 # Word of caution: Some services are required to run on the same host to
 # function appropriately. For example, neutron-metadata-agent must run on the
 # same host as the l3-agent and (depending on configuration) the dhcp-agent.
+
+# Common
+[cron:children]
+common
+
+[fluentd:children]
+common
+
+[kolla-logs:children]
+common
+
+[kolla-toolbox:children]
+common
 
 # Elasticsearch Curator
 [elasticsearch-curator:children]
