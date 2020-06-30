@@ -73,7 +73,12 @@ function find_base_dir {
         elif [[ ${dir_name} == "/usr/local/bin" ]]; then
             BASEDIR=/usr/local/share/kolla-ansible
         elif [[ -n ${VIRTUAL_ENV} ]] && [[ ${dir_name} == "${VIRTUAL_ENV}/bin" ]]; then
-            BASEDIR="${VIRTUAL_ENV}/share/kolla-ansible"
+            if test -f ${VIRTUAL_ENV}/lib/python*/site-packages/kolla-ansible.egg-link; then
+                # Editable install.
+                BASEDIR="$(head -n1 ${VIRTUAL_ENV}/lib/python*/site-packages/kolla-ansible.egg-link)"
+            else
+                BASEDIR="${VIRTUAL_ENV}/share/kolla-ansible"
+            fi
         else
             BASEDIR="$(dirname ${dir_name})"
         fi
