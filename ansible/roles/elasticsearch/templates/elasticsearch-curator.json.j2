@@ -1,11 +1,12 @@
 {% set cron_cmd = 'cron -f' if kolla_base_distro in ['ubuntu', 'debian'] else 'crond -s -n' %}
+{% set cron_path = '/var/spool/cron/crontabs/elasticsearch' if kolla_base_distro in ['ubuntu', 'debian'] else '/var/spool/cron/elasticsearch' %}
 {
     "command": "{{ cron_cmd }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/elasticsearch-curator.crontab",
-            "dest": "/var/spool/cron/elasticsearch",
-            "owner": "root",
+            "dest": "{{ cron_path }}",
+            "owner": "elasticsearch",
             "perm": "0600"
         },
         {
