@@ -39,10 +39,18 @@ es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }
 # Elasticsearch Curator
 #######################
 
-# How frequently Curator runs. On multinode deployments of Curator
-# you may wish to override this in hostvars so that Curator does
-# not run simultaneously on all nodes. Defaults to every midnight.
-elasticsearch_curator_cron_schedule: "0 0 * * *"
+# Helper variable used to define the default hour Curator runs to avoid
+# simultaneous runs in multinode deployments.
+elasticsearch_curator_instance_id: "{{ groups['elasticsearch-curator'].index(inventory_hostname) }}"
+
+# How frequently Curator runs.
+# For multinode deployments of Curator you should ensure each node has
+# a different schedule so that Curator does not run simultaneously on
+# multiple nodes. Use hostvars or parameterize like in the default
+# below.
+# The default depends on Curator's id as defined above which dictates
+# the daily hour the schedule runs (0, 1, etc.).
+elasticsearch_curator_cron_schedule: "0 {{ elasticsearch_curator_instance_id }} * * *"
 
 # When set to True, Curator will not modify Elasticsearch data, but
 # will print what it *would* do to the Curator log file. This is a
