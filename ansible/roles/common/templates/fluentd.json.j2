@@ -13,52 +13,12 @@
     {% set fluentd_cmd = '/usr/sbin/td-agent' %}
 {% endif %}
 
-{%- macro config_directory_permissions(dir) -%}
-        {
-            "path": "{{ fluentd_dir }}/{{ dir }}",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
-            "perm": "0700"
-        }
-{%- endmacro -%}
-
 {
     "command": "{{ fluentd_cmd }} -o /var/log/kolla/fluentd/fluentd.log",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/td-agent.conf",
             "dest": "{{ fluentd_dir }}/{{ fluentd_conf }}",
-            "owner": "{{ fluentd_user }}",
-            "perm": "0600"
-        },
-        {# Copy all configuration files in input/ directory to include #}
-        {# custom input configs. #}
-        {
-            "source": "{{ container_config_directory }}/input",
-            "dest": "{{ fluentd_dir }}/input",
-            "owner": "{{ fluentd_user }}",
-            "perm": "0600"
-        },
-        {# Copy all configuration files in filter/ directory to include #}
-        {# custom filter configs. #}
-        {
-            "source": "{{ container_config_directory }}/filter",
-            "dest": "{{ fluentd_dir }}/filter",
-            "owner": "{{ fluentd_user }}",
-            "perm": "0600"
-        },
-        {# Copy all configuration files in format/ directory to include #}
-        {# custom format configs. #}
-        {
-            "source": "{{ container_config_directory }}/format",
-            "dest": "{{ fluentd_dir }}/format",
-            "owner": "{{ fluentd_user }}",
-            "perm": "0600"
-        },
-        {# Copy all configuration files in output/ directory to include #}
-        {# custom output configs. #}
-        {
-            "source": "{{ container_config_directory }}/output",
-            "dest": "{{ fluentd_dir }}/output",
             "owner": "{{ fluentd_user }}",
             "perm": "0600"
         }
@@ -83,12 +43,7 @@
             "path": "/var/lib/fluentd/data",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
             "recurse": true
-        },
-        {# Allow Fluentd to read configuration from folders #}
-        {{ config_directory_permissions("input") }},
-        {{ config_directory_permissions("filter") }},
-        {{ config_directory_permissions("format") }},
-        {{ config_directory_permissions("output") }}
+        }
     ]
 
 }
