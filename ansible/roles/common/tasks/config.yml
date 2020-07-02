@@ -1,30 +1,28 @@
 ---
 - name: Ensuring config directories exist
+  vars:
+    service_name: "{{ item.0.service_name }}"
+    service: "{{ common_services[service_name] }}"
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.1 }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  with_items:
-    - "kolla-toolbox"
-    - "cron"
-    - "cron/logrotate"
-
-- name: Ensuring fluentd config directories exist
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    state: "directory"
-    mode: "0770"
-  become: true
-  with_items:
-    - "fluentd"
-    - "fluentd/input"
-    - "fluentd/output"
-    - "fluentd/format"
-    - "fluentd/filter"
-  when: enable_fluentd | bool
+  with_subelements:
+    - - service_name: "cron"
+        paths:
+          - "cron"
+          - "cron/logrotate"
+      - service_name: "fluentd"
+        paths:
+          - "fluentd"
+      - service_name: "kolla-toolbox"
+        paths:
+          - "kolla-toolbox"
+    - paths
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Ensure fluentd image is present for label check
   vars:
@@ -74,147 +72,7 @@
   run_once: True
   register: find_custom_fluentd_inputs
   delegate_to: localhost
-  when:
-    - enable_fluentd | bool
-
-- name: Copying over fluentd input config files
-  vars:
-    customised_input_files: "{{ find_custom_fluentd_inputs.files | map(attribute='path') | map('basename') | list }}"
-  template:
-    src: "conf/input/{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/input/{{ item }}.conf"
-    mode: "0660"
-  become: true
-  when:
-    - enable_fluentd | bool
-    - item ~ '.conf' not in customised_input_files
-  with_items:
-    - "00-global"
-    - "01-syslog"
-    - "02-mariadb"
-    - "03-rabbitmq"
-    - "04-openstack-wsgi"
-    - "05-libvirt"
-    - "06-zookeeper"
-    - "07-kafka"
-    - "09-monasca"
-  notify:
-    - Restart fluentd container
-
-- name: Copying over custom fluentd input config files
-  template:
-    src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/fluentd/input/{{ item.path | basename }}"
-    mode: "0660"
-  when:
-    - enable_fluentd | bool
-  with_items: "{{ find_custom_fluentd_inputs.files }}"
-  notify:
-    - Restart fluentd container
-
-- name: Determine whether logs should be forwarded directly to Elasticsearch
-  set_fact:
-    log_direct_to_elasticsearch: "{{ ( enable_elasticsearch | bool or
-                ( elasticsearch_address != kolla_internal_vip_address )) and
-                not enable_monasca | bool }}"
-
-- name: Find custom fluentd output config files
-  find:
-    path: "{{ node_custom_config }}/fluentd/output"
-    pattern: "*.conf"
-  run_once: True
-  register: find_custom_fluentd_outputs
-  delegate_to: localhost
-  when:
-    - enable_fluentd | bool
-
-- name: Copying over fluentd output config files
-  vars:
-    customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | map('basename') | list }}"
-  template:
-    src: "conf/output/{{ item.name }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
-    mode: "0660"
-  become: true
-  when:
-    - enable_fluentd | bool
-    - item.enabled | bool
-    - item.name ~ '.conf' not in customised_output_files
-  with_items:
-    - name: "00-local"
-      enabled: true
-    - name: "01-es"
-      enabled: "{{ log_direct_to_elasticsearch }}"
-    - name: "02-monasca"
-      enabled: "{{ enable_monasca | bool }}"
-  notify:
-    - Restart fluentd container
-
-- name: Removing stale output config files
-  file:
-    path: "{{ node_config_directory }}/fluentd/output/{{ item.name }}.conf"
-    state: "absent"
-  become: true
-  when:
-    - enable_fluentd | bool
-    - item.disable | bool
-  with_items:
-    - name: "02-monasca"
-      disable: "{{ not enable_monasca | bool }}"
-    - name: "01-es"
-      disable: "{{ not log_direct_to_elasticsearch }}"
-  notify:
-    - Restart fluentd container
-
-- name: Copying over custom fluentd output config files
-  template:
-    src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/fluentd/output/{{ item.path | basename }}"
-    mode: "0660"
-  become: true
-  when:
-    - enable_fluentd | bool
-  with_items: "{{ find_custom_fluentd_outputs.files }}"
-  notify:
-    - Restart fluentd container
-
-- name: Find custom fluentd format config files
-  find:
-    path: "{{ node_custom_config }}/fluentd/format"
-    pattern: "*.conf"
-  run_once: True
-  register: find_custom_fluentd_format
-  delegate_to: localhost
-  when:
-    - enable_fluentd | bool
-
-- name: Copying over fluentd format config files
-  vars:
-    customised_format_files: "{{ find_custom_fluentd_format.files | map(attribute='path') | map('basename') | list }}"
-  template:
-    src: "conf/format/{{ item }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/format/{{ item }}.conf"
-    mode: "0660"
-  become: true
-  with_items:
-    - "apache_access"
-    - "wsgi_access"
-  when:
-    - enable_fluentd | bool
-    - item ~ '.conf' not in customised_format_files
-  notify:
-    - Restart fluentd container
-
-- name: Copying over custom fluentd format config files
-  template:
-    src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/fluentd/format/{{ item.path | basename }}"
-    mode: "0660"
-  when:
-    - enable_fluentd | bool
-  with_items: "{{ find_custom_fluentd_format.files }}"
-  notify:
-    - Restart fluentd container
+  when: common_services.fluentd.enabled | bool
 
 - name: Find custom fluentd filter config files
   find:
@@ -223,50 +81,77 @@
   run_once: True
   register: find_custom_fluentd_filters
   delegate_to: localhost
-  when: enable_fluentd | bool
+  when: common_services.fluentd.enabled | bool
 
-- name: Copying over fluentd filter config files
-  vars:
-    customised_filter_files: "{{ find_custom_fluentd_filters.files | map(attribute='path') | map('basename') | list }}"
-    fluentd_version: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_version | default('0.12') }}"
-  template:
-    src: "conf/filter/{{ item.src }}.conf.j2"
-    dest: "{{ node_config_directory }}/fluentd/filter/{{ item.dest }}.conf"
-    mode: "0660"
-  become: true
-  with_items:
-    - src: 00-record_transformer
-      dest: 00-record_transformer
-    - src: "{{ '01-rewrite-0.14' if fluentd_version == '0.14' else '01-rewrite-0.12' }}"
-      dest: 01-rewrite
-    - src: 02-parser
-      dest: 02-parser
-  when:
-    - enable_fluentd | bool
-    - item.src ~ '.conf' not in customised_filter_files
-  notify:
-    - Restart fluentd container
+- name: Find custom fluentd format config files
+  find:
+    path: "{{ node_custom_config }}/fluentd/format"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_formats
+  delegate_to: localhost
+  when: common_services.fluentd.enabled | bool
 
-- name: Copying over custom fluentd filter config files
-  template:
-    src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/fluentd/filter/{{ item.path | basename }}"
-    mode: "0660"
-  become: true
-  with_items: "{{ find_custom_fluentd_filters.files }}"
-  when: enable_fluentd | bool
-  notify:
-    - Restart fluentd container
+- name: Find custom fluentd output config files
+  find:
+    path: "{{ node_custom_config }}/fluentd/output"
+    pattern: "*.conf"
+  run_once: True
+  register: find_custom_fluentd_outputs
+  delegate_to: localhost
+  when: common_services.fluentd.enabled | bool
 
 - name: Copying over td-agent.conf
+  vars:
+    log_direct_to_elasticsearch: >-
+      {{ ( enable_elasticsearch | bool or
+           ( elasticsearch_address != kolla_internal_vip_address )) and
+         not enable_monasca | bool }}
+    fluentd_version: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_version | default('0.12') }}"
+    # Inputs
+    fluentd_input_files: "{{ default_input_files | customise_fluentd(customised_input_files) }}"
+    default_input_files:
+      - "conf/input/00-global.conf.j2"
+      - "conf/input/01-syslog.conf.j2"
+      - "conf/input/02-mariadb.conf.j2"
+      - "conf/input/03-rabbitmq.conf.j2"
+      - "conf/input/04-openstack-wsgi.conf.j2"
+      - "conf/input/05-libvirt.conf.j2"
+      - "conf/input/06-zookeeper.conf.j2"
+      - "conf/input/07-kafka.conf.j2"
+      - "conf/input/09-monasca.conf.j2"
+    customised_input_files: "{{ find_custom_fluentd_inputs.files | map(attribute='path') | list }}"
+    # Filters
+    fluentd_filter_files: "{{ default_filter_files | customise_fluentd(customised_filter_files) }}"
+    default_filter_files:
+      - "conf/filter/00-record_transformer.conf.j2"
+      - "conf/filter/{{ '01-rewrite-0.14' if fluentd_version == '0.14' else '01-rewrite-0.12' }}.conf.j2"
+      - "conf/filter/02-parser.conf.j2"
+    customised_filter_files: "{{ find_custom_fluentd_filters.files | map(attribute='path') | list }}"
+    # Formats
+    fluentd_format_files: "{{ default_format_files | customise_fluentd(customised_format_files) }}"
+    default_format_files:
+      - "conf/format/apache_access.conf.j2"
+      - "conf/format/wsgi_access.conf.j2"
+    customised_format_files: "{{ find_custom_fluentd_formats.files | map(attribute='path') | list }}"
+    # Outputs
+    fluentd_output_files: "{{ default_output_files_enabled | customise_fluentd(customised_output_files) }}"
+    default_output_files_enabled: "{{ default_output_files | selectattr('enabled') | map(attribute='name') | list }}"
+    default_output_files:
+      - name: "conf/output/00-local.conf.j2"
+        enabled: true
+      - name: "conf/output/01-es.conf.j2"
+        enabled: "{{ log_direct_to_elasticsearch }}"
+      - name: "conf/output/02-monasca.conf.j2"
+        enabled: "{{ enable_monasca | bool }}"
+    customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | list }}"
   template:
     src: "td-agent.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item }}/td-agent.conf"
+    dest: "{{ node_config_directory }}/fluentd/td-agent.conf"
     mode: "0660"
   become: true
-  with_items:
-    - "fluentd"
-  when: enable_fluentd | bool
+  when:
+    - common_services.fluentd | service_enabled_and_mapped_to_host
   notify:
     - Restart fluentd container
 
