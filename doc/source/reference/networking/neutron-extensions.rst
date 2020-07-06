@@ -78,3 +78,16 @@ encrypted ping packets observed being sent from one to the other.
 For more information on this and VPNaaS in Neutron refer to the
 :neutron-vpnaas-doc:`Neutron VPNaaS Testing <contributor/index.html#testing>`
 and the `OpenStack wiki <https://wiki.openstack.org/wiki/Neutron/VPNaaS>`_.
+
+Trunking
+--------
+
+The network trunk service allows multiple networks to be connected to an
+instance using a single virtual NIC (vNIC). Multiple networks can be presented
+to an instance by connecting it to a single port.
+
+Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
+
+.. code-block:: yaml
+
+   enable_neutron_trunk: "yes"
