@@ -215,7 +215,11 @@ monasca_log_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{
 monasca_log_api_tag: "{{ monasca_tag }}"
 monasca_log_api_image_full: "{{ monasca_log_api_image }}:{{ monasca_log_api_tag }}"
 
-monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-logstash"
+# The logstash6 image is available for CentOS 7 and CentOS 8, and provides a
+# compatible migration point to CentOS 8, which only has Logstash 6.
+monasca_logstash_use_v6: "{{ ansible_os_family == 'RedHat' and ansible_distribution_major_version | int >= 8 }}"
+monasca_logstash_image_name: "{{ 'logstash6' if monasca_logstash_use_v6 | bool else 'logstash' }}"
+monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-{{ monasca_logstash_image_name }}"
 monasca_logstash_tag: "{{ monasca_tag }}"
 monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
 
