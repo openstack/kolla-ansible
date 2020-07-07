@@ -9,11 +9,11 @@
 
 input {
     kafka {
-        zk_connect => "{{ monasca_zookeeper_servers }}"
-        topic_id => "{{ monasca_transformed_logs_topic }}"
+        bootstrap_servers => "{{ monasca_kafka_servers }}"
+        topics => ["{{ monasca_transformed_logs_topic }}"]
         group_id => "log_metrics"
-        consumer_id => "log_metrics_{{ ansible_hostname }}"
         consumer_threads => "{{ monasca_log_pipeline_threads }}"
+        codec => json
     }
 }
 
@@ -42,7 +42,7 @@ filter {
 
     # Convert the timestamp of the event to milliseconds since epoch.
     ruby {
-        code => "event['metric']['timestamp'] = event['@timestamp'].to_i * 1000"
+        code => "event.set('[metric][timestamp]', event.get('[@timestamp]').to_i*1000)"
     }
 
     # Clean up any fields which aren't required from the new metric to save space
@@ -68,9 +68,8 @@ filter {
 
 output {
     kafka {
+        codec => json
         bootstrap_servers => "{{ monasca_kafka_servers }}"
         topic_id => "{{ monasca_metrics_topic }}"
-        client_id => "log_metrics_{{ ansible_hostname }}"
-        workers => {{ monasca_log_pipeline_threads|int }}
     }
 }
