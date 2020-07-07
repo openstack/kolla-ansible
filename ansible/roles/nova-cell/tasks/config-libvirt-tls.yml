@@ -1,14 +1,46 @@
 ---
-- name: Copying over libvirt TLS keys {{ file }}
+- name: Copying over libvirt TLS keys (nova-libvirt)
   become: true
+  vars:
+    service: "{{ nova_cell_services['nova-libvirt'] }}"
+    service_name: nova-libvirt
+    paths:
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ item }}"
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ item }}"
   copy:
-    src: "{{ first_found }}"
-    dest: "{{ node_config_directory }}/{{ service_name }}/{{ file }}"
+    src: "{{ lookup('first_found', paths) }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item }}"
     mode: "0600"
-  with_first_found:
-    - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ file }}"
-    - "{{ node_custom_config }}/nova/nova-libvirt/{{ file }}"
-  loop_control:
-    loop_var: first_found
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - cacert.pem
+    - servercert.pem
+    - serverkey.pem
+    - clientcert.pem
+    - clientkey.pem
+  notify:
+    - Restart {{ service_name }} container
+
+- name: Copying over libvirt TLS keys (nova-compute)
+  become: true
+  vars:
+    service: "{{ nova_cell_services['nova-compute'] }}"
+    service_name: nova-compute
+    paths:
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ item }}"
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ item }}"
+  copy:
+    src: "{{ lookup('first_found', paths) }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item }}"
+    mode: "0600"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - cacert.pem
+    - clientcert.pem
+    - clientkey.pem
   notify:
     - Restart {{ service_name }} container
