@@ -1,8 +1,6 @@
 ---
-- include_tasks: register.yml
-  when: enable_keystone | bool and
-        (inventory_hostname in groups['ironic-api'] or
-        inventory_hostname in groups['ironic-inspector'])
+- import_tasks: register.yml
+  when: enable_keystone | bool
 
 - import_tasks: config-host.yml
 
@@ -11,10 +9,7 @@
 - include_tasks: clone.yml
   when: ironic_dev_mode | bool
 
-- include_tasks: bootstrap.yml
-  when: inventory_hostname in groups['ironic-api'] or
-        inventory_hostname in groups['ironic-inspector'] or
-        inventory_hostname in groups['ironic-pxe']
+- import_tasks: bootstrap.yml
 
 - name: Flush handlers
   meta: flush_handlers
