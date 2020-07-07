@@ -1,17 +1,14 @@
 ---
-- include_tasks: register.yml
-  when: inventory_hostname in groups['designate-api']
+- import_tasks: register.yml
 
 - import_tasks: config.yml
 
 - include_tasks: clone.yml
   when: designate_dev_mode | bool
 
-- include_tasks: bootstrap.yml
-  when: inventory_hostname in groups['designate-central']
+- import_tasks: bootstrap.yml
 
 - name: Flush handlers
   meta: flush_handlers
 
-- include_tasks: update_pools.yml
-  when: inventory_hostname == groups['designate-worker'][0]
+- import_tasks: update_pools.yml
