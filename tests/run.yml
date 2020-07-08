@@ -97,14 +97,11 @@
         state: directory
       become: true
 
-    # TODO(mnasiadka): remove cinder and glance in Victoria
     - name: Ensure configuration directories exist
       file:
         path: "/etc/kolla/config/{{ item }}"
         state: directory
       loop:
-        - cinder
-        - glance
         - neutron
         - nova
         - bifrost
@@ -459,16 +456,6 @@
               echo "requirements checked out to:"
               git log --pretty=oneline  -1
             chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
-
-        # TODO(mnasiadka): Remove in Victoria
-        - name: Remove not needed external ceph required configs
-          file:
-            name: "{{ item }}"
-            state: absent
-          with_items:
-            - /etc/kolla/config/glance/glance-api.conf
-            - /etc/kolla/config/cinder/cinder-volume.conf
-            - /etc/kolla/config/cinder/cinder-backup.conf
 
         - name: Generate configuration files
           template:
