@@ -1,0 +1,41 @@
+---
+- import_role:
+    name: service-precheck
+  vars:
+    service_precheck_services: "{{ prometheus_services }}"
+    service_name: "{{ project_name }}"
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - prometheus_node_exporter
+      - prometheus_cadvisor
+  check_mode: false
+  register: container_facts
+
+- name: Checking free port for Prometheus node_exporter
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ prometheus_node_exporter_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts.containers['prometheus_node_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-node-exporter']
+    - enable_prometheus_node_exporter | bool
+
+- name: Checking free port for Prometheus cAdvisor
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ prometheus_cadvisor_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts.containers['prometheus_cadvisor'] is not defined
+    - inventory_hostname in groups['prometheus-cadvisor']
+    - enable_prometheus_cadvisor | bool
