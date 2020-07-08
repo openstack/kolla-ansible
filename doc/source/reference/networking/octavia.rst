@@ -45,13 +45,13 @@ It is necessary to build an Amphora image. On CentOS / RHEL 8:
 .. code-block:: console
 
    sudo dnf -y install epel-release
-   sudo dnf install -y debootstrap
+   sudo dnf install -y debootstrap qemu-img git e2fsprogs policycoreutils-python-utils
 
 On Ubuntu:
 
 .. code-block:: console
 
-   sudo apt -y install debootstrap
+   sudo apt -y install debootstrap qemu-utils git kpartx
 
 Acquire the Octavia source code:
 
