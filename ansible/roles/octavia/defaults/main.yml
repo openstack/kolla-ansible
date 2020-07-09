@@ -154,3 +154,87 @@ octavia_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 octavia_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 octavia_dev_mode: "{{ kolla_dev_mode }}"
 octavia_source_version: "{{ kolla_source_version }}"
+
+#####################
+# Integration Options
+#####################
+octavia_amp_ssh_key_name: "octavia_ssh_key"
+octavia_amp_listen_port: "9443"
+octavia_amp_image_tag: "amphora"
+
+# Load balancer topology options are [ SINGLE, ACTIVE_STANDBY ]
+octavia_loadbalancer_topology: "SINGLE"
+
+# Whether to run Kolla-Ansible's automatic configuration for Octavia.
+# NOTE: if you upgrade from Ussuri, you must set `octavia_auto_configure` to `no`
+# and keep your other Octavia config like before.
+octavia_auto_configure: yes
+
+# OpenStack auth used when registering resources for Octavia.
+octavia_user_auth:
+  auth_url: "{{ keystone_admin_url }}"
+  username: "octavia"
+  password: "{{ octavia_keystone_password }}"
+  project_name: "{{ octavia_service_auth_project }}"
+  domain_name: "{{ default_project_domain_name }}"
+
+# Octavia amphora flavor.
+# See os_nova_flavor for details. Supported parameters:
+# - disk
+# - ephemeral (optional)
+# - extra_specs (optional)
+# - flavorid (optional)
+# - is_public (optional)
+# - name
+# - ram
+# - swap (optional)
+# - vcpus
+octavia_amp_flavor:
+  name: "amphora"
+  is_public: no
+  vcpus: 1
+  ram: 1024
+  disk: 5
+
+# Octavia security groups. lb-mgmt-sec-grp is for amphorae.
+octavia_amp_security_groups:
+  mgmt-sec-grp:
+    name: "lb-mgmt-sec-grp"
+    rules:
+      - protocol: icmp
+      - protocol: tcp
+        src_port: 22
+        dst_port: 22
+      - protocol: tcp
+        src_port: "{{ octavia_amp_listen_port }}"
+        dst_port: "{{ octavia_amp_listen_port }}"
+
+# Octavia management network.
+# See os_network and os_subnet for details. Supported parameters:
+# - external (optional)
+# - mtu (optional)
+# - name
+# - provider_network_type (optional)
+# - provider_physical_network (optional)
+# - provider_segmentation_id (optional)
+# - shared (optional)
+# - subnet
+# The subnet parameter has the following supported parameters:
+# - allocation_pool_start (optional)
+# - allocation_pool_start (optional)
+# - cidr
+# - enable_dhcp (optional)
+# - gateway_ip (optional)
+# - name
+# - no_gateway_ip (optional)
+octavia_amp_network:
+  name: lb-mgmt-net
+  shared: false
+  subnet:
+    name: lb-mgmt-subnet
+    cidr: "{{ octavia_amp_network_cidr }}"
+    no_gateway_ip: yes
+    enable_dhcp: yes
+
+# Octavia management network subnet CIDR.
+octavia_amp_network_cidr: 10.0.0.0/24
