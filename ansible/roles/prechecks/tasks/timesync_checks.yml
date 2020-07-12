@@ -1,0 +1,24 @@
+---
+- name: Checking timedatectl status
+  become: true
+  command: timedatectl status
+  register: timedatectl_status
+  changed_when: false
+
+- name: Fail if no (S)NTP service is running
+  fail:
+    msg: >-
+      timedatectl does not see any (S)NTP service running.
+      Please ensure you have (S)NTP client working.
+  when:
+    - "'service: active' not in timedatectl_status.stdout"
+    # Ubuntu Bionic (18.04)
+    - "'service active: yes' not in timedatectl_status.stdout"
+
+- name: Fail if the clock is not synchronized
+  fail:
+    msg: >-
+      timedatectl sees the system clock as unsynchronized.
+      Please wait for synchronization.
+  when:
+    - "'synchronized: yes' not in timedatectl_status.stdout"
