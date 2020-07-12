@@ -173,7 +173,7 @@ images:
 
 .. code-block:: console
 
-   $ kolla-build cron chrony fluentd mariadb kolla-toolbox keystone memcached keepalived haproxy
+   $ kolla-build cron fluentd mariadb kolla-toolbox keystone memcached keepalived haproxy
 
 Deployment
 ~~~~~~~~~~
