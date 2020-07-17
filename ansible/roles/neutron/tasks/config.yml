@@ -87,6 +87,8 @@
       - "neutron-bgp-dragent"
       - "neutron-infoblox-ipam-agent"
       - "neutron-sriov-agent"
+      - "neutron-mlnx-agent"
+      - "neutron-eswitchd"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron.conf.j2"
@@ -183,6 +185,7 @@
     - "Restart {{ service_name }} container"
 
 - name: Copying over sriov_agent.ini
+  become: true
   vars:
     service_name: "neutron-sriov-agent"
     neutron_sriov_agent: "{{ neutron_services[service_name] }}"
@@ -196,6 +199,42 @@
   when:
     - neutron_sriov_agent.enabled | bool
     - neutron_sriov_agent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over mlnx_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-mlnx-agent"
+    neutron_mlnx_agent: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/mlnx_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/mlnx_agent.ini"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/mlnx_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/mlnx_agent.ini"
+    mode: "0660"
+  when:
+    - neutron_mlnx_agent.enabled | bool
+    - neutron_mlnx_agent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over eswitchd.conf
+  become: true
+  vars:
+    service_name: "neutron-eswitchd"
+    neutron_eswitchd: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/eswitchd.conf.j2"
+      - "{{ node_custom_config }}/neutron/eswitchd.conf"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/eswitchd.conf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/eswitchd.conf"
+    mode: "0660"
+  when:
+    - neutron_eswitchd.enabled | bool
+    - neutron_eswitchd.host_in_groups | bool
   notify:
     - "Restart {{ service_name }} container"
 
