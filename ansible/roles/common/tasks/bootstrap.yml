@@ -5,6 +5,7 @@
     action: "create_volume"
     common_options: "{{ docker_common_options }}"
     name: "kolla_logs"
+  when: inventory_hostname in groups['kolla-logs']
 
 - name: Link kolla_logs volume to /var/log/kolla
   become: true
@@ -12,3 +13,4 @@
     src: "{{ docker_runtime_directory or '/var/lib/docker' }}/volumes/kolla_logs/_data"
     path: /var/log/kolla
     state: link
+  when: inventory_hostname in groups['kolla-logs']

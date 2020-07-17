@@ -1,30 +1,32 @@
 ---
 - name: Ensuring config directories exist
+  vars:
+    service_name: "{{ item.0.service_name }}"
+    service: "{{ common_services[service_name] }}"
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.1 }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  with_items:
-    - "kolla-toolbox"
-    - "cron"
-    - "cron/logrotate"
-
-- name: Ensuring fluentd config directories exist
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    state: "directory"
-    mode: "0770"
-  become: true
-  with_items:
-    - "fluentd"
-    - "fluentd/input"
-    - "fluentd/output"
-    - "fluentd/format"
-    - "fluentd/filter"
-  when: enable_fluentd | bool
+  with_subelements:
+    - - service_name: "cron"
+        paths:
+          - "cron"
+          - "cron/logrotate"
+      - service_name: "fluentd"
+        paths:
+          - "fluentd"
+          - "fluentd/input"
+          - "fluentd/output"
+          - "fluentd/format"
+          - "fluentd/filter"
+      - service_name: "kolla-toolbox"
+        paths:
+          - "kolla-toolbox"
+    - paths
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Ensure fluentd image is present for label check
   vars:
@@ -35,7 +37,7 @@
     action: "ensure_image"
     common_options: "{{ docker_common_options }}"
     image: "{{ service.image }}"
-  when: enable_fluentd | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Fetch fluentd image labels
   vars:
@@ -45,12 +47,12 @@
   docker_image_info:
     name: "{{ service.image }}"
   register: fluentd_labels
-  when: enable_fluentd | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Set fluentd facts
   set_fact:
     fluentd_binary: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}"
-  when: enable_fluentd | bool
+  when: common_services.fluentd | service_enabled_and_mapped_to_host
 
 - include_tasks: copy-certs.yml
   when:
@@ -62,7 +64,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when: item.value.enabled | bool
+  when: item.value | service_enabled_and_mapped_to_host
   with_dict: "{{ common_services }}"
   notify:
     - "Restart {{ item.key }} container"
@@ -74,8 +76,7 @@
   run_once: True
   register: find_custom_fluentd_inputs
   delegate_to: localhost
-  when:
-    - enable_fluentd | bool
+  when: common_services.fluentd | service_enabled_and_mapped_to_host
 
 - name: Copying over fluentd input config files
   vars:
@@ -86,7 +87,7 @@
     mode: "0660"
   become: true
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
     - item ~ '.conf' not in customised_input_files
   with_items:
     - "00-global"
@@ -107,7 +108,7 @@
     dest: "{{ node_config_directory }}/fluentd/input/{{ item.path | basename }}"
     mode: "0660"
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
   with_items: "{{ find_custom_fluentd_inputs.files }}"
   notify:
     - Restart fluentd container
@@ -117,6 +118,8 @@
     log_direct_to_elasticsearch: "{{ ( enable_elasticsearch | bool or
                 ( elasticsearch_address != kolla_internal_vip_address )) and
                 not enable_monasca | bool }}"
+  when:
+    - common_services.fluentd | service_enabled_and_mapped_to_host
 
 - name: Find custom fluentd output config files
   find:
@@ -126,7 +129,7 @@
   register: find_custom_fluentd_outputs
   delegate_to: localhost
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
 
 - name: Copying over fluentd output config files
   vars:
@@ -137,7 +140,7 @@
     mode: "0660"
   become: true
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
     - item.enabled | bool
     - item.name ~ '.conf' not in customised_output_files
   with_items:
@@ -156,7 +159,7 @@
     state: "absent"
   become: true
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
     - item.disable | bool
   with_items:
     - name: "02-monasca"
@@ -173,7 +176,7 @@
     mode: "0660"
   become: true
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
   with_items: "{{ find_custom_fluentd_outputs.files }}"
   notify:
     - Restart fluentd container
@@ -186,7 +189,7 @@
   register: find_custom_fluentd_format
   delegate_to: localhost
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
 
 - name: Copying over fluentd format config files
   vars:
@@ -200,7 +203,7 @@
     - "apache_access"
     - "wsgi_access"
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
     - item ~ '.conf' not in customised_format_files
   notify:
     - Restart fluentd container
@@ -211,7 +214,7 @@
     dest: "{{ node_config_directory }}/fluentd/format/{{ item.path | basename }}"
     mode: "0660"
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
   with_items: "{{ find_custom_fluentd_format.files }}"
   notify:
     - Restart fluentd container
@@ -223,7 +226,7 @@
   run_once: True
   register: find_custom_fluentd_filters
   delegate_to: localhost
-  when: enable_fluentd | bool
+  when: common_services.fluentd | service_enabled_and_mapped_to_host
 
 - name: Copying over fluentd filter config files
   vars:
@@ -242,7 +245,7 @@
     - src: 02-parser
       dest: 02-parser
   when:
-    - enable_fluentd | bool
+    - common_services.fluentd | service_enabled_and_mapped_to_host
     - item.src ~ '.conf' not in customised_filter_files
   notify:
     - Restart fluentd container
@@ -254,7 +257,8 @@
     mode: "0660"
   become: true
   with_items: "{{ find_custom_fluentd_filters.files }}"
-  when: enable_fluentd | bool
+  when:
+    - common_services.fluentd | service_enabled_and_mapped_to_host
   notify:
     - Restart fluentd container
 
@@ -266,7 +270,7 @@
   become: true
   with_items:
     - "fluentd"
-  when: enable_fluentd | bool
+  when: common_services.fluentd | service_enabled_and_mapped_to_host
   notify:
     - Restart fluentd container
 
@@ -276,7 +280,9 @@
     dest: "{{ node_config_directory }}/cron/logrotate/{{ item.name }}.conf"
     mode: "0660"
   become: true
-  when: item.enabled | bool
+  when:
+    - common_services.cron | service_enabled_and_mapped_to_host
+    - item.enabled | bool
   with_items:
     - { name: "ansible", enabled: "yes" }
     - { name: "aodh", enabled: "{{ enable_aodh }}" }
@@ -348,7 +354,9 @@
     content: "{{ rabbitmq_cluster_cookie }}"
     dest: "{{ node_config_directory }}/kolla-toolbox/rabbitmq-erlang.cookie"
     mode: "0660"
-  when: enable_rabbitmq | bool
+  when:
+    - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
+    - enable_rabbitmq | bool
   notify:
     - Restart kolla-toolbox container
 
@@ -361,7 +369,7 @@
     mode: "0770"
   ignore_errors: "{{ ansible_check_mode }}"
   when:
-    - item.value.enabled | bool
+    - item.value | service_enabled_and_mapped_to_host
     - item.key != "kolla-toolbox"
   with_dict: "{{ common_services }}"
 
@@ -374,7 +382,8 @@
     mode: "0600"
   become: true
   when:
-    api_address_family == "ipv6"
+    - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
+    - api_address_family == "ipv6"
 
 - name: Copy rabbitmq erl_intr to kolla toolbox
   copy:
@@ -384,7 +393,8 @@
     mode: "0600"
   become: true
   when:
-    api_address_family == "ipv6"
+    - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
+    - api_address_family == "ipv6"
 
 - include_tasks: check-containers.yml
   when: kolla_action != "config"
