@@ -8,6 +8,7 @@ set -o pipefail
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
+declare -a fluentchecks=("got incomplete line before first line" "pattern not matched")
 
 function check_openstack_log_file_for_level {
     # $1: file
@@ -20,6 +21,12 @@ function check_fluentd_log_file_for_level {
     # $1: file
     # $2: log level
     sudo egrep "\[$2\]:" $1
+}
+
+function check_fluentd_log_file_for_content {
+    # $1: file
+    # $2: content
+    sudo egrep " $2 " $1
 }
 
 function check_docker_log_file_for_sigkill {
@@ -72,7 +79,6 @@ for level in CRITICAL ERROR WARNING; do
     fi
 done
 
-
 # check fluentd errors (we consider them critical)
 fluentd_log_file=/var/log/kolla/fluentd/fluentd.log
 fluentd_error_summary_file=/tmp/logs/kolla/fluentd-error.log
@@ -82,6 +88,16 @@ if check_fluentd_log_file_for_level $fluentd_log_file error >/dev/null; then
     check_fluentd_log_file_for_level $fluentd_log_file error > $fluentd_error_summary_file
     echo >> $fluentd_error_summary_file
 fi
+
+for string in "${fluentchecks[@]}"; do
+    fluentd_file=/tmp/logs/kolla/fluentd-errors.log
+    if check_fluentd_log_file_for_content $fluentd_log_file "$string" >/dev/null; then
+        any_critical=1
+        echo "$string" >> $fluentd_file
+        check_fluentd_log_file_for_content $fluentd_log_file "$string" >> $fluentd_file
+        echo >> $fluentd_file
+    fi
+done
 
 if check_docker_log_file_for_sigkill >/dev/null; then
     any_critical=1
