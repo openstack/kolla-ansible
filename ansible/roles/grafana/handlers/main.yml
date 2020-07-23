@@ -1,5 +1,6 @@
 ---
-- name: Restart grafana container
+- name: Restart first grafana container
+  listen: Restart grafana container
   vars:
     service_name: "grafana"
     service: "{{ grafana_services[service_name] }}"
@@ -13,3 +14,39 @@
     dimensions: "{{ service.dimensions }}"
   when:
     - kolla_action != "config"
+    - inventory_hostname == groups[service.group]|first
+
+- name: Waiting for grafana to start on first node
+  listen: Restart grafana container
+  vars:
+    service_name: "grafana"
+    service: "{{ grafana_services[service_name] }}"
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "http://{{ api_interface_address | put_address_in_context('url') }}:{{ grafana_server_port }}/login"
+      status_code: 200
+  register: result
+  until: result.get('status') == 200
+  retries: 10
+  delay: 2
+  when:
+    - inventory_hostname == groups[service.group]|first
+
+- name: Restart remaining grafana containers
+  listen: Restart grafana container
+  vars:
+    service_name: "grafana"
+    service: "{{ grafana_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname != groups[service.group]|first
