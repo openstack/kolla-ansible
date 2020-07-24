@@ -64,6 +64,10 @@ function setup_config {
         GATE_IMAGES="^cron,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
+    if [[ $SCENARIO == "prometheus-efk" ]]; then
+        GATE_IMAGES="^cron,^elasticsearch,^fluentd,^grafana,^haproxy,^keepalived,^kibana,^kolla-toolbox,^mariadb,^memcached,^prometheus,^rabbitmq"
+    fi
+
     # NOTE(yoctozepto): we cannot build and push at the same time on debian
     # buster see https://github.com/docker/for-linux/issues/711.
     PUSH="true"
