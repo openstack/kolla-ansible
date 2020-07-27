@@ -189,7 +189,6 @@ assuming that you have services using ``nova.conf`` running on hosts
 called ``controller-0001``, ``controller-0002`` and ``controller-0003``:
 
 * ``/etc/kolla/config/nova.conf``
-* ``/etc/kolla/config/nova/nova.conf``
 * ``/etc/kolla/config/nova/controller-0001/nova.conf``
 * ``/etc/kolla/config/nova/controller-0002/nova.conf``
 * ``/etc/kolla/config/nova/controller-0003/nova.conf``

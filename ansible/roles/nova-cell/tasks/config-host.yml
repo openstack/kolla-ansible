@@ -1,0 +1,15 @@
+---
+- name: Setting sysctl values
+  become: true
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+  with_items:
+    - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
+    - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1}
+    - { name: "net.ipv4.conf.all.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
+    - { name: "net.ipv4.conf.default.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
+  when:
+    - set_sysctl | bool
+    - inventory_hostname in groups[nova_cell_compute_group]

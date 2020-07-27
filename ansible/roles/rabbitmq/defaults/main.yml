@@ -51,14 +51,19 @@ haproxy_outward_rabbitmq_server_timeout: "1h"
 # Docker
 ####################
 rabbitmq_install_type: "{{ kolla_install_type }}"
-rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ rabbitmq_install_type }}-rabbitmq"
-rabbitmq_tag: "{{ openstack_release }}"
+# The rabbitmq-3.7.24 image is available only for CentOS 7, and provides a
+# compatible migration point to CentOS 8, which also has 3.7.24.
+rabbitmq_use_3_7_24_on_centos7: false
+rabbitmq_image_name: "{{ 'rabbitmq-3.7.24' if rabbitmq_use_3_7_24_on_centos7 | bool and ansible_os_family == 'RedHat' and ansible_distribution_major_version | int == 7 else 'rabbitmq' }}"
+rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ rabbitmq_install_type }}-{{ rabbitmq_image_name }}"
+rabbitmq_tag: "{{ openstack_tag }}"
 rabbitmq_image_full: "{{ rabbitmq_image }}:{{ rabbitmq_tag }}"
 rabbitmq_dimensions: "{{ default_container_dimensions }}"
 
 rabbitmq_default_volumes:
   - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ project_name }}:/var/lib/rabbitmq/"
   - "kolla_logs:/var/log/kolla/"
 rabbitmq_extra_volumes: "{{ default_extra_volumes }}"

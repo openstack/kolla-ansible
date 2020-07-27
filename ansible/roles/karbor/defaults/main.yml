@@ -48,7 +48,7 @@ karbor_database_address: "{{ database_address | put_address_in_context('url') }}
 # Docker
 ####################
 karbor_install_type: "{{ kolla_install_type }}"
-karbor_tag: "{{ openstack_release }}"
+karbor_tag: "{{ openstack_tag }}"
 
 karbor_protection_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ karbor_install_type }}-karbor-protection"
 karbor_protection_tag: "{{ karbor_tag }}"
@@ -70,14 +70,17 @@ karbor_operationengine_dimensions: "{{ default_container_dimensions }}"
 karbor_protection_default_volumes:
   - "{{ node_config_directory }}/karbor-protection/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 karbor_operationengine_default_volumes:
   - "{{ node_config_directory }}/karbor-operationengine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 karbor_api_default_volumes:
   - "{{ node_config_directory }}/karbor-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 karbor_extra_volumes: "{{ default_extra_volumes }}"
 karbor_protection_extra_volumes: "{{ karbor_extra_volumes }}"

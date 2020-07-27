@@ -25,12 +25,12 @@ haproxy_services:
 ####################
 keepalived_install_type: "{{ kolla_install_type }}"
 keepalived_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ keepalived_install_type }}-keepalived"
-keepalived_tag: "{{ openstack_release }}"
+keepalived_tag: "{{ openstack_tag }}"
 keepalived_image_full: "{{ keepalived_image }}:{{ keepalived_tag }}"
 
 haproxy_install_type: "{{ kolla_install_type }}"
 haproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ haproxy_install_type }}-haproxy"
-haproxy_tag: "{{ openstack_release }}"
+haproxy_tag: "{{ openstack_tag }}"
 haproxy_image_full: "{{ haproxy_image }}:{{ haproxy_tag }}"
 
 syslog_server: "{{ api_interface_address }}"
@@ -52,10 +52,12 @@ keepalived_dimensions: "{{ default_container_dimensions }}"
 haproxy_default_volumes:
   - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
 keepalived_default_volumes:
   - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
 

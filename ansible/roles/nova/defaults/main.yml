@@ -77,7 +77,7 @@ nova_api_database_address: "{{ database_address | put_address_in_context('url') 
 # Docker
 ####################
 nova_install_type: "{{ kolla_install_type }}"
-nova_tag: "{{ openstack_release }}"
+nova_tag: "{{ openstack_tag }}"
 
 nova_super_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-conductor"
 nova_super_conductor_tag: "{{ nova_tag }}"
@@ -98,23 +98,27 @@ nova_super_conductor_dimensions: "{{ default_container_dimensions }}"
 nova_api_default_volumes:
   - "{{ node_config_directory }}/nova-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_scheduler_default_volumes:
   - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_super_conductor_default_volumes:
   - "{{ node_config_directory }}/nova-super-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 # Used by bootstrapping containers.
 nova_api_bootstrap_default_volumes:
   - "{{ node_config_directory }}/nova-api-bootstrap/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 

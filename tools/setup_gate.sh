@@ -10,48 +10,55 @@ GIT_PROJECT_DIR=$(mktemp -d)
 
 function setup_openstack_clients {
     # Prepare virtualenv for openstack deployment tests
-    virtualenv ~/openstackclient-venv
-    ~/openstackclient-venv/bin/pip install -U pip
-    ~/openstackclient-venv/bin/pip install python-openstackclient
-    ~/openstackclient-venv/bin/pip install python-heatclient
+    local packages=(python-openstackclient python-heatclient)
     if [[ $SCENARIO == zun ]]; then
-        ~/openstackclient-venv/bin/pip install python-zunclient
+        packages+=(python-zunclient)
     fi
     if [[ $SCENARIO == ironic ]]; then
-        ~/openstackclient-venv/bin/pip install python-ironicclient
+        packages+=(python-ironicclient)
     fi
     if [[ $SCENARIO == masakari ]]; then
-        ~/openstackclient-venv/bin/pip install python-masakariclient
+        packages+=(python-masakariclient)
     fi
+    virtualenv ~/openstackclient-venv
+    ~/openstackclient-venv/bin/pip install -U pip
+    ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
 }
 
 function setup_config {
     if [[ $SCENARIO != "bifrost" ]]; then
-        GATE_IMAGES="cron,fluentd,glance,haproxy,keepalived,keystone,kolla-toolbox,mariadb,memcached,neutron,nova,openvswitch,rabbitmq,horizon,chrony,heat,placement"
+        GATE_IMAGES="^cron,^fluentd,^glance,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^neutron,^nova-,^openvswitch,^rabbitmq,^horizon,^chrony,^heat,^placement"
     else
         GATE_IMAGES="bifrost"
     fi
 
     if [[ $SCENARIO == "ceph" ]]; then
-        GATE_IMAGES+=",ceph,cinder"
+        GATE_IMAGES+=",^ceph,^cinder"
     fi
 
     if [[ $SCENARIO == "zun" ]]; then
-        GATE_IMAGES+=",zun,kuryr,etcd,cinder,iscsid,tgtd"
+        GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
+        if [[ $BASE_DISTRO != "centos" ]] || [[ $BASE_DISTRO_MAJOR_VERSION -eq 7 ]]; then
+            GATE_IMAGES+=",^tgtd"
+        fi
     fi
 
     if [[ $SCENARIO == "scenario_nfv" ]]; then
-        GATE_IMAGES+=",tacker,mistral,redis,barbican"
+        GATE_IMAGES+=",^tacker,^mistral,^redis,^barbican"
     fi
     if [[ $SCENARIO == "ironic" ]]; then
-        GATE_IMAGES+=",dnsmasq,ironic,iscsid"
+        GATE_IMAGES+=",^dnsmasq,^ironic,^iscsid"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
-        GATE_IMAGES+=",masakari"
+        GATE_IMAGES+=",^masakari"
+    fi
+
+    if [[ $SCENARIO == "swift" ]]; then
+        GATE_IMAGES+=",^swift"
     fi
 
     if [[ $SCENARIO == "mariadb" ]]; then
-        GATE_IMAGES="cron,haproxy,keepalived,kolla-toolbox,mariadb"
+        GATE_IMAGES="^cron,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
     # NOTE(yoctozepto): we cannot build and push at the same time on debian
@@ -79,38 +86,20 @@ EOF
     mkdir -p /tmp/logs/build
 }
 
-function setup_ansible {
-    RAW_INVENTORY=/etc/kolla/inventory
-
-    # Test latest ansible version on Ubuntu, minimum supported on others.
-    if [[ $BASE_DISTRO == "ubuntu" ]]; then
-        ANSIBLE_VERSION=">=2.6"
-    else
-        ANSIBLE_VERSION="<2.7"
-    fi
-
-    # TODO(SamYaple): Move to virtualenv
-    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0"
-
-    sudo mkdir /etc/ansible
-    ara_location=$(python -m ara.setup.callback_plugins)
-    sudo tee /etc/ansible/ansible.cfg<<EOF
-[defaults]
-callback_plugins = ${ara_location}
-host_key_checking = False
-EOF
-
-    # Record the running state of the environment as seen by the setup module
-    ansible all -i ${RAW_INVENTORY} -e ansible_user=$USER -m setup > /tmp/logs/ansible/initial-setup
-}
-
 function prepare_images {
     if [[ "${BUILD_IMAGE}" == "False" ]]; then
         return
     fi
     sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
     pushd "${KOLLA_SRC_DIR}"
-    sudo tox -e "build-${BASE_DISTRO}-${INSTALL_TYPE}"
+    # TODO(mgoddard): Remove this if block when CentOS 7 is no longer
+    # supported.
+    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
+        kolla_base_distro=centos8
+    else
+        kolla_base_distro=${BASE_DISTRO}
+    fi
+    sudo tox -e "build-${kolla_base_distro}-${INSTALL_TYPE}"
     # NOTE(yoctozepto): due to debian buster we push after images are built
     # see https://github.com/docker/for-linux/issues/711
     if [[ "debian" == $BASE_DISTRO ]]; then
@@ -123,8 +112,8 @@ function prepare_images {
 
 setup_openstack_clients
 
-setup_ansible
 setup_config
 
+RAW_INVENTORY=/etc/kolla/inventory
 tools/kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
 prepare_images

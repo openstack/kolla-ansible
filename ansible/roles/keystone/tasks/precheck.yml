@@ -42,3 +42,24 @@
     - container_facts['keystone_ssh'] is not defined
     - keystone_ssh.enabled | bool
     - inventory_hostname in groups['keystone']
+
+- name: Checking fernet_token_expiry
+  run_once: true
+  assert:
+    that:
+      - fernet_token_expiry is number
+      # Check that it is not a floating point number
+      - fernet_token_expiry | int == fernet_token_expiry
+      - fernet_token_expiry >= 0
+      # NOTE(wszumski): fernet_rotate_cron_generator.py doesn't support a span
+      # greater than a week.
+      - fernet_token_expiry <= 604800
+    msg: >-
+      fernet_token_expiry must be an integer up to and including 604800. You can
+      set this in `globals.yml`. The value represents the time period, in
+      seconds, at which to rotate the fernet keys. Suggested values are: 60,
+      120, 240, 480, 720, 1440, 3600, 7200, 10800, 14400, 21600, 43200, 60480,
+      120960, 151200, 201600, 302400, 604800. These values ensure an evenly-spaced
+      run schedule as they divide 7 days without remainder.
+  when:
+    - keystone_token_provider == 'fernet'

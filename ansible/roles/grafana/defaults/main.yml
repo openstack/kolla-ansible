@@ -39,7 +39,7 @@ grafana_data_sources:
       database: "telegraf"
       name: "telegraf"
       type: "influxdb"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ influxdb_http_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ influxdb_http_port }}"
       access: "proxy"
       basicAuth: false
   elasticsearch:
@@ -48,7 +48,7 @@ grafana_data_sources:
       name: "elasticsearch"
       type: "elasticsearch"
       access: "proxy"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ elasticsearch_port }}"
       database: "flog-*"
       jsonData:
         esVersion: 5
@@ -59,7 +59,7 @@ grafana_data_sources:
 ##########
 grafana_install_type: "{{ kolla_install_type }}"
 grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ grafana_install_type }}-grafana"
-grafana_tag: "{{ openstack_release }}"
+grafana_tag: "{{ openstack_tag }}"
 grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"
 
@@ -68,6 +68,7 @@ grafana_dimensions: "{{ default_container_dimensions }}"
 grafana_default_volumes:
   - "{{ node_config_directory }}/grafana/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "grafana:/var/lib/grafana/"
   - "kolla_logs:/var/log/kolla/"
 grafana_extra_volumes: "{{ default_extra_volumes }}"

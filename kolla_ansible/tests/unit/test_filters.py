@@ -104,14 +104,14 @@ class TestFilters(unittest.TestCase):
         service = {
             'group': 'foo'
         }
-        context = self._make_context({'groups': ['foo', 'bar']})
+        context = self._make_context({'group_names': ['foo', 'bar']})
         self.assertTrue(filters.service_mapped_to_host(context, service))
 
     def test_service_mapped_to_host_not_in_group(self):
         service = {
             'group': 'foo'
         }
-        context = self._make_context({'groups': ['bar']})
+        context = self._make_context({'group_names': ['bar']})
         self.assertFalse(filters.service_mapped_to_host(context, service))
 
     def test_service_mapped_to_host_no_attr(self):

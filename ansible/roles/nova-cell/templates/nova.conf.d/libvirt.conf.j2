@@ -1,9 +1,11 @@
 [libvirt]
 {% if libvirt_tls | bool %}
-connection_uri = "qemu+tls://{{ migration_hostname }}/system"
-live_migration_uri = "qemu+tls://%s/system"
+connection_uri = "qemu+tls://{{ migration_hostname | put_address_in_context('url') }}/system"
+live_migration_scheme = "tls"
+live_migration_inbound_addr = "{{ migration_hostname }}"
 {% else %}
 connection_uri = "qemu+tcp://{{ migration_interface_address | put_address_in_context('url') }}/system"
+live_migration_inbound_addr = "{{ migration_interface_address }}"
 {% endif %}
 {% if enable_ceph | bool and nova_backend == "rbd" %}
 images_type = rbd

@@ -46,7 +46,7 @@ blazar_database_address: "{{ database_address | put_address_in_context('url') }}
 # Docker
 ####################
 blazar_install_type: "{{ kolla_install_type }}"
-blazar_tag: "{{ openstack_release }}"
+blazar_tag: "{{ openstack_tag }}"
 
 blazar_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ blazar_install_type }}-blazar-manager"
 blazar_manager_tag: "{{ blazar_tag }}"
@@ -62,11 +62,13 @@ blazar_manager_dimensions: "{{ default_container_dimensions }}"
 blazar_api_default_volumes:
   - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
 blazar_manager_default_volumes:
   - "{{ node_config_directory }}/blazar-manager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/blazar/blazar:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/blazar' if blazar_dev_mode | bool else '' }}"
 

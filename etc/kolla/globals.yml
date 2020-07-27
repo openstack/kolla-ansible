@@ -20,6 +20,12 @@
 # Valid option is Docker repository tag
 #openstack_release: ""
 
+# Docker image tag used by default.
+#openstack_tag: "{{ openstack_release ~ openstack_tag_suffix }}"
+
+# Suffix applied to openstack_release to generate openstack_tag.
+#openstack_tag_suffix: "{{ '' if base_distro != 'centos' or ansible_distribution_major_version == '7' else  '-centos8' }}"
+
 # Location of configuration overrides
 #node_custom_config: "/etc/kolla/config"
 
@@ -49,14 +55,16 @@
 ################
 # Docker options
 ################
-# Below is an example of a private repository with authentication. Note the
-# Docker registry password can also be set in the passwords.yml file.
 
-#docker_registry: "172.16.0.10:4000"
-#docker_namespace: "companyname"
-#docker_registry_insecure: "yes"
-#docker_registry_username: "sam"
-#docker_registry_password: "correcthorsebatterystaple"
+# Custom docker registry settings:
+#docker_registry:
+#docker_registry_insecure: "{{ 'yes' if docker_registry else 'no' }}"
+#docker_registry_username:
+# docker_registry_password is set in the passwords.yml file.
+
+# Namespace of images:
+#docker_namespace: "kolla"
+
 # Docker client timeout in seconds.
 #docker_client_timeout: 120
 
@@ -492,8 +500,8 @@
 # Valid options are [ bind9 ]
 #designate_backend: "bind9"
 #designate_ns_record: "sample.openstack.org"
-# Valid options are [ '', redis, etcd ]
-#designate_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
+# Valid options are [ '', redis ]
+#designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 
 ########################
 # Nova - Compute Options

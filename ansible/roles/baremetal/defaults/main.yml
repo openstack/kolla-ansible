@@ -11,7 +11,9 @@ docker_apt_package: "docker-ce"
 
 # Docker Yum repository configuration.
 docker_yum_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
-docker_yum_baseurl: "{{ docker_yum_url }}/{{ ansible_distribution_major_version | lower }}/$basearch/stable"
+# FIXME(mgoddard): Use {{ ansible_distribution_major_version | lower }} rather
+# than 7.
+docker_yum_baseurl: "{{ docker_yum_url }}/7/$basearch/stable"
 docker_yum_gpgkey: "{{ docker_yum_url }}/gpg"
 docker_yum_gpgcheck: true
 docker_yum_package: "docker-ce"
@@ -36,12 +38,20 @@ docker_custom_config: {}
 
 # Ubuntu 18+ does not have easy_install available due to
 # https://bugs.launchpad.net/ubuntu/+source/python-setuptools/+bug/1774419.
+# CentOS/RHEL 8 does not have easy_install.
 easy_install_available: >-
   {{ not (ansible_distribution == 'Ubuntu' and
           ansible_distribution_major_version is version(18, 'ge'))
      and
      not (ansible_distribution == 'Debian' and
-          ansible_distribution_major_version is version(10, 'ge')) }}
+          ansible_distribution_major_version is version(10, 'ge'))
+     and
+     not (ansible_os_family == 'RedHat' and
+          ansible_distribution_major_version is version(8, 'ge')) }}
+
+# Version of python used to execute Ansible modules.
+host_python_version: "{{ ansible_python.version.major }}.{{ ansible_python.version.minor }}"
+host_python_major_version: "{{ ansible_python.version.major }}"
 
 # Ubuntu 18+ bundles nfs-ganesha 2.6.0 with Ceph Mimic packages,
 # which does udp rpcbind test even with NFSv3 disabled - therefore
@@ -49,15 +59,19 @@ easy_install_available: >-
 debian_pkg_install:
  - "{{ docker_apt_package }}"
  - git
- - "{% if not easy_install_available %}python-pip{% endif %}"
- - python-setuptools
+ - "python{% if host_python_major_version == '3' %}3{% endif %}-setuptools"
+ - "{% if not easy_install_available %}python{% if host_python_major_version == '3' %}3{% endif %}-pip{% endif %}"
+ - "{% if virtualenv is not none %}python{% if host_python_major_version == '3' %}3{% endif %}-virtualenv{% endif %}"
  - "{% if enable_host_ntp | bool %}ntp{% endif %}"
  - "{% if enable_ceph_nfs|bool %}rpcbind{% endif %}"
+ - "{% if enable_multipathd|bool %}sg3-utils-udev{% endif %}"
 
 redhat_pkg_install:
  - "{{ docker_yum_package }}"
  - git
- - python-setuptools
+ - "{% if host_python_major_version == '2' %}python-setuptools{% endif %}"
+ - "{% if not easy_install_available %}python{{ host_python_major_version }}-pip{% endif %}"
+ - "{% if virtualenv is not none %}python{{ host_python_major_version }}-virtualenv{% endif %}"
  - "{% if enable_host_ntp | bool %}ntp{% endif %}"
  - sudo
 

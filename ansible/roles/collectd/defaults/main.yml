@@ -16,7 +16,7 @@ collectd_services:
 ####################
 collectd_install_type: "{{ kolla_install_type }}"
 collectd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ collectd_install_type }}-collectd"
-collectd_tag: "{{ openstack_release }}"
+collectd_tag: "{{ openstack_tag }}"
 collectd_image_full: "{{ collectd_image }}:{{ collectd_tag }}"
 
 collectd_dimensions: "{{ default_container_dimensions }}"
@@ -25,6 +25,7 @@ collectd_default_volumes:
   - "{{ node_config_directory }}/collectd/:{{ container_config_directory }}/:ro"
   - "{{node_config_directory }}/collectd/collectd.conf.d/:/etc/collectd/collectd.conf.d/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/sys/:/sys/:ro"
   - "/dev/:/dev/:ro"

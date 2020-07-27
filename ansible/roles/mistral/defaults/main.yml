@@ -55,7 +55,7 @@ mistral_database_address: "{{ database_address | put_address_in_context('url') }
 # Docker
 ####################
 mistral_install_type: "{{ kolla_install_type }}"
-mistral_tag: "{{ openstack_release }}"
+mistral_tag: "{{ openstack_tag }}"
 
 mistral_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mistral_install_type }}-mistral-engine"
 mistral_engine_tag: "{{ mistral_tag }}"
@@ -81,21 +81,25 @@ mistral_api_dimensions: "{{ default_container_dimensions }}"
 mistral_engine_default_volumes:
   - "{{ node_config_directory }}/mistral-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_event_engine_default_volumes:
   - "{{ node_config_directory }}/mistral-event-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_executor_default_volumes:
   - "{{ node_config_directory }}/mistral-executor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_api_default_volumes:
   - "{{ node_config_directory }}/mistral-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
 

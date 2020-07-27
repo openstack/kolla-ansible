@@ -182,6 +182,8 @@ nova_cell_rpc_port: "{{ om_rpc_port }}"
 nova_cell_rpc_group_name: "{{ om_rpc_group }}"
 nova_cell_rpc_transport: "{{ om_rpc_transport }}"
 nova_cell_rpc_vhost: "{{ 'nova_' ~ nova_cell_name if nova_cell_name else om_rpc_vhost }}"
+nova_cell_rpc_tags:
+  - "administrator"
 
 nova_cell_notify_user: "{{ nova_cell_rpc_user }}"
 nova_cell_notify_password: "{{ nova_cell_rpc_password }}"
@@ -189,6 +191,7 @@ nova_cell_notify_port: "{{ nova_cell_rpc_port }}"
 nova_cell_notify_group_name: "{{ nova_cell_rpc_group_name }}"
 nova_cell_notify_transport: "{{ nova_cell_rpc_transport }}"
 nova_cell_notify_vhost: "{{ nova_cell_rpc_vhost }}"
+nova_cell_notify_tags: "{{ nova_cell_rpc_tags }}"
 
 # External Rabbit users should override these
 nova_cell_rpc_transport_url: "{{ nova_cell_rpc_transport }}://{% for host in groups[nova_cell_rpc_group_name] %}{{ nova_cell_rpc_user }}:{{ nova_cell_rpc_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ nova_cell_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ nova_cell_rpc_vhost }}"
@@ -199,16 +202,18 @@ nova_cell_rpc_rabbitmq_users:
   - user: "{{ nova_cell_rpc_user }}"
     password: "{{ nova_cell_rpc_password }}"
     vhost: "{{ nova_cell_rpc_vhost }}"
+    tags: "{{ nova_cell_rpc_tags }}"
 nova_cell_notify_rabbitmq_users:
   - user: "{{ nova_cell_notify_user }}"
     password: "{{ nova_cell_notify_password }}"
     vhost: "{{ nova_cell_notify_vhost }}"
+    tags: "{{ nova_cell_notify_tags }}"
 
 ####################
 # Docker
 ####################
 nova_install_type: "{{ kolla_install_type }}"
-nova_tag: "{{ openstack_release }}"
+nova_tag: "{{ openstack_tag }}"
 
 nova_libvirt_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-libvirt"
 nova_libvirt_tag: "{{ nova_tag }}"
@@ -255,6 +260,7 @@ nova_compute_ironic_dimensions: "{{ default_container_dimensions }}"
 nova_libvirt_default_volumes:
   - "{{ node_config_directory }}/nova-libvirt/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "/run/:/run/:shared"
   - "/dev:/dev"
@@ -269,6 +275,7 @@ nova_libvirt_default_volumes:
 nova_ssh_default_volumes:
   - "{{ node_config_directory }}/nova-ssh/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "{{ nova_instance_datadir_volume }}:/var/lib/nova"
   - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
@@ -276,26 +283,31 @@ nova_ssh_default_volumes:
 nova_novncproxy_default_volumes:
   - "{{ node_config_directory }}/nova-novncproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_spicehtml5proxy_default_volumes:
   - "{{ node_config_directory }}/nova-spicehtml5proxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_serialproxy_default_volumes:
   - "{{ node_config_directory }}/nova-serialproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_conductor_default_volumes:
   - "{{ node_config_directory }}/nova-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 nova_compute_default_volumes:
   - "{{ node_config_directory }}/nova-compute/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "/run:/run:shared"
   - "/dev:/dev"
@@ -308,12 +320,14 @@ nova_compute_default_volumes:
 nova_compute_ironic_default_volumes:
   - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 # Used by bootstrapping containers.
 nova_cell_bootstrap_default_volumes:
   - "{{ node_config_directory }}/nova-cell-bootstrap/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
 

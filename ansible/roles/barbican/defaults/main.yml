@@ -50,7 +50,7 @@ barbican_database_address: "{{ database_address | put_address_in_context('url') 
 # Docker
 ####################
 barbican_install_type: "{{ kolla_install_type }}"
-barbican_tag: "{{ openstack_release }}"
+barbican_tag: "{{ openstack_tag }}"
 
 barbican_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ barbican_install_type }}-barbican-api"
 barbican_api_tag: "{{ barbican_tag }}"
@@ -71,17 +71,20 @@ barbican_worker_dimensions: "{{ default_container_dimensions }}"
 barbican_api_default_volumes:
   - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "barbican:/var/lib/barbican/"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
 barbican_keystone_listener_default_volumes:
   - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
 barbican_worker_default_volumes:
   - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
 

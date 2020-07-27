@@ -41,7 +41,7 @@ murano_database_address: "{{ database_address | put_address_in_context('url') }}
 # Docker
 ####################
 murano_install_type: "{{ kolla_install_type }}"
-murano_tag: "{{ openstack_release }}"
+murano_tag: "{{ openstack_tag }}"
 
 murano_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ murano_install_type }}-murano-api"
 murano_api_tag: "{{ murano_tag }}"
@@ -58,11 +58,13 @@ murano_api_default_volumes:
   - "{{ node_config_directory }}/murano-api/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/murano/murano:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/murano' if murano_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 murano_engine_default_volumes:
   - "{{ node_config_directory }}/murano-engine/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/murano/murano:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/murano' if murano_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 murano_extra_volumes: "{{ default_extra_volumes }}"

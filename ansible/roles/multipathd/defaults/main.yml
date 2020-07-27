@@ -17,13 +17,14 @@ multipathd_services:
 ####################
 multipathd_install_type: "{{ kolla_install_type }}"
 multipathd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ multipathd_install_type }}-multipathd"
-multipathd_tag: "{{ openstack_release }}"
+multipathd_tag: "{{ openstack_tag }}"
 multipathd_image_full: "{{ multipathd_image }}:{{ multipathd_tag }}"
 
 multipathd_default_volumes:
   - "{{ node_config_directory }}/multipathd/:{{ container_config_directory }}/:ro"
   - "kolla_logs:/var/log/kolla/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/dev/:/dev/"
   - "/run/:/run/:shared"
   - "/sys/fs/cgroup:/sys/fs/cgroup:ro"

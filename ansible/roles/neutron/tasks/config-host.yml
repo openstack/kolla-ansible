@@ -1,0 +1,30 @@
+---
+- name: Load and persist ip6_tables module
+  include_role:
+    name: module-load
+  vars:
+    modules:
+      - {'name': ip6_tables}
+  when: neutron_services | select_services_enabled_and_mapped_to_host | list | intersect([ "neutron-l3-agent", "neutron-linuxbridge-agent", "neutron-openvswitch-agent" ]) | list | length > 0
+
+- name: Setting sysctl values
+  become: true
+  vars:
+    neutron_l3_agent: "{{ neutron_services['neutron-l3-agent'] }}"
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+  with_items:
+    - { name: "net.ipv4.ip_forward", value: 1}
+    - { name: "net.ipv4.conf.all.rp_filter", value: "{{ neutron_l3_agent_host_rp_filter_mode }}"}
+    - { name: "net.ipv4.conf.default.rp_filter", value: "{{ neutron_l3_agent_host_rp_filter_mode }}"}
+    - { name: "net.ipv4.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh1 }}"}
+    - { name: "net.ipv4.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh2 }}"}
+    - { name: "net.ipv4.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh3 }}"}
+    - { name: "net.ipv6.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh1 }}"}
+    - { name: "net.ipv6.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh2 }}"}
+    - { name: "net.ipv6.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh3 }}"}
+  when:
+    - set_sysctl | bool
+    - (neutron_l3_agent.enabled | bool and neutron_l3_agent.host_in_groups | bool)

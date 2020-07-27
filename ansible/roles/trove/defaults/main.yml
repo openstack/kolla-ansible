@@ -48,7 +48,7 @@ trove_database_address: "{{ database_address | put_address_in_context('url') }}:
 # Docker
 ####################
 trove_install_type: "{{ kolla_install_type }}"
-trove_tag: "{{ openstack_release }}"
+trove_tag: "{{ openstack_tag }}"
 
 trove_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ trove_install_type }}-trove-conductor"
 trove_conductor_tag: "{{ trove_tag }}"
@@ -69,18 +69,21 @@ trove_taskmanager_dimensions: "{{ default_container_dimensions }}"
 trove_api_default_volumes:
   - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"
 trove_conductor_default_volumes:
   - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"
 trove_taskmanager_default_volumes:
   - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"

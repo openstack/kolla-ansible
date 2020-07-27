@@ -41,7 +41,7 @@ cloudkitty_database_address: "{{ database_address | put_address_in_context('url'
 # Docker
 ####################
 cloudkitty_install_type: "{{ kolla_install_type }}"
-cloudkitty_tag: "{{ openstack_release }}"
+cloudkitty_tag: "{{ openstack_tag }}"
 
 cloudkitty_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cloudkitty_install_type }}-cloudkitty-api"
 cloudkitty_api_tag: "{{ cloudkitty_tag }}"
@@ -57,11 +57,13 @@ cloudkitty_api_dimensions: "{{ default_container_dimensions }}"
 cloudkitty_api_default_volumes:
   - "{{ node_config_directory }}/cloudkitty-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
 cloudkitty_processor_default_volumes:
   - "{{ node_config_directory }}/cloudkitty-processor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
 

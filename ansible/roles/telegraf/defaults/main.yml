@@ -16,13 +16,14 @@ telegraf_services:
 ####################
 telegraf_install_type: "{{ kolla_install_type }}"
 telegraf_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ telegraf_install_type }}-telegraf"
-telegraf_tag: "{{ openstack_release }}"
+telegraf_tag: "{{ openstack_tag }}"
 telegraf_image_full: "{{ telegraf_image }}:{{ telegraf_tag }}"
 telegraf_dimensions: "{{ default_container_dimensions }}"
 
 telegraf_default_volumes:
   - "{{ node_config_directory }}/telegraf/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/sys:/rootfs/sys:ro"
   - "/proc:/rootfs/proc:ro"

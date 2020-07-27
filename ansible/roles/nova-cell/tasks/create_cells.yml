@@ -1,5 +1,7 @@
 ---
 - import_tasks: get_cell_settings.yml
+  when:
+    - inventory_hostname == groups[nova_conductor.group][0] | default(None)
 
 - name: Create cell
   vars:
@@ -50,4 +52,4 @@
   when:
     - inventory_hostname == groups[nova_conductor.group][0] | default(None)
     - nova_cell_settings | length > 0
-    - nova_cell_settings.cell_message_queue != nova_cell_notify_transport_url or nova_cell_settings.cell_database != nova_cell_database_url
+    - nova_cell_settings.cell_message_queue != nova_cell_rpc_transport_url or nova_cell_settings.cell_database != nova_cell_database_url

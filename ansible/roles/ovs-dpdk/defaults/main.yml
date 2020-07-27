@@ -63,7 +63,7 @@ neutron_bridge_name: "br_dpdk"
 # Docker
 ####################
 ovsdpdk_install_type: "{{ kolla_install_type }}"
-ovsdpdk_tag: "{{ openstack_release }}"
+ovsdpdk_tag: "{{ openstack_tag }}"
 
 ovsdpdk_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ovsdpdk_install_type }}-ovsdpdk-db"
 ovsdpdk_db_tag: "{{ ovsdpdk_tag }}"
@@ -78,14 +78,16 @@ ovsdpdk_vswitchd_dimensions: "{{ default_container_dimensions }}"
 ovsdpdk_db_default_volumes:
   - "{{ node_config_directory }}/ovsdpdk-db/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "/run:/run:shared"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "/run/openvswitch:/run/openvswitch:shared"
   - "kolla_logs:/var/log/kolla/"
   - "ovsdpdk_db:/var/lib/openvswitch/"
 ovsdpdk_vswitchd_default_volumes:
   - "{{ node_config_directory }}/ovsdpdk-vswitchd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run:/run:shared"
+  - "/run/openvswitch:/run/openvswitch:shared"
   - "/dev:/dev:shared"
   - "kolla_logs:/var/log/kolla/"
 

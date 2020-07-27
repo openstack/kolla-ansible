@@ -50,7 +50,7 @@ kolla_dev_repos_directory: "/opt/stack/"
 kolla_dev_repos_git: "https://opendev.org/openstack"
 kolla_dev_repos_pull: "no"
 kolla_dev_mode: "no"
-kolla_source_version: "master"
+kolla_source_version: "stable/train"
 
 # Proxy settings for containers such as magnum that need internet access
 container_http_proxy: ""
@@ -501,7 +501,11 @@ admin_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
 ####################
 # OpenStack options
 ####################
-openstack_release: "master"
+openstack_release: "train"
+# Docker image tag used by default.
+openstack_tag: "{{ openstack_release ~ openstack_tag_suffix }}"
+# TODO(mgoddard): Set to an empty string when CentOS 7 is no longer supported.
+openstack_tag_suffix: "{{ '' if kolla_base_distro != 'centos' or ansible_distribution_major_version == '7' else  '-centos8' }}"
 openstack_logging_debug: "False"
 
 openstack_region_name: "RegionOne"
@@ -873,7 +877,7 @@ gnocchi_metric_datadir_volume: "gnocchi"
 cinder_backend_ceph: "{{ enable_ceph }}"
 cinder_backend_vmwarevc_vmdk: "no"
 cinder_volume_group: "cinder-volumes"
-cinder_target_helper: "tgtadm"
+cinder_target_helper: "{{ 'lioadm' if ansible_os_family == 'RedHat' and ansible_distribution_major_version is version_compare('8', '>=') else 'tgtadm' }}"
 # Valid options are [ '', redis, etcd ]
 cinder_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
 
@@ -902,8 +906,8 @@ designate_backend: "bind9"
 designate_ns_record: "sample.openstack.org"
 designate_backend_external: "no"
 designate_backend_external_bind9_nameservers: ""
-# Valid options are [ '', redis, etcd ]
-designate_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
+# Valid options are [ '', redis ]
+designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 
 #######################
 # Neutron options
@@ -1136,9 +1140,9 @@ influxdb_address: "{{ kolla_internal_fqdn }}"
 # Internal Image options
 #########################
 distro_python_version_map: {
-  "centos": "2.7",
+  "centos": "{{ '3.6' if ansible_distribution_major_version is version(8, '>=') else '2.7' }}",
   "debian": "3.7",
-  "rhel": "2.7",
+  "rhel": "{{ '3.6' if ansible_distribution_major_version is version(8, '>=') else '2.7' }}",
   "ubuntu": "3.6"
 }
 

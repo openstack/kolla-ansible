@@ -28,13 +28,14 @@ etcd_services:
 ####################
 etcd_install_type: "{{ kolla_install_type }}"
 etcd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ etcd_install_type }}-etcd"
-etcd_tag: "{{ openstack_release }}"
+etcd_tag: "{{ openstack_tag }}"
 etcd_image_full: "{{ etcd_image }}:{{ etcd_tag }}"
 etcd_dimensions: "{{ default_container_dimensions }}"
 
 etcd_default_volumes:
   - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_etcd:/var/lib/etcd/"
   - "kolla_logs:/var/log/kolla/"
 etcd_extra_volumes: "{{ default_extra_volumes }}"

@@ -43,7 +43,7 @@ tacker_database_address: "{{ database_address | put_address_in_context('url') }}
 # Docker
 ########
 tacker_install_type: "{{ kolla_install_type }}"
-tacker_tag: "{{ openstack_release }}"
+tacker_tag: "{{ openstack_tag }}"
 
 tacker_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ tacker_install_type }}-tacker-server"
 tacker_server_tag: "{{ tacker_tag }}"
@@ -60,6 +60,7 @@ tacker_server_default_volumes:
   - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   # NOTE(yoctozepto): Starting in Train, this volume must be shared
   # between all instances of both Tacker services (Server, Conductor)
@@ -68,6 +69,7 @@ tacker_conductor_default_volumes:
   - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "kolla_tacker_vnfpackages:/var/lib/tacker/vnfpackages/"
   # NOTE(yoctozepto): Starting in Train, this volume must be shared

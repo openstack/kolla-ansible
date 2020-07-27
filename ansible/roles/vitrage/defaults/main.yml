@@ -54,7 +54,7 @@ vitrage_database_address: "{{ database_address | put_address_in_context('url') }
 ####################
 
 vitrage_install_type: "{{ kolla_install_type }}"
-vitrage_tag: "{{ openstack_release }}"
+vitrage_tag: "{{ openstack_tag }}"
 
 vitrage_graph_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vitrage_install_type }}-vitrage-graph"
 vitrage_graph_tag: "{{ vitrage_tag }}"
@@ -80,21 +80,25 @@ vitrage_ml_dimensions: "{{ default_container_dimensions }}"
 vitrage_api_default_volumes:
   - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 vitrage_notifier_default_volumes:
   - "{{ node_config_directory }}/vitrage-notifier/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 vitrage_graph_default_volumes:
   - "{{ node_config_directory }}/vitrage-graph/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 vitrage_ml_default_volumes:
   - "{{ node_config_directory }}/vitrage-ml/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/vitrage/vitrage:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/vitrage' if vitrage_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 

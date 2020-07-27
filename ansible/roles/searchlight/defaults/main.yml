@@ -37,7 +37,7 @@ searchlight_elasticsearch_url: "{{ kolla_internal_fqdn | put_address_in_context(
 # Docker
 ####################
 searchlight_install_type: "{{ kolla_install_type }}"
-searchlight_tag: "{{ openstack_release }}"
+searchlight_tag: "{{ openstack_tag }}"
 
 searchlight_listener_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ searchlight_install_type }}-searchlight-listener"
 searchlight_listener_tag: "{{ searchlight_tag }}"
@@ -53,10 +53,12 @@ searchlight_listener_dimensions: "{{ default_container_dimensions }}"
 searchlight_api_default_volumes:
   - "{{ node_config_directory }}/searchlight-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 searchlight_listener_default_volumes:
   - "{{ node_config_directory }}/searchlight-listener/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 searchlight_extra_volumes: "{{ default_extra_volumes }}"

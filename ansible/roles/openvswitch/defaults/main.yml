@@ -38,7 +38,7 @@ openvswitch_services:
 # Docker
 ####################
 openvswitch_install_type: "{{ kolla_install_type }}"
-openvswitch_tag: "{{ openstack_release }}"
+openvswitch_tag: "{{ openstack_tag }}"
 
 openvswitch_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ openvswitch_install_type }}-openvswitch-db-server"
 openvswitch_db_tag: "{{ openvswitch_tag }}"
@@ -54,15 +54,17 @@ openvswitch_vswitchd_dimensions: "{{ default_container_dimensions }}"
 openvswitch_db_default_volumes:
   - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run:/run:shared"
+  - "/run/openvswitch:/run/openvswitch:shared"
   - "kolla_logs:/var/log/kolla/"
   - "openvswitch_db:/var/lib/openvswitch/"
 openvswitch_vswitchd_default_volumes:
   - "{{ node_config_directory }}/openvswitch-vswitchd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run:/run:shared"
+  - "/run/openvswitch:/run/openvswitch:shared"
   - "kolla_logs:/var/log/kolla/"
 
 openvswitch_extra_volumes: "{{ default_extra_volumes }}"

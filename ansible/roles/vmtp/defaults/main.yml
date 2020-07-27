@@ -15,13 +15,14 @@ vmtp_services:
 ####################
 vmtp_install_type: "{{ kolla_install_type }}"
 vmtp_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ vmtp_install_type }}-vmtp"
-vmtp_tag: "{{ openstack_release }}"
+vmtp_tag: "{{ openstack_tag }}"
 vmtp_image_full: "{{ vmtp_image }}:{{ vmtp_tag }}"
 vmtp_dimensions: "{{ default_container_dimensions }}"
 
 vmtp_default_volumes:
   - "{{ node_config_directory }}/vmtp/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
 
 vmtp_extra_volumes: "{{ default_extra_volumes }}"
 

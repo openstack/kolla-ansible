@@ -9,22 +9,19 @@
     # is similar to what nova uses internally as its default for the
     # [DEFAULT] host config option.
     virt_compute_service_hosts: >-
-      {{ groups[nova_cell_compute_group] |
-         intersect(ansible_play_batch) |
+      {{ virt_computes_in_batch |
          map('extract', hostvars, 'ansible_nodename') |
          list }}
     # For ironic, use {{ansible_hostname}}-ironic since this is what we
     # configure for [DEFAULT] host in nova.conf.
     ironic_compute_service_hosts: >-
-      {{ (groups[nova_cell_compute_ironic_group] |
-          intersect(ansible_play_batch) |
-          map('extract', hostvars, 'ansible_hostname') |
-          map('regex_replace', '^(.*)$', '\1-ironic') |
-          list)
-         if nova_cell_services['nova-compute-ironic'].enabled | bool else [] }}
+      {{ ironic_computes_in_batch |
+         map('extract', hostvars, 'ansible_hostname') |
+         map('regex_replace', '^(.*)$', '\1-ironic') |
+         list }}
   set_fact:
     expected_compute_service_hosts: "{{ virt_compute_service_hosts + ironic_compute_service_hosts }}"
-  when: inventory_hostname == groups[nova_cell_conductor_group][0] | default(None)
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
 
 - name: Waiting for nova-compute services to register themselves
   become: true
@@ -60,17 +57,17 @@
        map(attribute='Host') |
        list)
       is superset(expected_compute_service_hosts)
-  when: inventory_hostname == groups[nova_cell_conductor_group][0] | default(None)
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
 
 - import_tasks: get_cell_settings.yml
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
 
 - name: Fail if cell settings not found
   fail:
     msg: >-
       Unable to find settings for {{ nova_cell_name or 'the default cell' }}.
-  when:
-    - inventory_hostname == groups[nova_cell_conductor_group][0] | default(None)
-    - not nova_cell_settings
+  when: not nova_cell_settings
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
 
 # TODO(yoctozepto): no need to do --by-service if ironic not used
 - name: Discover nova hosts
@@ -78,4 +75,4 @@
   command: >
     docker exec nova_conductor nova-manage cell_v2 discover_hosts --by-service --cell_uuid {{ nova_cell_settings.cell_uuid }}
   changed_when: False
-  when: inventory_hostname == groups[nova_cell_conductor_group][0] | default(None)
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"

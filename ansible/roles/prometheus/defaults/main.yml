@@ -129,7 +129,7 @@ prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bo
 # 'service_name:blackbox_exporter_module:endpoint' for example:
 #
 # prometheus_blackbox_exporter_targets:
-#   - 'glance:os_endpoint:http://{{ kolla_external_vip_address | put_address_in_context('url') }}:{{ glance_api_port}}'
+#   - 'glance:os_endpoint:{{ external_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ glance_api_port}}'
 #
 # For a list of modules see the alertmanager config.
 prometheus_blackbox_exporter_endpoints: []
@@ -151,7 +151,7 @@ prometheus_jiralert_default_receiver_name: 'jira'
 # Docker
 ####################
 prometheus_install_type: "{{ kolla_install_type }}"
-prometheus_tag: "{{ openstack_release }}"
+prometheus_tag: "{{ openstack_tag }}"
 
 prometheus_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-server"
 prometheus_server_tag: "{{ prometheus_tag }}"
@@ -223,30 +223,36 @@ prometheus_jiralert_dimensions: "{{ default_container_dimensions }}"
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "prometheus:/var/lib/prometheus"
   - "kolla_logs:/var/log/kolla/"
 prometheus_haproxy_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-haproxy-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "haproxy_socket:/var/lib/kolla/haproxy"
 prometheus_mysqld_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-mysqld-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 prometheus_node_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/proc:/host/proc:ro"
   - "/sys:/host/sys:ro"
 prometheus_memcached_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 prometheus_cadvisor_default_volumes:
   - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/:/rootfs:ro"
   - "/var/run:/var/run:rw"
@@ -256,20 +262,24 @@ prometheus_cadvisor_default_volumes:
 prometheus_alertmanager_default_volumes:
   - "{{ node_config_directory }}/prometheus-alertmanager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "prometheus:/var/lib/prometheus"
 prometheus_openstack_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-openstack-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "prometheus:/var/lib/prometheus"
 prometheus_elasticsearch_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-elasticsearch-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 prometheus_blackbox_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-blackbox-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 prometheus_mtail_default_volumes:
   - "{{ node_config_directory }}/prometheus-mtail/:{{ container_config_directory }}/:ro"

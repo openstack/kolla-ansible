@@ -23,13 +23,14 @@ mongodb_services:
 ####################
 mongodb_install_type: "{{ kolla_install_type }}"
 mongodb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ mongodb_install_type }}-mongodb"
-mongodb_tag: "{{ openstack_release }}"
+mongodb_tag: "{{ openstack_tag }}"
 mongodb_image_full: "{{ mongodb_image }}:{{ mongodb_tag }}"
 mongodb_dimensions: "{{ default_container_dimensions }}"
 
 mongodb_default_volumes:
   - "{{ node_config_directory }}/mongodb/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "mongodb:/var/lib/mongodb"
 mongodb_extra_volumes: "{{ default_extra_volumes }}"

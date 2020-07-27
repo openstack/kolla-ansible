@@ -26,7 +26,7 @@ iscsi_services:
 # Docker
 ####################
 iscsi_install_type: "{{ kolla_install_type }}"
-iscsi_tag: "{{ openstack_release }}"
+iscsi_tag: "{{ openstack_tag }}"
 
 iscsid_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ iscsi_install_type }}-iscsid"
 iscsid_tag: "{{ iscsi_tag }}"
@@ -43,6 +43,7 @@ iscsid_default_volumes:
   - "{{ node_config_directory }}/iscsid/:{{ container_config_directory }}/:ro"
   - "kolla_logs:/var/log/kolla/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/dev/:/dev/"
   - "/run/:/run/:shared"
   - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
@@ -54,6 +55,7 @@ tgtd_default_volumes:
   - "{{ node_config_directory }}/tgtd/:{{ container_config_directory }}/:ro"
   - "kolla_logs:/var/log/kolla/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/dev/:/dev/"
   - "/run/:/run/:shared"
   - "/sys/fs/cgroup:/sys/fs/cgroup:ro"

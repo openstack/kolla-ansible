@@ -22,6 +22,8 @@
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'ceph', 'zun', 'cells', 'swift'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
+        # NOTE(mgoddard): Use Python 3 only for CentOS 8 on stable/train.
+        playbook_python_version: "{{ '3' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8' else '2' }}"
 
     - name: Install xfsprogs package for Swift filesystems
       become: true
@@ -47,6 +49,12 @@
         - item.project.short_name == "kolla"
         - item.branch == zuul.branch
       with_items: "{{ zuul['items'] }}"
+
+    - name: Ensure tox is installed
+      pip:
+        name: tox
+      when: need_build_image
+      become: true
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images
@@ -150,9 +158,40 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
-    - name: install kolla-ansible
+    - name: ensure /etc/ansible exists
+      file:
+        path: /etc/ansible
+        state: directory
+      become: true
+
+    - name: install kolla-ansible and dependencies
+      vars:
+        # Test latest ansible version on Ubuntu and CentOS 8, minimum supported on others.
+        ansible_version_latest: >-
+          {{ base_distro == 'ubuntu' or
+             (base_distro == 'centos' and groups['all'] | map('extract', hostvars, 'ansible_distribution_major_version') | map('int') | list | max == 8) }}
+        ansible_version_constraint: "{{ '<2.10' if ansible_version_latest else '<2.7' }}"
       pip:
-        name: "{{ kolla_ansible_src_dir }}"
+        name:
+          - "{{ kolla_ansible_src_dir }}"
+          - "ansible{{ ansible_version_constraint }}"
+          - "ara<1.0.0"
+          # NOTE(mgoddard): pyfakefs 4.0.0 dropped support for Python 2.
+          - "pyfakefs{% if playbook_python_version == '2' %}<4{% endif %}"
+        # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
+        executable: "pip{{ playbook_python_version }}"
+      become: true
+
+    # TODO(mgoddard): Always use python3 when previous_release is ussuri.
+    - name: get ARA callback plugin path
+      command: "python{{ playbook_python_version }} -m ara.setup.callback_plugins"
+      changed_when: false
+      register: ara_callback_plugins
+
+    - name: template ansible.cfg
+      template:
+        src: "{{ kolla_ansible_local_src_dir }}/tests/templates/ansible.cfg.j2"
+        dest: /etc/ansible/ansible.cfg
       become: true
 
     - name: copy passwords.yml file
@@ -162,7 +201,7 @@
         remote_src: true
 
     - name: generate passwords
-      shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+      command: kolla-genpwd
 
     - name: slurp kolla passwords
       slurp:
@@ -191,6 +230,10 @@
         docker_image_tag: "{{ build_image_tag if need_build_image else zuul.branch | basename }}"
         docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else 'kolla/' }}"
 
+    - name: Record the running state of the environment as seen by the setup module
+      shell:
+        cmd: ansible all -i {{ kolla_inventory_path }} -e ansible_user={{ ansible_user }} -m setup > /tmp/logs/ansible/initial-setup
+
     # NOTE(mgoddard): We are using the script module here and later to ensure
     # we use the local copy of these scripts, rather than the one on the remote
     # host, which could be checked out to a previous release (in an upgrade
@@ -202,11 +245,13 @@
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
         BASE_DISTRO: "{{ base_distro }}"
+        BASE_DISTRO_MAJOR_VERSION: "{{ ansible_distribution_major_version }}"
         INSTALL_TYPE: "{{ install_type }}"
         BUILD_IMAGE: "{{ need_build_image }}"
         TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
         SCENARIO: "{{ scenario }}"
+        UPPER_CONSTRAINTS: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
 
     - name: Run init-swift.sh script
       script:
@@ -369,6 +414,7 @@
         - name: upgrade kolla-ansible
           pip:
             name: "{{ kolla_ansible_src_dir }}"
+            executable: "pip{{ playbook_python_version }}"
           become: true
 
         # Update passwords.yml to include any new passwords added in this
@@ -383,11 +429,11 @@
             remote_src: true
 
         - name: generate new passwords
-          shell: "{{ kolla_ansible_src_dir }}/tools/generate_passwords.py"
+          command: kolla-genpwd
 
         - name: merge old and new passwords
-          shell: >-
-            {{ kolla_ansible_src_dir }}/tools/merge_passwords.py
+          command: >-
+            kolla-mergepwd
             --old /etc/kolla/passwords.yml.old
             --new /etc/kolla/passwords.yml
             --final /etc/kolla/passwords.yml

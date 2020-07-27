@@ -62,7 +62,7 @@ octavia_database_address: "{{ database_address | put_address_in_context('url') }
 # Docker
 ####################
 octavia_install_type: "{{ kolla_install_type }}"
-octavia_tag: "{{ openstack_release }}"
+octavia_tag: "{{ openstack_tag }}"
 
 octavia_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ octavia_install_type }}-octavia-api"
 octavia_api_tag: "{{ octavia_tag }}"
@@ -88,18 +88,22 @@ octavia_worker_dimensions: "{{ default_container_dimensions }}"
 octavia_api_default_volumes:
   - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 octavia_health_manager_default_volumes:
   - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 octavia_housekeeping_default_volumes:
   - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 octavia_worker_default_volumes:
   - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 octavia_extra_volumes: "{{ default_extra_volumes }}"

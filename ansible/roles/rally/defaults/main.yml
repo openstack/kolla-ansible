@@ -16,13 +16,14 @@ rally_services:
 ########
 rally_install_type: "{{ kolla_install_type }}"
 rally_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ rally_install_type }}-rally"
-rally_tag: "{{ openstack_release }}"
+rally_tag: "{{ openstack_tag }}"
 rally_image_full: "{{ rally_image }}:{{ rally_tag }}"
 rally_dimensions: "{{ default_container_dimensions }}"
 
 rally_default_volumes:
   - "{{ node_config_directory }}/rally/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 rally_extra_volumes: "{{ default_extra_volumes }}"

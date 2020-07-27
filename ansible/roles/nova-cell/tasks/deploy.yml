@@ -7,6 +7,8 @@
 - include_tasks: clone.yml
   when: nova_dev_mode | bool
 
+- include_tasks: config-host.yml
+
 - include_tasks: config.yml
 
 - include_tasks: config-nova-fake.yml
@@ -18,4 +20,22 @@
   meta: flush_handlers
 
 - include_tasks: discover_computes.yml
-  when: inventory_hostname in groups[nova_cell_conductor_group]
+  vars:
+    # List of virtualised compute hypervisors in this Ansible play batch.
+    virt_computes_in_batch: >-
+      {{ groups[nova_cell_compute_group] |
+         intersect(ansible_play_batch) |
+         list }}
+    # List of iroinc compute hosts in this Ansible play batch.
+    ironic_computes_in_batch: >-
+      {{ (groups[nova_cell_compute_ironic_group] |
+          intersect(ansible_play_batch) |
+          list)
+         if nova_cell_services['nova-compute-ironic'].enabled | bool else [] }}
+    all_computes_in_batch: "{{ virt_computes_in_batch + ironic_computes_in_batch }}"
+  when:
+    # Run discovery when one or more compute hosts are in the Ansible batch,
+    # and there is a cell conductor in the inventory to delegate to.
+    - all_computes_in_batch | length > 0
+    - inventory_hostname == all_computes_in_batch[0]
+    - groups[nova_cell_conductor_group] | length > 0

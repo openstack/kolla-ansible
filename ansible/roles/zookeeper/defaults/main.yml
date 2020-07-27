@@ -23,13 +23,14 @@ zookeeper_log_settings: 'INFO,ROLLINGFILE'
 ####################
 zookeeper_install_type: "{{ kolla_install_type }}"
 zookeeper_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zookeeper_install_type }}-zookeeper"
-zookeeper_tag: "{{ openstack_release }}"
+zookeeper_tag: "{{ openstack_tag }}"
 zookeeper_image_full: "{{ zookeeper_image }}:{{ zookeeper_tag }}"
 zookeeper_dimensions: "{{ default_container_dimensions }}"
 
 zookeeper_default_volumes:
   - "{{ node_config_directory }}/zookeeper/:{{ container_config_directory }}/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "zookeeper:/var/lib/zookeeper/data"
   - "kolla_logs:/var/log/kolla/"
 

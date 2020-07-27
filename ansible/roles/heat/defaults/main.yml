@@ -62,7 +62,7 @@ heat_database_address: "{{ database_address | put_address_in_context('url') }}:{
 # Docker
 ####################
 heat_install_type: "{{ kolla_install_type }}"
-heat_tag: "{{ openstack_release }}"
+heat_tag: "{{ openstack_tag }}"
 
 heat_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ heat_install_type }}-heat-api"
 heat_api_tag: "{{ heat_tag }}"
@@ -83,16 +83,19 @@ heat_engine_dimensions: "{{ default_container_dimensions }}"
 heat_api_default_volumes:
   - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 heat_api_cfn_default_volumes:
   - "{{ node_config_directory }}/heat-api-cfn/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 heat_engine_default_volumes:
   - "{{ node_config_directory }}/heat-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 

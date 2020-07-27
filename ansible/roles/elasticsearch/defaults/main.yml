@@ -33,7 +33,7 @@ es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }
 ####################
 elasticsearch_install_type: "{{ kolla_install_type }}"
 elasticsearch_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ elasticsearch_install_type }}-elasticsearch"
-elasticsearch_tag: "{{ openstack_release }}"
+elasticsearch_tag: "{{ openstack_tag }}"
 elasticsearch_image_full: "{{ elasticsearch_image }}:{{ elasticsearch_tag }}"
 
 elasticsearch_dimensions: "{{ default_container_dimensions }}"
@@ -41,5 +41,6 @@ elasticsearch_dimensions: "{{ default_container_dimensions }}"
 elasticsearch_default_volumes:
   - "{{ node_config_directory }}/elasticsearch/:{{ container_config_directory }}/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ elasticsearch_datadir_volume }}:/var/lib/elasticsearch/data"
 elasticsearch_extra_volumes: "{{ default_extra_volumes }}"

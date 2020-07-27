@@ -8,6 +8,7 @@ common_run: False
 common_services:
   fluentd:
     container_name: fluentd
+    group: all
     enabled: "{{ enable_fluentd | bool }}"
     image: "{{ fluentd_image_full }}"
     environment:
@@ -16,6 +17,7 @@ common_services:
     dimensions: "{{ fluentd_dimensions }}"
   kolla-toolbox:
     container_name: kolla_toolbox
+    group: all
     enabled: True
     image: "{{ kolla_toolbox_image_full }}"
     environment:
@@ -27,6 +29,7 @@ common_services:
   # DUMMY_ENVIRONMENT is needed because empty environment is not supported
   cron:
     container_name: cron
+    group: all
     enabled: True
     image: "{{ cron_image_full }}"
     environment:
@@ -39,7 +42,7 @@ common_services:
 #######################
 
 fluentd_elasticsearch_path: ""
-fluentd_elasticsearch_scheme: "http"
+fluentd_elasticsearch_scheme: "{{ internal_protocol }}"
 fluentd_elasticsearch_user: ""
 fluentd_elasticsearch_password: ""
 fluentd_elasticsearch_ssl_version: "TLSv1_2"
@@ -49,7 +52,7 @@ fluentd_elasticsearch_ssl_verify: "true"
 # Docker
 ####################
 common_install_type: "{{ kolla_install_type }}"
-common_tag: "{{ openstack_release }}"
+common_tag: "{{ openstack_tag }}"
 
 cron_dimensions: "{{ default_container_dimensions }}"
 kolla_toolbox_dimensions: "{{ default_container_dimensions }}"
@@ -73,16 +76,19 @@ syslog_haproxy_facility: "local1"
 kolla_toolbox_default_volumes:
   - "{{ node_config_directory }}/kolla-toolbox/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "/dev/:/dev/"
   - "/run/:/run/:shared"
   - "kolla_logs:/var/log/kolla/"
 cron_default_volumes:
   - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 fluentd_default_volumes:
   - "{{ node_config_directory }}/fluentd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "fluentd_data:/var/lib/fluentd/data/"
 kolla_toolbox_extra_volumes: "{{ default_extra_volumes }}"

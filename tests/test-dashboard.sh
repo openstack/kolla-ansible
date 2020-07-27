@@ -30,7 +30,9 @@ function test_dashboard_logged {
     while ! check_dashboard $output_path; do
         echo "Dashboard not accessible yet"
         attempt=$((attempt+1))
-        if [[ $attempt -eq 30 ]]; then
+        # FIXME(mgoddard): Temporarily bumping attempts to 100 due to
+        # https://bugs.launchpad.net/kolla-ansible/+bug/1871138.
+        if [[ $attempt -eq 100 ]]; then
             echo "FAILED: Dashboard did not become accessible. Response:"
             cat $output_path
             return 1

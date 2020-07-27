@@ -34,7 +34,7 @@ storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ 'api' | kolla
 ####################
 storm_install_type: "{{ kolla_install_type }}"
 storm_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ storm_install_type }}-storm"
-storm_tag: "{{ openstack_release }}"
+storm_tag: "{{ openstack_tag }}"
 storm_image_full: "{{ storm_image }}:{{ storm_tag }}"
 
 storm_worker_dimensions: "{{ default_container_dimensions }}"
@@ -43,11 +43,13 @@ storm_nimbus_dimensions: "{{ default_container_dimensions }}"
 storm_worker_default_volumes:
   - "{{ node_config_directory }}/storm-worker/:{{ container_config_directory }}/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "storm:/var/lib/storm/data"
   - "kolla_logs:/var/log/kolla/"
 storm_nimbus_default_volumes:
   - "{{ node_config_directory }}/storm-nimbus/:{{ container_config_directory }}/"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "storm:/var/lib/storm/data"
   - "kolla_logs:/var/log/kolla/"
 

@@ -42,7 +42,7 @@ senlin_database_address: "{{ database_address | put_address_in_context('url') }}
 # Docker
 ####################
 senlin_install_type: "{{ kolla_install_type }}"
-senlin_tag: "{{ openstack_release }}"
+senlin_tag: "{{ openstack_tag }}"
 
 senlin_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ senlin_install_type }}-senlin-engine"
 senlin_engine_tag: "{{ senlin_tag }}"
@@ -58,11 +58,13 @@ senlin_engine_dimensions: "{{ default_container_dimensions }}"
 senlin_api_default_volumes:
   - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
 senlin_engine_default_volumes:
   - "{{ node_config_directory }}/senlin-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/senlin/senlin:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/senlin' if senlin_dev_mode | bool else '' }}"
 

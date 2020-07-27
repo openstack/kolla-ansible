@@ -189,7 +189,7 @@ monasca_grafana_data_sources:
       name: "Monasca API"
       type: "monasca-datasource"
       access: "proxy"
-      url: "{{ internal_protocol }}://{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ monasca_api_port }}"
+      url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}"
       isDefault: True
       basicAuth: false
       jsonData:
@@ -201,7 +201,7 @@ monasca_grafana_data_sources:
 
 # NOTE(dszumski): Binary support for Monasca images is not yet available in Kolla
 monasca_install_type: "{{ kolla_install_type }}"
-monasca_tag: "{{ openstack_release }}"
+monasca_tag: "{{ openstack_tag }}"
 
 monasca_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-agent"
 monasca_agent_tag: "{{ monasca_tag }}"
@@ -249,53 +249,65 @@ monasca_grafana_dimensions: "{{ default_container_dimensions }}"
 monasca_agent_collector_default_volumes:
   - "{{ node_config_directory }}/monasca-agent-collector/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "/sys:/sys:ro"
   - "/dev/disk/:/dev/disk:ro"
 monasca_agent_statsd_default_volumes:
   - "{{ node_config_directory }}/monasca-agent-statsd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_agent_forwarder_default_volumes:
   - "{{ node_config_directory }}/monasca-agent-forwarder/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_api_default_volumes:
   - "{{ node_config_directory }}/monasca-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_log_api_default_volumes:
   - "{{ node_config_directory }}/monasca-log-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_log_transformer_default_volumes:
   - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_log_persister_default_volumes:
   - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_log_metrics_default_volumes:
   - "{{ node_config_directory }}/monasca-log-metrics/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_thresh_default_volumes:
   - "{{ node_config_directory }}/monasca-thresh/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "monasca_thresh:/var/lib/monasca-thresh/"
   - "kolla_logs:/var/log/kolla"
 monasca_notification_default_volumes:
   - "{{ node_config_directory }}/monasca-notification/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_persister_default_volumes:
   - "{{ node_config_directory }}/monasca-persister/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla"
 monasca_grafana_default_volumes:
   - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 monasca_extra_volumes: "{{ default_extra_volumes }}"

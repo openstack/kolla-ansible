@@ -41,7 +41,7 @@ qinling_database_address: "{{ database_address | put_address_in_context('url') }
 # Docker
 ####################
 qinling_install_type: "{{ kolla_install_type }}"
-qinling_tag: "{{ openstack_release }}"
+qinling_tag: "{{ openstack_tag }}"
 
 qinling_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ qinling_install_type }}-qinling-api"
 qinling_api_tag: "{{ qinling_tag }}"
@@ -57,11 +57,13 @@ qinling_engine_dimensions: "{{ default_container_dimensions }}"
 qinling_api_default_volumes:
   - "{{ node_config_directory }}/qinling-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 qinling_engine_default_volumes:
   - "{{ node_config_directory }}/qinling-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "qinling:/var/lib/qinling/"
   - "{{ kolla_dev_repos_directory ~ '/qinling/qinling:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/qinling' if qinling_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
