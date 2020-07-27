@@ -51,7 +51,7 @@ Consoles
 ========
 
 The console driver may be selected via ``nova_console`` in ``globals.yml``.
-Valid options are ``none``, ``novnc``, ``spice``, or ``rdp``. Additionally,
+Valid options are ``none``, ``novnc`` and ``spice``. Additionally,
 serial console support can be enabled by setting
 ``enable_nova_serialconsole_proxy`` to ``yes``.
 
