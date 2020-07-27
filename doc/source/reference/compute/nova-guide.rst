@@ -16,15 +16,6 @@ The virtualisation driver may be selected via ``nova_compute_virt_type`` in
 ``globals.yml``. Supported options are ``qemu``, ``kvm``, and ``vmware``.
 The default is ``kvm``.
 
-HyperV
-------
-
-.. note::
-
-   Hyper-V support has been deprecated and will be removed in the Victoria cycle.
-
-Information on using Nova with HyperV can be found in :doc:`hyperv-guide`.
-
 Libvirt
 -------
 
