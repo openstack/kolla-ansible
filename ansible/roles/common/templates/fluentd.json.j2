@@ -22,7 +22,7 @@
 {%- endmacro -%}
 
 {
-    "command": "{{ fluentd_cmd }}",
+    "command": "{{ fluentd_cmd }} -o /var/log/kolla/fluentd/fluentd.log",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/td-agent.conf",
@@ -64,6 +64,11 @@
         }
     ],
     "permissions": [
+        {
+            "path": "/var/log/kolla/fluentd",
+            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "recurse": true
+        },
         {
             "path": "/var/log/kolla/haproxy",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
