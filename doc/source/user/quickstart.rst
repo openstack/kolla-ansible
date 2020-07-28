@@ -371,7 +371,7 @@ There are a few options that are required to deploy Kolla-Ansible:
   - Debian
   - RHEL
 
-  For newcomers, we recommend to use CentOS 8 or Ubuntu 18.04.
+  For newcomers, we recommend to use CentOS 8 or Ubuntu 20.04.
 
   .. code-block:: console
 
