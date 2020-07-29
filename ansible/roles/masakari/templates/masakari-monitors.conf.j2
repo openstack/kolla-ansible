@@ -13,5 +13,25 @@ password = {{ masakari_keystone_password }}
 cafile = {{ openstack_cacert }}
 api_interface = internal
 
+{% if service_name == 'masakari-instancemonitor' %}
 [libvirt]
 connection_uri = "qemu+tcp://{{ migration_interface_address | put_address_in_context('url') }}/system"
+{% endif %}
+
+{% if service_name == 'masakari-hostmonitor' %}
+[host]
+{#
+  NOTE(yoctozepto): ``restrict_to_remotes`` is due to being unable to monitor
+  both types at once and Kolla has remotes on dedicated computes so it is
+  a better default choice.
+  This limitation may be lifted in the near future (Xena+).
+#}
+restrict_to_remotes = True
+{% if inventory_hostname in groups['hacluster'] %}
+pacemaker_node_type = cluster
+corosync_multicast_interfaces = {{ api_interface }}
+corosync_multicast_ports = {{ hacluster_corosync_port }}
+{% elif inventory_hostname in groups['hacluster-remote'] %}
+pacemaker_node_type = remote
+{% endif %}
+{% endif %}
