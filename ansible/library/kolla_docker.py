@@ -241,6 +241,9 @@ EXAMPLES = '''
 '''
 
 
+COMPARE_CONFIG_CMD = ['/usr/local/bin/kolla_set_configs', '--check']
+
+
 def get_docker_client():
     return docker.APIClient
 
@@ -322,7 +325,9 @@ class DockerWorker(object):
 
     def compare_container(self):
         container = self.check_container()
-        if not container or self.check_container_differs():
+        if (not container or
+                self.check_container_differs() or
+                self.compare_config()):
             self.changed = True
         return self.changed
 
@@ -534,6 +539,43 @@ class DockerWorker(object):
             if (new_path != container_info['Path'] or
                     new_args != container_info['Args']):
                 return True
+
+    def compare_config(self):
+        try:
+            job = self.dc.exec_create(
+                self.params['name'],
+                COMPARE_CONFIG_CMD,
+                user='root',
+            )
+            output = self.dc.exec_start(job)
+            exec_inspect = self.dc.exec_inspect(job)
+        except docker.errors.APIError as e:
+            # NOTE(yoctozepto): If we have a client error, then the container
+            # cannot be used for config check (e.g., is restarting, or stopped
+            # in the mean time) - assume config is stale = return True.
+            # Else, propagate the server error back.
+            if e.is_client_error():
+                return True
+            else:
+                raise
+        # Exit codes:
+        # 0: not changed
+        # 1: changed
+        # 137: abrupt exit -> changed
+        # else: error
+        if exec_inspect['ExitCode'] == 0:
+            return False
+        elif exec_inspect['ExitCode'] == 1:
+            return True
+        elif exec_inspect['ExitCode'] == 137:
+            # NOTE(yoctozepto): This is Docker's command exit due to container
+            # exit. It means the container is unstable so we are better off
+            # marking it as requiring a restart due to config update.
+            return True
+        else:
+            raise Exception('Failed to compare container configuration: '
+                            'ExitCode: %s Message: %s' %
+                            (exec_inspect['ExitCode'], output))
 
     def parse_image(self):
         full_image = self.params.get('image')
