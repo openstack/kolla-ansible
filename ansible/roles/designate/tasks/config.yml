@@ -39,8 +39,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over designate.conf
   vars:
@@ -56,8 +54,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over pools.yaml
   vars:
@@ -71,8 +67,6 @@
   with_first_found:
     - "{{ node_custom_config }}/designate/pools.yaml"
     - "{{ role_path }}/templates/pools.yaml.j2"
-  notify:
-    - Restart designate-worker container
 
 - name: Copying over named.conf
   vars:
@@ -90,8 +84,6 @@
     - "{{ node_custom_config }}/designate/designate-backend-bind9/named.conf"
     - "{{ node_custom_config }}/designate/named.conf"
     - "{{ role_path }}/templates/named.conf.j2"
-  notify:
-    - Restart designate-backend-bind9 container
 
 - name: Copying over rndc.conf
   template:
@@ -103,8 +95,6 @@
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over rndc.key
   template:
@@ -116,8 +106,6 @@
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - include_tasks: backend_external.yml
   when: designate_backend_external == 'bind9'
@@ -131,5 +119,3 @@
   when:
     - designate_policy_file is defined
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

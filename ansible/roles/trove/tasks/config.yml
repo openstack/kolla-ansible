@@ -39,8 +39,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over trove-wsgi.conf
   vars:
@@ -55,8 +53,6 @@
     - "{{ node_custom_config }}/trove/trove-wsgi.conf"
     - "trove-wsgi.conf.j2"
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart trove-api container
 
 - name: Copying over trove-guestagent.conf
   vars:
@@ -74,8 +70,6 @@
   when:
     - item.key in services_need_confs
   with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over trove.conf
   vars:
@@ -91,8 +85,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over existing policy file
   template:
@@ -102,5 +94,3 @@
   when:
     - trove_policy_file is defined
   with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

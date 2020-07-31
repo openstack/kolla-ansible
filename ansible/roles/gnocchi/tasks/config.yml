@@ -43,8 +43,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over gnocchi.conf
   vars:
@@ -60,8 +58,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over wsgi-gnocchi.conf
   vars:
@@ -74,8 +70,6 @@
   when: service | service_enabled_and_mapped_to_host
   with_items:
     - "gnocchi-api"
-  notify:
-    - Restart gnocchi-api container
 
 - name: Copying over existing policy file
   template:
@@ -86,5 +80,3 @@
   when:
     - gnocchi_policy_file is defined
   with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

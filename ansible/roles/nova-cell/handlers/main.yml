@@ -14,7 +14,6 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - kolla_action != "upgrade" or not nova_safety_upgrade | bool
 
 - name: Restart nova-novncproxy container
@@ -32,7 +31,6 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - kolla_action != "upgrade" or not nova_safety_upgrade | bool
 
 - name: Restart nova-spicehtml5proxy container
@@ -50,7 +48,6 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - kolla_action != "upgrade" or not nova_safety_upgrade | bool
 
 - name: Restart nova-serialproxy container
@@ -68,7 +65,6 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - kolla_action != "upgrade" or not nova_safety_upgrade | bool
 
 - name: Restart nova-ssh container
@@ -86,8 +82,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart nova-libvirt container
   vars:
@@ -111,8 +105,6 @@
   # guests running, nova_libvirt will raise error even though it is removed.
   retries: 5
   until: restart_nova_libvirt is success
-  when:
-    - kolla_action != "config"
   notify: "{{ nova_libvirt_notify }}"
 
   # need to wait kolla_set_configs script to overwrite sasl config file
@@ -164,8 +156,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart nova-compute-ironic container
   vars:
@@ -181,8 +171,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 # nova-compute-fake is special. It will start multi numbers of container
 # so put all variables here rather than defaults/main.yml file
@@ -206,8 +194,6 @@
       - "/run/openvswitch:/run/openvswitch:shared"
       - "kolla_logs:/var/log/kolla/"
   with_sequence: start=1 end={{ num_nova_fake_per_node }}
-  when:
-    - kolla_action != "config"
 
 # NOTE(mgoddard): After upgrading nova-compute, services will have an RPC
 # version cap in place.  We need to restart all services that communicate with

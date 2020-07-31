@@ -44,8 +44,6 @@
   when:
     - magnum_kubeconfig_file.stat.exists
   with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Set magnum kubeconfig file's path
   set_fact:
@@ -64,8 +62,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over magnum.conf
   vars:
@@ -81,8 +77,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   template:
@@ -93,5 +87,3 @@
   when:
     - magnum_policy_file is defined
   with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

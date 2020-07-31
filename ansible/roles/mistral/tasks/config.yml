@@ -39,8 +39,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ mistral_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over mistral.conf
   vars:
@@ -56,8 +54,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ mistral_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   template:
@@ -68,8 +64,6 @@
   when:
     - mistral_policy_file is defined
   with_dict: "{{ mistral_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over event_definitions.yaml
   become: true
@@ -84,5 +78,3 @@
     - "{{ node_custom_config }}/mistral/{{ inventory_hostname }}/event_definitions.yaml"
     - "{{ node_custom_config }}/mistral/event_definitions.yaml"
     - "{{ role_path }}/templates/event_definitions.yaml.j2"
-  notify:
-    - "Restart mistral-event-engine container"

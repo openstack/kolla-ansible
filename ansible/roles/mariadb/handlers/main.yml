@@ -59,7 +59,6 @@
   when:
     - groups[mariadb_shard_group + '_port_alive_True'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
-    - kolla_action != "config"
   listen: Restart mariadb container
 
 - name: Start MariaDB on new nodes
@@ -69,7 +68,6 @@
     - bootstrap_host is not defined or bootstrap_host != inventory_hostname
     - groups[mariadb_shard_group + '_port_alive_False'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_False']
-    - kolla_action != "config"
   listen: Restart mariadb container
 
 - name: Restart mariadb-clustercheck container
@@ -88,5 +86,4 @@
   listen:
     - Restart mariadb-clustercheck container
   when:
-    - kolla_action != "config"
     - service | service_enabled_and_mapped_to_host

@@ -44,8 +44,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over zun.conf
   vars:
@@ -61,8 +59,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over wsgi-zun files for services
   vars:
@@ -73,8 +69,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart zun-api container
 
 - name: Copying over existing policy file
   template:
@@ -85,5 +79,3 @@
   when:
     - zun_policy_file is defined
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

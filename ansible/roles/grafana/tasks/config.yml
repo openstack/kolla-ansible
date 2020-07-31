@@ -31,8 +31,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ grafana_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over grafana.ini
   vars:
@@ -46,8 +44,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ grafana_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over extra configuration file
   become: true
@@ -59,8 +55,6 @@
     - item is defined
   with_items:
     - "{{ check_extra_conf_grafana.files }}"
-  notify:
-    - Restart grafana container
 
 - name: Configuring Prometheus as data source for Grafana
   vars:
@@ -77,8 +71,6 @@
     - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/prometheus.yaml"
     - "{{ node_custom_config }}/grafana/prometheus.yaml"
     - "prometheus.yaml.j2"
-  notify:
-    - Restart grafana container
 
 - name: Configuring dashboards provisioning
   vars:
@@ -93,8 +85,6 @@
     - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/provisioning.yaml"
     - "{{ node_custom_config }}/grafana/provisioning.yaml"
     - "{{ role_path }}/templates/provisioning.yaml.j2"
-  notify:
-    - Restart grafana container
 
 - name: Check if the folder for custom grafana dashboards exists
   stat:
@@ -124,5 +114,3 @@
     - grafana_custom_dashboards_folder.stat.exists
     - grafana_custom_dashboards_folder.stat.isdir
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart grafana container

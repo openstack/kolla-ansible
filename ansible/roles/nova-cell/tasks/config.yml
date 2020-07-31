@@ -57,8 +57,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over nova.conf
   become: true
@@ -77,8 +75,6 @@
   when:
     - item.key in nova_cell_services_require_nova_conf
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over Nova compute provider config
   become: true
@@ -91,8 +87,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - nova_cell_compute_provider_config is defined
-  notify:
-    - Restart nova-compute container
 
 - name: Copying over libvirt configuration
   become: true
@@ -106,8 +100,6 @@
   with_items:
     - { src: "qemu.conf.j2", dest: "qemu.conf" }
     - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
-  notify:
-    - Restart nova-libvirt container
 
 - name: Copying over libvirt TLS keys
   include_tasks: config-libvirt-tls.yml
@@ -132,8 +124,6 @@
     - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-compute" }
     - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-libvirt" }
     - { src: "sasl.conf.j2", dest: "sasl.conf", service: "nova-libvirt" }
-  notify:
-    - Restart {{ service_name }} container
 
 - name: Copying files for nova-ssh
   become: true
@@ -149,8 +139,6 @@
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
     - { src: "ssh_config.j2", dest: "ssh_config" }
-  notify:
-    - Restart nova-ssh container
 
 - name: Copying VMware vCenter CA file
   vars:
@@ -163,8 +151,6 @@
     - nova_compute_virt_type == "vmware"
     - not vmware_vcenter_insecure | bool
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart nova-compute container
 
 - name: Copying 'release' file for nova_compute
   vars:
@@ -180,8 +166,6 @@
         - "{{ node_custom_config }}/nova/release"
       skip: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart nova-compute container
 
 - name: Generating 'hostnqn' file for nova_compute
   vars:
@@ -193,8 +177,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart nova-compute container
 
 - name: Copying over existing policy file
   become: true
@@ -206,8 +188,6 @@
     - nova_policy_file is defined
     - item.key in nova_cell_services_require_policy_json
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over vendordata file to containers
   vars:
@@ -220,8 +200,6 @@
   when:
     - vendordata_file_path is defined
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - "Restart {{ item }} container"
   with_items:
     - nova-compute
     - nova-compute-ironic
