@@ -1,16 +1,3 @@
 ---
-- name: Check glance containers
-  become: true
-  kolla_container:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    privileged: "{{ item.value.privileged | default(omit) }}"
-    environment: "{{ item.value.environment | default(omit) }}"
-    volumes: "{{ item.value.volumes | reject('equalto', '') | list }}"
-    dimensions: "{{ item.value.dimensions }}"
-    healthcheck: "{{ item.value.healthcheck | default(omit) }}"
-  with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
+- import_role:
+    name: service-check-containers
