@@ -15,16 +15,7 @@
 import jinja2
 
 from kolla_ansible import exception
-
-
-def _call_bool_filter(context, value):
-    """Pass a value through the 'bool' filter.
-
-    :param context: Jinja2 Context object.
-    :param value: Value to pass through bool filter.
-    :returns: A boolean.
-    """
-    return context.environment.call_filter("bool", value, context=context)
+from kolla_ansible.helpers import _call_bool_filter
 
 
 @jinja2.contextfilter
