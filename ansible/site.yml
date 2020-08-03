@@ -668,6 +668,7 @@
     - ironic-conductor
     - ironic-inspector
     - ironic-pxe
+    - ironic-ipxe
     - '&enable_ironic_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
@@ -707,6 +708,7 @@
     - ceph-mon
     - compute
     - nova-api
+    - nova-compute-ironic
     - nova-conductor
     - nova-consoleauth
     - nova-novncproxy
@@ -774,6 +776,8 @@
     - ironic-neutron-agent
     - neutron-metadata-agent
     - neutron-metering-agent
+    - neutron-bgp-dragent
+    - neutron-infoblox-ipam-agent
     - compute
     - manila-share
     - '&enable_neutron_True'
@@ -954,8 +958,9 @@
 - name: Apply role monasca
   gather_facts: false
   hosts:
-    - monasca
-    - monasca-agent
+    - monasca-agent-collector
+    - monasca-agent-forwarder
+    - monasca-agent-statsd
     - monasca-api
     - monasca-grafana
     - monasca-log-api
