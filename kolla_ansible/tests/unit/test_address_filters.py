@@ -22,6 +22,8 @@ from kolla_ansible.exception import FilterError
 from kolla_ansible.kolla_address import kolla_address
 from kolla_ansible.put_address_in_context import put_address_in_context
 
+from kolla_ansible.tests.unit.helpers import _to_bool
+
 
 class TestAddressContextFilter(unittest.TestCase):
 
@@ -58,6 +60,7 @@ class TestKollaAddressFilter(unittest.TestCase):
     def setUp(self):
         # Bandit complains about Jinja2 autoescaping without nosec.
         self.env = jinja2.Environment()  # nosec
+        self.env.filters['bool'] = _to_bool
 
     def _make_context(self, parent):
         return self.env.context_class(
@@ -97,6 +100,7 @@ class TestKollaAddressFilter(unittest.TestCase):
             'inventory_hostname': 'primary',
             'hostvars': {
                 'primary': {
+                    'enable_haproxy': 'yes',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
                     'ansible_fake_interface': {
@@ -133,6 +137,7 @@ class TestKollaAddressFilter(unittest.TestCase):
             'inventory_hostname': 'primary',
             'hostvars': {
                 'primary': {
+                    'enable_haproxy': 'yes',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
                     'ansible_fake_interface': {
@@ -185,3 +190,109 @@ class TestKollaAddressFilter(unittest.TestCase):
             },
         })
         self.assertRaises(FilterError, kolla_address, context, 'api')
+
+    def test_valid_ipv6_config_prefix_128(self):
+        addr = 'fd::'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    'enable_haproxy': 'yes',
+                    'api_address_family': 'ipv6',
+                    'api_interface': 'fake-interface',
+                    'ansible_fake_interface': {
+                        'ipv6': [
+                            {
+                                'address': addr,
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                        ],
+                    },
+                },
+            },
+        })
+        self.assertEqual(addr, kolla_address(context, 'api'))
+
+    def test_valid_ipv6_config_ignore_internal_vip_address(self):
+        addr = 'fd::'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    'enable_haproxy': 'yes',
+                    'kolla_internal_vip_address': addr + '1',
+                    'api_address_family': 'ipv6',
+                    'api_interface': 'fake-interface',
+                    'ansible_fake_interface': {
+                        'ipv6': [
+                            {
+                                'address': addr + '1',
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                            {
+                                'address': addr,
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                        ],
+                    },
+                },
+            },
+        })
+        self.assertEqual(addr, kolla_address(context, 'api'))
+
+    def test_valid_ipv6_config_ignore_external_vip_address(self):
+        addr = 'fd::'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    'enable_haproxy': 'yes',
+                    'kolla_external_vip_address': addr + '1',
+                    'api_address_family': 'ipv6',
+                    'api_interface': 'fake-interface',
+                    'ansible_fake_interface': {
+                        'ipv6': [
+                            {
+                                'address': addr + '1',
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                            {
+                                'address': addr,
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                        ],
+                    },
+                },
+            },
+        })
+        self.assertEqual(addr, kolla_address(context, 'api'))
+
+    def test_valid_ipv6_config_do_not_ignore_any_vip_address(self):
+        addr = 'fd::'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    'enable_haproxy': 'no',
+                    'kolla_external_vip_address': addr,
+                    'kolla_internal_vip_address': addr,
+                    'api_address_family': 'ipv6',
+                    'api_interface': 'fake-interface',
+                    'ansible_fake_interface': {
+                        'ipv6': [
+                            {
+                                'address': addr,
+                                'scope': 'global',
+                                'prefix': 128,
+                            },
+                        ],
+                    },
+                },
+            },
+        })
+        self.assertEqual(addr, kolla_address(context, 'api'))
