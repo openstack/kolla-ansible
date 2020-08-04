@@ -57,7 +57,7 @@ to using the native OVS firewall driver by employing a configuration override
 
 .. code-block:: ini
 
-   [security_group]
+   [securitygroup]
    firewall_driver = openvswitch
 
 OVN (ml2/ovn)
