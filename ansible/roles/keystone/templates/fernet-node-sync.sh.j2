@@ -3,13 +3,9 @@
 set -o errexit
 set -o pipefail
 
-# Get data on the fernet tokens
-# NOTE(mnasiadka): Check for existence of at least two tokens (should exist after bootstrap)
-TOKEN_CHECK=$(/usr/bin/python3 /usr/bin/fetch_fernet_tokens.py -t {{ fernet_token_expiry }} -n 2)
-
-# Ensure tokens are populated
+# Ensure tokens are populated, check for 0 key which should always exist
 n=0
-while /usr/bin/python3 /usr/bin/fetch_fernet_tokens.py -t 86400 -n 1 | grep -q '"populated": false'; do
+while [ ! -f /etc/keystone/fernet-keys/0 ]; do
     if [ $n -lt 10 ]; then
         n=$(( n + 1 ))
         echo "ERROR: Fernet tokens have not been populated, rechecking in 1 minute"
@@ -21,15 +17,3 @@ while /usr/bin/python3 /usr/bin/fetch_fernet_tokens.py -t 86400 -n 1 | grep -q '
         exit 1
     fi
 done
-
-# Ensure the primary token exists and is not stale
-if $(echo "$TOKEN_CHECK" | grep -q '"update_required": false'); then
-    exit 0;
-fi
-
-# For each host node sync tokens
-{% for host in groups['keystone'] %}
-{% if inventory_hostname != host %}
-/usr/bin/rsync -azu --delete -e 'ssh -i /var/lib/keystone/.ssh/id_rsa -p {{ hostvars[host]['keystone_ssh_port'] }} -F /var/lib/keystone/.ssh/config' keystone@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:/etc/keystone/fernet-keys/ /etc/keystone/fernet-keys
-{% endif %}
-{% endfor %}
