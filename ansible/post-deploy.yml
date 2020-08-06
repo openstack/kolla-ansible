@@ -1,10 +1,12 @@
 ---
 - name: Creating admin openrc file on the deploy node
   hosts: localhost
-  become: true
   tasks:
     - name: Template out admin-openrc.sh
+      become: true
       template:
         src: "roles/common/templates/admin-openrc.sh.j2"
         dest: "{{ node_config }}/admin-openrc.sh"
-      run_once: True
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: 0600
