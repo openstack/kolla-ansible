@@ -22,33 +22,14 @@
     </record>
 </filter>
 
-<filter syslog.local0.**>
+{% for item in syslog_facilities | selectattr('enabled') %}
+<filter syslog.{{ item.facility }}.**>
     @type record_transformer
     <record>
-        programname swift
+        programname {{ item.logdir }}
     </record>
 </filter>
-
-<filter syslog.local1.**>
-    @type record_transformer
-    <record>
-        programname haproxy
-    </record>
-</filter>
-
-<filter syslog.{{ syslog_glance_tls_proxy_facility }}.**>
-    @type record_transformer
-    <record>
-        programname glance-tls-proxy
-    </record>
-</filter>
-
-<filter syslog.{{ syslog_neutron_tls_proxy_facility }}.**>
-    @type record_transformer
-    <record>
-        programname neutron-tls-proxy
-    </record>
-</filter>
+{% endfor %}
 
 # Rename internal Fluent message field to match other logs. This removes
 # all other fields by default, including the original message field. This is
