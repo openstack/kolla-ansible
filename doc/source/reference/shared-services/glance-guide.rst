@@ -146,3 +146,32 @@ Glance caches are not cleaned up automatically, the glance team recommends to
 use a cron service to regularly clean cached images. In the future kolla will
 deploy a cron container to manage such clean ups.  Please refer to
 :glance-doc:`Glance image cache <admin/cache.html>`.
+
+Property protection
+~~~~~~~~~~~~~~~~~~~
+
+`Property protection <https://docs.openstack.org/glance/latest/admin/property-protections.html>`_
+is disabled by default, it can be enabled by:
+
+.. code-block:: yaml
+
+   glance_enable_property_protection: "yes"
+
+
+and defining ``property-protections-rules.conf`` under
+``{{ node_custom_config }}/glance/``. The default
+``property_protection_rule_format`` is ``roles`` but it can be overwritten.
+
+
+Interoperable image import
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `interoperable image import <https://docs.openstack.org/glance/latest/admin/interoperable-image-import.html>`_
+is disabled by default, it can be enabled by:
+
+.. code-block:: yaml
+
+  glance_enable_interoperable_image_import: "yes"
+
+and defining ``glance-image-import.conf`` under
+``{{ node_custom_config }}/glance/``.
