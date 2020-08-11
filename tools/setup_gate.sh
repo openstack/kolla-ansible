@@ -94,7 +94,7 @@ function setup_ansible {
 
     # Test Ansible 2.8.x on Ubuntu, minimum supported on others.
     if [[ $BASE_DISTRO == "ubuntu" ]]; then
-        ANSIBLE_VERSION=">=2.4,<2.9"
+        ANSIBLE_VERSION=">=2.4,<2.9,!=2.8.14"
         ARA_VERSION="<1.0.0"
     else
         ANSIBLE_VERSION="<2.5"
