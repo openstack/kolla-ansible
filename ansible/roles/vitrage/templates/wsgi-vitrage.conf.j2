@@ -1,5 +1,4 @@
 {% set vitrage_log_dir = '/var/log/kolla/vitrage' %}
-{% set python_path = '/usr/lib/python' ~ distro_python_version ~ '/site-packages' if vitrage_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages' %}
 Listen {{ 'api' | kolla_address | put_address_in_context('url') }}:{{ vitrage_api_port }}
 
 ServerSignature Off
@@ -34,7 +33,7 @@ LogLevel info
   ServerSignature Off
   CustomLog "{{ vitrage_log_dir }}/vitrage_wsgi_access.log" combined
   WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess vitrage group=vitrage processes={{ openstack_service_workers }} threads=1 user=vitrage python-path={{ python_path }}
+  WSGIDaemonProcess vitrage group=vitrage processes={{ openstack_service_workers }} threads=1 user=vitrage
   WSGIProcessGroup vitrage
   WSGIScriptAlias / "/var/www/cgi-bin/vitrage/app.wsgi"
 {% if enable_vitrage_prometheus_datasource | bool %}

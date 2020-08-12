@@ -1,5 +1,4 @@
 {% set monasca_log_dir = '/var/log/kolla/monasca' %}
-{% set python_path = '/usr/lib/python' ~ distro_python_version ~ '/site-packages' if monasca_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages' %}
 {% set wsgi_path = '/usr/bin' if monasca_install_type == 'binary' else '/monasca-api/monasca_api/api' %}
 
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ monasca_api_port }}
@@ -22,7 +21,7 @@ LogLevel info
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog "{{ monasca_log_dir }}/monasca-api-access.log" logformat
     WSGIApplicationGroup %{GLOBAL}
-    WSGIDaemonProcess monasca-api group=monasca processes={{ openstack_service_workers }} threads=1 user=monasca python-path={{ python_path }}
+    WSGIDaemonProcess monasca-api group=monasca processes={{ openstack_service_workers }} threads=1 user=monasca
     WSGIProcessGroup  monasca-api
     WSGIScriptAlias / {{ wsgi_path }}/wsgi.py
     WSGIPassAuthorization On

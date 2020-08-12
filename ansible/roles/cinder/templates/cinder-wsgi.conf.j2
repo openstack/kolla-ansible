@@ -1,8 +1,3 @@
-{% if cinder_install_type == 'binary' %}
-    {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro in ['debian', 'ubuntu'] else '/usr/lib/python' ~ distro_python_version ~ '/site-packages' %}
-{% else %}
-    {% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
-{% endif %}
 {% if cinder_enable_tls_backend | bool %}
 {% if kolla_base_distro in ['centos']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
@@ -22,7 +17,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ cinder_api_listen_port }}>
-    WSGIDaemonProcess cinder-api processes={{ openstack_service_workers }} threads=1 user=cinder group=cinder display-name=%{GROUP} python-path={{ python_path }}
+    WSGIDaemonProcess cinder-api processes={{ openstack_service_workers }} threads=1 user=cinder group=cinder display-name=%{GROUP}
     WSGIProcessGroup cinder-api
     WSGIScriptAlias / /var/www/cgi-bin/cinder/cinder-wsgi
     WSGIApplicationGroup %{GLOBAL}
