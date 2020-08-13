@@ -1,0 +1,67 @@
+---
+- name: Get amphora flavor info
+  become: true
+  kolla_toolbox:
+    module_name: os_flavor_info
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ octavia_amp_flavor.name }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: flavor_results
+
+- name: Get {{ octavia_service_auth_project }} project id
+  become: True
+  kolla_toolbox:
+    module_name: os_project_info
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ octavia_service_auth_project }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: project_info
+
+# NOTE(wuchunyang): ansible doesn't have a module to query security groups
+# let's use os_security_group module instead.
+- name: Get security groups for octavia
+  become: true
+  kolla_toolbox:
+    module_name: os_security_group
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ item.name }}"
+  loop: "{{ octavia_amp_security_groups.values() | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: sec_grp_info
+
+- name: Get loadbalancer management network
+  become: true
+  kolla_toolbox:
+    module_name: os_networks_info
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ octavia_amp_network['name'] }}"
+  register: network_results
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Set octavia resources facts
+  set_fact:
+    network_info: "{{ network_results.openstack_networks.0 }}"
+    amphora_flavor_info: "{{ flavor_results.openstack_flavors.0 }}"
