@@ -117,3 +117,23 @@ cephfs_enable_snapshots = False
 cephfs_ganesha_server_is_remote= False
 cephfs_ganesha_server_ip = {{ api_interface_address }}
 {% endif %}
+
+{% if enable_manila_backend_glusterfs_nfs | bool %}
+[glusterfsnfs1]
+driver_handles_share_servers = False
+share_backend_name = GLUSTERFSNFS1
+share_driver = manila.share.drivers.glusterfs.GlusterfsShareDriver
+glusterfs_share_layout = {{ manila_glusterfs_share_layout }}
+glusterfs_nfs_server_type = {{ manila_glusterfs_nfs_server_type }}
+{% if manila_glusterfs_servers is defined  %}
+glusterfs_servers = {% for ip in manila_glusterfs_servers %}{% if manila_glusterfs_ssh_user is defined %}{{ manila_glusterfs_ssh_user }}@{% endif %}{{ ip }}{% if not loop.last %},{% endif %}{% endfor %}
+
+{% endif %}
+{% if manila_glusterfs_volume_pattern is defined %}glusterfs_volume_pattern = {{ manila_glusterfs_volume_pattern }}{% endif %}
+
+{% if manila_glusterfs_target is defined %}glusterfs_target = {{ manila_glusterfs_target }}{% endif %}
+
+{% if manila_glusterfs_mount_point_base is defined %}glusterfs_mount_point_base = {{ manila_glusterfs_mount_point_base }}{% endif %}
+
+{% if manila_glusterfs_ssh_password is defined %}glusterfs_server_password = {{ manila_glusterfs_ssh_password }}{% endif %}
+{% endif %}
