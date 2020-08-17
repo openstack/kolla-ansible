@@ -97,6 +97,21 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_sriov_agent_default_volumes + neutron_sriov_agent_extra_volumes }}"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
+  neutron-mlnx-agent:
+    container_name: "neutron_mlnx_agent"
+    image: "{{ neutron_mlnx_agent_image_full }}"
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
+    host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
+    volumes: "{{ neutron_mlnx_agent_default_volumes + neutron_mlnx_agent_extra_volumes }}"
+    dimensions: "{{ neutron_mlnx_agent_dimensions }}"
+  neutron-eswitchd:
+    container_name: "neutron_eswitchd"
+    image: "{{ neutron_eswitchd_image_full }}"
+    privileged: True
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
+    host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
+    volumes: "{{ neutron_eswitchd_default_volumes + neutron_eswitchd_extra_volumes }}"
+    dimensions: "{{ neutron_eswitchd_dimensions }}"
   neutron-metadata-agent:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
@@ -180,6 +195,14 @@ neutron_sriov_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' 
 neutron_sriov_agent_tag: "{{ neutron_tag }}"
 neutron_sriov_agent_image_full: "{{ neutron_sriov_agent_image }}:{{ neutron_sriov_agent_tag }}"
 
+neutron_mlnx_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-mlnx-agent"
+neutron_mlnx_agent_tag: "{{ neutron_tag }}"
+neutron_mlnx_agent_image_full: "{{ neutron_mlnx_agent_image }}:{{ neutron_mlnx_agent_tag }}"
+
+neutron_eswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-mlnx-agent"
+neutron_eswitchd_tag: "{{ neutron_mlnx_agent_tag }}"
+neutron_eswitchd_image_full: "{{ neutron_eswitchd_image }}:{{ neutron_eswitchd_tag }}"
+
 neutron_linuxbridge_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-linuxbridge-agent"
 neutron_linuxbridge_agent_tag: "{{ neutron_tag }}"
 neutron_linuxbridge_agent_image_full: "{{ neutron_linuxbridge_agent_image }}:{{ neutron_linuxbridge_agent_tag }}"
@@ -221,6 +244,8 @@ neutron_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_dhcp_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_l3_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_sriov_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_mlnx_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_eswitchd_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_linuxbridge_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_ovn_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
@@ -253,6 +278,19 @@ neutron_sriov_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
+neutron_mlnx_agent_default_volumes:
+  - "{{ node_config_directory }}/neutron-mlnx-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
+neutron_eswitchd_default_volumes:
+  - "{{ node_config_directory }}/neutron-eswitchd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/run/libvirt:/run/libvirt:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if kolla_base_distro in ['debian', 'ubuntu'] else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/neutron/neutron:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/neutron' if neutron_dev_mode | bool else '' }}"
 neutron_linuxbridge_agent_default_volumes:
@@ -317,6 +355,8 @@ neutron_extra_volumes: "{{ default_extra_volumes }}"
 neutron_dhcp_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_l3_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_sriov_agent_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_mlnx_agent_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_eswitchd_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_linuxbridge_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_ovn_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -357,6 +397,8 @@ mechanism_drivers:
     enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
   - name: "openvswitch"
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
+  - name: "mlnx_infiniband"
+    enabled: "{{ enable_neutron_mlnx | bool }}"
   - name: "baremetal"
     enabled: "{{ enable_ironic_neutron_agent | bool }}"
   - name: "l2population"
@@ -497,6 +539,14 @@ infoblox_grid_master_name: "infoblox.localdomain"
 infoblox_admin_user_name: "admin"
 infoblox_wapi_version: "2.3"
 infoblox_wapi_max_results: "-50000"
+
+######################
+# Mellanox Agent
+######################
+# "ibphysnet" and "ib0" used here as placeholders
+neutron_mlnx_physnet_mappings:
+  ibphysnet: "ib0"
+neutron_mlnx_physnets: "{{ neutron_mlnx_physnet_mappings.items() | map('join', ':') | join(',') }}"
 
 ######################
 # Notification Drivers

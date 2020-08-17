@@ -80,3 +80,26 @@ To change this behaviour you need to set the following:
 
    neutron_ovn_distributed_fip: "yes"
 
+Mellanox Infiniband (ml2/mlnx)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to add ``mlnx_infiniband`` to the list of mechanism driver
+for ``neutron`` to support Infiniband virtual funtions, you need to
+set the following (assuming neutron SR-IOV agent is also enabled using
+``enable_neutron_sriov`` flag):
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   enable_neutron_mlnx: "yes"
+
+Additionally, you will also need to provide physnet:interface mappings
+via ``neutron_mlnx_physnet_mappings`` which is presented to
+``neutron_mlnx_agent`` container via ``mlnx_agent.ini`` and
+``neutron_eswitchd`` container via ``eswitchd.conf``:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_mlnx_physnet_mappings:
+     ibphysnet: "ib0"

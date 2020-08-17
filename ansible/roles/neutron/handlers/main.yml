@@ -115,6 +115,38 @@
   when:
     - kolla_action != "config"
 
+- name: Restart neutron-mlnx-agent container
+  vars:
+    service_name: "neutron-mlnx-agent"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart neutron-eswitchd container
+  vars:
+    service_name: "neutron-eswitchd"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+  when:
+    - kolla_action != "config"
+
 - name: Restart neutron-metadata-agent container
   vars:
     service_name: "neutron-metadata-agent"
