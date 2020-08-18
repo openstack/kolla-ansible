@@ -54,15 +54,9 @@ In Kolla operators should configure following network interfaces:
   ``kolla_enable_tls_external`` is set to yes. Defaults to
   ``network_interface``.
 
-* ``storage_interface`` - This is the interface that is used by virtual
-  machines to communicate to Ceph. This can be heavily utilized so it's
-  recommended to use a high speed network fabric. Defaults to
-  ``network_interface``.
-
-* ``cluster_interface`` - This is another interface used by Ceph. It's used for
-  data replication. It can be heavily utilized also and if it becomes a
-  bottleneck it can affect data consistency and performance of whole cluster.
-  Defaults to ``network_interface``.
+* ``storage_interface`` - This is the interface that is used by Swift.
+  This can be heavily utilized so it's recommended to use a high speed
+  network fabric. Defaults to ``network_interface``.
 
 * ``swift_storage_interface`` - This interface is used by Swift for storage
   access traffic.  This can be heavily utilized so it's recommended to use

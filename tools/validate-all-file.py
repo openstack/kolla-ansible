@@ -43,7 +43,6 @@ YAML_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git',
 KOLLA_NETWORKS = [
     'api',
     'storage',
-    'cluster',
     'swift_storage',
     'swift_replication',
     'migration',
@@ -124,7 +123,6 @@ def check_json_j2():
         context = {
             'hostvars': hostvars(),
             'groups': groups(),
-            'cluster_interface': 'cluster_interface',
             'storage_interface': 'storage_interface',
             'inventory_hostname': 'hostname'
         }
