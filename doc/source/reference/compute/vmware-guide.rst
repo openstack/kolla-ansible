@@ -4,10 +4,6 @@
 VMware - Nova Virtualisation Driver
 ===================================
 
-.. note::
-
-   VMware support has been deprecated and will be removed in the Victoria cycle.
-
 Overview
 ~~~~~~~~
 
