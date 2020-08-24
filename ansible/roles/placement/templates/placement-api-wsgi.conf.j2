@@ -1,9 +1,4 @@
 {% set log_dir = '/var/log/kolla/placement' %}
-{% if placement_install_type == 'binary' %}
-    {% set python_path = '/usr/lib/python3/dist-packages' if kolla_base_distro in ['debian', 'ubuntu'] else '/usr/lib/python' ~ distro_python_version ~ '/site-packages' %}
-{% else %}
-    {% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
-{% endif %}
 {% set wsgi_directory = '/usr/bin' if placement_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 {% if placement_enable_tls_backend | bool %}
 {% if kolla_base_distro in ['centos']  %}
@@ -24,7 +19,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ placement_api_listen_port }}>
-    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=placement group=placement display-name=%{GROUP} python-path={{ python_path }}
+    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=placement group=placement display-name=%{GROUP}
     WSGIProcessGroup placement-api
     WSGIScriptAlias / {{ wsgi_directory }}/placement-api
     WSGIApplicationGroup %{GLOBAL}

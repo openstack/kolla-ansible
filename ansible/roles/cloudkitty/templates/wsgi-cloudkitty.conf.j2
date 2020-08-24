@@ -1,5 +1,4 @@
 {% set cloudkitty_log_dir = '/var/log/kolla/cloudkitty' %}
-{% set python_path = '/usr/lib/python' ~ distro_python_version ~ '/site-packages' if cloudkitty_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages' %}
 {% set binary_path = '/usr/bin' if cloudkitty_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ cloudkitty_api_port }}
 
@@ -23,7 +22,7 @@ LogLevel info
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
   CustomLog "{{ cloudkitty_log_dir }}/cloudkitty-api-access.log" logformat
   WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess cloudkitty group=cloudkitty processes={{ openstack_service_workers }} threads=1 user=cloudkitty python-path={{ python_path }}
+  WSGIDaemonProcess cloudkitty group=cloudkitty processes={{ openstack_service_workers }} threads=1 user=cloudkitty
   WSGIProcessGroup cloudkitty
   WSGIScriptAlias / "{{ binary_path }}/cloudkitty-api"
 
