@@ -1,4 +1,33 @@
 ---
+- name: Checking for any running keystone_fernet containers
+  become: true
+  kolla_container_facts:
+    name:
+      - keystone_fernet
+  register: container_facts
+
+# FIXME(mgoddard): This does not catch some cases we might consider
+# bootstrapped:
+# * the keystone_fernet container is created but not running
+# * the keystone_fernet volume exists but no container
+# Probably what we care about is the existence of Fernet key 0.
+- name: Group nodes where keystone_fernet is running
+  group_by:
+    key: keystone_fernet_{{ container_facts['keystone_fernet'].State if 'keystone_fernet' in container_facts else 'bootstrap' }}
+
+# NOTE(mgoddard): If we bootstrap Fernet keys on an existing cluster, this
+# would overwrite existing keys, and invalidate tokens created from them.
+- name: Fail if any hosts need bootstrapping and not all hosts targeted
+  fail:
+    msg: >
+      Some hosts ({{ groups['keystone_fernet_bootstrap'] | join(', ') }}) need
+      Fernet key bootstrapping, but not all Keystone hosts are in the target
+      list. Stopping as it may be unsafe to proceed. Please run without --limit
+      or --serial to bootstrap these hosts.
+  when:
+    - groups['keystone_fernet_running'] is not defined
+    - groups['keystone'] | difference(ansible_play_batch) | list | length > 0
+
 - name: Running Keystone bootstrap container
   vars:
     keystone: "{{ keystone_services.keystone }}"
