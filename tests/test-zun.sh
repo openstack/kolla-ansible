@@ -15,7 +15,7 @@ function test_zun_logged {
     openstack subnet set --no-dhcp demo-subnet
     sudo docker pull alpine
     sudo docker save alpine | openstack image create alpine --public --container-format docker --disk-format raw
-    openstack appcontainer run --name test alpine sleep 1000
+    openstack appcontainer run --net network=demo-net --name test alpine sleep 1000
     attempt=1
     while [[ $(openstack appcontainer show test -f value -c status) != "Running" ]]; do
         echo "Container not running yet"
@@ -61,7 +61,7 @@ function test_zun_logged {
         fi
         sleep 10
     done
-    openstack appcontainer run --name test2 --mount source=zun_test_volume,destination=/data alpine sleep 1000
+    openstack appcontainer run --net network=demo-net --name test2 --mount source=zun_test_volume,destination=/data alpine sleep 1000
     attempt=1
     while [[ $(openstack volume show zun_test_volume -f value -c status) != "in-use" ]]; do
         echo "Volume not attached yet"
@@ -105,6 +105,12 @@ capsuleVersion: beta
 kind: capsule
 metadata:
   name: capsule-test
+# NOTE(yoctozepto): Capsules do not support nets in Ussuri.
+# See https://bugs.launchpad.net/zun/+bug/1895263
+# The choice for CI is worked around by ensuring the networks are created
+# in the desired order in init-runonce.
+#nets:
+#  - network: demo-net
 spec:
   containers:
   - image: alpine
