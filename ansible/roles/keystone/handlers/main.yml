@@ -26,21 +26,6 @@
     - kolla_action == "upgrade"
     - inventory_hostname == groups[service.group][0]
 
-- name: Restart keystone container
-  vars:
-    service_name: "keystone"
-    service: "{{ keystone_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
-    dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
-
 - name: Restart keystone-ssh container
   vars:
     service_name: "keystone-ssh"
@@ -59,6 +44,21 @@
 - name: Restart keystone-fernet container
   vars:
     service_name: "keystone-fernet"
+    service: "{{ keystone_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart keystone container
+  vars:
+    service_name: "keystone"
     service: "{{ keystone_services[service_name] }}"
   become: true
   kolla_docker:
