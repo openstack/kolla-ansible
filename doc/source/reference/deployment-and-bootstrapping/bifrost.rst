@@ -345,7 +345,7 @@ Deploy Bifrost manually
 
       cd /bifrost
       ./scripts/env-setup.sh
-      . env-vars
+      export OS_CLOUD=bifrost
       cat > /etc/rabbitmq/rabbitmq-env.conf << EOF
       HOME=/var/lib/rabbitmq
       EOF
@@ -363,7 +363,7 @@ Validate the Deployed Container
 
    docker exec -it bifrost_deploy bash
    cd /bifrost
-   . env-vars
+   export OS_CLOUD=bifrost
 
 Running "ironic node-list" should return with no nodes, for example
 
@@ -405,7 +405,7 @@ Manually
 
    docker exec -it bifrost_deploy bash
    cd /bifrost
-   . env-vars
+   export OS_CLOUD=bifrost
    export BIFROST_INVENTORY_SOURCE=/etc/bifrost/servers.yml
    ansible-playbook -vvvv \
    -i /bifrost/playbooks/inventory/bifrost_inventory.py \
@@ -415,7 +415,7 @@ Manually
 
    docker exec -it bifrost_deploy bash
    cd /bifrost
-   . env-vars
+   export OS_CLOUD=bifrost
    export BIFROST_INVENTORY_SOURCE=/etc/bifrost/servers.yml
    ansible-playbook -vvvv \
    -i /bifrost/playbooks/inventory/bifrost_inventory.py \
