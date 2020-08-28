@@ -63,12 +63,12 @@
     command: >
       bash -c 'sudo -E kolla_set_configs &&
       keystone-manage --config-file /etc/keystone/keystone.conf
-      fernet_setup --keystone-user {{ keystone_username }} --keystone-group {{ keystone_groupname }} && ls -l /etc/keystone/fernet-keys/'
+      fernet_setup --keystone-user {{ keystone_username }} --keystone-group {{ keystone_groupname }}'
     name: "bootstrap_keystone_fernet"
     restart_policy: no
     volumes: "{{ keystone_fernet.volumes|reject('equalto', '')|list }}"
   run_once: True
-  delegate_to: "{{ groups['keystone_fernet_bootstrap'][0] }}"
+  delegate_to: "{{ groups['keystone'][0] }}"
   when:
     - keystone_token_provider == 'fernet'
     - groups['keystone_fernet_running'] is not defined

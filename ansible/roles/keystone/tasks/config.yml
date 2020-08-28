@@ -68,6 +68,20 @@
   notify:
     - Restart {{ item.key }} container
 
+- name: Copying keystone-startup script for keystone
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  template:
+    src: "keystone-startup.sh.j2"
+    dest: "{{ node_config_directory }}/keystone/keystone-startup.sh"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone.enabled | bool
+  notify:
+    - Restart keystone container
+
 - name: Create Keystone domain-specific config directory
   vars:
     keystone: "{{ keystone_services.keystone }}"

@@ -1,8 +1,13 @@
-{% set keystone_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set keystone_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "/usr/sbin/{{ keystone_cmd }}",
+    "command": "/usr/bin/keystone-startup.sh",
     "config_files": [
+        {
+            "source": "{{ container_config_directory }}/keystone-startup.sh",
+            "dest": "/usr/bin/keystone-startup.sh",
+            "owner": "root",
+            "perm": "0755"
+        },
         {
             "source": "{{ container_config_directory }}/keystone.conf",
             "dest": "/etc/keystone/keystone.conf",

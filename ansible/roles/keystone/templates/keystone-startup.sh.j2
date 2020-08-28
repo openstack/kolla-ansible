@@ -1,0 +1,35 @@
+#!/bin/bash -x
+{% set keystone_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+
+set -o errexit
+set -o pipefail
+
+TOKEN_DIR="/etc/keystone/fernet-keys"
+
+# Ensure tokens are populated, check for 0 (staging) key
+n=0
+while [ ! -f "${TOKEN_DIR}/0" ]; do
+    if [ $n -lt 36 ]; then
+        n=$(( n + 1 ))
+        echo "ERROR: Fernet tokens have not been populated, rechecking in 5 seconds"
+        echo "DEBUG: ${TOKEN_DIR} contents:"
+        ls -l ${TOKEN_DIR}
+        sleep 5
+    else
+        echo "CRITICAL: Waited for 10 minutes - failing"
+        exit 1
+    fi
+done
+
+# Ensure tokens are not stale
+# Get primary token (file with highest number)
+TOKEN_PRIMARY=$(ls -1 ${TOKEN_DIR} | sort -hr | head -n 1)
+# Check it's age in seconds
+TOKEN_AGE=$(($(date +%s) - $(date +%s -r "${TOKEN_DIR}/${TOKEN_PRIMARY}")))
+# Compare if it's older than fernet_token_expiry and run key rotation if needed
+if [ "${TOKEN_AGE}" -gt "{{ fernet_token_expiry }}" ]; then
+    echo "ERROR: Primary token ${TOKEN_PRIMARY} is stale."
+    exit 1
+fi
+
+exec /usr/sbin/{{ keystone_cmd }} $@
