@@ -101,12 +101,12 @@ and set the ``database_password`` in ``/etc/kolla/passwords.yml`` file:
 
    database_password: mySuperSecurePassword
 
-If the MariaDB ``username`` is not ``root``, set ``database_username`` in
+If the MariaDB ``username`` is not ``root``, set ``database_user`` in
 ``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
-   database_username: "privillegeduser"
+   database_user: "privillegeduser"
 
 Using preconfigured databases / users:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
