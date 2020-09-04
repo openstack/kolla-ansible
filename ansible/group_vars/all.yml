@@ -57,10 +57,15 @@ container_http_proxy: ""
 container_https_proxy: ""
 container_no_proxy: "localhost,127.0.0.1"
 
+container_proxy_no_proxy_entries:
+  - "{{ container_no_proxy }}"
+  - "{{ api_interface_address }}"
+  - "{{ kolla_internal_vip_address | default('') }}"
+
 container_proxy:
   http_proxy: "{{ container_http_proxy }}"
   https_proxy: "{{ container_https_proxy }}"
-  no_proxy: "{{ container_no_proxy }},{{ api_interface_address }},{{ kolla_internal_vip_address }}"
+  no_proxy: "{{ container_proxy_no_proxy_entries | select | join(',') }}"
 
 # By default, Kolla API services bind to the network address assigned
 # to the api_interface.  Allow the bind address to be an override.
