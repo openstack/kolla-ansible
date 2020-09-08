@@ -46,21 +46,39 @@
 
 - hosts: primary
   any_errors_fatal: true
+  vars:
+    kolla_build_config:
+      DEFAULT:
+        profile: gate
+        logs_dir: /tmp/logs/build
+        # NOTE(yoctozepto): we cannot build and push at the same time on debian
+        # buster see https://github.com/docker/for-linux/issues/711.
+        push: "{{ base_distro != 'debian' }}"
+        base: "{{ base_distro }}"
+        install_type: "{{ install_type }}"
+        registry: "127.0.0.1:4000"
+        namespace: lokolla
+        tag: "{{ build_image_tag }}"
+        template_override: /etc/kolla/template_overrides.j2
+        # NOTE(yoctozepto): to avoid issues with IPv6 not enabled in the docker daemon
+        # and since we don't need isolated networks here, use host networking
+        network_mode: host
   environment: "{{ pip_user_path_env }}"
   tasks:
     - name: detect whether need build images
       set_fact:
         need_build_image: true
       when:
-        - item.project.short_name == "kolla"
-        - item.branch == zuul.branch
+        # NOTE(yoctozepto): if there is any tested change that does not belong to kolla-ansible,
+        # then kolla images should be built
+        - item.project.short_name != "kolla-ansible"
       with_items: "{{ zuul['items'] }}"
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images
       include_vars:
         file: "{{ zuul.executor.work_root }}/src/opendev.org/openstack/kolla/tests/vars/zuul.yml"
-      when: need_build_image  # only then kolla sources are available (and used)
+      when: need_build_image
 
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
@@ -89,12 +107,16 @@
         mode: 0777
       become: true
 
+    - import_role:
+        name: kolla-build-config
+      when: need_build_image
+
     # NOTE(yoctozepto): required to customize kolla to use local mirrors
     - name: Template template_overrides.j2
       template:
         src: "{{ zuul.executor.work_root }}/src/opendev.org/openstack/kolla/tests/templates/template_overrides.j2"
         dest: /etc/kolla/template_overrides.j2
-      when: need_build_image  # only then kolla sources are available (and used)
+      when: need_build_image
 
     - name: Ensure /etc/docker exists
       file:
@@ -271,9 +293,7 @@
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
         BASE_DISTRO: "{{ base_distro }}"
-        INSTALL_TYPE: "{{ install_type }}"
         BUILD_IMAGE: "{{ need_build_image }}"
-        TAG: "{{ build_image_tag }}"
         KOLLA_SRC_DIR: "{{ ansible_env.HOME }}/src/opendev.org/openstack/kolla"
         SCENARIO: "{{ scenario }}"
         UPPER_CONSTRAINTS: "{{ upper_constraints_file }}"

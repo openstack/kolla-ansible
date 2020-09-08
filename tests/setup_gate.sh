@@ -79,28 +79,7 @@ function prepare_images {
         GATE_IMAGES="^cron,^elasticsearch,^fluentd,^grafana,^haproxy,^keepalived,^kibana,^kolla-toolbox,^mariadb,^memcached,^prometheus,^rabbitmq"
     fi
 
-    # NOTE(yoctozepto): we cannot build and push at the same time on debian
-    # buster see https://github.com/docker/for-linux/issues/711.
-    PUSH="true"
-    if [[ "debian" == $BASE_DISTRO ]]; then
-        PUSH="false"
-    fi
-
-    sudo tee /etc/kolla/kolla-build.conf <<EOF
-[DEFAULT]
-namespace = lokolla
-base = ${BASE_DISTRO}
-install_type = ${INSTALL_TYPE}
-tag = ${TAG}
-profile = gate
-registry = 127.0.0.1:4000
-push = ${PUSH}
-logs_dir = /tmp/logs/build
-template_override = /etc/kolla/template_overrides.j2
-# NOTE(yoctozepto): to avoid issues with IPv6 not enabled in the docker daemon
-# and since we don't need isolated networks here, use host networking
-network_mode = host
-
+    sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}
 EOF
