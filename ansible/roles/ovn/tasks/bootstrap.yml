@@ -1,45 +1,33 @@
 ---
 - name: Create br-int bridge on OpenvSwitch
   become: true
-  command: >
-    docker exec openvswitch_vswitchd ovs-vsctl --may-exist
-    add-br br-int -- set Bridge br-int fail-mode=secure
-  when: inventory_hostname in groups['ovn-controller']
+  kolla_toolbox:
+    user: root
+    module_name: openvswitch_bridge
+    module_args:
+      bridge: br-int
+      state: present
+      fail_mode: secure
 
-- name: Set OVN encapsulation settings
-  become: true
-  command: >
-    docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch .
-    external_ids:ovn-encap-ip={{ tunnel_interface_address }}
-    external_ids:ovn-encap-type=geneve
-    external_ids:ovn-remote={{ ovn_sb_connection }}
-  when: inventory_hostname in groups['ovn-controller']
-
-- name: Set OVN bridge mappings
+- name: Configure OVN in OVSDB
   vars:
     ovn_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
+    ovn_cms_opts: "{{ 'enable-chassis-as-gw' if inventory_hostname in groups['ovn-controller-network'] else '' }}"
   become: true
-  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external_ids:ovn-bridge-mappings={{ ovn_mappings }}
-  when:
-    - inventory_hostname in groups["ovn-controller-network"]
-      or (inventory_hostname in groups["ovn-controller-compute"] and computes_need_external_bridge | bool)
-
-- name: Enable chassis as gateway
-  become: true
-  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external-ids:ovn-cms-options="enable-chassis-as-gw"
-  when: inventory_hostname in groups["ovn-controller-network"]
-
-- name: Ensure chassis as gateway is disabled where required
-  become: true
-  command: docker exec openvswitch_vswitchd ovs-vsctl remove Open_vSwitch . external-ids ovn-cms-options
-  when:
-    - inventory_hostname in groups["openvswitch"]
-    - inventory_hostname not in groups["ovn-controller-network"]
-
-- name: Set OVN remote probe interval
-  become: true
-  command: >
-    docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch .
-    external_ids:ovn-remote-probe-interval={{ ovn_remote_probe_interval }}
-  when:
-    - inventory_hostname in groups["ovn-controller"]
+  kolla_toolbox:
+    user: root
+    module_name: openvswitch_db
+    module_args:
+      table: Open_vSwitch
+      record: .
+      col: external_ids
+      key: "{{ item.name }}"
+      value: "{{ item.value }}"
+      state: "{{ item.state | default('present') }}"
+  loop:
+    - { name: ovn-encap-ip, value: "{{ tunnel_interface_address }}" }
+    - { name: ovn-encap-type, value: geneve }
+    - { name: ovn-remote, value: "{{ ovn_sb_connection }}" }
+    - { name: ovn-remote-probe-interval, value: "{{ ovn_remote_probe_interval }}" }
+    - { name: ovn-bridge-mappings, value: "{{ ovn_mappings if ovn_mappings != '' else omit }}", state: "{{ 'present' if (inventory_hostname in groups['ovn-controller-network'] or computes_need_external_bridge | bool) else 'absent' }}" }
+    - { name: ovn-cms-options, value: "{{ ovn_cms_opts }}", state: "{{ 'present' if ovn_cms_opts != '' else 'absent' }}" }
