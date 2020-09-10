@@ -87,6 +87,7 @@ below:
     keystone_identity_mappings:
       - name: "mappingId1"
         file: "/full/qualified/path/to/mapping/json/file/to/mappingId1"
+        schema_version: "2.0"
 
 In some cases it's necessary to add JWKS (JSON Web Key Set) uri.
 It is required for auth-openidc endpoint - which is
