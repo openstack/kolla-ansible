@@ -103,6 +103,8 @@ function test_ironic_logged {
     baremetal_driver_list=$(openstack baremetal driver list)
     openstack baremetal node list
     openstack baremetal port list
+    # Ironic Inspector API
+    openstack baremetal introspection rule list
 
     # Sanity check.
     if ! echo "$baremetal_driver_list" | grep fake-hardware; then

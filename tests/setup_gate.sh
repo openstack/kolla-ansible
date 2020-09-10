@@ -15,7 +15,7 @@ function setup_openstack_clients {
         packages+=(python-zunclient)
     fi
     if [[ $SCENARIO == ironic ]]; then
-        packages+=(python-ironicclient)
+        packages+=(python-ironicclient python-ironic-inspector-client)
     fi
     if [[ $SCENARIO == masakari ]]; then
         packages+=(python-masakariclient)
