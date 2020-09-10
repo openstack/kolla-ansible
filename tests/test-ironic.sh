@@ -131,12 +131,14 @@ function test_ironic_logged {
 
 function test_ironic {
     echo "Testing Ironic"
-    if ! test_ironic_logged > /tmp/logs/ansible/test-ironic 2>&1; then
+    test_ironic_logged > /tmp/logs/ansible/test-ironic 2>&1
+    result=$?
+    if [[ $result != 0 ]]; then
         echo "Testing Ironic failed. See ansible/test-ironic for details"
-        return 1
     else
         echo "Successfully tested Ironic. See ansible/test-ironic for details"
     fi
+    return $result
 }
 
 test_ironic
