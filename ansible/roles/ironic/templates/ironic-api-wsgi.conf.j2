@@ -1,0 +1,50 @@
+{% set ironic_log_dir = '/var/log/kolla/ironic' %}
+{% set wsgi_directory = '/usr/bin' if ironic_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+{% if ironic_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
+Listen {{ api_interface_address | put_address_in_context('url') }}:{{ ironic_api_listen_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+KeepAliveTimeout {{ kolla_httpd_keep_alive }}
+
+<Directory "{{ wsgi_directory }}">
+    <FilesMatch "^ironic-api-wsgi$">
+        Options None
+        Require all granted
+    </FilesMatch>
+</Directory>
+
+ErrorLog "{{ ironic_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+CustomLog "{{ ironic_log_dir }}/apache-access.log" common
+</IfModule>
+
+{% if ironic_logging_debug | bool %}
+LogLevel info
+{% endif %}
+
+<VirtualHost *:{{ ironic_api_listen_port }}>
+    WSGIDaemonProcess ironic-api processes={{ openstack_service_workers }} threads=1 user=ironic group=ironic display-name=%{GROUP}
+    WSGIProcessGroup ironic-api
+    WSGIScriptAlias / {{ wsgi_directory }}/ironic-api-wsgi
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    <IfVersion >= 2.4>
+      ErrorLogFormat "%{cu}t %M"
+    </IfVersion>
+    ErrorLog "{{ ironic_log_dir }}/ironic-api-error.log"
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "{{ ironic_log_dir }}/ironic-api-access.log" logformat
+{% if ironic_enable_tls_backend | bool %}
+    SSLEngine on
+    SSLCertificateFile /etc/ironic/certs/ironic-cert.pem
+    SSLCertificateKeyFile /etc/ironic/certs/ironic-key.pem
+{% endif %}
+</VirtualHost>
