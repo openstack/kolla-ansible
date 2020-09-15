@@ -98,39 +98,11 @@
   notify:
     - Restart nova-libvirt container
 
-- name: Copying over libvirt TLS keys (nova-libvirt)
-  include_tasks: "config-libvirt-tls.yml"
-  vars:
-    service: "{{ nova_cell_services['nova-libvirt'] }}"
-    service_name: nova-libvirt
-    file: "{{ item }}"
+- name: Copying over libvirt TLS keys
+  include_tasks: config-libvirt-tls.yml
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
     - libvirt_tls | bool
     - libvirt_tls_manage_certs | bool
-  with_items:
-    - cacert.pem
-    - servercert.pem
-    - serverkey.pem
-    - clientcert.pem
-    - clientkey.pem
-
-- name: Copying over libvirt TLS keys (nova-compute)
-  include_tasks: "config-libvirt-tls.yml"
-  vars:
-    service: "{{ nova_cell_services['nova-compute'] }}"
-    service_name: nova-compute
-    file: "{{ item }}"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - libvirt_tls | bool
-    - libvirt_tls_manage_certs | bool
-  with_items:
-    - cacert.pem
-    - clientcert.pem
-    - clientkey.pem
 
 - name: Copying files for nova-ssh
   become: true
