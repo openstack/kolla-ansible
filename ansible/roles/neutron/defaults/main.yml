@@ -399,6 +399,8 @@ mechanism_drivers:
     enabled: "{{ neutron_plugin_agent != 'ovn' }}"
   - name: "ovn"
     enabled: "{{ neutron_plugin_agent == 'ovn' }}"
+  - name: "sriovnicswitch"
+    enabled: "{{ enable_neutron_sriov | bool }}"
 
 neutron_mechanism_drivers: "{{ mechanism_drivers | selectattr('enabled', 'equalto', true) | list }}"
 
@@ -473,6 +475,8 @@ agent_extensions:
     enabled: "{{ enable_neutron_qos | bool }}"
   - name: "sfc"
     enabled: "{{ enable_neutron_sfc | bool }}"
+  - name: "fdb"
+    enabled: "{{ enable_neutron_sriov | bool }}"
 
 neutron_agent_extensions: "{{ agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
 
@@ -574,3 +578,8 @@ neutron_ks_users:
     user: "{{ neutron_keystone_user }}"
     password: "{{ neutron_keystone_password }}"
     role: "admin"
+
+####################
+# SRIOV
+####################
+neutron_sriov_physnets: "{{ neutron_sriov_physnet_mappings.items() | map('join', ':') | join(',') }}"
