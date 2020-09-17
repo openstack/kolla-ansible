@@ -34,11 +34,11 @@ To run the default set of tests:
 
    tox
 
-To run the Python 3.7 tests:
+To run the Python 3.8 tests:
 
 .. code-block:: console
 
-   tox -e py37
+   tox -e py38
 
 To run the style tests:
 
@@ -50,7 +50,7 @@ To run multiple tests separate items by commas:
 
 .. code-block:: console
 
-   tox -e py37,linters
+   tox -e py38,linters
 
 Running a subset of tests
 -------------------------
@@ -64,28 +64,28 @@ directory use:
 
 .. code-block:: console
 
-   tox -e py37 kolla-ansible.tests
+   tox -e py38 kolla-ansible.tests
 
 To run the tests of a specific file
 ``kolla-ansible/tests/test_kolla_docker.py``:
 
 .. code-block:: console
 
-   tox -e py37 test_kolla_docker
+   tox -e py38 test_kolla_docker
 
 To run the tests in the ``ModuleArgsTest`` class in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
-   tox -e py37 test_kolla_docker.ModuleArgsTest
+   tox -e py38 test_kolla_docker.ModuleArgsTest
 
 To run the ``ModuleArgsTest.test_module_args`` test method in
 the ``kolla-ansible/tests/test_kolla_docker.py`` file:
 
 .. code-block:: console
 
-   tox -e py37 test_kolla_docker.ModuleArgsTest.test_module_args
+   tox -e py38 test_kolla_docker.ModuleArgsTest.test_module_args
 
 Debugging unit tests
 --------------------
