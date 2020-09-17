@@ -58,6 +58,10 @@ pygments_style = 'native'
 html_theme = 'openstackdocs'
 # html_static_path = ['static']
 
+# Add any paths that contain "extra" files, such as .htaccess or
+# robots.txt.
+html_extra_path = ['_extra']
+
 html_theme_options = {
     "show_other_versions": True,
 }
