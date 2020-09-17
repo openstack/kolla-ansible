@@ -12,7 +12,7 @@
   when: inventory_hostname in groups['monasca-grafana']
   register: monasca_grafana_differs
 
-- include_tasks: config.yml
+- import_tasks: config.yml
 
 # NOTE(dszumski): We don't want old Grafana instances running after
 # a new instance has updated the DB schema. Since the first instance
@@ -30,7 +30,7 @@
     - inventory_hostname != groups['monasca-grafana']|first
     - monasca_grafana_differs['result']
 
-- include_tasks: bootstrap_service.yml
+- import_tasks: bootstrap_service.yml
 
 - name: Flush handlers
   meta: flush_handlers
