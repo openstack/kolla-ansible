@@ -17,10 +17,12 @@
   become: true
   vars:
     neutron_l3_agent: "{{ neutron_services['neutron-l3-agent'] }}"
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
   sysctl:
     name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    sysctl_set: yes
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
     sysctl_file: "{{ kolla_sysctl_conf_path }}"
   with_items:
     - { name: "net.ipv4.ip_forward", value: 1}
@@ -34,4 +36,5 @@
     - { name: "net.ipv6.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh3 }}"}
   when:
     - set_sysctl | bool
+    - item.value != 'KOLLA_SKIP'
     - (neutron_l3_agent.enabled | bool and neutron_l3_agent.host_in_groups | bool)
