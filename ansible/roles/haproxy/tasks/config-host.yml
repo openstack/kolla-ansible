@@ -1,9 +1,12 @@
 ---
 - name: Setting sysctl values
+  vars:
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
   sysctl:
     name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    sysctl_set: yes
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
     sysctl_file: "{{ kolla_sysctl_conf_path }}"
   become: true
   with_items:
@@ -12,6 +15,7 @@
     - { name: "net.unix.max_dgram_qlen", value: 128}
   when:
     - set_sysctl | bool
+    - item.value != 'KOLLA_SKIP'
 
 - name: Load and persist keepalived module
   import_role:
