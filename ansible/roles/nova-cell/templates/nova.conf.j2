@@ -141,13 +141,16 @@ valid_interfaces = internal
 {% if not service_name.startswith('nova-compute') %}
 [database]
 connection = mysql+pymysql://{{ nova_cell_database_user }}:{{ nova_cell_database_password }}@{{ nova_cell_database_address | put_address_in_context('url') }}:{{ nova_cell_database_port }}/{{ nova_cell_database_name }}
-max_pool_size = 50
+connection_recycle_time = {{ database_connection_recycle_time }}
 max_overflow = 1000
+max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 {% if service_name == 'nova-cell-bootstrap' or (service_name == 'nova-conductor' and nova_cell_conductor_has_api_database | bool) %}
 [api_database]
 connection = mysql+pymysql://{{ nova_api_database_user }}:{{ nova_api_database_password }}@{{ nova_api_database_address }}/{{ nova_api_database_name }}
+connection_recycle_time = {{ database_connection_recycle_time }}
+max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 {% endif %}
 {% endif %}
