@@ -111,6 +111,10 @@ backend {{ service_name }}_back
         {% set custom_member_list = haproxy_service.custom_member_list|default(none) %}
         {# Mode defaults to http #}
         {% set mode = haproxy_service.mode|default('http') %}
+        {# By default each service has its own frontend (hence with_frontend is true by default) #}
+        {% set with_frontend = haproxy_service.with_frontend|default(true)|bool %}
+        {# By default each service has its own backend (hence with_backend is true by default) #}
+        {% set with_backend = haproxy_service.with_backend|default(true)|bool %}
         {# Use the parent host group but allow it to be overridden #}
         {% set host_group = haproxy_service.host_group|default(service.group) %}
         {# Additional options can be defined in config, and are additive to the global extras #}
@@ -125,10 +129,12 @@ backend {{ service_name }}_back
         {% if auth_user and auth_pass %}
 {{ userlist_macro(haproxy_name, auth_user, auth_pass) }}
         {% endif %}
+        {% if with_frontend %}
 {{ frontend_macro(haproxy_name, haproxy_service.port, mode, external,
                   frontend_http_extra, frontend_tcp_extra) }}
+        {% endif %}
         {# Redirect (to https) is a special case, as it does not include a backend #}
-        {% if mode != 'redirect' %}
+        {% if with_backend and mode != 'redirect' %}
 {{ backend_macro(haproxy_name, listen_port, mode, host_group,
                  custom_member_list, backend_http_extra, backend_tcp_extra,
                  auth_user, auth_pass, tls_backend) }}
