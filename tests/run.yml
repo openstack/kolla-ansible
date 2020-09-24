@@ -188,6 +188,24 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
+    - block:
+        - name: ensure octavia config directory exists
+          file:
+            path: /etc/kolla/config/octavia
+            state: directory
+            mode: 0777
+
+        - name: create dummy TLS certificates for octavia
+          file:
+            path: "/etc/kolla/config/octavia/{{ item }}"
+            state: touch
+          with_items:
+            - client.cert-and-key.pem
+            - client_ca.cert.pem
+            - server_ca.cert.pem
+            - server_ca.key.pem
+      when: scenario == 'magnum'
+
     - name: ensure /etc/ansible exists
       file:
         path: /etc/ansible
@@ -404,6 +422,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "ironic"
+
+        - name: Run test-magnum.sh script
+          script:
+            cmd: test-magnum.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "magnum"
 
         - name: Run test-masakari.sh script
           script:
