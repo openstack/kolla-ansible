@@ -35,7 +35,13 @@ function wait_for_placement_resources {
     for i in $(seq 1 120); do
         # Fetch provider UUIDs from Placement
         local providers
-        providers=$(curl -sH "X-Auth-Token: $token" $endpoint/resource_providers \
+        args=(
+            -sH "X-Auth-Token: $token"
+        )
+        if [[ "$TLS_ENABLED" = "True" ]]; then
+            args+=(--cacert $OS_CACERT)
+        fi
+        providers=$(curl "${args[@]}" $endpoint/resource_providers \
             | ./jq -r '.resource_providers[].uuid')
 
         local p
@@ -46,7 +52,7 @@ function wait_for_placement_resources {
             # A resource class inventory record looks something like
             # {"max_unit": 1, "min_unit": 1, "step_size": 1, "reserved": 0, "total": 1, "allocation_ratio": 1}
             # Subtract reserved from total (defaulting both to 0)
-            amount=$(curl -sH "X-Auth-Token: $token" $endpoint/resource_providers/$p/inventories \
+            amount=$(curl "${args[@]}" $endpoint/resource_providers/$p/inventories \
                 | ./jq ".inventories.CUSTOM_$resource_class as \$cls
                     | (\$cls.total // 0) - (\$cls.reserved // 0)")
             if [ $amount -gt 0 ]; then

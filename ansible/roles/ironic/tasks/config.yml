@@ -33,7 +33,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - kolla_copy_ca_into_containers | bool or ironic_enable_tls_backend | bool
 
 - name: Copying over config.json files for services
   template:
@@ -243,6 +243,18 @@
   with_dict: "{{ ironic_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over ironic-api-wsgi.conf
+  template:
+    src: "ironic-api-wsgi.conf.j2"
+    dest: "{{ node_config_directory }}/ironic-api/ironic-api-wsgi.conf"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups["ironic-api"]
+    - ironic_services["ironic-api"].enabled | bool
+  notify:
+    - "Restart ironic-api container"
 
 - import_tasks: check-containers.yml
   when: kolla_action != "config"
