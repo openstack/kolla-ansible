@@ -1,0 +1,44 @@
+---
+# This play adapts https://docs.openstack.org/octavia/victoria/admin/guides/certificates.html
+
+# Kolla-Ansible prepares the Server CA certificate and key for use by Octavia
+# to generate Amphorae certificates.
+
+# Kolla-Ansible prepares and controls the Client CA certificate and key.
+# Client CA is used to generate certificates for Octavia controllers.
+
+- name: Ensure server_ca and client_ca directories exist
+  file:
+    path: "{{ octavia_certs_work_dir }}/{{ item }}"
+    state: "directory"
+    mode: 0770
+  loop:
+    - server_ca
+    - client_ca
+
+- name: Copy openssl.cnf
+  copy:
+    src: "{{ octavia_certs_openssl_cnf_path }}"
+    dest: "{{ octavia_certs_work_dir }}/openssl.cnf"
+
+- import_tasks: server_ca.yml
+
+- import_tasks: client_ca.yml
+
+- import_tasks: client_cert.yml
+
+- name: Ensure {{ node_custom_config }}/octavia directory exists
+  file:
+    path: "{{ node_custom_config }}/octavia"
+    state: "directory"
+    mode: 0770
+
+- name: Copy the to-be-deployed keys and certs to {{ node_custom_config }}/octavia
+  copy:
+    src: "{{ octavia_certs_work_dir }}/{{ item.src }}"
+    dest: "{{ node_custom_config }}/octavia/{{ item.dest }}"
+  with_items:
+    - { src: "server_ca/server_ca.cert.pem", dest: "server_ca.cert.pem" }
+    - { src: "server_ca/server_ca.key.pem", dest: "server_ca.key.pem" }
+    - { src: "client_ca/client_ca.cert.pem", dest: "client_ca.cert.pem" }
+    - { src: "client_ca/client.cert-and-key.pem", dest: "client.cert-and-key.pem" }
