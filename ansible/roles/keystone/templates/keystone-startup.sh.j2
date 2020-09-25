@@ -26,8 +26,8 @@ done
 TOKEN_PRIMARY=$(ls -1 ${TOKEN_DIR} | sort -hr | head -n 1)
 # Check it's age in seconds
 TOKEN_AGE=$(($(date +%s) - $(date +%s -r "${TOKEN_DIR}/${TOKEN_PRIMARY}")))
-# Compare if it's older than fernet_token_expiry and run key rotation if needed
-if [ "${TOKEN_AGE}" -gt "{{ fernet_token_expiry }}" ]; then
+# Compare if it's older than fernet_key_rotation_interval and fail if it's stale
+if [ "${TOKEN_AGE}" -gt "{{ fernet_key_rotation_interval }}" ]; then
     echo "ERROR: Primary token ${TOKEN_PRIMARY} is stale."
     exit 1
 fi
