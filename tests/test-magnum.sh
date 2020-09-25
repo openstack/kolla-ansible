@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test deployment of magnum, octavia and designate.
+# Test deployment of magnum, trove and designate.
 
 set -o xtrace
 set -o errexit
@@ -12,10 +12,6 @@ export PYTHONUNBUFFERED=1
 function test_magnum_clusters {
     openstack coe cluster list
     openstack coe cluster template list
-}
-
-function test_octavia {
-    openstack loadbalancer list
 }
 
 function test_trove {
@@ -66,19 +62,18 @@ function test_magnum_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
     test_magnum_clusters
-    test_octavia
     test_designate
     test_trove
 }
 
 function test_magnum {
-    echo "Testing Magnum, Octavia, Trove and Designate"
+    echo "Testing Magnum, Trove and Designate"
     test_magnum_logged > /tmp/logs/ansible/test-magnum 2>&1
     result=$?
     if [[ $result != 0 ]]; then
-        echo "Testing Magnum, Octavia, Trove and Designate failed. See ansible/test-magnum for details"
+        echo "Testing Magnum, Trove and Designate failed. See ansible/test-magnum for details"
     else
-        echo "Successfully tested Magnum, Octavia, Trove and Designate . See ansible/test-magnum for details"
+        echo "Successfully tested Magnum, Trove and Designate . See ansible/test-magnum for details"
     fi
     return $result
 }
