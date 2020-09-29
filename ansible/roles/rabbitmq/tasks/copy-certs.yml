@@ -1,0 +1,52 @@
+---
+- name: Copying over extra CA certificates
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  copy:
+    src: "{{ kolla_certificates_dir }}/ca/"
+    dest: "{{ node_config_directory }}/{{ project_name }}/ca-certificates"
+    mode: "0644"
+  when:
+    - kolla_copy_ca_into_containers | bool
+    - service | service_enabled_and_mapped_to_host
+  notify:
+    - Restart rabbitmq container
+
+- name: Copying over TLS certificate
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/{{ project_name }}-cert.pem"
+    mode: "0644"
+  with_first_found:
+    - files:
+        - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-cert.pem"
+        - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
+        - "{{ kolla_certificates_dir }}/{{ project_name }}-cert.pem"
+      skip: true
+  when:
+    - service | service_enabled_and_mapped_to_host
+  notify:
+    - Restart rabbitmq container
+
+- name: Copying over TLS key
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/{{ project_name }}-key.pem"
+    mode: "0600"
+  with_first_found:
+    - files:
+        - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-key.pem"
+        - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
+        - "{{ kolla_certificates_dir }}/{{ project_name }}-key.pem"
+      skip: true
+  when:
+    - service | service_enabled_and_mapped_to_host
+  notify:
+    - Restart rabbitmq container

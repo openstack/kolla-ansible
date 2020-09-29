@@ -62,3 +62,16 @@
     src: "{{ backend_dir }}/backend.key"
     dest: "{{ kolla_certificates_dir }}/backend-key.pem"
     mode: "0660"
+
+- name: Copy backend TLS certificate and key for RabbitMQ
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    remote_src: true
+  with_items:
+    - src: "{{ kolla_tls_backend_cert }}"
+      dest: "{{ kolla_certificates_dir }}/rabbitmq-cert.pem"
+    - src: "{{ kolla_tls_backend_key }}"
+      dest: "{{ kolla_certificates_dir }}/rabbitmq-key.pem"
+  when:
+    - rabbitmq_enable_tls | bool
