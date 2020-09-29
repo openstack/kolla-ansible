@@ -64,6 +64,14 @@ Limitations and Recommendations
    ``"yes"``, you need to have the ``log_bin_trust_function_creators`` set to
    ``1`` by your database administrator before performing the upgrade.
 
+Ubuntu Focal 20.04
+------------------
+
+The Victoria release adds support for Ubuntu Focal 20.04 as a host operating
+system. Ubuntu users upgrading from Ussuri should first upgrade OpenStack
+containers to Victoria, which uses the Ubuntu Focal 20.04 base container image.
+Hosts should then be upgraded to Ubuntu Focal 20.04.
+
 Preparation
 -----------
 
