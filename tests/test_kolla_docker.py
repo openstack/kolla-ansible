@@ -93,6 +93,7 @@ class ModuleArgsTest(base.BaseTestCase):
             dimensions=dict(required=False, type='dict', default=dict()),
             tty=dict(required=False, type='bool', default=False),
             client_timeout=dict(required=False, type='int', default=120),
+            healthcheck=dict(required=False, type='dict'),
         )
         required_if = [
             ['action', 'pull_image', ['image']],
@@ -259,8 +260,9 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.fake_data['params'].pop('dimensions')
         self.fake_data['params']['host_config']['blkio_weight'] = '10'
-        expected_args = {'command', 'detach', 'environment', 'host_config',
-                         'image', 'labels', 'name', 'tty', 'volumes'}
+        expected_args = {'command', 'detach', 'environment',
+                         'host_config', 'image', 'labels', 'name', 'tty',
+                         'volumes'}
         self.dw.dc.create_container.assert_called_once_with(
             **{k: self.fake_data['params'][k] for k in expected_args})
         self.dw.dc.create_host_config.assert_called_with(
@@ -277,6 +279,20 @@ class TestContainer(base.BaseTestCase):
         self.dw.module.exit_json.assert_called_once_with(
             failed=True, msg=repr("Unsupported dimensions"),
             unsupported_dimensions=set(['random']))
+
+    def test_create_container_with_healthcheck(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh']}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertTrue(self.dw.changed)
+        expected_args = {'command', 'detach', 'environment', 'host_config',
+                         'healthcheck', 'image', 'labels', 'name', 'tty',
+                         'volumes'}
+        self.dw.dc.create_container.assert_called_once_with(
+            **{k: self.fake_data['params'][k] for k in expected_args})
 
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',
@@ -1102,3 +1118,236 @@ class TestAttrComp(base.BaseTestCase):
             'Ulimits': [ulimits_nofile]}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertFalse(self.dw.compare_dimensions(container_info))
+
+    def test_compare_empty_new_healthcheck(self):
+        container_info = dict()
+        container_info['Config'] = {
+            'Healthcheck': {
+                'Test': [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_healthcheck(container_info))
+
+    def test_compare_empty_current_healthcheck(self):
+        self.fake_data['params']['healthcheck'] = {
+            'test': ['CMD-SHELL', '/bin/check.sh'],
+            'interval': 30,
+            'timeout': 30,
+            'start_period': 5,
+            'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_no_test(self):
+        self.fake_data['params']['healthcheck'] = {
+            'interval': 30,
+            'timeout': 30,
+            'start_period': 5,
+            'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {
+            'Healthcheck': {
+                'Test': [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.compare_healthcheck(container_info)
+        self.dw.module.exit_json.assert_called_once_with(
+            failed=True, msg=repr("Missing healthcheck option"),
+            missing_healthcheck=set(['test']))
+
+    def test_compare_healthcheck_pos(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD', '/bin/check']}
+        container_info = dict()
+        container_info['Config'] = {
+            'Healthcheck': {
+                'Test': [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_neg(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'interval': 30,
+             'timeout': 30,
+             'start_period': 5,
+             'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_time_zero(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'interval': 0,
+             'timeout': 30,
+             'start_period': 5,
+             'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_time_wrong_type(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'timeout': 30,
+             'start_period': 5,
+             'retries': 3}
+        self.fake_data['params']['healthcheck']['interval'] = \
+            {"broken": {"interval": "True"}}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertRaises(TypeError,
+                          lambda: self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_time_wrong_value(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'timeout': 30,
+             'start_period': 5,
+             'retries': 3}
+        self.fake_data['params']['healthcheck']['interval'] = "dog"
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertRaises(ValueError,
+                          lambda: self.dw.compare_healthcheck(container_info))
+
+    def test_compare_healthcheck_opt_missing(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'interval': 30,
+             'timeout': 30,
+             'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.compare_healthcheck(container_info)
+        self.dw.module.exit_json.assert_called_once_with(
+            failed=True, msg=repr("Missing healthcheck option"),
+            missing_healthcheck=set(['start_period']))
+
+    def test_compare_healthcheck_opt_extra(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'interval': 30,
+             'start_period': 5,
+             'extra_option': 1,
+             'timeout': 30,
+             'retries': 3}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.compare_healthcheck(container_info)
+        self.dw.module.exit_json.assert_called_once_with(
+            failed=True, msg=repr("Unsupported healthcheck options"),
+            unsupported_healthcheck=set(['extra_option']))
+
+    def test_compare_healthcheck_value_false(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['CMD-SHELL', '/bin/check.sh'],
+             'interval': 30,
+             'start_period': 5,
+             'extra_option': 1,
+             'timeout': 30,
+             'retries': False}
+        container_info = dict()
+        container_info['Config'] = {
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/bin/check.sh"],
+                "Interval": 30000000000,
+                "Timeout": 30000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 3}}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_healthcheck(container_info))
+
+    def test_parse_healthcheck_empty(self):
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertIsNone(self.dw.parse_healthcheck(
+                          self.fake_data.get('params', {}).get('healthcheck')))
+
+    def test_parse_healthcheck_test_none(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': 'NONE'}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertIsNone(self.dw.parse_healthcheck(
+                          self.fake_data['params']['healthcheck']))
+
+    def test_parse_healthcheck_test_none_brackets(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['NONE']}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertIsNone(self.dw.parse_healthcheck(
+                          self.fake_data['params']['healthcheck']))

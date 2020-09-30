@@ -207,6 +207,12 @@ options:
     required: False
     default: 120
     type: int
+  healthcheck:
+    description:
+      - Container healthcheck configuration
+    required: False
+    default: dict()
+    type: dict
 author: Sam Yaple
 '''
 
@@ -341,7 +347,8 @@ class DockerWorker(object):
             self.compare_environment(container_info) or
             self.compare_container_state(container_info) or
             self.compare_dimensions(container_info) or
-            self.compare_command(container_info)
+            self.compare_command(container_info) or
+            self.compare_healthcheck(container_info)
         )
 
     def compare_ipc_mode(self, container_info):
@@ -535,6 +542,30 @@ class DockerWorker(object):
                     new_args != container_info['Args']):
                 return True
 
+    def compare_healthcheck(self, container_info):
+        new_healthcheck = self.parse_healthcheck(
+            self.params.get('healthcheck'))
+        current_healthcheck = container_info['Config'].get('Healthcheck')
+
+        healthcheck_map = {
+            'test': 'Test',
+            'retries': 'Retries',
+            'interval': 'Interval',
+            'start_period': 'StartPeriod',
+            'timeout': 'Timeout'}
+
+        if new_healthcheck:
+            new_healthcheck = new_healthcheck['healthcheck']
+            if current_healthcheck:
+                new_healthcheck = dict((healthcheck_map.get(k, k), v)
+                                       for (k, v) in new_healthcheck.items())
+                return new_healthcheck != current_healthcheck
+            else:
+                return True
+        else:
+            if current_healthcheck:
+                return True
+
     def parse_image(self):
         full_image = self.params.get('image')
 
@@ -719,7 +750,8 @@ class DockerWorker(object):
 
     def build_container_options(self):
         volumes, binds = self.generate_volumes()
-        return {
+
+        options = {
             'command': self.params.get('command'),
             'detach': self.params.get('detach'),
             'environment': self._format_env_vars(),
@@ -730,6 +762,12 @@ class DockerWorker(object):
             'volumes': volumes,
             'tty': self.params.get('tty'),
         }
+
+        healthcheck = self.parse_healthcheck(self.params.get('healthcheck'))
+        if healthcheck:
+            options.update(healthcheck)
+
+        return options
 
     def create_container(self):
         self.changed = True
@@ -825,6 +863,71 @@ class DockerWorker(object):
             self.module.fail_json(msg="No such container: {}".format(name))
         else:
             self.module.exit_json(**info['State'])
+
+    def parse_healthcheck(self, healthcheck):
+        if not healthcheck:
+            return None
+
+        result = dict(healthcheck={})
+
+        # All supported healthcheck parameters
+        supported = set(['test', 'interval', 'timeout', 'start_period',
+                         'retries'])
+        unsupported = set(healthcheck) - supported
+        missing = supported - set(healthcheck)
+        duration_options = set(['interval', 'timeout', 'start_period'])
+
+        if unsupported:
+            self.module.exit_json(failed=True,
+                                  msg=repr("Unsupported healthcheck options"),
+                                  unsupported_healthcheck=unsupported)
+
+        if missing:
+            self.module.exit_json(failed=True,
+                                  msg=repr("Missing healthcheck option"),
+                                  missing_healthcheck=missing)
+
+        for key in healthcheck:
+            value = healthcheck.get(key)
+            if key in duration_options:
+                try:
+                    result['healthcheck'][key] = int(value) * 1000000000
+                except TypeError:
+                    raise TypeError(
+                        'Cannot parse healthcheck "{0}". '
+                        'Expected an integer, got "{1}".'
+                        .format(value, type(value).__name__)
+                    )
+                except ValueError:
+                    raise ValueError(
+                        'Cannot parse healthcheck "{0}". '
+                        'Expected an integer, got "{1}".'
+                        .format(value, type(value).__name__)
+                    )
+            else:
+                if key == 'test':
+                    # If the user explicitly disables the healthcheck,
+                    # return None as the healthcheck object
+                    if value in (['NONE'], 'NONE'):
+                        return None
+                    else:
+                        if isinstance(value, (tuple, list)):
+                            result['healthcheck'][key] = \
+                                [str(e) for e in value]
+                        else:
+                            result['healthcheck'][key] = \
+                                ['CMD-SHELL', str(value)]
+                elif key == 'retries':
+                    try:
+                        result['healthcheck'][key] = int(value)
+                    except ValueError:
+                        raise ValueError(
+                            'Cannot parse healthcheck number of retries.'
+                            'Expected an integer, got "{0}".'
+                            .format(type(value))
+                        )
+
+        return result
 
     def stop_container(self):
         name = self.params.get('name')
@@ -935,6 +1038,7 @@ def generate_module():
         labels=dict(required=False, type='dict', default=dict()),
         name=dict(required=False, type='str'),
         environment=dict(required=False, type='dict'),
+        healthcheck=dict(required=False, type='dict'),
         image=dict(required=False, type='str'),
         ipc_mode=dict(required=False, type='str', choices=['',
                                                            'host',
