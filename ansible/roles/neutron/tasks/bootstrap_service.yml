@@ -10,37 +10,12 @@
     environment:
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      NEUTRON_BOOTSTRAP_SERVICES: "{{ neutron_bootstrap_services | join(' ') }}"
     image: "{{ neutron_server.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_neutron"
     restart_policy: no
     volumes: "{{ neutron_server.volumes }}"
-  run_once: True
-  delegate_to: "{{ groups[neutron_server.group][0] }}"
-  when: (kolla_action == "deploy")
-        or (not neutron_enable_rolling_upgrade | bool)
-
-- name: Running Neutron sfc bootstrap container
-  vars:
-    neutron_server: "{{ neutron_services['neutron-server'] }}"
-  become: true
-  kolla_docker:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    environment:
-      NEUTRON_SFC_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ neutron_server.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "bootstrap_neutron_sfc"
-    restart_policy: no
-    volumes: "{{ neutron_server.volumes }}"
-  when:
-    - enable_neutron_sfc | bool
-    - neutron_server.enabled | bool
-    - neutron_server.host_in_groups | bool
   run_once: True
   delegate_to: "{{ groups[neutron_server.group][0] }}"
