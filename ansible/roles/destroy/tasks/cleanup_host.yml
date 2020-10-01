@@ -15,3 +15,26 @@
     kolla_external_vip_address: "{{ kolla_external_vip_address }}"
     kolla_dev_repos_directory: "{{ kolla_dev_repos_directory }}"
     destroy_include_dev: "{{ destroy_include_dev }}"
+
+- block:
+    - name: disable octavia-interface service
+      service:
+        name: octavia-interface
+        enabled: no
+        state: stopped
+      failed_when: false
+
+    - name: remove octavia-interface service file
+      file:
+        path: /etc/systemd/system/octavia-interface.service
+        state: absent
+
+    - name: remove dhclient.conf
+      file:
+        path: /etc/dhcp/octavia-dhclient.conf
+        state: absent
+  when:
+    - enable_octavia | bool
+    - octavia_auto_configure | bool
+    - octavia_network_type == 'tenant'
+    - inventory_hostname in groups['octavia-health-manager']
