@@ -1,85 +1,12 @@
 {% set cron_cmd = 'cron -f' if kolla_base_distro in ['ubuntu', 'debian'] else 'crond -s -n' %}
-{% set services = [
-    ( 'ansible', 'yes' ),
-    ( 'aodh', enable_aodh ),
-    ( 'barbican', enable_barbican ),
-    ( 'blazar', enable_blazar ),
-    ( 'ceilometer', enable_ceilometer ),
-    ( 'chrony', enable_chrony ),
-    ( 'cinder', enable_cinder ),
-    ( 'cloudkitty', enable_cloudkitty ),
-    ( 'collectd', enable_collectd ),
-    ( 'congress', enable_congress ),
-    ( 'cyborg', enable_cyborg ),
-    ( 'designate', enable_designate ),
-    ( 'elasticsearch', enable_elasticsearch ),
-    ( 'etcd', enable_etcd ),
-    ( 'freezer', enable_freezer ),
-    ( 'glance', enable_glance ),
-    ( 'glance-tls-proxy', enable_glance ),
-    ( 'gnocchi', enable_gnocchi ),
-    ( 'grafana', enable_grafana ),
-    ( 'haproxy', enable_haproxy ),
-    ( 'heat', enable_heat ),
-    ( 'horizon', enable_horizon ),
-    ( 'influxdb', enable_influxdb ),
-    ( 'ironic', enable_ironic ),
-    ( 'ironic-inspector', enable_ironic ),
-    ( 'iscsid', enable_iscsid ),
-    ( 'kafka', enable_kafka ),
-    ( 'karbor', enable_karbor ),
-    ( 'keepalived', enable_haproxy ),
-    ( 'keystone', enable_keystone ),
-    ( 'kibana', enable_kibana ),
-    ( 'kuryr', enable_kuryr ),
-    ( 'magnum', enable_magnum ),
-    ( 'manila', enable_manila ),
-    ( 'mariadb', enable_mariadb ),
-    ( 'masakari', enable_masakari ),
-    ( 'mistral', enable_mistral ),
-    ( 'monasca', enable_monasca ),
-    ( 'mongodb', enable_mongodb ),
-    ( 'murano', enable_murano ),
-    ( 'neutron', enable_neutron ),
-    ( 'nova', enable_nova ),
-    ( 'octavia', enable_octavia ),
-    ( 'outward-rabbitmq', enable_outward_rabbitmq ),
-    ( 'panko', enable_panko ),
-    ( 'qinling', enable_qinling ),
-    ( 'rabbitmq', enable_rabbitmq ),
-    ( 'rally', enable_rally ),
-    ( 'sahara', enable_sahara ),
-    ( 'searchlight', enable_searchlight ),
-    ( 'senlin', enable_senlin ),
-    ( 'skydive', enable_skydive ),
-    ( 'solum', enable_solum ),
-    ( 'storm', enable_storm ),
-    ( 'swift', enable_swift ),
-    ( 'tacker', enable_tacker ),
-    ( 'tempest', enable_tempest ),
-    ( 'trove', enable_trove ),
-    ( 'vitrage', enable_vitrage ),
-    ( 'watcher', enable_watcher ),
-    ( 'zookeeper', enable_zookeeper ),
-    ( 'zun', enable_zun )
-] %}
 {
     "command": "{{ cron_cmd }}",
     "config_files": [
         {
-            "source": "{{ container_config_directory }}/logrotate/global.conf",
+            "source": "{{ container_config_directory }}/logrotate.conf",
             "dest": "/etc/logrotate.conf",
             "owner": "root",
             "perm": "0600"
-        },
-{% for service, enabled in services if enabled | bool %}
-        {
-            "source": "{{ container_config_directory }}/logrotate/{{ service }}.conf",
-            "dest": "/etc/logrotate.d/{{ service }}.conf",
-            "owner": "root",
-            "perm": "0600"
-        }{{ ',' if not loop.last else '' }}
-{% endfor %}
-
+        }
     ]
 }
