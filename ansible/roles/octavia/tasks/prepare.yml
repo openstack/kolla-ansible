@@ -1,0 +1,131 @@
+---
+- name: Create amphora flavor
+  become: true
+  kolla_toolbox:
+    module_name: os_nova_flavor
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      is_public: "{{ octavia_amp_flavor.is_public | bool }}"
+      name: "{{ octavia_amp_flavor.name }}"
+      flavorid: "{{ octavia_amp_flavor.flavorid | default(omit, true) }}"
+      vcpus: "{{ octavia_amp_flavor.vcpus }}"
+      ram: "{{ octavia_amp_flavor.ram }}"
+      disk: "{{ octavia_amp_flavor.disk }}"
+      ephemeral: "{{ octavia_amp_flavor.ephemeral | default(omit, true) }}"
+      swap: "{{ octavia_amp_flavor.swap | default(omit, true) }}"
+      extra_specs: "{{ octavia_amp_flavor.extra_specs | default(omit, true) }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: amphora_flavor_info
+
+- name: Create nova keypair for amphora
+  become: True
+  kolla_toolbox:
+    module_name: os_keypair
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ octavia_amp_ssh_key_name }}"
+      public_key: "{{ octavia_amp_ssh_key.public_key }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Get {{ octavia_service_auth_project }} project id
+  become: True
+  kolla_toolbox:
+    module_name: os_project_info
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ octavia_service_auth_project }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: project_info
+
+- name: Create security groups for octavia
+  become: true
+  kolla_toolbox:
+    module_name: os_security_group
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ item.name }}"
+  loop: "{{ octavia_amp_security_groups.values() | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+  register: sec_grp_info
+
+- name: Add rules for security groups
+  become: true
+  kolla_toolbox:
+    module_name: os_security_group_rule
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      security_group: "{{ item.0.name }}"
+      protocol: "{{ item.1.protocol }}"
+      port_range_min: "{{ item.1.src_port | default(omit) }}"
+      port_range_max: "{{ item.1.dst_port | default(omit) }}"
+  with_subelements:
+    - "{{ octavia_amp_security_groups }}"
+    - rules
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Create loadbalancer management network
+  become: true
+  kolla_toolbox:
+    module_name: os_network
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ octavia_amp_network['name'] }}"
+      mtu: "{{ octavia_amp_network['mtu'] | default(omit, true) }}"
+      provider_network_type: "{{ octavia_amp_network['provider_network_type'] | default(omit, true) }}"
+      provider_physical_network: "{{ octavia_amp_network['provider_physical_network'] | default(omit, true) }}"
+      provider_segmentation_id: "{{ octavia_amp_network['provider_segmentation_id'] | default(omit, true) }}"
+      external: "{{ octavia_amp_network['external'] | default(omit) }}"
+      shared: "{{ octavia_amp_network['shared'] | default(omit) }}"
+  register: network_info
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Create loadbalancer management subnet
+  become: true
+  kolla_toolbox:
+    module_name: os_subnet
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      network_name: "{{ octavia_amp_network['name'] }}"
+      name: "{{ octavia_amp_network['subnet']['name'] }}"
+      cidr: "{{ octavia_amp_network['subnet']['cidr'] }}"
+      allocation_pool_start: "{{ octavia_amp_network['subnet']['allocation_pool_start'] | default(omit, true) }}"
+      allocation_pool_end: "{{ octavia_amp_network['subnet']['allocation_pool_end'] | default(omit, true) }}"
+      enable_dhcp: "{{ octavia_amp_network['subnet']['enable_dhcp'] | default(omit) }}"
+      no_gateway_ip: "{{ octavia_amp_network['subnet']['no_gateway_ip'] | default(omit) }}"
+      gateway_ip: "{{ octavia_amp_network['gateway_ip'] | default(omit, true) }}"
+  run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
