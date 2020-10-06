@@ -10,6 +10,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['neutron-server'] }}"
     volumes: "{{ neutron_server_default_volumes + neutron_server_extra_volumes }}"
     dimensions: "{{ neutron_server_dimensions }}"
+    healthcheck: "{{ neutron_server_healthcheck }}"
     haproxy:
       neutron_server:
         enabled: "{{ enable_neutron }}"
@@ -47,6 +48,7 @@ neutron_services:
       }}
     volumes: "{{ neutron_openvswitch_agent_default_volumes + neutron_openvswitch_agent_extra_volumes }}"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
+    healthcheck: "{{ neutron_openvswitch_agent_healthcheck }}"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
     image: "{{  neutron_linuxbridge_agent_image_full }}"
@@ -64,6 +66,7 @@ neutron_services:
       }}
     volumes: "{{ neutron_linuxbridge_agent_default_volumes + neutron_linuxbridge_agent_extra_volumes }}"
     dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
+    healthcheck: "{{ neutron_linuxbridge_agent_healthcheck }}"
   neutron-dhcp-agent:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
@@ -73,6 +76,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes: "{{ neutron_dhcp_agent_default_volumes + neutron_dhcp_agent_extra_volumes }}"
     dimensions: "{{ neutron_dhcp_agent_dimensions }}"
+    healthcheck: "{{ neutron_dhcp_agent_healthcheck }}"
   neutron-l3-agent:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
@@ -87,6 +91,7 @@ neutron_services:
       }}
     volumes: "{{ neutron_l3_agent_default_volumes + neutron_l3_agent_extra_volumes }}"
     dimensions: "{{ neutron_l3_agent_dimensions }}"
+    healthcheck: "{{ neutron_l3_agent_healthcheck }}"
   neutron-sriov-agent:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
@@ -95,6 +100,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_sriov_agent_default_volumes + neutron_sriov_agent_extra_volumes }}"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
+    healthcheck: "{{ neutron_sriov_agent_healthcheck }}"
   neutron-mlnx-agent:
     container_name: "neutron_mlnx_agent"
     image: "{{ neutron_mlnx_agent_image_full }}"
@@ -122,6 +128,7 @@ neutron_services:
       }}
     volumes: "{{ neutron_metadata_agent_default_volumes + neutron_metadata_agent_extra_volumes }}"
     dimensions: "{{ neutron_metadata_agent_dimensions }}"
+    healthcheck: "{{ neutron_metadata_agent_healthcheck }}"
   neutron-ovn-metadata-agent:
     container_name: "neutron_ovn_metadata_agent"
     image: "{{ neutron_ovn_metadata_agent_image_full }}"
@@ -130,6 +137,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['neutron-ovn-metadata-agent'] }}"
     volumes: "{{ neutron_ovn_metadata_agent_default_volumes + neutron_ovn_metadata_agent_extra_volumes }}"
     dimensions: "{{ neutron_ovn_metadata_agent_dimensions }}"
+    healthcheck: "{{ neutron_ovn_metadata_agent_healthcheck }}"
   neutron-bgp-dragent:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
@@ -254,6 +262,109 @@ neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
+neutron_dhcp_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_dhcp_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_dhcp_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_dhcp_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_dhcp_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-dhcp-agent {{ om_rpc_port }}"]
+neutron_dhcp_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_dhcp_agent_healthcheck:
+  interval: "{{ neutron_dhcp_agent_healthcheck_interval }}"
+  retries: "{{ neutron_dhcp_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_dhcp_agent_healthcheck_start_period }}"
+  test: "{% if neutron_dhcp_agent_enable_healthchecks | bool %}{{ neutron_dhcp_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_dhcp_agent_healthcheck_timeout }}"
+
+neutron_l3_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_l3_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_l3_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_l3_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_l3_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port 'neutron-l3-agent ' {{ om_rpc_port }}"]
+neutron_l3_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_l3_agent_healthcheck:
+  interval: "{{ neutron_l3_agent_healthcheck_interval }}"
+  retries: "{{ neutron_l3_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_l3_agent_healthcheck_start_period }}"
+  test: "{% if neutron_l3_agent_enable_healthchecks | bool %}{{ neutron_l3_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_l3_agent_healthcheck_timeout }}"
+
+neutron_linuxbridge_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_linuxbridge_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_linuxbridge_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_linuxbridge_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_linuxbridge_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-linuxbridge-agent {{ om_rpc_port }}"]
+neutron_linuxbridge_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_linuxbridge_agent_healthcheck:
+  interval: "{{ neutron_linuxbridge_agent_healthcheck_interval }}"
+  retries: "{{ neutron_linuxbridge_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_linuxbridge_agent_healthcheck_start_period }}"
+  test: "{% if neutron_linuxbridge_agent_enable_healthchecks | bool %}{{ neutron_linuxbridge_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_linuxbridge_agent_healthcheck_timeout }}"
+
+neutron_metadata_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_metadata_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_metadata_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_metadata_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_metadata_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-metadata-agent {{ om_rpc_port }}"]
+neutron_metadata_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_metadata_agent_healthcheck:
+  interval: "{{ neutron_metadata_agent_healthcheck_interval }}"
+  retries: "{{ neutron_metadata_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_metadata_agent_healthcheck_start_period }}"
+  test: "{% if neutron_metadata_agent_enable_healthchecks | bool %}{{ neutron_metadata_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_metadata_agent_healthcheck_timeout }}"
+
+neutron_openvswitch_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_openvswitch_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_openvswitch_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_openvswitch_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_openvswitch_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-openvswitch-agent {{ om_rpc_port }}"]
+neutron_openvswitch_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_openvswitch_agent_healthcheck:
+  interval: "{{ neutron_openvswitch_agent_healthcheck_interval }}"
+  retries: "{{ neutron_openvswitch_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_openvswitch_agent_healthcheck_start_period }}"
+  test: "{% if neutron_openvswitch_agent_enable_healthchecks | bool %}{{ neutron_openvswitch_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_openvswitch_agent_healthcheck_timeout }}"
+
+neutron_ovn_metadata_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_ovn_metadata_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_ovn_metadata_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_ovn_metadata_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_ovn_metadata_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port python {{ ovn_sb_db_port }}"]
+neutron_ovn_metadata_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_ovn_metadata_agent_healthcheck:
+  interval: "{{ neutron_ovn_metadata_agent_healthcheck_interval }}"
+  retries: "{{ neutron_ovn_metadata_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_ovn_metadata_agent_healthcheck_start_period }}"
+  test: "{% if neutron_ovn_metadata_agent_enable_healthchecks | bool %}{{ neutron_ovn_metadata_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_ovn_metadata_agent_healthcheck_timeout }}"
+
+neutron_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ neutron_server_listen_port }}"]
+neutron_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_server_healthcheck:
+  interval: "{{ neutron_server_healthcheck_interval }}"
+  retries: "{{ neutron_server_healthcheck_retries }}"
+  start_period: "{{ neutron_server_healthcheck_start_period }}"
+  test: "{% if neutron_server_enable_healthchecks | bool %}{{ neutron_server_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_server_healthcheck_timeout }}"
+
+neutron_sriov_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_sriov_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_sriov_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_sriov_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_sriov_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-sriov-nic-agent {{ om_rpc_port }}"]
+neutron_sriov_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_sriov_agent_healthcheck:
+  interval: "{{ neutron_sriov_agent_healthcheck_interval }}"
+  retries: "{{ neutron_sriov_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_sriov_agent_healthcheck_start_period }}"
+  test: "{% if neutron_sriov_agent_enable_healthchecks | bool %}{{ neutron_sriov_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_sriov_agent_healthcheck_timeout }}"
 
 neutron_dhcp_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"

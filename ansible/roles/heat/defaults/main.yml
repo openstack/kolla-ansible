@@ -9,6 +9,7 @@ heat_services:
     image: "{{ heat_api_image_full }}"
     volumes: "{{ heat_api_default_volumes + heat_api_extra_volumes }}"
     dimensions: "{{ heat_api_dimensions }}"
+    healthcheck: "{{ heat_api_healthcheck }}"
     haproxy:
       heat_api:
         enabled: "{{ enable_heat }}"
@@ -31,6 +32,7 @@ heat_services:
     image: "{{ heat_api_cfn_image_full }}"
     volumes: "{{ heat_api_cfn_default_volumes + heat_api_cfn_extra_volumes }}"
     dimensions: "{{ heat_api_cfn_dimensions }}"
+    healthcheck: "{{ heat_api_cfn_healthcheck }}"
     haproxy:
       heat_api_cfn:
         enabled: "{{ enable_heat }}"
@@ -53,6 +55,7 @@ heat_services:
     image: "{{ heat_engine_image_full }}"
     volumes: "{{ heat_engine_default_volumes + heat_engine_extra_volumes }}"
     dimensions: "{{ heat_engine_dimensions }}"
+    healthcheck: "{{ heat_engine_healthcheck }}"
 
 ####################
 # Database
@@ -83,6 +86,45 @@ heat_engine_image_full: "{{ heat_engine_image }}:{{ heat_engine_tag }}"
 heat_api_dimensions: "{{ default_container_dimensions }}"
 heat_api_cfn_dimensions: "{{ default_container_dimensions }}"
 heat_engine_dimensions: "{{ default_container_dimensions }}"
+
+heat_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+heat_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+heat_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+heat_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+heat_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ heat_api_listen_port }}"]
+heat_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+heat_api_healthcheck:
+  interval: "{{ heat_api_healthcheck_interval }}"
+  retries: "{{ heat_api_healthcheck_retries }}"
+  start_period: "{{ heat_api_healthcheck_start_period }}"
+  test: "{% if heat_api_enable_healthchecks | bool %}{{ heat_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ heat_api_healthcheck_timeout }}"
+
+heat_api_cfn_enable_healthchecks: "{{ enable_container_healthchecks }}"
+heat_api_cfn_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+heat_api_cfn_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+heat_api_cfn_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+heat_api_cfn_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ heat_api_cfn_listen_port }}"]
+heat_api_cfn_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+heat_api_cfn_healthcheck:
+  interval: "{{ heat_api_cfn_healthcheck_interval }}"
+  retries: "{{ heat_api_cfn_healthcheck_retries }}"
+  start_period: "{{ heat_api_cfn_healthcheck_start_period }}"
+  test: "{% if heat_api_cfn_enable_healthchecks | bool %}{{ heat_api_cfn_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ heat_api_cfn_healthcheck_timeout }}"
+
+heat_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+heat_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+heat_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+heat_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+heat_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port heat-engine {{ om_rpc_port }}"]
+heat_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+heat_engine_healthcheck:
+  interval: "{{ heat_engine_healthcheck_interval }}"
+  retries: "{{ heat_engine_healthcheck_retries }}"
+  start_period: "{{ heat_engine_healthcheck_start_period }}"
+  test: "{% if heat_engine_enable_healthchecks | bool %}{{ heat_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ heat_engine_healthcheck_timeout }}"
 
 heat_api_default_volumes:
   - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"

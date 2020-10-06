@@ -9,6 +9,7 @@ placement_services:
     enabled: True
     volumes: "{{ placement_api_default_volumes + placement_api_extra_volumes }}"
     dimensions: "{{ placement_api_dimensions }}"
+    healthcheck: "{{ placement_api_healthcheck }}"
     haproxy:
       placement_api:
         enabled: "{{ enable_placement }}"
@@ -43,6 +44,19 @@ placement_api_tag: "{{ placement_tag }}"
 placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
 
 placement_api_dimensions: "{{ default_container_dimensions }}"
+
+placement_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+placement_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+placement_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+placement_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+placement_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if placement_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ placement_api_listen_port }}"]
+placement_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+placement_api_healthcheck:
+  interval: "{{ placement_api_healthcheck_interval }}"
+  retries: "{{ placement_api_healthcheck_retries }}"
+  start_period: "{{ placement_api_healthcheck_start_period }}"
+  test: "{% if placement_api_enable_healthchecks | bool %}{{ placement_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ placement_api_healthcheck_timeout }}"
 
 placement_api_default_volumes:
   - "{{ node_config_directory }}/placement-api/:{{ container_config_directory }}/:ro"
