@@ -218,8 +218,8 @@ Enabling TLS on the backend services secures communication between the
 HAProxy listing on the internal/external VIP and the OpenStack
 services. It also enables secure end-to-end communication between OpenStack
 services that support TLS termination. The OpenStack services that support
-backend TLS termination in Ussuri are: Keystone, Glance, Heat, Placement,
-Horizon, Barbican, and Cinder.
+backend TLS termination in Victoria are: Nova, Ironic, Neutron, Keystone,
+Glance, Heat, Placement, Horizon, Barbican, and Cinder.
 
 The configuration variables that control back-end TLS for service endpoints
 are:

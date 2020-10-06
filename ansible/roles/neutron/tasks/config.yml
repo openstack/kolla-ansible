@@ -22,7 +22,21 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - kolla_copy_ca_into_containers | bool or neutron_enable_tls_backend | bool
+
+- name: Creating TLS backend PEM File
+  vars:
+    neutron_tls_proxy: "{{ neutron_services['neutron-tls-proxy'] }}"
+  assemble:
+    src: "{{ node_config_directory }}/neutron-tls-proxy/"
+    dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-cert-and-key.pem"
+    mode: "0660"
+    regexp: "^neutron-(cert|key)\\.pem$"
+    remote_src: true
+  become: true
+  when:
+    - neutron_tls_proxy.enabled | bool
+    - neutron_tls_proxy.host_in_groups | bool
 
 - name: Check if policies shall be overwritten
   stat:
@@ -437,6 +451,25 @@
     - "{{ check_extra_ml2_plugins.files }}"
   notify:
     - "Restart {{ item.0 }} container"
+
+- name: Copying over neutron-tls-proxy.cfg
+  vars:
+    neutron_tls_proxy: "{{ neutron_services['neutron-tls-proxy'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-tls-proxy.cfg"
+    mode: "0660"
+  become: true
+  with_first_found:
+    - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron-tls-proxy.cfg"
+    - "{{ node_custom_config }}/neutron/neutron-tls-proxy.cfg"
+    - "neutron-tls-proxy.cfg.j2"
+  when:
+    - neutron_tls_proxy.enabled | bool
+    - neutron_tls_proxy.host_in_groups | bool
+  notify:
+    - Restart neutron-tls-proxy container
+
 
 - import_tasks: check-containers.yml
   when: kolla_action != "config"
