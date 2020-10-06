@@ -73,12 +73,16 @@
   vars:
     service: "{{ placement_services['placement-api'] }}"
   template:
-    src: "placement-api-wsgi.conf.j2"
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
     mode: "0660"
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/placement/{{ inventory_hostname }}/placement-api-wsgi.conf"
+    - "{{ node_custom_config }}/placement/placement-api-wsgi.conf"
+    - "placement-api-wsgi.conf.j2"
   notify:
     - Restart placement-api container
 
