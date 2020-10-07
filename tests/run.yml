@@ -26,6 +26,12 @@
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
 
+    - name: Install dig for Designate testing
+      become: true
+      package:
+        name: "{{ 'bind-utils' if ansible_os_family == 'RedHat' else 'dnsutils' }}"
+      when: scenario == 'magnum'
+
     - name: Install xfsprogs package for Swift filesystems
       become: true
       package:
@@ -384,7 +390,7 @@
             EXT_NET_LOCAL_ADDR: "{{ neutron_external_network_prefix }}1/{{ neutron_external_network_prefix_length }}"
             EXT_NET_SLAVE_DEVICE: "{{ neutron_external_interface_name }}"
             SCENARIO: "{{ scenario }}"
-          when: openstack_core_tested or scenario in ['ironic', 'scenario_nfv', 'zun']
+          when: openstack_core_tested or scenario in ['ironic', 'magnum', 'scenario_nfv', 'zun']
 
         - name: Run test-core-openstack.sh script
           script:

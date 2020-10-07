@@ -18,7 +18,7 @@ function setup_openstack_clients {
         packages+=(python-ironicclient python-ironic-inspector-client)
     fi
     if [[ $SCENARIO == magnum ]]; then
-        packages+=(python-magnumclient python-octaviaclient)
+        packages+=(python-designateclient python-magnumclient python-octaviaclient)
     fi
     if [[ $SCENARIO == masakari ]]; then
         packages+=(python-masakariclient)
@@ -63,7 +63,7 @@ function prepare_images {
         GATE_IMAGES+=",^dnsmasq,^ironic,^iscsid"
     fi
     if [[ $SCENARIO == "magnum" ]]; then
-        GATE_IMAGES+=",^magnum,^octavia"
+        GATE_IMAGES+=",^designate,^magnum,^octavia"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
         GATE_IMAGES+=",^masakari"
