@@ -495,6 +495,17 @@ neutron_l3_agent_host_ipv6_neigh_gc_thresh2: "{{ neutron_l3_agent_host_ipv4_neig
 neutron_l3_agent_host_ipv6_neigh_gc_thresh3: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh3 }}"
 
 ####################
+# Subprojects
+####################
+neutron_subprojects:
+  - name: "networking-sfc"
+    enabled: "{{ enable_neutron_sfc | bool }}"
+  - name: "neutron-dynamic-routing"
+    enabled: "{{ enable_neutron_bgp_dragent | bool }}"
+  - name: "neutron-vpnaas"
+    enabled: "{{ enable_neutron_vpnaas | bool }}"
+
+####################
 # Mechanism drivers
 ####################
 mechanism_drivers:
@@ -531,10 +542,15 @@ extension_drivers:
 neutron_extension_drivers: "{{ extension_drivers | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
+# Neutron bootstrap
+####################
+neutron_bootstrap_services: "{{ neutron_subprojects | selectattr('enabled') | map(attribute='name') | list }}"
+
+####################
 # Neutron upgrade
 ####################
 neutron_enable_rolling_upgrade: "yes"
-neutron_rolling_upgrade_services: ["neutron", "neutron-vpnaas"]
+neutron_rolling_upgrade_services: "{{ neutron_subprojects | selectattr('enabled') | map(attribute='name') | list }}"
 
 ####################
 # Service Plugins
