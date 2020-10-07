@@ -30,6 +30,9 @@ There are two different layers of TLS configuration for OpenStack APIs:
   :ref:`admin-tls-generating-a-private-ca` to use a Kolla Ansible generated
   private CA.
 
+  For details on ACME-enabled CAs, such as letsencrypt.org, please see
+  :doc:`acme`.
+
 Quick Start
 ~~~~~~~~~~~
 
