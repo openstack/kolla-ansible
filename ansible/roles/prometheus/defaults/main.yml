@@ -5,13 +5,13 @@ prometheus_services:
   prometheus-server:
     container_name: prometheus_server
     group: prometheus
-    enabled: "{{ enable_prometheus_server }}"
+    enabled: "{{ enable_prometheus_server | bool }}"
     image: "{{ prometheus_server_image_full }}"
     volumes: "{{ prometheus_server_default_volumes + prometheus_server_extra_volumes }}"
     dimensions: "{{ prometheus_server_dimensions }}"
     haproxy:
       prometheus_server:
-        enabled: "{{ enable_prometheus_server }}"
+        enabled: "{{ enable_prometheus_server | bool }}"
         mode: "http"
         external: false
         port: "{{ prometheus_port }}"
@@ -60,14 +60,14 @@ prometheus_services:
     dimensions: "{{ prometheus_alertmanager_dimensions }}"
     haproxy:
       prometheus_alertmanager:
-        enabled: "{{ enable_prometheus_alertmanager }}"
+        enabled: "{{ enable_prometheus_alertmanager | bool }}"
         mode: "http"
         external: false
         port: "{{ prometheus_alertmanager_port }}"
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
       prometheus_alertmanager_external:
-        enabled: "{{ enable_prometheus_alertmanager }}"
+        enabled: "{{ enable_prometheus_alertmanager | bool }}"
         mode: "http"
         external: true
         port: "{{ prometheus_alertmanager_port }}"
