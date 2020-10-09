@@ -11,5 +11,6 @@ User Guides
    multinode
    multi-regions
    operating-kolla
+   centos8
    security
    troubleshooting
