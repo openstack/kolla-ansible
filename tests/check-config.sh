@@ -16,6 +16,7 @@ function check_config {
     for f in $(sudo find /etc/kolla \
                 -not -regex /etc/kolla/config.* \
                 -not -regex /etc/kolla/certificates.* \
+                -not -regex /etc/kolla/octavia-certificates.* \
                 -not -regex .*pem \
                 -not -regex .*key \
                 -not -regex ".*ca-certificates.*" \

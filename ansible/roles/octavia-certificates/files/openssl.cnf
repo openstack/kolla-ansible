@@ -1,0 +1,49 @@
+[ client_ca ]
+new_certs_dir     = .
+database          = index.txt
+serial            = serial
+RANDFILE          = .rand
+
+private_key       = client_ca.key.pem
+certificate       = client_ca.cert.pem
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md        = sha256
+
+name_opt          = ca_default
+cert_opt          = ca_default
+default_days      = 3650
+
+x509_extensions   = client_cert
+
+policy            = policy_any
+
+[ policy_any ]
+countryName            = supplied
+stateOrProvinceName    = optional
+organizationName       = optional
+organizationalUnitName = optional
+commonName             = supplied
+emailAddress           = optional
+
+[ req ]
+distinguished_name = req_distinguished_name
+x509_extensions    = v3_ca
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md         = sha256
+
+[ req_distinguished_name ]
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, cRLSign, keyCertSign
+
+[ client_cert ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature
+extendedKeyUsage = clientAuth

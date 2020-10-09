@@ -1,0 +1,43 @@
+---
+
+- name: Create client_ca index.txt
+  copy:
+    content: ''
+    dest: "{{ octavia_certs_work_dir }}/client_ca/index.txt"
+    force: no
+    mode: 0660
+
+- name: Create client_ca serial
+  copy:
+    content: "1000\n"
+    dest: "{{ octavia_certs_work_dir }}/client_ca/serial"
+    force: no
+    mode: 0660
+
+- name: Create client_ca private key
+  command: >
+    openssl genrsa -aes256 -out client_ca.key.pem
+    -passout pass:{{ octavia_client_ca_password }} 4096
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/client_ca"
+    creates: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
+
+- name: Create client_ca certificate
+  vars:
+    client_ca_subject:
+      C: "{{ octavia_certs_client_ca_country }}"
+      ST: "{{ octavia_certs_client_ca_state }}"
+      O: "{{ octavia_certs_client_ca_organization }}"
+      OU: "{{ octavia_certs_client_ca_organizational_unit }}"
+      CN: "{{ octavia_certs_client_ca_common_name }}"
+  command: >
+    openssl req -new -x509 -config ../openssl.cnf
+    -key client_ca.key.pem
+    -days {{ octavia_certs_client_ca_expiry }}
+    -out client_ca.cert.pem
+    -subj "/{{ client_ca_subject.items() | map('join', '=') | join('/') }}"
+    -passin pass:{{ octavia_client_ca_password }}
+    -batch
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/client_ca"
+    creates: "{{ octavia_certs_work_dir }}/client_ca/client_ca.cert.pem"

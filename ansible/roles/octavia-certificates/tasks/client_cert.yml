@@ -1,0 +1,50 @@
+---
+
+# NOTE(yoctozepto): This should ideally be per controller, i.e. controller
+# generates its key&CSR and this CA signs it.
+
+- name: Create a key for the client certificate
+  command: >
+    openssl genrsa -out client.key.pem 4096
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/client_ca"
+    creates: "{{ octavia_certs_work_dir }}/client_ca/client.key.pem"
+
+- name: Create the certificate request for the client certificate
+  vars:
+    client_req_subject:
+      C: "{{ octavia_certs_client_req_country }}"
+      ST: "{{ octavia_certs_client_req_state }}"
+      O: "{{ octavia_certs_client_req_organization }}"
+      OU: "{{ octavia_certs_client_req_organizational_unit }}"
+      CN: "{{ octavia_certs_client_req_common_name }}"
+  command: >
+    openssl req -new -config ../openssl.cnf
+    -key client.key.pem
+    -out client.csr.pem
+    -subj "/{{ client_req_subject.items() | map('join', '=') | join('/') }}"
+    -batch
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/client_ca"
+    creates: "{{ octavia_certs_work_dir }}/client_ca/client.csr.pem"
+
+- name: Sign the client certificate request
+  command: >
+    openssl ca -config ../openssl.cnf
+    -name client_ca
+    -days {{ octavia_certs_client_expiry }}
+    -in client.csr.pem
+    -out client.cert.pem
+    -key {{ octavia_client_ca_password }}
+    -notext
+    -batch
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/client_ca"
+    creates: "{{ octavia_certs_work_dir }}/client_ca/client.cert.pem"
+
+- name: Create a concatenated client certificate and key file
+  assemble:
+    regexp: ^client\.(cert|key)\.pem$
+    src: "{{ octavia_certs_work_dir }}/client_ca"
+    dest: "{{ octavia_certs_work_dir }}/client_ca/client.cert-and-key.pem"
+    mode: "0660"

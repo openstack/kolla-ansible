@@ -1,0 +1,29 @@
+---
+
+- name: Generate server_ca private key
+  command: >
+    openssl genrsa -aes256 -out server_ca.key.pem
+    -passout pass:{{ octavia_ca_password }} 4096
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/server_ca"
+    creates: "{{ octavia_certs_work_dir }}/server_ca/server_ca.key.pem"
+
+- name: Create server_ca certificate
+  vars:
+    server_ca_subject:
+      C: "{{ octavia_certs_server_ca_country }}"
+      ST: "{{ octavia_certs_server_ca_state }}"
+      O: "{{ octavia_certs_server_ca_organization }}"
+      OU: "{{ octavia_certs_server_ca_organizational_unit }}"
+      CN: "{{ octavia_certs_server_ca_common_name }}"
+  command: >
+    openssl req -new -x509 -config ../openssl.cnf
+    -key server_ca.key.pem
+    -days {{ octavia_certs_server_ca_expiry }}
+    -out server_ca.cert.pem
+    -subj "/{{ server_ca_subject.items() | map('join', '=') | join('/') }}"
+    -passin pass:{{ octavia_ca_password }}
+    -batch
+  args:
+    chdir: "{{ octavia_certs_work_dir }}/server_ca"
+    creates: "{{ octavia_certs_work_dir }}/server_ca/server_ca.cert.pem"
