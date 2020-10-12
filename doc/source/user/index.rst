@@ -11,6 +11,7 @@ User Guides
    multinode
    multi-regions
    operating-kolla
+   adding-and-removing-hosts
    centos8
    security
    troubleshooting
