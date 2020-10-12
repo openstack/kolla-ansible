@@ -114,4 +114,5 @@ openstack_projects = [
     'octavia',
     'oslotest',
     'swift',
+    'watcher',
 ]
