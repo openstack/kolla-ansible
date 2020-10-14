@@ -12,4 +12,5 @@ User Guides
    multi-regions
    operating-kolla
    security
+   ansible-tuning
    troubleshooting
