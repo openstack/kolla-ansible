@@ -31,10 +31,4 @@ For details of which images are supported on which distributions, see the
 CentOS 8
 --------
 
-For details on how to build images for CentOS 8, see the :kolla-doc:`Kolla
-image building guide <admin/image-building.html#building-kolla-images>`. Note
-that for the Train release only, Kolla Ansible applies a ``-centos8`` suffix
-(configured via ``openstack_tag_suffix``) to image tags by default on CentOS 8
-hosts. The default tag is therefore ``train-centos8``. This is to
-differentiate CentOS 7 and CentOS 8 container images. Information about
-migrating from CentOS 7 to CentOS 8 will be provided soon.
+Information on CentOS 8 is provided in :doc:`centos8`.
