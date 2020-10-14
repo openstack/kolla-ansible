@@ -25,10 +25,6 @@ Information on the libvirt-based drivers ``kvm`` and ``qemu`` can be found in
 VMware
 ------
 
-.. note::
-
-   VMware support has been deprecated and will be removed in the Victoria cycle.
-
 Information on the VMware-based driver ``vmware`` can be found in
 :doc:`vmware-guide`.
 
