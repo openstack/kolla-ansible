@@ -134,3 +134,23 @@ For each batch, the high level workflow is:
 * bootstrap the batch of hosts
 * deploy services to the batch of hosts
 * verify the operation was successful
+
+Controllers
+###########
+
+* :ref:`remove batch of CentOS 7 controllers from the cluster
+  <removing-existing-controllers>`
+* reinstall host OS using CentOS 8 (out of scope for Kolla Ansible)
+* :ref:`add batch of CentOS 8 controllers to the cluster
+  <adding-new-controllers>`
+* verify the controllers are functioning correctly
+
+Compute nodes
+#############
+
+* :ref:`remove batch of CentOS 7 compute nodes from the cluster
+  <removing-existing-compute-nodes>`
+* reinstall host OS using CentOS 8 (out of scope for Kolla Ansible)
+* :ref:`add batch of CentOS 8 compute nodes to the cluster
+  <adding-new-compute-nodes>`
+* verify the compute nodes are functioning correctly
