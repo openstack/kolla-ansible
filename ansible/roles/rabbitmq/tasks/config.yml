@@ -79,6 +79,24 @@
   notify:
     - Restart rabbitmq container
 
+- name: Copying over advanced.config
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/advanced.config"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/advanced.config"
+    - "{{ node_custom_config }}/rabbitmq/advanced.config"
+    - "advanced.config.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart rabbitmq container
+
 - name: Copying over definitions.json
   become: true
   vars:

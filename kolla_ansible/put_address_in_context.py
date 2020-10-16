@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ipaddress import ip_address
 from kolla_ansible.exception import FilterError
 
 
@@ -27,18 +28,32 @@ def put_address_in_context(address, context):
     :returns: string with address in proper context
     """
 
-    if context not in ['url', 'memcache']:
+    if context not in ['url', 'memcache', 'rabbitmq']:
         raise FilterError("Unknown context '{context}'"
                           .format(context=context))
 
-    if ':' not in address:
+    if ':' not in address and context != 'rabbitmq':
         return address
 
     # must be IPv6 raw address
 
     if context == 'url':
         return '[{address}]'.format(address=address)
-    elif context == 'memcache':
+    if context == 'memcache':
         return 'inet6:[{address}]'.format(address=address)
+
+    # rabbitmq/erlang has special syntax for ip addresses in IPv4 and IPv6
+    # see: https://www.erlang.org/doc/man/inet.html
+    # replacing dots and colons with decimal points
+    # and converting IPv6 as described here:
+    # https://www.erlang.org/doc/man/inet.html#type-ip6_address
+
+    if context == 'rabbitmq':
+        if ip_address(address).version == 6:
+            return (",".join(['16#%x' % int(x, 16)
+                    for x in
+                    ip_address(address).exploded.split(':')]))
+
+        return address.replace('.', ',')
 
     return address
