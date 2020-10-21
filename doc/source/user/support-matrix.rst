@@ -10,7 +10,10 @@ Kolla Ansible supports the following host Operating Systems (OS):
 .. note::
 
    CentOS 7 is no longer supported as a host OS. The Train release supports
-   both CentOS 7 and 8, and provides a route for migration.
+   both CentOS 7 and 8, and provides a route for migration. See the `Kolla
+   Ansible Train documentation
+   <https://docs.openstack.org/kolla-ansible/train/user/centos8.html>`_ for
+   information on migrating to CentOS 8.
 
 * CentOS 8
 * Debian Buster (10)
