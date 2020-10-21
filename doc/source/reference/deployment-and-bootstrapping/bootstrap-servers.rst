@@ -178,6 +178,10 @@ maximum number of log files to retain per container. The
 ``docker_log_max_size`` variable, which defaults to ``50m``, defines the
 maximum size of each rotated log file per container.
 
+The ``docker_http_proxy``, ``docker_https_proxy`` and ``docker_no_proxy``
+variables can be used to configure Docker Engine to connect to the internet
+using http/https proxies.
+
 Additional options for the Docker engine can be passed in
 ``docker_custom_config`` variable. It will be stored in ``daemon.json`` config
 file. Example:
