@@ -220,7 +220,7 @@ as follows:
 
 .. code-block:: console
 
-   source /etc/kolla/octavia-openrc.sh
+   . /etc/kolla/octavia-openrc.sh
 
 .. note::
 
@@ -353,7 +353,7 @@ Source octavia user openrc:
 
 .. code-block:: console
 
-   source /etc/kolla/octavia-openrc.sh
+   . /etc/kolla/octavia-openrc.sh
 
 .. note::
 
