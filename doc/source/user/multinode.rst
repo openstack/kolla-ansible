@@ -18,77 +18,64 @@ registry services.
 The Docker registry prior to version 2.3 has extremely bad performance because
 all container data is pushed for every image rather than taking advantage of
 Docker layering to optimize push operations. For more information reference
-`pokey registry <https://github.com/docker/docker/issues/14018>`__.
+`pokey registry <https://github.com/docker/docker/issues/14018>`__.  The Kolla
+community recommends using registry 2.3 or later.
 
-Edit the ``/etc/kolla/globals.yml`` and add the following where 192.168.1.100
-is the IP address of the machine and 5000 is the port where the registry is
-currently running:
+The registry may be configured either as a local registry with support for
+storing images, or as a pull-through cache for Docker hub.
+
+Option 1: local registry
+------------------------
+
+.. code-block:: console
+
+   docker run -d \
+    --name registry \
+    --restart=always \
+    -p 4000:5000 \
+    -v registry:/var/lib/registry \
+    registry:2
+
+Here we are using port 4000 to avoid a conflict with Keystone. If the registry
+is not running on the same host as Keystone, the ``-p`` argument may be
+omitted.
+
+Edit ``globals.yml`` and add the following, where ``192.168.1.100:4000`` is the
+IP address and port on which the registry is listening:
 
 .. code-block:: yaml
 
-   docker_registry: 192.168.1.100:5000
+   docker_registry: 192.168.1.100:4000
 
-The Kolla community recommends using registry 2.3 or later. To deploy registry
-with version 2.3 or later, do the following:
-
-.. code-block:: console
-
-   cd kolla
-   tools/start-registry
+Option 2: registry mirror
+-------------------------
 
 The Docker registry can be configured as a pull through cache to proxy the
 official Kolla images hosted in Docker Hub. In order to configure the local
-registry as a pull through cache, in the host machine set the environment
-variable ``REGISTRY_PROXY_REMOTEURL`` to the URL for the repository on
-Docker Hub.
+registry as a pull through cache, pass the environment variable
+``REGISTRY_PROXY_REMOTEURL`` through to the registry container.  Pushing to a
+registry configured as a pull-through cache is unsupported.  For more
+information, Reference the `Docker Documentation
+<https://docs.docker.com/registry/configuration/>`__.
 
 .. code-block:: console
 
-   export REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
+   docker run -d \
+    --name registry \
+    --restart=always \
+    -p 4000:5000 \
+    -v registry:/var/lib/registry \
+    -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+    registry:2
 
-.. note::
+Edit ``globals.yml`` and add the following, where ``192.168.1.100:4000`` is the
+IP address and port on which the registry is listening:
 
-   Pushing to a registry configured as a pull-through cache is unsupported.
-   For more information, Reference the `Docker Documentation
-   <https://docs.docker.com/registry/configuration/>`__.
+.. code-block:: yaml
 
-.. _configure_docker_all_nodes:
-
-Configure Docker on all nodes
-=============================
-
-.. note::
-
-   As the subtitle for this section implies, these steps should be
-   applied to all nodes, not just the deployment node.
-
-After starting the registry, it is necessary to instruct Docker that
-it will be communicating with an insecure registry.
-For example, To enable insecure registry communication,
-modify the ``/etc/docker/daemon.json`` file to contain the following where
-``192.168.1.100`` is the IP address of the machine where the registry
-is currently running:
-
-.. path /etc/docker/daemon.json
-.. code-block:: json
-
-   {
-     "insecure-registries" : ["192.168.1.100:5000"]
-   }
-
-Restart Docker by executing the following commands:
-
-For CentOS or Ubuntu with systemd:
-
-.. code-block:: console
-
-   systemctl restart docker
-
-For Ubuntu with upstart or sysvinit:
-
-.. code-block:: console
-
-   service docker restart
+   docker_custom_config:
+     registry-mirrors:
+       - 192.168.1.100:4000
 
 .. _edit-inventory:
 
