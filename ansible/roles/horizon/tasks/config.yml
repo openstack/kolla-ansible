@@ -129,6 +129,22 @@
   notify:
     - Restart horizon container
 
+- name: Copying over custom themes
+  become: true
+  vars:
+    horizon: "{{ horizon_services['horizon'] }}"
+  copy:
+    src: "{{ node_custom_config }}/horizon/themes/{{ item.name }}"
+    dest: "{{ node_config_directory }}/horizon/themes/"
+    mode: 0660
+  when:
+    - horizon.enabled | bool
+    - inventory_hostname in groups[horizon.group]
+    - horizon_custom_themes | length > 0
+  with_items: "{{ horizon_custom_themes }}"
+  notify:
+    - Restart horizon container
+
 - include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool or horizon_enable_tls_backend | bool
