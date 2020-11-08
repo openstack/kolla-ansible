@@ -28,23 +28,11 @@ datadir=/var/lib/mysql/
 
 wsrep_cluster_address=gcomm://{% if (groups['mariadb'] | length) > 1 %}{% for host in groups['mariadb'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
 
-{% if api_address_family == 'ipv6' and kolla_base_distro == 'centos' %}
-# FIXME(jeffrey4l): Revert when using C8 (CentOS+Ussuri)
-# Use [::] to avoid galera issue.
-# for more info see https://github.com/codership/galera/issues/534#issuecomment-472607544
-wsrep_provider_options=gmcast.listen_addr=tcp://[::]:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
-{% else %}
 wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
-{% endif %}
 
 wsrep_node_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}
-{% if api_address_family == 'ipv6' and kolla_base_distro == 'centos' %}
-# FIXME(yj.bai): Revert when using C8 (CentOS+Ussuri)
-# Use IPv6-resolvable hostname to avoid galera issue.
-wsrep_sst_receive_address={{ ansible_hostname }}:{{ mariadb_sst_port }}
-{% else %}
+
 wsrep_sst_receive_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_sst_port }}
-{% endif %}
 
 wsrep_provider={{ wsrep_driver }}
 wsrep_cluster_name="{{ database_cluster_name }}"
