@@ -20,6 +20,13 @@ octavia_services:
         mode: "http"
         external: true
         port: "{{ octavia_api_port }}"
+  octavia-driver-agent:
+    container_name: octavia_driver_agent
+    group: octavia-driver-agent
+    enabled: "{{ enable_octavia_driver_agent }}"
+    image: "{{ octavia_driver_agent_image_full }}"
+    volumes: "{{ octavia_driver_agent_default_volumes + octavia_driver_agent_extra_volumes }}"
+    dimensions: "{{ octavia_driver_agent_dimensions }}"
   octavia-health-manager:
     container_name: octavia_health_manager
     group: octavia-health-manager
@@ -68,6 +75,10 @@ octavia_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 octavia_api_tag: "{{ octavia_tag }}"
 octavia_api_image_full: "{{ octavia_api_image }}:{{ octavia_api_tag }}"
 
+octavia_driver_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ octavia_install_type }}-octavia-driver-agent"
+octavia_driver_agent_tag: "{{ octavia_tag }}"
+octavia_driver_agent_image_full: "{{ octavia_driver_agent_image }}:{{ octavia_driver_agent_tag }}"
+
 octavia_health_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ octavia_install_type }}-octavia-health-manager"
 octavia_health_manager_tag: "{{ octavia_tag }}"
 octavia_health_manager_image_full: "{{ octavia_health_manager_image }}:{{ octavia_health_manager_tag }}"
@@ -81,6 +92,7 @@ octavia_worker_tag: "{{ octavia_tag }}"
 octavia_worker_image_full: "{{ octavia_worker_image }}:{{ octavia_worker_tag }}"
 
 octavia_api_dimensions: "{{ default_container_dimensions }}"
+octavia_driver_agent_dimensions: "{{ default_container_dimensions }}"
 octavia_health_manager_dimensions: "{{ default_container_dimensions }}"
 octavia_housekeeping_dimensions: "{{ default_container_dimensions }}"
 octavia_worker_dimensions: "{{ default_container_dimensions }}"
@@ -91,12 +103,20 @@ octavia_api_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "octavia_driver_agent:/var/run/octavia/"
 octavia_health_manager_default_volumes:
   - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+octavia_driver_agent_default_volumes:
+  - "{{ node_config_directory }}/octavia-driver-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "octavia_driver_agent:/var/run/octavia/"
 octavia_housekeeping_default_volumes:
   - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -112,6 +132,7 @@ octavia_worker_default_volumes:
 
 octavia_extra_volumes: "{{ default_extra_volumes }}"
 octavia_api_extra_volumes: "{{ octavia_extra_volumes }}"
+octavia_driver_agent_extra_volumes: "{{ octavia_extra_volumes }}"
 octavia_health_manager_extra_volumes: "{{ octavia_extra_volumes }}"
 octavia_housekeeping_extra_volumes: "{{ octavia_extra_volumes }}"
 octavia_worker_extra_volumes: "{{ octavia_extra_volumes }}"
@@ -248,3 +269,7 @@ octavia_amp_network:
 
 # Octavia management network subnet CIDR.
 octavia_amp_network_cidr: 10.1.0.0/24
+
+# Octavia provider drivers
+octavia_provider_drivers: "amphora:Amphora provider{% if neutron_plugin_agent == 'ovn'%}, ovn:OVN provider{% endif %}"
+octavia_provider_agents: "amphora_agent{% if neutron_plugin_agent == 'ovn'%}, ovn{% endif %}"

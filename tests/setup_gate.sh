@@ -26,6 +26,9 @@ function setup_openstack_clients {
     if [[ $SCENARIO == scenario_nfv ]]; then
         packages+=(python-tackerclient python-barbicanclient python-mistralclient)
     fi
+    if [[ $SCENARIO == ovn ]]; then
+        packages+=(python-octaviaclient)
+    fi
     if [[ "debian" == $BASE_DISTRO ]]; then
         sudo apt -y install python3-venv
     fi
@@ -74,7 +77,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "ovn" ]]; then
-        GATE_IMAGES+=",^ovn"
+        GATE_IMAGES+=",^octavia,^ovn"
     fi
 
     if [[ $SCENARIO == "mariadb" ]]; then
