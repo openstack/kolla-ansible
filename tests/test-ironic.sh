@@ -16,7 +16,7 @@ function wait_for_placement_resources {
     local expected_count=1
     local resource_class="RC0"
 
-    curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+    curl --fail -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
     chmod +x jq
 
     # TODO(mgoddard): switch to Placement OSC plugin, once it exists
@@ -35,7 +35,7 @@ function wait_for_placement_resources {
     for i in $(seq 1 120); do
         # Fetch provider UUIDs from Placement
         local providers
-        providers=$(curl -sH "X-Auth-Token: $token" $endpoint/resource_providers \
+        providers=$(curl --fail -sH "X-Auth-Token: $token" $endpoint/resource_providers \
             | ./jq -r '.resource_providers[].uuid')
 
         local p
