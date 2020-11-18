@@ -1,0 +1,21 @@
+---
+- name: Restart rabbitmq container
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    environment: "{{ service.environment }}"
+    dimensions: "{{ service.dimensions }}"
+
+- name: Waiting for rabbitmq to start
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  become: true
+  command: "docker exec {{ service.container_name }} rabbitmqctl wait {{ rabbitmq_pid_file }}"
