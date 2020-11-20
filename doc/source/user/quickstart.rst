@@ -41,7 +41,7 @@ execution, which is described in
 
    .. code-block:: console
 
-      sudo apt-get update
+      sudo apt update
 
 #. Install Python build dependencies:
 
@@ -55,7 +55,7 @@ execution, which is described in
 
    .. code-block:: console
 
-      sudo apt-get install python3-dev libffi-dev gcc libssl-dev
+      sudo apt install python3-dev libffi-dev gcc libssl-dev
 
 Install dependencies using a virtual environment
 ------------------------------------------------
@@ -102,7 +102,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      sudo apt-get install python3-pip
+      sudo apt install python3-pip
 
 #. Ensure the latest version of pip is installed:
 
@@ -123,7 +123,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      sudo apt-get install ansible
+      sudo apt install ansible
 
    .. note::
 
@@ -314,7 +314,7 @@ than one node, edit ``multinode`` inventory:
       Distributions might not come with Python pre-installed. That will cause
       errors in the ``ping`` module. To quickly install Python with Ansible you
       can run: for Debian or Ubuntu:
-      ``ansible -i multinode all -m raw -a "apt-get -y install python3"``,
+      ``ansible -i multinode all -m raw -a "apt -y install python3"``,
       and for CentOS or RHEL:
       ``ansible -i multinode all -m raw -a "dnf -y install python3"``.
 

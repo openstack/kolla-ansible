@@ -51,7 +51,7 @@ For Ubuntu 16.04 or later:
 
 .. code-block:: console
 
-   sudo apt-get install vagrant ruby-dev ruby-libvirt python-libvirt \
+   sudo apt install vagrant ruby-dev ruby-libvirt python-libvirt \
    qemu-utils qemu-kvm libvirt-dev nfs-kernel-server zlib1g-dev libpng12-dev \
    gcc git
 
