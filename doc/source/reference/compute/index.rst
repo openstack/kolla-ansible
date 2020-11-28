@@ -13,6 +13,5 @@ compute services.
    nova-cells-guide
    nova-fake-driver
    nova-guide
-   qinling-guide
    vmware-guide
    zun-guide
