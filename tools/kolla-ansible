@@ -66,13 +66,16 @@ function check_environment_coherence {
 
 function find_base_dir {
     local dir_name
-    dir_name=$(cd "$(dirname "$0")" &>/dev/null && pwd)
+    dir_name=$(dirname "$0")
+    # NOTE(yoctozepto): Fix the case where dir_name is a symlink and VIRTUAL_ENV might not be. This
+    # happens with pyenv-virtualenv, see https://bugs.launchpad.net/kolla-ansible/+bug/1903887
+    dir_name=$(readlink -e "$dir_name")
     if [ -z "$SNAP" ]; then
         if [[ ${dir_name} == "/usr/bin" ]]; then
             BASEDIR=/usr/share/kolla-ansible
         elif [[ ${dir_name} == "/usr/local/bin" ]]; then
             BASEDIR=/usr/local/share/kolla-ansible
-        elif [[ -n ${VIRTUAL_ENV} ]] && [[ ${dir_name} == "${VIRTUAL_ENV}/bin" ]]; then
+        elif [[ -n ${VIRTUAL_ENV} ]] && [[ ${dir_name} == "$(readlink -e "${VIRTUAL_ENV}/bin")" ]]; then
             if test -f ${VIRTUAL_ENV}/lib/python*/site-packages/kolla-ansible.egg-link; then
                 # Editable install.
                 BASEDIR="$(head -n1 ${VIRTUAL_ENV}/lib/python*/site-packages/kolla-ansible.egg-link)"
@@ -80,6 +83,7 @@ function find_base_dir {
                 BASEDIR="${VIRTUAL_ENV}/share/kolla-ansible"
             fi
         else
+            # Running from sources (repo).
             BASEDIR="$(dirname ${dir_name})"
         fi
     else
