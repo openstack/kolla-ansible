@@ -9,6 +9,7 @@ blazar_services:
     image: "{{ blazar_api_image_full }}"
     volumes: "{{ blazar_api_default_volumes + blazar_api_extra_volumes }}"
     dimensions: "{{ blazar_api_dimensions }}"
+    healthcheck: "{{ blazar_api_healthcheck }}"
     haproxy:
       blazar_api:
         enabled: "{{ enable_blazar }}"
@@ -27,6 +28,7 @@ blazar_services:
     image: "{{ blazar_manager_image_full }}"
     volumes: "{{ blazar_manager_default_volumes + blazar_manager_extra_volumes }}"
     dimensions: "{{ blazar_manager_dimensions }}"
+    healthcheck: "{{ blazar_manager_healthcheck }}"
 
 
 ####################
@@ -58,6 +60,34 @@ blazar_api_image_full: "{{ blazar_api_image }}:{{ blazar_api_tag }}"
 
 blazar_api_dimensions: "{{ default_container_dimensions }}"
 blazar_manager_dimensions: "{{ default_container_dimensions }}"
+
+blazar_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+blazar_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+blazar_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+blazar_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+# NOTE(wuchunyang): we don't use healthcheck_url because the api returns 401(Unauthorized) which is failed.
+blazar_api_healthcheck_test: ["CMD-SHELL", "healthcheck_listen blazar-api {{ blazar_api_port }}"]
+blazar_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+blazar_api_healthcheck:
+  interval: "{{ blazar_api_healthcheck_interval }}"
+  retries: "{{ blazar_api_healthcheck_retries }}"
+  start_period: "{{ blazar_api_healthcheck_start_period }}"
+  test: "{% if blazar_api_enable_healthchecks | bool %}{{ blazar_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ blazar_api_healthcheck_timeout }}"
+
+blazar_manager_enable_healthchecks: "{{ enable_container_healthchecks }}"
+blazar_manager_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+blazar_manager_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+blazar_manager_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+blazar_manager_healthcheck_test: ["CMD-SHELL", "healthcheck_port blazar-manager {{ om_rpc_port }}"]
+blazar_manager_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+blazar_manager_healthcheck:
+  interval: "{{ blazar_manager_healthcheck_interval }}"
+  retries: "{{ blazar_manager_healthcheck_retries }}"
+  start_period: "{{ blazar_manager_healthcheck_start_period }}"
+  test: "{% if blazar_manager_enable_healthchecks | bool %}{{ blazar_manager_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ blazar_manager_healthcheck_timeout }}"
+
 
 blazar_api_default_volumes:
   - "{{ node_config_directory }}/blazar-api/:{{ container_config_directory }}/:ro"
