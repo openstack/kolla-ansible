@@ -20,6 +20,30 @@ and change the following:
 
    enable_prometheus: "yes"
 
+This will, by default, deploy Prometheus version 2.x. Since Prometheus 1.x data
+is not compatible with Prometheus 2.x and no automatic data migration is
+provided, any previous Prometheus 1.x deployment will be replaced and all its
+stored metrics will become inacessible (but still available in the old data
+volume: ``prometheus``; the new data volume defaults to ``prometheus_v2``).
+If you rely on Prometheus only as e.g. a source of alert notifications (in pair
+with Alertmanager), it might not be worth migrating old metrics and they could
+be discarded. Otherwise, it's either possible to use
+`remote storage <https://prometheus.io/docs/prometheus/latest/storage/#remote-storage-integrations>`_
+or scrape Kolla's Prometheus ``/federate`` endpoint with an external system.
+However, if you want to stay on 1.x series, set the following variable:
+
+.. code-block:: yaml
+
+   prometheus_use_v1: yes
+
+In order to remove leftover volume containing Prometheus 1.x data, execute:
+
+.. code-block:: console
+
+   docker volume rm prometheus
+
+on all hosts wherever Prometheus was previously deployed.
+
 Extending the default command line options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
