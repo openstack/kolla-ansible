@@ -299,5 +299,6 @@ pdf_documents = [
 # -- Options for openstackdocstheme -------------------------------------------
 
 openstack_projects = [
+    'kolla',
     'kolla-ansible',
 ]
