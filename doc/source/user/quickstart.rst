@@ -62,6 +62,16 @@ Install dependencies using a virtual environment
 
 If not installing Kolla Ansible in a virtual environment, skip this section.
 
+#. Install the virtual environment dependencies.
+
+   For CentOS or RHEL 8, you don't need to do anything.
+
+   For Debian or Ubuntu, run:
+
+   .. code-block:: console
+
+      sudo apt install python3-venv
+
 #. Create a virtual environment and activate it:
 
    .. code-block:: console
