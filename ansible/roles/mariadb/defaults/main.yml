@@ -4,7 +4,7 @@ project_name: "mariadb"
 mariadb_services:
   mariadb:
     container_name: mariadb
-    group: mariadb
+    group: "{{ mariadb_shard_group }}"
     enabled: true
     image: "{{ mariadb_image_full }}"
     volumes: "{{ mariadb_default_volumes + mariadb_extra_volumes }}"
@@ -37,13 +37,13 @@ mariadb_services:
         custom_member_list: "{{ external_haproxy_members.split(';') }}"
   mariadb-clustercheck:
     container_name: mariadb_clustercheck
-    group: mariadb
+    group: "{{ mariadb_shard_group }}"
     enabled: "{{ enable_mariadb_clustercheck | bool }}"
     image: "{{ mariadb_clustercheck_image_full }}"
     volumes: "{{ mariadb_clustercheck_default_volumes + mariadb_clustercheck_extra_volumes }}"
     dimensions: "{{ mariadb_clustercheck_dimensions }}"
     environment:
-      MYSQL_USERNAME: "haproxy"
+      MYSQL_USERNAME: "{{ mariadb_monitor_user }}"
       MYSQL_PASSWORD: ""
       MYSQL_HOST: "{{ api_interface_address }}"
       AVAILABLE_WHEN_DONOR: "1"
@@ -57,8 +57,8 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
-external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port}} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+internal_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+external_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker
@@ -95,6 +95,7 @@ mariadb_clustercheck_extra_volumes: "{{ default_extra_volumes }}"
 # Vars used within recover_cluster.yml
 ########################################
 mariadb_service: "{{ mariadb_services['mariadb'] }}"
+mariadb_recover_tmp_file_path: "/tmp/kolla_mariadb_recover_inventory_name_{{ mariadb_shard_name }}"
 
 ###############
 # WSREP options
@@ -108,12 +109,21 @@ mariabackup_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ doc
 mariabackup_tag: "{{ openstack_tag }}"
 mariabackup_image_full: "{{ mariabackup_image }}:{{ mariabackup_tag }}"
 
-mariadb_backup_host: "{{ groups['mariadb'][0] }}"
+mariadb_backup_host: "{{ groups[mariadb_shard_group][0] }}"
 mariadb_backup_database_schema: "PERCONA_SCHEMA"
-mariadb_backup_database_user: "backup"
+mariadb_backup_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}backup{% else %}backup_{{ mariadb_shard_name }}{% endif %}"
 mariadb_backup_type: "full"
+mariadb_backup: "{{ mariadb_loadbalancer != 'haproxy' or inventory_hostname in mariadb_default_database_shard_hosts }}"
 
 ####################
 # Clustercheck
 ####################
 enable_mariadb_clustercheck: "yes"
+
+####################
+# Sharding
+####################
+mariadb_shard_id: "{{ mariadb_default_database_shard_id }}"
+mariadb_shard_name: "shard_{{ mariadb_shard_id }}"
+mariadb_shard_group: "mariadb_{{ mariadb_shard_name }}"
+mariadb_shard_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}{{ database_user }}{% else %}root_{{ mariadb_shard_name }}{% endif %}"
