@@ -15,6 +15,7 @@ prometheus_services:
         mode: "http"
         external: false
         port: "{{ prometheus_port }}"
+        custom_member_list: "{{ prometheus_haproxy_members.split(';') }}"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -99,6 +100,12 @@ prometheus_services:
 # Database
 ####################
 prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}prometheus{% endif %}"
+
+####################
+# HAProxy
+####################
+prometheus_active_passive: true
+prometheus_haproxy_members: "{% for host in groups['prometheus'] %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ prometheus_port }} check inter 2000 rise 2 fall 5{% if not loop.first %}{% if prometheus_active_passive | bool %} backup{% endif %}{% endif %};{% endfor %}"
 
 ####################
 # Blackbox
