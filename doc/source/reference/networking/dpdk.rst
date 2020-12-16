@@ -49,7 +49,7 @@ config and regenerating your grub file.
 
 As dpdk is a userspace networking library it requires userspace compatible
 drivers to be able to control the physical interfaces on the platform.
-dpdk technically support 3 kernel drivers ``igb_uio``,``uio_pci_generic``, and
+dpdk technically support 3 kernel drivers ``igb_uio``, ``uio_pci_generic`` and
 ``vfio_pci``.
 While it is technically possible to use all 3 only ``uio_pci_generic`` and
 ``vfio_pci`` are recommended for use with kolla. ``igb_uio`` is BSD licenced
