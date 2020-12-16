@@ -1,4 +1,24 @@
 ---
+- name: Prepare Swift containers list
+  set_fact:
+    swift_containers:
+      - { name: swift_account_server, group: swift-account-server }
+      - { name: swift_account_auditor, group: swift-account-server }
+      - { name: swift_account_replicator, group: swift-account-server }
+      - { name: swift_account_reaper, group: swift-account-server }
+      - { name: swift_rsyncd, group: swift-account-server }
+      - { name: swift_container_server, group: swift-container-server }
+      - { name: swift_container_auditor, group: swift-container-server }
+      - { name: swift_container_replicator, group: swift-container-server }
+      - { name: swift_container_updater, group: swift-container-server }
+      - { name: swift_rsyncd, group: swift-container-server }
+      - { name: swift_object_server, group: swift-object-server }
+      - { name: swift_object_auditor, group: swift-object-server }
+      - { name: swift_object_replicator, group: swift-object-server }
+      - { name: swift_object_updater, group: swift-object-server }
+      - { name: swift_object_expirer, group: swift-object-server }
+      - { name: swift_rsyncd, group: swift-object-server }
+
 # Upgrade swift storage nodes first
 - include_tasks: config.yml
   when: inventory_hostname in groups['swift-account-server'] or
@@ -12,25 +32,10 @@
   become: true
   kolla_docker:
     action: "stop_container"
-    name: "{{ item }}"
+    name: "{{ item.name }}"
+  when: inventory_hostname in groups[item.group]
   with_items:
-    - "swift_rsyncd"
-    - "swift_account_server"
-    - "swift_account_auditor"
-    - "swift_account_replicator"
-    - "swift_account_reaper"
-    - "swift_container_server"
-    - "swift_container_auditor"
-    - "swift_container_replicator"
-    - "swift_container_updater"
-    - "swift_object_server"
-    - "swift_object_auditor"
-    - "swift_object_replicator"
-    - "swift_object_updater"
-    - "swift_object_expirer"
-  when: inventory_hostname in groups['swift-account-server'] or
-        inventory_hostname in groups['swift-container-server'] or
-        inventory_hostname in groups['swift-object-server']
+    - "{{ swift_containers }}"
 
 - import_tasks: start.yml
   vars:
