@@ -18,6 +18,12 @@ function test_octavia {
     openstack loadbalancer list
 }
 
+function test_trove {
+  # smoke test
+    openstack database instance list
+    openstack database cluster list
+}
+
 function test_designate {
     # Smoke test.
     openstack zone list --all
@@ -62,16 +68,17 @@ function test_magnum_logged {
     test_magnum_clusters
     test_octavia
     test_designate
+    test_trove
 }
 
 function test_magnum {
-    echo "Testing Magnum, Octavia and Designate"
+    echo "Testing Magnum, Octavia, Trove and Designate"
     test_magnum_logged > /tmp/logs/ansible/test-magnum 2>&1
     result=$?
     if [[ $result != 0 ]]; then
-        echo "Testing Magnum, Octavia and Designate failed. See ansible/test-magnum for details"
+        echo "Testing Magnum, Octavia, Trove and Designate failed. See ansible/test-magnum for details"
     else
-        echo "Successfully tested Magnum, Octavia and Designate . See ansible/test-magnum for details"
+        echo "Successfully tested Magnum, Octavia, Trove and Designate . See ansible/test-magnum for details"
     fi
     return $result
 }
