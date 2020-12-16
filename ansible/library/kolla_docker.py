@@ -176,6 +176,11 @@ options:
       - How many times to attempt a restart if 'on-failure' policy is set
     type: int
     default: 10
+  tmpfs:
+    description:
+      - List of paths to mount as tmpfs.
+    required: False
+    type: list
   volumes:
     description:
       - Set volumes for docker to use
@@ -342,6 +347,7 @@ class DockerWorker(object):
             self.compare_labels(container_info) or
             self.compare_privileged(container_info) or
             self.compare_pid_mode(container_info) or
+            self.compare_tmpfs(container_info) or
             self.compare_volumes(container_info) or
             self.compare_volumes_from(container_info) or
             self.compare_environment(container_info) or
@@ -431,6 +437,17 @@ class DockerWorker(object):
                 del current_labels[k]
 
         if new_labels != current_labels:
+            return True
+
+    def compare_tmpfs(self, container_info):
+        new_tmpfs = self.generate_tmpfs()
+        current_tmpfs = container_info['HostConfig'].get('Tmpfs')
+        if not new_tmpfs:
+            new_tmpfs = []
+        if not current_tmpfs:
+            current_tmpfs = []
+
+        if set(current_tmpfs).symmetric_difference(set(new_tmpfs)):
             return True
 
     def compare_volumes_from(self, container_info):
@@ -637,6 +654,13 @@ class DockerWorker(object):
                 if self.check_container():
                     raise
 
+    def generate_tmpfs(self):
+        tmpfs = self.params.get('tmpfs')
+        if tmpfs:
+            # NOTE(mgoddard): Filter out any empty strings.
+            tmpfs = [t for t in tmpfs if t]
+        return tmpfs
+
     def generate_volumes(self):
         volumes = self.params.get('volumes')
         if not volumes:
@@ -711,6 +735,7 @@ class DockerWorker(object):
             'security_opt': self.params.get('security_opt'),
             'pid_mode': self.params.get('pid_mode'),
             'privileged': self.params.get('privileged'),
+            'tmpfs': self.generate_tmpfs(),
             'volumes_from': self.params.get('volumes_from')
         }
 
@@ -1066,6 +1091,7 @@ def generate_module():
         tls_cert=dict(required=False, type='str'),
         tls_key=dict(required=False, type='str'),
         tls_cacert=dict(required=False, type='str'),
+        tmpfs=dict(required=False, type='list'),
         volumes=dict(required=False, type='list'),
         volumes_from=dict(required=False, type='list'),
         dimensions=dict(required=False, type='dict', default=dict()),

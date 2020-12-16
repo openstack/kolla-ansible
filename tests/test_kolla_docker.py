@@ -88,6 +88,7 @@ class ModuleArgsTest(base.BaseTestCase):
             tls_cert=dict(required=False, type='str'),
             tls_key=dict(required=False, type='str'),
             tls_cacert=dict(required=False, type='str'),
+            tmpfs=dict(required=False, type='list'),
             volumes=dict(required=False, type='list'),
             volumes_from=dict(required=False, type='list'),
             dimensions=dict(required=False, type='dict', default=dict()),
@@ -136,6 +137,7 @@ FAKE_DATA = {
             'security_opt': None,
             'pid_mode': '',
             'privileged': False,
+            'tmpfs': None,
             'volumes_from': None,
             'restart_policy': 'unless-stopped',
             'restart_retries': 10},
@@ -276,7 +278,7 @@ class TestContainer(base.BaseTestCase):
             **{k: self.fake_data['params'][k] for k in expected_args})
         self.dw.dc.create_host_config.assert_called_with(
             cap_add=None, network_mode='host', ipc_mode=None,
-            pid_mode=None, volumes_from=None, blkio_weight=10,
+            pid_mode=None, tmpfs=None, volumes_from=None, blkio_weight=10,
             security_opt=None, privileged=None)
 
     def test_create_container_wrong_dimensions(self):
@@ -302,6 +304,25 @@ class TestContainer(base.BaseTestCase):
                          'volumes'}
         self.dw.dc.create_container.assert_called_once_with(
             **{k: self.fake_data['params'][k] for k in expected_args})
+
+    def test_create_container_with_tmpfs(self):
+        self.fake_data['params']['tmpfs'] = ['/tmp']  # nosec: B108
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertTrue(self.dw.changed)
+        self.assertEqual(['/tmp'],  # nosec: B108
+                         self.dw.dc.create_host_config.call_args[1]['tmpfs'])
+
+    def test_create_container_with_tmpfs_empty_string(self):
+        self.fake_data['params']['tmpfs'] = ['']
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertTrue(self.dw.changed)
+        self.assertFalse(self.dw.dc.create_host_config.call_args[1]['tmpfs'])
 
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',
@@ -978,6 +999,36 @@ class TestAttrComp(base.BaseTestCase):
         self.dw.check_image = mock.MagicMock(return_value=dict(
             Labels={'kolla_version': '1.0.1'}))
         self.assertTrue(self.dw.compare_labels(container_info))
+
+    def test_compare_tmpfs_neg(self):
+        container_info = {'HostConfig': dict(Tmpfs=['foo'])}
+        self.dw = get_DockerWorker({'tmpfs': ['foo']})
+
+        self.assertFalse(self.dw.compare_tmpfs(container_info))
+
+    def test_compare_tmpfs_neg_empty_string(self):
+        container_info = {'HostConfig': dict()}
+        self.dw = get_DockerWorker({'tmpfs': ['']})
+
+        self.assertFalse(self.dw.compare_tmpfs(container_info))
+
+    def test_compare_tmpfs_pos_different(self):
+        container_info = {'HostConfig': dict(Tmpfs=['foo'])}
+        self.dw = get_DockerWorker({'tmpfs': ['bar']})
+
+        self.assertTrue(self.dw.compare_tmpfs(container_info))
+
+    def test_compare_tmpfs_pos_empty_new(self):
+        container_info = {'HostConfig': dict(Tmpfs=['foo'])}
+        self.dw = get_DockerWorker({})
+
+        self.assertTrue(self.dw.compare_tmpfs(container_info))
+
+    def test_compare_tmpfs_pos_empty_current(self):
+        container_info = {'HostConfig': dict()}
+        self.dw = get_DockerWorker({'tmpfs': ['bar']})
+
+        self.assertTrue(self.dw.compare_tmpfs(container_info))
 
     def test_compare_volumes_from_neg(self):
         container_info = {'HostConfig': dict(VolumesFrom=['777f7dc92da7'])}
