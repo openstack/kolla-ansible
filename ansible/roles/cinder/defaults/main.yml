@@ -38,6 +38,7 @@ cinder_services:
     image: "{{ cinder_volume_image_full }}"
     privileged: True
     ipc_mode: "host"
+    tmpfs: "{{ cinder_volume_tmpfs }}"
     volumes: "{{ cinder_volume_default_volumes + cinder_volume_extra_volumes }}"
     dimensions: "{{ cinder_volume_dimensions }}"
   cinder-backup:
@@ -124,6 +125,12 @@ cinder_api_extra_volumes: "{{ cinder_extra_volumes }}"
 cinder_backup_extra_volumes: "{{ cinder_extra_volumes }}"
 cinder_scheduler_extra_volumes: "{{ cinder_extra_volumes }}"
 cinder_volume_extra_volumes: "{{ cinder_extra_volumes }}"
+
+cinder_volume_tmpfs:
+  - "{% if cinder_enable_conversion_tmpfs | bool %}/var/lib/cinder/conversion{% endif %}"
+
+# If true, use a tmpfs mount for the Cinder image conversion directory.
+cinder_enable_conversion_tmpfs: false
 
 ####################
 # OpenStack
