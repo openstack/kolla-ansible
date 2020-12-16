@@ -9,3 +9,4 @@ including kuryr.
    :maxdepth: 1
 
    kuryr-guide
+   magnum-guide

@@ -96,6 +96,7 @@ openstack_projects = [
     'keystone',
     'kolla',
     'kolla-ansible',
+    'magnum',
     'manila',
     'networking-sfc',
     'neutron-vpnaas',
