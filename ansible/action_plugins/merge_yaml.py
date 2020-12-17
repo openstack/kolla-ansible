@@ -118,7 +118,7 @@ class ActionModule(action.ActionBase):
 
         temp_vars = task_vars.copy()
         temp_vars.update(extra_vars)
-        self._templar.set_available_variables(temp_vars)
+        self._templar.available_variables = temp_vars
 
         output = {}
         sources = self._task.args.get('sources', None)
@@ -130,7 +130,7 @@ class ActionModule(action.ActionBase):
                 output, self.read_config(source), extend_lists)
 
         # restore original vars
-        self._templar.set_available_variables(old_vars)
+        self._templar.available_variables = old_vars
 
         local_tempdir = tempfile.mkdtemp(dir=constants.DEFAULT_LOCAL_TMP)
 
