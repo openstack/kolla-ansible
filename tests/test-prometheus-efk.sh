@@ -127,8 +127,26 @@ function test_prometheus {
     echo "SUCCESS: Prometheus"
 }
 
+function migrate_to_elk_6 {
+    RAW_INVENTORY=/etc/kolla/inventory
+
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv -t elasticsearch,kibana upgrade
+}
+
 function test_prometheus_efk_logged {
     . /etc/kolla/admin-openrc.sh
+
+    test_kibana
+    test_grafana
+    test_prometheus
+
+    migrate_to_elk_6 &> /tmp/logs/ansible/migrate-elk
+
+    test_kibana
+    test_grafana
+    test_prometheus
+
+    migrate_to_elk_6 &> /tmp/logs/ansible/migrate-elk-again
 
     test_kibana
     test_grafana
