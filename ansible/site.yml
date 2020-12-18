@@ -62,7 +62,6 @@
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_qdrouterd_{{ enable_qdrouterd | bool }}
-        - enable_qinling_{{ enable_qinling | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
         - enable_rally_{{ enable_rally | bool }}
         - enable_redis_{{ enable_redis | bool }}
@@ -302,11 +301,6 @@
             tasks_from: loadbalancer
           tags: prometheus
           when: enable_prometheus | bool
-        - include_role:
-            name: qinling
-            tasks_from: loadbalancer
-          tags: qinling
-          when: enable_qinling | bool
         - include_role:
             name: rabbitmq
             tasks_from: loadbalancer
@@ -837,18 +831,6 @@
     - { role: mistral,
         tags: mistral,
         when: enable_mistral | bool }
-
-- name: Apply role qinling
-  gather_facts: false
-  hosts:
-    - qinling-api
-    - qinling-engine
-    - '&enable_qinling_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: qinling,
-        tags: qinling,
-        when: enable_qinling | bool }
 
 - name: Apply role sahara
   gather_facts: false
