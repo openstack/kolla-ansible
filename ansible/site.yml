@@ -66,7 +66,6 @@
         - enable_rally_{{ enable_rally | bool }}
         - enable_redis_{{ enable_redis | bool }}
         - enable_sahara_{{ enable_sahara | bool }}
-        - enable_searchlight_{{ enable_searchlight | bool }}
         - enable_senlin_{{ enable_senlin | bool }}
         - enable_skydive_{{ enable_skydive | bool }}
         - enable_solum_{{ enable_solum | bool }}
@@ -314,11 +313,6 @@
             tasks_from: loadbalancer
           tags: sahara
           when: enable_sahara | bool
-        - include_role:
-            name: searchlight
-            tasks_from: loadbalancer
-          tags: searchlight
-          when: enable_searchlight | bool
         - include_role:
             name: senlin
             tasks_from: loadbalancer
@@ -1083,18 +1077,6 @@
     - { role: senlin,
         tags: senlin,
         when: enable_senlin | bool }
-
-- name: Apply role searchlight
-  gather_facts: false
-  hosts:
-    - searchlight-api
-    - searchlight-listener
-    - '&enable_searchlight_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: searchlight,
-        tags: searchlight,
-        when: enable_searchlight | bool }
 
 - name: Apply role tacker
   gather_facts: false
