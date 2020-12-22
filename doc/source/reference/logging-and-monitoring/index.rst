@@ -9,6 +9,7 @@ logging and monitoring services available in kolla.
    :maxdepth: 1
 
    central-logging-guide
+   grafana-guide
    influxdb-guide
    kafka-guide
    monasca-guide
