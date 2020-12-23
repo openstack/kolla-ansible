@@ -115,7 +115,7 @@ IPv6 is tested on all supported platforms.
 For example, ``network_address_family`` accepts either ``ipv4`` or ``ipv6``
 as its value and defines the default address family for all networks just
 like ``network_interface`` defines the default interface.
-Analogically, ``api_adress_family`` changes the address family for the API
+Analogically, ``api_address_family`` changes the address family for the API
 network. Current listing of networks is available in ``globals.yml`` file.
 
 .. note::
