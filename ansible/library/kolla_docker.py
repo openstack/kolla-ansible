@@ -833,8 +833,10 @@ class DockerWorker(object):
             graceful_timeout = 10
         container = self.check_container()
         if not container:
-            self.module.fail_json(
-                msg="No such container: {} to stop".format(name))
+            ignore_missing = self.params.get('ignore_missing')
+            if not ignore_missing:
+                self.module.fail_json(
+                    msg="No such container: {} to stop".format(name))
         elif not container['Status'].startswith('Exited '):
             self.changed = True
             self.dc.stop(name, timeout=graceful_timeout)
@@ -965,6 +967,7 @@ def generate_module():
         dimensions=dict(required=False, type='dict', default=dict()),
         tty=dict(required=False, type='bool', default=False),
         client_timeout=dict(required=False, type='int', default=120),
+        ignore_missing=dict(required=False, type='bool', default=False),
     )
     required_if = [
         ['action', 'pull_image', ['image']],

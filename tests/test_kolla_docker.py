@@ -93,6 +93,7 @@ class ModuleArgsTest(base.BaseTestCase):
             dimensions=dict(required=False, type='dict', default=dict()),
             tty=dict(required=False, type='bool', default=False),
             client_timeout=dict(required=False, type='int', default=120),
+            ignore_missing=dict(required=False, type='bool', default=False),
         )
         required_if = [
             ['action', 'pull_image', ['image']],
@@ -174,7 +175,15 @@ FAKE_DATA = {
          'Image': 'myregistrydomain.com:5000/ubuntu:16.04',
          'ImageID': 'sha256:c5f1cf30',
          'Labels': {},
-         'Names': '/my_container'}
+         'Names': '/my_container'},
+        {'Created': 1463578195,
+         'Status': 'Exited (0) 2 hours ago',
+         'HostConfig': {'NetworkMode': 'default'},
+         'Id': 'e40d8e7188',
+         'Image': 'myregistrydomain.com:5000/ubuntu:16.04',
+         'ImageID': 'sha256:c5f1cf30',
+         'Labels': {},
+         'Names': '/exited_container'},
     ],
 
     'container_inspect': {
@@ -380,6 +389,18 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
+        self.dw.module.fail_json.assert_not_called()
+
+    def test_stop_container_already_stopped(self):
+        self.dw = get_DockerWorker({'name': 'exited_container',
+                                    'action': 'stop_container'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.stop_container()
+
+        self.assertFalse(self.dw.changed)
+        self.dw.dc.containers.assert_called_once_with(all=True)
+        self.dw.module.fail_json.assert_not_called()
+        self.dw.dc.stop.assert_not_called()
 
     def test_stop_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake_container',
@@ -389,8 +410,21 @@ class TestContainer(base.BaseTestCase):
 
         self.assertFalse(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
+        self.dw.dc.stop.assert_not_called()
         self.dw.module.fail_json.assert_called_once_with(
             msg="No such container: fake_container to stop")
+
+    def test_stop_container_not_exists_ignore_missing(self):
+        self.dw = get_DockerWorker({'name': 'fake_container',
+                                    'action': 'stop_container',
+                                    'ignore_missing': True})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.stop_container()
+
+        self.assertFalse(self.dw.changed)
+        self.dw.dc.containers.assert_called_once_with(all=True)
+        self.dw.dc.stop.assert_not_called()
+        self.dw.module.fail_json.assert_not_called()
 
     def test_stop_and_remove_container(self):
         self.dw = get_DockerWorker({'name': 'my_container',
