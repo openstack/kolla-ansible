@@ -53,7 +53,6 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 - `Heat <https://docs.openstack.org/heat/latest/>`__
 - `Horizon <https://docs.openstack.org/horizon/latest/>`__
 - `Ironic <https://docs.openstack.org/ironic/latest/>`__
-- `Karbor <https://docs.openstack.org/karbor/latest/>`__
 - `Keystone <https://docs.openstack.org/keystone/latest/>`__
 - `Kuryr <https://docs.openstack.org/kuryr/latest/>`__
 - `Magnum <https://docs.openstack.org/magnum/latest/>`__

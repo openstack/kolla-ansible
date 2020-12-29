@@ -39,7 +39,6 @@
         - enable_ironic_{{ enable_ironic | bool }}
         - enable_iscsid_{{ enable_iscsid | bool }}
         - enable_kafka_{{ enable_kafka | bool }}
-        - enable_karbor_{{ enable_karbor | bool }}
         - enable_keystone_{{ enable_keystone | bool }}
         - enable_kibana_{{ enable_kibana | bool }}
         - enable_kuryr_{{ enable_kuryr | bool }}
@@ -207,11 +206,6 @@
             tasks_from: loadbalancer
           tags: ironic
           when: enable_ironic | bool
-        - include_role:
-            name: karbor
-            tasks_from: loadbalancer
-          tags: karbor
-          when: enable_karbor | bool
         - include_role:
             name: keystone
             tasks_from: loadbalancer
@@ -597,19 +591,6 @@
     - { role: storm,
         tags: storm,
         when: enable_storm | bool }
-
-- name: Apply role karbor
-  gather_facts: false
-  hosts:
-    - karbor-api
-    - karbor-protection
-    - karbor-operationengine
-    - '&enable_karbor_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: karbor,
-        tags: karbor,
-        when: enable_karbor | bool }
 
 - name: Apply role swift
   gather_facts: false
