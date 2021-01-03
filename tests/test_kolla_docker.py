@@ -558,8 +558,8 @@ class TestContainer(base.BaseTestCase):
         State = {'Dead': False,
                  'ExitCode': 0,
                  'Pid': 12475,
-                 'StartedAt': u'2016-06-07T11:22:37.66876269Z',
-                 'Status': u'running'}
+                 'StartedAt': '2016-06-07T11:22:37.66876269Z',
+                 'Status': 'running'}
         self.fake_data['container_inspect'].update({'State': State})
         self.dw = get_DockerWorker({'name': 'my_container',
                                     'action': 'get_container_state'})
@@ -865,7 +865,7 @@ class TestVolume(base.BaseTestCase):
         self.fake_data = copy.deepcopy(FAKE_DATA)
         self.volumes = {
             'Volumes':
-            [{'Driver': u'local',
+            [{'Driver': 'local',
               'Labels': None,
               'Mountpoint': '/var/lib/docker/volumes/nova_compute/_data',
               'Name': 'nova_compute'},
