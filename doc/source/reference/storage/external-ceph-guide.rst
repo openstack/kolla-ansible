@@ -8,9 +8,8 @@ Kolla Ansible does not provide support for provisioning and configuring a
 Ceph cluster directly. Instead, administrators should use a tool dedicated
 to this purpose, such as:
 
-* `ceph-ansible <https://docs.ceph.com/ceph-ansible>`_
-* `ceph-deploy <https://docs.ceph.com/docs/master/start/>`_
-* `cephadm <https://docs.ceph.com/docs/master/bootstrap/>`_
+* `ceph-ansible <https://docs.ceph.com/projects/ceph-ansible/en/latest/>`_
+* `cephadm <https://docs.ceph.com/en/latest/cephadm/install/>`_
 
 The desired pool(s) and keyrings should then be created via the Ceph CLI
 or similar.
@@ -23,7 +22,7 @@ Requirements
 * Existing credentials in Ceph for OpenStack services to connect to Ceph
   (Glance, Cinder, Nova, Gnocchi, Manila)
 
-Refer to http://docs.ceph.com/docs/master/rbd/rbd-openstack/ for details on
+Refer to https://docs.ceph.com/en/latest/rbd/rbd-openstack/ for details on
 creating the pool and keyrings with appropriate permissions for each service.
 
 Enabling External Ceph
