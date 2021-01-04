@@ -1,0 +1,23 @@
+---
+issues:
+  - |
+    Since Ussuri, there is a bug in how Ceph (RBD) is handled with Cinder:
+    the ``backend_host`` option is missing from the generated configuration
+    for external Ceph. The symptoms are that volumes become unmanageable
+    until extra admin action is taken. This does *not* affect the data plane
+    - running virtual machines are *not* affected.
+
+    There is a related issue regarding active-active ``cinder-volume``
+    services (single-host ``cinder-volume`` *not* affected), which is that
+    they should not have been configured with ``backend_host`` in the first
+    place but with ``cluster`` and proper coordination instead. Some users
+    might have customised their config already to address this issue.
+
+    The Kolla team is investigating the best way to address this for all its
+    users. In the meantime, please ensure that, before upgrading to Ussuri,
+    the ``backend_host`` option is set to its previous value (the default was
+    ``rbd:volumes``) via a config override.
+
+    For more details please refer to the referenced bug.
+    Do note this issue affects both new deployments and upgrades.
+    `LP#1904062 <https://bugs.launchpad.net/kolla-ansible/+bug/1904062>`__
