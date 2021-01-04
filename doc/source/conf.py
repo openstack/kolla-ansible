@@ -102,4 +102,5 @@ openstack_projects = [
     'oslo.messaging',
     'oslotest',
     'swift',
+    'watcher',
 ]
