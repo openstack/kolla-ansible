@@ -131,7 +131,22 @@ monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ 'api'
 # NOTE(dszumski): Only one NTP server is currently supported by the Monasca Agent plugin
 monasca_ntp_server: "{{ external_ntp_servers | first }}"
 
-# Kafka topics used by Monasca services
+# The default number of Kafka topic partitions. This effectively limits
+# the maximum number of workers per topic, counted over all nodes in the
+# Monasca deployment. For example, if you have a 3 node Monasca
+# deployment, you will by default have 3 instances of Monasca Persister,
+# with each instance having 2 workers by default for the metrics topic.
+# In this case, each worker on the metrics topic will be assigned 5
+# partitions of the metrics topic. If you increase the worker or instance
+# count, you may need to increase the partition count to ensure that all
+# workers can get a share of the work.
+monasca_default_topic_partitions: 30
+
+# The default number of topic replicas. Generally you should not change
+# this.
+monasca_default_topic_replication_factor: "{{ kafka_broker_count if kafka_broker_count|int < 3 else 3 }}"
+
+# Kafka topic names used by Monasca services
 monasca_metrics_topic: "metrics"
 monasca_raw_logs_topic: "logs"
 monasca_transformed_logs_topic: "transformed-logs"
@@ -140,6 +155,47 @@ monasca_alarm_state_transitions_topic: "alarm-state-transitions"
 monasca_alarm_notifications_topic: "alarm-notifications"
 monasca_alarm_notifications_retry_topic: "retry-notifications"
 monasca_periodic_notifications_topic: "60-seconds-notifications"
+
+# Kafka topic configuration. Most users will not need to modify these
+# settings, however for deployments where resources are tightly
+# constrained, or very large deployments where there are many parallel
+# workers, it is worth considering changing them. Note that if you do
+# change these settings, then you will need to manually remove each
+# topic from the Kafka deployment for the change to take effect when
+# the Monasca service is reconfigured.
+monasca_all_topics:
+  - name: "{{ monasca_metrics_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_raw_logs_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_transformed_logs_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_events_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_alarm_state_transitions_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_alarm_notifications_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_alarm_notifications_retry_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
+  - name: "{{ monasca_periodic_notifications_topic }}"
+    partitions: "{{ monasca_default_topic_partitions }}"
+    replication_factor: "{{ monasca_default_topic_replication_factor }}"
+    enabled: True
 
 # NOTE(dszumski): Due to the way monasca-notification is currently
 # implemented it is not recommended to change this period.
