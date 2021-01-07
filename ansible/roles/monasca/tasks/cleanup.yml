@@ -1,0 +1,22 @@
+---
+- name: Stop and remove containers for disabled monasca services
+  become: true
+  kolla_docker:
+    action: "stop_and_remove_container"
+    name: "{{ item.value.container_name }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - not item.value.enabled | bool
+  with_dict: "{{ monasca_services }}"
+
+- name: Removing config for any disabled services
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "absent"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - not item.value.enabled | bool
+  with_dict: "{{ monasca_services }}"
+
+# NOTE(dszumski): Docker volume removal is currently a manual procedure

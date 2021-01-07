@@ -160,29 +160,11 @@
   notify:
     - Restart monasca-api container
 
-- name: Copying over monasca-log-transformer config
-  vars:
-    service: "{{ monasca_services['monasca-log-transformer'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/monasca-log-transformer/log-transformer.conf"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-transformer.conf"
-    - "{{ node_custom_config }}/monasca/log-transformer.conf"
-    - "{{ role_path }}/templates/monasca-log-transformer/log-transformer.conf.j2"
-  when:
-    - inventory_hostname in groups[service['group']]
-    - service.enabled | bool
-  notify:
-    - Restart monasca-log-transformer container
-
 - name: Ensuring logstash patterns folder exists
   vars:
-    service: "{{ monasca_services['monasca-log-transformer'] }}"
+    service: "{{ monasca_services['monasca-log-persister'] }}"
   file:
-    path: "{{ node_config_directory }}/monasca-log-transformer/logstash_patterns"
+    path: "{{ node_config_directory }}/monasca-log-persister/logstash_patterns"
     state: "directory"
     mode: "0770"
   become: true
@@ -200,10 +182,10 @@
 
 - name: Copying over custom logstash patterns
   vars:
-    service: "{{ monasca_services['monasca-log-transformer'] }}"
+    service: "{{ monasca_services['monasca-log-persister'] }}"
   template:
     src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/monasca-log-transformer/logstash_patterns/{{ item.path | basename }}"
+    dest: "{{ node_config_directory }}/monasca-log-persister/logstash_patterns/{{ item.path | basename }}"
     mode: "0660"
   with_items: "{{ monasca_custom_logstash_patterns.files }}"
   become: true
@@ -211,7 +193,7 @@
     - inventory_hostname in groups[service['group']]
     - service.enabled | bool
   notify:
-    - Restart monasca-log-transformer container
+    - Restart monasca-log-persister container
 
 - name: Copying over monasca-log-persister config
   vars:
