@@ -329,6 +329,11 @@ which you must run the cleanup command is given below:
 
 - Upgrading from Victoria to Wallaby to remove the unused Monasca Log
   Transformer service
+- Upgrading from Victoria to Wallaby to remove the Monasca Log Metrics
+  service, unless the option to disable it by default has been overridden in
+  Wallaby.
+- Upgrading from Wallaby to Xena to remove the Monasca Log Metrics service
+  if the option to disable it by default was overridden in Wallaby.
 
 The cleanup command can be invoked from the Kolla Ansible CLI, for example:
 
@@ -371,7 +376,7 @@ Monasca will deploy the following Docker containers:
 * Monasca Agent Statsd
 * Monasca API
 * Monasca Log API
-* Monasca Log Metrics (Logstash)
+* Monasca Log Metrics (Logstash, optional, deprecated)
 * Monasca Log Persister (Logstash)
 * Monasca Notification
 * Monasca Persister
