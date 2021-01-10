@@ -39,6 +39,20 @@ freezer_es_address: "{{ elasticsearch_address }}"
 freezer_es_port: "{{ elasticsearch_port }}"
 
 ####################
+# Database sharding
+####################
+freezer_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ freezer_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+freezer_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+freezer_database_shard:
+  users:
+    - user: "{{ freezer_database_user }}"
+      password: "{{ freezer_database_password }}"
+  rules:
+    - schema: "{{ freezer_database_name }}"
+      shard_id: "{{ freezer_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 freezer_tag: "{{ openstack_tag }}"

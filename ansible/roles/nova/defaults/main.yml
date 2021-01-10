@@ -73,6 +73,25 @@ nova_api_database_user: "{% if use_preconfigured_databases | bool and use_common
 nova_api_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+nova_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ nova_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+nova_database_shard:
+  users:
+    - user: "{{ nova_database_user }}"
+      password: "{{ nova_database_password }}"
+    - user: "{{ nova_api_database_user }}"
+      password: "{{ nova_api_database_password }}"
+  rules:
+    - schema: "{{ nova_database_name }}"
+      shard_id: "{{ nova_database_shard_id }}"
+    - schema: "{{ nova_cell0_database_name }}"
+      shard_id: "{{ nova_database_shard_id }}"
+    - schema: "{{ nova_api_database_name }}"
+      shard_id: "{{ nova_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 nova_tag: "{{ openstack_tag }}"

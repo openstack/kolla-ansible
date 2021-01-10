@@ -44,6 +44,19 @@ watcher_database_name: "watcher"
 watcher_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}watcher{% endif %}"
 watcher_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+watcher_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ watcher_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+watcher_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+watcher_database_shard:
+  users:
+    - user: "{{ watcher_database_user }}"
+      password: "{{ watcher_database_password }}"
+  rules:
+    - schema: "{{ watcher_database_name }}"
+      shard_id: "{{ watcher_database_shard_id }}"
+
 
 ####################
 # Docker

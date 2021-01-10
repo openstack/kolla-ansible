@@ -136,7 +136,7 @@ nova_cell_serialproxy_group: 'nova-serialproxy'
 ####################
 # Database
 ####################
-nova_cell_database_admin_user: "{{ database_user }}"
+nova_cell_database_admin_user: "{{ nova_cell_database_shard_root_user }}"
 nova_cell_database_admin_password: "{{ database_password }}"
 
 nova_cell_database_name: "{{ 'nova_' ~ nova_cell_name if nova_cell_name else 'nova' }}"
@@ -155,6 +155,23 @@ nova_api_database_address: "{{ database_address | put_address_in_context('url') 
 
 # Optional group for cell database. If this is not defined, then the top level database is used.
 # nova_cell_database_group:
+
+####################
+# Database sharding
+####################
+# If nova-cell is used and proxied through proxysql
+# define nova_cell_database_shard_id to shard_id
+# where cell's DB will be installed.
+#
+# If nova-cell is not used and DBs are proxied
+# through proxysql shards are same:
+#  - nova_cell_database_shard_id = nova_database_shard_id
+nova_cell_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ nova_cell_database_shard_id | default(nova_database_shard_id) }}{% else %}{{ database_user }}{% endif %}"
+nova_cell_database_shard:
+  users:
+    - user: "{{ nova_cell_database_user }}"
+      password: "{{ nova_cell_database_password }}"
+  rules: "{% set rules = [] %}{% for host in groups['nova-conductor'] %}{{ rules.append({'schema': 'nova_' ~ hostvars[host]['nova_cell_name'] if hostvars[host]['nova_cell_name'] is defined else 'nova', 'shard_id': hostvars[host]['nova_cell_database_shard_id'] if (hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined ) else nova_database_shard_id}) }}{% endfor %}{{ rules }}"
 
 ####################
 # RabbitMQ

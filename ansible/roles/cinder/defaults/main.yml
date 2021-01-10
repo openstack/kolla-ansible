@@ -60,6 +60,20 @@ cinder_database_user: "{% if use_preconfigured_databases | bool and use_common_m
 cinder_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+cinder_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ cinder_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+cinder_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+cinder_database_shard:
+  users:
+    - user: "{{ cinder_database_user }}"
+      password: "{{ cinder_database_password }}"
+  rules:
+    - schema: "{{ cinder_database_name }}"
+      shard_id: "{{ cinder_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 cinder_tag: "{{ openstack_tag }}"
