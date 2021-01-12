@@ -9,6 +9,7 @@ cloudkitty_services:
     enabled: True
     volumes: "{{ cloudkitty_api_default_volumes + cloudkitty_api_extra_volumes }}"
     dimensions: "{{ cloudkitty_api_dimensions }}"
+    healthcheck: "{{ cloudkitty_api_healthcheck }}"
     haproxy:
       cloudkitty_api:
         enabled: "{{ enable_cloudkitty }}"
@@ -27,6 +28,7 @@ cloudkitty_services:
     enabled: True
     volumes: "{{ cloudkitty_processor_default_volumes + cloudkitty_processor_extra_volumes }}"
     dimensions: "{{ cloudkitty_processor_dimensions }}"
+    healthcheck: "{{ cloudkitty_processor_healthcheck }}"
 
 
 ####################
@@ -66,6 +68,32 @@ cloudkitty_processor_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
+
+cloudkitty_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cloudkitty_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cloudkitty_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cloudkitty_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cloudkitty_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ cloudkitty_api_port}}"]
+cloudkitty_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cloudkitty_api_healthcheck:
+  interval: "{{ cloudkitty_api_healthcheck_interval }}"
+  retries: "{{ cloudkitty_api_healthcheck_retries }}"
+  start_period: "{{ cloudkitty_api_healthcheck_start_period }}"
+  test: "{% if cloudkitty_api_enable_healthchecks | bool %}{{ cloudkitty_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cloudkitty_api_healthcheck_timeout }}"
+
+cloudkitty_processor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cloudkitty_processor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cloudkitty_processor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cloudkitty_processor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cloudkitty_processor_healthcheck_test: ["CMD-SHELL", "healthcheck_port cloudkitty-processor {{ om_rpc_port }}"]
+cloudkitty_processor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cloudkitty_processor_healthcheck:
+  interval: "{{ cloudkitty_processor_healthcheck_interval }}"
+  retries: "{{ cloudkitty_processor_healthcheck_retries }}"
+  start_period: "{{ cloudkitty_processor_healthcheck_start_period }}"
+  test: "{% if cloudkitty_processor_enable_healthchecks | bool %}{{ cloudkitty_processor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cloudkitty_processor_healthcheck_timeout }}"
 
 cloudkitty_extra_volumes: "{{ default_extra_volumes }}"
 cloudkitty_processor_extra_volumes: "{{ cloudkitty_extra_volumes }}"
