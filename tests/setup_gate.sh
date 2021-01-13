@@ -58,6 +58,10 @@ function prepare_images {
         GATE_IMAGES+=",^cinder"
     fi
 
+    if [[ $SCENARIO == "cells" ]]; then
+        GATE_IMAGES+=",^proxysql"
+    fi
+
     if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
         if [[ $BASE_DISTRO != "centos" ]]; then

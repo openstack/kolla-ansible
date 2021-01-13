@@ -65,7 +65,7 @@ control
 {% for host in hostvars %}
 {% set cell_name = 'cell' ~ loop.index %}
 [{{ cell_name }}]
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }} mariadb_shard_id={{ loop.index0 % 2 }}
 
 [{{ cell_name }}:vars]
 nova_cell_name = {{ cell_name }}
@@ -73,6 +73,7 @@ nova_cell_compute_group = {{ cell_name }}
 nova_cell_conductor_group = {{ cell_name }}
 nova_cell_novncproxy_group = {{ cell_name }}
 nova_novncproxy_port = {{ 6080 + loop.index0 }}
+nova_cell_database_shard_id = {{ loop.index0 % 2 }}
 
 {% endfor %}
 {% endif %}
