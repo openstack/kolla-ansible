@@ -114,12 +114,19 @@ prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bo
 prometheus_blackbox_exporter_endpoints: []
 
 ####################
+# Compatibility
+####################
+
+# Whether to keep using Prometheus server v1 (due to no data-preserving migration path to v2)
+prometheus_use_v1: no
+
+####################
 # Docker
 ####################
 prometheus_install_type: "{{ kolla_install_type }}"
 prometheus_tag: "{{ openstack_tag }}"
 
-prometheus_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-prometheus-server"
+prometheus_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ prometheus_install_type }}-{% if not prometheus_use_v1 | bool %}prometheus-v2-server{% else %}prometheus-server{% endif %}"
 prometheus_server_tag: "{{ prometheus_tag }}"
 prometheus_server_image_full: "{{ prometheus_server_image }}:{{ prometheus_server_tag }}"
 
@@ -175,7 +182,7 @@ prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
-  - "prometheus:/var/lib/prometheus"
+  - "{{ 'prometheus_v2' if not prometheus_use_v1 | bool else 'prometheus' }}:/var/lib/prometheus"
   - "kolla_logs:/var/log/kolla/"
 prometheus_haproxy_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-haproxy-exporter/:{{ container_config_directory }}/:ro"
