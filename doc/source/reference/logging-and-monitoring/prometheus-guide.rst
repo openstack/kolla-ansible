@@ -48,12 +48,12 @@ Extending the default command line options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to extend the default command line options for Prometheus by
-using a custom variable. As an example, to set remote timeouts to 30 seconds
-and data retention period to 2 days:
+using a custom variable. As an example, to set query timeout to 1 minute
+and data retention size to 30 gigabytes:
 
 .. code-block:: yaml
 
-   prometheus_cmdline_extras: "-storage.remote.timeout 30s -storage.local.retention 48h"
+   prometheus_cmdline_extras: "--query.timeout=1m --storage.tsdb.retention.size=30GB"
 
 Extending prometheus.cfg
 ~~~~~~~~~~~~~~~~~~~~~~~~
