@@ -1,5 +1,5 @@
-Welcome to Kolla Release Notes documentation
-=============================================
+Welcome to Kolla Ansible Release Notes documentation
+====================================================
 
 Contents
 ========
