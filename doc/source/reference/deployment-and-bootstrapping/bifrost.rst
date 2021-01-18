@@ -159,7 +159,7 @@ Configure and Deploy a Bifrost Container
 This section provides instructions for how to configure and deploy a container
 running bifrost services.
 
-Prepare Kolla-Ansible Inventory
+Prepare Kolla Ansible Inventory
 -------------------------------
 
 Kolla-ansible will deploy bifrost on the hosts in the ``bifrost`` Ansible
@@ -177,7 +177,7 @@ services deployed by kolla including OpenStack Ironic, MariaDB, RabbitMQ and
 (optionally) OpenStack Keystone.  These services should not be deployed on the
 host on which bifrost is deployed.
 
-Prepare Kolla-Ansible Configuration
+Prepare Kolla Ansible Configuration
 -----------------------------------
 
 Follow the instructions in :doc:`../../user/quickstart` to prepare
@@ -291,7 +291,7 @@ Deploy Bifrost
 
 The bifrost container can be deployed either using kolla-ansible or manually.
 
-Deploy Bifrost using Kolla-Ansible
+Deploy Bifrost using Kolla Ansible
 ----------------------------------
 
 For development:
@@ -382,7 +382,7 @@ Once we have deployed a bifrost container we can use it to provision the bare
 metal cloud hosts specified in the inventory file. Again, this can be done
 either using kolla-ansible or manually.
 
-By Kolla-Ansible
+By Kolla Ansible
 ----------------
 
 For Development:

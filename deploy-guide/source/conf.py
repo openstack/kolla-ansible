@@ -54,7 +54,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Kolla-Ansible'
+project = 'Kolla Ansible'
 bug_tag = 'deploy-guide'
 copyright = '2016, OpenStack contributors'
 

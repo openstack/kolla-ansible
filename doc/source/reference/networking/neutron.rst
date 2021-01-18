@@ -71,7 +71,7 @@ the following:
 
    neutron_plugin_agent: "ovn"
 
-When using OVN - Kolla-Ansible will not enable distributed floating ip
+When using OVN - Kolla Ansible will not enable distributed floating ip
 functionality (not enable external bridges on computes) by default.
 To change this behaviour you need to set the following:
 

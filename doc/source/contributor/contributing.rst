@@ -127,4 +127,4 @@ Project Team Lead Duties
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 All common PTL duties are enumerated in the `PTL guide <https://docs.openstack.org/project-team-guide/ptl.html>`_.
-Kolla-Ansible-specific PTL duties are listed in `Kolla Ansible PTL guide <https://docs.openstack.org/kolla-ansible/latest/contributor/ptl-guide.html>`_.
+Kolla Ansible-specific PTL duties are listed in `Kolla Ansible PTL guide <https://docs.openstack.org/kolla-ansible/latest/contributor/ptl-guide.html>`_.

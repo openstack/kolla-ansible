@@ -11,7 +11,7 @@ Recommended reading
 ~~~~~~~~~~~~~~~~~~~
 
 It's beneficial to learn basics of both `Ansible <https://docs.ansible.com>`__
-and `Docker <https://docs.docker.com>`__ before running Kolla-Ansible.
+and `Docker <https://docs.docker.com>`__ before running Kolla Ansible.
 
 Host machine requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,7 +276,7 @@ The next step is to prepare our inventory file. An inventory is an Ansible file
 where we specify hosts and the groups that they belong to. We can use this to
 define node roles and access credentials.
 
-Kolla-Ansible comes with ``all-in-one`` and ``multinode`` example inventory
+Kolla Ansible comes with ``all-in-one`` and ``multinode`` example inventory
 files. The difference between them is that the former is ready for deploying
 single node OpenStack on localhost. If you need to use separate host or more
 than one node, edit ``multinode`` inventory:
@@ -351,8 +351,8 @@ For development, run:
 Kolla globals.yml
 -----------------
 
-``globals.yml`` is the main configuration file for Kolla-Ansible.
-There are a few options that are required to deploy Kolla-Ansible:
+``globals.yml`` is the main configuration file for Kolla Ansible.
+There are a few options that are required to deploy Kolla Ansible:
 
 * Image options
 
@@ -399,7 +399,7 @@ There are a few options that are required to deploy Kolla-Ansible:
 
 * Networking
 
-  Kolla-Ansible requires a few networking options to be set.
+  Kolla Ansible requires a few networking options to be set.
   We need to set network interfaces used by OpenStack.
 
   First interface to set is "network_interface". This is the default interface
@@ -433,7 +433,7 @@ There are a few options that are required to deploy Kolla-Ansible:
 
 * Enable additional services
 
-  By default Kolla-Ansible provides a bare compute kit, however it does provide
+  By default Kolla Ansible provides a bare compute kit, however it does provide
   support for a vast selection of additional services. To enable them, set
   ``enable_*`` to "yes". For example, to enable Block Storage service:
 
@@ -475,7 +475,7 @@ Deployment
 After configuration is set, we can proceed to the deployment phase. First we
 need to setup basic host-level dependencies, like docker.
 
-Kolla-Ansible provides a playbook that will install all required services in
+Kolla Ansible provides a playbook that will install all required services in
 the correct versions.
 
 The following assumes the use of the ``multinode`` inventory. If using a
@@ -554,7 +554,7 @@ Using OpenStack
         ./kolla-ansible post-deploy
         . /etc/kolla/admin-openrc.sh
 
-#. Depending on how you installed Kolla-Ansible, there is a script that will
+#. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.
 
    * For deployment or evaluation,

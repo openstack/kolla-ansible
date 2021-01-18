@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'kolla-ansible'
+project = 'Kolla Ansible'
 copyright = '2013, OpenStack Foundation'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
@@ -67,15 +67,15 @@ html_theme_options = {
 }
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '%sdoc' % project
+htmlhelp_basename = 'kolla-ansibledoc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
     ('index',
-     'doc-%s.tex' % project,
-     '%s Documentation' % project,
+     'doc-kolla-ansible.tex',
+     'Kolla Ansible Documentation',
      'OpenStack Foundation', 'manual'),
 ]
 
