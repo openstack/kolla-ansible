@@ -1,0 +1,16 @@
+---
+- name: Ensure yum repos directory exists
+  file:
+    path: /etc/yum.repos.d/
+    state: directory
+    recurse: yes
+  become: True
+
+- name: Enable Ceph base yum repository
+  yum_repository:
+    name: "{{ item.shortname }}"
+    description: "{{ item.name }}"
+    baseurl: "{{ item.url }}"
+    gpgkey: "{{ cephadm_ceph_rpm_gpg_key }}"
+  loop: "{{ cephadm_ceph_rpm_repos }}"
+  become: True

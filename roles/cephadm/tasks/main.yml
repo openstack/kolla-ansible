@@ -1,0 +1,113 @@
+---
+- include_tasks: pkg_{{ ansible_os_family | lower }}.yml
+
+- name: Install cephadm
+  package:
+    name: cephadm
+    state: present
+  become: True
+
+- name: Ensure /etc/ceph exists
+  file:
+    path: /etc/ceph
+    state: directory
+  become: True
+
+- name: Generate ssh key for cephadm
+  openssh_keypair:
+    path: "/etc/ceph/cephadm.id"
+    size: 4096
+    comment: "cephadm"
+  become: True
+  register: cephadm_ssh_key
+
+- name: Save public key
+  copy:
+    content: "{{ cephadm_ssh_key.public_key }}"
+    dest: /etc/ceph/cephadm.pub
+  become: True
+
+- name: Copy cephadm public key to all hosts
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ cephadm_ssh_key.public_key }}"
+  become: True
+  with_inventory_hostnames:
+    - all
+  delegate_to: "{{ item }}"
+
+- name: Bootstrap cephadm
+  vars:
+    mon_ip: "{{ hostvars[inventory_hostname]['ansible_'+api_interface_name].ipv4.address }}"
+  command:
+    cmd: >
+         cephadm bootstrap
+         --ssh-private-key=/etc/ceph/cephadm.id
+         --ssh-public-key=/etc/ceph/cephadm.pub
+         --skip-monitoring-stack
+         --skip-dashboard
+         --skip-firewalld
+         --mon-ip={{ mon_ip }}
+  become: True
+  register: cephadm_bootstrap_output
+
+- name: Get ceph fsid
+  vars:
+    regexp: 'Cluster fsid: (.*)'
+  set_fact:
+    ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp,'\\1') | first }}"
+
+- name: Template out cluster spec
+  template:
+    src: templates/cephadm.yml.j2
+    dest: "/var/run/ceph/{{ ceph_fsid }}/cluster.yml"
+  become: True
+
+- name: Apply cluster spec
+  command:
+    cmd: >
+         cephadm shell --
+         ceph orch apply -i /var/run/ceph/cluster.yml
+  become: True
+
+- name: Add osds
+  command:
+    cmd: >
+         cephadm shell --
+         ceph orch daemon add osd {{ item }}
+  become: True
+  loop: "{{ cephadm_ceph_osd_devices }}"
+
+- name: Create and initialise pools for OpenStack services
+  command:
+    cmd: >
+         cephadm shell --
+         ceph osd pool create {{ item }}
+  with_items: "{{ cephadm_ceph_pools }}"
+  become: true
+
+- name: Create users for OpenStack services
+  command:
+    cmd: >
+         cephadm shell --
+         ceph auth get-or-create {{ item }}
+  become: true
+  with_items: "{{ cephadm_ceph_users }}"
+
+# TODO(mnasiadka): Fix merge_configs to support tabs
+- name: Generate ceph.conf without tabs
+  vars:
+    ceph_conf_fixed: |
+      [global]
+      fsid = {{ ceph_fsid }}
+      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_'+api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+  copy:
+    content: "{{ ceph_conf_fixed }}"
+    dest: /etc/ceph/ceph.conf
+  become: True
+
+- name: Check ceph health
+  command:
+    cmd: cephadm shell -- ceph health detail
+  become: True

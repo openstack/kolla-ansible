@@ -23,7 +23,6 @@ function check_config {
                 -not -path /etc/kolla \
                 -not -regex .*-openrc.sh \
                 -not -name globals.yml \
-                -not -name ceph-ansible.yml \
                 -not -name header \
                 -not -name inventory \
                 -not -name ceph-inventory \

@@ -48,7 +48,7 @@ function prepare_images {
         GATE_IMAGES="bifrost"
     fi
 
-    if [[ $SCENARIO == "ceph-ansible" ]]; then
+    if [[ $SCENARIO == "cephadm" ]]; then
         GATE_IMAGES+=",^cinder"
     fi
 
