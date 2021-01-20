@@ -48,6 +48,12 @@ previous release of kolla, append the OpenStack release name to the URL. For
 example, to access Kolla Ansible documentation for the Stein release:
 https://docs.openstack.org/kolla-ansible/stein
 
+Release Notes
+=============
+
+The release notes for the project can be found here:
+https://docs.openstack.org/releasenotes/kolla-ansible/
+
 Administrator Guide
 ===================
 
