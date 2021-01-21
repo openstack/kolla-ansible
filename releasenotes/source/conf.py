@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Kolla Release Notes'
-copyright = u'2015, Kolla developers'
+project = u'Kolla Ansible Release Notes'
+copyright = u'2015-2021, Kolla Ansible developers'
 
 # Release notes do not need a version number in the title, they
 # cover multiple releases.
@@ -178,7 +178,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'KollaReleaseNotesdoc'
+htmlhelp_basename = 'KollaAnsibleReleaseNotesdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -187,8 +187,9 @@ htmlhelp_basename = 'KollaReleaseNotesdoc'
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'KollaReleaseNotes.tex', u'Kolla Release Notes Documentation',
-     u'Kolla developers', 'manual'),
+    ('index', 'KollaAnsibleReleaseNotes.tex',
+     u'Kolla Ansible Release Notes Documentation',
+     u'Kolla Ansible developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -212,28 +213,17 @@ latex_documents = [
 # latex_domain_indices = True
 
 
-# -- Options for manual page output ---------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'kollareleasenotes', u'Kolla Release Notes Documentation',
-     [u'Kolla developers'], 1)
-]
-
-# If true, show URL addresses after external links.
-# man_show_urls = False
-
-
 # -- Options for Texinfo output -------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'KollaReleaseNotes', u'Kolla Release Notes Documentation',
-     u'Kolla developers', 'KollaReleaseNotes',
-     'One line description of project.', 'Miscellaneous'),
+    ('index', 'KollaAnsibleReleaseNotes',
+     u'Kolla Ansible Release Notes Documentation',
+     u'Kolla Ansible developers', 'KollaAnsibleReleaseNotes',
+     'Kolla-Ansible deploys OpenStack services and infrastructure components '
+     'in Docker containers.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
