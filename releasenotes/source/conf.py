@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Kolla Ansible Release Notes'
-copyright = u'2015-2021, Kolla Ansible developers'
+project = 'Kolla Ansible Release Notes'
+copyright = '2015-2021, Kolla Ansible developers'
 
 # Release notes do not need a version number in the title, they
 # cover multiple releases.
@@ -188,8 +188,8 @@ htmlhelp_basename = 'KollaAnsibleReleaseNotesdoc'
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     ('index', 'KollaAnsibleReleaseNotes.tex',
-     u'Kolla Ansible Release Notes Documentation',
-     u'Kolla Ansible developers', 'manual'),
+     'Kolla Ansible Release Notes Documentation',
+     'Kolla Ansible developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -220,8 +220,8 @@ latex_documents = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'KollaAnsibleReleaseNotes',
-     u'Kolla Ansible Release Notes Documentation',
-     u'Kolla Ansible developers', 'KollaAnsibleReleaseNotes',
+     'Kolla Ansible Release Notes Documentation',
+     'Kolla Ansible developers', 'KollaAnsibleReleaseNotes',
      'Kolla-Ansible deploys OpenStack services and infrastructure components '
      'in Docker containers.', 'Miscellaneous'),
 ]
