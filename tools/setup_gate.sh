@@ -126,7 +126,8 @@ function setup_ansible {
     fi
 
     # TODO(SamYaple): Move to virtualenv
-    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0" "pyfakefs<4"
+    # NOTE(yoctozepto): alembic 1.5.0 dropped support for SQLAlchemy 1.2.
+    sudo pip install -U "ansible${ANSIBLE_VERSION}" "ara<1.0.0" "pyfakefs<4" "alembic<1.5"
 
     detect_distro
 
