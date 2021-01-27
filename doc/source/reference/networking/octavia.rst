@@ -176,6 +176,9 @@ The subnet parameter has the following supported parameters:
 - ``gateway_ip`` (optional)
 - ``name``
 - ``no_gateway_ip`` (optional)
+- ``ip_version`` (optional)
+- ``ipv6_address_mode`` (optional)
+- ``ipv6_ra_mode`` (optional)
 
 For example:
 
