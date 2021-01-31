@@ -1,5 +1,5 @@
 ==============================
-Kolla-Ansible Deployment Guide
+Kolla Ansible Deployment Guide
 ==============================
 
 Kolla provides Docker containers and Ansible playbooks to meet Kolla's mission.

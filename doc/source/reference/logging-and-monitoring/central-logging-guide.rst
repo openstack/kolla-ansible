@@ -214,7 +214,7 @@ choosing *import* option.
 Custom log rules
 ~~~~~~~~~~~~~~~~
 
-Kolla-Ansible automatically deploys Fluentd for forwarding OpenStack logs
+Kolla Ansible automatically deploys Fluentd for forwarding OpenStack logs
 from across the control plane to a central logging repository. The Fluentd
 configuration is split into four parts: Input, forwarding, filtering and
 formatting. The following can be customised:

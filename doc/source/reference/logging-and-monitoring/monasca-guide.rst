@@ -49,19 +49,19 @@ following override in ``/etc/kolla/globals.yml``:
 Stand-alone configuration (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Monasca can be deployed via Kolla-Ansible in a standalone configuration. The
+Monasca can be deployed via Kolla Ansible in a standalone configuration. The
 deployment will include all supporting services such as HAProxy, Keepalived,
 MariaDB and Memcached. It can also include Keystone, but you will likely
 want to integrate with the Keystone instance provided by your existing
 OpenStack deployment. Some reasons to perform a standalone deployment are:
 
-* Your OpenStack deployment is *not* managed by Kolla-Ansible, but you want
-  to take advantage of Monasca support in Kolla-Ansible.
-* Your OpenStack deployment *is* managed by Kolla-Ansible, but you do not
+* Your OpenStack deployment is *not* managed by Kolla Ansible, but you want
+  to take advantage of Monasca support in Kolla Ansible.
+* Your OpenStack deployment *is* managed by Kolla Ansible, but you do not
   want the Monasca deployment to share services with your OpenStack
   deployment. For example, in a combined deployment Monasca will share HAProxy
   and MariaDB with the core OpenStack services.
-* Your OpenStack deployment *is* managed by Kolla-Ansible, but you want
+* Your OpenStack deployment *is* managed by Kolla Ansible, but you want
   Monasca to be decoupled from the core OpenStack services. For example, you
   may have a dedicated monitoring and logging team, and wish to prevent that
   team accidentally breaking, or redeploying core OpenStack services.
@@ -112,7 +112,7 @@ be obtained from the external OpenStack CLI, for example:
    | e02067a58b1946c7ae53abf0cfd0bf11 | RegionOne | keystone     | identity     | True    | internal  | http://172.28.128.254:5000  |
    +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
 
-If you are also using Kolla-Ansible to manage the external OpenStack
+If you are also using Kolla Ansible to manage the external OpenStack
 installation, the external Keystone admin password will most likely
 be defined in the *external* `/etc/kolla/passwords.yml` file. For other
 deployment methods you will need to consult the relevant documentation.

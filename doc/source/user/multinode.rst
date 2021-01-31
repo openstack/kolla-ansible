@@ -97,7 +97,7 @@ Edit the Inventory File
 
 The ansible inventory file contains all the information needed to determine
 what services will land on which hosts. Edit the inventory file in the
-Kolla-Ansible directory ``ansible/inventory/multinode``. If Kolla-Ansible
+Kolla Ansible directory ``ansible/inventory/multinode``. If Kolla Ansible
 was installed with pip, it can be found in ``/usr/share/kolla-ansible``.
 
 Add the IP addresses or hostnames to a group and the services associated with

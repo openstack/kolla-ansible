@@ -297,7 +297,7 @@ Enable Swift Recon in ``/etc/kolla/globals.yml``:
    enable_swift_recon : "yes"
 
 
-The Swift role in Kolla-Ansible is still using the old role format. Unlike many
+The Swift role in Kolla Ansible is still using the old role format. Unlike many
 other Kolla Ansible roles, it won't automatically add the new volume to the
 containers in existing deployments when running `kolla-ansible reconfigure`.
 Instead we must use the `kolla-ansible upgrade` command, which will remove the

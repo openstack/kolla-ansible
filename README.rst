@@ -1,5 +1,5 @@
 =============
-Kolla-Ansible
+Kolla Ansible
 =============
 
 .. image:: https://governance.openstack.org/tc/badges/kolla-ansible.svg
@@ -8,9 +8,9 @@ Kolla-Ansible
 .. Change things from this point on
 
 
-The Kolla-Ansible is a deliverable project separated from Kolla project.
+The Kolla Ansible is a deliverable project separated from Kolla project.
 
-Kolla-Ansible deploys OpenStack services and infrastructure components
+Kolla Ansible deploys OpenStack services and infrastructure components
 in Docker containers.
 
 Kolla's mission statement is:
@@ -28,8 +28,8 @@ configuration to suit the operator's exact requirements.
 Getting Started
 ===============
 
-Learn about Kolla-Ansible by reading the documentation online
-`Kolla-Ansible <https://docs.openstack.org/kolla-ansible/latest/>`__.
+Learn about Kolla Ansible by reading the documentation online
+`Kolla Ansible <https://docs.openstack.org/kolla-ansible/latest/>`__.
 
 Get started by reading the `Developer
 Quickstart <https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html>`__.
@@ -37,7 +37,7 @@ Quickstart <https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html
 OpenStack services
 ------------------
 
-Kolla-Ansible deploys containers for the following OpenStack projects:
+Kolla Ansible deploys containers for the following OpenStack projects:
 
 - `Aodh <https://docs.openstack.org/aodh/latest/>`__
 - `Barbican <https://docs.openstack.org/barbican/latest/>`__
@@ -81,7 +81,7 @@ Kolla-Ansible deploys containers for the following OpenStack projects:
 Infrastructure components
 -------------------------
 
-Kolla-Ansible deploys containers for the following infrastructure components:
+Kolla Ansible deploys containers for the following infrastructure components:
 
 - `Collectd <https://collectd.org/>`__,
   `Telegraf <https://docs.influxdata.com/telegraf/>`__,
@@ -121,11 +121,11 @@ Directories
    a working All-in-One (AIO) deployment.
 -  ``kolla_ansible`` - Contains password generation script.
 -  ``releasenotes`` - Contains releasenote of all features added in
-   Kolla-Ansible.
--  ``specs`` - Contains the Kolla-Ansible communities key arguments about
+   Kolla Ansible.
+-  ``specs`` - Contains the Kolla Ansible communities key arguments about
    architectural shifts in the code base.
 -  ``tests`` - Contains functional testing tools.
--  ``tools`` - Contains tools for interacting with Kolla-Ansible.
+-  ``tools`` - Contains tools for interacting with Kolla Ansible.
 -  ``zuul.d`` - Contains project gate job definitions.
 
 Getting Involved

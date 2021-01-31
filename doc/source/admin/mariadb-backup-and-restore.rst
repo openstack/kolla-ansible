@@ -4,7 +4,7 @@
 MariaDB database backup and restore
 ===================================
 
-Kolla-Ansible can facilitate either full or incremental backups of data
+Kolla Ansible can facilitate either full or incremental backups of data
 hosted in MariaDB. It achieves this using Mariabackup, a tool
 designed to allow for 'hot backups' - an approach which means that consistent
 backups can be taken without any downtime for your database or your cloud.
@@ -60,7 +60,7 @@ permissions defined during the configuration step; no password is required to
 invoke these commands.
 
 Furthermore, backup actions can be triggered from a node with a minimal
-installation of Kolla-Ansible, specifically one which doesn't require a copy of
+installation of Kolla Ansible, specifically one which doesn't require a copy of
 ``passwords.yml``.  This is of note if you're looking to implement automated
 backups scheduled via a cron job.
 
