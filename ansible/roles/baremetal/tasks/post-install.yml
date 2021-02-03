@@ -66,6 +66,7 @@
     docker_config: "{{ docker_config | combine(docker_zun_config) }}"
   when:
     - docker_configure_for_zun | bool
+    - "'zun-compute' in group_names"
 
 - name: Warn about deprecations
   debug:
@@ -122,7 +123,7 @@
     state: absent
   when:
     - not docker_custom_option
-    - not docker_configure_for_zun|bool
+    - not docker_configure_for_zun | bool or 'zun-compute' not in group_names
 
 - name: Ensure docker service directory exists
   become: True
@@ -130,14 +131,18 @@
     path: /etc/systemd/system/docker.service.d
     state: directory
     recurse: yes
-  when: docker_custom_option | length > 0 or docker_configure_for_zun|bool
+  when: >
+    docker_custom_option | length > 0 or
+    (docker_configure_for_zun | bool and 'zun-compute' in group_names)
 
 - name: Configure docker service
   become: True
   template:
     src: docker_systemd_service.j2
     dest: /etc/systemd/system/docker.service.d/kolla.conf
-  when: docker_custom_option | length > 0 or docker_configure_for_zun|bool
+  when: >
+    docker_custom_option | length > 0 or
+    (docker_configure_for_zun | bool and 'zun-compute' in group_names)
 
 - name: Reload docker service file
   become: True
