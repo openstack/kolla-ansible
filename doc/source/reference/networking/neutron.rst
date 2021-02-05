@@ -80,6 +80,18 @@ To change this behaviour you need to set the following:
 
    neutron_ovn_distributed_fip: "yes"
 
+Similarly - in order to have Neutron DHCP agents deployed in OVN networking
+scenario, use:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_ovn_dhcp_agent: "yes"
+
+This might be desired for example when Ironic bare metal nodes are
+used as a compute service. Currently OVN is not able to answer DHCP
+queries on port type external, this is where Neutron agent helps.
+
 Mellanox Infiniband (ml2/mlnx)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
