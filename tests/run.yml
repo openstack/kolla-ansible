@@ -25,6 +25,8 @@
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
+        pip_user_path_env:
+          PATH: "{{ ansible_env.HOME + '/.local/bin:' + ansible_env.PATH }}"
 
     - name: Install dig for Designate testing
       become: true
@@ -65,6 +67,7 @@
         # NOTE(yoctozepto): to avoid issues with IPv6 not enabled in the docker daemon
         # and since we don't need isolated networks here, use host networking
         network_mode: host
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: detect whether need build images
       set_fact:
@@ -200,6 +203,14 @@
         state: directory
       become: true
 
+    # NOTE(mgoddard): We need a recent pip to install the latest cryptography
+    # library. See https://github.com/pyca/cryptography/issues/5753
+    - name: install pip 19.1.1+
+      pip:
+        name: "pip>=19.1.1"
+        executable: "pip3"
+        extra_args: "--user"
+
     - name: install kolla-ansible and dependencies
       vars:
         # Test latest ansible version on Ubuntu, minimum supported on others.
@@ -210,8 +221,7 @@
           - "ansible{{ ansible_version_constraint }}"
           - "ara<1.0.0"
         executable: "pip3"
-        extra_args: "-c {{ upper_constraints_file }}"
-      become: true
+        extra_args: "-c {{ upper_constraints_file }} --user"
 
     - name: get ARA callback plugin path
       command: "python3 -m ara.setup.callback_plugins"
@@ -486,6 +496,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     # Upgrade: update config.
     - block:
@@ -529,8 +540,7 @@
           pip:
             name: "{{ kolla_ansible_src_dir }}"
             executable: pip3
-            extra_args: "-c {{ upper_constraints_file }}"
-          become: true
+            extra_args: "-c {{ upper_constraints_file }} --user"
 
         # Update passwords.yml to include any new passwords added in this
         # release.
@@ -627,6 +637,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: Run reconfigure.sh script
       script:
