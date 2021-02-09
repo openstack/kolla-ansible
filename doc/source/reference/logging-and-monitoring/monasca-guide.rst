@@ -49,6 +49,33 @@ resource usage you can set ``/etc/kolla/globals.yml``:
 
    monasca_enable_alerting_pipeline: "no"
 
+You can optionally bypass Monasca for control plane logs, and instead have
+them sent directly to Elasticsearch. This should be avoided if you have
+deployed Monasca as a standalone service for the purpose of storing
+logs in a protected silo for security purposes. However, if this is not
+a relevant consideration, for example you have deployed Monasca alongside the
+existing Openstack control plane, then you may free up some resources by
+setting:
+
+.. code-block:: yaml
+
+   monasca_ingest_control_plane_logs: "no"
+
+You should note that when making this change with the default
+``kibana_log_prefix`` prefix of ``flog-``, you will need to create a new
+index pattern in Kibana accordingly. If you wish to continue to search all
+logs using the same index pattern in Kibana, then you can override
+``kibana_log_prefix`` to ``monasca`` or similar in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   kibana_log_prefix: "monasca"
+
+If you have enabled Elasticsearch Curator, it will be configured to rotate
+logs with index patterns matching either ``^flog-.*`` or ``^monasca-.*`` by
+default. If this is undesirable then you can update the
+``elasticsearch_curator_index_pattern`` variable accordingly.
+
 Currently Monasca is only supported using the ``source`` install type Kolla
 images. If you are using the ``binary`` install type you should set the
 following override in ``/etc/kolla/globals.yml``:
