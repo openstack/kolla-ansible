@@ -42,6 +42,13 @@ Enable Monasca in ``/etc/kolla/globals.yml``:
 
    enable_monasca: "yes"
 
+If you wish to disable the alerting and notification pipeline to reduce
+resource usage you can set ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   monasca_enable_alerting_pipeline: "no"
+
 Currently Monasca is only supported using the ``source`` install type Kolla
 images. If you are using the ``binary`` install type you should set the
 following override in ``/etc/kolla/globals.yml``:
@@ -334,6 +341,9 @@ which you must run the cleanup command is given below:
   Wallaby.
 - Upgrading from Wallaby to Xena to remove the Monasca Log Metrics service
   if the option to disable it by default was overridden in Wallaby.
+- If you have disabled the alerting pipeline via the
+  `monasca_enable_alerting_pipeline` flag after you have deployed the alerting
+  services.
 
 The cleanup command can be invoked from the Kolla Ansible CLI, for example:
 
@@ -365,7 +375,7 @@ System requirements and performance impact
 Monasca will deploy the following Docker containers:
 
 * Apache Kafka
-* Apache Storm
+* Apache Storm (optional)
 * Apache Zookeeper
 * Elasticsearch
 * Grafana
@@ -378,9 +388,9 @@ Monasca will deploy the following Docker containers:
 * Monasca Log API
 * Monasca Log Metrics (Logstash, optional, deprecated)
 * Monasca Log Persister (Logstash)
-* Monasca Notification
+* Monasca Notification (optional)
 * Monasca Persister
-* Monasca Thresh (Apache Storm topology)
+* Monasca Thresh (Apache Storm topology, optional)
 
 In addition to these, Monasca will also utilise Kolla deployed MariaDB,
 Keystone, Memcached and HAProxy/Keepalived. The Monasca Agent containers
@@ -396,6 +406,10 @@ in a production environment, you will need at least 32GB RAM and a recent
 multi-core CPU. You will also need enough space to store metrics and logs,
 and to buffer these in Kafka. Whilst Kafka is happy with spinning disks,
 you will likely want to use SSDs to back InfluxDB and Elasticsearch.
+
+If resources are tight, it is possible to disable the alerting and
+notification pipeline which removes the need for Apache Storm, Monasca
+Thresh and Monasca Notification. This can have a significant effect.
 
 .. _Security impact:
 

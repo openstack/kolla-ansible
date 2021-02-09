@@ -15,9 +15,13 @@ port = {{ monasca_influxdb_http_port }}
 legacy_kafka_client_enabled = False
 
 [kafka_alarm_history]
+{% if not monasca_enable_alerting_pipeline | bool %}
+enabled = False
+{% else %}
 uri = {{ monasca_kafka_servers }}
 topic = {{ monasca_alarm_state_transitions_topic }}
 num_processors = 1
+{% endif %}
 
 [kafka_metrics]
 uri = {{ monasca_kafka_servers }}
