@@ -9,6 +9,9 @@ export PYTHONUNBUFFERED=1
 function setup_ceph_ansible {
     # Prepare virtualenv for ceph-ansible deployment
     python3 -m venv --system-site-packages ~/ceph-venv
+    # NOTE(mgoddard): We need a recent pip to install the latest cryptography
+    # library. See https://github.com/pyca/cryptography/issues/5753
+    ~/ceph-venv/bin/pip install -I 'pip>=19.1.1'
     ~/ceph-venv/bin/pip install -Ir requirements.txt
     ~/ceph-venv/bin/pip install -IU selinux
 }
