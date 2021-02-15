@@ -61,6 +61,47 @@
   delegate_to: "{{ groups['influxdb'][0] }}"
   when: monasca_influxdb_name not in monasca_influxdb_database.stdout_lines
 
-# NOTE(dszumski): The Monasca APIs write logs and messages to Kafka. Since
-# Kafka has automatic topic generation enabled by default we don't need to
-# create topics here.
+# NOTE(dszumski): Although we can take advantage of automatic topic
+# creation in Kafka, creating the topics manually allows unique settings
+# to be used per topic, rather than the defaults. It also avoids an edge
+# case where services on multiple nodes may race to create topics, and
+# paves the way for enabling things like compression on a per topic basis.
+- name: List monasca kafka topics
+  become: true
+  command: >
+    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    --zookeeper localhost
+    --list
+  register: kafka_topics
+  run_once: True
+  delegate_to: "{{ groups['kafka'][0] }}"
+
+- name: Create monasca kafka topics if they don't exist
+  become: true
+  command: >
+    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    --create
+    --topic {{ item.name }}
+    --partitions {{ item.partitions }}
+    --replication-factor {{ item.replication_factor }}
+    --zookeeper localhost
+  run_once: True
+  delegate_to: "{{ groups['kafka'][0] }}"
+  when:
+    - item.name not in kafka_topics.stdout_lines
+    - item.enabled | bool
+  with_items: "{{ monasca_all_topics }}"
+
+- name: Remove monasca kafka topics for disabled services
+  become: true
+  command: >
+    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    --delete
+    --topic "{{ item.name }}"
+    --zookeeper localhost
+  run_once: True
+  delegate_to: "{{ groups['kafka'][0] }}"
+  when:
+    - item.name in kafka_topics.stdout_lines
+    - not item.enabled | bool
+  with_items: "{{ monasca_all_topics }}"
