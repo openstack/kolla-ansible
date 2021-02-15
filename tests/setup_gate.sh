@@ -26,6 +26,9 @@ function setup_openstack_clients {
     if [[ $SCENARIO == scenario_nfv ]]; then
         packages+=(python-tackerclient python-barbicanclient python-mistralclient)
     fi
+    if [[ $SCENARIO == monasca ]]; then
+        packages+=(python-monascaclient)
+    fi
     if [[ "debian" == $BASE_DISTRO ]]; then
         sudo apt -y install python3-venv
     fi
@@ -85,6 +88,10 @@ function prepare_images {
         GATE_IMAGES="^cron,^elasticsearch,^fluentd,^grafana,^haproxy,^keepalived,^kibana,^kolla-toolbox,^mariadb,^memcached,^prometheus,^rabbitmq"
     fi
 
+    if [[ $SCENARIO == "monasca" ]]; then
+        # FIXME(mgoddard): No need for OpenStack core images.
+        GATE_IMAGES+=",^elasticsearch,^influxdb,^kafka,^kibana,^logstash,^monasca,^storm,^zookeeper"
+    fi
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}
