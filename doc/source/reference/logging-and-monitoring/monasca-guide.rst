@@ -32,6 +32,10 @@ fairly straightforward exercise.
 Pre-deployment configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Before enabling Monasca, read the :ref:`Security impact` section and
+decide whether you need to configure a firewall, and/or wish to prevent
+users from accessing Monasca services.
+
 Enable Monasca in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
@@ -353,11 +357,18 @@ multi-core CPU. You will also need enough space to store metrics and logs,
 and to buffer these in Kafka. Whilst Kafka is happy with spinning disks,
 you will likely want to use SSDs to back InfluxDB and Elasticsearch.
 
+.. _Security impact:
+
 Security impact
 ~~~~~~~~~~~~~~~
 
-The Monasca API and the Monasca Log API will be exposed on public endpoints
-via HAProxy/Keepalived.
+The Monasca API, Log API and Grafana fork will be exposed on public
+endpoints via HAProxy/Keepalived. If your public endpoints are exposed
+externally, then you should use a firewall to restrict access. In
+particular, external access to the Monasca Grafana endpoint should be
+blocked, since it is effectively unmaintained and is likely to contain
+unpatched vulnerabilities. You should also consider whether you
+wish to allow tenants to access these services on the internal network.
 
 If you are using the multi-tenant capabilities of Monasca there is a risk
 that tenants could gain access to other tenants logs and metrics. This could
