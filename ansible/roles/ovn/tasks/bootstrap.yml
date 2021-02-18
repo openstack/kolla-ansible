@@ -32,7 +32,9 @@
 - name: Ensure chassis as gateway is disabled where required
   become: true
   command: docker exec openvswitch_vswitchd ovs-vsctl remove Open_vSwitch . external-ids ovn-cms-options
-  when: inventory_hostname not in groups["ovn-controller-network"]
+  when:
+    - inventory_hostname in groups["openvswitch"]
+    - inventory_hostname not in groups["ovn-controller-network"]
 
 - name: Set OVN remote probe interval
   become: true
