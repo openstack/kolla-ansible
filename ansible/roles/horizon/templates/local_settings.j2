@@ -209,8 +209,9 @@ OPENSTACK_HOST = "{{ kolla_internal_fqdn }}"
 OPENSTACK_KEYSTONE_URL = "{{ horizon_keystone_url }}"
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "{{ keystone_default_user_role }}"
 
+{% if enable_keystone_federation | bool %}
 # Enables keystone web single-sign-on if set to True.
-#WEBSSO_ENABLED = False
+WEBSSO_ENABLED = True
 
 # Determines which authentication choice to show as default.
 #WEBSSO_INITIAL_CHOICE = "credentials"
@@ -223,13 +224,13 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "{{ keystone_default_user_role }}"
 # Do not remove the mandatory credentials mechanism.
 # Note: The last two tuples are sample mapping keys to a identity provider
 # and federation protocol combination (WEBSSO_IDP_MAPPING).
-#WEBSSO_CHOICES = (
-#    ("credentials", _("Keystone Credentials")),
-#    ("oidc", _("OpenID Connect")),
-#    ("saml2", _("Security Assertion Markup Language")),
-#    ("acme_oidc", "ACME - OpenID Connect"),
-#    ("acme_saml2", "ACME - SAML2"),
-#)
+WEBSSO_KEYSTONE_URL = "{{ keystone_public_url }}/v3"
+WEBSSO_CHOICES = (
+    ("credentials", _("Keystone Credentials")),
+    {% for idp in keystone_identity_providers %}
+    ("{{ idp.name }}_{{ idp.protocol }}", "{{ idp.public_name }}"),
+    {% endfor %}
+)
 
 # A dictionary of specific identity provider and federation protocol
 # combinations. From the selected authentication mechanism, the value
@@ -238,10 +239,12 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "{{ keystone_default_user_role }}"
 # specific WebSSO endpoint in keystone, otherwise it will use the value
 # as the protocol_id when redirecting to the WebSSO by protocol endpoint.
 # NOTE: The value is expected to be a tuple formatted as: (<idp_id>, <protocol_id>).
-#WEBSSO_IDP_MAPPING = {
-#    "acme_oidc": ("acme", "oidc"),
-#    "acme_saml2": ("acme", "saml2"),
-#}
+WEBSSO_IDP_MAPPING = {
+{% for idp in keystone_identity_providers %}
+    "{{ idp.name }}_{{ idp.protocol }}": ("{{ idp.name }}", "{{ idp.protocol }}"),
+{% endfor %}
+}
+{% endif %}
 
 # Disable SSL certificate checks (useful for self-signed certificates):
 #OPENSTACK_SSL_NO_VERIFY = True

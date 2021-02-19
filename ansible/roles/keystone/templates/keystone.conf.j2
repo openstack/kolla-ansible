@@ -77,3 +77,18 @@ connection_string = {{ osprofiler_backend_connection_string }}
 [cors]
 allowed_origin = {{ grafana_public_endpoint }}
 {% endif %}
+
+{% if enable_keystone_federation %}
+[federation]
+{% for dashboard in keystone_trusted_dashboards %}
+trusted_dashboard = {{ dashboard }}
+{% endfor %}
+
+sso_callback_template = /etc/keystone/sso_callback_template.html
+
+[openid]
+remote_id_attribute = {{ keystone_remote_id_attribute_oidc }}
+
+[auth]
+methods = password,token,openid,application_credential
+{% endif %}

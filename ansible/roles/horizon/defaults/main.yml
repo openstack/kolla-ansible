@@ -123,7 +123,7 @@ horizon_extra_volumes: "{{ default_extra_volumes }}"
 # OpenStack
 ####################
 horizon_logging_debug: "{{ openstack_logging_debug }}"
-horizon_keystone_url: "{{ keystone_internal_url }}/v3"
+horizon_keystone_url: "{{ keystone_public_url if horizon_use_keystone_public_url | bool else keystone_internal_url }}/v3"
 
 
 ####################
@@ -149,3 +149,9 @@ horizon_murano_source_version: "{{ kolla_source_version }}"
 # TLS
 ####################
 horizon_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+# This variable was created for administrators to define which one of the Keystone's URLs should be configured in Horizon.
+# In some cases, such as when using OIDC, horizon will need to be configured with Keystone's public URL.
+# Therefore, instead of overriding the whole "horizon_keystone_url", this change allows an easier integration because
+# the Keystone public URL is already defined with variable "keystone_public_url".
+horizon_use_keystone_public_url: False

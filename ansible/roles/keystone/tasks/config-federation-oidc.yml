@@ -1,0 +1,86 @@
+---
+- name: Remove OpenID certificate and metadata files
+  become: true
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  file:
+    state: absent
+    path: "{{ item }}"
+  when:
+    - inventory_hostname in groups[keystone.group]
+  with_items:
+    - "{{ keystone_host_federation_oidc_metadata_folder }}"
+    - "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
+    - "{{ keystone_host_federation_oidc_attribute_mappings_folder }}"
+
+- name: Create OpenID configuration directories
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  file:
+    dest: "{{ item }}"
+    state: "directory"
+    mode: "0770"
+  become: true
+  with_items:
+    - "{{ keystone_host_federation_oidc_metadata_folder }}"
+    - "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
+    - "{{ keystone_host_federation_oidc_attribute_mappings_folder }}"
+  when:
+    - inventory_hostname in groups[keystone.group]
+
+- name: Copying OpenID Identity Providers metadata
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  become: true
+  copy:
+    src: "{{ item.metadata_folder }}/"
+    dest: "{{ keystone_host_federation_oidc_metadata_folder }}"
+    mode: "0660"
+  with_items: "{{ keystone_identity_providers }}"
+  when:
+    - item.protocol == 'openid'
+    - inventory_hostname in groups[keystone.group]
+
+- name: Copying OpenID Identity Providers certificate
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  become: true
+  copy:
+    src: "{{ item.certificate_file }}"
+    dest: "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
+    mode: "0660"
+  with_items: "{{ keystone_identity_providers }}"
+  when:
+    - item.protocol == 'openid'
+    - inventory_hostname in groups[keystone.group]
+
+- name: Copying OpenStack Identity Providers attribute mappings
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  become: true
+  copy:
+    src: "{{ item.file }}"
+    dest: "{{ keystone_host_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
+    mode: "0660"
+  with_items: "{{ keystone_identity_mappings }}"
+  when:
+    - inventory_hostname in groups[keystone.group]
+
+- name: Setting the certificates files variable
+  become: true
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  find:
+    path: "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
+    pattern: "*.pem"
+  register: certificates_path
+  when:
+    - inventory_hostname in groups[keystone.group]
+
+- name: Setting the certificates variable
+  vars:
+    keystone: "{{ keystone_services['keystone'] }}"
+  set_fact:
+    keystone_federation_openid_certificate_key_ids: "{{ certificates_path.files | map(attribute='path') | map('regex_replace', '^.*/(.*)\\.pem$', '\\1#' + keystone_container_federation_oidc_idp_certificate_folder + '/\\1.pem') | list }}"  # noqa 204
+  when:
+    - inventory_hostname in groups[keystone.group]
