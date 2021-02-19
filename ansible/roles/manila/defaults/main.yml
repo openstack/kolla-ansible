@@ -9,6 +9,7 @@ manila_services:
     enabled: True
     volumes: "{{ manila_api_default_volumes + manila_api_extra_volumes }}"
     dimensions: "{{ manila_api_dimensions }}"
+    healthcheck: "{{ manila_api_healthcheck }}"
     haproxy:
       manila_api:
         enabled: "{{ enable_manila }}"
@@ -27,6 +28,7 @@ manila_services:
     enabled: True
     volumes: "{{ manila_scheduler_default_volumes + manila_scheduler_extra_volumes }}"
     dimensions: "{{ manila_scheduler_dimensions }}"
+    healthcheck: "{{ manila_scheduler_healthcheck }}"
   manila-share:
     container_name: "manila_share"
     group: "manila-share"
@@ -35,6 +37,7 @@ manila_services:
     privileged: True
     volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes }}"
     dimensions: "{{ manila_share_dimensions }}"
+    healthcheck: "{{ manila_share_healthcheck }}"
   manila-data:
     container_name: "manila_data"
     group: "manila-data"
@@ -43,6 +46,7 @@ manila_services:
     privileged: True
     volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes }}"
     dimensions: "{{ manila_data_dimensions }}"
+    healthcheck: "{{ manila_data_healthcheck }}"
 
 
 #####################
@@ -79,6 +83,58 @@ manila_share_dimensions: "{{ default_container_dimensions }}"
 manila_scheduler_dimensions: "{{ default_container_dimensions }}"
 manila_api_dimensions: "{{ default_container_dimensions }}"
 manila_data_dimensions: "{{ default_container_dimensions }}"
+
+manila_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+manila_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+manila_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+manila_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+manila_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ manila_api_port }}"]
+manila_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+manila_api_healthcheck:
+  interval: "{{ manila_api_healthcheck_interval }}"
+  retries: "{{ manila_api_healthcheck_retries }}"
+  start_period: "{{ manila_api_healthcheck_start_period }}"
+  test: "{% if manila_api_enable_healthchecks | bool %}{{ manila_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ manila_api_healthcheck_timeout }}"
+
+manila_scheduler_enable_healthchecks: "{{ enable_container_healthchecks }}"
+manila_scheduler_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+manila_scheduler_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+manila_scheduler_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+manila_scheduler_healthcheck_test: ["CMD-SHELL", "healthcheck_port manila-scheduler {{ om_rpc_port }}"]
+manila_scheduler_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+manila_scheduler_healthcheck:
+  interval: "{{ manila_scheduler_healthcheck_interval }}"
+  retries: "{{ manila_scheduler_healthcheck_retries }}"
+  start_period: "{{ manila_scheduler_healthcheck_start_period }}"
+  test: "{% if manila_scheduler_enable_healthchecks | bool %}{{ manila_scheduler_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ manila_scheduler_healthcheck_timeout }}"
+
+manila_share_enable_healthchecks: "{{ enable_container_healthchecks }}"
+manila_share_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+manila_share_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+manila_share_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+manila_share_healthcheck_test: ["CMD-SHELL", "healthcheck_port manila-share {{ om_rpc_port }}"]
+manila_share_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+manila_share_healthcheck:
+  interval: "{{ manila_share_healthcheck_interval }}"
+  retries: "{{ manila_share_healthcheck_retries }}"
+  start_period: "{{ manila_share_healthcheck_start_period }}"
+  test: "{% if manila_share_enable_healthchecks | bool %}{{ manila_share_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ manila_share_healthcheck_timeout }}"
+
+manila_data_enable_healthchecks: "{{ enable_container_healthchecks }}"
+manila_data_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+manila_data_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+manila_data_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+manila_data_healthcheck_test: ["CMD-SHELL", "healthcheck_port manila-data {{ om_rpc_port }}"]
+manila_data_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+manila_data_healthcheck:
+  interval: "{{ manila_data_healthcheck_interval }}"
+  retries: "{{ manila_data_healthcheck_retries }}"
+  start_period: "{{ manila_data_healthcheck_start_period }}"
+  test: "{% if manila_data_enable_healthchecks | bool %}{{ manila_data_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ manila_data_healthcheck_timeout }}"
 
 manila_share_default_volumes:
   - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
