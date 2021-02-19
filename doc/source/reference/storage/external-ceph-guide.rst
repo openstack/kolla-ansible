@@ -211,3 +211,74 @@ type ``default_share_type``, please see :doc:`Manila in Kolla <manila-guide>`.
 
 For more details on the CephFS Native driver, please see
 :manila-doc:`CephFS Native driver <admin/cephfs_driver.html>`.
+
+RadosGW
+-------
+
+As of the Xena 13.0.0 release, Kolla Ansible supports integration with Ceph
+RadosGW. This includes:
+
+* Registration of Swift-compatible endpoints in Keystone
+* Load balancing across RadosGW API servers using HAProxy
+
+See the `Ceph documentation
+<https://docs.ceph.com/en/latest/radosgw/keystone/>`__ for further information,
+including changes that must be applied to the Ceph cluster configuration.
+
+Enable Ceph RadosGW integration:
+
+.. code-block:: yaml
+
+   enable_ceph_rgw: true
+
+Keystone integration
+====================
+
+A Keystone user and endpoints are registered by default, however this may be
+avoided by setting ``enable_ceph_rgw_keystone`` to ``false``. If registration
+is enabled, the username is defined via ``ceph_rgw_keystone_user``, and this
+defaults to ``ceph_rgw``. The hostnames used by the endpoints default to
+``ceph_rgw_external_fqdn`` and ``ceph_rgw_internal_fqdn`` for the public and
+internal endpoints respectively. These default to ``kolla_external_fqdn`` and
+``kolla_internal_fqdn`` respectively. The port used by the endpoints is defined
+via ``ceph_rgw_port``, and defaults to 6780.
+
+By default RadosGW supports both Swift and S3 API, and it is not completely
+compatible with Swift API. The option ``ceph_rgw_swift_compatibility`` can
+enable/disable complete RadosGW compatibility with Swift API.  This should
+match the configuration used by Ceph RadosGW. After changing the value, run
+the ``kolla-ansible deploy`` command to enable.
+
+By default, the RadosGW endpoint URL does not include the project (account) ID.
+This prevents cross-project and public object access. This can be resolved by
+setting ``ceph_rgw_swift_account_in_url`` to ``true``. This should match the
+``rgw_swift_account_in_url`` configuration option in Ceph RadosGW.
+
+Load balancing
+==============
+
+.. warning::
+
+   Users of Ceph RadosGW can generate very high volumes of traffic. It is
+   advisable to use a separate load balancer for RadosGW for anything other
+   than small or lightly utilised RadosGW deployments, however this is
+   currently out of scope for Kolla Ansible.
+
+Load balancing is enabled by default, however this may be avoided by setting
+``enable_ceph_rgw_loadbalancer`` to ``false``. If using load balancing, the
+RadosGW hosts and ports must be configured. Each item should contain
+``host`` and ``port`` keys. The ``ip`` and ``port`` keys are optional. If
+``ip`` is not specified, the ``host`` values should be resolvable from the host
+running HAProxy. If the ``port`` is not specified, the default HTTP (80) or
+HTTPS (443) port will be used. For example:
+
+.. code-block:: yaml
+
+   ceph_rgw_hosts:
+     - host: rgw-host-1
+     - host: rgw-host-2
+       ip: 10.0.0.42
+       port: 8080
+
+The HAProxy frontend port is defined via ``ceph_rgw_port``, and defaults to
+6780.

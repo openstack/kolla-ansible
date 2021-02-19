@@ -22,6 +22,7 @@
         - enable_barbican_{{ enable_barbican | bool }}
         - enable_blazar_{{ enable_blazar | bool }}
         - enable_ceilometer_{{ enable_ceilometer | bool }}
+        - enable_ceph_rgw_{{ enable_ceph_rgw | bool }}
         - enable_chrony_{{ enable_chrony | bool }}
         - enable_cinder_{{ enable_cinder | bool }}
         - enable_cloudkitty_{{ enable_cloudkitty | bool }}
@@ -143,6 +144,11 @@
             tasks_from: loadbalancer
           tags: blazar
           when: enable_blazar | bool
+        - include_role:
+            name: ceph-rgw
+            tasks_from: loadbalancer
+          tags: ceph-rgw
+          when: enable_ceph_rgw | bool
         - include_role:
             name: cinder
             tasks_from: loadbalancer
@@ -602,6 +608,19 @@
     - { role: swift,
         tags: swift,
         when: enable_swift | bool }
+
+- name: Apply role ceph-rgw
+  gather_facts: false
+  hosts:
+    # NOTE(mgoddard): This is only used to register Keystone services, and
+    # can run on any host running kolla-toolbox.
+    - kolla-toolbox
+    - '&enable_ceph_rgw_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: ceph-rgw,
+        tags: ceph-rgw,
+        when: enable_ceph_rgw | bool }
 
 - name: Apply role glance
   gather_facts: false
