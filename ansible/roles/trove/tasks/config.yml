@@ -48,29 +48,6 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying over trove conf files
-  vars:
-    services_need_confs:
-      - trove-conductor
-      - trove-taskmanager
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/{{ item.key }}.conf.j2"
-      - "{{ node_custom_config }}/global.conf"
-      - "{{ node_custom_config }}/{{ item.key }}.conf"
-      - "{{ node_custom_config }}/trove/{{ item.key }}.conf"
-      - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/{{ item.key }}.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.conf"
-    mode: "0660"
-  become: true
-  when:
-    - item.key in services_need_confs
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
-
 - name: Copying over trove-guestagent.conf
   vars:
     services_need_confs:
