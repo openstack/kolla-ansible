@@ -8,16 +8,11 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_masakari_logged {
-
     # Source OpenStack credentials
     . /etc/kolla/admin-openrc.sh
 
     # Activate virtualenv to access Masakari client
     . ~/openstackclient-venv/bin/activate
-
-    # NOTE:(gtrellu) Masakari client/API has a bug which generate a mismatch
-    # between what the client send and what the API should received.
-    CLIENT_OPTS="--os-ha-api-version 1.0"
 
     # Get the first Nova compute
     if ! HYPERVISOR=$(openstack hypervisor list -f value -c 'Hypervisor Hostname' | head -n1); then
@@ -26,19 +21,19 @@ function test_masakari_logged {
     fi
 
     # Create Masakari segment
-    if ! openstack $CLIENT_OPTS segment create test_segment auto COMPUTE; then
+    if ! openstack segment create test_segment auto COMPUTE; then
         echo "Unable to create Masakari segment"
         return 1
     fi
 
     # Add Nova compute to Masakari segment
-    if ! openstack $CLIENT_OPTS segment host create $HYPERVISOR COMPUTE SSH test_segment; then
+    if ! openstack segment host create $HYPERVISOR COMPUTE SSH test_segment; then
         echo "Unable to add Nova hypervisor to Masakari segment"
         return 1
     fi
 
     # Delete Masakari segment
-    if ! openstack $CLIENT_OPTS segment delete test_segment; then
+    if ! openstack segment delete test_segment; then
         echo "Unable to delete Masakari segment"
         return 1
     fi
