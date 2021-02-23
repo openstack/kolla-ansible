@@ -13,4 +13,5 @@ User Guides
    operating-kolla
    adding-and-removing-hosts
    security
+   ansible-tuning
    troubleshooting
