@@ -17,6 +17,7 @@ We welcome everyone to join our project!
    release-notes
    vagrant-dev-env
    running-tests
+   code-review
    kolla-for-openstack-development
    bug-triage
    ptl-guide
