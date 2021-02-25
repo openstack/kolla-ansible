@@ -11,6 +11,8 @@ copy_logs() {
     rm ${LOG_DIR}/kolla_configs/config/ironic/ironic-agent.{kernel,initramfs}
     mkdir ${LOG_DIR}/system_configs/
     cp -rL /etc/{hostname,hosts,host.conf,resolv.conf,nsswitch.conf,docker,systemd} ${LOG_DIR}/system_configs/
+    # Remove /var/log/kolla link to not double the data uploaded
+    unlink /var/log/kolla
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
 
 
@@ -125,6 +127,8 @@ copy_logs() {
     done
 
     chmod -R 777 ${LOG_DIR}
+
+    du -sm ${LOG_DIR}
 }
 
 copy_logs
