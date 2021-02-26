@@ -17,3 +17,4 @@ Projects Deployment Configuration Reference
    message-queues/index
    deployment-config/index
    deployment-and-bootstrapping/index
+   high-availability/index
