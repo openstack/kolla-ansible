@@ -9,6 +9,7 @@ cyborg_services:
     image: "{{ cyborg_api_image_full }}"
     volumes: "{{ cyborg_api_default_volumes + cyborg_api_extra_volumes }}"
     dimensions: "{{ cyborg_api_dimensions }}"
+    healthcheck: "{{ cyborg_api_healthcheck }}"
   cyborg-agent:
     container_name: cyborg_agent
     group: cyborg-agent
@@ -17,6 +18,7 @@ cyborg_services:
     image: "{{ cyborg_agent_image_full }}"
     volumes: "{{ cyborg_agent_default_volumes + cyborg_agent_extra_volumes }}"
     dimensions: "{{ cyborg_agent_dimensions }}"
+    healthcheck: "{{ cyborg_agent_healthcheck }}"
   cyborg-conductor:
     container_name: cyborg_conductor
     group: cyborg-conductor
@@ -24,6 +26,7 @@ cyborg_services:
     image: "{{ cyborg_conductor_image_full }}"
     volumes: "{{ cyborg_conductor_default_volumes + cyborg_conductor_extra_volumes }}"
     dimensions: "{{ cyborg_conductor_dimensions }}"
+    healthcheck: "{{ cyborg_conductor_healthcheck }}"
 
 ####################
 # Database
@@ -53,6 +56,45 @@ cyborg_conductor_image_full: "{{ cyborg_conductor_image }}:{{ cyborg_conductor_t
 cyborg_api_dimensions: "{{ default_container_dimensions }}"
 cyborg_agent_dimensions: "{{ default_container_dimensions }}"
 cyborg_conductor_dimensions: "{{ default_container_dimensions }}"
+
+cyborg_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cyborg_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cyborg_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cyborg_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cyborg_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ cyborg_api_port }}"]
+cyborg_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cyborg_api_healthcheck:
+  interval: "{{ cyborg_api_healthcheck_interval }}"
+  retries: "{{ cyborg_api_healthcheck_retries }}"
+  start_period: "{{ cyborg_api_healthcheck_start_period }}"
+  test: "{% if cyborg_api_enable_healthchecks | bool %}{{ cyborg_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cyborg_api_healthcheck_timeout }}"
+
+cyborg_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cyborg_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cyborg_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cyborg_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cyborg_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port cyborg-agent {{ om_rpc_port }}"]
+cyborg_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cyborg_agent_healthcheck:
+  interval: "{{ cyborg_agent_healthcheck_interval }}"
+  retries: "{{ cyborg_agent_healthcheck_retries }}"
+  start_period: "{{ cyborg_agent_healthcheck_start_period }}"
+  test: "{% if cyborg_agent_enable_healthchecks | bool %}{{ cyborg_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cyborg_agent_healthcheck_timeout }}"
+
+cyborg_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cyborg_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cyborg_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cyborg_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cyborg_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port cyborg-conductor {{ om_rpc_port }}"]
+cyborg_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cyborg_conductor_healthcheck:
+  interval: "{{ cyborg_conductor_healthcheck_interval }}"
+  retries: "{{ cyborg_conductor_healthcheck_retries }}"
+  start_period: "{{ cyborg_conductor_healthcheck_start_period }}"
+  test: "{% if cyborg_conductor_enable_healthchecks | bool %}{{ cyborg_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cyborg_conductor_healthcheck_timeout }}"
 
 cyborg_api_default_volumes:
   - "{{ node_config_directory }}/cyborg-api/:{{ container_config_directory }}/:ro"
