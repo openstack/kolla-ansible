@@ -9,6 +9,7 @@ trove_services:
     image: "{{ trove_api_image_full }}"
     volumes: "{{ trove_api_default_volumes + trove_api_extra_volumes }}"
     dimensions: "{{ trove_api_dimensions }}"
+    healthcheck: "{{ trove_api_healthcheck }}"
     haproxy:
       trove_api:
         enabled: "{{ enable_trove }}"
@@ -27,6 +28,7 @@ trove_services:
     image: "{{ trove_conductor_image_full }}"
     volumes: "{{ trove_conductor_default_volumes + trove_conductor_extra_volumes }}"
     dimensions: "{{ trove_conductor_dimensions }}"
+    healthcheck: "{{ trove_conductor_healthcheck }}"
   trove-taskmanager:
     container_name: trove_taskmanager
     group: trove-taskmanager
@@ -34,6 +36,7 @@ trove_services:
     image: "{{ trove_taskmanager_image_full }}"
     volumes: "{{ trove_taskmanager_default_volumes + trove_taskmanager_extra_volumes }}"
     dimensions: "{{ trove_taskmanager_dimensions }}"
+    healthcheck: "{{ trove_taskmanager_healthcheck }}"
 
 
 ####################
@@ -65,6 +68,45 @@ trove_taskmanager_image_full: "{{ trove_taskmanager_image }}:{{ trove_taskmanage
 trove_api_dimensions: "{{ default_container_dimensions }}"
 trove_conductor_dimensions: "{{ default_container_dimensions }}"
 trove_taskmanager_dimensions: "{{ default_container_dimensions }}"
+
+trove_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+trove_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+trove_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+trove_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+trove_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ trove_api_port }}"]
+trove_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+trove_api_healthcheck:
+  interval: "{{ trove_api_healthcheck_interval }}"
+  retries: "{{ trove_api_healthcheck_retries }}"
+  start_period: "{{ trove_api_healthcheck_start_period }}"
+  test: "{% if trove_api_enable_healthchecks | bool %}{{ trove_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ trove_api_healthcheck_timeout }}"
+
+trove_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+trove_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+trove_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+trove_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+trove_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port trove-conductor {{ om_rpc_port }}"]
+trove_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+trove_conductor_healthcheck:
+  interval: "{{ trove_conductor_healthcheck_interval }}"
+  retries: "{{ trove_conductor_healthcheck_retries }}"
+  start_period: "{{ trove_conductor_healthcheck_start_period }}"
+  test: "{% if trove_conductor_enable_healthchecks | bool %}{{ trove_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ trove_conductor_healthcheck_timeout }}"
+
+trove_taskmanager_enable_healthchecks: "{{ enable_container_healthchecks }}"
+trove_taskmanager_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+trove_taskmanager_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+trove_taskmanager_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+trove_taskmanager_healthcheck_test: ["CMD-SHELL", "healthcheck_port trove-taskmanager {{ om_rpc_port }}"]
+trove_taskmanager_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+trove_taskmanager_healthcheck:
+  interval: "{{ trove_taskmanager_healthcheck_interval }}"
+  retries: "{{ trove_taskmanager_healthcheck_retries }}"
+  start_period: "{{ trove_taskmanager_healthcheck_start_period }}"
+  test: "{% if trove_taskmanager_enable_healthchecks | bool %}{{ trove_taskmanager_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ trove_taskmanager_healthcheck_timeout }}"
 
 trove_api_default_volumes:
   - "{{ node_config_directory }}/trove-api/:{{ container_config_directory }}/:ro"
