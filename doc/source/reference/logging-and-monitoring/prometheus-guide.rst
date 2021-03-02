@@ -36,6 +36,10 @@ However, if you want to stay on 1.x series, set the following variable:
 
    prometheus_use_v1: yes
 
+.. warning::
+   Support for Prometheus 1.x is deprecated and will be removed in next
+   Kolla Ansible release (Xena).
+
 In order to remove leftover volume containing Prometheus 1.x data, execute:
 
 .. code-block:: console
