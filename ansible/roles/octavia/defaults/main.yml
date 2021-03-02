@@ -9,6 +9,7 @@ octavia_services:
     image: "{{ octavia_api_image_full }}"
     volumes: "{{ octavia_api_default_volumes + octavia_api_extra_volumes }}"
     dimensions: "{{ octavia_api_dimensions }}"
+    healthcheck: "{{ octavia_api_healthcheck }}"
     haproxy:
       octavia_api:
         enabled: "{{ enable_octavia }}"
@@ -27,6 +28,7 @@ octavia_services:
     image: "{{ octavia_health_manager_image_full }}"
     volumes: "{{ octavia_health_manager_default_volumes + octavia_health_manager_extra_volumes }}"
     dimensions: "{{ octavia_health_manager_dimensions }}"
+    healthcheck: "{{ octavia_health_manager_healthcheck }}"
   octavia-housekeeping:
     container_name: octavia_housekeeping
     group: octavia-housekeeping
@@ -34,6 +36,7 @@ octavia_services:
     image: "{{ octavia_housekeeping_image_full }}"
     volumes: "{{ octavia_housekeeping_default_volumes + octavia_housekeeping_extra_volumes }}"
     dimensions: "{{ octavia_housekeeping_dimensions }}"
+    healthcheck: "{{ octavia_housekeeping_healthcheck }}"
   octavia-worker:
     container_name: octavia_worker
     group: octavia-worker
@@ -41,6 +44,7 @@ octavia_services:
     image: "{{ octavia_worker_image_full }}"
     volumes: "{{ octavia_worker_default_volumes + octavia_worker_extra_volumes }}"
     dimensions: "{{ octavia_worker_dimensions }}"
+    healthcheck: "{{ octavia_worker_healthcheck }}"
 
 octavia_required_roles:
   - load-balancer_observer
@@ -84,6 +88,58 @@ octavia_api_dimensions: "{{ default_container_dimensions }}"
 octavia_health_manager_dimensions: "{{ default_container_dimensions }}"
 octavia_housekeeping_dimensions: "{{ default_container_dimensions }}"
 octavia_worker_dimensions: "{{ default_container_dimensions }}"
+
+octavia_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+octavia_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+octavia_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+octavia_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+octavia_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ octavia_api_listen_port }}"]
+octavia_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+octavia_api_healthcheck:
+  interval: "{{ octavia_api_healthcheck_interval }}"
+  retries: "{{ octavia_api_healthcheck_retries }}"
+  start_period: "{{ octavia_api_healthcheck_start_period }}"
+  test: "{% if octavia_api_enable_healthchecks | bool %}{{ octavia_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ octavia_api_healthcheck_timeout }}"
+
+octavia_health_manager_enable_healthchecks: "{{ enable_container_healthchecks }}"
+octavia_health_manager_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+octavia_health_manager_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+octavia_health_manager_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+octavia_health_manager_healthcheck_test: ["CMD-SHELL", "healthcheck_port octavia-health-manager {{ database_port }}"]
+octavia_health_manager_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+octavia_health_manager_healthcheck:
+  interval: "{{ octavia_health_manager_healthcheck_interval }}"
+  retries: "{{ octavia_health_manager_healthcheck_retries }}"
+  start_period: "{{ octavia_health_manager_healthcheck_start_period }}"
+  test: "{% if octavia_health_manager_enable_healthchecks | bool %}{{ octavia_health_manager_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ octavia_health_manager_healthcheck_timeout }}"
+
+octavia_housekeeping_enable_healthchecks: "{{ enable_container_healthchecks }}"
+octavia_housekeeping_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+octavia_housekeeping_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+octavia_housekeeping_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+octavia_housekeeping_healthcheck_test: ["CMD-SHELL", "healthcheck_port octavia-housekeeping {{ database_port }}"]
+octavia_housekeeping_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+octavia_housekeeping_healthcheck:
+  interval: "{{ octavia_housekeeping_healthcheck_interval }}"
+  retries: "{{ octavia_housekeeping_healthcheck_retries }}"
+  start_period: "{{ octavia_housekeeping_healthcheck_start_period }}"
+  test: "{% if octavia_housekeeping_enable_healthchecks | bool %}{{ octavia_housekeeping_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ octavia_housekeeping_healthcheck_timeout }}"
+
+octavia_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+octavia_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+octavia_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+octavia_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+octavia_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port octavia-worker {{ om_rpc_port }}"]
+octavia_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+octavia_worker_healthcheck:
+  interval: "{{ octavia_worker_healthcheck_interval }}"
+  retries: "{{ octavia_worker_healthcheck_retries }}"
+  start_period: "{{ octavia_worker_healthcheck_start_period }}"
+  test: "{% if octavia_worker_enable_healthchecks | bool %}{{ octavia_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ octavia_worker_healthcheck_timeout }}"
 
 octavia_api_default_volumes:
   - "{{ node_config_directory }}/octavia-api/:{{ container_config_directory }}/:ro"
