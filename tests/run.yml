@@ -274,6 +274,13 @@
         docker_image_tag: "{{ build_image_tag if need_build_image else (zuul.branch | basename) ~ docker_image_tag_suffix }}"
         docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else 'kolla/' }}"
 
+    # NOTE(yoctozepto): k-a octavia-certificates should run before k-a bootstrap-servers
+    # because the latter hijacks /etc/kolla permissions (due to same directory on the
+    # same host being used by both)
+    - name: create TLS certificates for octavia
+      command: kolla-ansible octavia-certificates
+      when: scenario == 'octavia'
+
     # NOTE(mgoddard): We are using the script module here and later to ensure
     # we use the local copy of these scripts, rather than the one on the remote
     # host, which could be checked out to a previous release (in an upgrade
@@ -382,7 +389,7 @@
             EXT_NET_LOCAL_ADDR: "{{ neutron_external_network_prefix }}1/{{ neutron_external_network_prefix_length }}"
             EXT_NET_SLAVE_DEVICE: "{{ neutron_external_interface_name }}"
             SCENARIO: "{{ scenario }}"
-          when: openstack_core_tested or scenario in ['ironic', 'magnum', 'scenario_nfv', 'zun']
+          when: openstack_core_tested or scenario in ['ironic', 'magnum', 'scenario_nfv', 'zun', 'octavia']
 
         - name: Run test-core-openstack.sh script
           script:
@@ -429,6 +436,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "magnum"
+
+        - name: Run test-octavia.sh script
+          script:
+            cmd: test-octavia.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "octavia"
 
         - name: Run test-monasca.sh script
           script:
