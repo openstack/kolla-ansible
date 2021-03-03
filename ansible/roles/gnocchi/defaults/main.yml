@@ -9,6 +9,7 @@ gnocchi_services:
     image: "{{ gnocchi_api_image_full }}"
     volumes: "{{ gnocchi_api_default_volumes + gnocchi_api_extra_volumes }}"
     dimensions: "{{ gnocchi_api_dimensions }}"
+    healthcheck: "{{ gnocchi_api_healthcheck }}"
     haproxy:
       gnocchi_api:
         enabled: "{{ enable_gnocchi }}"
@@ -27,6 +28,7 @@ gnocchi_services:
     image: "{{ gnocchi_metricd_image_full }}"
     volumes: "{{ gnocchi_metricd_default_volumes + gnocchi_metricd_extra_volumes }}"
     dimensions: "{{ gnocchi_metricd_dimensions }}"
+    healthcheck: "{{ gnocchi_metricd_healthcheck }}"
   gnocchi-statsd:
     container_name: gnocchi_statsd
     group: gnocchi-statsd
@@ -34,6 +36,7 @@ gnocchi_services:
     image: "{{ gnocchi_statsd_image_full }}"
     volumes: "{{ gnocchi_statsd_default_volumes + gnocchi_statsd_extra_volumes }}"
     dimensions: "{{ gnocchi_statsd_dimensions }}"
+    healthcheck: "{{ gnocchi_statsd_healthcheck }}"
 
 
 ####################
@@ -72,6 +75,45 @@ gnocchi_metricd_image_full: "{{ gnocchi_metricd_image }}:{{ gnocchi_metricd_tag 
 gnocchi_api_dimensions: "{{ default_container_dimensions }}"
 gnocchi_metricd_dimensions: "{{ default_container_dimensions }}"
 gnocchi_statsd_dimensions: "{{ default_container_dimensions }}"
+
+gnocchi_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+gnocchi_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+gnocchi_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+gnocchi_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+gnocchi_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ gnocchi_api_listen_port }}"]
+gnocchi_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+gnocchi_api_healthcheck:
+  interval: "{{ gnocchi_api_healthcheck_interval }}"
+  retries: "{{ gnocchi_api_healthcheck_retries }}"
+  start_period: "{{ gnocchi_api_healthcheck_start_period }}"
+  test: "{% if gnocchi_api_enable_healthchecks | bool %}{{ gnocchi_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ gnocchi_api_healthcheck_timeout }}"
+
+gnocchi_metricd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+gnocchi_metricd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+gnocchi_metricd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+gnocchi_metricd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+gnocchi_metricd_healthcheck_test: ["CMD-SHELL", "healthcheck_port gnocchi-metricd {{ database_port }}"]
+gnocchi_metricd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+gnocchi_metricd_healthcheck:
+  interval: "{{ gnocchi_metricd_healthcheck_interval }}"
+  retries: "{{ gnocchi_metricd_healthcheck_retries }}"
+  start_period: "{{ gnocchi_metricd_healthcheck_start_period }}"
+  test: "{% if gnocchi_metricd_enable_healthchecks | bool %}{{ gnocchi_metricd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ gnocchi_metricd_healthcheck_timeout }}"
+
+gnocchi_statsd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+gnocchi_statsd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+gnocchi_statsd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+gnocchi_statsd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+gnocchi_statsd_healthcheck_test: ["CMD-SHELL", "healthcheck_port gnocchi-statsd {{ database_port }}"]
+gnocchi_statsd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+gnocchi_statsd_healthcheck:
+  interval: "{{ gnocchi_statsd_healthcheck_interval }}"
+  retries: "{{ gnocchi_statsd_healthcheck_retries }}"
+  start_period: "{{ gnocchi_statsd_healthcheck_start_period }}"
+  test: "{% if gnocchi_statsd_enable_healthchecks | bool %}{{ gnocchi_statsd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ gnocchi_statsd_healthcheck_timeout }}"
 
 gnocchi_api_default_volumes:
   - "{{ node_config_directory }}/gnocchi-api/:{{ container_config_directory }}/:ro"
