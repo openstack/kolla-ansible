@@ -16,6 +16,85 @@ function test_smoke {
     fi
 }
 
+function create_a_volume {
+    local volume_name=$1
+
+    local attempt
+
+    openstack volume create --size 2 $volume_name
+    attempt=1
+    while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
+        echo "Volume $volume_name not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume $volume_name failed to become available"
+            openstack volume show $volume_name
+            return 1
+        fi
+        sleep 10
+    done
+}
+
+function attach_and_detach_a_volume {
+    local volume_name=$1
+    local instance_name=$2
+
+    local attempt
+
+    openstack server add volume $instance_name $volume_name --device /dev/vdb
+    attempt=1
+    while [[ $(openstack volume show $volume_name -f value -c status) != "in-use" ]]; do
+        echo "Volume $volume_name not attached yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to attach"
+            openstack volume show $volume_name
+            return 1
+        fi
+        sleep 10
+    done
+
+    openstack server remove volume $instance_name $volume_name
+    attempt=1
+    while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
+        echo "Volume $volume_name not detached yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to detach"
+            openstack volume show $volume_name
+            return 1
+        fi
+        sleep 10
+    done
+}
+
+function delete_a_volume {
+    local volume_name=$1
+
+    local attempt
+    local result
+
+    openstack volume delete $volume_name
+
+    attempt=1
+    # NOTE(yoctozepto): This is executed outside of the `while` clause
+    # *on purpose*. You see, bash is evil (TM) and will silence any error
+    # happening in any "condition" clause (such as `if` or `while`) even with
+    # `errexit` being set.
+    result=$(openstack volume list --name $volume_name -f value -c ID)
+    while [[ -n "$result" ]]; do
+        echo "Volume $volume_name not deleted yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume failed to delete"
+            openstack volume show $volume_name
+            return 1
+        fi
+        sleep 10
+        result=$(openstack volume list --name $volume_name -f value -c ID)
+    done
+}
+
 function test_instance_boot {
     echo "TESTING: Server creation"
     openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net kolla_boot_test
@@ -30,44 +109,28 @@ function test_instance_boot {
 
     if [[ $SCENARIO == "ceph-ansible" ]] || [[ $SCENARIO == "zun" ]]; then
         echo "TESTING: Cinder volume attachment"
-        openstack volume create --size 2 test_volume
-        attempt=1
-        while [[ $(openstack volume show test_volume -f value -c status) != "available" ]]; do
-            echo "Volume not available yet"
-            attempt=$((attempt+1))
-            if [[ $attempt -eq 10 ]]; then
-                echo "Volume failed to become available"
-                openstack volume show test_volume
-                return 1
-            fi
-            sleep 10
-        done
-        openstack server add volume kolla_boot_test test_volume --device /dev/vdb
-        attempt=1
-        while [[ $(openstack volume show test_volume -f value -c status) != "in-use" ]]; do
-            echo "Volume not attached yet"
-            attempt=$((attempt+1))
-            if [[ $attempt -eq 10 ]]; then
-                echo "Volume failed to attach"
-                openstack volume show test_volume
-                return 1
-            fi
-            sleep 10
-        done
-        openstack server remove volume kolla_boot_test test_volume
-        attempt=1
-        while [[ $(openstack volume show test_volume -f value -c status) != "available" ]]; do
-            echo "Volume not detached yet"
-            attempt=$((attempt+1))
-            if [[ $attempt -eq 10 ]]; then
-                echo "Volume failed to detach"
-                openstack volume show test_volume
-                return 1
-            fi
-            sleep 10
-        done
-        openstack volume delete test_volume
+
+        create_a_volume test_volume
+        openstack volume show test_volume
+        attach_and_detach_a_volume test_volume kolla_boot_test
+        delete_a_volume test_volume
+
         echo "SUCCESS: Cinder volume attachment"
+
+        if [[ $HAS_UPGRADE == 'yes' ]]; then
+            echo "TESTING: Cinder volume upgrade stability (PHASE: $PHASE)"
+
+            if [[ $PHASE == 'deploy' ]]; then
+                create_a_volume durable_volume
+                openstack volume show durable_volume
+            elif [[ $PHASE == 'upgrade' ]]; then
+                openstack volume show durable_volume
+                attach_and_detach_a_volume durable_volume kolla_boot_test
+                delete_a_volume durable_volume
+            fi
+
+            echo "SUCCESS: Cinder volume upgrade stability (PHASE: $PHASE)"
+        fi
     fi
 
     echo "TESTING: Floating ip allocation"
