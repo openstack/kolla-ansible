@@ -9,6 +9,7 @@ senlin_services:
     image: "{{ senlin_api_image_full }}"
     volumes: "{{ senlin_api_default_volumes + senlin_api_extra_volumes }}"
     dimensions: "{{ senlin_api_dimensions }}"
+    healthcheck: "{{ senlin_api_healthcheck }}"
     haproxy:
       senlin_api:
         enabled: "{{ enable_senlin }}"
@@ -29,6 +30,7 @@ senlin_services:
     image: "{{ senlin_conductor_image_full }}"
     volumes: "{{ senlin_conductor_default_volumes + senlin_conductor_extra_volumes }}"
     dimensions: "{{ senlin_conductor_dimensions }}"
+    healthcheck: "{{ senlin_conductor_healthcheck }}"
   senlin-engine:
     container_name: senlin_engine
     group: senlin-engine
@@ -36,6 +38,7 @@ senlin_services:
     image: "{{ senlin_engine_image_full }}"
     volumes: "{{ senlin_engine_default_volumes + senlin_engine_extra_volumes }}"
     dimensions: "{{ senlin_engine_dimensions }}"
+    healthcheck: "{{ senlin_engine_healthcheck }}"
   senlin-health-manager:
     container_name: senlin_health_manager
     group: senlin-health-manager
@@ -43,6 +46,7 @@ senlin_services:
     image: "{{ senlin_health_manager_image_full }}"
     volumes: "{{ senlin_health_manager_default_volumes + senlin_health_manager_extra_volumes }}"
     dimensions: "{{ senlin_health_manager_dimensions }}"
+    healthcheck: "{{ senlin_health_manager_healthcheck }}"
 
 ####################
 # Database
@@ -78,6 +82,58 @@ senlin_api_dimensions: "{{ default_container_dimensions }}"
 senlin_conductor_dimensions: "{{ default_container_dimensions }}"
 senlin_engine_dimensions: "{{ default_container_dimensions }}"
 senlin_health_manager_dimensions: "{{ default_container_dimensions }}"
+
+senlin_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+senlin_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+senlin_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+senlin_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+senlin_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ senlin_api_listen_port }}"]
+senlin_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+senlin_api_healthcheck:
+  interval: "{{ senlin_api_healthcheck_interval }}"
+  retries: "{{ senlin_api_healthcheck_retries }}"
+  start_period: "{{ senlin_api_healthcheck_start_period }}"
+  test: "{% if senlin_api_enable_healthchecks | bool %}{{ senlin_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ senlin_api_healthcheck_timeout }}"
+
+senlin_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+senlin_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+senlin_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+senlin_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+senlin_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port senlin-conductor {{ om_rpc_port }}"]
+senlin_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+senlin_conductor_healthcheck:
+  interval: "{{ senlin_conductor_healthcheck_interval }}"
+  retries: "{{ senlin_conductor_healthcheck_retries }}"
+  start_period: "{{ senlin_conductor_healthcheck_start_period }}"
+  test: "{% if senlin_conductor_enable_healthchecks | bool %}{{ senlin_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ senlin_conductor_healthcheck_timeout }}"
+
+senlin_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+senlin_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+senlin_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+senlin_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+senlin_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port senlin-engine {{ om_rpc_port }}"]
+senlin_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+senlin_engine_healthcheck:
+  interval: "{{ senlin_engine_healthcheck_interval }}"
+  retries: "{{ senlin_engine_healthcheck_retries }}"
+  start_period: "{{ senlin_engine_healthcheck_start_period }}"
+  test: "{% if senlin_engine_enable_healthchecks | bool %}{{ senlin_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ senlin_engine_healthcheck_timeout }}"
+
+senlin_health_manager_enable_healthchecks: "{{ enable_container_healthchecks }}"
+senlin_health_manager_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+senlin_health_manager_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+senlin_health_manager_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+senlin_health_manager_healthcheck_test: ["CMD-SHELL", "healthcheck_port senlin-health-manager {{ om_rpc_port }}"]
+senlin_health_manager_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+senlin_health_manager_healthcheck:
+  interval: "{{ senlin_health_manager_healthcheck_interval }}"
+  retries: "{{ senlin_health_manager_healthcheck_retries }}"
+  start_period: "{{ senlin_health_manager_healthcheck_start_period }}"
+  test: "{% if senlin_health_manager_enable_healthchecks | bool %}{{ senlin_health_manager_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ senlin_health_manager_healthcheck_timeout }}"
 
 senlin_api_default_volumes:
   - "{{ node_config_directory }}/senlin-api/:{{ container_config_directory }}/:ro"
