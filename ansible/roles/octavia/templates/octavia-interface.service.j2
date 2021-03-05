@@ -1,0 +1,14 @@
+[Unit]
+Description=Octavia Interface Creator
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStartPre=/usr/bin/sudo /sbin/ip link set dev {{ octavia_network_interface }} address {{ port_info.port.mac_address }}
+ExecStart=/usr/bin/sudo /sbin/dhclient -v {{ octavia_network_interface }} -cf /etc/dhcp/octavia-dhclient.conf
+ExecStop=/usr/bin/sudo /sbin/dhclient -r {{ octavia_network_interface }}
+
+[Install]
+WantedBy=multi-user.target

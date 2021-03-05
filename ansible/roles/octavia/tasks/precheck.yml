@@ -55,3 +55,14 @@
     - client_ca.cert.pem
     - server_ca.cert.pem
     - server_ca.key.pem
+
+- name: Fail when Neutron plugin agent is not supported
+  fail:
+    msg: >
+      Neutron plugin agent {{ neutron_plugin_agent }} is not supported when
+      octavia_network_type is tenant, only openvswitch is supported currently
+  run_once: True
+  when:
+    - octavia_auto_configure | bool
+    - octavia_network_type == "tenant"
+    - neutron_plugin_agent != 'openvswitch'

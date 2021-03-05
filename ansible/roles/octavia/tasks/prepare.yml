@@ -65,6 +65,7 @@
   loop: "{{ octavia_amp_security_groups.values() | list }}"
   loop_control:
     label: "{{ item.name }}"
+  when: item.enabled | bool
   run_once: True
   delegate_to: "{{ groups['octavia-api'][0] }}"
   register: sec_grp_info
@@ -85,6 +86,7 @@
   with_subelements:
     - "{{ octavia_amp_security_groups }}"
     - rules
+  when: item.0.enabled | bool
   run_once: True
   delegate_to: "{{ groups['octavia-api'][0] }}"
 
