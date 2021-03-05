@@ -9,6 +9,7 @@ designate_services:
     image: "{{ designate_api_image_full }}"
     volumes: "{{ designate_api_default_volumes + designate_api_extra_volumes }}"
     dimensions: "{{ designate_api_dimensions }}"
+    healthcheck: "{{ designate_api_healthcheck }}"
     haproxy:
       designate_api:
         enabled: "{{ enable_designate }}"
@@ -29,6 +30,7 @@ designate_services:
     image: "{{ designate_backend_bind9_image_full }}"
     volumes: "{{ designate_backend_bind9_default_volumes + designate_backend_bind9_extra_volumes }}"
     dimensions: "{{ designate_backend_bind9_dimensions }}"
+    healthcheck: "{{ designate_backend_bind9_healthcheck }}"
   designate-central:
     container_name: designate_central
     group: designate-central
@@ -36,6 +38,7 @@ designate_services:
     image: "{{ designate_central_image_full }}"
     volumes: "{{ designate_central_default_volumes + designate_central_extra_volumes }}"
     dimensions: "{{ designate_central_dimensions }}"
+    healthcheck: "{{ designate_central_healthcheck }}"
   designate-mdns:
     container_name: designate_mdns
     group: designate-mdns
@@ -43,6 +46,7 @@ designate_services:
     image: "{{ designate_mdns_image_full }}"
     volumes: "{{ designate_mdns_default_volumes + designate_mdns_extra_volumes }}"
     dimensions: "{{ designate_mdns_dimensions }}"
+    healthcheck: "{{ designate_mdns_healthcheck }}"
   designate-producer:
     container_name: designate_producer
     group: designate-producer
@@ -50,6 +54,7 @@ designate_services:
     image: "{{ designate_producer_image_full }}"
     volumes: "{{ designate_producer_default_volumes + designate_producer_extra_volumes }}"
     dimensions: "{{ designate_producer_dimensions }}"
+    healthcheck: "{{ designate_producer_healthcheck }}"
   designate-worker:
     container_name: designate_worker
     group: designate-worker
@@ -57,6 +62,7 @@ designate_services:
     image: "{{ designate_worker_image_full }}"
     volumes: "{{ designate_worker_default_volumes + designate_worker_extra_volumes }}"
     dimensions: "{{ designate_worker_dimensions }}"
+    healthcheck: "{{ designate_worker_healthcheck }}"
   designate-sink:
     container_name: designate_sink
     group: designate-sink
@@ -64,6 +70,7 @@ designate_services:
     image: "{{ designate_sink_image_full }}"
     volumes: "{{ designate_sink_default_volumes + designate_sink_extra_volumes }}"
     dimensions: "{{ designate_sink_dimensions }}"
+    healthcheck: "{{ designate_sink_healthcheck }}"
 
 
 ####################
@@ -115,6 +122,97 @@ designate_mdns_dimensions: "{{ default_container_dimensions }}"
 designate_producer_dimensions: "{{ default_container_dimensions }}"
 designate_worker_dimensions: "{{ default_container_dimensions }}"
 designate_sink_dimensions: "{{ default_container_dimensions }}"
+
+designate_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
+designate_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_api_healthcheck:
+  interval: "{{ designate_api_healthcheck_interval }}"
+  retries: "{{ designate_api_healthcheck_retries }}"
+  start_period: "{{ designate_api_healthcheck_start_period }}"
+  test: "{% if designate_api_enable_healthchecks | bool %}{{ designate_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_api_healthcheck_timeout }}"
+
+designate_backend_bind9_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_backend_bind9_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_backend_bind9_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_backend_bind9_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_backend_bind9_healthcheck_test: ["CMD-SHELL", "healthcheck_listen named {{ designate_bind_port }}"]
+designate_backend_bind9_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_backend_bind9_healthcheck:
+  interval: "{{ designate_backend_bind9_healthcheck_interval }}"
+  retries: "{{ designate_backend_bind9_healthcheck_retries }}"
+  start_period: "{{ designate_backend_bind9_healthcheck_start_period }}"
+  test: "{% if designate_backend_bind9_enable_healthchecks | bool %}{{ designate_backend_bind9_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_backend_bind9_healthcheck_timeout }}"
+
+designate_central_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_central_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_central_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_central_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_central_healthcheck_test: ["CMD-SHELL", "healthcheck_port designate-central {{ om_rpc_port }}"]
+designate_central_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_central_healthcheck:
+  interval: "{{ designate_central_healthcheck_interval }}"
+  retries: "{{ designate_central_healthcheck_retries }}"
+  start_period: "{{ designate_central_healthcheck_start_period }}"
+  test: "{% if designate_central_enable_healthchecks | bool %}{{ designate_central_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_central_healthcheck_timeout }}"
+
+designate_mdns_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_mdns_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_mdns_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_mdns_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_mdns_healthcheck_test: ["CMD-SHELL", "healthcheck_port designate-mdns {{ om_rpc_port }}"]
+designate_mdns_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_mdns_healthcheck:
+  interval: "{{ designate_mdns_healthcheck_interval }}"
+  retries: "{{ designate_mdns_healthcheck_retries }}"
+  start_period: "{{ designate_mdns_healthcheck_start_period }}"
+  test: "{% if designate_mdns_enable_healthchecks | bool %}{{ designate_mdns_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_mdns_healthcheck_timeout }}"
+
+designate_producer_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_producer_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_producer_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_producer_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_producer_healthcheck_test: ["CMD-SHELL", "healthcheck_port designate-producer {{ om_rpc_port }}"]
+designate_producer_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_producer_healthcheck:
+  interval: "{{ designate_producer_healthcheck_interval }}"
+  retries: "{{ designate_producer_healthcheck_retries }}"
+  start_period: "{{ designate_producer_healthcheck_start_period }}"
+  test: "{% if designate_producer_enable_healthchecks | bool %}{{ designate_producer_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_producer_healthcheck_timeout }}"
+
+designate_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port designate-worker {{ om_rpc_port }}"]
+designate_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_worker_healthcheck:
+  interval: "{{ designate_worker_healthcheck_interval }}"
+  retries: "{{ designate_worker_healthcheck_retries }}"
+  start_period: "{{ designate_worker_healthcheck_start_period }}"
+  test: "{% if designate_worker_enable_healthchecks | bool %}{{ designate_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_worker_healthcheck_timeout }}"
+
+designate_sink_enable_healthchecks: "{{ enable_container_healthchecks }}"
+designate_sink_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+designate_sink_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+designate_sink_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+designate_sink_healthcheck_test: ["CMD-SHELL", "healthcheck_port designate-sink {{ om_rpc_port }}"]
+designate_sink_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+designate_sink_healthcheck:
+  interval: "{{ designate_sink_healthcheck_interval }}"
+  retries: "{{ designate_sink_healthcheck_retries }}"
+  start_period: "{{ designate_sink_healthcheck_start_period }}"
+  test: "{% if designate_sink_enable_healthchecks | bool %}{{ designate_sink_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ designate_sink_healthcheck_timeout }}"
 
 designate_api_default_volumes:
   - "{{ node_config_directory }}/designate-api/:{{ container_config_directory }}/:ro"
