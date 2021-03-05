@@ -20,6 +20,9 @@ function setup_openstack_clients {
     if [[ $SCENARIO == magnum ]]; then
         packages+=(python-designateclient python-magnumclient python-troveclient)
     fi
+    if [[ $SCENARIO == octavia ]]; then
+        packages+=(python-octaviaclient)
+    fi
     if [[ $SCENARIO == masakari ]]; then
         packages+=(python-masakariclient)
     fi
@@ -67,6 +70,9 @@ function prepare_images {
     fi
     if [[ $SCENARIO == "magnum" ]]; then
         GATE_IMAGES+=",^designate,^magnum,^trove"
+    fi
+    if [[ $SCENARIO == "octavia" ]]; then
+        GATE_IMAGES+=",^octavia"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
         GATE_IMAGES+=",^masakari"
