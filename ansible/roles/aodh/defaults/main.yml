@@ -9,6 +9,7 @@ aodh_services:
     image: "{{ aodh_api_image_full }}"
     volumes: "{{ aodh_api_default_volumes + aodh_api_extra_volumes }}"
     dimensions: "{{ aodh_api_dimensions }}"
+    healthcheck: "{{ aodh_api_healthcheck }}"
     haproxy:
       aodh_api:
         enabled: "{{ enable_aodh }}"
@@ -29,6 +30,7 @@ aodh_services:
     image: "{{ aodh_evaluator_image_full }}"
     volumes: "{{ aodh_evaluator_default_volumes + aodh_evaluator_extra_volumes }}"
     dimensions: "{{ aodh_evaluator_dimensions }}"
+    healthcheck: "{{ aodh_evaluator_healthcheck }}"
   aodh-listener:
     container_name: aodh_listener
     group: aodh-listener
@@ -36,6 +38,7 @@ aodh_services:
     image: "{{ aodh_listener_image_full }}"
     volumes: "{{ aodh_listener_default_volumes + aodh_listener_extra_volumes }}"
     dimensions: "{{ aodh_listener_dimensions }}"
+    healthcheck: "{{ aodh_listener_healthcheck }}"
   aodh-notifier:
     container_name: aodh_notifier
     group: aodh-notifier
@@ -43,6 +46,8 @@ aodh_services:
     image: "{{ aodh_notifier_image_full }}"
     volumes: "{{ aodh_notifier_default_volumes + aodh_notifier_extra_volumes }}"
     dimensions: "{{ aodh_notifier_dimensions }}"
+    healthcheck: "{{ aodh_notifier_healthcheck }}"
+
 
 # Aodh Evaluation interval - Period of evaluation cycle, should
 # be >= than configured polling interval for collection of
@@ -97,6 +102,58 @@ aodh_api_dimensions: "{{ default_container_dimensions }}"
 aodh_evaluator_dimensions: "{{ default_container_dimensions }}"
 aodh_listener_dimensions: "{{ default_container_dimensions }}"
 aodh_notifier_dimensions: "{{ default_container_dimensions }}"
+
+aodh_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+aodh_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+aodh_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+aodh_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+aodh_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ aodh_api_listen_port }}"]
+aodh_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+aodh_api_healthcheck:
+  interval: "{{ aodh_api_healthcheck_interval }}"
+  retries: "{{ aodh_api_healthcheck_retries }}"
+  start_period: "{{ aodh_api_healthcheck_start_period }}"
+  test: "{% if aodh_api_enable_healthchecks | bool %}{{ aodh_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ aodh_api_healthcheck_timeout }}"
+
+aodh_evaluator_enable_healthchecks: "{{ enable_container_healthchecks }}"
+aodh_evaluator_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+aodh_evaluator_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+aodh_evaluator_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+aodh_evaluator_healthcheck_test: ["CMD-SHELL", "healthcheck_port aodh-evaluator {{ database_port }}"]
+aodh_evaluator_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+aodh_evaluator_healthcheck:
+  interval: "{{ aodh_evaluator_healthcheck_interval }}"
+  retries: "{{ aodh_evaluator_healthcheck_retries }}"
+  start_period: "{{ aodh_evaluator_healthcheck_start_period }}"
+  test: "{% if aodh_evaluator_enable_healthchecks | bool %}{{ aodh_evaluator_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ aodh_evaluator_healthcheck_timeout }}"
+
+aodh_listener_enable_healthchecks: "{{ enable_container_healthchecks }}"
+aodh_listener_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+aodh_listener_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+aodh_listener_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+aodh_listener_healthcheck_test: ["CMD-SHELL", "healthcheck_port aodh-listener {{ om_rpc_port }}"]
+aodh_listener_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+aodh_listener_healthcheck:
+  interval: "{{ aodh_listener_healthcheck_interval }}"
+  retries: "{{ aodh_listener_healthcheck_retries }}"
+  start_period: "{{ aodh_listener_healthcheck_start_period }}"
+  test: "{% if aodh_listener_enable_healthchecks | bool %}{{ aodh_listener_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ aodh_listener_healthcheck_timeout }}"
+
+aodh_notifier_enable_healthchecks: "{{ enable_container_healthchecks }}"
+aodh_notifier_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+aodh_notifier_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+aodh_notifier_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+aodh_notifier_healthcheck_test: ["CMD-SHELL", "healthcheck_port aodh-notifier {{ om_rpc_port }}"]
+aodh_notifier_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+aodh_notifier_healthcheck:
+  interval: "{{ aodh_notifier_healthcheck_interval }}"
+  retries: "{{ aodh_notifier_healthcheck_retries }}"
+  start_period: "{{ aodh_notifier_healthcheck_start_period }}"
+  test: "{% if aodh_notifier_enable_healthchecks | bool %}{{ aodh_notifier_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ aodh_notifier_healthcheck_timeout }}"
 
 aodh_api_default_volumes:
   - "{{ node_config_directory }}/aodh-api/:{{ container_config_directory }}/:ro"
