@@ -9,6 +9,7 @@ vitrage_services:
     image: "{{ vitrage_api_image_full }}"
     volumes: "{{ vitrage_api_default_volumes + vitrage_api_extra_volumes }}"
     dimensions: "{{ vitrage_api_dimensions }}"
+    healthcheck: "{{ vitrage_api_healthcheck }}"
     haproxy:
       vitrage_api:
         enabled: "{{ enable_vitrage }}"
@@ -27,6 +28,7 @@ vitrage_services:
     image: "{{ vitrage_notifier_image_full }}"
     volumes: "{{ vitrage_notifier_default_volumes + vitrage_notifier_extra_volumes }}"
     dimensions: "{{ vitrage_notifier_dimensions }}"
+    healthcheck: "{{ vitrage_notifier_healthcheck }}"
   vitrage-graph:
     container_name: vitrage_graph
     group: vitrage-graph
@@ -34,6 +36,7 @@ vitrage_services:
     image: "{{ vitrage_graph_image_full }}"
     volumes: "{{ vitrage_graph_default_volumes + vitrage_graph_extra_volumes }}"
     dimensions: "{{ vitrage_graph_dimensions }}"
+    healthcheck: "{{ vitrage_graph_healthcheck }}"
   vitrage-ml:
     container_name: vitrage_ml
     group: vitrage-ml
@@ -41,6 +44,7 @@ vitrage_services:
     image: "{{ vitrage_ml_image_full }}"
     volumes: "{{ vitrage_ml_default_volumes + vitrage_ml_extra_volumes }}"
     dimensions: "{{ vitrage_ml_dimensions }}"
+    healthcheck: "{{ vitrage_ml_healthcheck }}"
   vitrage-persistor:
     container_name: vitrage_persistor
     group: vitrage-persistor
@@ -48,6 +52,7 @@ vitrage_services:
     image: "{{ vitrage_persistor_image_full }}"
     volumes: "{{ vitrage_persistor_default_volumes + vitrage_persistor_extra_volumes }}"
     dimensions: "{{ vitrage_persistor_dimensions }}"
+    healthcheck: "{{ vitrage_persistor_healthcheck }}"
 
 ####################
 ## Database
@@ -88,6 +93,71 @@ vitrage_notifier_dimensions: "{{ default_container_dimensions }}"
 vitrage_graph_dimensions: "{{ default_container_dimensions }}"
 vitrage_ml_dimensions: "{{ default_container_dimensions }}"
 vitrage_persistor_dimensions: "{{ default_container_dimensions }}"
+
+vitrage_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+vitrage_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+vitrage_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+vitrage_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+vitrage_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ vitrage_api_port }}"]
+vitrage_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+vitrage_api_healthcheck:
+  interval: "{{ vitrage_api_healthcheck_interval }}"
+  retries: "{{ vitrage_api_healthcheck_retries }}"
+  start_period: "{{ vitrage_api_healthcheck_start_period }}"
+  test: "{% if vitrage_api_enable_healthchecks | bool %}{{ vitrage_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ vitrage_api_healthcheck_timeout }}"
+
+vitrage_notifier_enable_healthchecks: "{{ enable_container_healthchecks }}"
+vitrage_notifier_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+vitrage_notifier_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+vitrage_notifier_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+vitrage_notifier_healthcheck_test: ["CMD-SHELL", "healthcheck_port vitrage-notifier {{ om_rpc_port }}"]
+vitrage_notifier_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+vitrage_notifier_healthcheck:
+  interval: "{{ vitrage_notifier_healthcheck_interval }}"
+  retries: "{{ vitrage_notifier_healthcheck_retries }}"
+  start_period: "{{ vitrage_notifier_healthcheck_start_period }}"
+  test: "{% if vitrage_notifier_enable_healthchecks | bool %}{{ vitrage_notifier_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ vitrage_notifier_healthcheck_timeout }}"
+
+vitrage_graph_enable_healthchecks: "{{ enable_container_healthchecks }}"
+vitrage_graph_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+vitrage_graph_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+vitrage_graph_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+vitrage_graph_healthcheck_test: ["CMD-SHELL", "healthcheck_port vitrage-graph {{ om_rpc_port }}"]
+vitrage_graph_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+vitrage_graph_healthcheck:
+  interval: "{{ vitrage_graph_healthcheck_interval }}"
+  retries: "{{ vitrage_graph_healthcheck_retries }}"
+  start_period: "{{ vitrage_graph_healthcheck_start_period }}"
+  test: "{% if vitrage_graph_enable_healthchecks | bool %}{{ vitrage_graph_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ vitrage_graph_healthcheck_timeout }}"
+
+vitrage_ml_enable_healthchecks: "{{ enable_container_healthchecks }}"
+vitrage_ml_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+vitrage_ml_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+vitrage_ml_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+vitrage_ml_healthcheck_test: ["CMD-SHELL", "healthcheck_port vitrage-ml {{ om_rpc_port }}"]
+vitrage_ml_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+vitrage_ml_healthcheck:
+  interval: "{{ vitrage_ml_healthcheck_interval }}"
+  retries: "{{ vitrage_ml_healthcheck_retries }}"
+  start_period: "{{ vitrage_ml_healthcheck_start_period }}"
+  test: "{% if vitrage_ml_enable_healthchecks | bool %}{{ vitrage_ml_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ vitrage_ml_healthcheck_timeout }}"
+
+vitrage_persistor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+vitrage_persistor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+vitrage_persistor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+vitrage_persistor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+vitrage_persistor_healthcheck_test: ["CMD-SHELL", "healthcheck_port vitrage-persistor {{ om_rpc_port }}"]
+vitrage_persistor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+vitrage_persistor_healthcheck:
+  interval: "{{ vitrage_persistor_healthcheck_interval }}"
+  retries: "{{ vitrage_persistor_healthcheck_retries }}"
+  start_period: "{{ vitrage_persistor_healthcheck_start_period }}"
+  test: "{% if vitrage_persistor_enable_healthchecks | bool %}{{ vitrage_persistor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ vitrage_persistor_healthcheck_timeout }}"
 
 vitrage_api_default_volumes:
   - "{{ node_config_directory }}/vitrage-api/:{{ container_config_directory }}/:ro"
