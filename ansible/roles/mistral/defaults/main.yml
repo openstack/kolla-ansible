@@ -9,6 +9,7 @@ mistral_services:
     image: "{{ mistral_api_image_full }}"
     volumes: "{{ mistral_api_default_volumes + mistral_api_extra_volumes }}"
     dimensions: "{{ mistral_api_dimensions }}"
+    healthcheck: "{{ mistral_api_healthcheck }}"
     haproxy:
       mistral_api:
         enabled: "{{ enable_mistral }}"
@@ -27,6 +28,7 @@ mistral_services:
     image: "{{ mistral_engine_image_full }}"
     volumes: "{{ mistral_engine_default_volumes + mistral_engine_extra_volumes }}"
     dimensions: "{{ mistral_engine_dimensions }}"
+    healthcheck: "{{ mistral_engine_healthcheck }}"
   mistral-event-engine:
     container_name: mistral_event_engine
     group: mistral-event-engine
@@ -34,6 +36,7 @@ mistral_services:
     image: "{{ mistral_event_engine_image_full }}"
     volumes: "{{ mistral_event_engine_default_volumes + mistral_event_engine_extra_volumes }}"
     dimensions: "{{ mistral_event_engine_dimensions }}"
+    healthcheck: "{{ mistral_event_engine_healthcheck }}"
   mistral-executor:
     container_name: mistral_executor
     group: mistral-executor
@@ -41,6 +44,7 @@ mistral_services:
     image: "{{ mistral_executor_image_full }}"
     volumes: "{{ mistral_executor_default_volumes + mistral_executor_extra_volumes }}"
     dimensions: "{{ mistral_executor_dimensions }}"
+    healthcheck: "{{ mistral_executor_healthcheck }}"
 
 
 ####################
@@ -77,6 +81,58 @@ mistral_engine_dimensions: "{{ default_container_dimensions }}"
 mistral_event_engine_dimensions: "{{ default_container_dimensions }}"
 mistral_executor_dimensions: "{{ default_container_dimensions }}"
 mistral_api_dimensions: "{{ default_container_dimensions }}"
+
+mistral_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+mistral_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+mistral_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+mistral_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+mistral_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ mistral_api_port }}"]
+mistral_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+mistral_api_healthcheck:
+  interval: "{{ mistral_api_healthcheck_interval }}"
+  retries: "{{ mistral_api_healthcheck_retries }}"
+  start_period: "{{ mistral_api_healthcheck_start_period }}"
+  test: "{% if mistral_api_enable_healthchecks | bool %}{{ mistral_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ mistral_api_healthcheck_timeout }}"
+
+mistral_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+mistral_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+mistral_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+mistral_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+mistral_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port mistral-server {{ om_rpc_port }}"]
+mistral_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+mistral_engine_healthcheck:
+  interval: "{{ mistral_engine_healthcheck_interval }}"
+  retries: "{{ mistral_engine_healthcheck_retries }}"
+  start_period: "{{ mistral_engine_healthcheck_start_period }}"
+  test: "{% if mistral_engine_enable_healthchecks | bool %}{{ mistral_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ mistral_engine_healthcheck_timeout }}"
+
+mistral_event_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+mistral_event_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+mistral_event_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+mistral_event_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+mistral_event_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port mistral-server {{ om_rpc_port }}"]
+mistral_event_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+mistral_event_engine_healthcheck:
+  interval: "{{ mistral_event_engine_healthcheck_interval }}"
+  retries: "{{ mistral_event_engine_healthcheck_retries }}"
+  start_period: "{{ mistral_event_engine_healthcheck_start_period }}"
+  test: "{% if mistral_event_engine_enable_healthchecks | bool %}{{ mistral_event_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ mistral_event_engine_healthcheck_timeout }}"
+
+mistral_executor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+mistral_executor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+mistral_executor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+mistral_executor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+mistral_executor_healthcheck_test: ["CMD-SHELL", "healthcheck_port mistral-server {{ om_rpc_port }}"]
+mistral_executor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+mistral_executor_healthcheck:
+  interval: "{{ mistral_executor_healthcheck_interval }}"
+  retries: "{{ mistral_executor_healthcheck_retries }}"
+  start_period: "{{ mistral_executor_healthcheck_start_period }}"
+  test: "{% if mistral_executor_enable_healthchecks | bool %}{{ mistral_executor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ mistral_executor_healthcheck_timeout }}"
 
 mistral_engine_default_volumes:
   - "{{ node_config_directory }}/mistral-engine/:{{ container_config_directory }}/:ro"
