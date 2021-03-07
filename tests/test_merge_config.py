@@ -132,6 +132,29 @@ key2 = not_b
 
 '''
 
+# TESTC_NO_WHITESPACE is TESTA + TESTB without whitespace around equal signs
+TESTC_NO_WHITESPACE = '''[DEFAULT]
+key1=b
+     c
+key2=v3
+     v4
+     v5
+key3=v3
+key3=v4
+key4=v4
+key4=
+
+[b]
+b_key1=1
+b_key2=2
+
+[c]
+c_key1=
+c_key2=1 2 3
+       4 5 6
+
+'''
+
 
 class OverrideConfigParserTest(base.BaseTestCase):
 
@@ -177,4 +200,13 @@ class OverrideConfigParserTest(base.BaseTestCase):
         output = StringIO()
         parser.write(output)
         self.assertEqual(TESTC_NO_DEFAULT_SECTION, output.getvalue())
+        output.close()
+
+    def test_merge_no_whitespace(self):
+        parser = merge_configs.OverrideConfigParser(whitespace=False)
+        parser.parse(StringIO(TESTA))
+        parser.parse(StringIO(TESTB))
+        output = StringIO()
+        parser.write(output)
+        self.assertEqual(TESTC_NO_WHITESPACE, output.getvalue())
         output.close()
