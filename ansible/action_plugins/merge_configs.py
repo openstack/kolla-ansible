@@ -123,6 +123,10 @@ class OverrideConfigParser(iniparser.BaseParser):
                             ws=self._whitespace,
                             value=value))
                     else:
+                        # We want additional values to be written out under the
+                        # first value with the same indentation, like this:
+                        # key = value1
+                        #       value2
                         indent_size = len(key) + len(self._whitespace) * 2 + 1
                         ws_indent = ' ' * indent_size
                         fp.write('{ws_indent}{value}\n'.format(
