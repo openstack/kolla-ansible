@@ -24,6 +24,9 @@
         dashboard_enabled: "{{ openstack_core_enabled }}"
         # NOTE(mgoddard): Use Python 3 only for CentOS 8 on stable/train.
         playbook_python_version: "{{ '3' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8' else '2' }}"
+        upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
+        pip_user_path_env:
+          PATH: "{{ ansible_env.HOME + '/.local/bin:' + ansible_env.PATH }}"
 
     - name: Install xfsprogs package for Swift filesystems
       become: true
@@ -41,6 +44,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: detect whether need build images
       set_fact:
@@ -177,7 +181,7 @@
           - "alembic{% if playbook_python_version == '2' %}<1.5{% endif %}"
         # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
         executable: "pip{{ playbook_python_version }}"
-      become: true
+        extra_args: "-c {{ upper_constraints_file }} --user"
 
     # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
@@ -385,6 +389,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     # Upgrade: update config.
     - block:
@@ -424,7 +429,7 @@
           pip:
             name: "{{ kolla_ansible_src_dir }}"
             executable: "pip{{ playbook_python_version }}"
-          become: true
+            extra_args: "-c {{ upper_constraints_file }} --user"
 
         # Update passwords.yml to include any new passwords added in this
         # release.
@@ -521,6 +526,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: Run reconfigure.sh script
       script:
