@@ -71,7 +71,7 @@ neutron_services:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3'] }}"
+    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3'] or neutron_ovn_dhcp_agent | bool }}"
     group: "neutron-dhcp-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes: "{{ neutron_dhcp_agent_default_volumes + neutron_dhcp_agent_extra_volumes }}"
@@ -729,6 +729,11 @@ neutron_mlnx_physnets: "{{ neutron_mlnx_physnet_mappings.items() | map('join', '
 notification_drivers: []
 
 neutron_notification_drivers: "{{ notification_drivers | selectattr('enabled', 'equalto', true) | list }}"
+
+######################
+# OVN
+######################
+neutron_ovn_dhcp_agent: "no"
 
 ####################
 # Kolla
