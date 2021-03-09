@@ -45,4 +45,34 @@
   delegate_to: "{{ groups['cloudkitty-api'][0] }}"
   when: cloudkitty_storage_backend == 'influxdb'
 
+- name: Checking if Cloudkitty elasticsearch index exists
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ cloudkitty_elasticsearch_url }}/{{ cloudkitty_elasticsearch_index_name }}"
+      status_code: 200, 404
+  run_once: true
+  delegate_to: "{{ groups['cloudkitty-api'][0] }}"
+  register: cloudkitty_index
+  when: cloudkitty_storage_backend == 'elasticsearch'
+
+- name: Creating Cloudkitty elasticsearch index
+  become: true
+  kolla_toolbox:
+    module_name: uri
+    module_args:
+      url: "{{ cloudkitty_elasticsearch_url }}/{{ cloudkitty_elasticsearch_index_name }}"
+      method: PUT
+      status_code: 200
+      return_content: yes
+      body: |
+        {}
+      body_format: json
+  run_once: True
+  delegate_to: "{{ groups['cloudkitty-api'][0] }}"
+  when:
+    - cloudkitty_storage_backend == 'elasticsearch'
+    - cloudkitty_index.get('status') != 200
+
 - import_tasks: bootstrap_service.yml
