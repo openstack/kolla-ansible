@@ -10,6 +10,7 @@
 - name: Divide hosts by their MariaDB volume availability
   group_by:
     key: mariadb_had_volume_{{ mariadb_volume is not changed }}
+  changed_when: false
 
 - name: Establish whether the cluster has already existed
   set_fact:
@@ -29,6 +30,7 @@
     - name: Divide hosts by their MariaDB service port liveness
       group_by:
         key: mariadb_port_alive_{{ check_mariadb_port_liveness is success }}
+      changed_when: false
 
     - name: Fail on existing but stopped cluster
       fail:
@@ -64,6 +66,7 @@
     - name: Divide hosts by their MariaDB service WSREP sync status
       group_by:
         key: mariadb_sync_status_{{ mariadb_sync_status | default('NA') }}
+      changed_when: false
 
     - name: Fail when MariaDB services are not synced across the whole cluster
       fail:
