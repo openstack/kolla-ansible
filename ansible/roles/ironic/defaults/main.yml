@@ -9,6 +9,7 @@ ironic_services:
     image: "{{ ironic_api_image_full }}"
     volumes: "{{ ironic_api_default_volumes + ironic_api_extra_volumes }}"
     dimensions: "{{ ironic_api_dimensions }}"
+    healthcheck: "{{ ironic_api_healthcheck }}"
     haproxy:
       ironic_api:
         enabled: "{{ enable_ironic }}"
@@ -32,6 +33,7 @@ ironic_services:
     privileged: True
     volumes: "{{ ironic_conductor_default_volumes + ironic_conductor_extra_volumes }}"
     dimensions: "{{ ironic_conductor_dimensions }}"
+    healthcheck: "{{ ironic_conductor_healthcheck }}"
   ironic-inspector:
     container_name: ironic_inspector
     group: ironic-inspector
@@ -40,6 +42,7 @@ ironic_services:
     privileged: True
     volumes: "{{ ironic_inspector_default_volumes + ironic_inspector_extra_volumes }}"
     dimensions: "{{ ironic_inspector_dimensions }}"
+    healthcheck: "{{ ironic_inspector_healthcheck }}"
     haproxy:
       ironic_inspector:
         enabled: "{{ enable_ironic }}"
@@ -67,6 +70,7 @@ ironic_services:
     image: "{{ ironic_pxe_image_full }}"
     volumes: "{{ ironic_ipxe_default_volumes + ironic_ipxe_extra_volumes }}"
     dimensions: "{{ ironic_ipxe_dimensions }}"
+    healthcheck: "{{ ironic_ipxe_healthcheck }}"
   ironic-dnsmasq:
     container_name: ironic_dnsmasq
     group: ironic-inspector
@@ -122,6 +126,58 @@ ironic_pxe_dimensions: "{{ default_container_dimensions }}"
 ironic_ipxe_dimensions: "{{ default_container_dimensions }}"
 ironic_inspector_dimensions: "{{ default_container_dimensions }}"
 ironic_dnsmasq_dimensions: "{{ default_container_dimensions }}"
+
+ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ ironic_api_listen_port }}"]
+ironic_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_api_healthcheck:
+  interval: "{{ ironic_api_healthcheck_interval }}"
+  retries: "{{ ironic_api_healthcheck_retries }}"
+  start_period: "{{ ironic_api_healthcheck_start_period }}"
+  test: "{% if ironic_api_enable_healthchecks | bool %}{{ ironic_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_api_healthcheck_timeout }}"
+
+ironic_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port ironic-conductor {{ om_rpc_port }}"]
+ironic_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_conductor_healthcheck:
+  interval: "{{ ironic_conductor_healthcheck_interval }}"
+  retries: "{{ ironic_conductor_healthcheck_retries }}"
+  start_period: "{{ ironic_conductor_healthcheck_start_period }}"
+  test: "{% if ironic_conductor_enable_healthchecks | bool %}{{ ironic_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_conductor_healthcheck_timeout }}"
+
+ironic_inspector_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_inspector_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_inspector_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_inspector_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_inspector_healthcheck_test: ["CMD-SHELL", "healthcheck_port ironic-inspector {{ om_rpc_port }}"]
+ironic_inspector_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_inspector_healthcheck:
+  interval: "{{ ironic_inspector_healthcheck_interval }}"
+  retries: "{{ ironic_inspector_healthcheck_retries }}"
+  start_period: "{{ ironic_inspector_healthcheck_start_period }}"
+  test: "{% if ironic_inspector_enable_healthchecks | bool %}{{ ironic_inspector_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_inspector_healthcheck_timeout }}"
+
+ironic_ipxe_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_ipxe_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_ipxe_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_ipxe_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_ipxe_healthcheck_test: ["CMD-SHELL", "healthcheck_listen httpd {{ ironic_ipxe_port }}"]
+ironic_ipxe_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_ipxe_healthcheck:
+  interval: "{{ ironic_ipxe_healthcheck_interval }}"
+  retries: "{{ ironic_ipxe_healthcheck_retries }}"
+  start_period: "{{ ironic_ipxe_healthcheck_start_period }}"
+  test: "{% if ironic_ipxe_enable_healthchecks | bool %}{{ ironic_ipxe_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_ipxe_healthcheck_timeout }}"
 
 ironic_api_default_volumes:
   - "{{ node_config_directory }}/ironic-api/:{{ container_config_directory }}/:ro"
