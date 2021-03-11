@@ -89,11 +89,11 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
       pip install -U pip
 
 #. Install `Ansible <http://www.ansible.com>`__. Kolla Ansible requires at least
-   Ansible ``2.9`` and supports up to ``2.9``.
+   Ansible ``2.9`` and supports up to ``2.10``.
 
    .. code-block:: console
 
-      pip install 'ansible<2.10'
+      pip install 'ansible<3.0'
 
 Install dependencies not using a virtual environment
 ----------------------------------------------------
@@ -121,7 +121,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
       sudo pip3 install -U pip
 
 #. Install `Ansible <http://www.ansible.com>`__. Kolla Ansible requires at least
-   Ansible ``2.9`` and supports up to ``2.9``.
+   Ansible ``2.9`` and supports up to ``2.10``.
 
    For CentOS or RHEL, run:
 
@@ -138,7 +138,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
    .. note::
 
       If the installed Ansible version does not meet the requirements, one can
-      use pip: ``sudo pip install -U 'ansible<2.10'``.
+      use pip: ``sudo pip install -U 'ansible<3.0'``.
       Beware system package upgrades might interfere with that so it
       is recommended to uninstall the system package first. One might be better
       off with the virtual environment method to avoid this pitfall.
