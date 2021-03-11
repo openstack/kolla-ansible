@@ -27,6 +27,8 @@
         playbook_python_version: "{{ '2' if is_upgrade and previous_release == 'train' and ansible_os_family != 'RedHat' else '3' }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
+        pip_user_path_env:
+          PATH: "{{ ansible_env.HOME + '/.local/bin:' + ansible_env.PATH }}"
 
     - name: Install xfsprogs package for Swift filesystems
       become: true
@@ -44,6 +46,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: detect whether need build images
       set_fact:
@@ -203,8 +206,7 @@
           - "ara<1.0.0"
         # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
         executable: "pip{{ playbook_python_version }}"
-        extra_args: "-c {{ upper_constraints_file }}"
-      become: true
+        extra_args: "-c {{ upper_constraints_file }} --user"
 
     # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
@@ -466,6 +468,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     # Upgrade: update config.
     - block:
@@ -524,7 +527,6 @@
                   - ara
                 executable: pip2
                 state: absent
-              become: true
               when: playbook_python_version == '2'
 
             - name: install ansible and ARA for python 3
@@ -536,8 +538,7 @@
                   - "ansible{{ ansible_version_constraint }}"
                   - "ara<1.0.0"
                 executable: pip3
-                extra_args: "-c {{ upper_constraints_file }}"
-              become: true
+                extra_args: "-c {{ upper_constraints_file }} --user"
 
             - name: get ARA callback plugin path
               command: "python3 -m ara.setup.callback_plugins"
@@ -554,8 +555,7 @@
           pip:
             name: "{{ kolla_ansible_src_dir }}"
             executable: pip3
-            extra_args: "-c {{ upper_constraints_file }}"
-          become: true
+            extra_args: "-c {{ upper_constraints_file }} --user"
 
         # Update passwords.yml to include any new passwords added in this
         # release.
@@ -652,6 +652,7 @@
 
 - hosts: primary
   any_errors_fatal: true
+  environment: "{{ pip_user_path_env }}"
   tasks:
     - name: Run reconfigure.sh script
       script:
