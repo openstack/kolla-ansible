@@ -19,6 +19,7 @@ kuryr_services:
       - NET_ADMIN
     volumes: "{{ kuryr_default_volumes + kuryr_extra_volumes }}"
     dimensions: "{{ kuryr_dimensions }}"
+    healthcheck: "{{ kuryr_healthcheck }}"
 
 
 ####################
@@ -28,6 +29,19 @@ kuryr_install_type: "{{ kolla_install_type }}"
 kuryr_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kuryr_install_type }}-kuryr-libnetwork"
 kuryr_tag: "{{ openstack_tag }}"
 kuryr_image_full: "{{ kuryr_image }}:{{ kuryr_tag }}"
+
+kuryr_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kuryr_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kuryr_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kuryr_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+kuryr_healthcheck_test: ["CMD-SHELL", "healthcheck_listen kuryr-server {{ kuryr_port }}"]
+kuryr_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kuryr_healthcheck:
+  interval: "{{ kuryr_healthcheck_interval }}"
+  retries: "{{ kuryr_healthcheck_retries }}"
+  start_period: "{{ kuryr_healthcheck_start_period }}"
+  test: "{% if kuryr_enable_healthchecks | bool %}{{ kuryr_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kuryr_healthcheck_timeout }}"
 
 kuryr_default_volumes:
   - "{{ node_config_directory }}/kuryr/:{{ container_config_directory }}/:ro"
