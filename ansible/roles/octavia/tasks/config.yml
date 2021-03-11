@@ -47,7 +47,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - kolla_copy_ca_into_containers | bool or octavia_enable_tls_backend | bool
 
 - name: Copying over config.json files for services
   template:
@@ -61,6 +61,24 @@
   with_dict: "{{ octavia_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over octavia-wsgi.conf
+  vars:
+    service: "{{ octavia_services['octavia-api'] }}"
+  become: true
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/octavia-api/octavia-wsgi.conf"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia-wsgi.conf"
+    - "{{ node_custom_config }}/octavia/octavia-wsgi.conf"
+    - "octavia-wsgi.conf.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart octavia-api container
 
 - name: Copying over octavia.conf
   vars:

@@ -1,9 +1,17 @@
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {
-    "command": "octavia-api --config-file /etc/octavia/octavia.conf",
+    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/octavia.conf",
             "dest": "/etc/octavia/octavia.conf",
+            "owner": "octavia",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/octavia-wsgi.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/octavia-wsgi.conf",
             "owner": "octavia",
             "perm": "0600"
         }{% if octavia_policy_file is defined %},
@@ -12,9 +20,26 @@
             "dest": "/etc/octavia/{{ octavia_policy_file }}",
             "owner": "octavia",
             "perm": "0600"
-        }{% endif %}
-    ],
+        }{% endif %}{% if octavia_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/octavia-cert.pem",
+            "dest": "/etc/octavia/certs/octavia-cert.pem",
+            "owner": "octavia",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/octavia-key.pem",
+            "dest": "/etc/octavia/certs/octavia-key.pem",
+            "owner": "octavia",
+            "perm": "0600"
+        }
+    {% endif %}],
     "permissions": [
+        {
+            "path": "/var/log/kolla/octavia",
+            "owner": "octavia:octavia",
+            "recurse": true
+        },
         {
             "path": "/var/run/octavia",
             "owner": "octavia:octavia"
