@@ -9,6 +9,8 @@ qdrouterd_services:
     image: "{{ qdrouterd_image_full }}"
     volumes: "{{ qdrouterd_default_volumes + qdrouterd_extra_volumes }}"
     dimensions: "{{ qdrouterd_dimensions }}"
+    healthcheck: "{{ qdrouterd_healthcheck }}"
+
 
 ####################
 # Docker
@@ -18,6 +20,19 @@ qdrouterd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 qdrouterd_tag: "{{ openstack_tag }}"
 qdrouterd_image_full: "{{ qdrouterd_image }}:{{ qdrouterd_tag }}"
 qdrouterd_dimensions: "{{ default_container_dimensions }}"
+
+qdrouterd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+qdrouterd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+qdrouterd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+qdrouterd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+qdrouterd_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ qdrouterd_port }}"]
+qdrouterd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+qdrouterd_healthcheck:
+  interval: "{{ qdrouterd_healthcheck_interval }}"
+  retries: "{{ qdrouterd_healthcheck_retries }}"
+  start_period: "{{ qdrouterd_healthcheck_start_period }}"
+  test: "{% if qdrouterd_enable_healthchecks | bool %}{{ qdrouterd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ qdrouterd_healthcheck_timeout }}"
 
 qdrouterd_default_volumes:
   - "{{ node_config_directory }}/qdrouterd/:{{ container_config_directory }}/:ro"
