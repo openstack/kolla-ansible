@@ -18,6 +18,7 @@ rabbitmq_services:
       RABBITMQ_LOG_DIR: "/var/log/kolla/{{ project_name }}"
     volumes: "{{ rabbitmq_default_volumes + rabbitmq_extra_volumes }}"
     dimensions: "{{ rabbitmq_dimensions }}"
+    healthcheck: "{{ rabbitmq_healthcheck }}"
     haproxy:
       rabbitmq_management:
         enabled: "{{ enable_rabbitmq }}"
@@ -55,6 +56,19 @@ rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker
 rabbitmq_tag: "{{ openstack_tag }}"
 rabbitmq_image_full: "{{ rabbitmq_image }}:{{ rabbitmq_tag }}"
 rabbitmq_dimensions: "{{ default_container_dimensions }}"
+
+rabbitmq_enable_healthchecks: "{{ enable_container_healthchecks }}"
+rabbitmq_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+rabbitmq_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+rabbitmq_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+rabbitmq_healthcheck_test: ["CMD-SHELL", "healthcheck_rabbitmq"]
+rabbitmq_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+rabbitmq_healthcheck:
+  interval: "{{ rabbitmq_healthcheck_interval }}"
+  retries: "{{ rabbitmq_healthcheck_retries }}"
+  start_period: "{{ rabbitmq_healthcheck_start_period }}"
+  test: "{% if rabbitmq_enable_healthchecks | bool %}{{ rabbitmq_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ rabbitmq_healthcheck_timeout }}"
 
 rabbitmq_default_volumes:
   - "{{ node_config_directory }}/{{ project_name }}/:{{ container_config_directory }}/:ro"
