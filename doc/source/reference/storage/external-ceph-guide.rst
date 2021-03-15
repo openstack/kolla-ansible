@@ -26,40 +26,22 @@ Requirements
 Refer to http://docs.ceph.com/docs/master/rbd/rbd-openstack/ for details on
 creating the pool and keyrings with appropriate permissions for each service.
 
-Enabling External Ceph
-~~~~~~~~~~~~~~~~~~~~~~
-
-To activate external Ceph integration you need to enable Ceph backend.
-This can be done individually per service in ``/etc/kolla/globals.yml``:
-
-.. code-block:: yaml
-
-   glance_backend_ceph: "yes"
-   cinder_backend_ceph: "yes"
-   nova_backend_ceph: "yes"
-   gnocchi_backend_storage: "ceph"
-   enable_manila_backend_cephfs_native: "yes"
-
-Edit the Inventory File
-~~~~~~~~~~~~~~~~~~~~~~~
-
-When using external Ceph, there may be no nodes defined in the storage group.
-This will cause Cinder and related services relying on this group to fail.
-In this case, operator should add some nodes to the storage group, all the
-nodes where ``cinder-volume`` and ``cinder-backup`` will run:
-
-.. code-block:: ini
-
-   [storage]
-   compute01
-
 Configuring External Ceph
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ceph integration is configured for different OpenStack services independently.
 
 Glance
 ------
 
-Configuring Glance for Ceph includes the following steps:
+Ceph RBD can be used as a storage backend for Glance images. Configuring Glance
+for Ceph includes the following steps:
+
+#. Enable Glance Ceph backend in ``globals.yml``:
+
+   .. code-block:: yaml
+
+      glance_backend_ceph: "yes"
 
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
@@ -85,7 +67,24 @@ Configuring Glance for Ceph includes the following steps:
 Cinder
 ------
 
-Configuring Cinder for Ceph includes following steps:
+Ceph RBD can be used as a storage backend for Cinder volumes. Configuring
+Cinder for Ceph includes following steps:
+
+#. When using external Ceph, there may be no nodes defined in the storage
+   group.  This will cause Cinder and related services relying on this group to
+   fail.  In this case, operator should add some nodes to the storage group,
+   all the nodes where ``cinder-volume`` and ``cinder-backup`` will run:
+
+   .. code-block:: ini
+
+      [storage]
+      control01
+
+#. Enable Cinder Ceph backend in ``globals.yml``:
+
+   .. code-block:: yaml
+
+      cinder_backend_ceph: "yes"
 
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
@@ -116,22 +115,42 @@ Configuring Cinder for Ceph includes following steps:
     ``cinder-backup`` requires two keyrings for accessing volumes
     and backup pool.
 
-Nova
-----
-
-Configuring Nova for Ceph includes following steps:
+Nova must also be configured to allow access to Cinder volumes:
 
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
    * ``ceph_cinder_keyring`` (default: ``ceph.client.cinder.keyring``)
-   * ``ceph_nova_keyring`` (by default it's the same as ceph_cinder_keyring)
+
+#. Copy Ceph keyring file(s) to:
+
+   * ``/etc/kolla/config/nova/<ceph_cinder_keyring>``
+
+Nova
+----
+
+Ceph RBD can be used as a storage backend for Nova instance ephemeral disks.
+This avoids the requirement for local storage for instances on compute nodes.
+It improves the performance of migration, since instances' ephemeral disks do
+not need to be copied between hypervisors.
+
+Configuring Nova for Ceph includes following steps:
+
+#. Enable Nova Ceph backend in ``globals.yml``:
+
+   .. code-block:: yaml
+
+      nova_backend_ceph: "yes"
+
+#. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
+
+   * ``ceph_nova_keyring`` (by default it's the same as
+     ``ceph_cinder_keyring``)
    * ``ceph_nova_user`` (default: ``nova``)
    * ``ceph_nova_pool_name`` (default: ``vms``)
 
 #. Copy Ceph configuration file to ``/etc/kolla/config/nova/ceph.conf``
 #. Copy Ceph keyring file(s) to:
 
-   * ``/etc/kolla/config/nova/<ceph_cinder_keyring>``
    * ``/etc/kolla/config/nova/<ceph_nova_keyring>`` (if your Ceph deployment
      created one)
 
@@ -144,7 +163,14 @@ Configuring Nova for Ceph includes following steps:
 Gnocchi
 -------
 
+Ceph object storage can be used as a storage backend for Gnocchi metrics.
 Configuring Gnocchi for Ceph includes following steps:
+
+#. Enable Gnocchi Ceph backend in ``globals.yml``:
+
+   .. code-block:: yaml
+
+      gnocchi_backend_storage: "ceph"
 
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
@@ -159,10 +185,15 @@ Configuring Gnocchi for Ceph includes following steps:
 Manila
 ------
 
-Configuring Manila for Ceph includes following steps:
+CephFS can be used as a storage backend for Manila shares. Configuring Manila
+for Ceph includes following steps:
 
-#. Configure CephFS backend by setting ``enable_manila_backend_cephfs_native``
-   to ``true``
+#. Enable Manila Ceph backend in ``globals.yml``:
+
+   .. code-block:: yaml
+
+      enable_manila_backend_cephfs_native: "yes"
+
 #. Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
    * ``ceph_manila_keyring`` (default: ``ceph.client.manila.keyring``)
