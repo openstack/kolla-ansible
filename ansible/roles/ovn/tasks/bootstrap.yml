@@ -36,6 +36,14 @@
     - inventory_hostname in groups["openvswitch"]
     - inventory_hostname not in groups["ovn-controller-network"]
 
+- name: Set OVN chassis mac mappings
+  vars:
+    ovn_macs: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ ovn_base_mac | random_mac(seed=inventory_hostname+bridge) }}{% if not loop.last %},{% endif %}{% endfor %}"
+  become: true
+  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external_ids:ovn-chassis-mac-mappings={{ ovn_macs }}
+  when:
+    - inventory_hostname in groups["ovn-controller-compute"]
+
 - name: Set OVN remote probe interval
   become: true
   command: >
