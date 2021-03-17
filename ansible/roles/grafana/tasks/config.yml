@@ -102,3 +102,71 @@
     - "prometheus.yaml.j2"
   notify:
     - Restart grafana container
+
+- name: Configuring dashboards provisioning
+  vars:
+    service: "{{ grafana_services['grafana'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/grafana/provisioning.yaml"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/grafana/{{ inventory_hostname }}/provisioning.yaml"
+    - "{{ node_custom_config }}/grafana/provisioning.yaml"
+    - "{{ role_path }}/templates/provisioning.yaml.j2"
+  notify:
+    - Restart grafana container
+
+- name: Check if the folder for custom grafana dashboards exists
+  stat:
+    path: "{{ node_custom_config }}/grafana/dashboards"
+  delegate_to: localhost
+  register: grafana_custom_dashboards_folder
+  run_once: True
+
+- name: Remove templated Grafana dashboards
+  become: true
+  vars:
+    service: "{{ grafana_services['grafana'] }}"
+  file:
+    state: absent
+    path: "{{ node_config_directory }}/grafana/dashboards/"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Create custom Grafana dashboards folder
+  become: true
+  vars:
+    service: "{{ grafana_services['grafana'] }}"
+  file:
+    dest: "{{ node_config_directory }}/grafana/dashboards/"
+    state: "directory"
+    mode: "0770"
+  when:
+    - grafana_custom_dashboards_folder.stat.exists
+    - grafana_custom_dashboards_folder.stat.isdir
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Copying over custom dashboards
+  vars:
+    service: "{{ grafana_services['grafana'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/grafana/dashboards/"
+    mode: "0660"
+  become: true
+  when:
+    - grafana_custom_dashboards_folder.stat.exists
+    - grafana_custom_dashboards_folder.stat.isdir
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_fileglob:
+    - "{{ node_custom_config }}/grafana/dashboards/*.json"
+  notify:
+    - Restart grafana container
