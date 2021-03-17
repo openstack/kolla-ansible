@@ -5,9 +5,10 @@ node.name: "{{ 'api' | kolla_address | put_address_in_context('url') }}"
 network.host: "{{ 'api' | kolla_address | put_address_in_context('url') }}"
 
 cluster.name: "{{ elasticsearch_cluster_name }}"
+cluster.initial_master_nodes: [{% for host in groups['elasticsearch'] %}"{{ 'api' | kolla_address(host) }}"{% if not loop.last %},{% endif %}{% endfor %}]
 node.master: true
 node.data: true
-discovery.zen.ping.unicast.hosts: [{% for host in groups['elasticsearch'] %}"{{ 'api' | kolla_address(host) | put_address_in_context('url') }}"{% if not loop.last %},{% endif %}{% endfor %}]
+discovery.seed_hosts: [{% for host in groups['elasticsearch'] %}"{{ 'api' | kolla_address(host) | put_address_in_context('url') }}"{% if not loop.last %},{% endif %}{% endfor %}]
 
 discovery.zen.minimum_master_nodes: {{ minimum_master_nodes }}
 http.port: {{ elasticsearch_port }}
