@@ -52,8 +52,8 @@ is to differentiate CentOS 7 and CentOS 8 container images.
 Migrating from CentOS 7 to CentOS 8
 -----------------------------------
 
-This section describes how to migrate an existing deployment from CentOS 7 to
-CentOS 8.
+This section describes how to migrate an existing Train deployment from CentOS
+7 to CentOS 8.
 
 There is no supported upgrade path from CentOS 7 to CentOS 8. Since we want to
 use the same major versions of CentOS in the host and containers, the hosts
@@ -65,8 +65,8 @@ level workflow is:
 * upgrade services to ensure compatibility with those available in CentOS 8
 * migrate hosts to CentOS 8 in batches
 
-Note that in a multi-node system it is possible to have a mix of CentOS 7 and
-CentOS 8 hosts while the migration takes place.
+Note that in a multi-node system on the Train release it is possible to have a
+mix of CentOS 7 and CentOS 8 hosts while the migration takes place.
 
 Service compatibility
 ~~~~~~~~~~~~~~~~~~~~~
