@@ -22,18 +22,18 @@ and change the following:
 
    enable_grafana: "yes"
 
-If you would like to set up Prometheus as a data source additionally set:
+If you would like to set up Prometheus as a data source, additionally set:
 
 .. code-block:: yaml
 
    enable_prometheus: "yes"
 
-Please follow :doc:`Prometheus Guide <prometheus-guide>` for more information
+Please follow :doc:`Prometheus Guide <prometheus-guide>` for more information.
 
-Custom Dashboards Provisioning
+Custom dashboards provisioning
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Kolla Ansible sets Custom Dashboards Provisioning using `Dashboard provider <https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards>`_.
+Kolla Ansible sets custom dashboards provisioning using `Dashboard provider <https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards>`_.
 
 Dashboard's JSON files should be placed into
 ``{{ node_custom_config }}/grafana/dashboards/`` folder.
@@ -42,5 +42,5 @@ Dashboards will be imported to Grafana dashboards General Folder.
 Grafana provisioner config can be altered by placing ``provisioning.yaml`` to
 ``{{ node_custom_config }}/grafana/`` folder.
 
-For other settings follow configuration reference:
+For other settings, follow configuration reference:
 `Dashboard provider configuration <https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards>`_.
