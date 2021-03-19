@@ -105,7 +105,7 @@ EOF
 
     mkdir -p /tmp/logs/build
 
-    sudo docker run -d -p 4000:5000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
+    sudo docker run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
 
     python3 -m venv ~/kolla-venv
     . ~/kolla-venv/bin/activate
