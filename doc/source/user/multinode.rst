@@ -75,7 +75,7 @@ IP address and port on which the registry is listening:
 
    docker_custom_config:
      registry-mirrors:
-       - 192.168.1.100:4000
+       - http://192.168.1.100:4000
 
 .. _edit-inventory:
 
