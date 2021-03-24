@@ -20,10 +20,12 @@ monasca_services:
         mode: "http"
         external: true
         port: "{{ monasca_api_port }}"
+  # NOTE(dszumski): We can remove log_transformer and all other references after the
+  # Wallaby release
   monasca-log-transformer:
     container_name: monasca_log_transformer
     group: monasca-log-transformer
-    enabled: true
+    enabled: false
     image: "{{ monasca_logstash_image_full }}"
     volumes: "{{ monasca_log_transformer_default_volumes + monasca_log_transformer_extra_volumes }}"
     dimensions: "{{ monasca_log_transformer_dimensions }}"
@@ -175,7 +177,7 @@ monasca_all_topics:
   - name: "{{ monasca_transformed_logs_topic }}"
     partitions: "{{ monasca_default_topic_partitions }}"
     replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: True
+    enabled: False
   - name: "{{ monasca_events_topic }}"
     partitions: "{{ monasca_default_topic_partitions }}"
     replication_factor: "{{ monasca_default_topic_replication_factor }}"

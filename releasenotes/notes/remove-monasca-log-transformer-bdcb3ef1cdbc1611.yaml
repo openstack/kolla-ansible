@@ -1,0 +1,24 @@
+---
+upgrade:
+  - |
+    Monasca Log Transformer has been merged with Monasca Log Persister to
+    improve performance and reduce resource consumption. Any custom Monasca
+    Log Transformer configuration should be either merged into Monasca Log
+    Persister configuration, or moved outside of the Monasca pipeline, for
+    example, to Fluentd. Any custom Monasca Log Metrics config will also
+    need to be updated to read from the raw logs pipeline, rather than the
+    transformed logs pipeline. The transformed logs pipeline will be
+    removed from Kafka automatically, as will any log transformer containers.
+    There will be a short interruption to logging services whilst the
+    pipeline is updated. During this time it's likely that a small window
+    of logs will be lost from the transformed logs Kafka queue. If this
+    is a problem, the Monasca API should be stopped on all nodes prior to
+    upgrading Monasca. This will allow the transformed logs topic to drain
+    into Elasticsearch before the pipeline is reconfigured. Services such
+    as Fluentd, which post logs to the Monasca API, should buffer logs
+    whilst this happens up to the maximum configured buffer. Note that
+    there may be other services forwarding logs, and these will need to be
+    inspected independently. The Log Transformer volumes will remain on
+    the monitoring nodes and can be manually removed as described in the
+    `documentation
+    <https://docs.openstack.org/kolla-ansible/latest/reference/logging-and-monitoring/monasca-guide.html#cleanup>`__.

@@ -318,6 +318,42 @@ Apply the password changes by running the following command:
 
    kolla-ansible reconfigure -t monasca
 
+Cleanup
+~~~~~~~
+
+From time-to-time it may be necessary to manually invoke the Monasca cleanup
+command. If this is required during an upgrade it will be mentioned in the
+release notes. It may also be necessary to run the cleanup command when
+disabling certain parts of the Monasca pipeline. A full list of scenarios in
+which you must run the cleanup command is given below:
+
+- Upgrading from Victoria to Wallaby to remove the unused Monasca Log
+  Transformer service
+
+The cleanup command can be invoked from the Kolla Ansible CLI, for example:
+
+.. code-block:: console
+
+   kolla-ansible monasca_cleanup
+
+Following cleanup, you may also choose to remove unused container volumes.
+It is recommended to run this manually on each Monasca service host. Note
+that `docker prune` will indiscriminately remove all unused volumes,
+which may not always be what you want. If you wish to keep a subset of
+unused volumes, you can remove them individually.
+
+To remove all unused volumes on a host:
+
+.. code-block:: console
+
+   docker prune
+
+To remove a single unused volume, run for example:
+
+.. code-block:: console
+
+   docker volume rm monasca_log_transformer_data
+
 System requirements and performance impact
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -335,9 +371,8 @@ Monasca will deploy the following Docker containers:
 * Monasca Agent Statsd
 * Monasca API
 * Monasca Log API
-* Monasca Log Transformer (Logstash)
 * Monasca Log Metrics (Logstash)
-* Monasca Log Perister (Logstash)
+* Monasca Log Persister (Logstash)
 * Monasca Notification
 * Monasca Persister
 * Monasca Thresh (Apache Storm topology)
