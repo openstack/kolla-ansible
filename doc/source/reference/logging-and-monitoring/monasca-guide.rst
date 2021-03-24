@@ -356,18 +356,20 @@ Cleanup
 ~~~~~~~
 
 From time-to-time it may be necessary to manually invoke the Monasca cleanup
-command. If this is required during an upgrade it will be mentioned in the
-release notes. It may also be necessary to run the cleanup command when
-disabling certain parts of the Monasca pipeline. A full list of scenarios in
-which you must run the cleanup command is given below:
+command. Normally this will be triggered automatically during an upgrade for
+services which are removed or disabled by default. However, volume cleanup
+will always need to be addressed manually. It may also be necessary to run the
+cleanup command when disabling certain parts of the Monasca pipeline. A full
+list of scenarios in which you must run the cleanup command is given below.
+Those marked as automatic will be triggered as part of an upgrade.
 
 - Upgrading from Victoria to Wallaby to remove the unused Monasca Log
-  Transformer service
+  Transformer service (automatic).
 - Upgrading from Victoria to Wallaby to remove the Monasca Log Metrics
   service, unless the option to disable it by default has been overridden in
-  Wallaby.
+  Wallaby (automatic).
 - Upgrading from Wallaby to Xena to remove the Monasca Log Metrics service
-  if the option to disable it by default was overridden in Wallaby.
+  if the option to disable it by default was overridden in Wallaby (automatic).
 - If you have disabled the alerting pipeline via the
   `monasca_enable_alerting_pipeline` flag after you have deployed the alerting
   services.
