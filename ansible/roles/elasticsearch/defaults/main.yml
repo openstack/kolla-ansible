@@ -31,6 +31,10 @@ elasticsearch_services:
 ####################
 # Elasticsearch
 ####################
+
+# Register Elasticsearch internal endpoint in the Keystone service catalogue
+elasticsearch_enable_keystone_registration: False
+
 elasticsearch_cluster_name: "kolla_logging"
 es_heap_size: "1g"
 es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }}{%endif%}"
@@ -69,6 +73,18 @@ elasticsearch_curator_soft_retention_period_days: 30
 
 # Duration after which an index is permanently erased from the cluster.
 elasticsearch_curator_hard_retention_period_days: 60
+
+####################
+# Keystone
+####################
+elasticsearch_openstack_auth: "{{ openstack_auth }}"
+
+elasticsearch_ks_services:
+  - name: "elasticsearch"
+    type: "log-storage"
+    description: "Elasticsearch"
+    endpoints:
+      - {'interface': 'internal', 'url': '{{ elasticsearch_internal_endpoint }}'}
 
 ####################
 # Docker
