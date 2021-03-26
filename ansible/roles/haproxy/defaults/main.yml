@@ -10,6 +10,7 @@ haproxy_services:
     privileged: True
     volumes: "{{ haproxy_default_volumes + haproxy_extra_volumes }}"
     dimensions: "{{ haproxy_dimensions }}"
+    healthcheck: "{{ haproxy_healthcheck }}"
   keepalived:
     container_name: keepalived
     group: haproxy
@@ -48,6 +49,19 @@ haproxy_defaults_max_connections: 10000
 
 haproxy_dimensions: "{{ default_container_dimensions }}"
 keepalived_dimensions: "{{ default_container_dimensions }}"
+
+haproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
+haproxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+haproxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+haproxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+haproxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ haproxy_monitor_port }}"]
+haproxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+haproxy_healthcheck:
+  interval: "{{ haproxy_healthcheck_interval }}"
+  retries: "{{ haproxy_healthcheck_retries }}"
+  start_period: "{{ haproxy_healthcheck_start_period }}"
+  test: "{% if haproxy_enable_healthchecks | bool %}{{ haproxy_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ haproxy_healthcheck_timeout }}"
 
 haproxy_default_volumes:
   - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
