@@ -10,6 +10,7 @@ tacker_services:
     image: "{{ tacker_server_image_full }}"
     volumes: "{{ tacker_server_default_volumes + tacker_server_extra_volumes }}"
     dimensions: "{{ tacker_server_dimensions }}"
+    healthcheck: "{{ tacker_server_healthcheck }}"
     haproxy:
       tacker_server:
         enabled: "{{ enable_tacker }}"
@@ -31,6 +32,7 @@ tacker_services:
     image: "{{ tacker_conductor_image_full }}"
     volumes: "{{ tacker_conductor_default_volumes + tacker_conductor_extra_volumes }}"
     dimensions: "{{ tacker_conductor_dimensions }}"
+    healthcheck: "{{ tacker_conductor_healthcheck }}"
 
 ####################
 # Database
@@ -55,6 +57,32 @@ tacker_conductor_image_full: "{{ tacker_conductor_image }}:{{ tacker_conductor_t
 
 tacker_server_dimensions: "{{ default_container_dimensions }}"
 tacker_conductor_dimensions: "{{ default_container_dimensions }}"
+
+tacker_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
+tacker_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+tacker_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+tacker_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+tacker_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ tacker_server_port }}"]
+tacker_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+tacker_server_healthcheck:
+  interval: "{{ tacker_server_healthcheck_interval }}"
+  retries: "{{ tacker_server_healthcheck_retries }}"
+  start_period: "{{ tacker_server_healthcheck_start_period }}"
+  test: "{% if tacker_server_enable_healthchecks | bool %}{{ tacker_server_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ tacker_server_healthcheck_timeout }}"
+
+tacker_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+tacker_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+tacker_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+tacker_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+tacker_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port tacker-conductor {{ om_rpc_port }}"]
+tacker_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+tacker_conductor_healthcheck:
+  interval: "{{ tacker_conductor_healthcheck_interval }}"
+  retries: "{{ tacker_conductor_healthcheck_retries }}"
+  start_period: "{{ tacker_conductor_healthcheck_start_period }}"
+  test: "{% if tacker_conductor_enable_healthchecks | bool %}{{ tacker_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ tacker_conductor_healthcheck_timeout }}"
 
 tacker_server_default_volumes:
   - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
