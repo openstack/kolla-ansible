@@ -9,6 +9,7 @@ cinder_services:
     image: "{{ cinder_api_image_full }}"
     volumes: "{{ cinder_api_default_volumes + cinder_api_extra_volumes }}"
     dimensions: "{{ cinder_api_dimensions }}"
+    healthcheck: "{{ cinder_api_healthcheck }}"
     haproxy:
       cinder_api:
         enabled: "{{ enable_cinder }}"
@@ -31,6 +32,7 @@ cinder_services:
     image: "{{ cinder_scheduler_image_full }}"
     volumes: "{{ cinder_scheduler_default_volumes + cinder_scheduler_extra_volumes }}"
     dimensions: "{{ cinder_scheduler_dimensions }}"
+    healthcheck: "{{ cinder_scheduler_healthcheck }}"
   cinder-volume:
     container_name: cinder_volume
     group: cinder-volume
@@ -41,6 +43,7 @@ cinder_services:
     tmpfs: "{{ cinder_volume_tmpfs }}"
     volumes: "{{ cinder_volume_default_volumes + cinder_volume_extra_volumes }}"
     dimensions: "{{ cinder_volume_dimensions }}"
+    healthcheck: "{{ cinder_volume_healthcheck }}"
   cinder-backup:
     container_name: cinder_backup
     group: cinder-backup
@@ -49,6 +52,7 @@ cinder_services:
     privileged: True
     volumes: "{{ cinder_backup_default_volumes + cinder_backup_extra_volumes }}"
     dimensions: "{{ cinder_backup_dimensions }}"
+    healthcheck: "{{ cinder_backup_healthcheck }}"
 
 ####################
 # Database
@@ -83,6 +87,58 @@ cinder_api_dimensions: "{{ default_container_dimensions }}"
 cinder_backup_dimensions: "{{ default_container_dimensions }}"
 cinder_scheduler_dimensions: "{{ default_container_dimensions }}"
 cinder_volume_dimensions: "{{ default_container_dimensions }}"
+
+cinder_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cinder_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cinder_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cinder_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cinder_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if cinder_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ cinder_api_listen_port}}"]
+cinder_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cinder_api_healthcheck:
+  interval: "{{ cinder_api_healthcheck_interval }}"
+  retries: "{{ cinder_api_healthcheck_retries }}"
+  start_period: "{{ cinder_api_healthcheck_start_period }}"
+  test: "{% if cinder_api_enable_healthchecks | bool %}{{ cinder_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cinder_api_healthcheck_timeout }}"
+
+cinder_scheduler_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cinder_scheduler_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cinder_scheduler_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cinder_scheduler_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cinder_scheduler_healthcheck_test: ["CMD-SHELL", "healthcheck_port cinder-scheduler {{ om_rpc_port }}"]
+cinder_scheduler_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cinder_scheduler_healthcheck:
+  interval: "{{ cinder_scheduler_healthcheck_interval }}"
+  retries: "{{ cinder_scheduler_healthcheck_retries }}"
+  start_period: "{{ cinder_scheduler_healthcheck_start_period }}"
+  test: "{% if cinder_scheduler_enable_healthchecks | bool %}{{ cinder_scheduler_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cinder_scheduler_healthcheck_timeout }}"
+
+cinder_volume_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cinder_volume_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cinder_volume_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cinder_volume_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cinder_volume_healthcheck_test: ["CMD-SHELL", "healthcheck_port cinder-volume {{ om_rpc_port }}"]
+cinder_volume_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cinder_volume_healthcheck:
+  interval: "{{ cinder_volume_healthcheck_interval }}"
+  retries: "{{ cinder_volume_healthcheck_retries }}"
+  start_period: "{{ cinder_volume_healthcheck_start_period }}"
+  test: "{% if cinder_volume_enable_healthchecks | bool %}{{ cinder_volume_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cinder_volume_healthcheck_timeout }}"
+
+cinder_backup_enable_healthchecks: "{{ enable_container_healthchecks }}"
+cinder_backup_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+cinder_backup_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+cinder_backup_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+cinder_backup_healthcheck_test: ["CMD-SHELL", "healthcheck_port cinder-backup {{ om_rpc_port }}"]
+cinder_backup_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+cinder_backup_healthcheck:
+  interval: "{{ cinder_backup_healthcheck_interval }}"
+  retries: "{{ cinder_backup_healthcheck_retries }}"
+  start_period: "{{ cinder_backup_healthcheck_start_period }}"
+  test: "{% if cinder_backup_enable_healthchecks | bool %}{{ cinder_backup_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ cinder_backup_healthcheck_timeout }}"
 
 cinder_api_default_volumes:
   - "{{ node_config_directory }}/cinder-api/:{{ container_config_directory }}/:ro"
