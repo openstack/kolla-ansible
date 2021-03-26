@@ -322,3 +322,15 @@ The combined certificate and key file ``haproxy.pem`` (which is the default
 value for ``kolla_external_fqdn_cert``) will be generated and stored in the
 ``/etc/kolla/certificates/`` directory, and a copy of the CA certificate
 (``root.crt``) will be stored in the ``/etc/kolla/certificates/ca/`` directory.
+
+Generating your certificates without kolla-ansible
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to manage your TLS certificates outside kolla-ansible directly on
+your hosts, you can do it by setting ``kolla_externally_managed_cert`` to
+``true``. This will make kolla-ansible ignore any copy of certificate from
+the operator to kolla-ansible managed hosts and will keep other configuration
+options for TLS as is.
+
+If using this option, make sure that all certificates are present on the
+appropriate hosts in the appropriate location.
