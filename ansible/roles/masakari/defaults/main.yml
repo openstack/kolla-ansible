@@ -34,7 +34,7 @@ masakari_services:
     image: "{{ masakari_monitors_image_full }}"
     volumes: "{{ masakari_instancemonitor_default_volumes + masakari_instancemonitor_extra_volumes }}"
     privileged: True
-    dimensions: "{{ masakari_monitors_dimensions }}"
+    dimensions: "{{ masakari_instancemonitor_dimensions }}"
 
 
 ####################
@@ -64,7 +64,9 @@ masakari_monitors_image_full: "{{ masakari_monitors_image }}:{{ masakari_monitor
 
 masakari_api_dimensions: "{{ default_container_dimensions }}"
 masakari_engine_dimensions: "{{ default_container_dimensions }}"
-masakari_monitors_dimensions: "{{ default_container_dimensions }}"
+# NOTE(mgoddard): Allow masakari_monitors_dimensions for backwards
+# compatibility.
+masakari_instancemonitor_dimensions: "{{ masakari_monitors_dimensions | default(default_container_dimensions) }}"
 
 masakari_extra_volumes: "{{ default_extra_volumes }}"
 masakari_api_extra_volumes: "{{ masakari_extra_volumes }}"
@@ -89,7 +91,7 @@ masakari_instancemonitor_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/masakari/masakari:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/masakari' if masakari_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/masakari-monitors/masakarimonitors:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/masakarimonitors' if masakari_dev_mode | bool else '' }}"
 
 
 ####################
@@ -114,7 +116,7 @@ masakari_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 masakari_dev_mode: "{{ kolla_dev_mode }}"
 masakari_source_version: "{{ kolla_source_version }}"
 
-masakari_monitors_git_repository: "{{ kolla_dev_repos_git }}/masakarimonitors"
+masakari_monitors_git_repository: "{{ kolla_dev_repos_git }}/masakari-monitors"
 masakari_monitors_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 masakari_monitors_dev_mode: "{{ kolla_dev_mode }}"
 masakari_monitors_source_version: "{{ kolla_source_version }}"
