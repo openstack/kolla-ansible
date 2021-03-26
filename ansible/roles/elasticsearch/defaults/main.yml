@@ -11,6 +11,7 @@ elasticsearch_services:
       ES_JAVA_OPTS: "{{ es_java_opts }}"
     volumes: "{{ elasticsearch_default_volumes + elasticsearch_extra_volumes }}"
     dimensions: "{{ elasticsearch_dimensions }}"
+    healthcheck: "{{ elasticsearch_healthcheck }}"
     haproxy:
       elasticsearch:
         enabled: "{{ enable_elasticsearch }}"
@@ -100,6 +101,19 @@ elasticsearch_curator_image_full: "{{ elasticsearch_curator_image }}:{{ elastics
 
 elasticsearch_dimensions: "{{ default_container_dimensions }}"
 elasticsearch_curator_dimensions: "{{ default_container_dimensions }}"
+
+elasticsearch_enable_healthchecks: "{{ enable_container_healthchecks }}"
+elasticsearch_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+elasticsearch_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+elasticsearch_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+elasticsearch_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ elasticsearch_port }}"]
+elasticsearch_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+elasticsearch_healthcheck:
+  interval: "{{ elasticsearch_healthcheck_interval }}"
+  retries: "{{ elasticsearch_healthcheck_retries }}"
+  start_period: "{{ elasticsearch_healthcheck_start_period }}"
+  test: "{% if elasticsearch_enable_healthchecks | bool %}{{ elasticsearch_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ elasticsearch_healthcheck_timeout }}"
 
 elasticsearch_default_volumes:
   - "{{ node_config_directory }}/elasticsearch/:{{ container_config_directory }}/"
