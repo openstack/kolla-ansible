@@ -9,6 +9,7 @@ skydive_services:
     image: "{{ skydive_analyzer_image_full }}"
     volumes: "{{ skydive_analyzer_default_volumes + skydive_analyzer_extra_volumes }}"
     dimensions: "{{ skydive_analyzer_dimensions }}"
+    healthcheck: "{{ skydive_analyzer_healthcheck }}"
     haproxy:
       skydive_server:
         enabled: "{{ enable_skydive }}"
@@ -28,6 +29,7 @@ skydive_services:
     privileged: True
     volumes: "{{ skydive_agent_default_volumes + skydive_agent_extra_volumes }}"
     dimensions: "{{ skydive_agent_dimensions }}"
+    healthcheck: "{{ skydive_agent_healthcheck }}"
 
 ####################
 # Docker
@@ -43,6 +45,32 @@ skydive_agent_tag: "{{ openstack_tag }}"
 skydive_agent_image_full: "{{ skydive_agent_image }}:{{ skydive_agent_tag }}"
 skydive_analyzer_dimensions: "{{ default_container_dimensions }}"
 skydive_agent_dimensions: "{{ default_container_dimensions }}"
+
+skydive_analyzer_enable_healthchecks: "{{ enable_container_healthchecks }}"
+skydive_analyzer_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+skydive_analyzer_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+skydive_analyzer_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+skydive_analyzer_healthcheck_test: ["CMD-SHELL", "healthcheck_listen skydive {{ skydive_analyzer_port }}"]
+skydive_analyzer_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+skydive_analyzer_healthcheck:
+  interval: "{{ skydive_analyzer_healthcheck_interval }}"
+  retries: "{{ skydive_analyzer_healthcheck_retries }}"
+  start_period: "{{ skydive_analyzer_healthcheck_start_period }}"
+  test: "{% if skydive_analyzer_enable_healthchecks | bool %}{{ skydive_analyzer_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ skydive_analyzer_healthcheck_timeout }}"
+
+skydive_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+skydive_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+skydive_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+skydive_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+skydive_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_listen skydive {{ skydive_agents_port }}"]
+skydive_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+skydive_agent_healthcheck:
+  interval: "{{ skydive_agent_healthcheck_interval }}"
+  retries: "{{ skydive_agent_healthcheck_retries }}"
+  start_period: "{{ skydive_agent_healthcheck_start_period }}"
+  test: "{% if skydive_agent_enable_healthchecks | bool %}{{ skydive_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ skydive_agent_healthcheck_timeout }}"
 
 skydive_analyzer_default_volumes:
   - "{{ node_config_directory }}/skydive-analyzer/:{{ container_config_directory }}/:ro"
