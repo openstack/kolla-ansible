@@ -9,6 +9,7 @@ watcher_services:
     image: "{{ watcher_api_image_full }}"
     volumes: "{{ watcher_api_default_volumes + watcher_api_extra_volumes }}"
     dimensions: "{{ watcher_api_dimensions }}"
+    healthcheck: "{{ watcher_api_healthcheck }}"
     haproxy:
       watcher_api:
         enabled: "{{ enable_watcher }}"
@@ -27,6 +28,7 @@ watcher_services:
     image: "{{ watcher_applier_image_full }}"
     volumes: "{{ watcher_applier_default_volumes + watcher_applier_extra_volumes }}"
     dimensions: "{{ watcher_applier_dimensions }}"
+    healthcheck: "{{ watcher_applier_healthcheck }}"
   watcher-engine:
     container_name: watcher_engine
     group: watcher-engine
@@ -34,6 +36,7 @@ watcher_services:
     image: "{{ watcher_engine_image_full }}"
     volumes: "{{ watcher_engine_default_volumes + watcher_engine_extra_volumes }}"
     dimensions: "{{ watcher_engine_dimensions }}"
+    healthcheck: "{{ watcher_engine_healthcheck }}"
 
 
 ####################
@@ -65,6 +68,45 @@ watcher_applier_image_full: "{{ watcher_applier_image }}:{{ watcher_applier_tag 
 watcher_api_dimensions: "{{ default_container_dimensions }}"
 watcher_applier_dimensions: "{{ default_container_dimensions }}"
 watcher_engine_dimensions: "{{ default_container_dimensions }}"
+
+watcher_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+watcher_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+watcher_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+watcher_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+watcher_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ watcher_api_port }}"]
+watcher_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+watcher_api_healthcheck:
+  interval: "{{ watcher_api_healthcheck_interval }}"
+  retries: "{{ watcher_api_healthcheck_retries }}"
+  start_period: "{{ watcher_api_healthcheck_start_period }}"
+  test: "{% if watcher_api_enable_healthchecks | bool %}{{ watcher_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ watcher_api_healthcheck_timeout }}"
+
+watcher_applier_enable_healthchecks: "{{ enable_container_healthchecks }}"
+watcher_applier_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+watcher_applier_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+watcher_applier_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+watcher_applier_healthcheck_test: ["CMD-SHELL", "healthcheck_port watcher-applier {{ om_rpc_port }}"]
+watcher_applier_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+watcher_applier_healthcheck:
+  interval: "{{ watcher_applier_healthcheck_interval }}"
+  retries: "{{ watcher_applier_healthcheck_retries }}"
+  start_period: "{{ watcher_applier_healthcheck_start_period }}"
+  test: "{% if watcher_applier_enable_healthchecks | bool %}{{ watcher_applier_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ watcher_applier_healthcheck_timeout }}"
+
+watcher_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+watcher_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+watcher_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+watcher_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+watcher_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port watcher-decision-engine {{ om_rpc_port }}"]
+watcher_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+watcher_engine_healthcheck:
+  interval: "{{ watcher_engine_healthcheck_interval }}"
+  retries: "{{ watcher_engine_healthcheck_retries }}"
+  start_period: "{{ watcher_engine_healthcheck_start_period }}"
+  test: "{% if watcher_engine_enable_healthchecks | bool %}{{ watcher_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ watcher_engine_healthcheck_timeout }}"
 
 watcher_api_default_volumes:
   - "{{ node_config_directory }}/watcher-api/:{{ container_config_directory }}/:ro"
