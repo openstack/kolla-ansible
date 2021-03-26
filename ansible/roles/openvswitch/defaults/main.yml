@@ -17,6 +17,7 @@ openvswitch_services:
       }}
     volumes: "{{ openvswitch_db_default_volumes + openvswitch_db_extra_volumes }}"
     dimensions: "{{ openvswitch_db_dimensions }}"
+    healthcheck: "{{ openvswitch_db_healthcheck }}"
   openvswitch-vswitchd:
     container_name: "openvswitch_vswitchd"
     image: "{{ openvswitch_vswitchd_image_full }}"
@@ -33,6 +34,7 @@ openvswitch_services:
     privileged: True
     volumes: "{{ openvswitch_vswitchd_default_volumes + openvswitch_vswitchd_extra_volumes }}"
     dimensions: "{{ openvswitch_vswitchd_dimensions }}"
+    healthcheck: "{{ openvswitch_vswitchd_healthcheck }}"
 
 ####################
 # Docker
@@ -50,6 +52,32 @@ openvswitch_vswitchd_image_full: "{{ openvswitch_vswitchd_image }}:{{ openvswitc
 
 openvswitch_db_dimensions: "{{ default_container_dimensions }}"
 openvswitch_vswitchd_dimensions: "{{ default_container_dimensions }}"
+
+openvswitch_db_enable_healthchecks: "{{ enable_container_healthchecks }}"
+openvswitch_db_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+openvswitch_db_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+openvswitch_db_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+openvswitch_db_healthcheck_test: ["CMD-SHELL", "healthcheck_socket ovsdb-server /run/openvswitch/db.sock"]
+openvswitch_db_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+openvswitch_db_healthcheck:
+  interval: "{{ openvswitch_db_healthcheck_interval }}"
+  retries: "{{ openvswitch_db_healthcheck_retries }}"
+  start_period: "{{ openvswitch_db_healthcheck_start_period }}"
+  test: "{% if openvswitch_db_enable_healthchecks | bool %}{{ openvswitch_db_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ openvswitch_db_healthcheck_timeout }}"
+
+openvswitch_vswitchd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+openvswitch_vswitchd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+openvswitch_vswitchd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+openvswitch_vswitchd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+openvswitch_vswitchd_healthcheck_test: ["CMD-SHELL", "ovs-appctl version"]
+openvswitch_vswitchd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+openvswitch_vswitchd_healthcheck:
+  interval: "{{ openvswitch_vswitchd_healthcheck_interval }}"
+  retries: "{{ openvswitch_vswitchd_healthcheck_retries }}"
+  start_period: "{{ openvswitch_vswitchd_healthcheck_start_period }}"
+  test: "{% if openvswitch_vswitchd_enable_healthchecks | bool %}{{ openvswitch_vswitchd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ openvswitch_vswitchd_healthcheck_timeout }}"
 
 openvswitch_db_default_volumes:
   - "{{ node_config_directory }}/openvswitch-db-server/:{{ container_config_directory }}/:ro"
