@@ -83,3 +83,40 @@ disable fact variable injection.
 
    [defaults]
    inject_facts_as_vars = False
+
+Fact filtering
+--------------
+
+Ansible facts filtering can be used to speed up Ansible.  Environments with
+many network interfaces on the network and compute nodes can experience very
+slow processing with Kolla Ansible. This happens due to the processing of the
+large per-interface facts with each task.  To avoid storing certain facts, we
+can use the ``kolla_ansible_setup_filter`` variable, which is used as the
+``filter`` argument to the ``setup`` module. For example, to avoid collecting
+facts for virtual interfaces beginning with q or t:
+
+.. code-block:: yaml
+
+   kolla_ansible_setup_filter: "ansible_[!qt]*"
+
+This causes Ansible to collect but not store facts matching that pattern, which
+includes the virtual interface facts. Currently we are not referencing other
+facts matching the pattern within Kolla Ansible.  Note that including the
+``ansible_`` prefix causes meta facts ``module_setup`` and ``gather_subset`` to
+be filtered, but this seems to be the only way to get a good match on the
+interface facts.
+
+The exact improvement will vary, but has been reported to be as large as 18x on
+systems with many virtual interfaces.
+
+Fact gathering subsets
+----------------------
+
+It is also possible to configure which subsets of facts are gathered, via
+``kolla_ansible_setup_gather_subset``, which is used as the ``gather_subset``
+argument to the ``setup`` module. For example, if one wants to avoid collecting
+facts via facter:
+
+.. code-block:: yaml
+
+   kolla_ansible_setup_gather_subset: "all,!facter"
