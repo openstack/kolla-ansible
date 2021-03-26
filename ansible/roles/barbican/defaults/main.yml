@@ -9,6 +9,7 @@ barbican_services:
     image: "{{ barbican_api_image_full }}"
     volumes: "{{ barbican_api_default_volumes + barbican_api_extra_volumes }}"
     dimensions: "{{ barbican_api_dimensions }}"
+    healthcheck: "{{ barbican_api_healthcheck }}"
     haproxy:
       barbican_api:
         enabled: "{{ enable_barbican }}"
@@ -31,6 +32,7 @@ barbican_services:
     image: "{{ barbican_keystone_listener_image_full }}"
     volumes: "{{ barbican_keystone_listener_default_volumes + barbican_keystone_listener_extra_volumes }}"
     dimensions: "{{ barbican_keystone_listener_dimensions }}"
+    healthcheck: "{{ barbican_keystone_listener_healthcheck }}"
   barbican-worker:
     container_name: barbican_worker
     group: barbican-worker
@@ -38,6 +40,7 @@ barbican_services:
     image: "{{ barbican_worker_image_full }}"
     volumes: "{{ barbican_worker_default_volumes + barbican_worker_extra_volumes }}"
     dimensions: "{{ barbican_worker_dimensions }}"
+    healthcheck: "{{ barbican_worker_healthcheck }}"
 
 
 ####################
@@ -69,6 +72,45 @@ barbican_worker_image_full: "{{ barbican_worker_image }}:{{ barbican_worker_tag 
 barbican_api_dimensions: "{{ default_container_dimensions }}"
 barbican_keystone_listener_dimensions: "{{ default_container_dimensions }}"
 barbican_worker_dimensions: "{{ default_container_dimensions }}"
+
+barbican_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+barbican_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+barbican_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+barbican_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+barbican_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if barbican_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ barbican_api_listen_port}}"]
+barbican_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+barbican_api_healthcheck:
+  interval: "{{ barbican_api_healthcheck_interval }}"
+  retries: "{{ barbican_api_healthcheck_retries }}"
+  start_period: "{{ barbican_api_healthcheck_start_period }}"
+  test: "{% if barbican_api_enable_healthchecks | bool %}{{ barbican_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ barbican_api_healthcheck_timeout }}"
+
+barbican_keystone_listener_enable_healthchecks: "{{ enable_container_healthchecks }}"
+barbican_keystone_listener_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+barbican_keystone_listener_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+barbican_keystone_listener_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+barbican_keystone_listener_healthcheck_test: ["CMD-SHELL", "healthcheck_port barbican-keystone-listener {{ om_rpc_port }}"]
+barbican_keystone_listener_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+barbican_keystone_listener_healthcheck:
+  interval: "{{ barbican_keystone_listener_healthcheck_interval }}"
+  retries: "{{ barbican_keystone_listener_healthcheck_retries }}"
+  start_period: "{{ barbican_keystone_listener_healthcheck_start_period }}"
+  test: "{% if barbican_keystone_listener_enable_healthchecks | bool %}{{ barbican_keystone_listener_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ barbican_keystone_listener_healthcheck_timeout }}"
+
+barbican_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+barbican_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+barbican_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+barbican_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+barbican_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port barbican-worker {{ om_rpc_port }}"]
+barbican_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+barbican_worker_healthcheck:
+  interval: "{{ barbican_worker_healthcheck_interval }}"
+  retries: "{{ barbican_worker_healthcheck_retries }}"
+  start_period: "{{ barbican_worker_healthcheck_start_period }}"
+  test: "{% if barbican_worker_enable_healthchecks | bool %}{{ barbican_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ barbican_worker_healthcheck_timeout }}"
 
 barbican_api_default_volumes:
   - "{{ node_config_directory }}/barbican-api/:{{ container_config_directory }}/:ro"
