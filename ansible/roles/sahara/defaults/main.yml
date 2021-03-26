@@ -9,6 +9,7 @@ sahara_services:
     image: "{{ sahara_api_image_full }}"
     volumes: "{{ sahara_api_default_volumes + sahara_api_extra_volumes }}"
     dimensions: "{{ sahara_api_dimensions }}"
+    healthcheck: "{{ sahara_api_healthcheck }}"
     haproxy:
       sahara_api:
         enabled: "{{ enable_sahara }}"
@@ -28,6 +29,7 @@ sahara_services:
     privileged: True
     volumes: "{{ sahara_engine_default_volumes + sahara_engine_extra_volumes }}"
     dimensions: "{{ sahara_engine_dimensions }}"
+    healthcheck: "{{ sahara_engine_healthcheck }}"
 
 
 ####################
@@ -54,6 +56,32 @@ sahara_api_image_full: "{{ sahara_api_image }}:{{ sahara_api_tag }}"
 
 sahara_api_dimensions: "{{ default_container_dimensions }}"
 sahara_engine_dimensions: "{{ default_container_dimensions }}"
+
+sahara_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+sahara_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+sahara_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+sahara_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+sahara_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ sahara_api_port }}"]
+sahara_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+sahara_api_healthcheck:
+  interval: "{{ sahara_api_healthcheck_interval }}"
+  retries: "{{ sahara_api_healthcheck_retries }}"
+  start_period: "{{ sahara_api_healthcheck_start_period }}"
+  test: "{% if sahara_api_enable_healthchecks | bool %}{{ sahara_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ sahara_api_healthcheck_timeout }}"
+
+sahara_engine_enable_healthchecks: "{{ enable_container_healthchecks }}"
+sahara_engine_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+sahara_engine_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+sahara_engine_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+sahara_engine_healthcheck_test: ["CMD-SHELL", "healthcheck_port sahara_engine {{ om_rpc_port }}"]
+sahara_engine_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+sahara_engine_healthcheck:
+  interval: "{{ sahara_engine_healthcheck_interval }}"
+  retries: "{{ sahara_engine_healthcheck_retries }}"
+  start_period: "{{ sahara_engine_healthcheck_start_period }}"
+  test: "{% if sahara_engine_enable_healthchecks | bool %}{{ sahara_engine_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ sahara_engine_healthcheck_timeout }}"
 
 sahara_api_default_volumes:
   - "{{ node_config_directory }}/sahara-api/:{{ container_config_directory }}/:ro"
