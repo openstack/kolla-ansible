@@ -9,6 +9,7 @@ kibana_services:
     group: "kibana"
     volumes: "{{ kibana_default_volumes + kibana_extra_volumes }}"
     dimensions: "{{ kibana_dimensions }}"
+    healthcheck: "{{ kibana_healthcheck }}"
     haproxy:
       kibana:
         enabled: "{{ enable_kibana }}"
@@ -43,6 +44,19 @@ kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_n
 kibana_tag: "{{ openstack_tag }}"
 kibana_image_full: "{{ kibana_image }}:{{ kibana_tag }}"
 kibana_dimensions: "{{ default_container_dimensions }}"
+
+kibana_enable_healthchecks: "{{ enable_container_healthchecks }}"
+kibana_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+kibana_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+kibana_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+kibana_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ kibana_server_port }}"]
+kibana_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+kibana_healthcheck:
+  interval: "{{ kibana_healthcheck_interval }}"
+  retries: "{{ kibana_healthcheck_retries }}"
+  start_period: "{{ kibana_healthcheck_start_period }}"
+  test: "{% if kibana_enable_healthchecks | bool %}{{ kibana_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ kibana_healthcheck_timeout }}"
 
 kibana_default_volumes:
   - "{{ node_config_directory }}/kibana/:{{ container_config_directory }}/:ro"
