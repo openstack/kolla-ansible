@@ -100,69 +100,67 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying over Octavia SSH key
-  copy:
-    content: "{{ octavia_amp_ssh_key.private_key }}"
-    dest: "{{ node_config_directory }}/octavia-worker/{{ octavia_amp_ssh_key_name }}"
-    owner: "{{ config_owner_user }}"
-    group: "{{ config_owner_group }}"
-    mode: "0400"
-  become: True
-  when: inventory_hostname in groups[octavia_services['octavia-worker']['group']]
+- block:
 
-- name: Copying certificate files for octavia-worker
-  vars:
-    service: "{{ octavia_services['octavia-worker'] }}"
-  copy:
-    src: "{{ node_custom_config }}/octavia/{{ item }}"
-    dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
-    mode: "0660"
-  become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - client.cert-and-key.pem
-    - client_ca.cert.pem
-    - server_ca.cert.pem
-    - server_ca.key.pem
-  notify:
-    - Restart octavia-worker container
+    - name: Copying over Octavia SSH key
+      copy:
+        content: "{{ octavia_amp_ssh_key.private_key }}"
+        dest: "{{ node_config_directory }}/octavia-worker/{{ octavia_amp_ssh_key_name }}"
+        owner: "{{ config_owner_user }}"
+        group: "{{ config_owner_group }}"
+        mode: "0400"
+      become: True
+      when: inventory_hostname in groups[octavia_services['octavia-worker']['group']]
 
-- name: Copying certificate files for octavia-housekeeping
-  vars:
-    service: "{{ octavia_services['octavia-housekeeping'] }}"
-  copy:
-    src: "{{ node_custom_config }}/octavia/{{ item }}"
-    dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
-    mode: "0660"
-  become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - client.cert-and-key.pem
-    - client_ca.cert.pem
-    - server_ca.cert.pem
-    - server_ca.key.pem
-  notify:
-    - Restart octavia-housekeeping container
+    - name: Copying certificate files for octavia-worker
+      vars:
+        service: "{{ octavia_services['octavia-worker'] }}"
+      copy:
+        src: "{{ node_custom_config }}/octavia/{{ item }}"
+        dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
+        mode: "0660"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+        - service.enabled | bool
+      with_items: "{{ octavia_amphora_keys }}"
+      notify:
+        - Restart octavia-worker container
 
-- name: Copying certificate files for octavia-health-manager
+    - name: Copying certificate files for octavia-housekeeping
+      vars:
+        service: "{{ octavia_services['octavia-housekeeping'] }}"
+      copy:
+        src: "{{ node_custom_config }}/octavia/{{ item }}"
+        dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
+        mode: "0660"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+        - service.enabled | bool
+      with_items: "{{ octavia_amphora_keys }}"
+      notify:
+        - Restart octavia-housekeeping container
+
+    - name: Copying certificate files for octavia-health-manager
+      vars:
+        service: "{{ octavia_services['octavia-health-manager'] }}"
+      copy:
+        src: "{{ node_custom_config }}/octavia/{{ item }}"
+        dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
+        mode: "0660"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+        - service.enabled | bool
+      with_items: "{{ octavia_amphora_keys }}"
+      notify:
+        - Restart octavia-health-manager container
+
+  when: "'amphora' in octavia_provider_drivers"
   vars:
-    service: "{{ octavia_services['octavia-health-manager'] }}"
-  copy:
-    src: "{{ node_custom_config }}/octavia/{{ item }}"
-    dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
-    mode: "0660"
-  become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - client.cert-and-key.pem
-    - client_ca.cert.pem
-    - server_ca.cert.pem
-    - server_ca.key.pem
-  notify:
-    - Restart octavia-health-manager container
+    octavia_amphora_keys:
+      - client.cert-and-key.pem
+      - client_ca.cert.pem
+      - server_ca.cert.pem
+      - server_ca.key.pem
