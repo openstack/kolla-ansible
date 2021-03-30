@@ -24,7 +24,7 @@ elif [ $1 = 'swift' ]; then
     mkfs.xfs -L d0 $free_partition
 elif [ $1 = 'ceph-lvm' ]; then
     free_device=$(losetup -f)
-    fallocate -l 10G /var/lib/ceph-osd1.img
+    fallocate -l 5G /var/lib/ceph-osd1.img
     losetup $free_device /var/lib/ceph-osd1.img
     pvcreate $free_device
     vgcreate cephvg $free_device
