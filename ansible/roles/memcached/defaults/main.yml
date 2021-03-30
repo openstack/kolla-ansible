@@ -9,6 +9,7 @@ memcached_services:
     group: "memcached"
     volumes: "{{ memcached_default_volumes + memcached_extra_volumes }}"
     dimensions: "{{ memcached_dimensions }}"
+    healthcheck: "{{ memcached_healthcheck }}"
     haproxy:
       memcached:
         enabled: "{{ enable_memcached|bool and enable_haproxy_memcached|bool }}"
@@ -35,6 +36,19 @@ memcached_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 memcached_tag: "{{ openstack_tag }}"
 memcached_image_full: "{{ memcached_image }}:{{ memcached_tag }}"
 memcached_dimensions: "{{ default_container_dimensions }}"
+
+memcached_enable_healthchecks: "{{ enable_container_healthchecks }}"
+memcached_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+memcached_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+memcached_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+memcached_healthcheck_test: ["CMD-SHELL", "healthcheck_listen memcached {{ memcached_port }}"]
+memcached_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+memcached_healthcheck:
+  interval: "{{ memcached_healthcheck_interval }}"
+  retries: "{{ memcached_healthcheck_retries }}"
+  start_period: "{{ memcached_healthcheck_start_period }}"
+  test: "{% if memcached_enable_healthchecks | bool %}{{ memcached_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ memcached_healthcheck_timeout }}"
 
 memcached_default_volumes:
   - "{{ node_config_directory }}/memcached/:{{ container_config_directory }}/:ro"
