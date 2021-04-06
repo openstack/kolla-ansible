@@ -32,6 +32,9 @@ copy_logs() {
     parted -l > ${LOG_DIR}/system_logs/parted-l.txt
     mount > ${LOG_DIR}/system_logs/mount.txt
     env > ${LOG_DIR}/system_logs/env.txt
+    systemctl status > ${LOG_DIR}/system_logs/systemctl_status.txt
+    systemctl list-units --all > ${LOG_DIR}/system_logs/systemctl_units.txt
+    systemctl list-unit-files > ${LOG_DIR}/system_logs/systemctl_unit_files.txt
 
     (set -x
     ip a
