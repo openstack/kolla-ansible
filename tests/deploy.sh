@@ -17,8 +17,7 @@ function deploy {
     sudo chmod -R 777 /etc/kolla
     # Actually do the deployment
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/deploy-prechecks
-    # TODO(jeffrey4l): add pull action when we have a local registry
-    # service in CI
+    tools/kolla-ansible -i ${RAW_INVENTORY} -vvv pull &> /tmp/logs/ansible/pull
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv deploy &> /tmp/logs/ansible/deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy &> /tmp/logs/ansible/post-deploy
     tools/kolla-ansible -i ${RAW_INVENTORY} -vvv check &> /tmp/logs/ansible/check-deploy
