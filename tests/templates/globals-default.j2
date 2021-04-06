@@ -33,6 +33,12 @@ enable_openstack_core: "{{ openstack_core_enabled }}"
 enable_horizon: "{{ dashboard_enabled }}"
 enable_heat: "{{ openstack_core_tested }}"
 
+# TODO(yoctozepto): Remove this in the Xena cycle.
+# We have to keep it for now for upgrades because dropping chronyd inbetween
+# will make prechecks fail due to lack of proper host-level timesync (chronyd
+# is containerized and the host-level client either removed or fought with).
+enable_chrony: "no"
+
 {% if scenario != 'bifrost' %}
 kolla_internal_vip_address: "{{ kolla_internal_vip_address }}"
 neutron_external_interface: "{{ neutron_external_interface_name }}"
@@ -107,7 +113,6 @@ enable_cells: "yes"
 {% endif %}
 
 {% if scenario == "mariadb" %}
-enable_chrony: "no"
 enable_fluentd: "yes"
 enable_mariadb: "yes"
 enable_memcached: "no"
@@ -115,8 +120,6 @@ enable_rabbitmq: "no"
 {% endif %}
 
 {% if scenario == "cephadm" %}
-# Disable chrony - cephadm requires chronyd.service running
-enable_chrony: "no"
 # kolla-ansible vars
 enable_cinder: "yes"
 # External Ceph
@@ -156,7 +159,6 @@ enable_octavia: "yes"
 {% endif %}
 
 {% if scenario == "prometheus-efk" %}
-enable_chrony: "no"
 enable_central_logging: "yes"
 enable_grafana: "yes"
 enable_prometheus: "yes"
