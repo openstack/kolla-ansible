@@ -54,7 +54,7 @@ them sent directly to Elasticsearch. This should be avoided if you have
 deployed Monasca as a standalone service for the purpose of storing
 logs in a protected silo for security purposes. However, if this is not
 a relevant consideration, for example you have deployed Monasca alongside the
-existing Openstack control plane, then you may free up some resources by
+existing OpenStack control plane, then you may free up some resources by
 setting:
 
 .. code-block:: yaml
@@ -73,7 +73,7 @@ logs using the same index pattern in Kibana, then you can override
 
 If you have enabled Elasticsearch Curator, it will be configured to rotate
 logs with index patterns matching either ``^flog-.*`` or ``^monasca-.*`` by
-default. If this is undesirable then you can update the
+default. If this is undesirable, then you can update the
 ``elasticsearch_curator_index_pattern`` variable accordingly.
 
 Currently Monasca is only supported using the ``source`` install type Kolla
