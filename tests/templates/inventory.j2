@@ -125,6 +125,32 @@ storage
 [elasticsearch:children]
 control
 
+# NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
+# we are forced to separate remotes from full members.
+# This is not as bad as it sounds, because it would be enforced in
+# non-containerised environments anyway.
+#[hacluster:children]
+#control
+[hacluster]
+{% for host in hostvars %}
+{% if 'ternary' not in host %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endif %}
+{% endfor %}
+
+# NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
+# we are forced to separate remotes from full members.
+# This is not as bad as it sounds, because it would be enforced in
+# non-containerised environments anyway.
+#[hacluster-remote:children]
+#compute
+[hacluster-remote]
+{% for host in hostvars %}
+{% if 'ternary' in host %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endif %}
+{% endfor %}
+
 [haproxy:children]
 network
 

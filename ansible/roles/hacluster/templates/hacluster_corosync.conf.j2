@@ -1,0 +1,36 @@
+totem {
+    version: 2
+    cluster_name: kolla-hacluster
+    crypto_cipher: aes256
+    crypto_hash: sha384
+    secauth: yes
+    transport: knet
+    # NOTE(yoctozepto): despite the name, this controls knet recv port
+    mcastport: {{ hacluster_corosync_port }}
+}
+
+nodelist {
+{% for host in groups['hacluster'] | sort %}
+    node {
+        ring0_addr: {{ 'api' | kolla_address(host) }}
+        name: {{ hostvars[host]['ansible_hostname'] }}
+        nodeid: {{ loop.index }}
+    }
+{% endfor %}
+}
+
+quorum {
+    provider: corosync_votequorum
+{% if groups['hacluster'] | length == 2 %}
+    two_node: 1
+{% endif %}
+}
+
+logging {
+    debug: {{ 'on' if openstack_logging_debug | bool else 'off' }}
+    to_logfile: yes
+    logfile: /var/log/kolla/hacluster/corosync.log
+    to_stderr: no
+    to_syslog: no
+    timestamp: on
+}

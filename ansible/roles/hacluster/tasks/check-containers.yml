@@ -1,0 +1,25 @@
+---
+- name: Check hacluster containers
+  become: true
+  kolla_docker:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image | default(omit) }}"
+    volumes: "{{ service.volumes | default(omit) }}"
+    dimensions: "{{ service.dimensions | default(omit) }}"
+    volumes_from: "{{ service.volumes_from | default(omit) }}"
+    privileged: "{{ service.privileged | default(omit) }}"
+    cap_add: "{{ service.cap_add | default(omit) }}"
+    environment: "{{ service.environment | default(omit) }}"
+    ipc_mode: "{{ service.ipc_mode | default(omit) }}"
+    pid_mode: "{{ service.pid_mode | default(omit) }}"
+    security_opt: "{{ service.security_opt | default(omit) }}"
+    labels: "{{ service.labels | default(omit) }}"
+    command: "{{ service.command | default(omit) }}"
+  vars:
+    service_name: "{{ item.key }}"
+    service: "{{ item.value }}"
+  with_dict: "{{ hacluster_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ service_name }} container"

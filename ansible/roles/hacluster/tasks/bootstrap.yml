@@ -1,0 +1,42 @@
+---
+- name: Ensure config directories exist
+  file:
+    path: "{{ node_custom_config }}/{{ item }}"
+    state: directory
+  delegate_to: localhost
+  changed_when: False
+  check_mode: no
+  run_once: True
+  with_items:
+    - hacluster-corosync
+    - hacluster-pacemaker
+
+- name: Check if Corosync authkey file exists
+  stat:
+    path: "{{ node_custom_config }}/hacluster-corosync/authkey"
+  delegate_to: localhost
+  run_once: True
+  register: hacluster_corosync_authkey_file
+
+- name: Check if Pacemaker authkey file exists
+  stat:
+    path: "{{ node_custom_config }}/hacluster-pacemaker/authkey"
+  delegate_to: localhost
+  run_once: True
+  register: hacluster_pacemaker_authkey_file
+
+- name: Generating Corosync authkey file
+  command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-corosync/authkey bs=4096 count=1"
+  delegate_to: localhost
+  changed_when: False
+  check_mode: no
+  run_once: True
+  when: not hacluster_corosync_authkey_file.stat.exists
+
+- name: Generating Pacemaker authkey file
+  command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-pacemaker/authkey bs=4096 count=1"
+  delegate_to: localhost
+  changed_when: False
+  check_mode: no
+  run_once: True
+  when: not hacluster_pacemaker_authkey_file.stat.exists

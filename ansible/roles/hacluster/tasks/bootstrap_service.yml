@@ -1,0 +1,34 @@
+---
+- name: Ensure stonith is disabled
+  vars:
+    service: "{{ hacluster_services['hacluster-pacemaker'] }}"
+  command: docker exec {{ service.container_name }} crm_attribute --type crm_config --name stonith-enabled --update false
+  run_once: true
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Ensure remote node is added
+  vars:
+    pacemaker_service: "{{ hacluster_services['hacluster-pacemaker'] }}"
+    pacemaker_remote_service: "{{ hacluster_services['hacluster-pacemaker-remote'] }}"
+  shell: >
+    docker exec {{ pacemaker_service.container_name }}
+    cibadmin --modify --scope resources -X '
+      <resources>
+        <primitive id="{{ ansible_hostname }}" class="ocf" provider="pacemaker" type="remote">
+          <instance_attributes id="{{ ansible_hostname }}-instance_attributes">
+            <nvpair id="{{ ansible_hostname }}-instance_attributes-server" name="server" value="{{ 'api' | kolla_address }}"/>
+          </instance_attributes>
+          <operations>
+            <op id="{{ ansible_hostname }}-monitor" name="monitor" interval="60" timeout="30"/>
+          </operations>
+        </primitive>
+      </resources>
+    '
+  become: true
+  delegate_to: "{{ groups[pacemaker_service.group][0] }}"
+  when:
+    - inventory_hostname in groups[pacemaker_remote_service.group]
+    - pacemaker_remote_service.enabled | bool
