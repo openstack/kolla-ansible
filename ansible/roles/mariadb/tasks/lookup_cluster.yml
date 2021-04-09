@@ -9,12 +9,12 @@
 
 - name: Divide hosts by their MariaDB volume availability
   group_by:
-    key: mariadb_had_volume_{{ mariadb_volume is not changed }}
+    key: "{{ mariadb_shard_group }}_had_volume_{{ mariadb_volume is not changed }}"
   changed_when: false
 
 - name: Establish whether the cluster has already existed
   set_fact:
-    mariadb_cluster_exists: "{{ groups.mariadb_had_volume_True is defined }}"
+    mariadb_cluster_exists: "{{ groups[mariadb_shard_group + '_had_volume_True'] is defined }}"
 
 - block:
     - name: Check MariaDB service port liveness
@@ -29,7 +29,7 @@
 
     - name: Divide hosts by their MariaDB service port liveness
       group_by:
-        key: mariadb_port_alive_{{ check_mariadb_port_liveness is success }}
+        key: "{{ mariadb_shard_group }}_port_alive_{{ check_mariadb_port_liveness is success }}"
       changed_when: false
 
     - name: Fail on existing but stopped cluster
@@ -37,9 +37,9 @@
         msg: MariaDB cluster exists but is stopped. Please start it using kolla-ansible mariadb_recovery
       when:
         # NOTE(yoctozepto): we allow single-node cluster to start
-        - groups['mariadb'] | length > 1
+        - groups[mariadb_shard_group] | length > 1
         - mariadb_cluster_exists
-        - groups.mariadb_port_alive_True is not defined
+        - groups[mariadb_shard_group + '_port_alive_True'] is not defined
 
     - block:
         - name: Check MariaDB service WSREP sync status
@@ -60,19 +60,20 @@
           set_fact:
             mariadb_sync_status: "{{ check_mariadb_sync_status.stdout.split('\t')[1] }}"
       when:
-        - groups.mariadb_port_alive_True is defined
-        - inventory_hostname in groups.mariadb_port_alive_True
+        - groups[mariadb_shard_group + '_port_alive_True'] is defined
+        - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
 
     - name: Divide hosts by their MariaDB service WSREP sync status
       group_by:
-        key: mariadb_sync_status_{{ mariadb_sync_status | default('NA') }}
+        key: "{{ mariadb_shard_group }}_sync_status_{{ mariadb_sync_status | default('NA') }}"
       changed_when: false
 
     - name: Fail when MariaDB services are not synced across the whole cluster
       fail:
         msg: MariaDB cluster is not synced. Please wait for WSREP sync before proceeding.
       when:
-        - groups.mariadb_port_alive_True is defined
-        - groups.mariadb_sync_status_Synced is not defined or
-          groups.mariadb_port_alive_True | sort != groups.mariadb_sync_status_Synced | sort
+        - groups[mariadb_shard_group + '_port_alive_True'] is defined
+        - groups[mariadb_shard_group + '_sync_status_Synced'] is not defined or
+          groups[mariadb_shard_group + '_port_alive_True'] | sort != groups[mariadb_shard_group + '_sync_status_Synced'] | sort
+
   when: not mariadb_recover | default(False)

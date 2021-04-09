@@ -57,7 +57,7 @@
       login_port: "{{ mariadb_port }}"
       login_user: "{{ database_user }}"
       login_password: "{{ database_password }}"
-      name: "haproxy"
+      name: "{{ mariadb_monitor_user }}"
       password: ""
       host: "%"
       priv: "*.*:USAGE"
@@ -66,9 +66,9 @@
 - name: Restart MariaDB on existing cluster members
   include_tasks: 'restart_services.yml'
   when:
-    - groups.mariadb_port_alive_True is defined
-    - inventory_hostname in groups.mariadb_port_alive_True
-    - groups.mariadb_port_alive_True.index(inventory_hostname) % 4 == item
+    - groups[mariadb_shard_group + '_port_alive_True'] is defined
+    - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
+    - groups[mariadb_shard_group + '_port_alive_True'].index(inventory_hostname) % 4 == item
     - kolla_action != "config"
   listen: restart mariadb
   loop:
@@ -81,8 +81,8 @@
   include_tasks: 'restart_services.yml'
   when:
     - bootstrap_host is not defined or bootstrap_host != inventory_hostname
-    - groups.mariadb_port_alive_False is defined
-    - inventory_hostname in groups.mariadb_port_alive_False
+    - groups[mariadb_shard_group + '_port_alive_False'] is defined
+    - inventory_hostname in groups[mariadb_shard_group + '_port_alive_False']
     - kolla_action != "config"
   listen: restart mariadb
 

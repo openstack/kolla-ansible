@@ -1,9 +1,16 @@
 ---
-- name: Waiting for MariaDB service to be ready through VIP
+# Explicitly wait for the database to be accessible via the load balancer.
+# Sometimes it can reject connections even when all database services are up,
+# due to the health check polling in HAProxy.
+- name: Wait for MariaDB service to be ready through VIP
   become: true
-  command: "docker exec {{ mariadb_service.container_name }} mysql -h {{ database_address }} -P {{ database_port }} -u haproxy -e 'show databases;'"
+  command: >
+    docker exec {{ mariadb_service.container_name }}
+    mysql -h {{ database_address }} -P {{ database_port }}
+    -u {{ mariadb_shard_database_user }} -p{{ database_password }} -e 'show databases;'
   register: result
   until: result is success
   changed_when: False
   retries: 6
   delay: 10
+  when: mariadb_shard_id == mariadb_default_database_shard_id
