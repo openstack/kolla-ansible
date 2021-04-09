@@ -162,6 +162,15 @@
         state: directory
       become: true
 
+    # Workaround for distutils.errors.DistutilsError: Could not find suitable
+    # distribution for Requirement.parse('pbr>=2.0.0') in the next task
+    - name: ensure setuptools is updated
+      pip:
+        name: "setuptools"
+        executable: "pip{{ playbook_python_version }}"
+        extra_args: "-c {{ upper_constraints_file }} --user"
+        state: latest
+
     - name: install kolla-ansible and dependencies
       vars:
         # Test latest ansible version on Ubuntu and CentOS 8, minimum supported on others.
