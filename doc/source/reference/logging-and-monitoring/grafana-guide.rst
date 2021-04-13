@@ -35,9 +35,11 @@ Custom dashboards provisioning
 
 Kolla Ansible sets custom dashboards provisioning using `Dashboard provider <https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards>`_.
 
-Dashboard's JSON files should be placed into
-``{{ node_custom_config }}/grafana/dashboards/`` folder.
-Dashboards will be imported to Grafana dashboards General Folder.
+Dashboard JSON files should be placed into the
+``{{ node_custom_config }}/grafana/dashboards/`` folder. The use of
+sub-folders is also supported when using a custom ``provisioning.yaml``
+file. Dashboards will be imported into the Grafana dashboards 'General'
+folder by default.
 
 Grafana provisioner config can be altered by placing ``provisioning.yaml`` to
 ``{{ node_custom_config }}/grafana/`` folder.
