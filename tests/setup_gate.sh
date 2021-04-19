@@ -99,7 +99,7 @@ function prepare_images {
 
     if [[ $SCENARIO == "monasca" ]]; then
         # FIXME(mgoddard): No need for OpenStack core images.
-        GATE_IMAGES+=",^elasticsearch,^influxdb,^kafka,^kibana,^logstash,^monasca,^storm,^zookeeper"
+        GATE_IMAGES+=",^elasticsearch,^grafana,^influxdb,^kafka,^kibana,^logstash,^monasca,^storm,^zookeeper"
     fi
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]

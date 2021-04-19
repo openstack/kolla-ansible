@@ -1,39 +1,9 @@
 ---
-- name: Checking if Monasca Grafana container needs upgrading
-  vars:
-    service_name: "monasca-grafana"
-    service: "{{ monasca_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "compare_image"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ project_name }}"
-    image: "{{ monasca_grafana_image_full }}"
-  when: inventory_hostname in groups['monasca-grafana']
-  register: monasca_grafana_differs
-
 - import_tasks: config.yml
 
 - import_tasks: cleanup.yml
 
 - import_tasks: check-containers.yml
-
-# NOTE(dszumski): We don't want old Grafana instances running after
-# a new instance has updated the DB schema. Since the first instance
-# is upgraded first, we stop all the other ones.
-- name: Stopping all Monasca Grafana instances but the first node
-  vars:
-    service_name: "monasca-grafana"
-    service: "{{ monasca_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-  when:
-    - inventory_hostname in groups['monasca-grafana']
-    - inventory_hostname != groups['monasca-grafana']|first
-    - monasca_grafana_differs['result']
 
 - import_tasks: register.yml
 
