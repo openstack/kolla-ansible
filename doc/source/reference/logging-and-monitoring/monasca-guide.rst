@@ -261,9 +261,25 @@ Alternatively we could have assigned the user the read only role:
 
     openstack role add monasca_read_only_user --project monasca_control_plane --user mon_user
 
-The user is now active and the credentials can be used to log into the
-Monasca fork of Grafana which will be available by default on port `3001` on
-both internal and external VIPs.
+The user is now active and the credentials can be used to generate an
+OpenStack token which can be added to the Monasca Grafana datasource in
+Grafana. For example, first set the OpenStack credentials for the project
+you wish to view metrics in. This is normally easiest to do by logging into
+Horizon with the user you have configured for monitoring, switching to
+the OpenStack project you wish to view metrics in, and then downloading
+the credentials file for that project. The credentials file can then
+be sourced from the command line. You can then generate a token for the
+datasource using the following command:
+
+.. code-block:: console
+
+   openstack token issue
+
+You should then log into Grafana. By default Grafana is available on port
+`3000` on both internal and external VIPs. See the
+:ref:`Grafana guide<grafana-guide>` for further details. Once in Grafana
+you can select the Monasca datasource and add your token to it. You are
+then ready to view metrics from Monasca.
 
 For log analysis Kibana is also available, by default on port `5601` on both
 internal and external VIPs. Currently the Keystone authentication plugin is
@@ -280,25 +296,16 @@ databases. Migration of time series or log data is not considered.
 Migrating service databases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first step is to dump copies of the existing databases from wherever
-they are deployed. For example:
+The first step is to dump copies of the existing Monasca database. For example:
 
 .. code-block:: console
 
-   mysqldump -h 10.0.0.1 -u grafana_db_user -p grafana_db > grafana_db.sql
    mysqldump -h 10.0.0.1 -u monasca_db_user -p monasca_db > monasca_db.sql
 
-These can then be loaded into the Kolla managed databases. Note that it
-simplest to get the database password, IP and port from the Monasca API Kolla
-config file in `/etc/kolla/monasca-api`. Note that the commands below drop and
-recreate each database before loading in the existing database.
-
-.. code-block:: console
-
-   mysql -h 192.168.0.1 -u monasca -p -e "drop database monasca_grafana; create database monasca_grafana;"
-   mysql -h 192.168.0.1 -u monasca -p monasca_grafana < grafana_db.sql
-
-A similar procedure is used to load the Monasca service database:
+This can then be used to replace the Kolla managed Monasca database. Note that
+it is simplest to get the database password, IP and port from the Monasca API
+Kolla config file in `/etc/kolla/monasca-api`. Also note that the commands
+below drop and recreate the database before loading in the existing database.
 
 .. code-block:: console
 
@@ -317,7 +324,6 @@ The passwords which you may wish to set to match the original passwords are:
 .. code-block:: console
 
    monasca_agent_password:
-   monasca_grafana_admin_password:
 
 These can be found in the Kolla Ansible passwords file.
 
@@ -445,13 +451,11 @@ Thresh and Monasca Notification. This can have a significant effect.
 Security impact
 ~~~~~~~~~~~~~~~
 
-The Monasca API, Log API and Grafana fork will be exposed on public
-endpoints via HAProxy/Keepalived. If your public endpoints are exposed
-externally, then you should use a firewall to restrict access. In
-particular, external access to the Monasca Grafana endpoint should be
-blocked, since it is effectively unmaintained and is likely to contain
-unpatched vulnerabilities. You should also consider whether you
-wish to allow tenants to access these services on the internal network.
+The Monasca API, Log API, Grafana and Kibana ports will be exposed on
+public endpoints via HAProxy/Keepalived. If your public endpoints are
+exposed externally, then you should use a firewall to restrict access.
+You should also consider whether you wish to allow tenants to access
+these services on the internal network.
 
 If you are using the multi-tenant capabilities of Monasca there is a risk
 that tenants could gain access to other tenants logs and metrics. This could

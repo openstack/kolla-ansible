@@ -86,10 +86,12 @@ monasca_services:
     image: "{{ monasca_agent_image_full }}"
     volumes: "{{ monasca_agent_forwarder_default_volumes + monasca_agent_forwarder_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
+  # TODO(dszumski): Remove monasca-grafana entry here and all other references after the
+  # Xena release. It exists here to support cleanup operations.
   monasca-grafana:
     container_name: monasca_grafana
     group: monasca-grafana
-    enabled: true
+    enabled: false
     image: "{{ monasca_grafana_image_full }}"
     volumes: "{{ monasca_grafana_default_volumes + monasca_grafana_extra_volumes }}"
     dimensions: "{{ monasca_grafana_dimensions }}"
@@ -110,7 +112,6 @@ monasca_services:
 ####################
 monasca_database_name: "monasca"
 monasca_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}monasca{% endif %}"
-monasca_grafana_database_name: "monasca_grafana"
 monasca_database_address: "{{ database_address }}"
 monasca_database_port: "{{ database_port }}"
 
@@ -222,23 +223,6 @@ monasca_agent_check_frequency: 30
 # exceed the Kafka topic partition count.
 monasca_log_pipeline_threads: 2
 monasca_metric_pipeline_threads: 2
-
-# Local password for Grafana. This account allows you to bypass Keystone
-# authentication. This must *not* match any OpenStack username.
-monasca_grafana_admin_username: "grafana_local_admin"
-
-monasca_grafana_data_sources:
-  monasca:
-    enabled: True
-    data:
-      name: "Monasca API"
-      type: "monasca-datasource"
-      access: "proxy"
-      url: "{{ monasca_api_internal_base_endpoint }}"
-      isDefault: True
-      basicAuth: false
-      jsonData:
-        keystoneAuth: True
 
 ####################
 # Docker
@@ -384,8 +368,6 @@ monasca_api_internal_endpoint: "{{ monasca_api_internal_base_endpoint }}/v2.0"
 monasca_api_public_endpoint: "{{ monasca_api_public_base_endpoint }}/v2.0"
 
 monasca_logging_debug: "{{ openstack_logging_debug }}"
-
-monasca_grafana_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_grafana_server_port }}"
 
 ####################
 # Keystone
