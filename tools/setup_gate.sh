@@ -25,6 +25,7 @@ function setup_openstack_clients {
     fi
     virtualenv ~/openstackclient-venv
     ~/openstackclient-venv/bin/pip install -U pip
+    ~/openstackclient-venv/bin/pip install -U setuptools
     ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
 }
 
@@ -111,6 +112,10 @@ EOF
 
     virtualenv ~/kolla-venv
     . ~/kolla-venv/bin/activate
+
+    # Install newest setuptools to avoid issues on Python 2
+    pip install -U pip
+    pip install -U setuptools
 
     pip install -c $UPPER_CONSTRAINTS "${KOLLA_SRC_DIR}"
 
