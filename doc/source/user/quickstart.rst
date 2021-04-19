@@ -98,11 +98,12 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
    The virtual environment should be activated before running any commands that
    depend on packages installed in it.
 
-#. Ensure the latest version of pip is installed:
+#. Ensure the latest version of pip and setuptools are installed:
 
    .. code-block:: console
 
       pip install -U pip
+      pip install -U setuptools
 
 #. Install `Ansible <http://www.ansible.com>`__. Currently, Kolla Ansible
    requires Ansible 2.6 to 2.9.
@@ -130,11 +131,12 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
       sudo apt-get install python-pip
 
-#. Ensure the latest version of pip is installed:
+#. Ensure the latest version of pip and setuptools are installed:
 
    .. code-block:: console
 
       sudo pip install -U pip
+      sudo pip install -U setuptools
 
 #. Install `Ansible <http://www.ansible.com>`__. Currently, Kolla Ansible
    requires Ansible 2.6 to 2.9.
