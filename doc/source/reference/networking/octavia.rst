@@ -396,3 +396,21 @@ Upgrade
 If you upgrade from the Ussuri release, you must disable
 ``octavia_auto_configure`` in ``globals.yml`` and keep your other octavia
 config as before.
+
+Development or Testing
+======================
+
+Kolla Ansible provides a simple way to setup Octavia networking for
+development or testing, when using the Neutron Open vSwitch ML2 mechanism
+driver. In this case, Kolla Ansible will create a tenant
+network and configure Octavia control services to access it. Please do not
+use this option in production, the network may not be reliable enough for
+production.
+
+Add ``octavia_network_type`` to ``globals.yml`` and set the value to ``tenant``
+
+.. code-block:: yaml
+
+   octavia_network_type: "tenant"
+
+Next，follow the deployment instructions as normal.
