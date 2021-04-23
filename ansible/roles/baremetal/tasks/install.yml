@@ -46,6 +46,26 @@
   changed_when: false
   register: running_containers
 
+# APT starts Docker engine right after installation, which creates
+# iptables rules before we disable iptables in Docker config
+
+- name: Check if docker systemd unit exists
+  stat:
+    path: /etc/systemd/system/docker.service
+  register: docker_unit_file
+
+- name: Mask the docker systemd unit on Debian/Ubuntu
+  file:
+    src: /dev/null
+    dest: /etc/systemd/system/docker.service
+    owner: root
+    group: root
+    state: link
+  become: true
+  when:
+    - ansible_os_family == 'Debian'
+    - not docker_unit_file.stat.exists
+
 - name: Install apt packages
   package:
     name: "{{ (debian_pkg_install | join(' ')).split() }}"
@@ -73,6 +93,26 @@
   when: ansible_os_family == 'RedHat'
   register: rpm_install_result
 
+# Workaround older Ansible that fails systemd tasks
+# when unit is masked
+
+- name: Check if docker service is masked
+  become: True
+  stat:
+    path: /etc/systemd/system/docker.service
+  register: docker_unit_masked
+  when: ansible_os_family == 'Debian'
+
+- name: Unmask docker service
+  become: True
+  file:
+    path: /etc/systemd/system/docker.service
+    state: absent
+  when:
+    - ansible_os_family == 'Debian'
+    - docker_unit_masked.stat.islnk
+    - docker_unit_masked.stat.lnk_source == '/dev/null'
+
 # If any packages were updated, and any containers were running, wait for the
 # daemon to come up and start all previously running containers.
 
@@ -80,10 +120,11 @@
     # At some point (at least on CentOS 7) Docker CE stopped starting
     # automatically after an upgrade from legacy docker . Start it manually.
     - name: Start docker
-      service:
+      systemd:
         name: docker
         state: started
         enabled: yes
+        masked: no
       become: True
 
     - name: Wait for Docker to start
