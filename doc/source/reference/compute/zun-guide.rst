@@ -23,7 +23,7 @@ following variables:
    docker_configure_for_zun: "yes"
    containerd_configure_for_zun: "yes"
 
-Docker reconfiguration requires reboostrapping before deploy.
+Docker reconfiguration requires rebootstrapping before deploy.
 Make sure you understand the consequences of restarting Docker.
 Please see :ref:`rebootstrapping` for details.
 If it's initial deploy, then there is nothing to worry about
