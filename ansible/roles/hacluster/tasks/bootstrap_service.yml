@@ -5,9 +5,7 @@
   command: docker exec {{ service.container_name }} crm_attribute --type crm_config --name stonith-enabled --update false
   run_once: true
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  delegate_to: "{{ groups[service.group][0] }}"
 
 - name: Ensure remote node is added
   vars:
