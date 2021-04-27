@@ -27,10 +27,12 @@ monasca_services:
     image: "{{ monasca_logstash_image_full }}"
     volumes: "{{ monasca_log_persister_default_volumes + monasca_log_persister_extra_volumes }}"
     dimensions: "{{ monasca_log_persister_dimensions }}"
+  # TODO(dszumski): We can remove log-metrics and all other references to it after
+  # the Xena release. This is used for cleaning up the service.
   monasca-log-metrics:
     container_name: monasca_log_metrics
     group: monasca-log-metrics
-    enabled: "{{ monasca_enable_log_metrics_service | bool }}"
+    enabled: false
     image: "{{ monasca_logstash_image_full }}"
     volumes: "{{ monasca_log_metrics_default_volumes + monasca_log_metrics_extra_volumes }}"
     dimensions: "{{ monasca_log_metrics_dimensions }}"
@@ -118,10 +120,6 @@ monasca_influxdb_retention_policy:
 ####################
 # Monasca
 ####################
-
-# NOTE(dszumski): This can be removed in the Xena cycle when the
-# log metrics service is removed
-monasca_enable_log_metrics_service: False
 
 monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
