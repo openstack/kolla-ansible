@@ -231,24 +231,6 @@
   notify:
     - Restart monasca-log-persister container
 
-- name: Copying over monasca-log-metrics config
-  vars:
-    service: "{{ monasca_services['monasca-log-metrics'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/monasca-log-metrics/log-metrics.conf"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_custom_config }}/monasca/{{ inventory_hostname }}/log-metrics.conf"
-    - "{{ node_custom_config }}/monasca/log-metrics.conf"
-    - "{{ role_path }}/templates/monasca-log-metrics/log-metrics.conf.j2"
-  when:
-    - inventory_hostname in groups[service['group']]
-    - service.enabled | bool
-  notify:
-    - Restart monasca-log-metrics container
-
 - name: Copying over monasca-thresh config
   vars:
     service: "{{ monasca_services['monasca-thresh'] }}"
