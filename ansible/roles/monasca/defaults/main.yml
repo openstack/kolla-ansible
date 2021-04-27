@@ -20,15 +20,6 @@ monasca_services:
         mode: "http"
         external: true
         port: "{{ monasca_api_port }}"
-  # NOTE(dszumski): We can remove log_transformer and all other references after the
-  # Wallaby release
-  monasca-log-transformer:
-    container_name: monasca_log_transformer
-    group: monasca-log-transformer
-    enabled: false
-    image: "{{ monasca_logstash_image_full }}"
-    volumes: "{{ monasca_log_transformer_default_volumes + monasca_log_transformer_extra_volumes }}"
-    dimensions: "{{ monasca_log_transformer_dimensions }}"
   monasca-log-persister:
     container_name: monasca_log_persister
     group: monasca-log-persister
@@ -264,7 +255,6 @@ monasca_grafana_image_full: "{{ monasca_grafana_image }}:{{ monasca_grafana_tag 
 monasca_agent_dimensions: "{{ default_container_dimensions }}"
 monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
-monasca_log_transformer_dimensions: "{{ default_container_dimensions }}"
 monasca_log_persister_dimensions: "{{ default_container_dimensions }}"
 monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 monasca_thresh_dimensions: "{{ default_container_dimensions }}"
@@ -294,12 +284,6 @@ monasca_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
-monasca_log_transformer_default_volumes:
-  - "{{ node_config_directory }}/monasca-log-transformer/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla"
-  - "monasca_log_transformer_data:/var/lib/logstash"
 monasca_log_persister_default_volumes:
   - "{{ node_config_directory }}/monasca-log-persister/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -339,7 +323,6 @@ monasca_agent_collector_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_agent_statsd_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_agent_forwarder_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_api_extra_volumes: "{{ monasca_extra_volumes }}"
-monasca_log_transformer_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_log_persister_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_thresh_extra_volumes: "{{ monasca_extra_volumes }}"
