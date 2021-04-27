@@ -229,5 +229,10 @@ then the SELinux state will be set to ``selinux_state`` (default
 Configuration of NTP daemon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. warning::
+   Support for configuration of NTP daemon is deprecated and will be removed in
+   the next Kolla Ansible release (Xena).
+   Please use other means of configuring NTP.
+
 This is optional, and enabled by ``enable_host_ntp``, which is ``false`` by
 default.
