@@ -66,7 +66,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "scenario_nfv" ]]; then
-        GATE_IMAGES+=",^tacker,^mistral,^redis,^barbican"
+        GATE_IMAGES+=",^aodh,^tacker,^mistral,^redis,^barbican"
     fi
     if [[ $SCENARIO == "ironic" ]]; then
         GATE_IMAGES+=",^dnsmasq,^ironic,^iscsid"
