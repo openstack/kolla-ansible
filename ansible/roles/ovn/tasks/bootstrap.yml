@@ -22,12 +22,12 @@
       record: .
       col: external_ids
       key: "{{ item.name }}"
-      value: "{{ item.value }}"
+      value: "{{ item.value if item.state | default('present') == 'present' else omit }}"
       state: "{{ item.state | default('present') }}"
   loop:
     - { name: ovn-encap-ip, value: "{{ tunnel_interface_address }}" }
     - { name: ovn-encap-type, value: geneve }
     - { name: ovn-remote, value: "{{ ovn_sb_connection }}" }
     - { name: ovn-remote-probe-interval, value: "{{ ovn_remote_probe_interval }}" }
-    - { name: ovn-bridge-mappings, value: "{{ ovn_mappings if ovn_mappings != '' else omit }}", state: "{{ 'present' if (inventory_hostname in groups['ovn-controller-network'] or computes_need_external_bridge | bool) else 'absent' }}" }
+    - { name: ovn-bridge-mappings, value: "{{ ovn_mappings }}", state: "{{ 'present' if (inventory_hostname in groups['ovn-controller-network'] or computes_need_external_bridge | bool) else 'absent' }}" }
     - { name: ovn-cms-options, value: "{{ ovn_cms_opts }}", state: "{{ 'present' if ovn_cms_opts != '' else 'absent' }}" }
