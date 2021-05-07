@@ -64,43 +64,48 @@
 
 - name: Copying over masakari.conf
   vars:
-    service: "{{ item.key }}"
+    service_name: "{{ item }}"
+    service: "{{ masakari_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/masakari.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/masakari.conf"
-      - "{{ node_custom_config }}/masakari/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/masakari/{{ service_name }}.conf"
       - "{{ node_custom_config }}/masakari/{{ inventory_hostname }}/masakari.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/masakari.conf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/masakari.conf"
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ masakari_services }}"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - masakari-api
+    - masakari-engine
   notify:
-    - Restart {{ item.key }} container
+    - Restart {{ service_name }} container
 
 - name: Copying over masakari-monitors.conf
   vars:
-    service: "{{ item.key }}"
+    service_name: "{{ item }}"
+    service: "{{ masakari_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/masakari-monitors.conf.j2"
       - "{{ node_custom_config }}/global.conf"
-      - "{{ node_custom_config }}/masakari/{{ item.key }}.conf"
+      - "{{ node_custom_config }}/masakari/{{ service_name }}.conf"
       - "{{ node_custom_config }}/masakari/masakari-monitors.conf"
       - "{{ node_custom_config }}/masakari/{{ inventory_hostname }}/masakari-monitors.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/masakari-monitors.conf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/masakari-monitors.conf"
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ masakari_services }}"
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - masakari-instancemonitor
   notify:
-    - Restart {{ item.key }} container
+    - Restart {{ service_name }} container
 
 - name: Copying over wsgi-masakari file for services
   vars:
