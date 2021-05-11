@@ -42,8 +42,9 @@ function check_elasticsearch {
     if ! curl "${args[@]}" $ELASTICSEARCH_URL > $output_path; then
         return 1
     fi
-    # NOTE(mgoddard): Status is yellow because no indices have been created.
-    if ! grep '"status":"yellow"' $output_path >/dev/null; then
+    # NOTE(mgoddard): Status may be yellow because no indices have been
+    # created.
+    if ! grep -E '"status":"(green|yellow)"' $output_path >/dev/null; then
         return 1
     fi
 }
