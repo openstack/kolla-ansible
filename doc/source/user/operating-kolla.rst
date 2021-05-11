@@ -72,6 +72,15 @@ system. Ubuntu users upgrading from Ussuri should first upgrade OpenStack
 containers to Victoria, which uses the Ubuntu Focal 20.04 base container image.
 Hosts should then be upgraded to Ubuntu Focal 20.04.
 
+CentOS Stream 8
+---------------
+
+The Wallaby release adds support for CentOS Stream 8 as a host operating
+system. CentOS Stream 8 support will also be added to a Victoria stable
+release. CentOS Linux users upgrading from Victoria should first migrate hosts
+and container images from CentOS Linux to CentOS Stream before upgrading to
+Wallaby.
+
 Preparation
 -----------
 
