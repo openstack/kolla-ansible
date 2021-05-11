@@ -27,6 +27,8 @@ import traceback
 
 import docker
 
+from distutils.version import StrictVersion
+
 from ansible.module_utils.basic import AnsibleModule
 
 DOCUMENTATION = '''
@@ -148,6 +150,16 @@ options:
     type: str
     default: None
     choices:
+      - host
+  cgroupns_mode:
+    description:
+      - Set docker cgroups namespace (default depends on Docker config)
+      - Supported only with Docker 20.10 (Docker API 1.41) and later
+    required: False
+    type: str
+    default: None
+    choices:
+      - private
       - host
   privileged:
     description:
@@ -275,6 +287,9 @@ class DockerWorker(object):
 
         self.dc = get_docker_client()(**options)
 
+        self._cgroupns_mode_supported = (
+            StrictVersion(self.dc._version) >= StrictVersion('1.41'))
+
     def generate_tls(self):
         tls = {'verify': self.params.get('tls_verify')}
         tls_cert = self.params.get('tls_cert'),
@@ -347,6 +362,7 @@ class DockerWorker(object):
             self.compare_labels(container_info) or
             self.compare_privileged(container_info) or
             self.compare_pid_mode(container_info) or
+            self.compare_cgroupns_mode(container_info) or
             self.compare_tmpfs(container_info) or
             self.compare_volumes(container_info) or
             self.compare_volumes_from(container_info) or
@@ -401,6 +417,21 @@ class DockerWorker(object):
 
         if new_pid_mode != current_pid_mode:
             return True
+
+    def compare_cgroupns_mode(self, container_info):
+        if not self._cgroupns_mode_supported:
+            return False
+        new_cgroupns_mode = self.params.get('cgroupns_mode')
+        if new_cgroupns_mode is None:
+            # means we don't care what it is
+            return False
+        current_cgroupns_mode = (container_info['HostConfig']
+                                 .get('CgroupnsMode'))
+        if current_cgroupns_mode == '':
+            # means the container was created on Docker pre-20.10
+            # it behaves like 'host'
+            current_cgroupns_mode = 'host'
+        return new_cgroupns_mode != current_cgroupns_mode
 
     def compare_privileged(self, container_info):
         new_privileged = self.params.get('privileged')
@@ -760,7 +791,16 @@ class DockerWorker(object):
         if binds:
             options['binds'] = binds
 
-        return self.dc.create_host_config(**options)
+        host_config = self.dc.create_host_config(**options)
+
+        if self._cgroupns_mode_supported:
+            # NOTE(yoctozepto): python-docker does not support CgroupnsMode
+            # natively so we stuff it in manually.
+            cgroupns_mode = self.params.get('cgroupns_mode')
+            if cgroupns_mode is not None:
+                host_config['CgroupnsMode'] = cgroupns_mode
+
+        return host_config
 
     def _inject_env_var(self, environment_info):
         newenv = {
@@ -1074,6 +1114,8 @@ def generate_module():
         cap_add=dict(required=False, type='list', default=list()),
         security_opt=dict(required=False, type='list', default=list()),
         pid_mode=dict(required=False, type='str', choices=['host', '']),
+        cgroupns_mode=dict(required=False, type='str',
+                           choices=['private', 'host']),
         privileged=dict(required=False, type='bool', default=False),
         graceful_timeout=dict(required=False, type='int', default=10),
         remove_on_exit=dict(required=False, type='bool', default=True),
