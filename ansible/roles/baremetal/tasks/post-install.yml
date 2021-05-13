@@ -192,19 +192,19 @@
   stat:
     path: /etc/apparmor.d/usr.sbin.libvirtd
   register: apparmor_libvirtd_profile
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts.distribution == "Ubuntu"
 
 - name: Get stat of libvirtd apparmor disable profile
   stat:
     path: /etc/apparmor.d/disable/usr.sbin.libvirtd
   register: apparmor_libvirtd_disable_profile
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts.distribution == "Ubuntu"
 
 - name: Remove apparmor profile for libvirt
   command: apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
   become: True
   when:
-    - ansible_distribution == "Ubuntu"
+    - ansible_facts.distribution == "Ubuntu"
     - apparmor_libvirtd_profile.stat.exists
     - not apparmor_libvirtd_disable_profile.stat.exists
 
@@ -213,14 +213,14 @@
     path: /etc/apparmor.d/usr.sbin.chronyd
   register: apparmor_chronyd_profile
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts.os_family == "Debian"
     - enable_chrony | bool
 
 - name: Remove apparmor profile for chrony
   command: apparmor_parser -R /etc/apparmor.d/usr.sbin.chronyd
   become: True
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts.os_family == "Debian"
     - enable_chrony | bool
     - apparmor_chronyd_profile.stat.exists
 
@@ -272,7 +272,7 @@
     state: stopped
   become: True
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts.os_family == "Debian"
     - enable_host_ntp | bool
 
 - name: Stop time service
@@ -281,7 +281,7 @@
     state: stopped
   become: True
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_facts.os_family == "RedHat"
     - enable_host_ntp | bool
 
 - name: Synchronizing time one-time
@@ -296,7 +296,7 @@
     enabled: yes
   become: True
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts.os_family == "Debian"
     - enable_host_ntp | bool
 
 - name: Start time sync service
@@ -306,7 +306,7 @@
     enabled: yes
   become: True
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_facts.os_family == "RedHat"
     - enable_host_ntp | bool
 
 - name: Change state of selinux
@@ -316,4 +316,4 @@
   become: true
   when:
     - change_selinux | bool
-    - ansible_os_family == "RedHat"
+    - ansible_facts.os_family == "RedHat"

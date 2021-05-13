@@ -3,7 +3,7 @@
   apt:
     update_cache: yes
   become: True
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts.os_family == 'Debian'
 
 # TODO(inc0): Gates don't seem to have ufw executable, check for it instead of ignore errors
 - name: Set firewall default policy
@@ -11,7 +11,7 @@
   ufw:
     state: disabled
     policy: allow
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts.os_family == 'Debian'
   ignore_errors: yes
 
 - name: Check if firewalld is installed
@@ -21,7 +21,7 @@
   failed_when: firewalld_check.rc > 1
   args:
     warn: false
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts.os_family == 'RedHat'
 
 - name: Disable firewalld
   become: True
@@ -32,7 +32,7 @@
   with_items:
     - firewalld
   when:
-    - ansible_os_family == 'RedHat'
+    - ansible_facts.os_family == 'RedHat'
     - firewalld_check.rc == 0
 
 # Upgrading docker engine may cause containers to stop. Take a snapshot of the
@@ -63,7 +63,7 @@
     state: link
   become: true
   when:
-    - ansible_os_family == 'Debian'
+    - ansible_facts.os_family == 'Debian'
     - not docker_unit_file.stat.exists
 
 - name: Install apt packages
@@ -71,7 +71,7 @@
     name: "{{ (debian_pkg_install | join(' ')).split() }}"
     state: present
   become: True
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts.os_family == 'Debian'
   register: apt_install_result
 
 - name: Install deltarpm packages
@@ -80,7 +80,7 @@
     state: present
     update_cache: yes
   become: True
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts.os_family == 'RedHat'
 
 - name: Install RPM packages
   package:
@@ -88,7 +88,7 @@
     state: present
     update_cache: yes
   become: True
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts.os_family == 'RedHat'
   register: rpm_install_result
 
 # If any packages were updated, and any containers were running, wait for the
@@ -122,7 +122,7 @@
     - running_containers.rc == 0
     - running_containers.stdout != ''
   vars:
-    install_result: "{{ rpm_install_result if ansible_os_family == 'RedHat' else apt_install_result }}"
+    install_result: "{{ rpm_install_result if ansible_facts.os_family == 'RedHat' else apt_install_result }}"
 
 - name: Install latest pip in the virtualenv
   pip:
@@ -150,11 +150,11 @@
     name: "{{ (ubuntu_pkg_removals | join(' ')).split() }}"
     state: absent
   become: True
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts.os_family == 'Debian'
 
 - name: Remove packages
   package:
     name: "{{ (redhat_pkg_removals | join(' ')).split() }}"
     state: absent
   become: True
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts.os_family == 'RedHat'
