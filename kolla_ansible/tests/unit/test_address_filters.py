@@ -84,9 +84,11 @@ class TestKollaAddressFilter(unittest.TestCase):
                 'primary': {
                     'api_address_family': 'ipv4',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv4': {
-                            'address': addr,
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv4': {
+                                'address': addr,
+                            },
                         },
                     },
                 },
@@ -103,14 +105,16 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'enable_haproxy': 'yes',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 64,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 64,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -124,7 +128,9 @@ class TestKollaAddressFilter(unittest.TestCase):
                 'primary': {
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
+                    'ansible_facts': {
+                        'fake_interface': {
+                        },
                     },
                 },
             },
@@ -140,24 +146,26 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'enable_haproxy': 'yes',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 64,
-                            },
-                            {
-                                'address': addr + '1',
-                                'scope': 'link',
-                                'prefix': 64,
-                            },
-                            {
-                                'address': addr + '2',
-                                'scope': 'global',
-                                'prefix': 64,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 64,
+                                },
+                                {
+                                    'address': addr + '1',
+                                    'scope': 'link',
+                                    'prefix': 64,
+                                },
+                                {
+                                    'address': addr + '2',
+                                    'scope': 'global',
+                                    'prefix': 64,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -172,19 +180,21 @@ class TestKollaAddressFilter(unittest.TestCase):
                 'primary': {
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr,
-                                'scope': 'link',
-                                'prefix': 64,
-                            },
-                            {
-                                'address': addr + '1',
-                                'scope': 'link',
-                                'prefix': 64,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr,
+                                    'scope': 'link',
+                                    'prefix': 64,
+                                },
+                                {
+                                    'address': addr + '1',
+                                    'scope': 'link',
+                                    'prefix': 64,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -200,14 +210,16 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'enable_haproxy': 'yes',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -224,19 +236,21 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'kolla_internal_vip_address': addr + '1',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr + '1',
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr + '1',
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -253,19 +267,21 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'kolla_external_vip_address': addr + '1',
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr + '1',
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr + '1',
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                            ],
+                        },
                     },
                 },
             },
@@ -283,14 +299,16 @@ class TestKollaAddressFilter(unittest.TestCase):
                     'kolla_internal_vip_address': addr,
                     'api_address_family': 'ipv6',
                     'api_interface': 'fake-interface',
-                    'ansible_fake_interface': {
-                        'ipv6': [
-                            {
-                                'address': addr,
-                                'scope': 'global',
-                                'prefix': 128,
-                            },
-                        ],
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv6': [
+                                {
+                                    'address': addr,
+                                    'scope': 'global',
+                                    'prefix': 128,
+                                },
+                            ],
+                        },
                     },
                 },
             },

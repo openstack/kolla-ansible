@@ -57,7 +57,7 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+internal_haproxy_members: "{% for host in groups['mariadb'] %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 external_haproxy_members: "{% for host in groups['mariadb'] %}server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port}} {% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
@@ -79,13 +79,13 @@ mariadb_clustercheck_dimensions: "{{ default_container_dimensions }}"
 mariadb_default_volumes:
   - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "mariadb:/var/lib/mysql"
   - "kolla_logs:/var/log/kolla/"
 mariadb_clustercheck_default_volumes:
   - "{{ node_config_directory }}/mariadb-clustercheck/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 mariadb_extra_volumes: "{{ default_extra_volumes }}"

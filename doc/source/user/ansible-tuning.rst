@@ -64,3 +64,22 @@ the `jsonfile cache plugin
 
 You may also wish to set the expiration timeout for the cache via ``[defaults]
 fact_caching_timeout``.
+
+Fact variable injection
+-----------------------
+
+By default, Ansible injects a variable for every fact, prefixed with
+``ansible_``. This can result in a large number of variables for each host,
+which at scale can incur a performance penalty. Ansible provides a
+`configuration option
+<https://docs.ansible.com/ansible/latest/reference_appendices/config.html#inject-facts-as-vars>`__
+that can be set to ``False`` to prevent this injection of facts. In this case,
+facts should be referenced via ``ansible_facts.<fact>``. In recent releases of
+Kolla Ansible, facts are referenced via ``ansible_facts``, allowing users to
+disable fact variable injection.
+
+.. code-block:: ini
+   :caption: ``ansible.cfg``
+
+   [defaults]
+   inject_facts_as_vars = False

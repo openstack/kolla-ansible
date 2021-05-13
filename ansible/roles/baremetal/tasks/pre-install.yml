@@ -17,7 +17,7 @@
 - name: Ensure hostname does not point to 127.0.1.1 in /etc/hosts
   lineinfile:
     dest: /etc/hosts
-    regexp: "^127.0.1.1\\b.*\\s{{ ansible_hostname }}\\b"
+    regexp: "^127.0.1.1\\b.*\\s{{ ansible_facts.hostname }}\\b"
     state: absent
   become: True
   when: customize_etc_hosts | bool
@@ -28,9 +28,9 @@
     marker: "# {mark} ANSIBLE GENERATED HOSTS"
     block: |
         {% for host in groups['baremetal'] %}
-        {% set api_interface = hostvars[host]['api_interface'] | replace('-', '_') %}
-        {% if host not in groups['bifrost'] or 'ansible_' + api_interface in hostvars[host] %}
-        {% set hostnames = [hostvars[host]['ansible_nodename'], hostvars[host]['ansible_hostname']] %}
+        {% set api_interface = hostvars[host]['api_interface'] %}
+        {% if host not in groups['bifrost'] or api_interface in hostvars[host].ansible_facts %}
+        {% set hostnames = [hostvars[host].ansible_facts.nodename, hostvars[host].ansible_facts.hostname] %}
         {{ 'api' | kolla_address(host) }} {{ hostnames | unique | join(' ') }}
         {% endif %}
         {% endfor %}
@@ -39,7 +39,7 @@
     - customize_etc_hosts | bool
     # Skip hosts in the bifrost group that do not have a valid api_interface.
     - inventory_hostname not in groups['bifrost'] or
-      'ansible_' + hostvars[inventory_hostname]['api_interface'] | replace('-', '_') in hostvars[inventory_hostname]
+      hostvars[inventory_hostname]['api_interface'] | replace('-', '_') in hostvars[inventory_hostname].ansible_facts
 
 # NOTE(osmanlicilegi): The distribution might come with cloud-init installed, and manage_etc_hosts
 # configuration enabled. If so, it will override the file /etc/hosts from cloud-init templates at
@@ -110,7 +110,7 @@
             repo: "{{ docker_apt_repo }}"
             filename: docker
           become: True
-      when: ansible_os_family == 'Debian'
+      when: ansible_facts.os_family == 'Debian'
 
     - block:
         - name: Ensure yum repos directory exists
@@ -147,5 +147,5 @@
             key: "{{ docker_yum_url }}/gpg"
           become: True
           when: docker_yum_gpgcheck | bool
-      when: ansible_os_family == 'RedHat'
+      when: ansible_facts.os_family == 'RedHat'
   when: enable_docker_repo | bool
