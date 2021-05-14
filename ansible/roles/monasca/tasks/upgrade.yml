@@ -9,5 +9,18 @@
 
 - import_tasks: bootstrap_service.yml
 
+# NOTE(sshambar): We don't want pre-upgrade monasca-thresh instances
+# running in local mode after an upgrade, so stop them.
+# The first node will be replaced with the submission container in the
+# handlers below.
+- name: Stopping all monasca-thresh instances but the first node
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ monasca_services['monasca-thresh']['container_name'] }}"
+  when:
+    - inventory_hostname != groups['monasca-thresh']|first
+
 - name: Flush handlers
   meta: flush_handlers
