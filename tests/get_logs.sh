@@ -80,6 +80,9 @@ copy_logs() {
     # docker related information
     (docker info && docker images && docker ps -a && docker network ls && docker inspect $(docker ps -aq)) > ${LOG_DIR}/system_logs/docker-info.txt
 
+    # save dbus services
+    dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames > ${LOG_DIR}/system_logs/dbus-services.txt
+
     # cephadm related logs
     mkdir -p ${LOG_DIR}/ceph
     sudo cephadm shell -- ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
