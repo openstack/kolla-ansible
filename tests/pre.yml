@@ -79,3 +79,11 @@
       hostname:
         name: "{{ inventory_hostname }}"
       become: true
+
+    - name: Wait for ntp time sync
+      command: timedatectl status
+      register: timedatectl_status
+      changed_when: false
+      until: "'synchronized: yes' in timedatectl_status.stdout"
+      retries: 90
+      delay: 10
