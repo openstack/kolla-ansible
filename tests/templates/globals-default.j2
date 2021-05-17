@@ -33,7 +33,8 @@ enable_openstack_core: "{{ openstack_core_enabled }}"
 enable_horizon: "{{ dashboard_enabled }}"
 enable_heat: "{{ openstack_core_tested }}"
 
-{% if is_previous_release and scenario != "cephadm" %}
+# TODO(mgoddard): Remove when previous release is Xena.
+{% if is_previous_release and previous_release == "wallaby" and scenario != "cephadm" %}
 # NOTE(mnasiadka): Test chrony cleanup in upgrade jobs
 enable_chrony: "yes"
 {% endif %}
@@ -128,10 +129,6 @@ enable_cinder: "yes"
 glance_backend_ceph: "yes"
 cinder_backend_ceph: "yes"
 nova_backend_ceph: "yes"
-
-# TODO(yoctozepto): Remove this in the Xena cycle.
-# cephadm doesn't support chrony in a container (checks for chrony.service)
-enable_chrony: "no"
 
 enable_ceph_rgw: {{ not is_upgrade or previous_release != 'wallaby' }}
 ceph_rgw_hosts:
