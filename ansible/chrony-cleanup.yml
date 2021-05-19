@@ -1,0 +1,14 @@
+---
+- name: Remove chrony container
+  gather_facts: false
+  hosts:
+    - chrony-server
+    - chrony
+  serial: '{{ kolla_serial|default("0") }}'
+  tags:
+    - chrony
+  tasks:
+    - import_role:
+        name: chrony
+        tasks_from: cleanup.yml
+      when: not enable_chrony | bool
