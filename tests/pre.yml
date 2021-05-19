@@ -104,3 +104,31 @@
       until: "'synchronized: yes' in timedatectl_status.stdout"
       retries: 90
       delay: 10
+
+    # TODO(mgoddard): Remove this task in the Y cycle after chrony has been
+    # dropped for a cycle.
+    # NOTE(mgoddard): For upgrades, test the case where we are running
+    # a chrony container, but keep the default of disabled after the
+    # upgrade.
+    - block:
+        - name: Remove host NTP packages
+          become: true
+          package:
+            name:
+              - chrony
+              - ntp
+            state: absent
+
+        # NOTE(mgoddard): removing the systemd-timesyncd package fails, so stop
+        # and disable it instead.
+        - name: Stop systemd-timesyncd service
+          become: true
+          service:
+            name: systemd-timesyncd
+            enabled: no
+            state: stopped
+          when: ansible_os_family == 'Debian'
+      when:
+        - is_upgrade
+        # cephadm gets grumpy without a host-level chrony.
+        - scenario != 'cephadm'

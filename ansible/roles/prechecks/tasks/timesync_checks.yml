@@ -1,14 +1,71 @@
 ---
-- name: Checking timedatectl status
+# TODO(mgoddard): Remove this check in the Y cycle after chrony has been
+# dropped for a cycle.
+- name: Get container facts
   become: true
-  command: timedatectl status
-  register: timedatectl_status
-  changed_when: false
+  kolla_container_facts:
+    name:
+      - chrony
+  register: container_facts
 
-- name: Fail if the clock is not synchronized
+- name: Fail if chrony container is running
   fail:
     msg: >-
-      timedatectl sees the system clock as unsynchronized.
-      Please wait for synchronization.
+      A chrony container is running, but 'enable_chrony' is 'false'. The chrony
+      container is deprecated from the Wallaby release, and the default value
+      of 'enable_chrony' was changed to 'false'.
+
+      The chrony container may be cleaned up via 'kolla-ansible
+      chrony-cleanup'. You should then install and configure a suitable host
+      NTP daemon before running these prechecks again.
+
+      To continue running the chrony container, set 'enable_chrony' to 'true',
+      however note that this feature will be removed in the Xena release, so it
+      is not recommended for use.
   when:
-    - "'synchronized: yes' not in timedatectl_status.stdout"
+    - "'chrony' in container_facts"
+
+- block:
+    - name: Check for a running host NTP daemon  # noqa command-instead-of-module
+      vars:
+        prechecks_host_ntp_daemons:
+          - chrony
+          - chronyd
+          - ntp
+          - ntpd
+          - systemd-timesyncd
+      become: true
+      command:
+        cmd: "systemctl is-active {{ prechecks_host_ntp_daemons | join(' ') }}"
+      register: systemctl_is_active
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if a host NTP daemon is not running
+      fail:
+        msg: >-
+          No host NTP daemon is running, and the Kolla Ansible chrony container
+          is disabled. Please install and configure a host NTP daemon.
+          Alternatively, set 'prechecks_enable_host_ntp_checks' to 'false' to
+          disable this check if not using one of the following NTP daemons:
+          chrony, ntpd, systemd-timesyncd.
+      when:
+        - systemctl_is_active.rc != 0
+
+    - name: Checking timedatectl status
+      become: true
+      command: timedatectl status
+      register: timedatectl_status
+      changed_when: false
+
+    - name: Fail if the clock is not synchronized
+      fail:
+        msg: >-
+          timedatectl sees the system clock as unsynchronized.
+          Please wait for synchronization.
+          Alternatively, set 'prechecks_enable_host_ntp_checks' to 'false' to
+          disable this check if your NTP daemon is not recognised by
+          'timedatectl status'.
+      when:
+        - "'synchronized: yes' not in timedatectl_status.stdout"
+  when: prechecks_enable_host_ntp_checks | bool
