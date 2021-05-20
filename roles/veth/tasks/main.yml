@@ -1,0 +1,12 @@
+---
+- name: Create veth pair
+  become: true
+  command: ip link add {{ veth_pair.0 }} type veth peer name {{ veth_pair.1 }}
+
+- name: Bring veth pair up
+  become: true
+  shell: ip link set {{ veth_pair.0 }} up && ip link set {{ veth_pair.1 }} up
+
+- name: Add first veth pair port to bridge
+  become: true
+  command: ip link set {{ veth_pair.0 }} master {{ bridge_name }}
