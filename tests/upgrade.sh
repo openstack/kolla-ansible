@@ -9,11 +9,6 @@ export PYTHONUNBUFFERED=1
 
 function upgrade {
     RAW_INVENTORY=/etc/kolla/inventory
-    # generate self-signed certificates for the optional internal TLS tests
-    if [[ "$TLS_ENABLED" = "True" ]]; then
-        kolla-ansible -i ${RAW_INVENTORY} -vvv certificates > /tmp/logs/ansible/certificates
-    fi
-
     # TODO(mgoddard): Remove this block in the Y cycle after chrony has been
     # dropped for a cycle.
     # NOTE(mgoddard): Remove the chrony container and install a host chrony
