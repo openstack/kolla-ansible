@@ -123,8 +123,11 @@ def check_json_j2():
         context = {
             'hostvars': hostvars(),
             'groups': groups(),
+            'inventory_hostname': 'hostname',
+            'api_interface_address': '',
+            'kolla_internal_fqdn': '',
+            'octavia_provider_drivers': '',
             'storage_interface': 'storage_interface',
-            'inventory_hostname': 'hostname'
         }
         data = template.render(**context)
         json.loads(data)
