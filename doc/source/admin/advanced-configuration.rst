@@ -220,6 +220,9 @@ Note this method is not recommended and generally not tested by the
 Kolla community, but included since sometimes a free IP is not available
 in a testing environment.
 
+In this mode it is still necessary to configure ``kolla_internal_vip_address``,
+and it should take the IP address of the ``api_interface`` interface.
+
 External Elasticsearch/Kibana environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
