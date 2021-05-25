@@ -194,22 +194,25 @@
   when: create_kolla_user | bool
 
 - name: Start docker
-  service:
+  systemd:
     name: docker
     state: started
+    masked: no
   become: True
 
 - name: Restart docker
-  service:
+  systemd:
     name: docker
     state: restarted
+    masked: no
   become: True
   when: docker_configured.changed or docker_reloaded.changed
 
 - name: Enable docker
-  service:
+  systemd:
     name: docker
     enabled: yes
+    masked: no
   become: True
 
 - name: Stop time service
