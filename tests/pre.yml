@@ -20,8 +20,25 @@
     # because it is enslaved by a bridge
     - role: multi-node-vxlan-overlay
       vars:
-        vxlan_interface_name: "{{ neutron_external_interface_name }}"
+        vxlan_interface_name: "{{ neutron_external_vxlan_interface_name }}"
         vxlan_vni: 10001
+    - role: bridge
+      vars:
+        bridge_name: "{{ neutron_external_bridge_name }}"
+        bridge_member_name: "{{ neutron_external_vxlan_interface_name }}"
+    # TODO(mnasiadka): Update ipv6 jobs to test ipv6 in Neutron
+    - role: multi-node-managed-addressing
+      vars:
+        managed_interface_name: "{{ neutron_external_bridge_name }}"
+        managed_network_prefix: "{{ neutron_external_network_prefix }}"
+        managed_network_prefix_length: "{{ neutron_external_network_prefix_length }}"
+        managed_network_address_family: "ipv4"
+    - role: veth
+      vars:
+        veth_pair:
+          - "veth-{{ neutron_external_bridge_name }}"
+          - "veth-{{ neutron_external_bridge_name }}-ext"
+        bridge_name: "{{ neutron_external_bridge_name }}"
   tasks:
     # NOTE(yoctozepto): we use gawk to add time to each logged line
     # outside of Ansible (e.g. for init-runonce)
