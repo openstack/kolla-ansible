@@ -8,3 +8,4 @@ This section describes configuration of database services.
    :maxdepth: 1
 
    external-mariadb-guide
+   mariadb-guide
