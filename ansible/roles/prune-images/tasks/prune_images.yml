@@ -6,3 +6,11 @@
     images_filters:
       label: kolla_version
     timeout: "{{ docker_image_prune_timeout }}"
+  when: kolla_container_engine == 'docker'
+
+# NOTE(m.hiner): Podman does not (yet?) have equivalent of docker_prune
+# and generic module podman_image does not support label filters
+- name: Pruning Kolla images
+  become: true
+  command: podman image prune --force --filter 'label=kolla_version'
+  when: kolla_container_engine == 'podman'

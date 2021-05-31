@@ -13,16 +13,14 @@
 # limitations under the License.
 
 
-import docker
-
 from ansible.module_utils.basic import AnsibleModule
 
 DOCUMENTATION = '''
 ---
 module: kolla_container_volume_facts
-short_description: Module for collecting Docker container volume facts
+short_description: Module for collecting container volume facts
 description:
-  - A module targeted at collecting Docker container volume facts. It is used
+  - A module targeted at collecting container volume facts. It is used
     for detecting whether the container volume exists on a host.
 options:
   container_engine:
@@ -60,7 +58,23 @@ EXAMPLES = '''
 
 
 def get_docker_client():
+    import docker
     return docker.APIClient
+
+
+def get_docker_volumes(api_version):
+    client = get_docker_client()(version=api_version)
+    return client.volumes()['Volumes']
+
+
+def get_podman_volumes():
+    from podman import PodmanClient
+
+    client = PodmanClient(base_url="http+unix:/run/podman/podman.sock")
+    volumes = []
+    for volume in client.volumes.list():
+        volumes.append(volume.attrs)
+    return volumes
 
 
 def main():
@@ -73,12 +87,15 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
 
     results = dict(changed=False, _volumes=[])
-    client = get_docker_client()(version=module.params.get('api_version'))
-    volumes = client.volumes()
+    if module.params.get('container_engine') == 'docker':
+        volumes = get_docker_volumes(module.params.get('api_version'))
+    else:
+        volumes = get_podman_volumes()
+
     names = module.params.get('name')
     if names and not isinstance(names, list):
         names = [names]
-    for volume in volumes['Volumes']:
+    for volume in volumes:
         volume_name = volume['Name']
         if names and volume_name not in names:
             continue

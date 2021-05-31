@@ -103,11 +103,15 @@ function prepare_images {
     fi
 
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
+[DEFAULT]
+engine = ${CONTAINER_ENGINE}
+
 [profiles]
 gate = ${GATE_IMAGES}
 EOF
 
-    mkdir -p /tmp/logs/build
+    sudo mkdir -p /tmp/logs/build
+    sudo mkdir -p /opt/kolla_registry
 
     sudo $CONTAINER_ENGINE run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
 

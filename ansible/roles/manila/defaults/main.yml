@@ -36,7 +36,7 @@ manila_services:
     image: "{{ manila_share_image_full }}"
     enabled: True
     privileged: True
-    volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes }}"
+    volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ manila_share_dimensions }}"
     healthcheck: "{{ manila_share_healthcheck }}"
   manila-data:
@@ -45,7 +45,7 @@ manila_services:
     image: "{{ manila_data_image_full }}"
     enabled: True
     privileged: True
-    volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes }}"
+    volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ manila_data_dimensions }}"
     healthcheck: "{{ manila_data_healthcheck }}"
 
@@ -159,7 +159,7 @@ manila_share_default_volumes:
   - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/lib/modules:/lib/modules:ro"
   - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
@@ -180,7 +180,7 @@ manila_data_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
 

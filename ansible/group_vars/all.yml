@@ -159,6 +159,33 @@ docker_common_options:
   restart_retries: "{{ docker_restart_policy_retry }}"
   graceful_timeout: "{{ docker_graceful_timeout }}"
   client_timeout: "{{ docker_client_timeout }}"
+  container_engine: "{{ kolla_container_engine }}"
+
+# Container engine specific volume paths
+docker_volumes_path: "{{ docker_runtime_directory or '/var/lib/docker' }}/volumes"
+podman_volumes_path: "{{ docker_runtime_directory or '/var/lib/containers' }}/storage/volumes"
+container_engine_volumes_path: "{{ docker_volumes_path if kolla_container_engine == 'docker' else podman_volumes_path }}"
+
+#####################
+# Volumes under /run
+#####################
+# Podman has problem with mounting whole /run directory
+# described here: https://github.com/containers/podman/issues/16305
+run_default_volumes_podman:
+  - '/run/netns:/run/netns:shared'
+  - '/run/lock/nova:/run/lock/nova:shared'
+  - "/run/libvirt:/run/libvirt:shared"
+  - "/run/nova:/run/nova:shared"
+  - "/run/openvswitch:/run/openvswitch:shared"
+
+run_default_volumes_docker: []
+
+run_default_subdirectories:
+  - '/run/netns'
+  - '/run/lock/nova'
+  - "/run/libvirt"
+  - "/run/nova"
+  - "/run/openvswitch"
 
 ####################
 # Dimensions options
@@ -167,9 +194,18 @@ docker_common_options:
 # NOTE(mnasiadka): Lower 1073741816 nofile limit on EL9 (RHEL9/CentOS Stream 9/Rocky Linux 9)
 #                  fixes at least rabbitmq and mariadb
 default_container_dimensions: "{{ default_container_dimensions_el9 if ansible_facts.os_family == 'RedHat' else '{}' }}"
-default_container_dimensions_el9:
+default_container_dimensions_el9: "{{ default_docker_dimensions_el9 if kolla_container_engine == 'docker' else default_podman_dimensions_el9 }}"
+default_docker_dimensions_el9:
   ulimits:
     nofile:
+      soft: 1048576
+      hard: 1048576
+default_podman_dimensions_el9:
+  ulimits:
+    RLIMIT_NOFILE:
+      soft: 1048576
+      hard: 1048576
+    RLIMIT_NPROC:
       soft: 1048576
       hard: 1048576
 

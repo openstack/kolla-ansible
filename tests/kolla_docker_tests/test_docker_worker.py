@@ -39,7 +39,7 @@ dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
 FAKE_DATA = {
 
     'params': {
-        'common_options': None,
+        'container_engine': 'docker',
         'api_version': None,
         'auth_username': None,
         'auth_password': None,
@@ -224,19 +224,21 @@ class TestMainModule(base.BaseTestCase):
         module_mock.fail_json.assert_called_once_with(
             changed=True, msg=repr("Some very ugly traceback"))
 
-    @mock.patch("kolla_docker.DockerWorker")
     @mock.patch("kolla_docker.generate_module")
-    def test_execute_module(self, mock_generate_module, mock_dw):
-        mock_dw.return_value.check_image.return_value = False
-        mock_dw.return_value.changed = False
-        mock_dw.return_value.result = {"some_key": "some_value"}
+    def test_execute_module(self, mock_generate_module):
         module_mock = mock.MagicMock()
         module_mock.params = self.fake_data['params']
         module_mock.params["action"] = "check_image"
         mock_generate_module.return_value = module_mock
-        kd.main()
-        mock_dw.assert_called_once_with(module_mock)
-        mock_dw.return_value.check_image.assert_called_once_with()
+        with mock.patch(
+            "ansible.module_utils.kolla_docker_worker.DockerWorker"
+        ) as mock_dw:
+            mock_dw.return_value.check_image.return_value = False
+            mock_dw.return_value.changed = False
+            mock_dw.return_value.result = {"some_key": "some_value"}
+            kd.main()
+            mock_dw.assert_called_once_with(module_mock)
+            mock_dw.return_value.check_image.assert_called_once_with()
         module_mock.exit_json.assert_called_once_with(changed=False,
                                                       result=False,
                                                       some_key="some_value")

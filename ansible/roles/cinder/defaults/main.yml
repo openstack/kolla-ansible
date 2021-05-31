@@ -40,7 +40,7 @@ cinder_services:
     privileged: True
     ipc_mode: "host"
     tmpfs: "{{ cinder_volume_tmpfs }}"
-    volumes: "{{ cinder_volume_default_volumes + cinder_volume_extra_volumes }}"
+    volumes: "{{ cinder_volume_default_volumes + cinder_volume_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ cinder_volume_dimensions }}"
     healthcheck: "{{ cinder_volume_healthcheck }}"
   cinder-backup:
@@ -49,7 +49,7 @@ cinder_services:
     enabled: "{{ enable_cinder_backup | bool }}"
     image: "{{ cinder_backup_image_full }}"
     privileged: True
-    volumes: "{{ cinder_backup_default_volumes + cinder_backup_extra_volumes }}"
+    volumes: "{{ cinder_backup_default_volumes + cinder_backup_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ cinder_backup_dimensions }}"
     healthcheck: "{{ cinder_backup_healthcheck }}"
 
@@ -171,7 +171,7 @@ cinder_backup_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
   - "/lib/modules:/lib/modules:ro"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "cinder:/var/lib/cinder"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
   - "kolla_logs:/var/log/kolla/"
@@ -188,7 +188,7 @@ cinder_volume_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
   - "/lib/modules:/lib/modules:ro"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "cinder:/var/lib/cinder"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
   - "{% if enable_cinder_backend_lvm | bool and cinder_target_helper == 'lioadm' %}target_config:/etc/target{% endif %}"

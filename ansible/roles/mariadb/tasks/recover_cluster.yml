@@ -20,6 +20,7 @@
       kolla_docker:
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
+        common_options: "{{ docker_common_options }}"
         ignore_missing: true
 
     # Run wsrep recovery with detach=false to block until completion. Use a
@@ -42,7 +43,7 @@
 
     - name: Copying MariaDB log file to /tmp
       become: true
-      command: "cp {{ docker_runtime_directory or '/var/lib/docker' }}/volumes/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
+      command: "cp {{ container_engine_volumes_path }}/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
     # Look for sequence number in logs. Format is:
     # WSREP: Recovered position: <UUID>:<seqno>.
@@ -99,7 +100,7 @@
   become: true
   lineinfile:
     create: yes
-    dest: "{{ docker_runtime_directory or '/var/lib/docker' }}/volumes/mariadb/_data/grastate.dat"
+    dest: "{{ container_engine_volumes_path }}/mariadb/_data/grastate.dat"
     regexp: 'safe_to_bootstrap:(.*)$'
     line: 'safe_to_bootstrap: 1'
     state: present
