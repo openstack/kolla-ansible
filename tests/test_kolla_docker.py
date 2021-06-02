@@ -71,6 +71,8 @@ class ModuleArgsTest(base.BaseTestCase):
             cap_add=dict(required=False, type='list', default=list()),
             security_opt=dict(required=False, type='list', default=list()),
             pid_mode=dict(required=False, type='str', choices=['host', '']),
+            cgroupns_mode=dict(required=False, type='str',
+                               choices=['private', 'host']),
             privileged=dict(required=False, type='bool', default=False),
             graceful_timeout=dict(required=False, type='int', default=10),
             remove_on_exit=dict(required=False, type='bool', default=True),
@@ -204,12 +206,13 @@ FAKE_DATA = {
 }
 
 
-@mock.patch("docker.APIClient")
-def get_DockerWorker(mod_param, mock_dclient):
+def get_DockerWorker(mod_param, docker_api_version='1.40'):
     module = mock.MagicMock()
     module.params = mod_param
-    dw = kd.DockerWorker(module)
-    return dw
+    with mock.patch("docker.APIClient") as MockedDockerClientClass:
+        MockedDockerClientClass.return_value._version = docker_api_version
+        dw = kd.DockerWorker(module)
+        return dw
 
 
 class TestMainModule(base.BaseTestCase):
@@ -247,6 +250,15 @@ class TestMainModule(base.BaseTestCase):
         module_mock.exit_json.assert_called_once_with(changed=False,
                                                       result=False,
                                                       some_key="some_value")
+
+    def test_sets_cgroupns_mode_supported_false(self):
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw._cgroupns_mode_supported)
+
+    def test_sets_cgroupns_mode_supported_true(self):
+        self.dw = get_DockerWorker(self.fake_data['params'],
+                                   docker_api_version='1.41')
+        self.assertTrue(self.dw._cgroupns_mode_supported)
 
 
 class TestContainer(base.BaseTestCase):
@@ -975,6 +987,40 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'HostConfig': dict(PidMode='host1')}
         self.dw = get_DockerWorker({'pid_mode': 'host2'})
         self.assertTrue(self.dw.compare_pid_mode(container_info))
+
+    def test_compare_cgroupns_mode_neg(self):
+        container_info = {'HostConfig': dict(CgroupnsMode='host')}
+        self.dw = get_DockerWorker({'cgroupns_mode': 'host'},
+                                   docker_api_version='1.41')
+        self.assertFalse(self.dw.compare_cgroupns_mode(container_info))
+
+    def test_compare_cgroupns_mode_neg_backward_compat(self):
+        container_info = {'HostConfig': dict(CgroupnsMode='')}
+        self.dw = get_DockerWorker({'cgroupns_mode': 'host'},
+                                   docker_api_version='1.41')
+        self.assertFalse(self.dw.compare_cgroupns_mode(container_info))
+
+    def test_compare_cgroupns_mode_ignore(self):
+        container_info = {'HostConfig': dict(CgroupnsMode='private')}
+        self.dw = get_DockerWorker({}, docker_api_version='1.41')
+        self.assertFalse(self.dw.compare_cgroupns_mode(container_info))
+
+    def test_compare_cgroupns_mode_pos(self):
+        container_info = {'HostConfig': dict(CgroupnsMode='private')}
+        self.dw = get_DockerWorker({'cgroupns_mode': 'host'},
+                                   docker_api_version='1.41')
+        self.assertTrue(self.dw.compare_cgroupns_mode(container_info))
+
+    def test_compare_cgroupns_mode_pos_backward_compat(self):
+        container_info = {'HostConfig': dict(CgroupnsMode='')}
+        self.dw = get_DockerWorker({'cgroupns_mode': 'private'},
+                                   docker_api_version='1.41')
+        self.assertTrue(self.dw.compare_cgroupns_mode(container_info))
+
+    def test_compare_cgroupns_mode_unsupported(self):
+        container_info = {'HostConfig': dict()}
+        self.dw = get_DockerWorker({'cgroupns_mode': 'host'})
+        self.assertFalse(self.dw.compare_cgroupns_mode(container_info))
 
     def test_compare_privileged_neg(self):
         container_info = {'HostConfig': dict(Privileged=True)}
