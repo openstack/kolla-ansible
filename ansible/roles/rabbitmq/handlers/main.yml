@@ -1,5 +1,19 @@
 ---
-- name: Restart rabbitmq container
+# NOTE(mgoddard): These tasks perform a 'full stop upgrade', which is necessary when moving between
+# major releases. In future kolla-ansible releases we may be able to change this to a rolling
+# restart. For info on this process see https://www.rabbitmq.com/upgrade.html
+
+- name: Restart first rabbitmq container
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  include_tasks: 'restart_services.yml'
+  when:
+    - kolla_action != "config"
+    - inventory_hostname == groups[service.group] | first
+  listen: Restart rabbitmq container
+
+- name: Restart remaining rabbitmq containers
   vars:
     service_name: "rabbitmq"
     service: "{{ rabbitmq_services[service_name] }}"
@@ -7,4 +21,6 @@
   when:
     - kolla_action != "config"
     - inventory_hostname == item
+    - inventory_hostname != groups[service.group] | first
   loop: "{{ groups[service.group] }}"
+  listen: Restart rabbitmq container
