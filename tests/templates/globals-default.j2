@@ -33,12 +33,6 @@ enable_openstack_core: "{{ openstack_core_enabled }}"
 enable_horizon: "{{ dashboard_enabled }}"
 enable_heat: "{{ openstack_core_tested }}"
 
-# TODO(yoctozepto): Remove this in the Xena cycle.
-# We have to keep it for now for upgrades because dropping chronyd inbetween
-# will make prechecks fail due to lack of proper host-level timesync (chronyd
-# is containerized and the host-level client either removed or fought with).
-enable_chrony: "no"
-
 {% if scenario != 'bifrost' %}
 kolla_internal_vip_address: "{{ kolla_internal_vip_address }}"
 neutron_external_interface: "{{ neutron_external_interface_name }}"
@@ -128,6 +122,10 @@ glance_backend_ceph: "yes"
 cinder_backend_ceph: "yes"
 nova_backend_ceph: "yes"
 ceph_nova_user: "cinder"
+
+# TODO(yoctozepto): Remove this in the Xena cycle.
+# cephadm doesn't support chrony in a container (checks for chrony.service)
+enable_chrony: "no"
 {% endif %}
 
 {% if tls_enabled %}
