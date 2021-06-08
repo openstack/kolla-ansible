@@ -338,29 +338,6 @@
   notify:
     - "Restart {{ item.key }} container"
 
-- name: Copying over panko.conf
-  vars:
-    service_require_panko_conf:
-      - ceilometer-notification
-  merge_configs:
-    sources:
-      - "{{ role_path }}/../panko/templates/panko.conf.j2"
-      - "{{ node_custom_config }}/global.conf"
-      - "{{ node_custom_config }}/panko.conf"
-      - "{{ node_custom_config }}/panko/panko.conf"
-      - "{{ node_custom_config }}/panko/{{ inventory_hostname }}/panko.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/panko.conf"
-    mode: "0660"
-  become: true
-  when:
-    - enable_panko | bool
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-    - item.key in service_require_panko_conf
-  with_dict: "{{ ceilometer_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
-
 - name: Copying VMware vCenter CA file
   become: true
   vars:
