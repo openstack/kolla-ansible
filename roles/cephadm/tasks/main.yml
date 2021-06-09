@@ -79,17 +79,6 @@
   become: True
   loop: "{{ cephadm_ceph_osd_devices }}"
 
-# NOTE(mnasiadka): Ubuntu uses pre 15.2.11 Octopus client code and suffers from
-#                  https://docs.ceph.com/en/latest/security/CVE-2021-20288/
-
-- name: Set auth_allow_insecure_global_id_reclaim to True
-  command:
-    cmd: >
-         cephadm shell --
-         ceph config set mon auth_allow_insecure_global_id_reclaim true
-  become: true
-  when: ansible_distribution == "Ubuntu"
-
 - name: Create and initialise pools for OpenStack services
   command:
     cmd: >
