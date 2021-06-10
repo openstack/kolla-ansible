@@ -78,20 +78,6 @@
         jump: LOG
         log_prefix: 'iptables FORWARD: '
 
-    # NOTE(yoctozepto): This is to undo Docker's default policy of DROP which
-    # breaks l3 forwarding and also linuxbridge deploys due to bridge-nf-call-iptables.
-    # FIXME(yoctozepto): really handle this for users - somehow my local multinode
-    # deploy fixed it for itself by setting it to ACCEPT on network nodes without
-    # my intervention but so far we have no idea what did that. It certainly does
-    # not happen in CI where all nodes are aio.
-    - name: iptables - ACCEPT FORWARD
-      become: True
-      iptables:
-        state: present
-        action: append
-        chain: FORWARD
-        jump: ACCEPT
-
     - name: set new hostname based on ansible inventory file
       hostname:
         name: "{{ inventory_hostname }}"
