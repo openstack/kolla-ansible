@@ -60,7 +60,6 @@
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_ovn_{{ enable_ovn | bool }}
-        - enable_panko_{{ enable_panko | bool }}
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_qdrouterd_{{ enable_qdrouterd | bool }}
@@ -287,11 +286,6 @@
             tasks_from: loadbalancer
           tags: octavia
           when: enable_octavia | bool
-        - include_role:
-            name: panko
-            tasks_from: loadbalancer
-          tags: panko
-          when: enable_panko | bool
         - include_role:
             name: prometheus
             tasks_from: loadbalancer
@@ -834,17 +828,6 @@
         tags: sahara,
         when: enable_sahara | bool }
 
-- name: Apply role panko
-  gather_facts: false
-  hosts:
-    - panko-api
-    - '&enable_panko_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: panko,
-        tags: panko,
-        when: enable_panko | bool }
-
 - name: Apply role manila
   gather_facts: false
   hosts:
@@ -874,8 +857,6 @@
 
 - name: Apply role ceilometer
   gather_facts: false
-  vars_files:
-    - "roles/panko/defaults/main.yml"
   hosts:
     - ceilometer-central
     - ceilometer-notification
