@@ -7,3 +7,18 @@ fixes:
     ``net.ipv4.ip_forward`` sysctl to ``1``.
     This is to protect from creating all-forwarding hosts.
     `LP#1931615 <https://launchpad.net/bugs/1931615>`__
+upgrade:
+  - |
+    Adds a new flag, ``docker_disable_ip_forward``, which
+    defaults to ``docker_disable_default_iptables_rules`` and is used to
+    disable docker's ``ip-forward`` option which makes docker set
+    ``net.ipv4.ip_forward`` sysctl to ``1``. By default,
+    ``docker_disable_default_iptables_rules`` is ``true``, in which case
+    docker's ``ip-forward`` option is ``disabled``.
+
+    For existing hosts, this configuration change is applied when configuring
+    docker via ``kolla-ansible bootstrap-servers``. Docker changes the sysctl
+    in a non-persistent manner, so it will revert to the default of ``0`` after
+    a reboot, if not configured elsewhere. This should not cause a problem,
+    since Kolla Ansible applies the sysctl where necessary. Operators may wish
+    to perform a proactive reboot, or apply the default through other means.
