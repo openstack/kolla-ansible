@@ -64,6 +64,12 @@ Limitations and Recommendations
    ``"yes"``, you need to have the ``log_bin_trust_function_creators`` set to
    ``1`` by your database administrator before performing the upgrade.
 
+.. note::
+
+   If you have separate keys for nova and cinder, please be sure to set
+   ``ceph_nova_keyring: ceph.client.nova.keyring`` and ``ceph_nova_user: nova``
+   in ``/etc/kolla/globals.yml``
+
 Preparation
 -----------
 
