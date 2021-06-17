@@ -16,12 +16,12 @@ rdbcompression yes
 rdbchecksum yes
 dbfilename dump.rdb
 dir /var/lib/redis
-slave-serve-stale-data yes
-slave-read-only yes
+replica-serve-stale-data yes
+replica-read-only yes
 repl-diskless-sync no
 repl-diskless-sync-delay 5
 repl-disable-tcp-nodelay no
-slave-priority 100
+replica-priority 100
 appendonly yes
 appendfilename "redis-staging-ao.aof"
 appendfsync everysec
@@ -42,7 +42,7 @@ zset-max-ziplist-value 64
 hll-sparse-max-bytes 3000
 activerehashing yes
 client-output-buffer-limit normal 0 0 0
-client-output-buffer-limit slave 256mb 64mb 60
+client-output-buffer-limit replica 256mb 64mb 60
 client-output-buffer-limit pubsub 32mb 8mb 60
 hz 10
 aof-rewrite-incremental-fsync yes
@@ -51,5 +51,5 @@ masterauth {{ redis_master_password }}
 
 {% if inventory_hostname != groups['redis'][0] %}
 {% set redis_master_address = 'api' | kolla_address(groups['redis'][0]) %}
-slaveof {{ redis_master_address }} 6379
+replicaof {{ redis_master_address }} 6379
 {% endif %}
