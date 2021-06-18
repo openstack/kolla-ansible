@@ -375,6 +375,13 @@ There are a few options that are required to deploy Kolla-Ansible:
 
      kolla_base_distro: "centos"
 
+  You can also use CentOS Stream 8 - it's recommended for new installations
+  because CentOS Linux 8 will be supported only until `31st Dec 2021 <https://wiki.centos.org/About/Product>`__.
+
+  .. code-block:: yaml
+
+     openstack_tag_suffix: "-centos8s"
+
   Next "type" of installation needs to be configured.
   Choices are:
 
