@@ -64,7 +64,6 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `Neutron <https://docs.openstack.org/neutron/latest/>`__
 - `Nova <https://docs.openstack.org/nova/latest/>`__
 - `Octavia <https://docs.openstack.org/octavia/latest/>`__
-- `Rally <https://docs.openstack.org/rally/latest/>`__
 - `Sahara <https://docs.openstack.org/sahara/latest/>`__
 - `Senlin <https://docs.openstack.org/senlin/latest/>`__
 - `Solum <https://docs.openstack.org/solum/latest/>`__
