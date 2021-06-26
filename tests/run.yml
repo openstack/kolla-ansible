@@ -206,22 +206,20 @@
     # NOTE(mgoddard): We need a recent pip to install the latest cryptography
     # library. See https://github.com/pyca/cryptography/issues/5753
     - name: install pip 19.1.1+
-      pip:
-        name: "pip>=19.1.1"
-        executable: "pip3"
-        extra_args: "--user"
+      command: >-
+        python3 -m pip install --user
+        pip>=19.1.1
 
     - name: install kolla-ansible and dependencies
       vars:
         # Test latest ansible version on Ubuntu, minimum supported on others.
         ansible_version_constraint: "==2.9.*"
-      pip:
-        name:
-          - "{{ kolla_ansible_src_dir }}"
-          - "ansible{{ ansible_version_constraint }}"
-          - "ara<1.0.0"
-        executable: "pip3"
-        extra_args: "-c {{ upper_constraints_file }} --user"
+      command: >-
+        python3 -m pip install --user
+        -c {{ upper_constraints_file }}
+        {{ kolla_ansible_src_dir }}
+        ansible{{ ansible_version_constraint }}
+        ara<1.0.0
 
     - name: get ARA callback plugin path
       command: "python3 -m ara.setup.callback_plugins"
@@ -539,10 +537,10 @@
           when: item.when | default(true)
 
         - name: upgrade kolla-ansible
-          pip:
-            name: "{{ kolla_ansible_src_dir }}"
-            executable: pip3
-            extra_args: "-c {{ upper_constraints_file }} --user"
+          command: >-
+            python3 -m pip install --user
+            -c {{ upper_constraints_file }}
+            {{ kolla_ansible_src_dir }}
 
         # Update passwords.yml to include any new passwords added in this
         # release.
