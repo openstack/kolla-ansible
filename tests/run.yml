@@ -221,14 +221,12 @@
       vars:
         # Test latest ansible version on Ubuntu, minimum supported on others.
         ansible_version_constraint: "{{ '==2.9.*,!=2.9.8,!=2.9.12' if base_distro == 'ubuntu' else '==2.8.*,!=2.8.14' }}"
-      pip:
-        name:
-          - "{{ kolla_ansible_src_dir }}"
-          - "ansible{{ ansible_version_constraint }}"
-          - "ara<1.0.0"
-        # TODO(mgoddard): Always use pip3 when previous_release is ussuri.
-        executable: "pip{{ playbook_python_version }}"
-        extra_args: "-c {{ upper_constraints_file }} --user"
+      command: >-
+        python{{ playbook_python_version }} -m pip install --user
+        -c {{ upper_constraints_file }}
+        {{ kolla_ansible_src_dir }}
+        ansible{{ ansible_version_constraint }}
+        ara<1.0.0
 
     # TODO(mgoddard): Always use python3 when previous_release is ussuri.
     - name: get ARA callback plugin path
@@ -540,25 +538,15 @@
 
         # TODO(mgoddard): Remove this block when previous_release is ussuri.
         - block:
-            - name: remove ansible and ARA for python 2
-              pip:
-                name:
-                  - ansible
-                  - ara
-                executable: pip2
-                state: absent
-              when: playbook_python_version == '2'
-
             - name: install ansible and ARA for python 3
               vars:
                 # Test latest ansible version on Ubuntu, minimum supported on others.
                 ansible_version_constraint: "{{ '==2.9.*,!=2.9.8' if base_distro == 'ubuntu' else '==2.8.*' }}"
-              pip:
-                name:
-                  - "ansible{{ ansible_version_constraint }}"
-                  - "ara<1.0.0"
-                executable: pip3
-                extra_args: "-c {{ upper_constraints_file }} --user"
+              command: >-
+                python3 -m pip install --user
+                -c {{ upper_constraints_file }}
+                ansible{{ ansible_version_constraint }}
+                ara<1.0.0
 
             - name: get ARA callback plugin path
               command: "python3 -m ara.setup.callback_plugins"
@@ -572,10 +560,10 @@
               become: true
 
         - name: upgrade kolla-ansible
-          pip:
-            name: "{{ kolla_ansible_src_dir }}"
-            executable: pip3
-            extra_args: "-c {{ upper_constraints_file }} --user"
+          command: >-
+            python3 -m pip install --user
+            -c {{ upper_constraints_file }}
+            {{ kolla_ansible_src_dir }}
 
         # Update passwords.yml to include any new passwords added in this
         # release.
