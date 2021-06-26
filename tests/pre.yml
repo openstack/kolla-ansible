@@ -3,6 +3,8 @@
   any_errors_fatal: true
   vars:
     logs_dir: "/tmp/logs"
+    # NOTE(mgoddard): Use Python 3 only for CentOS 8 on stable/train.
+    playbook_python_version: "{{ '3' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8' else '2' }}"
   roles:
     - bindep
     - multi-node-firewall
@@ -65,9 +67,9 @@
 
     - name: Ensure latest pip is installed
       become: true
-      pip:
-        name: pip<21
-        state: latest
+      command: >-
+        python{{ playbook_python_version }} -m pip install --upgrade
+        pip<21
 
     - name: Ensure /tmp/logs/ dir
       file:
