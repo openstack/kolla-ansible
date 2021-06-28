@@ -13,7 +13,7 @@ ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
-<VirtualHost *:{{ horizon_listen_port }}>
+<VirtualHost {{ api_interface_address }}:{{ horizon_listen_port }}>
     LogLevel warn
     ErrorLog /var/log/kolla/horizon/horizon.log
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
@@ -49,11 +49,6 @@ TraceEnable off
     SSLCertificateKeyFile /etc/horizon/certs/horizon-key.pem
 {% endif %}
 </VirtualHost>
-
-{# FIXME(yoctozepto): enabling of either tls will break the other if not enabled too #}
-{% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
-Header edit Location ^http://(.*)$ https://$1
-{% endif %}
 
 <IfModule mod_deflate.c>
     # Compress HTML, CSS, JavaScript, Json, Text, XML and fonts
