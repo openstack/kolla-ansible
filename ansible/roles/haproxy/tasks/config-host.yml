@@ -10,9 +10,10 @@
     sysctl_file: "{{ kolla_sysctl_conf_path }}"
   become: true
   with_items:
-    - { name: "net.ipv4.ip_nonlocal_bind", value: 1}
-    - { name: "net.ipv6.ip_nonlocal_bind", value: 1}
-    - { name: "net.unix.max_dgram_qlen", value: 128}
+    - { name: "net.ipv4.ip_nonlocal_bind", value: 1 }
+    - { name: "net.ipv6.ip_nonlocal_bind", value: 1 }
+    - { name: "net.ipv4.tcp_retries2", value: "{{ haproxy_host_ipv4_tcp_retries2 }}" }
+    - { name: "net.unix.max_dgram_qlen", value: 128 }
   when:
     - set_sysctl | bool
     - item.value != 'KOLLA_SKIP'
