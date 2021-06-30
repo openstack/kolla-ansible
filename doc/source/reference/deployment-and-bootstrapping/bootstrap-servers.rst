@@ -204,6 +204,8 @@ will be added to allow all traffic.
 
 On Red Hat family systems where firewalld is installed, it will be disabled.
 
+This behaviour can be avoided by setting ``disable_firewall`` to ``false``.
+
 Creation of Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
