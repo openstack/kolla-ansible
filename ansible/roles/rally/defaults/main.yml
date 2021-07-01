@@ -1,0 +1,36 @@
+---
+project_name: "rally"
+
+rally_services:
+  rally:
+    container_name: "rally"
+    image: "{{ rally_image_full }}"
+    enabled: true
+    group: "rally"
+    volumes: "{{ rally_default_volumes + rally_extra_volumes }}"
+    dimensions: "{{ rally_dimensions }}"
+
+
+########
+# Docker
+########
+rally_install_type: "{{ kolla_install_type }}"
+rally_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ rally_install_type }}-rally"
+rally_tag: "{{ openstack_tag }}"
+rally_image_full: "{{ rally_image }}:{{ rally_tag }}"
+rally_dimensions: "{{ default_container_dimensions }}"
+
+rally_default_volumes:
+  - "{{ node_config_directory }}/rally/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+rally_extra_volumes: "{{ default_extra_volumes }}"
+
+####################
+# Database
+####################
+rally_database_name: "rally"
+rally_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}rally{% endif %}"
+rally_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
