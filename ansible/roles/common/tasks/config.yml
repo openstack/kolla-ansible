@@ -33,7 +33,9 @@
     action: "ensure_image"
     common_options: "{{ docker_common_options }}"
     image: "{{ service.image }}"
-  when: enable_fluentd | bool
+  when:
+    - fluentd_version is not defined or fluentd_binary is not defined
+    - enable_fluentd | bool
 
 - name: Fetch fluentd image labels
   vars:
@@ -43,12 +45,16 @@
   docker_image_info:
     name: "{{ service.image }}"
   register: fluentd_labels
-  when: enable_fluentd | bool
+  when:
+    - fluentd_version is not defined or fluentd_binary is not defined
+    - enable_fluentd | bool
 
 - name: Set fluentd facts
   set_fact:
     fluentd_binary: "{{ fluentd_labels.images.0.ContainerConfig.Labels.fluentd_binary }}"
-  when: enable_fluentd | bool
+  when:
+    - fluentd_binary is not defined
+    - enable_fluentd | bool
 
 - include_tasks: copy-certs.yml
   when:
