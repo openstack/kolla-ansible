@@ -1,0 +1,1 @@
+../kolla_ansible/cmd/writepwd.py
