@@ -139,26 +139,12 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
 
-- name: Create custom Grafana dashboards folder
-  become: true
-  vars:
-    service: "{{ grafana_services['grafana'] }}"
-  file:
-    dest: "{{ node_config_directory }}/grafana/dashboards/"
-    state: "directory"
-    mode: "0770"
-  when:
-    - grafana_custom_dashboards_folder.stat.exists
-    - grafana_custom_dashboards_folder.stat.isdir
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-
 - name: Copying over custom dashboards
   vars:
     service: "{{ grafana_services['grafana'] }}"
   copy:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/grafana/dashboards/"
+    src: "{{ node_custom_config }}/grafana/dashboards"
+    dest: "{{ node_config_directory }}/grafana/"
     mode: "0660"
   become: true
   when:
@@ -166,7 +152,5 @@
     - grafana_custom_dashboards_folder.stat.isdir
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-  with_fileglob:
-    - "{{ node_custom_config }}/grafana/dashboards/*.json"
   notify:
     - Restart grafana container
