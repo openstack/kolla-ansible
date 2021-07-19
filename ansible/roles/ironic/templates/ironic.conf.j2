@@ -184,15 +184,18 @@ deploy_logs_collect = always
 [pxe]
 pxe_append_params = nofb nomodeset vga=normal console=tty0 console=ttyS0,{{ ironic_console_serial_speed }}
 {% if enable_ironic_ipxe | bool %}
+{# NOTE(mgoddard): iPXE uses the TFTP image cache (tftp_master_path, default
+   /tftpboot/master_images), in which images get hard linked to the http_root
+   directory (/httpboot). These must be on the same device, but /httpboot and
+   /tftpboot live in separate Docker volumes. Override the default paths for
+   iPXE to place them both in /httpboot. This prevents mixing PXE and iPXE. #}
 tftp_root = /httpboot
 tftp_master_path = /httpboot/master_images
 tftp_server = {{ api_interface_address }}
 {% endif %}
 
-{% if enable_ironic_ipxe | bool %}
 [deploy]
 http_url = {{ ironic_ipxe_url }}
-{% endif %}
 
 [oslo_middleware]
 enable_proxy_headers_parsing = True
