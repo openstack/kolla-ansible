@@ -1,7 +1,16 @@
 # These initial groups are the only groups required to be modified. The
 # additional groups are for more control of the environment.
+
+# NOTE(yoctozepto): In CI we want to test Masakari HA but not of other services,
+# to conserve the resources. Hence, we set Masakari groups to use both
+# primary and secondary while the parent group (control) uses only primary.
+
 [control]
-{% if scenario == 'monasca' %}
+{% if scenario == 'masakari' %}
+{% for host in hostvars if host in ['primary'] %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endfor %}
+{% elif scenario == 'monasca' %}
 {% for host in hostvars if host in ['primary', 'secondary1', 'secondary2'] %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
@@ -11,20 +20,25 @@
 {% endfor %}
 {% endif %}
 
-{% if scenario == 'monasca' %}
 [network:children]
 control
+
+# NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
+# we are forced to separate Pacemaker remotes from full members.
+# This is not as bad as it sounds, because it would be enforced in
+# non-containerised environments anyway.
+# In CI we want Pacemaker remotes to run on ternaries (to test multiple remotes).
+
+[compute]
+{% if scenario == 'masakari' %}
+{% for host in hostvars if host in ['ternary1', 'ternary2'] %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
+{% endfor %}
 {% else %}
-[network]
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endfor %}
 {% endif %}
-
-[compute]
-{% for host in hostvars %}
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
-{% endfor %}
 
 [storage]
 {% for host in hostvars %}
@@ -126,30 +140,20 @@ storage
 control
 
 # NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
-# we are forced to separate remotes from full members.
+# we are forced to separate Pacemaker remotes from full members.
 # This is not as bad as it sounds, because it would be enforced in
 # non-containerised environments anyway.
-#[hacluster:children]
-#control
+# In CI we want Pacemaker to run on primary and secondary (to test with HA).
+
 [hacluster]
 {% for host in hostvars %}
-{% if 'ternary' not in host %}
+{% if host in ['primary', 'secondary'] %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
 {% endif %}
 {% endfor %}
 
-# NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
-# we are forced to separate remotes from full members.
-# This is not as bad as it sounds, because it would be enforced in
-# non-containerised environments anyway.
-#[hacluster-remote:children]
-#compute
-[hacluster-remote]
-{% for host in hostvars %}
-{% if 'ternary' in host %}
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} ansible_user=kolla ansible_ssh_private_key_file={{ ansible_env.HOME ~ '/.ssh/id_rsa_kolla' }}
-{% endif %}
-{% endfor %}
+[hacluster-remote:children]
+compute
 
 [haproxy:children]
 network
@@ -796,14 +800,18 @@ elasticsearch
 [prometheus-blackbox-exporter:children]
 monitoring
 
+# NOTE(yoctozepto): In CI we want to test Masakari HA but not of other services,
+# to conserve the resources. Hence, we set Masakari groups to use both
+# primary and secondary while the parent group (control) uses only primary.
+
 [masakari-api:children]
-control
+hacluster
 
 [masakari-engine:children]
-control
+hacluster
 
 [masakari-hostmonitor:children]
-control
+hacluster
 
 [masakari-instancemonitor:children]
 compute
