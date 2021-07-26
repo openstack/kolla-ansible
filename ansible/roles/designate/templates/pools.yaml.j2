@@ -4,8 +4,15 @@
   description: Default BIND9 Pool
   attributes: {}
   ns_records:
+{% if designate_ns_record is string %}
     - hostname: {{ designate_ns_record }}.
       priority: 1
+{% else %}
+{% for host in designate_ns_record %}
+    - hostname: {{ host }}.
+      priority: 1
+{% endfor %}
+{% endif %}
   nameservers:
 {% if designate_backend == 'bind9' %}
 {% for host in groups['designate-backend-bind9'] %}
