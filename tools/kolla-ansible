@@ -125,7 +125,8 @@ function usage {
 Usage: $0 COMMAND [options]
 
 Options:
-    --inventory, -i <inventory_path>   Specify path to ansible inventory file
+    --inventory, -i <inventory_path>   Specify path to ansible inventory file. \
+Can be specified multiple times to pass multiple inventories.
     --playbook, -p <playbook_path>     Specify path to ansible playbook file
     --configdir <config_path>          Specify path to directory with globals.yml
     --key -k <key_path>                Specify path to ansible vault keyfile
@@ -239,12 +240,13 @@ BACKUP_TYPE="full"
 # Serial is not recommended and disabled by default. Users can enable it by
 # configuring ANSIBLE_SERIAL variable.
 ANSIBLE_SERIAL=${ANSIBLE_SERIAL:-0}
+INVENTORIES=()
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
 
     (--inventory|-i)
-            INVENTORY="$2"
+            INVENTORIES+=("$2")
             shift 2
             ;;
 
@@ -502,5 +504,8 @@ GLOBALS_DIR="${CONFIG_DIR}/globals.d"
 EXTRA_GLOBALS=$(find ${GLOBALS_DIR} -maxdepth 1 -type f -name '*.yml' -printf ' -e @%p' 2>/dev/null)
 PASSWORDS_FILE="${PASSWORDS_FILE:-${CONFIG_DIR}/passwords.yml}"
 CONFIG_OPTS="-e @${CONFIG_DIR}/globals.yml ${EXTRA_GLOBALS} -e @${PASSWORDS_FILE} -e CONFIG_DIR=${CONFIG_DIR}"
-CMD="ansible-playbook -i $INVENTORY $CONFIG_OPTS $EXTRA_OPTS $PLAYBOOK $VERBOSITY"
+CMD="ansible-playbook $CONFIG_OPTS $EXTRA_OPTS $PLAYBOOK $VERBOSITY"
+for INVENTORY in ${INVENTORIES[@]}; do
+    CMD="${CMD} --inventory $INVENTORY"
+done
 process_cmd
