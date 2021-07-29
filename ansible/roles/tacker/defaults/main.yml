@@ -60,7 +60,7 @@ tacker_server_default_volumes:
   - "{{ node_config_directory }}/tacker-server/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   # NOTE(yoctozepto): Starting in Train, this volume must be shared
   # between all instances of both Tacker services (Server, Conductor)
@@ -69,7 +69,7 @@ tacker_conductor_default_volumes:
   - "{{ node_config_directory }}/tacker-conductor/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/tacker/tacker:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/tacker' if tacker_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "kolla_tacker_vnfpackages:/var/lib/tacker/vnfpackages/"
   # NOTE(yoctozepto): Starting in Train, this volume must be shared
@@ -136,4 +136,4 @@ tacker_ks_users:
 ####################
 # HAProxy
 ####################
-tacker_haproxy_members: "{% for host in tacker_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ tacker_server_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
+tacker_haproxy_members: "{% for host in tacker_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ tacker_server_port }} check inter 2000 rise 2 fall 5;{% endfor %}"

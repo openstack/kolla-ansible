@@ -36,7 +36,7 @@ wsrep_sst_receive_address={{ api_interface_address | put_address_in_context('url
 
 wsrep_provider={{ wsrep_driver }}
 wsrep_cluster_name="{{ database_cluster_name }}"
-wsrep_node_name={{ ansible_hostname }}
+wsrep_node_name={{ ansible_facts.hostname }}
 wsrep_sst_method={{ sst_method }}
 wsrep_sst_auth={{ database_user }}:{{ database_password }}
 wsrep_slave_threads=4
@@ -48,7 +48,7 @@ max_connections=10000
 key_buffer_size = '64M'
 max_heap_table_size = '64M'
 tmp_table_size = '64M'
-{% set dynamic_pool_size_mb = (hostvars[inventory_hostname]['ansible_memtotal_mb'] * 0.4) | round | int %}
+{% set dynamic_pool_size_mb = (hostvars[inventory_hostname].ansible_facts.memtotal_mb * 0.4) | round | int %}
 {% if dynamic_pool_size_mb < 8192 %}
 innodb_buffer_pool_size = '{{ dynamic_pool_size_mb }}M'
 {% else %}

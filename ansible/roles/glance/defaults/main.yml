@@ -70,8 +70,8 @@ glance_services:
 ####################
 # HAProxy
 ####################
-haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
-haproxy_tls_members: "{% for host in glance_api_hosts %}server {{ hostvars[host]['ansible_hostname'] }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5 ssl verify required ca-file {{ haproxy_backend_cacert }};{% endfor %}"
+haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
+haproxy_tls_members: "{% for host in glance_api_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5 ssl verify required ca-file {{ haproxy_backend_cacert }};{% endfor %}"
 
 ####################
 # Keystone
@@ -161,7 +161,7 @@ glance_tls_proxy_healthcheck:
 glance_api_default_volumes:
   - "{{ node_config_directory }}/glance-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "{{ glance_file_datadir_volume }}:/var/lib/glance/"
   - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/glance' if glance_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
@@ -171,7 +171,7 @@ glance_api_default_volumes:
 glance_tls_proxy_default_volumes:
   - "{{ node_config_directory }}/glance-tls-proxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_os_family == 'Debian' else '' }}"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 glance_extra_volumes: "{{ default_extra_volumes }}"

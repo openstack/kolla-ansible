@@ -1,6 +1,12 @@
 [defaults]
 callback_plugins = {{ ara_callback_plugins.stdout }}
 host_key_checking = False
+# TODO(mgoddard): Add inject_facts_as_vars unconditionally when previous
+# release is xena or previous release has had this patch backported.
+{% if not is_upgrade or previous_release not in ["ussuri", "victoria", "wallaby"] %}
+# Ensure that facts are referenced via ansible_facts.<fact>.
+inject_facts_as_vars = False
+{% endif %}
 
 [ssh_connection]
 pipelining = True

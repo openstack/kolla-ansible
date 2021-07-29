@@ -82,7 +82,7 @@ def kolla_address(context, network_name, hostname=None):
                                   network_name=network_name))
 
     ansible_interface_name = interface_name.replace('-', '_')
-    interface = host.get('ansible_' + ansible_interface_name)
+    interface = host['ansible_facts'].get(ansible_interface_name)
     if interface is None:
         raise FilterError("Interface '{interface_name}' "
                           "not present "
