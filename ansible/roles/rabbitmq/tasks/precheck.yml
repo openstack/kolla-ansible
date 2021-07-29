@@ -60,7 +60,7 @@
 - name: Check if all rabbit hostnames are resolvable
   vars:
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
-  command: "getent {{ nss_database }} {{ hostvars[item]['ansible_hostname'] }}"
+  command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
@@ -121,7 +121,7 @@
 - name: Check if all outward rabbit hostnames are resolvable
   vars:
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
-  command: "getent {{ nss_database }} {{ hostvars[item]['ansible_hostname'] }}"
+  command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
   register: outward_rabbitmq_hostnames
   with_items: "{{ groups['outward-rabbitmq'] }}"

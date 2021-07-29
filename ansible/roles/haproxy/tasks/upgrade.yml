@@ -6,7 +6,7 @@
 - name: Stopping all slave keepalived containers
   vars:
     key: "{{ 'ipv6' if api_address_family == 'ipv6' else 'ipv4_secondaries' }}"
-    addresses: "{{ hostvars[inventory_hostname]['ansible_' + api_interface].get(key, []) | map(attribute='address') | list }}"
+    addresses: "{{ hostvars[inventory_hostname].ansible_facts[api_interface].get(key, []) | map(attribute='address') | list }}"
   become: true
   kolla_docker:
     action: "stop_container"
