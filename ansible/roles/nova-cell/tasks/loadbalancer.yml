@@ -78,12 +78,16 @@
             external: false
             port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_port'] }}"
             listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel {{ haproxy_nova_spicehtml5_proxy_tunnel_timeout }}"
           nova_spicehtml5proxy_external:
             enabled: "{{ hostvars[groups[cell_proxy_group][0]]['nova_console'] == 'spice' }}"
             mode: "http"
             external: true
             port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_port'] }}"
             listen_port: "{{ hostvars[groups[cell_proxy_group][0]]['nova_spicehtml5proxy_listen_port'] }}"
+            backend_http_extra:
+              - "timeout tunnel {{ haproxy_nova_spicehtml5_proxy_tunnel_timeout }}"
   tags: always
 
 - import_tasks: proxy_loadbalancer.yml
