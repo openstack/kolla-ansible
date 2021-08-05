@@ -328,6 +328,14 @@ than one node, edit ``multinode`` inventory:
       and for CentOS or RHEL:
       ``ansible -i multinode all -m raw -a "dnf -y install python3"``.
 
+   .. note::
+
+      ssh has been turned on, but there is no way to ping successfully. It is possible
+      that sshpass is not install   ed.you can run: for Debian or Ubuntu:
+      ``apt-get install sshpass``,
+      and for CentOS or RHEL:
+      ``dnf install sshpass``.
+
 Kolla passwords
 ---------------
 
