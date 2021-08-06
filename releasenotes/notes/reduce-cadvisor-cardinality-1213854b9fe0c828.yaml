@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    Adds support for passing extra runtime options to cAdvisor via
+    ``prometheus_cadvisor_cmdline_extras`` new variable. By default
+    system cgroups' metrics are disabled, plus container labels
+    don't get exposed to Prometheus. Expensive metrics that usually
+    should not be exported are also enforced to be disabled - consult
+    `<https://github.com/google/cadvisor/blob/master/docs/runtime_options.md#metrics>`_
+    for a list. These defaults create savings in resources usage by both
+    cAdvisor and Prometheus.
+upgrade:
+  - |
+    cAdvisor has now reduced number of Prometheus metrics and labels
+    exported by default. This means that corresponding timeseries will
+    no longer be created. If existing setup relies on these, eg. for
+    visualisation or alerting, they could be explicitly enabled prior to
+    upgrading with the ``prometheus_cadvisor_cmdline_extras`` new variable.
+    Reference for the possible options: `<https://github.com/google/cadvisor/blob/master/docs/runtime_options.md#metrics>`_.
