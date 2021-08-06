@@ -9,6 +9,7 @@ ceilometer_services:
     image: "{{ ceilometer_notification_image_full }}"
     volumes: "{{ ceilometer_notification_default_volumes + ceilometer_notification_extra_volumes }}"
     dimensions: "{{ ceilometer_notification_dimensions }}"
+    healthcheck: "{{ ceilometer_notification_healthcheck }}"
   ceilometer-central:
     container_name: ceilometer_central
     group: ceilometer-central
@@ -16,6 +17,7 @@ ceilometer_services:
     image: "{{ ceilometer_central_image_full }}"
     volumes: "{{ ceilometer_central_default_volumes + ceilometer_central_extra_volumes }}"
     dimensions: "{{ ceilometer_central_dimensions }}"
+    healthcheck: "{{ ceilometer_central_healthcheck }}"
   ceilometer-compute:
     container_name: ceilometer_compute
     group: ceilometer-compute
@@ -24,6 +26,7 @@ ceilometer_services:
     image: "{{ ceilometer_compute_image_full }}"
     volumes: "{{ ceilometer_compute_default_volumes + ceilometer_compute_extra_volumes }}"
     dimensions: "{{ ceilometer_compute_dimensions }}"
+    healthcheck: "{{ ceilometer_compute_healthcheck }}"
   ceilometer-ipmi:
     container_name: ceilometer_ipmi
     group: ceilometer-ipmi
@@ -31,6 +34,7 @@ ceilometer_services:
     image: "{{ ceilometer_ipmi_image_full }}"
     volumes: "{{ ceilometer_ipmi_default_volumes + ceilometer_ipmi_extra_volumes }}"
     dimensions: "{{ ceilometer_ipmi_dimensions }}"
+    healthcheck: "{{ ceilometer_ipmi_healthcheck }}"
 
 
 ####################
@@ -59,6 +63,58 @@ ceilometer_notification_dimensions: "{{ default_container_dimensions }}"
 ceilometer_central_dimensions: "{{ default_container_dimensions }}"
 ceilometer_compute_dimensions: "{{ default_container_dimensions }}"
 ceilometer_ipmi_dimensions: "{{ default_container_dimensions }}"
+
+ceilometer_notification_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ceilometer_notification_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ceilometer_notification_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ceilometer_notification_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ceilometer_notification_healthcheck_test: ["CMD-SHELL", "healthcheck_port ceilometer-agent-notification {{ om_rpc_port }}"]
+ceilometer_notification_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ceilometer_notification_healthcheck:
+  interval: "{{ ceilometer_notification_healthcheck_interval }}"
+  retries: "{{ ceilometer_notification_healthcheck_retries }}"
+  start_period: "{{ ceilometer_notification_healthcheck_start_period }}"
+  test: "{% if ceilometer_notification_enable_healthchecks | bool %}{{ ceilometer_notification_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ceilometer_notification_healthcheck_timeout }}"
+
+ceilometer_central_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ceilometer_central_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ceilometer_central_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ceilometer_central_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ceilometer_central_healthcheck_test: ["CMD-SHELL", "healthcheck_port ceilometer-polling {{ om_rpc_port }}"]
+ceilometer_central_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ceilometer_central_healthcheck:
+  interval: "{{ ceilometer_central_healthcheck_interval }}"
+  retries: "{{ ceilometer_central_healthcheck_retries }}"
+  start_period: "{{ ceilometer_central_healthcheck_start_period }}"
+  test: "{% if ceilometer_central_enable_healthchecks | bool %}{{ ceilometer_central_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ceilometer_central_healthcheck_timeout }}"
+
+ceilometer_compute_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ceilometer_compute_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ceilometer_compute_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ceilometer_compute_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ceilometer_compute_healthcheck_test: ["CMD-SHELL", "healthcheck_port ceilometer-polling {{ om_rpc_port }}"]
+ceilometer_compute_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ceilometer_compute_healthcheck:
+  interval: "{{ ceilometer_compute_healthcheck_interval }}"
+  retries: "{{ ceilometer_compute_healthcheck_retries }}"
+  start_period: "{{ ceilometer_compute_healthcheck_start_period }}"
+  test: "{% if ceilometer_compute_enable_healthchecks | bool %}{{ ceilometer_compute_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ceilometer_compute_healthcheck_timeout }}"
+
+ceilometer_ipmi_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ceilometer_ipmi_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ceilometer_ipmi_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ceilometer_ipmi_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ceilometer_ipmi_healthcheck_test: ["CMD-SHELL", "healthcheck_port ceilometer-polling {{ om_rpc_port }}"]
+ceilometer_ipmi_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ceilometer_ipmi_healthcheck:
+  interval: "{{ ceilometer_ipmi_healthcheck_interval }}"
+  retries: "{{ ceilometer_ipmi_healthcheck_retries }}"
+  start_period: "{{ ceilometer_ipmi_healthcheck_start_period }}"
+  test: "{% if ceilometer_ipmi_enable_healthchecks | bool %}{{ ceilometer_ipmi_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ceilometer_ipmi_healthcheck_timeout }}"
 
 ceilometer_notification_default_volumes:
   - "{{ node_config_directory }}/ceilometer-notification/:{{ container_config_directory }}/:ro"
