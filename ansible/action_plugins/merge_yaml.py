@@ -21,13 +21,6 @@ import tempfile
 
 from yaml import dump
 from yaml import safe_load
-try:
-    from yaml import CDumper as Dumper  # noqa: F401
-    from yaml import CLoader as Loader  # noqa: F401
-except ImportError:
-    from yaml import Dumper  # noqa: F401
-    from yaml import Loader  # noqa: F401
-
 
 from ansible import constants
 from ansible import errors as ansible_errors
