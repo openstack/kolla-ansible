@@ -9,6 +9,7 @@ zun_services:
     image: "{{ zun_api_image_full }}"
     volumes: "{{ zun_api_default_volumes + zun_api_extra_volumes }}"
     dimensions: "{{ zun_api_dimensions }}"
+    healthcheck: "{{ zun_api_healthcheck }}"
     haproxy:
       zun_api:
         enabled: "{{ enable_zun }}"
@@ -27,6 +28,7 @@ zun_services:
     image: "{{ zun_wsproxy_image_full }}"
     volumes: "{{ zun_wsproxy_default_volumes + zun_wsproxy_extra_volumes }}"
     dimensions: "{{ zun_wsproxy_dimensions }}"
+    healthcheck: "{{ zun_wsproxy_healthcheck }}"
     haproxy:
       zun_wsproxy:
         enabled: "{{ enable_zun }}"
@@ -46,6 +48,7 @@ zun_services:
     privileged: True
     volumes: "{{ zun_compute_default_volumes + zun_compute_extra_volumes }}"
     dimensions: "{{ zun_compute_dimensions }}"
+    healthcheck: "{{ zun_compute_healthcheck }}"
   zun-cni-daemon:
     container_name: zun_cni_daemon
     group: zun-cni-daemon
@@ -54,6 +57,7 @@ zun_services:
     privileged: True
     volumes: "{{ zun_cni_daemon_default_volumes + zun_cni_daemon_extra_volumes }}"
     dimensions: "{{ zun_cni_daemon_dimensions }}"
+    healthcheck: "{{ zun_cni_daemon_healthcheck }}"
 
 ####################
 ## Database
@@ -90,6 +94,58 @@ zun_api_dimensions: "{{ default_container_dimensions }}"
 zun_wsproxy_dimensions: "{{ default_container_dimensions }}"
 zun_compute_dimensions: "{{ default_container_dimensions }}"
 zun_cni_daemon_dimensions: "{{ default_container_dimensions }}"
+
+zun_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+zun_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+zun_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+zun_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+zun_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ zun_api_port }}"]
+zun_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+zun_api_healthcheck:
+  interval: "{{ zun_api_healthcheck_interval }}"
+  retries: "{{ zun_api_healthcheck_retries }}"
+  start_period: "{{ zun_api_healthcheck_start_period }}"
+  test: "{% if zun_api_enable_healthchecks | bool %}{{ zun_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ zun_api_healthcheck_timeout }}"
+
+zun_wsproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
+zun_wsproxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+zun_wsproxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+zun_wsproxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+zun_wsproxy_healthcheck_test: ["CMD-SHELL", "healthcheck_listen zun-wsproxy {{ zun_wsproxy_port }}"]
+zun_wsproxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+zun_wsproxy_healthcheck:
+  interval: "{{ zun_wsproxy_healthcheck_interval }}"
+  retries: "{{ zun_wsproxy_healthcheck_retries }}"
+  start_period: "{{ zun_wsproxy_healthcheck_start_period }}"
+  test: "{% if zun_wsproxy_enable_healthchecks | bool %}{{ zun_wsproxy_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ zun_wsproxy_healthcheck_timeout }}"
+
+zun_compute_enable_healthchecks: "{{ enable_container_healthchecks }}"
+zun_compute_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+zun_compute_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+zun_compute_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+zun_compute_healthcheck_test: ["CMD-SHELL", "healthcheck_port zun-compute {{ om_rpc_port }}"]
+zun_compute_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+zun_compute_healthcheck:
+  interval: "{{ zun_compute_healthcheck_interval }}"
+  retries: "{{ zun_compute_healthcheck_retries }}"
+  start_period: "{{ zun_compute_healthcheck_start_period }}"
+  test: "{% if zun_compute_enable_healthchecks | bool %}{{ zun_compute_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ zun_compute_healthcheck_timeout }}"
+
+zun_cni_daemon_enable_healthchecks: "{{ enable_container_healthchecks }}"
+zun_cni_daemon_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+zun_cni_daemon_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+zun_cni_daemon_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+zun_cni_daemon_healthcheck_test: ["CMD-SHELL", "healthcheck_listen zun-cni-daemon {{ zun_cni_daemon_port }}"]
+zun_cni_daemon_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+zun_cni_daemon_healthcheck:
+  interval: "{{ zun_cni_daemon_healthcheck_interval }}"
+  retries: "{{ zun_cni_daemon_healthcheck_retries }}"
+  start_period: "{{ zun_cni_daemon_healthcheck_start_period }}"
+  test: "{% if zun_cni_daemon_enable_healthchecks | bool %}{{ zun_cni_daemon_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ zun_cni_daemon_healthcheck_timeout }}"
 
 zun_api_default_volumes:
   - "{{ node_config_directory }}/zun-api/:{{ container_config_directory }}/:ro"
