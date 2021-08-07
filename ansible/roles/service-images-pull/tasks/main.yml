@@ -7,6 +7,10 @@
     action: "pull_image"
     common_options: "{{ docker_common_options }}"
     image: "{{ service.image }}"
+  retries: "{{ service_images_pull_retries }}"
+  delay: "{{ service_images_pull_delay }}"
+  register: result
+  until: result is success
   with_dict: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host }}"
   loop_control:
     label: "{{ item.key }}"
