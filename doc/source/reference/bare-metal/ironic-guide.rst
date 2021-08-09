@@ -106,6 +106,28 @@ enabled_boot_interfaces`` option in ``/etc/kolla/config/ironic.conf``:
    [DEFAULT]
    enabled_boot_interfaces = ipxe
 
+Attach ironic to external keystone (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In :kolla-ansible-doc:`multi-regional <user/multi-regions.html>` deployment
+keystone could be installed in one region (let's say region 1) and ironic -
+in another region (let's say region 2). In this case we don't install keystone
+together with ironic in region 2, but have to configure ironic to connect to
+existing keystone in region 1. To deploy ironic in this way we have to set
+variable ``enable_keystone`` to ``"no"``.
+
+.. code-block:: yaml
+
+    enable_keystone: "no"
+
+It will prevent keystone from being installed in region 2.
+
+To add keystone-related sections in ironic.conf, it is also needed to set
+variable ``ironic_enable_keystone_integration`` to ``"yes"``
+
+.. code-block:: yaml
+
+    ironic_enable_keystone_integration: "yes"
+
 Deployment
 ~~~~~~~~~~
 Run the deploy as usual:
