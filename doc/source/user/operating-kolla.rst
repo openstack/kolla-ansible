@@ -201,6 +201,12 @@ necessary update containers, without generating configuration.
 ``kolla-ansible -i INVENTORY prune-images`` is used to prune orphaned Docker
 images on hosts.
 
+``kolla-ansible -i INVENTORY1 -i INVENTORY2 ...`` Multiple inventories can be
+specified by passing the ``--inventory`` or ``-i`` command line option multiple
+times. This can be useful to share configuration between multiple environments.
+Any common configuration can be set in ``INVENTORY1`` and ``INVENTORY2`` can be
+used to set environment specific details.
+
 .. note::
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
