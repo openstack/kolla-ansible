@@ -8,3 +8,4 @@ This section describes configuration of message queue services.
    :maxdepth: 1
 
    rabbitmq
+   external-rabbitmq-guide
