@@ -46,16 +46,43 @@
 
 - name: Restart monasca-thresh container
   vars:
-    service_name: "monasca-thresh"
-    service: "{{ monasca_services[service_name] }}"
+    service: "{{ monasca_services['monasca-thresh'] }}"
   become: true
   kolla_docker:
-    action: "recreate_or_restart_container"
+    action: "start_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
+    detach: False
+    remove_on_exit: false
+    restart_policy: no
+    environment:
+      KOLLA_BOOTSTRAP:
+  run_once: True
+  delegate_to: "{{ groups[service.group]|first }}"
+  when:
+    - kolla_action != "config"
+
+- name: Resubmitting monasca-thresh topology
+  vars:
+    service: "{{ monasca_services['monasca-thresh'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    name: "resubmit_{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    detach: False
+    restart_policy: no
+    environment:
+      KOLLA_BOOTSTRAP:
+      TOPOLOGY_REPLACE:
+  run_once: True
+  delegate_to: "{{ groups[service.group]|first }}"
   when:
     - kolla_action != "config"
 
