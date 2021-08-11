@@ -66,6 +66,23 @@ auth_section = keystone_authtoken
 region_name = {{ openstack_region_name }}
 {% endif %}
 
+{% if cloudkitty_collector_backend == "monasca" %}
+[collector_monasca]
+monasca_service_name = monasca
+interface = {{ cloudkitty_monasca_interface }}
+{% endif %}
+
+{% if cloudkitty_collector_backend == "prometheus" %}
+[collector_prometheus]
+prometheus_url = {{ cloudkitty_prometheus_url }}
+
+{% if cloudkitty_prometheus_cafile is defined %}
+cafile = {{ cloudkitty_prometheus_cafile }}
+{% endif %}
+
+insecure = {{ cloudkitty_prometheus_insecure_connections }}
+{% endif %}
+
 [api]
 host_ip = {{ api_interface_address }}
 port = {{ cloudkitty_api_port }}
@@ -76,11 +93,10 @@ max_workers = {{ openstack_service_workers }}
 
 [storage]
 backend = {{ cloudkitty_storage_backend }}
-{% if cloudkitty_storage_backend == 'influxdb' %}
-version = 2
-{% endif %}
 {% if cloudkitty_storage_backend == 'sqlalchemy' %}
 version = 1
+{% else %}
+version = 2
 {% endif %}
 
 {% if cloudkitty_storage_backend == 'influxdb' %}
@@ -103,6 +119,18 @@ insecure = {{ cloudkitty_influxdb_insecure_connections }}
 
 {% if cloudkitty_influxdb_cafile is defined %}
 cafile = {{ cloudkitty_influxdb_cafile }}
+{% endif %}
+
+{% endif %}
+
+{% if cloudkitty_storage_backend == 'elasticsearch' %}
+[storage_elasticsearch]
+host = {{ cloudkitty_elasticsearch_url }}
+index_name = {{ cloudkitty_elasticsearch_index_name }}
+insecure = {{ cloudkitty_elasticsearch_insecure_connections }}
+
+{% if cloudkitty_elasticsearch_cafile is defined %}
+cafile = {{ cloudkitty_elasticsearch_cafile }}
 {% endif %}
 
 {% endif %}
