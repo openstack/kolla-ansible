@@ -102,11 +102,11 @@ cloudkitty_custom_metrics_yaml_file: "metrics.yml"
 ####################
 # Storage backend
 ####################
-# Valid options are 'sqlalchemy' or 'influxdb'. The default value is
+# Valid options are 'sqlalchemy', 'influxdb' or 'elasticsearch'. The default value is
 # 'influxdb', which matches the default in Cloudkitty since the Stein release.
-# When the backend is "influxdb", we also enable Influxdb.
-# Also, when using 'influxdb' as the backend, we trigger the configuration/use
-# of Cloudkitty storage backend version 2.
+# When the backend is "influxdb" or "elasticsearch", we also enable the required service
+# accordingly.
+# Additionally, we use cloudkitty API v2 for any backend but sqlalchemy.
 cloudkitty_storage_backend: "influxdb"
 
 # InfluxDB retention policy to use (defaults to autogen).
@@ -116,13 +116,46 @@ cloudkitty_storage_backend: "influxdb"
 # cloudkitty_influxdb_use_ssl: false
 
 # Path of the CA certificate to trust for HTTPS connections.
-# cloudkitty_influxdb_cafile: "/full/qualified/path/to/CAs/certificates"
+# cloudkitty_influxdb_cafile: "{{ openstack_cacert }}"
 
 # Set to true to authorize insecure HTTPS connections to InfluxDB.
 # This means, HTTPS connections without validating the certificate used by InfluxDB
 # cloudkitty_influxdb_insecure_connections: false
 
 cloudkitty_influxdb_name: "cloudkitty"
+
+# Set the elasticsearch index name.
+cloudkitty_elasticsearch_index_name: "cloudkitty"
+
+# Set the elasticsearch host URL.
+cloudkitty_elasticsearch_url: "{{ internal_protocol }}://{{ elasticsearch_address }}:{{ elasticsearch_port }}"
+
+# Path of the CA certificate to trust for HTTPS connections.
+# cloudkitty_elasticsearch_cafile: "{{ openstack_cacert }}"
+
+# Set to true to authorize insecure HTTPS connections to Elasticsearch.
+# This means, HTTPS connections without validating the certificate used by elasticsearch
+cloudkitty_elasticsearch_insecure_connections: false
+
+####################
+# Collector
+####################
+# Valid options are 'gnocchi', 'monasca' or 'prometheus'. The default value is
+# 'gnocchi', which matches the default in Cloudkitty.
+cloudkitty_collector_backend: "gnocchi"
+
+# Set Monasca interface used for keystone URL discovery.
+cloudkitty_monasca_interface: "internal"
+
+# Set prometheus collector URL.
+cloudkitty_prometheus_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_port }}"
+
+# Path of the CA certificate to trust for HTTPS connections.
+# cloudkitty_prometheus_cafile: "{{ openstack_cacert }}"
+
+# Set to true to authorize insecure HTTPS connections to Prometheus.
+# This means, HTTPS connections without validating the certificate used by prometheus.
+cloudkitty_prometheus_insecure_connections: false
 
 ####################
 # Keystone
