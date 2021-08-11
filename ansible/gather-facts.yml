@@ -5,8 +5,15 @@
 - name: Gather facts for all hosts
   hosts: all
   serial: '{{ kolla_serial|default("0") }}'
-  gather_facts: true
+  gather_facts: false
   tasks:
+    - name: Gather facts
+      setup:
+        filter: "{{ kolla_ansible_setup_filter }}"
+        gather_subset: "{{ kolla_ansible_setup_gather_subset }}"
+      when:
+        - not ansible_facts
+
     - name: Group hosts to determine when using --limit
       group_by:
         key: "all_using_limit_{{ (ansible_play_batch | length) != (groups['all'] | length) }}"
@@ -32,10 +39,12 @@
   tasks:
     - name: Gather facts
       setup:
+        filter: "{{ kolla_ansible_setup_filter }}"
+        gather_subset: "{{ kolla_ansible_setup_gather_subset }}"
       delegate_facts: True
       delegate_to: "{{ item }}"
       with_items: "{{ delegate_hosts }}"
       # We gathered facts for all hosts in the batch during the first play.
       when:
-        - not hostvars[item].ansible_facts.module_setup | default(false)
+        - not hostvars[item].ansible_facts
   tags: always
