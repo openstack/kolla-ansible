@@ -65,3 +65,17 @@ concept known as Vendordata. If a Vendordata file is located in the
 following path within the Kolla configuration, Kolla will
 automatically use it when the Nova service is deployed or
 reconfigured: ``/etc/kolla/config/nova/vendordata.json``.
+
+Failure handling
+================
+
+Compute service registration
+----------------------------
+
+During deployment, Kolla Ansible waits for Nova compute services to register
+themselves. By default, if a compute service does not register itself before
+the timeout, that host will be marked as failed in the Ansible run. This
+behaviour is useful at scale, where failures are more frequent.
+
+Alternatively, to fail all hosts in a cell when any compute service fails
+to register, set ``nova_compute_registration_fatal`` to ``true``.
