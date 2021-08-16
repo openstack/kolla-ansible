@@ -17,3 +17,18 @@
     - ansible_facts.distribution_release not in host_os_distributions[ansible_facts.distribution]
     - ansible_facts.distribution_version not in host_os_distributions[ansible_facts.distribution]
     - ansible_facts.distribution_major_version not in host_os_distributions[ansible_facts.distribution]
+
+- name: Checking if CentOS is Stream
+  become: true
+  command: grep -q Stream /etc/os-release
+  register: stream_status
+  changed_when: false
+  when:
+    - ansible_facts.distribution == 'CentOS'
+
+- name: Fail if not running on CentOS Stream
+  fail:
+    msg: CentOS Linux is not supported, you need to run CentOS Stream.
+  when:
+    - ansible_facts.distribution == 'CentOS'
+    - stream_status.rc != 0
