@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 _XTRACE_OVS_DPDK_CTL=$(set +o | grep xtrace)
 if [[ "${OVS_DPDK_CTL_DEBUG}" == "True" ]]; then
