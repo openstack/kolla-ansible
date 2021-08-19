@@ -97,7 +97,7 @@ already configures RabbitMQ server for IPv6 (if necessary). Any argument can be
 passed there as documented in https://www.rabbitmq.com/runtime.html
 
 The default value for ``rabbitmq_server_additional_erl_args`` is ``+S 2:2 +sbwt
-none``.
+none +sbwtdcpu none +sbwtdio none``.
 
 By default RabbitMQ starts N schedulers where N is the number of CPU cores,
 including hyper-threaded cores. This is fine when you assume all CPUs are
@@ -106,5 +106,6 @@ Here we go for two scheduler threads (``+S 2:2``).  More details can be found
 here: https://www.rabbitmq.com/runtime.html#scheduling and here:
 https://erlang.org/doc/man/erl.html#emulator-flags
 
-The ``+sbwt`` argument prevents busy waiting of the scheduler, for more details
-see: https://www.rabbitmq.com/runtime.html#busy-waiting.
+The ``+sbwt none +sbwtdcpu none +sbwtdio none`` arguments prevent busy waiting
+of the scheduler, for more details see:
+https://www.rabbitmq.com/runtime.html#busy-waiting.
