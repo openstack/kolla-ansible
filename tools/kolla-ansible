@@ -139,6 +139,8 @@ Options:
     --vault-id <@prompt or path>       Specify @prompt or password file (Ansible >=  2.4)
     --ask-vault-pass                   Ask for vault password
     --vault-password-file <path>       Specify password file for vault decrypt
+    --check, -C                        Don't make any changes and try to predict some of the changes that may occur instead
+    --diff, -D                         Show differences in ansible-playbook changed tasks
     --verbose, -v                      Increase verbosity of ansible-playbook
 
 Environment variables:
@@ -190,6 +192,8 @@ cat <<EOF
 --vault-id
 --ask-vault-pass
 --vault-password-file
+--check -C
+--diff -D
 --verbose -v
 prechecks
 check
@@ -217,8 +221,8 @@ EOF
 
 check_environment_coherence
 
-SHORT_OPTS="hi:p:t:k:e:v"
-LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
+SHORT_OPTS="hi:p:t:k:e:CD:v"
+LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
@@ -261,6 +265,16 @@ while [ "$#" -gt 0 ]; do
     (--tags|-t)
             EXTRA_OPTS="$EXTRA_OPTS --tags $2"
             shift 2
+            ;;
+
+    (--check|-C)
+            EXTRA_OPTS="$EXTRA_OPTS --check"
+            shift 1
+            ;;
+
+    (--diff|-D)
+            EXTRA_OPTS="$EXTRA_OPTS --diff"
+            shift 1
             ;;
 
     (--verbose|-v)
