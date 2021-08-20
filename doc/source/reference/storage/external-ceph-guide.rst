@@ -145,20 +145,19 @@ Configuring Nova for Ceph includes following steps:
 
    * ``ceph_nova_keyring`` (by default it's the same as
      ``ceph_cinder_keyring``)
-   * ``ceph_nova_user`` (default: ``nova``)
+   * ``ceph_nova_user`` (by default it's the same as ``ceph_cinder_user``)
    * ``ceph_nova_pool_name`` (default: ``vms``)
 
 #. Copy Ceph configuration file to ``/etc/kolla/config/nova/ceph.conf``
 #. Copy Ceph keyring file(s) to:
 
-   * ``/etc/kolla/config/nova/<ceph_nova_keyring>`` (if your Ceph deployment
-     created one)
+   * ``/etc/kolla/config/nova/<ceph_nova_keyring>``
 
-   .. warning::
+   .. note::
 
-      If you are using ceph-ansible or another deployment tool that doesn't
-      create separate key for Nova just copy the Cinder key and configure
-      ``ceph_nova_user`` to the same value as ``ceph_cinder_user``.
+      If you are using a Ceph deployment tool that generates separate Ceph
+      keys for Cinder and Nova, you will need to override
+      ``ceph_nova_keyring`` and ``ceph_nova_user`` to match.
 
 Gnocchi
 -------
