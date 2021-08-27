@@ -74,6 +74,15 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
+{% if enable_prometheus_fluentd_integration | bool %}
+  - job_name: fluentd
+    static_configs:
+      - targets:
+{% for host in groups['fluentd'] %}
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_fluentd_integration_port'] }}'
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_ceph_mgr_exporter | bool %}
   - job_name: ceph_mgr_exporter
     honor_labels: true
