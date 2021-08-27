@@ -40,7 +40,15 @@ function test_swift_logged {
 
     openstack --debug object store account show
 
+    cleanup_swift
+
     echo "SUCCESS: Swift"
+}
+
+function cleanup_swift {
+    openstack --debug object delete $CONTAINER_NAME $FILE_PATH
+
+    openstack --debug container delete $CONTAINER_NAME
 }
 
 function test_swift {
