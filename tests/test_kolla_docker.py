@@ -672,6 +672,104 @@ class TestImage(base.BaseTestCase):
         self.dw.dc.images.assert_called_once_with()
         self.assertTrue(return_data)
 
+    def test_compare_config_unchanged(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        self.dw.dc.exec_inspect.return_value = {'ExitCode': 0}
+        return_data = self.dw.compare_config()
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+        self.assertFalse(return_data)
+
+    def test_compare_config_changed(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        self.dw.dc.exec_inspect.return_value = {'ExitCode': 1}
+        return_data = self.dw.compare_config()
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+        self.assertTrue(return_data)
+
+    def test_compare_config_changed_container_exited(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        self.dw.dc.exec_inspect.return_value = {'ExitCode': 137}
+        return_data = self.dw.compare_config()
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+        self.assertTrue(return_data)
+
+    def test_compare_config_changed_client_failure(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        failure_response = mock.MagicMock()
+        failure_response.status_code = 409  # any client error should do here
+        self.dw.dc.exec_inspect.side_effect = docker_error.APIError(
+            message="foo",
+            response=failure_response,
+        )
+        return_data = self.dw.compare_config()
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+        self.assertTrue(return_data)
+
+    def test_compare_config_error(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        self.dw.dc.exec_inspect.return_value = {'ExitCode': -1}
+        self.assertRaises(Exception, self.dw.compare_config)  # noqa: H202
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+
+    def test_compare_config_error_server_failure(self):
+        self.dw = get_DockerWorker(FAKE_DATA['params'])
+        job = mock.MagicMock()
+        self.dw.dc.exec_create.return_value = job
+        self.dw.dc.exec_start.return_value = 'fake output'
+        failure_response = mock.MagicMock()
+        failure_response.status_code = 500  # any server error should do here
+        self.dw.dc.exec_inspect.side_effect = docker_error.APIError(
+            message="foo",
+            response=failure_response,
+        )
+        self.assertRaises(docker_error.APIError, self.dw.compare_config)
+        self.dw.dc.exec_create.assert_called_once_with(
+            FAKE_DATA['params']['name'],
+            kd.COMPARE_CONFIG_CMD,
+            user='root')
+        self.dw.dc.exec_start.assert_called_once_with(job)
+        self.dw.dc.exec_inspect.assert_called_once_with(job)
+
     def test_get_image_id_not_exists(self):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04'})
