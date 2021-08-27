@@ -59,6 +59,7 @@ keystone_services:
       - "kolla_logs:/var/log/kolla/"
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
     dimensions: "{{ keystone_fernet_dimensions }}"
+    healthcheck: "{{ keystone_fernet_healthcheck }}"
 
 ####################
 # Database
@@ -122,6 +123,19 @@ keystone_ssh_healthcheck:
   start_period: "{{ keystone_ssh_healthcheck_start_period }}"
   test: "{% if keystone_ssh_enable_healthchecks | bool %}{{ keystone_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ keystone_ssh_healthcheck_timeout }}"
+
+keystone_fernet_enable_healthchecks: "{{ enable_container_healthchecks }}"
+keystone_fernet_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+keystone_fernet_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+keystone_fernet_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+keystone_fernet_healthcheck_test: ["CMD-SHELL", "/usr/bin/fernet-healthcheck.sh"]
+keystone_fernet_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+keystone_fernet_healthcheck:
+  interval: "{{ keystone_fernet_healthcheck_interval }}"
+  retries: "{{ keystone_fernet_healthcheck_retries }}"
+  start_period: "{{ keystone_fernet_healthcheck_start_period }}"
+  test: "{% if keystone_fernet_enable_healthchecks | bool %}{{ keystone_fernet_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ keystone_fernet_healthcheck_timeout }}"
 
 keystone_default_volumes:
   - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
