@@ -401,6 +401,16 @@ There are a few options that are required to deploy Kolla-Ansible:
 
      kolla_base_distro: "centos"
 
+  You can also use CentOS Stream 8 - it's recommended for new installations
+  because CentOS Linux 8 was supported only until `31st Dec 2021 <https://wiki.centos.org/About/Product>`__.
+
+  By default Kolla-Ansible will use ``-centos8s`` ``openstack_tag_suffix`` on CentOS Stream 8 hosts,
+  to override that behaviour please set ``openstack_tag_suffix`` to an empty/different value.
+
+  .. code-block:: yaml
+
+     openstack_tag_suffix: ""
+
   Next "type" of installation needs to be configured.
   Choices are:
 
