@@ -34,7 +34,6 @@
         - enable_glance_{{ enable_glance | bool }}
         - enable_gnocchi_{{ enable_gnocchi | bool }}
         - enable_grafana_{{ enable_grafana | bool }}
-        - enable_haproxy_{{ enable_haproxy | bool }}
         - enable_hacluster_{{ enable_hacluster | bool }}
         - enable_heat_{{ enable_heat | bool }}
         - enable_horizon_{{ enable_horizon | bool }}
@@ -45,6 +44,7 @@
         - enable_keystone_{{ enable_keystone | bool }}
         - enable_kibana_{{ enable_kibana | bool }}
         - enable_kuryr_{{ enable_kuryr | bool }}
+        - enable_loadbalancer_{{ enable_loadbalancer | bool }}
         - enable_magnum_{{ enable_magnum | bool }}
         - enable_manila_{{ enable_manila | bool }}
         - enable_mariadb_{{ enable_mariadb | bool }}
@@ -113,17 +113,17 @@
         tags: chrony,
         when: enable_chrony | bool }
 
-- name: Apply role haproxy
+- name: Apply role loadbalancer
   gather_facts: false
   hosts:
-    - haproxy
-    - '&enable_haproxy_True'
+    - loadbalancer
+    - '&enable_loadbalancer_True'
   serial: '{{ kolla_serial|default("0") }}'
   tags:
-    - haproxy
+    - loadbalancer
   roles:
-    - { role: haproxy,
-        when: enable_haproxy | bool }
+    - { role: loadbalancer,
+        when: enable_loadbalancer | bool }
   tasks:
     - block:
         - include_role:
