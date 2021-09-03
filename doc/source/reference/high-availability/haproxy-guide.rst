@@ -9,7 +9,7 @@ Openstack and other services. High-availability in Kolla
 is implented as via Keepalived and HAProxy. Keepalived manages virtual IP
 addresses, while HAProxy load-balances traffic to service backends.
 These two components must be installed on the same hosts
-and they are deployed to hosts in the ``haproxy`` group.
+and they are deployed to hosts in the ``loadbalancer`` group.
 
 Preparation and deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
