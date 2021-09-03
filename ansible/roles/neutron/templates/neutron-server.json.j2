@@ -1,5 +1,5 @@
 {
-    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'ovn'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_vpnaas.conf {% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %}",
+    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'ovn'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_vpnaas.conf {% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/neutron.conf",
@@ -19,12 +19,11 @@
             "owner": "neutron",
             "perm": "0600"
         },{% endif %}
-{% if neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] -%}
+{% if neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] -%}
         {
             "source": "{{ container_config_directory }}/nsx.ini",
             "dest": "/etc/neutron/plugins/vmware/nsx.ini",
             "owner": "neutron",
-            "optional": {{ (neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs']) | string | lower }},
             "perm": "0600"
         },{% endif %}
 {% if check_extra_ml2_plugins is defined and check_extra_ml2_plugins.matched > 0 %}{% for plugin in check_extra_ml2_plugins.files %}
