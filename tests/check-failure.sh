@@ -23,11 +23,17 @@ check_failure() {
     unhealthy_containers=$(sudo docker ps -a --format "{{.Names}}" \
         --filter health=unhealthy)
 
-    if [[ -n "$failed_containers" ]]; then
+    if [[ -n "$unhealthy_containers" ]]; then
         exit 1;
     fi
 
-    if [[ -n "$unhealthy_containers" ]]; then
+    # NOTE(mgoddard): monasca-thresh is a one-shot container that exits but
+    # remains in place, leaving it with a status of exited. This is harmless.
+    if [[ "$failed_containers" = "monasca_thresh" ]]; then
+        exit 0
+    fi
+
+    if [[ -n "$failed_containers" ]]; then
         exit 1;
     fi
 }
