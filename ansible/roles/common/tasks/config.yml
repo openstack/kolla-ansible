@@ -275,26 +275,29 @@
   with_dict: "{{ common_services }}"
 
 - name: Copy rabbitmq-env.conf to kolla toolbox
-  copy:
-    content: |
-      RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
-      export ERL_INETRC=/etc/rabbitmq/erl_inetrc
+  template:
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/kolla-toolbox/rabbitmq-env.conf"
     mode: "0600"
+  with_first_found:
+    - "{{ node_custom_config }}/kolla-toolbox/{{ inventory_hostname }}/rabbitmq-env.conf"
+    - "{{ node_custom_config }}/kolla-toolbox/rabbitmq-env.conf"
+    - "rabbitmq-env.conf.j2"
   become: true
   when:
     - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
     - enable_rabbitmq | bool
-    - api_address_family == "ipv6"
 
-- name: Copy rabbitmq erl_intr to kolla toolbox
-  copy:
-    content: |
-      {inet6,true}.
+- name: Copy rabbitmq erl_inetrc to kolla toolbox
+  template:
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/kolla-toolbox/erl_inetrc"
     mode: "0600"
   become: true
+  with_first_found:
+    - "{{ node_custom_config }}/kolla-toolbox/{{ inventory_hostname }}/erl_inetrc"
+    - "{{ node_custom_config }}/kolla-toolbox/erl_inetrc"
+    - "erl_inetrc.j2"
   when:
     - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
     - enable_rabbitmq | bool
-    - api_address_family == "ipv6"
