@@ -99,6 +99,12 @@ function test_zun_logged {
     openstack volume delete zun_test_volume
     echo "SUCCESS: Zun Cinder volume attachment"
 
+    # NOTE(hongbin): temporarily skip capsule test due to #1941982
+    # See https://bugs.launchpad.net/zun/+bug/1941982
+    if [[ $BASE_DISTRO =~ ^(debian|ubuntu)$ ]]; then
+        return 0
+    fi
+
     echo "TESTING: Zun capsule"
     cat >/tmp/capsule.yaml <<EOF
 capsuleVersion: beta
