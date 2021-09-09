@@ -168,10 +168,13 @@ The ``docker_registry`` variable, which is not set by default, defines the
 address of the Docker registry. If the variable is not set, Dockerhub will be
 used.
 
-The ``docker_registry_insecure`` variable, which defaults to ``true`` if
-``docker_registry`` is set, or ``false`` otherwise, defines whether to
-configure ``docker_registry`` as an insecure registry. Insecure registries use
-HTTP rather than HTTPS.
+The ``docker_registry_insecure`` variable, which defaults to ``false``,
+defines whether to configure ``docker_registry`` as an insecure registry.
+Insecure registries allow to use broken certificate chains and HTTP without
+TLS but it's strongly discouraged in production unless in very specific
+circumstances. For more discussion, see the official Docker documentation on
+`insecure registries <https://docs.docker.com/registry/insecure/>`__.
+Additionally, notice this will disable Docker registry authentication.
 
 The ``docker_log_max_file`` variable, which defaults to ``5``, defines the
 maximum number of log files to retain per container. The
