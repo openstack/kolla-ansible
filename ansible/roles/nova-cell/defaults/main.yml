@@ -239,7 +239,17 @@ nova_compute_ironic_image: "{{ docker_registry ~ '/' if docker_registry else '' 
 nova_compute_ironic_tag: "{{ nova_tag }}"
 nova_compute_ironic_image_full: "{{ nova_compute_ironic_image }}:{{ nova_compute_ironic_tag }}"
 
-nova_libvirt_dimensions: "{{ default_container_dimensions }}"
+nova_libvirt_default_dimensions:
+  ulimits:
+    # NOTE(yoctozepto): This limit bump is required for cgroupsv2 which use eBPF
+    # to filter devices. See also LP#1941940. The new value is said to support
+    # up to 4096 guests (see libvirtd systemd service file from Debian Bullseye
+    # libvirt-daemon-system package for details).
+    memlock:
+      soft: 67108864  # 64 MiB
+      hard: 67108864  # 64 MiB
+
+nova_libvirt_dimensions: "{{ default_container_dimensions | combine(nova_libvirt_default_dimensions, recursive=True) }}"
 nova_ssh_dimensions: "{{ default_container_dimensions }}"
 nova_novncproxy_dimensions: "{{ default_container_dimensions }}"
 nova_spicehtml5proxy_dimensions: "{{ default_container_dimensions }}"
