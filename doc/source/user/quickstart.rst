@@ -357,7 +357,8 @@ There are a few options that are required to deploy Kolla Ansible:
 * Image options
 
   User has to specify images that are going to be used for our deployment.
-  In this guide `DockerHub <https://hub.docker.com/u/kolla/>`__ provided
+  In this guide
+  `Quay.io <https://quay.io/organization/openstack.kolla>`__-provided,
   pre-built images are going to be used. To learn more about building
   mechanism, please refer :kolla-doc:`Building Container Images
   <admin/image-building.html>`.

@@ -160,7 +160,7 @@ Building images
 
 To build any custom images required by Monasca see the instructions in the
 Kolla repo: `kolla/doc/source/admin/template-override/monasca.rst`. The
-remaining images may be pulled from Docker Hub, but if you need to build
+remaining images may be pulled from a public registry, but if you need to build
 them manually you can use the following commands:
 
 .. code-block:: console

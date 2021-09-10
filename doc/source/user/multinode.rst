@@ -9,23 +9,13 @@ Multinode Deployment of Kolla
 Deploy a registry
 =================
 
-A Docker registry is a locally hosted registry that replaces the need to pull
-from the Docker Hub to get images. Kolla can function with or without a local
-registry, however for a multinode deployment some type of registry is
-mandatory.  Only one registry must be deployed, although HA features exist for
-registry services.
+A Docker registry is a locally-hosted registry that replaces the need to pull
+from a public registry to get images. Kolla can function with or without
+a local registry, however for a multinode deployment some type of local
+registry is recommended. Only one registry instance needs to be deployed,
+although HA features exist for registry services.
 
-The Docker registry prior to version 2.3 has extremely bad performance because
-all container data is pushed for every image rather than taking advantage of
-Docker layering to optimize push operations. For more information reference
-`pokey registry <https://github.com/docker/docker/issues/14018>`__.  The Kolla
-community recommends using registry 2.3 or later.
-
-The registry may be configured either as a local registry with support for
-storing images, or as a pull-through cache for Docker hub.
-
-Option 1: local registry
-------------------------
+A very simple registry may be deployed on the current host as follows:
 
 .. code-block:: console
 
@@ -46,36 +36,7 @@ IP address and port on which the registry is listening:
 .. code-block:: yaml
 
    docker_registry: 192.168.1.100:4000
-
-Option 2: registry mirror
--------------------------
-
-The Docker registry can be configured as a pull through cache to proxy the
-official Kolla images hosted in Docker Hub. In order to configure the local
-registry as a pull through cache, pass the environment variable
-``REGISTRY_PROXY_REMOTEURL`` through to the registry container.  Pushing to a
-registry configured as a pull-through cache is unsupported.  For more
-information, Reference the `Docker Documentation
-<https://docs.docker.com/registry/configuration/>`__.
-
-.. code-block:: console
-
-   docker run -d \
-    --name registry \
-    --restart=always \
-    -p 4000:5000 \
-    -v registry:/var/lib/registry \
-    -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
-    registry:2
-
-Edit ``globals.yml`` and add the following, where ``192.168.1.100:4000`` is the
-IP address and port on which the registry is listening:
-
-.. code-block:: yaml
-
-   docker_custom_config:
-     registry-mirrors:
-       - http://192.168.1.100:4000
+   docker_registry_insecure: yes
 
 .. _edit-inventory:
 

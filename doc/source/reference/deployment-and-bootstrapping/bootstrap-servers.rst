@@ -165,8 +165,8 @@ The ``docker_runtime_directory`` variable is optional. If set, it defines the
 runtime (``data-root``) directory for Docker.
 
 The ``docker_registry`` variable, which is not set by default, defines the
-address of the Docker registry. If the variable is not set, Dockerhub will be
-used.
+address of the Docker registry. If the variable is not set,
+`Quay.io <https://quay.io/organization/openstack.kolla>`__ will be used.
 
 The ``docker_registry_insecure`` variable, which defaults to ``false``,
 defines whether to configure ``docker_registry`` as an insecure registry.

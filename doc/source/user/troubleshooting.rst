@@ -10,22 +10,6 @@ Failures
 If Kolla fails, often it is caused by a CTRL-C during the deployment
 process or a problem in the ``globals.yml`` configuration.
 
-.. note::
-
-   In some countries like China, Kolla might fail due to unable to pull images
-   from `Docker Hub <https://hub.docker.com/u/kolla/>`__. There is a workround
-   to solve this issue:
-
-   .. code-block:: console
-
-      mkdir -p /etc/docker
-      tee /etc/docker/daemon.json <<-'EOF'
-      {
-        "registry-mirrors": ["https://registry.docker-cn.com"]
-      }
-      EOF
-      systemctl restart docker
-
 To correct the problem where Operators have a misconfigured environment,
 the Kolla community has added a precheck feature which ensures the
 deployment targets are in a state where Kolla may deploy to them. To
