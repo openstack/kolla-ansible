@@ -29,7 +29,18 @@ For VMware DVS:
 * neutron-metadata-agent
 
 Kolla can deploy the Glance and Cinder services using VMware datastore as their
-backend. Ceilometer metering for vSphere is also supported.
+backend.
+You can create Cinder volumes as VMDKs or as First Class Disks (FCDs).
+
+An FCD, also known as an Improved Virtual Disk (IVD) or Managed Virtual Disk,
+is a named virtual disk independent of a virtual machine.
+Using FCDs for Cinder volumes eliminates the need for shadow virtual machines.
+
+The FCD backend is offered in addition to the default VMDK backend.
+If you use FCD as the backend driver for Cinder, you can use both FCD and
+VMDK volumes in the same deployment.
+
+Ceilometer metering for vSphere is also supported.
 
 Because the `vmware-nsx <https://github.com/openstack/vmware-nsx>`__ drivers for
 neutron use completely different architecture than other types of
@@ -150,6 +161,16 @@ If you want to set VMware datastore as cinder backend, enable it in
 
    enable_cinder: "yes"
    cinder_backend_vmwarevc_vmdk: "yes"
+   vmware_datastore_name: "TestDatastore"
+
+If you want to set VMware First Class Disk (FCD) datastore
+as VMware vStorage Object backend, enable it in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_cinder: "yes"
+   cinder_backend_vmware_vstorage_object: "yes"
    vmware_datastore_name: "TestDatastore"
 
 If you want to set VMware datastore as glance backend, enable it in
@@ -295,13 +316,23 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
    * enable_neutron_vpnaas: "yes"
    * enable_neutron_fwaas: "yes"
 
-If you want to set VMware datastore as cinder backend, enable it in
+If you want to set VMware VMDK datastore as cinder backend, enable it in
 ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_cinder: "yes"
    cinder_backend_vmwarevc_vmdk: "yes"
+   vmware_datastore_name: "TestDatastore"
+
+If you want to set VMware First Class Disk (FCD) datastore
+as VMware vStorage Object backend, enable it in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_cinder: "yes"
+   cinder_backend_vmware_vstorage_object: "yes"
    vmware_datastore_name: "TestDatastore"
 
 If you want to set VMware datastore as glance backend, enable it in
@@ -397,13 +428,23 @@ Enable VMware nova-compute plugin and NSX-V neutron-server plugin in
    nova_compute_virt_type: "vmware"
    neutron_plugin_agent: "vmware_dvs"
 
-If you want to set VMware datastore as Cinder backend, enable it in
+If you want to set VMware VMDK datastore as cinder backend, enable it in
 ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_cinder: "yes"
    cinder_backend_vmwarevc_vmdk: "yes"
+   vmware_datastore_name: "TestDatastore"
+
+If you want to set VMware First Class Disk (FCD) datastore
+as VMware vStorage Object backend, enable it in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   enable_cinder: "yes"
+   cinder_backend_vmware_vstorage_object: "yes"
    vmware_datastore_name: "TestDatastore"
 
 If you want to set VMware datastore as Glance backend, enable it in
