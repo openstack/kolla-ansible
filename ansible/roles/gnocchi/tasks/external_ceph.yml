@@ -2,40 +2,37 @@
 - name: Copy over ceph.conf file
   template:
     src: "{{ node_custom_config }}/gnocchi/ceph.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/ceph.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
     mode: "0660"
   become: true
-  when: inventory_hostname in groups[item]
-  with_items:
-    - "gnocchi-api"
-    - "gnocchi-metricd"
-    - "gnocchi-statsd"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ gnocchi_services }}"
   notify:
-    - Restart {{ item }} container
+    - Restart {{ item.key }} container
 
 - name: Copy over ceph gnocchi keyring
   copy:
     src: "{{ node_custom_config }}/gnocchi/{{ ceph_gnocchi_keyring }}"
-    dest: "{{ node_config_directory }}/{{ item }}/{{ ceph_gnocchi_keyring }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ ceph_gnocchi_keyring }}"
     mode: "0660"
   become: true
-  when: inventory_hostname in groups[item]
-  with_items:
-    - "gnocchi-api"
-    - "gnocchi-metricd"
-    - "gnocchi-statsd"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ gnocchi_services }}"
   notify:
-    - Restart {{ item }} container
+    - Restart {{ item.key }} container
 
 - name: Ensuring config directory has correct owner and permission
   become: true
   file:
-    path: "{{ node_config_directory }}/{{ item }}"
+    path: "{{ node_config_directory }}/{{ item.key }}"
     recurse: yes
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
-  when: inventory_hostname in groups[item]
-  with_items:
-    - "gnocchi-api"
-    - "gnocchi-metricd"
-    - "gnocchi-statsd"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ gnocchi_services }}"
