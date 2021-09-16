@@ -4,31 +4,42 @@
 Operating Kolla
 ===============
 
-Versioning
-~~~~~~~~~~
+Tools versioning
+~~~~~~~~~~~~~~~~
 
-Kolla uses the ``x.y.z`` `semver <https://semver.org/>`_ nomenclature for
-naming versions. Kolla's initial Pike release was ``5.0.0`` and the initial
-Queens release is ``6.0.0``. The Kolla community commits to release z-stream
-updates every 45 days that resolve defects in the stable version in use and
-publish those images to the Docker Hub registry.
+Kolla and Kolla Ansible use the ``x.y.z`` `semver <https://semver.org/>`_
+nomenclature for naming versions, with major version increasing with each
+new series, e.g., Wallaby.
+The tools are designed to, respectively, build and deploy Docker images of
+OpenStack services of that series.
+Users are advised to run the latest version of tools for the series they
+target, preferably by installing directly from the relevant branch of the Git
+repository, e.g.:
 
-To prevent confusion, the Kolla community recommends using an alpha identifier
-``x.y.z.a`` where ``a`` represents any customization done on the part of the
-operator. For example, if an operator intends to modify one of the Docker files
-or the repos from the originals and build custom images for the Pike version,
-the operator should start with version 5.0.0.0 and increase alpha for each
-release. Alpha tag usage is at discretion of the operator. The alpha identifier
-could be a number as recommended or a string of the operator's choosing.
+.. code-block:: console
 
-To customize the version number uncomment ``openstack_release`` in globals.yml
-and specify the desired version number or name (e.g. ``victoria``,
-``wallaby``). If ``openstack_release`` is not specified, Kolla will deploy or
-upgrade using the version number information contained in the kolla-ansible
-package.
+   pip3 install --upgrade git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
+
+Version of deployed images
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Kolla Ansible will deploy or upgrade using the series name embedded
+in the internal config (``openstack_release``) and it is not recommended to
+tweak this unless using a local registry and a custom versioning policy, e.g.,
+when users want to control when services are upgraded and to which version,
+possibly on a per-service basis (but this is an advanced use case scenario).
 
 Upgrade procedure
 ~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   This procedure is for upgrading from series to series, not for doing updates
+   within a series.
+   Inside a series, it is usually sufficient to just update the
+   ``kolla-ansible`` package, rebuild (if needed) and pull the images,
+   and run ``kolla-ansible deploy`` again.
+   Please follow release notes to check if there are any issues to be aware of.
 
 .. note::
 
@@ -39,25 +50,11 @@ Kolla's strategy for upgrades is to never make a mess and to follow consistent
 patterns during deployment such that upgrades from one environment to the next
 are simple to automate.
 
-Kolla implements a one command operation for upgrading an existing deployment
-consisting of a set of containers and configuration data to a new deployment.
+Kolla Ansible implements a single command operation for upgrading an existing
+deployment.
 
 Limitations and Recommendations
 -------------------------------
-
-.. note::
-
-   Varying degrees of success have been reported with upgrading the libvirt
-   container with a running virtual machine in it. The libvirt upgrade still
-   needs a bit more validation, but the Kolla community feels confident this
-   mechanism can be used with the correct Docker storage driver.
-
-.. note::
-
-   Because of system technical limitations, upgrade of a libvirt container when
-   using software emulation (``virt_type = qemu`` in nova.conf), does not work
-   at all. This is acceptable because KVM is the recommended virtualization
-   driver to use with Nova.
 
 .. note::
 
@@ -88,74 +85,89 @@ release. CentOS Linux users upgrading from Victoria should first migrate hosts
 and container images from CentOS Linux to CentOS Stream before upgrading to
 Wallaby.
 
-Preparation
------------
+Preparation (the foreword)
+--------------------------
 
-While there may be some cases where it is possible to upgrade by skipping this
-step (i.e. by upgrading only the ``openstack_release`` version) - generally,
-when looking at a more comprehensive upgrade, the kolla-ansible package itself
-should be upgraded first. This will include reviewing some of the configuration
-and inventory files. On the operator/master node, a backup of the
-``/etc/kolla`` directory may be desirable.
+Before preparing the upgrade plan and making any decisions, please read the
+`release notes <https://docs.openstack.org/releasenotes/kolla-ansible/index.html>`__
+for the series you are targeting, especially the `Upgrade notes` that we
+publish for your convenience and awareness.
 
-If upgrading to ``|KOLLA_OPENSTACK_RELEASE|``, upgrade the kolla-ansible
-package:
+Before you begin, **make a backup of your config**. On the operator/deployment
+node, copy the contents of the config directory (``/etc/kolla`` by default) to
+a backup place (or use versioning tools, like git, to keep previous versions
+of config in a safe place).
+
+Preparation (the real deal)
+---------------------------
+
+First, upgrade the ``kolla-ansible`` package:
 
 .. code-block:: console
 
-   pip install --upgrade git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
+   pip3 install --upgrade git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
 
-If this is a minor upgrade, and you do not wish to upgrade kolla-ansible
-itself, you may skip this step.
+.. note::
+
+   If you are running from Git repository, then just checkout the desired
+   branch and run ``pip3 install --upgrade`` with the repository directory.
 
 The inventory file for the deployment should be updated, as the newer sample
 inventory files may have updated layout or other relevant changes.
-Use the newer ``|KOLLA_OPENSTACK_RELEASE|`` one as a starting template, and
-merge your existing inventory layout into a copy of the one from here::
+The ``diff`` tool (or similar) is your friend in this task.
+If using a virtual environment, the sample inventories are in
+``/path/to/venv/share/kolla-ansible/ansible/inventory/``, else they are
+most likely in
+``/usr/local/share/kolla-ansible/ansible/inventory/``.
 
-    /usr/share/kolla-ansible/ansible/inventory/
-
-In addition the ``|KOLLA_OPENSTACK_RELEASE|`` sample configuration files should
-be taken from::
-
-    # CentOS
-    /usr/share/kolla-ansible/etc_examples/kolla
-
-    # Ubuntu
-    /usr/local/share/kolla-ansible/etc_examples/kolla
-
-At this stage, files that are still at the previous version and need manual
-updating are:
+Other files which may need manual updating are:
 
 - ``/etc/kolla/globals.yml``
 - ``/etc/kolla/passwords.yml``
 
-For ``globals.yml`` relevant changes should be merged into a copy of the new
-template, and then replace the file in ``/etc/kolla`` with the updated version.
-For ``passwords.yml``, see the ``kolla-mergepwd`` instructions in
-`Tips and Tricks`.
+For ``globals.yml``, it is best to follow the release notes (mentioned above).
+For ``passwords.yml``, one needs to use ``kolla-mergepwd`` and ``kolla-genpwd``
+tools.
 
-For the kolla docker images, the ``openstack_release`` is updated to
-``|KOLLA_OPENSTACK_RELEASE|``:
+``kolla-mergepwd --old OLD_PASSWDS --new NEW_PASSWDS --final FINAL_PASSWDS``
+is used to merge passwords from old installation with newly generated
+passwords. The workflow is:
 
-.. code-block:: yaml
+#. Save old passwords from ``/etc/kolla/passwords.yml`` into
+   ``passwords.yml.old``.
+#. Generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``.
+#. Merge ``passwords.yml.old`` and ``passwords.yml.new`` into
+   ``/etc/kolla/passwords.yml``.
 
-   openstack_release: |KOLLA_OPENSTACK_RELEASE|
+For example:
 
-Once the kolla release, the inventory file, and the relevant configuration
-files have been updated in this way, the operator may first want to 'pull'
-down the images to stage the ``|KOLLA_OPENSTACK_RELEASE|`` versions. This can
-be done safely ahead of time, and does not impact the existing services.
-(optional)
+.. code-block:: console
 
-Run the command to pull the ``|KOLLA_OPENSTACK_RELEASE|`` images for staging:
+   cp /etc/kolla/passwords.yml passwords.yml.old
+   cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
+   kolla-genpwd -p passwords.yml.new
+   kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
+
+.. note::
+
+   ``kolla-mergepwd``, by default, keeps old, unused passwords intact.
+   To alter this behavior, and remove such entries, use the ``--clean``
+   argument when invoking ``kolla-mergepwd``.
+
+Run the command below to pull the new images on target hosts:
 
 .. code-block:: console
 
    kolla-ansible pull
 
-At a convenient time, the upgrade can now be run (it will complete more
-quickly if the images have been staged ahead of time).
+It is also recommended to run prechecks to identify potential configuration
+issues:
+
+.. code-block:: console
+
+   kolla-ansible prechecks
+
+At a convenient time, the upgrade can now be run.
 
 Perform the Upgrade
 -------------------
@@ -166,8 +178,9 @@ To perform the upgrade:
 
    kolla-ansible upgrade
 
-After this command is complete the containers will have been recreated from the
-new images.
+After this command is complete, the containers will have been recreated from
+the new images and all database schema upgrades and similar actions performed
+for you.
 
 Tips and Tricks
 ~~~~~~~~~~~~~~~
@@ -225,35 +238,8 @@ for example to populate a fact cache.
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
 
-Passwords
----------
-
-The following commands manage the Kolla Ansible passwords file.
-
-``kolla-mergepwd --old OLD_PASSWDS --new NEW_PASSWDS --final FINAL_PASSWDS``
-is used to merge passwords from old installation with newly generated
-passwords during upgrade of Kolla release. The workflow is:
-
-#. Save old passwords from ``/etc/kolla/passwords.yml`` into
-   ``passwords.yml.old``.
-#. Generate new passwords via ``kolla-genpwd`` as ``passwords.yml.new``.
-#. Merge ``passwords.yml.old`` and ``passwords.yml.new`` into
-   ``/etc/kolla/passwords.yml``.
-
-For example:
-
-.. code-block:: console
-
-   mv /etc/kolla/passwords.yml passwords.yml.old
-   cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
-   kolla-genpwd -p passwords.yml.new
-   kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
-
-.. note::
-
-   ``kolla-mergepwd``, by default, keeps old, unused passwords intact.
-   To alter this behavior, and remove such entries, use the ``--clean``
-   argument when invoking ``kolla-mergepwd``.
+Using Hashicorp Vault for password storage
+------------------------------------------
 
 Hashicorp Vault can be used as an alternative to Ansible Vault for storing
 passwords generated by Kolla Ansible. To use Hashicorp Vault as the secrets
