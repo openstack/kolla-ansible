@@ -146,6 +146,13 @@ scrape_configs:
 {% endif %}
 
 {% if enable_prometheus_alertmanager | bool %}
+  - job_name: alertmanager
+    static_configs:
+      - targets:
+{% for host in groups['prometheus-alertmanager'] %}
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+{% endfor %}
+
 alerting:
   alertmanagers:
   - static_configs:
