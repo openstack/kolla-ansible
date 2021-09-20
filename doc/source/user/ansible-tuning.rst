@@ -65,6 +65,25 @@ the `jsonfile cache plugin
 You may also wish to set the expiration timeout for the cache via ``[defaults]
 fact_caching_timeout``.
 
+Populating the cache
+~~~~~~~~~~~~~~~~~~~~
+
+In some situations it may be helpful to populate the fact cache on demand. The
+``kolla-ansible gather-facts`` command may be used to do this.
+
+One specific case where this may be helpful is when running ``kolla-ansible``
+with a ``--limit`` argument, since in that case hosts that match the limit will
+gather facts for hosts that fall outside the limit. In the extreme case of a
+limit that matches only one host, it will serially gather facts for all other
+hosts. To avoid this issue, run ``kolla-ansible gather-facts`` without a limit
+to populate the fact cache in parallel before running the required command with
+a limit. For example:
+
+.. code-block:: console
+
+   kolla-ansible gather-facts
+   kolla-ansible deploy --limit control01
+
 Fact variable injection
 -----------------------
 

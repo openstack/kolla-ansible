@@ -207,6 +207,9 @@ times. This can be useful to share configuration between multiple environments.
 Any common configuration can be set in ``INVENTORY1`` and ``INVENTORY2`` can be
 used to set environment specific details.
 
+``kolla-ansible -i INVENTORY gather-facts`` is used to gather Ansible facts,
+for example to populate a fact cache.
+
 .. note::
 
    In order to do smoke tests, requires ``kolla_enable_sanity_checks=yes``.
