@@ -79,7 +79,7 @@ Using this way, you need to adjust the inventory file:
 If you choose to use haproxy for load balancing between the
 members of the cluster, every node within this group
 needs to be resolvable and reachable from all
-the hosts within the ``[haproxy:children]``  group
+the hosts within the ``[loadbalancer:children]``  group
 of your inventory (defaults to ``[network]``).
 
 In addition, configure the ``/etc/kolla/globals.yml`` file

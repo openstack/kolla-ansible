@@ -129,7 +129,7 @@ grouped together and changing these around can break your deployment:
    [elasticsearch:children]
    control
 
-   [haproxy:children]
+   [loadbalancer:children]
    network
 
 .. _multinode-host-and-group-variables:
