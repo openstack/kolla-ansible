@@ -63,6 +63,20 @@ for Ceph includes the following steps:
 
 #. Copy Ceph keyring to ``/etc/kolla/config/glance/<ceph_glance_keyring>``
 
+#. For copy-on-write set following in ``/etc/kolla/config/glance.conf``:
+
+   .. path /etc/kolla/config/glance.conf
+   .. code-block:: ini
+
+      [GLOBAL]
+      show_image_direct_url = True
+
+.. warning::
+
+    ``show_image_direct_url`` can present a security risk if using more
+    than just Ceph as Glance backend(s). Please see
+    :glance-doc:`Glance show_image_direct_url <configuration/glance_api.html#DEFAULT.show_image_direct_url>`
+
 Cinder
 ------
 
