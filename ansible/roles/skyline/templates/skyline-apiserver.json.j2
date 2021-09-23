@@ -1,0 +1,36 @@
+{
+    "command": "gunicorn -c /etc/skyline/gunicorn.py skyline_apiserver.main:app",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/skyline.yaml",
+            "dest": "/etc/skyline/skyline.yaml",
+            "owner": "skyline",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/gunicorn.py",
+            "dest": "/etc/skyline/gunicorn.py",
+            "owner": "skyline",
+            "perm": "0600"
+        }{% if skyline_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/skyline-cert.pem",
+            "dest": "/etc/skyline/certs/skyline-cert.pem",
+            "owner": "skyline",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/skyline-key.pem",
+            "dest": "/etc/skyline/certs/skyline-key.pem",
+            "owner": "skyline",
+            "perm": "0600"
+        }{% endif %}
+        ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/skyline",
+            "owner": "skyline:skyline",
+            "recurse": true
+        }
+    ]
+}

@@ -1,0 +1,92 @@
+default:
+  access_token_expire: {{ skyline_access_token_expire_seconds }}
+  access_token_renew: {{ skyline_access_token_renew_seconds }}
+  cors_allow_origins: {{ skyline_backend_cors_origins }}
+  database_url: mysql://{{ skyline_database_user }}:{{ skyline_database_password }}@{{ skyline_database_address }}/{{ skyline_database_name }}
+  debug: {{ skyline_logging_debug }}
+  log_dir: {{ log_dir }}
+  secret_key: {{ skyline_secret_key }}
+  session_name: {{ skyline_session_name }}
+openstack:
+{% if skyline_base_domains_ignore | bool %}
+  base_domains:
+{% if enable_heat | bool %}
+  - heat_user_domain
+{% endif %}
+{% if enable_magnum | bool %}
+  - magnum
+{% endif %}
+{% endif %}
+  default_region: {{ openstack_region_name }}
+  extension_mapping:
+{% if enable_neutron_port_forwarding | bool %}
+    floating-ip-port-forwarding: neutron_port_forwarding
+{% endif %}
+{% if enable_neutron_qos | bool %}
+    qos: neutron_qos
+{% endif %}
+{% if enable_neutron_vpnaas | bool %}
+    vpnaas: neutron_vpn
+{% endif %}
+  keystone_url: {{ skyline_keystone_url }}
+  nginx_prefix: {{ skyline_nginx_prefix }}
+  reclaim_instance_interval: {{ skyline_reclaim_instance_interval }}
+  service_mapping:
+{% if enable_ironic | bool %}
+    baremetal: ironic
+{% endif %}
+{% if enable_nova | bool %}
+    compute: nova
+{% endif %}
+{% if enable_zun | bool %}
+    container: zun
+{% endif %}
+{% if enable_magnum | bool %}
+    container-infra: magnum
+{% endif %}
+{% if enable_trove | bool %}
+    database: trove
+{% endif %}
+{% if enable_keystone | bool %}
+    identity: keystone
+{% endif %}
+{% if enable_glance | bool %}
+    image: glance
+{% endif %}
+{% if enable_barbican | bool %}
+    key-manager: barbican
+{% endif %}
+{% if enable_octavia | bool %}
+    load-balancer: octavia
+{% endif %}
+{% if enable_neutron | bool %}
+    network: neutron
+{% endif %}
+{% if enable_swift | bool %}
+    object-store: swift
+{% endif %}
+{% if enable_heat | bool %}
+    orchestration: heat
+{% endif %}
+{% if enable_placement | bool %}
+    placement: placement
+{% endif %}
+{% if enable_manila | bool %}
+    sharev2: manilav2
+{% endif %}
+{% if enable_cinder | bool %}
+    volumev3: cinder
+{% endif %}
+  system_admin_roles:
+{% for skyline_system_admin_role in skyline_system_admin_roles %}
+  - {{ skyline_system_admin_role }}
+{% endfor %}
+  system_project: service
+  system_project_domain: {{ default_project_domain_name }}
+  system_reader_roles:
+{% for skyline_system_reader_role in skyline_system_reader_roles %}
+  - {{ skyline_system_reader_role }}
+{% endfor %}
+  system_user_domain: {{ default_user_domain_name }}
+  system_user_name: skyline
+  system_user_password: {{ skyline_keystone_password }}
