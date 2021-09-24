@@ -19,7 +19,10 @@ import docker
 import json
 import re
 
+from ansible.module_utils.ansible_release import __version__ as ansible_version
 from ansible.module_utils.basic import AnsibleModule
+
+from ast import literal_eval
 
 DOCUMENTATION = '''
 ---
@@ -108,7 +111,10 @@ def gen_commandline(params):
     if params.get('module_name'):
         command.extend(['-m', params.get('module_name')])
     if params.get('module_args'):
-        module_args = params.get('module_args')
+        if StrictVersion(ansible_version) < StrictVersion('2.11.0'):
+            module_args = params.get('module_args')
+        else:
+            module_args = literal_eval(params.get('module_args'))
         if isinstance(module_args, dict):
             module_args = ' '.join("{}='{}'".format(key, value)
                                    for key, value in module_args.items())
