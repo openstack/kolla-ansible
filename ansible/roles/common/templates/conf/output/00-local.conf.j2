@@ -1,3 +1,4 @@
+{% if enable_swift | bool and (inventory_hostname in groups['swift-proxy-server'] or inventory_hostname in groups['swift-account-server'] or inventory_hostname in groups['swift-container-server'] or inventory_hostname in groups['swift-object-server']) %}
 <match syslog.{{ syslog_swift_facility }}.**>
   @type copy
   <store>
@@ -58,7 +59,9 @@
   </store>
 {% endif %}
 </match>
+{% endif %}
 
+{% if enable_haproxy | bool and inventory_hostname in groups['haproxy'] %}
 <match syslog.{{ syslog_haproxy_facility }}.**>
   @type copy
   <store>
@@ -121,6 +124,7 @@
   </store>
 {% endif %}
 </match>
+{% endif %}
 
 {% if glance_enable_tls_backend | bool %}
 <match syslog.{{ syslog_glance_tls_proxy_facility }}.**>
