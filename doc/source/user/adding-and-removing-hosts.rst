@@ -194,7 +194,7 @@ If possible, live migrate instances to another host.
 
 .. code-block:: console
 
-   openstack server list --host <host> -f value -c ID | while read server; do
+   openstack server list --all-projects --host <host> -f value -c ID | while read server; do
      openstack server migrate --live-migration $server
    done
 
