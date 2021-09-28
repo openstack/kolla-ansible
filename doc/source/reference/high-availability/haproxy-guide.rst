@@ -45,3 +45,20 @@ This is especially helpful for connections to MariaDB. See
 `here <https://blog.cloudflare.com/when-tcp-sockets-refuse-to-die/>`__ and
 `here <https://access.redhat.com/solutions/726753>`__ for
 further information about this kernel option.
+
+Backend weights
+---------------
+
+When different baremetal are used in infrastructure as haproxy backends
+or they are overloaded for some reason, kolla-ansible is able to change
+weight of backend per sevice. Weight can be any integer value from 1 to
+256.
+
+To set weight of backend per service, modify inventory file as below:
+
+.. code-block:: ini
+
+   [control]
+   server1 haproxy_nova_api_weight=10
+   server2 haproxy_nova_api_weight=2 haproxy_keystone_internal_weight=10
+   server3 haproxy_keystone_admin_weight=50
