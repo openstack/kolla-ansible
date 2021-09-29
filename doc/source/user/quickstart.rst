@@ -381,7 +381,7 @@ There are a few options that are required to deploy Kolla Ansible:
   binary
    using repositories like apt or dnf
 
-  source
+  source (default)
    using raw source archives, git repositories or local source directory
 
   .. note::
