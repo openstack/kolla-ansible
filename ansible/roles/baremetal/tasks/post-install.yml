@@ -208,22 +208,6 @@
     - apparmor_libvirtd_profile.stat.exists
     - not apparmor_libvirtd_disable_profile.stat.exists
 
-- name: Get stat of chronyd apparmor profile
-  stat:
-    path: /etc/apparmor.d/usr.sbin.chronyd
-  register: apparmor_chronyd_profile
-  when:
-    - ansible_facts.os_family == "Debian"
-    - enable_chrony | bool
-
-- name: Remove apparmor profile for chrony
-  command: apparmor_parser -R /etc/apparmor.d/usr.sbin.chronyd
-  become: True
-  when:
-    - ansible_facts.os_family == "Debian"
-    - enable_chrony | bool
-    - apparmor_chronyd_profile.stat.exists
-
 - name: Create docker group
   group:
     name: docker
