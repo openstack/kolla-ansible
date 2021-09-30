@@ -95,16 +95,69 @@ function delete_a_volume {
     done
 }
 
-function test_instance_boot {
-    echo "TESTING: Server creation"
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net kolla_boot_test
-    openstack --debug server list
+function create_instance {
+    local name=$1
+    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${name}
     # If the status is not ACTIVE, print info and exit 1
-    if [[ $(openstack server show kolla_boot_test -f value -c status) != "ACTIVE" ]]; then
+    if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
         echo "FAILED: Instance is not active"
-        openstack --debug server show kolla_boot_test
+        openstack --debug server show ${name}
         return 1
     fi
+}
+
+function delete_instance {
+    local name=$1
+    openstack server delete --wait ${name}
+}
+
+function create_fip {
+    openstack floating ip create public1 -f value -c floating_ip_address
+}
+
+function delete_fip {
+    local fip_addr=$1
+    openstack floating ip delete ${fip_addr}
+}
+
+function attach_fip {
+    local instance_name=$1
+    local fip_addr=$2
+    openstack server add floating ip ${instance_name} ${fip_addr}
+}
+
+function detach_fip {
+    local instance_name=$1
+    local fip_addr=$2
+    openstack server remove floating ip ${instance_name} ${fip_addr}
+}
+
+function test_ssh {
+    local instance_name=$1
+    local fip_addr=$2
+    local attempts
+    attempts=12
+    for i in $(seq 1 ${attempts}); do
+        if ping -c1 -W1 ${fip_addr} && ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no cirros@${fip_addr} hostname; then
+            break
+        elif [[ $i -eq ${attempts} ]]; then
+            echo "Failed to access server via SSH after ${attempts} attempts"
+            echo "Console log:"
+            openstack console log show ${instance_name} || true
+            openstack --debug server show ${instance_name}
+            return 1
+        else
+            echo "Cannot access server - retrying"
+        fi
+        sleep 10
+    done
+}
+
+function test_instance_boot {
+    local fip_addr
+
+    echo "TESTING: Server creation"
+    create_instance kolla_boot_test
     echo "SUCCESS: Server creation"
 
     if [[ $SCENARIO == "cephadm" ]] || [[ $SCENARIO == "zun" ]]; then
@@ -134,35 +187,42 @@ function test_instance_boot {
     fi
 
     echo "TESTING: Floating ip allocation"
-    fip_addr=$(openstack floating ip create public1 -f value -c floating_ip_address)
-    openstack server add floating ip kolla_boot_test ${fip_addr}
+    fip_addr=$(create_fip)
+    attach_fip kolla_boot_test ${fip_addr}
     echo "SUCCESS: Floating ip allocation"
 
     echo "TESTING: PING&SSH to floating ip"
-    attempts=12
-    for i in $(seq 1 ${attempts}); do
-        if ping -c1 -W1 ${fip_addr} && ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no cirros@${fip_addr} hostname; then
-            break
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to access server via SSH after ${attempts} attempts"
-            echo "Console log:"
-            openstack console log show kolla_boot_test
-            return 1
-        else
-            echo "Cannot access server - retrying"
-        fi
-        sleep 10
-    done
+    test_ssh kolla_boot_test ${fip_addr}
     echo "SUCCESS: PING&SSH to floating ip"
 
     echo "TESTING: Floating ip deallocation"
-    openstack server remove floating ip kolla_boot_test ${fip_addr}
-    openstack floating ip delete ${fip_addr}
+    detach_fip kolla_boot_test ${fip_addr}
+    delete_fip ${fip_addr}
     echo "SUCCESS: Floating ip deallocation"
 
     echo "TESTING: Server deletion"
-    openstack server delete --wait kolla_boot_test
+    delete_instance kolla_boot_test
     echo "SUCCESS: Server deletion"
+
+    if [[ $HAS_UPGRADE == 'yes' ]]; then
+        echo "TESTING: Instance (Nova and Neutron) upgrade stability (PHASE: $PHASE)"
+
+        if [[ $PHASE == 'deploy' ]]; then
+            create_instance kolla_upgrade_test
+            fip_addr=$(create_fip)
+            attach_fip kolla_upgrade_test ${fip_addr}
+            test_ssh kolla_upgrade_test ${fip_addr}  # tested to see if the instance has not just failed booting already
+            echo ${fip_addr} > /tmp/kolla_ci_pre_upgrade_fip_addr
+        elif [[ $PHASE == 'upgrade' ]]; then
+            fip_addr=$(cat /tmp/kolla_ci_pre_upgrade_fip_addr)
+            test_ssh kolla_upgrade_test ${fip_addr}
+            detach_fip kolla_upgrade_test ${fip_addr}
+            delete_fip ${fip_addr}
+            delete_instance kolla_upgrade_test
+        fi
+
+        echo "SUCCESS: Instance (Nova and Neutron) upgrade stability (PHASE: $PHASE)"
+    fi
 }
 
 function test_openstack_logged {
