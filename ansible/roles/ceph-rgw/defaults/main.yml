@@ -1,0 +1,92 @@
+---
+project_name: "ceph-rgw"
+
+ceph_rgw_services:
+  # NOTE(mgoddard): There is no container deployment, this is used for load
+  # balancer configuration.
+  ceph-rgw:
+    group: "all"
+    enabled: "{{ enable_ceph_rgw | bool }}"
+    haproxy:
+      radosgw:
+        enabled: "{{ enable_ceph_rgw_loadbalancer | bool }}"
+        mode: "http"
+        external: false
+        port: "{{ ceph_rgw_port }}"
+        custom_member_list: "{{ ceph_rgw_haproxy_members }}"
+      radosgw_external:
+        enabled: "{{ enable_ceph_rgw_loadbalancer | bool }}"
+        mode: "http"
+        external: true
+        port: "{{ ceph_rgw_port }}"
+        custom_member_list: "{{ ceph_rgw_haproxy_members }}"
+
+####################
+# Load balancer
+####################
+
+# List of Ceph hosts to use as HAProxy backends. Each item should contain
+# 'host' and 'port'` keys. The 'ip' and 'port' keys are optional. If 'ip' is
+# not specified, the 'host' values should be resolvable from the host running
+# HAProxy. If the ``port`` is not specified, the default HTTP (80) or HTTPS
+# (443) port will be used.
+ceph_rgw_hosts: []
+ceph_rgw_haproxy_members: >-
+  {%- set members = [] -%}
+  {%- for host in ceph_rgw_hosts -%}
+  {%- set port = (":" ~ host.port) if host.port is defined else "" -%}
+  {%- set member = "server " ~ host.host ~ " " ~ host.ip | default(host.host) ~ port ~ " " ~ ceph_rgw_haproxy_healthcheck -%}
+  {%- set _ = members.append(member) -%}
+  {%- endfor -%}
+  {{ members }}
+ceph_rgw_haproxy_healthcheck: "check inter 2000 rise 2 fall 5"
+
+
+####################
+# OpenStack
+####################
+
+# Whether to register Ceph RadosGW swift-compatible endpoints in Keystone.
+enable_ceph_rgw_keystone: "{{ enable_ceph_rgw | bool }}"
+
+# Enable/disable ceph-rgw compatibility with OpenStack Swift.
+# This should match the configuration used by Ceph RadosGW.
+ceph_rgw_swift_compatibility: false
+
+# Enable/disable including the account (project) in the endpoint URL. This
+# allows for cross-project and public object access.
+# This should match the 'rgw_swift_account_in_url' config option used by Ceph
+# RadosGW.
+ceph_rgw_swift_account_in_url: false
+
+ceph_rgw_endpoint_path: "{{ '/' if ceph_rgw_swift_compatibility | bool else '/swift/' }}v1{% if ceph_rgw_swift_account_in_url | bool %}/AUTH_%(project_id)s{% endif %}"
+
+ceph_rgw_admin_endpoint: "{{ admin_protocol }}://{{ ceph_rgw_internal_fqdn | put_address_in_context('url') }}:{{ ceph_rgw_port }}{{ ceph_rgw_endpoint_path }}"
+ceph_rgw_internal_endpoint: "{{ internal_protocol }}://{{ ceph_rgw_internal_fqdn | put_address_in_context('url') }}:{{ ceph_rgw_port }}{{ ceph_rgw_endpoint_path }}"
+ceph_rgw_public_endpoint: "{{ public_protocol }}://{{ ceph_rgw_external_fqdn | put_address_in_context('url') }}:{{ ceph_rgw_port }}{{ ceph_rgw_endpoint_path }}"
+
+ceph_rgw_keystone_user: "ceph_rgw"
+
+openstack_ceph_rgw_auth: "{{ openstack_auth }}"
+
+
+####################
+# Keystone
+####################
+ceph_rgw_ks_services:
+  - name: "swift"
+    type: "object-store"
+    description: "Openstack Object Storage"
+    endpoints:
+      - {'interface': 'admin', 'url': '{{ ceph_rgw_admin_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ ceph_rgw_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ ceph_rgw_public_endpoint }}'}
+
+ceph_rgw_ks_users:
+  - project: "service"
+    user: "{{ ceph_rgw_keystone_user }}"
+    password: "{{ ceph_rgw_keystone_password }}"
+    role: "admin"
+
+ceph_rgw_ks_roles:
+  - "ResellerAdmin"

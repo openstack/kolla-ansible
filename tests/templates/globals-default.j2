@@ -132,6 +132,14 @@ nova_backend_ceph: "yes"
 # TODO(yoctozepto): Remove this in the Xena cycle.
 # cephadm doesn't support chrony in a container (checks for chrony.service)
 enable_chrony: "no"
+
+enable_ceph_rgw: {{ not is_upgrade or previous_release != 'wallaby' }}
+ceph_rgw_hosts:
+{% for host in hostvars %}
+  - host: {{ host }}
+    ip: {{ hostvars[host]['ansible_host'] }}
+    port: 6780
+{% endfor %}
 {% endif %}
 
 {% if tls_enabled %}
