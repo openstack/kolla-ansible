@@ -31,6 +31,19 @@
   when:
     - nova_policy.results
 
+- name: Check for vendordata file
+  stat:
+    path: "{{ node_custom_config }}/nova/vendordata.json"
+  delegate_to: localhost
+  run_once: True
+  register: vendordata_file
+
+- name: Set vendordata file path
+  set_fact:
+    vendordata_file_path: "{{ vendordata_file.stat.path }}"
+  when:
+    - vendordata_file.stat.exists
+
 - include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool or nova_enable_tls_backend | bool
@@ -92,5 +105,20 @@
   when:
     - inventory_hostname in groups["nova-api"]
     - nova_services["nova-api"].enabled | bool
+  notify:
+    - "Restart nova-api container"
+
+- name: Copying over vendordata file
+  vars:
+    service: "{{ nova_services['nova-api'] }}"
+  copy:
+    src: "{{ vendordata_file_path }}"
+    dest: "{{ node_config_directory }}/nova-api/vendordata.json"
+    mode: "0660"
+  become: True
+  when:
+    - vendordata_file_path is defined
+    - inventory_hostname in groups[service['group']]
+    - service.enabled | bool
   notify:
     - "Restart nova-api container"

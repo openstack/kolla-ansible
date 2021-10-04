@@ -56,3 +56,12 @@ Cells
 
 Information on using Nova Cells V2 to scale out can be found in
 :doc:`nova-cells-guide`.
+
+Vendordata
+==========
+
+Nova supports passing deployer provided data to instances using a
+concept known as Vendordata. If a Vendordata file is located in the
+following path within the Kolla configuration, Kolla will
+automatically use it when the Nova service is deployed or
+reconfigured: ``/etc/kolla/config/nova/vendordata.json``.
