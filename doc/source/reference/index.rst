@@ -18,3 +18,4 @@ Projects Deployment Configuration Reference
    deployment-config/index
    deployment-and-bootstrapping/index
    high-availability/index
+   rating/index

@@ -90,6 +90,7 @@ openstackdocs_bug_tag = ''
 openstack_projects = [
     'bifrost',
     'cinder',
+    'cloudkitty',
     'designate',
     'glance',
     'ironic',
