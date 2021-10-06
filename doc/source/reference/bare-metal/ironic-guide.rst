@@ -51,10 +51,10 @@ be used:
 
 .. code-block:: console
 
-   $ curl https://tarballs.openstack.org/ironic-python-agent/dib/files/ipa-centos8-master.kernel \
+   $ curl https://tarballs.opendev.org/openstack/ironic-python-agent/dib/files/ipa-centos8-master.kernel \
      -o /etc/kolla/config/ironic/ironic-agent.kernel
 
-   $ curl https://tarballs.openstack.org/ironic-python-agent/dib/files/ipa-centos8-master.initramfs \
+   $ curl https://tarballs.opendev.org/openstack/ironic-python-agent/dib/files/ipa-centos8-master.initramfs \
      -o /etc/kolla/config/ironic/ironic-agent.initramfs
 
 You may optionally pass extra kernel parameters to the inspection kernel using:
