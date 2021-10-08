@@ -8,12 +8,12 @@ transport_url = {{ rpc_transport_url }}
 
 [service:central]
 default_pool_id = {{ designate_pool_id }}
-workers = {{ openstack_service_workers }}
+workers = {{ designate_central_workers }}
 
 [service:api]
 listen = {{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}
 api_base_uri = {{ designate_internal_endpoint }}
-workers = {{ openstack_service_workers }}
+workers = {{ designate_api_workers }}
 enable_api_admin = True
 enable_host_header = True
 enabled_extensions_admin = quotas, reports
@@ -40,14 +40,14 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 {% if service_name == 'designate-mdns' %}
 [service:mdns]
 listen = {{ 'dns' | kolla_address | put_address_in_context('url') }}:{{ designate_mdns_port }}
-workers = {{ openstack_service_workers }}
+workers = {{ designate_mdns_workers }}
 {% endif %}
 
 [service:worker]
-workers = {{ openstack_service_workers }}
+workers = {{ designate_worker_workers }}
 
 [service:producer]
-workers = {{ openstack_service_workers }}
+workers = {{ designate_producer_workers }}
 threads = 1000
 enabled_tasks = None
 
@@ -62,7 +62,7 @@ idle_timeout = 3600
 {% if service_name == 'designate-sink' and designate_enable_notifications_sink | bool %}
 [service:sink]
 enabled_notification_handlers = nova_fixed, neutron_floatingip
-workers = {{ openstack_service_workers }}
+workers = {{ designate_sink_workers }}
 
 [handler:nova_fixed]
 #NOTE: zone_id must be manually filled an ID from openstack zone list
