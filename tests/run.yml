@@ -176,23 +176,11 @@
           {{ base_distro == 'ubuntu' or
              (base_distro == 'centos' and groups['all'] | map('extract', hostvars, 'ansible_distribution_major_version') | map('int') | list | max == 8) }}
         ansible_version_constraint: "{{ '<2.10,!=2.9.12' if ansible_version_latest else '<2.7' }}"
-      # NOTE(mgoddard): pyfakefs 4.0.0 dropped support for Python 2.
-      # NOTE(yoctozepto): alembic 1.5.0 dropped support for SQLAlchemy 1.2.
-      # This does not affect Python 3 where pip uses the new resolver.
       command: >-
         python{{ playbook_python_version }} -m pip install --user
         -c {{ upper_constraints_file }}
         {{ kolla_ansible_src_dir }}
         ansible{{ ansible_version_constraint }}
-        ara<1.0.0
-        pyfakefs{% if playbook_python_version == '2' %}<4{% endif %}
-        alembic{% if playbook_python_version == '2' %}<1.5{% endif %}
-
-    # TODO(mgoddard): Always use python3 when previous_release is ussuri.
-    - name: get ARA callback plugin path
-      command: "python{{ playbook_python_version }} -m ara.setup.callback_plugins"
-      changed_when: false
-      register: ara_callback_plugins
 
     - name: template ansible.cfg
       template:

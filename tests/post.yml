@@ -46,27 +46,3 @@
         mode: pull
         rsync_opts:
           - "--quiet"
-
-- hosts: primary
-  environment:
-    PATH: "{{ ansible_env.HOME + '/.local/bin:' + ansible_env.PATH }}"
-  tasks:
-    - name: check for existence of ara sqlite
-      stat:
-        path: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
-      register: ara_stat_result
-
-    - block:
-        - name: ensure ara-report folder existence
-          file:
-            path: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
-            state: directory
-          delegate_to: localhost
-          run_once: true
-
-        - name: download ara sqlite
-          synchronize:
-            src: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
-            dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report/"
-            mode: pull
-      when: ara_stat_result.stat.exists
