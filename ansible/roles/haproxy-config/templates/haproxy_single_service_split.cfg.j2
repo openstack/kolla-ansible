@@ -95,7 +95,7 @@ backend {{ service_name }}_back
             {% set host_ip = 'api' | kolla_address(host) %}
     {% set service_weight = 'haproxy_' + service_name + '_weight' %}
     {% set backend_weight_info = '' %}
-    {% if hostvars[host][service_weight] is defined and hostvars[host][service_weight] | int != 0 and hostvars[host][service_weight] <= 256 %}
+    {% if hostvars[host][service_weight] is defined and hostvars[host][service_weight] | int != 0 and hostvars[host][service_weight] | int <= 256 %}
         {% set backend_weight_info = 'weight %s'|format(hostvars[host][service_weight]) %}
     {% endif %}
     server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check_final }} {{ backend_tls_info }} {{ backend_weight_info }}
