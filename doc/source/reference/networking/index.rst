@@ -15,5 +15,4 @@ Networking-SFC, QoS, and so on.
    neutron
    neutron-extensions
    octavia
-   provider-networks
    sriov
