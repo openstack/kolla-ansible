@@ -94,6 +94,7 @@ openstack_projects = [
     'glance',
     'ironic',
     'keystone',
+    'kayobe',
     'kolla',
     'kolla-ansible',
     'magnum',
