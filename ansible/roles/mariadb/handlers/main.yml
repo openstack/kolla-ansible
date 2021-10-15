@@ -68,8 +68,14 @@
     - bootstrap_host is not defined or bootstrap_host != inventory_hostname
     - groups[mariadb_shard_group + '_port_alive_False'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_False']
+    - groups[mariadb_shard_group + '_port_alive_False'].index(inventory_hostname) % 4 == item
     - kolla_action != "config"
   listen: restart mariadb
+  loop:
+    - 0
+    - 1
+    - 2
+    - 3
 
 - name: Ensure MariaDB is running normally on bootstrap host
   include_tasks: 'restart_services.yml'
