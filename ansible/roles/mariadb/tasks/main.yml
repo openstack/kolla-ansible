@@ -1,7 +1,9 @@
 ---
 - name: Group MariaDB hosts based on shards
-  group_by:
-    key: "{{ mariadb_shard_group }}"
+  add_host:
+    name: "{{ item }}"
+    groups: "{{ hostvars[item]['mariadb_shard_group'] }}"
+  loop: "{{ groups['mariadb'] }}"
   changed_when: false
 
 - include_tasks: "{{ kolla_action }}.yml"
