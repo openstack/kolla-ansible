@@ -35,6 +35,26 @@ function create_a_volume {
     done
 }
 
+function create_a_volume_from_image {
+    local volume_name=$1
+    local image_name=$2
+
+    local attempt
+
+    openstack volume create --image $image_name --size 2 $volume_name
+    attempt=1
+    while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
+        echo "Volume $volume_name not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "Volume $volume_name failed to become available"
+            openstack volume show $volume_name
+            return 1
+        fi
+        sleep 10
+    done
+}
+
 function attach_and_detach_a_volume {
     local volume_name=$1
     local instance_name=$2
@@ -161,14 +181,29 @@ function test_instance_boot {
     echo "SUCCESS: Server creation"
 
     if [[ $SCENARIO == "cephadm" ]] || [[ $SCENARIO == "zun" ]]; then
-        echo "TESTING: Cinder volume attachment"
+        echo "TESTING: Cinder volume creation and attachment"
 
         create_a_volume test_volume
         openstack volume show test_volume
         attach_and_detach_a_volume test_volume kolla_boot_test
         delete_a_volume test_volume
 
-        echo "SUCCESS: Cinder volume attachment"
+        # test a qcow2 image (non-cloneable)
+        create_a_volume_from_image test_volume_from_image cirros
+        openstack volume show test_volume_from_image
+        attach_and_detach_a_volume test_volume_from_image kolla_boot_test
+        delete_a_volume test_volume_from_image
+
+        # test a raw image (cloneable)
+        openstack image create --disk-format raw --container-format bare --public \
+            --file /etc/passwd raw-image
+        create_a_volume_from_image test_volume_from_image raw-image
+        openstack volume show test_volume_from_image
+        attach_and_detach_a_volume test_volume_from_image kolla_boot_test
+        delete_a_volume test_volume_from_image
+        openstack image delete raw-image
+
+        echo "SUCCESS: Cinder volume creation and attachment"
 
         if [[ $HAS_UPGRADE == 'yes' ]]; then
             echo "TESTING: Cinder volume upgrade stability (PHASE: $PHASE)"
