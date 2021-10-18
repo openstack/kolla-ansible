@@ -21,7 +21,7 @@ mariadb_services:
         backend_tcp_extra:
           - "option srvtcpka"
           - "timeout server 3600s"
-          - "option {% if enable_mariadb_clustercheck | bool %}httpchk{% else %}mysql-check user haproxy post-41{% endif %}"
+          - "{% if enable_mariadb_clustercheck | bool %}option httpchk{% else %}{% if kolla_base_distro != 'debian' %}option mysql-check user haproxy post-41{% endif %}{% endif %}"
         custom_member_list: "{{ internal_haproxy_members.split(';') }}"
       mariadb_external_lb:
         enabled: "{{ enable_external_mariadb_load_balancer|bool }}"
@@ -57,8 +57,8 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-internal_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
-external_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+internal_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% else %}{% if kolla_base_distro == 'debian' %}port {{ mariadb_port }}{% endif %}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+external_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ host }} {{ host }}:{{ mariadb_port }} check {% if enable_mariadb_clustercheck | bool %}port {{ mariadb_clustercheck_port }}{% else %}{% if kolla_base_distro == 'debian' %}port {{ mariadb_port }}{% endif %}{% endif %} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
 
 ####################
 # Docker
