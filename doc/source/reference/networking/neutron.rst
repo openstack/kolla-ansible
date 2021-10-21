@@ -13,19 +13,65 @@ Neutron is enabled by default in ``/etc/kolla/globals.yml``:
 
    #enable_neutron: "{{ enable_openstack_core | bool }}"
 
+Network interfaces
+~~~~~~~~~~~~~~~~~~
+
 Neutron external interface is used for communication with the external world,
-for example provider networks and floating IPs.
-For setting up the neutron external interface please modify
+for example provider networks, routers and floating IPs.
+For setting up the neutron external interface modify
 ``/etc/kolla/globals.yml`` setting ``neutron_external_interface`` to the
-desired interface name, ``eth1`` in the example below:
+desired interface name. This interface is used by hosts in the ``network``
+group. It is also used by hosts in the ``compute`` group if
+``enable_neutron_provider_networks`` is set or DVR is enabled.
+
+The interface is plugged into a bridge (Open vSwitch or Linux Bridge, depending
+on the driver) defined by ``neutron_bridge_name``, which defaults to ``br-ex``.
+The default Neutron physical network is ``physnet1``.
+
+Example: single interface
+-------------------------
+
+In the case where we have only a single Neutron external interface,
+configuration is simple:
 
 .. code-block:: yaml
 
    neutron_external_interface: "eth1"
 
-.. note::
-   This is used by hosts in the ``network`` group, and hosts in the ``compute``
-   group if ``enable_neutron_provider_networks`` is set or DVR is enabled.
+Example: multiple interfaces
+----------------------------
+
+In some cases it may be necessary to have multiple external network interfaces.
+This may be achieved via comma-separated lists:
+
+.. code-block:: yaml
+
+   neutron_external_interface: "eth1,eth2"
+   neutron_bridge_name: "br-ex1,br-ex2"
+
+These two lists are "zipped" together, such that ``eth1`` is plugged into the
+``br-ex1`` bridge, and ``eth2`` is plugged into the ``br-ex2`` bridge.  Kolla
+Ansible maps these interfaces to Neutron physical networks ``physnet1`` and
+``physnet2`` respectively.
+
+Example: shared interface
+-------------------------
+
+Sometimes an interface used for Neutron external networking may also be used
+for other traffic. Plugging an interface directly into a bridge would prevent
+us from having a usable IP address on the interface. One solution to this issue
+is to use an intermediate Linux bridge and virtual Ethernet pair, then assign
+IP addresses on the Linux bridge. This setup is supported by
+:kayobe-doc:`Kayobe </>`. It is out of scope here, as it is non-trivial to set
+up in a persistent manner.
+
+Provider networks
+~~~~~~~~~~~~~~~~~
+
+Provider networks allow to connect compute instances directly to physical
+networks avoiding tunnels. This is necessary for example for some performance
+critical applications. Only administrators of OpenStack can create such
+networks.
 
 To use provider networks in instances you also need to set the following in
 ``/etc/kolla/globals.yml``:
@@ -34,9 +80,12 @@ To use provider networks in instances you also need to set the following in
 
    enable_neutron_provider_networks: yes
 
-.. note::
-   ``enable_neutron_provider_networks`` ensures ``neutron_external_interface``
-   is used on hosts in the ``compute`` group.
+For provider networks, compute hosts must have an external bridge
+created and configured by Ansible (this is also necessary when
+:neutron-doc:`Neutron Distributed Virtual Routing (DVR)
+<admin/deploy-ovs-ha-dvr.html>` mode is enabled). In this case, ensure
+``neutron_external_interface`` is configured correctly for hosts in the
+``compute`` group.
 
 OpenvSwitch (ml2/ovs)
 ~~~~~~~~~~~~~~~~~~~~~
