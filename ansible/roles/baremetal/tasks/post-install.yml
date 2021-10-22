@@ -243,56 +243,6 @@
     masked: no
   become: True
 
-- name: Warn about deprecations
-  debug:
-    msg: >
-      enable_host_ntp is deprecated.
-      Please configure NTP using a different tool.
-  when: enable_host_ntp | bool
-
-- name: Stop time service
-  service:
-    name: ntp
-    state: stopped
-  become: True
-  when:
-    - ansible_facts.os_family == "Debian"
-    - enable_host_ntp | bool
-
-- name: Stop time service
-  service:
-    name: ntpd
-    state: stopped
-  become: True
-  when:
-    - ansible_facts.os_family == "RedHat"
-    - enable_host_ntp | bool
-
-- name: Synchronizing time one-time
-  command: ntpd -gq
-  become: True
-  when: enable_host_ntp | bool
-
-- name: Start time sync service
-  service:
-    name: ntp
-    state: started
-    enabled: yes
-  become: True
-  when:
-    - ansible_facts.os_family == "Debian"
-    - enable_host_ntp | bool
-
-- name: Start time sync service
-  service:
-    name: ntpd
-    state: started
-    enabled: yes
-  become: True
-  when:
-    - ansible_facts.os_family == "RedHat"
-    - enable_host_ntp | bool
-
 - name: Change state of selinux
   selinux:
     policy: targeted
