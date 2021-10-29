@@ -40,6 +40,7 @@ nova_cell_services:
     enabled: "{{ nova_console == 'spice' }}"
     volumes: "{{ nova_spicehtml5proxy_default_volumes + nova_spicehtml5proxy_extra_volumes }}"
     dimensions: "{{ nova_spicehtml5proxy_dimensions }}"
+    healthcheck: "{{ nova_spicehtml5proxy_healthcheck }}"
   nova-serialproxy:
     container_name: "nova_serialproxy"
     group: "{{ nova_cell_serialproxy_group }}"
@@ -295,6 +296,19 @@ nova_novncproxy_healthcheck:
   start_period: "{{ nova_novncproxy_healthcheck_start_period }}"
   test: "{% if nova_novncproxy_enable_healthchecks | bool %}{{ nova_novncproxy_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ nova_novncproxy_healthcheck_timeout }}"
+
+nova_spicehtml5proxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_spicehtml5proxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_spicehtml5proxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_spicehtml5proxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_spicehtml5proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ nova_spicehtml5proxy_listen_port }}/spice_auto.html"]
+nova_spicehtml5proxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_spicehtml5proxy_healthcheck:
+  interval: "{{ nova_spicehtml5proxy_healthcheck_interval }}"
+  retries: "{{ nova_spicehtml5proxy_healthcheck_retries }}"
+  start_period: "{{ nova_spicehtml5proxy_healthcheck_start_period }}"
+  test: "{% if nova_spicehtml5proxy_enable_healthchecks | bool %}{{ nova_spicehtml5proxy_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_spicehtml5proxy_healthcheck_timeout }}"
 
 nova_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
 nova_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
