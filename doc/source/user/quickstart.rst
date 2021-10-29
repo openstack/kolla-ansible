@@ -149,23 +149,19 @@ Install Kolla-ansible
 Install Kolla-ansible for deployment or evaluation
 --------------------------------------------------
 
-For a list of ``kolla-ansible`` versions compatible with each OpenStack release
-see `Kolla Ansible release notes
-<https://docs.openstack.org/releasenotes/kolla-ansible/>`__.
-
 #. Install kolla-ansible and its dependencies using ``pip``.
 
    If using a virtual environment:
 
    .. code-block:: console
 
-      pip install 'kolla-ansible == |KOLLA_ANSIBLE_MAJOR_VERSION|.*'
+      pip install git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
 
    If not using a virtual environment:
 
    .. code-block:: console
 
-      sudo pip3 install 'kolla-ansible == |KOLLA_ANSIBLE_MAJOR_VERSION|.*'
+      sudo pip3 install git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
 
 #. Create the ``/etc/kolla`` directory.
 
