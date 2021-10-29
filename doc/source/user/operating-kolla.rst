@@ -22,9 +22,10 @@ release. Alpha tag usage is at discretion of the operator. The alpha identifier
 could be a number as recommended or a string of the operator's choosing.
 
 To customize the version number uncomment ``openstack_release`` in globals.yml
-and specify the version number desired. If ``openstack_release`` is not
-specified, Kolla will deploy or upgrade using the version number information
-contained in the kolla-ansible package.
+and specify the desired version number or name (e.g. ``victoria``,
+``wallaby``). If ``openstack_release`` is not specified, Kolla will deploy or
+upgrade using the version number information contained in the kolla-ansible
+package.
 
 Upgrade procedure
 ~~~~~~~~~~~~~~~~~
@@ -91,23 +92,25 @@ should be upgraded first. This will include reviewing some of the configuration
 and inventory files. On the operator/master node, a backup of the
 ``/etc/kolla`` directory may be desirable.
 
-If upgrading from ``5.0.0`` to ``6.0.0``, upgrade the kolla-ansible package:
+If upgrading to ``|KOLLA_OPENSTACK_RELEASE|``, upgrade the kolla-ansible
+package:
 
 .. code-block:: console
 
-   pip install --upgrade kolla-ansible==6.0.0
+   pip install --upgrade git+https://opendev.org/openstack/kolla-ansible@|KOLLA_BRANCH_NAME|
 
 If this is a minor upgrade, and you do not wish to upgrade kolla-ansible
 itself, you may skip this step.
 
 The inventory file for the deployment should be updated, as the newer sample
 inventory files may have updated layout or other relevant changes.
-Use the newer ``6.0.0`` one as a starting template, and merge your existing
-inventory layout into a copy of the one from here::
+Use the newer ``|KOLLA_OPENSTACK_RELEASE|`` one as a starting template, and
+merge your existing inventory layout into a copy of the one from here::
 
     /usr/share/kolla-ansible/ansible/inventory/
 
-In addition the ``6.0.0`` sample configuration files should be taken from::
+In addition the ``|KOLLA_OPENSTACK_RELEASE|`` sample configuration files should
+be taken from::
 
     # CentOS
     /usr/share/kolla-ansible/etc_examples/kolla
@@ -115,8 +118,8 @@ In addition the ``6.0.0`` sample configuration files should be taken from::
     # Ubuntu
     /usr/local/share/kolla-ansible/etc_examples/kolla
 
-At this stage, files that are still at the ``5.0.0`` version - which need
-manual updating are:
+At this stage, files that are still at the previous version and need manual
+updating are:
 
 - ``/etc/kolla/globals.yml``
 - ``/etc/kolla/passwords.yml``
@@ -126,18 +129,20 @@ template, and then replace the file in ``/etc/kolla`` with the updated version.
 For ``passwords.yml``, see the ``kolla-mergepwd`` instructions in
 `Tips and Tricks`.
 
-For the kolla docker images, the ``openstack_release`` is updated to ``6.0.0``:
+For the kolla docker images, the ``openstack_release`` is updated to
+``|KOLLA_OPENSTACK_RELEASE|``:
 
 .. code-block:: yaml
 
-   openstack_release: 6.0.0
+   openstack_release: |KOLLA_OPENSTACK_RELEASE|
 
 Once the kolla release, the inventory file, and the relevant configuration
 files have been updated in this way, the operator may first want to 'pull'
-down the images to stage the ``6.0.0`` versions. This can be done safely
-ahead of time, and does not impact the existing services. (optional)
+down the images to stage the ``|KOLLA_OPENSTACK_RELEASE|`` versions. This can
+be done safely ahead of time, and does not impact the existing services.
+(optional)
 
-Run the command to pull the ``6.0.0`` images for staging:
+Run the command to pull the ``|KOLLA_OPENSTACK_RELEASE|`` images for staging:
 
 .. code-block:: console
 
