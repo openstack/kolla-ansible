@@ -558,7 +558,7 @@ kolla_sysctl_conf_path: /etc/sysctl.conf
 
 # Endpoint type used to connect with OpenStack services with ansible modules.
 # Valid options are [ public, internal, admin ]
-openstack_interface: "admin"
+openstack_interface: "internal"
 
 # Openstack CA certificate bundle file
 # CA bundle file must be added to both the Horizon and Kolla Toolbox containers
@@ -733,11 +733,9 @@ monasca_enable_alerting_pipeline: True
 # directly to Elasticsearch.
 monasca_ingest_control_plane_logs: True
 
-monasca_api_admin_base_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
 monasca_api_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
 monasca_api_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
 
-monasca_log_api_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 
@@ -899,7 +897,6 @@ glance_api_hosts: "{{ [groups['glance-api']|first] if glance_backend_file | bool
 # NOTE(mnasiadka): For use in common role
 glance_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
 
-glance_admin_endpoint: "{{ admin_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
 glance_internal_endpoint: "{{ internal_protocol }}://{{ glance_internal_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
 glance_public_endpoint: "{{ public_protocol }}://{{ glance_external_fqdn | put_address_in_context('url') }}:{{ glance_api_port }}"
 
@@ -910,7 +907,6 @@ glance_public_endpoint: "{{ public_protocol }}://{{ glance_external_fqdn | put_a
 barbican_crypto_plugin: "simple_crypto"
 barbican_library_path: "/usr/lib/libCryptoki2_64.so"
 
-barbican_admin_endpoint: "{{ admin_protocol }}://{{ barbican_internal_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
 barbican_internal_endpoint: "{{ internal_protocol }}://{{ barbican_internal_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
 barbican_public_endpoint: "{{ public_protocol }}://{{ barbican_external_fqdn | put_address_in_context('url') }}:{{ barbican_api_port }}"
 
@@ -962,7 +958,6 @@ designate_backend_external_bind9_nameservers: ""
 # Valid options are [ '', redis ]
 designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 
-designate_admin_endpoint: "{{ admin_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 
@@ -990,7 +985,6 @@ neutron_legacy_iptables: "no"
 # Enable distributed floating ip for OVN deployments
 neutron_ovn_distributed_fip: "no"
 
-neutron_admin_endpoint: "{{ admin_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
 neutron_internal_endpoint: "{{ internal_protocol }}://{{ neutron_internal_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
 neutron_public_endpoint: "{{ public_protocol }}://{{ neutron_external_fqdn | put_address_in_context('url') }}:{{ neutron_server_port }}"
 
@@ -1156,7 +1150,6 @@ distro_python_version: "{{ distro_python_version_map[kolla_base_distro] }}"
 # telemetry data.
 telegraf_enable_docker_input: "no"
 
-vitrage_admin_endpoint: "{{ admin_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
 vitrage_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
 vitrage_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ vitrage_api_port }}"
 
@@ -1169,7 +1162,6 @@ grafana_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_a
 #############
 # Ironic
 #############
-ironic_admin_endpoint: "{{ admin_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
 ironic_internal_endpoint: "{{ internal_protocol }}://{{ ironic_internal_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
 ironic_public_endpoint: "{{ public_protocol }}://{{ ironic_external_fqdn | put_address_in_context('url') }}:{{ ironic_api_port }}"
 
@@ -1178,7 +1170,6 @@ ironic_public_endpoint: "{{ public_protocol }}://{{ ironic_external_fqdn | put_a
 ########
 swift_internal_base_endpoint: "{{ internal_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}"
 
-swift_admin_endpoint: "{{ admin_protocol }}://{{ swift_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1"
 swift_internal_endpoint: "{{ swift_internal_base_endpoint }}/v1/AUTH_%(tenant_id)s"
 swift_public_endpoint: "{{ public_protocol }}://{{ swift_external_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/v1/AUTH_%(tenant_id)s"
 
@@ -1198,7 +1189,6 @@ octavia_auto_configure: yes
 #   on the Octavia woker nodes on the same provider network.
 octavia_network_type: "provider"
 
-octavia_admin_endpoint: "{{ admin_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 octavia_internal_endpoint: "{{ internal_protocol }}://{{ octavia_internal_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 octavia_public_endpoint: "{{ public_protocol }}://{{ octavia_external_fqdn | put_address_in_context('url') }}:{{ octavia_api_port }}"
 
