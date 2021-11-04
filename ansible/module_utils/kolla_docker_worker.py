@@ -19,6 +19,7 @@ import json
 import os
 import shlex
 
+from ansible.module_utils.kolla_systemd_worker import SystemdWorker
 from distutils.version import StrictVersion
 
 COMPARE_CONFIG_CMD = ['/usr/local/bin/kolla_set_configs', '--check']
@@ -49,6 +50,8 @@ class DockerWorker(object):
 
         self._cgroupns_mode_supported = (
             StrictVersion(self.dc._version) >= StrictVersion('1.41'))
+
+        self.systemd = SystemdWorker(self.params)
 
     def generate_tls(self):
         tls = {'verify': self.params.get('tls_verify')}
@@ -110,7 +113,8 @@ class DockerWorker(object):
         container = self.check_container()
         if (not container or
                 self.check_container_differs() or
-                self.compare_config()):
+                self.compare_config() or
+                self.systemd.check_unit_change()):
             self.changed = True
         return self.changed
 
@@ -469,6 +473,7 @@ class DockerWorker(object):
         self.changed = old_image_id != new_image_id
 
     def remove_container(self):
+        self.changed |= self.systemd.remove_unit_file()
         if self.check_container():
             self.changed = True
             # NOTE(jeffrey4l): in some case, docker failed to remove container
@@ -575,18 +580,6 @@ class DockerWorker(object):
             dimensions = self.parse_dimensions(dimensions)
             options.update(dimensions)
 
-        restart_policy = self.params.get('restart_policy')
-
-        if restart_policy is not None:
-            restart_policy = {'Name': restart_policy}
-            # NOTE(Jeffrey4l): MaximumRetryCount is only needed for on-failure
-            # policy
-            if restart_policy['Name'] == 'on-failure':
-                retries = self.params.get('restart_retries')
-                if retries is not None:
-                    restart_policy['MaximumRetryCount'] = retries
-            options['restart_policy'] = restart_policy
-
         if binds:
             options['binds'] = binds
 
@@ -598,6 +591,11 @@ class DockerWorker(object):
             cgroupns_mode = self.params.get('cgroupns_mode')
             if cgroupns_mode is not None:
                 host_config['CgroupnsMode'] = cgroupns_mode
+
+        # detached containers should only log to journald
+        if self.params.get('detach'):
+            options['log_config'] = docker.types.LogConfig(
+                type=docker.types.LogConfig.types.NONE)
 
         return host_config
 
@@ -637,6 +635,8 @@ class DockerWorker(object):
         self.changed = True
         options = self.build_container_options()
         self.dc.create_container(**options)
+        if self.params.get('restart_policy') != 'no':
+            self.changed |= self.systemd.create_unit_file()
 
     def recreate_or_restart_container(self):
         self.changed = True
@@ -678,7 +678,15 @@ class DockerWorker(object):
 
         if not container['Status'].startswith('Up '):
             self.changed = True
-            self.dc.start(container=self.params.get('name'))
+            if self.params.get('restart_policy') == 'no':
+                self.dc.start(container=self.params.get('name'))
+            else:
+                self.systemd.create_unit_file()
+                if not self.systemd.start():
+                    self.module.fail_json(
+                        changed=True,
+                        msg="Container timed out",
+                        **self.check_container())
 
         # We do not want to detach so we wait around for container to exit
         if not self.params.get('detach'):
@@ -806,7 +814,11 @@ class DockerWorker(object):
                     msg="No such container: {} to stop".format(name))
         elif not container['Status'].startswith('Exited '):
             self.changed = True
-            self.dc.stop(name, timeout=graceful_timeout)
+            if self.params.get('restart_policy') != 'no':
+                self.systemd.create_unit_file()
+                self.systemd.stop()
+            else:
+                self.dc.stop(name, timeout=graceful_timeout)
 
     def stop_and_remove_container(self):
         container = self.check_container()
@@ -825,8 +837,13 @@ class DockerWorker(object):
                 msg="No such container: {}".format(name))
         else:
             self.changed = True
-            self.dc.stop(name, timeout=graceful_timeout)
-            self.dc.start(name)
+            self.systemd.create_unit_file()
+
+            if not self.systemd.restart():
+                self.module.fail_json(
+                    changed=True,
+                    msg="Container timed out",
+                    **self.check_container())
 
     def create_volume(self):
         if not self.check_volume():

@@ -30,7 +30,9 @@ echo "Removing ovs bridge..."
 fi
 
 echo "Stopping containers..."
-(sudo docker stop -t 2 ${containers_to_kill} 2>&1) > /dev/null
+for container in ${containers_to_kill}; do
+sudo systemctl stop kolla-${container}-container.service
+done
 
 echo "Removing containers..."
 (sudo docker rm -v -f ${containers_to_kill} 2>&1) > /dev/null
@@ -45,5 +47,9 @@ echo "Removing volumes..."
 
 echo "Removing link of kolla_log volume..."
 (sudo rm -f /var/log/kolla 2>&1) > /dev/null
+
+echo "Removing unit files..."
+sudo rm -f /etc/systemd/system/kolla-*-container.service
+sudo systemctl daemon-reload
 
 echo "All cleaned up!"
