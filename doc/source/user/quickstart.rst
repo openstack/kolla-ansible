@@ -544,7 +544,7 @@ Using OpenStack
 
    .. code-block:: console
 
-      pip install python-openstackclient
+      pip install python-openstackclient -c https://releases.openstack.org/constraints/upper/|KOLLA_OPENSTACK_RELEASE|
 
 #. OpenStack requires an openrc file where credentials for admin user
    are set. To generate this file:
