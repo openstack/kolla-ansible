@@ -5,16 +5,20 @@ port=0
 interface={{ ironic_dnsmasq_interface }}
 bind-interfaces
 
-dhcp-range={{ ironic_dnsmasq_dhcp_range }}
+{% for item in ironic_dnsmasq_dhcp_ranges %}
+{% set tag = item.tag | default('range_' ~ loop.index) %}
+{% set lease_time = item.lease_time | default(ironic_dnsmasq_dhcp_default_lease_time) %}
+dhcp-range=set:{{ tag }},{{ item.range }},{{ lease_time }}
+{% if item.routers is defined %}
+dhcp-option=tag:{{ tag }},option:router,{{ item.routers }}
+{% endif %}
+{% endfor %}
 dhcp-sequential-ip
 
 {% if api_address_family == 'ipv6' %}
 {# TODO(yoctozepto): IPv6-only support - DHCPv6 PXE support #}
 {# different options must be used here #}
 {% else %}{# ipv4 #}
-{% if ironic_dnsmasq_default_gateway is not none %}
-dhcp-option=3,{{ ironic_dnsmasq_default_gateway }}
-{% endif %}
 dhcp-option=option:tftp-server,{{ api_interface_address }}
 dhcp-option=option:server-ip-address,{{ api_interface_address }}
 dhcp-option=210,/var/lib/ironic/tftpboot/
