@@ -70,8 +70,8 @@ class TestFilters(unittest.TestCase):
     def test_extract_duplicate_cell(self):
         test_data = os.path.join(os.path.dirname(
             __file__), 'data', 'nova_manage_cli_output_duplicate_cells')
-        self.assertRaisesRegexp(jinja2.TemplateRuntimeError, 'duplicates',
-                                self._test_extract_cell, test_data, 'cell0001')
+        self.assertRaisesRegex(jinja2.TemplateRuntimeError, 'duplicates',
+                               self._test_extract_cell, test_data, 'cell0001')
 
     def test_namespace_haproxy_for_cell_with_empty_name(self):
         example_services = {
