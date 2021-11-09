@@ -33,12 +33,6 @@ enable_openstack_core: "{{ openstack_core_enabled }}"
 enable_horizon: "{{ dashboard_enabled }}"
 enable_heat: "{{ openstack_core_tested }}"
 
-# TODO(mgoddard): Remove when previous release is Xena.
-{% if is_previous_release and previous_release == "wallaby" and scenario != "cephadm" %}
-# NOTE(mnasiadka): Test chrony cleanup in upgrade jobs
-enable_chrony: "yes"
-{% endif %}
-
 {% if scenario != 'bifrost' %}
 kolla_internal_vip_address: "{{ kolla_internal_vip_address }}"
 neutron_external_interface: "{{ neutron_external_interface_name }}"
@@ -130,7 +124,7 @@ glance_backend_ceph: "yes"
 cinder_backend_ceph: "yes"
 nova_backend_ceph: "yes"
 
-enable_ceph_rgw: {{ not is_upgrade or previous_release != 'wallaby' }}
+enable_ceph_rgw: "yes"
 ceph_rgw_hosts:
 {% for host in hostvars %}
   - host: {{ host }}
@@ -151,11 +145,7 @@ openstack_cacert: "/etc/ssl/certs/ca-certificates.crt"
 openstack_cacert: "/etc/pki/tls/certs/ca-bundle.crt"
 {% endif %}
 kolla_admin_openrc_cacert: "{% raw %}{{ kolla_certificates_dir }}{% endraw %}/ca/root.crt"
-# TODO(mgoddard): Remove the condition when Victoria supports RabbitMQ TLS,
-# or the previous release is no longer Victoria.
-{% if not is_upgrade or previous_release != "victoria" %}
 rabbitmq_enable_tls: "yes"
-{% endif %}
 {% endif %}
 
 {% if scenario == 'linuxbridge' %}
