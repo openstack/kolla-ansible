@@ -568,7 +568,7 @@ Using OpenStack
 
      .. code-block:: console
 
-        /path/to/venv/share/share/kolla-ansible/init-runonce
+        /path/to/venv/share/kolla-ansible/init-runonce
 
      If not using a virtual environment:
 
