@@ -535,7 +535,7 @@ Using OpenStack
 
    .. code-block:: console
 
-      pip install python3-openstackclient
+      pip install python-openstackclient
 
 #. OpenStack requires an openrc file where credentials for admin user
    are set. To generate this file:
@@ -558,8 +558,15 @@ Using OpenStack
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.
 
-   * For deployment or evaluation,
-     run ``init-runonce`` script:
+   * For deployment or evaluation, run ``init-runonce`` script.
+
+     If using a virtual environment:
+
+     .. code-block:: console
+
+        /path/to/venv/share/kolla-ansible/init-runonce
+
+     If not using a virtual environment:
 
      .. code-block:: console
 
