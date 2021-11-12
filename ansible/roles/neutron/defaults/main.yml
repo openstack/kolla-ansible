@@ -172,6 +172,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['ironic-neutron-agent'] }}"
     volumes: "{{ ironic_neutron_agent_default_volumes + ironic_neutron_agent_extra_volumes }}"
     dimensions: "{{ ironic_neutron_agent_dimensions }}"
+    healthcheck: "{{ ironic_neutron_agent_healthcheck }}"
   neutron-tls-proxy:
     container_name: neutron_tls_proxy
     group: neutron-server
@@ -405,6 +406,19 @@ neutron_sriov_agent_healthcheck:
   start_period: "{{ neutron_sriov_agent_healthcheck_start_period }}"
   test: "{% if neutron_sriov_agent_enable_healthchecks | bool %}{{ neutron_sriov_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_sriov_agent_healthcheck_timeout }}"
+
+ironic_neutron_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_neutron_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_neutron_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_neutron_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_neutron_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port ironic-neutron-agent {{ om_rpc_port }}"]
+ironic_neutron_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_neutron_agent_healthcheck:
+  interval: "{{ ironic_neutron_agent_healthcheck_interval }}"
+  retries: "{{ ironic_neutron_agent_healthcheck_retries }}"
+  start_period: "{{ ironic_neutron_agent_healthcheck_start_period }}"
+  test: "{% if ironic_neutron_agent_enable_healthchecks | bool %}{{ ironic_neutron_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_neutron_agent_healthcheck_timeout }}"
 
 neutron_dhcp_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
