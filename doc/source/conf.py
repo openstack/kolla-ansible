@@ -15,6 +15,9 @@
 import os
 import sys
 
+import openstackdocstheme
+
+
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -115,18 +118,15 @@ openstack_projects = [
 # For replacement, use in docs as |VAR_NAME| (note there's no space around variable name)
 # When adding new variables, make sure you add them to GLOBAL_VARIABLE_MAP dictionary as well
 
-KOLLA_ANSIBLE_MAJOR_VERSION = '9'
+KOLLA_OPENSTACK_RELEASE = openstackdocstheme.ext._get_series_name()
 
-# use 'master' or release name, e.g. 'victoria', 'xena' etc.
-KOLLA_OPENSTACK_RELEASE = 'master'
-
-if KOLLA_OPENSTACK_RELEASE == 'master':
-    KOLLA_BRANCH_NAME = KOLLA_OPENSTACK_RELEASE
+if KOLLA_OPENSTACK_RELEASE == 'latest':
+    KOLLA_OPENSTACK_RELEASE = 'master'
+    KOLLA_BRANCH_NAME = 'master'
 else:
     KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
 
 GLOBAL_VARIABLE_MAP = {
-    "|KOLLA_ANSIBLE_MAJOR_VERSION|": KOLLA_ANSIBLE_MAJOR_VERSION,
     "|KOLLA_OPENSTACK_RELEASE|": KOLLA_OPENSTACK_RELEASE,
     "|KOLLA_BRANCH_NAME|": KOLLA_BRANCH_NAME,
 }
