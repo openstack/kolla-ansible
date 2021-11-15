@@ -123,13 +123,18 @@ KOLLA_OPENSTACK_RELEASE = openstackdocstheme.ext._get_series_name()
 if KOLLA_OPENSTACK_RELEASE == 'latest':
     KOLLA_OPENSTACK_RELEASE = 'master'
     KOLLA_BRANCH_NAME = 'master'
+    TESTED_RUNTIMES_GOVERNANCE_URL = 'https://governance.openstack.org/tc/reference/runtimes/'
 else:
     KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
+    TESTED_RUNTIMES_GOVERNANCE_URL =\
+        'https://governance.openstack.org/tc/reference/runtimes/{}.html'.format(KOLLA_OPENSTACK_RELEASE)
 
 GLOBAL_VARIABLE_MAP = {
-    "|KOLLA_OPENSTACK_RELEASE|": KOLLA_OPENSTACK_RELEASE,
-    "|KOLLA_BRANCH_NAME|": KOLLA_BRANCH_NAME,
+    '|KOLLA_OPENSTACK_RELEASE|': KOLLA_OPENSTACK_RELEASE,
+    '|KOLLA_BRANCH_NAME|': KOLLA_BRANCH_NAME,
+    '|TESTED_RUNTIMES_GOVERNANCE_URL|': TESTED_RUNTIMES_GOVERNANCE_URL,
 }
+
 
 def replace_global_vars(app, docname, source):
     # unlike rst_epilog, replaces variables (strings) in code blocks as well

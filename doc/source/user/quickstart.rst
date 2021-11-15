@@ -23,7 +23,10 @@ The host machine must satisfy the following minimum requirements:
 - 40GB disk space
 
 See the :kolla-ansible-doc:`support matrix <user/support-matrix>` for details
-of supported host Operating Systems.
+of supported host Operating Systems. Kolla Ansible supports the default Python
+3.x versions provided by the supported Operating Systems. For more information
+see `tested runtimes <|TESTED_RUNTIMES_GOVERNANCE_URL|>`_.
+
 
 Install dependencies
 ~~~~~~~~~~~~~~~~~~~~
