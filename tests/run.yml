@@ -202,8 +202,11 @@
 
     - name: install kolla-ansible and dependencies
       vars:
+        ansible_version_min: "==2.9.*"
+        ansible_version_max: "==2.10.*"
         # Test latest ansible version on Ubuntu, minimum supported on others.
-        ansible_version_constraint: "{{ '==2.9.*' if is_upgrade else '==2.10.*' }}"
+        ansible_version_constraint: >-
+          {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
       command: >-
         python3 -m pip install --user
         -c {{ upper_constraints_file }}
