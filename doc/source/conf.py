@@ -110,3 +110,36 @@ openstack_projects = [
     'swift',
     'watcher',
 ]
+
+# Global variables
+# For replacement, use in docs as |VAR_NAME| (note there's no space around variable name)
+# When adding new variables, make sure you add them to GLOBAL_VARIABLE_MAP dictionary as well
+
+KOLLA_ANSIBLE_MAJOR_VERSION = '9'
+
+# use 'master' or release name, e.g. 'victoria', 'xena' etc.
+KOLLA_OPENSTACK_RELEASE = 'master'
+
+if KOLLA_OPENSTACK_RELEASE == 'master':
+    KOLLA_BRANCH_NAME = KOLLA_OPENSTACK_RELEASE
+else:
+    KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
+
+GLOBAL_VARIABLE_MAP = {
+    "|KOLLA_ANSIBLE_MAJOR_VERSION|": KOLLA_ANSIBLE_MAJOR_VERSION,
+    "|KOLLA_OPENSTACK_RELEASE|": KOLLA_OPENSTACK_RELEASE,
+    "|KOLLA_BRANCH_NAME|": KOLLA_BRANCH_NAME,
+}
+
+def replace_global_vars(app, docname, source):
+    # unlike rst_epilog, replaces variables (strings) in code blocks as well
+    # thanks to https://github.com/sphinx-doc/sphinx/issues/4054#issuecomment-329097229
+    result = source[0]
+    for key in app.config.GLOBAL_VARIABLE_MAP:
+        result = result.replace(key, app.config.GLOBAL_VARIABLE_MAP[key])
+    source[0] = result
+
+
+def setup(app):
+   app.add_config_value('GLOBAL_VARIABLE_MAP', {}, True)
+   app.connect('source-read', replace_global_vars)
