@@ -2,7 +2,15 @@
 #
 # This script can be used to interact with kolla via ansible.
 
-function check_environment_coherence {
+# do not use _PYTHON_BIN directly, use $(get_python_bin) instead
+_PYTHON_BIN=""
+
+function get_python_bin {
+    if [ -n "$_PYTHON_BIN" ]; then
+      echo -n "$_PYTHON_BIN"
+      return
+    fi
+
     local ansible_path
     ansible_path=$(which ansible)
 
@@ -19,9 +27,14 @@ function check_environment_coherence {
         exit 1
     fi
 
-    local ansible_python_cmdline
     # NOTE(yoctozepto): may have multiple parts
-    ansible_python_cmdline=${ansible_shebang_line#\#\!}
+    _PYTHON_BIN=${ansible_shebang_line#\#\!}
+    echo -n "$_PYTHON_BIN"
+}
+
+function check_environment_coherence {
+    local ansible_python_cmdline
+    ansible_python_cmdline=$(get_python_bin)
     ansible_python_version=$($ansible_python_cmdline -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')
 
     if ! $ansible_python_cmdline --version &>/dev/null; then
@@ -37,7 +50,7 @@ function check_environment_coherence {
         exit 1
     fi
 
-    local ansible_version_output
+    local ansible_full_version
     ansible_full_version=$($ansible_python_cmdline -c 'import ansible; print(ansible.__version__)')
 
     if [[ $? -ne 0 ]]; then
@@ -143,6 +156,7 @@ Can be specified multiple times to pass multiple inventories.
     --check, -C                        Don't make any changes and try to predict some of the changes that may occur instead
     --diff, -D                         Show differences in ansible-playbook changed tasks
     --verbose, -v                      Increase verbosity of ansible-playbook
+    --version                          Show version
 
 Environment variables:
     EXTRA_OPTS                         Additional arguments to pass to ansible-playbook
@@ -197,6 +211,7 @@ cat <<EOF
 --check -C
 --diff -D
 --verbose -v
+--version
 prechecks
 check
 mariadb_recovery
@@ -222,10 +237,17 @@ prune-images
 EOF
 }
 
+function version {
+    local python_bin
+    python_bin=$(get_python_bin)
+
+    $python_bin -c 'from kolla_ansible.version import version_info; print(version_info)'
+}
+
 check_environment_coherence
 
 SHORT_OPTS="hi:p:t:k:e:CD:v"
-LONG_OPTS="help,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
+LONG_OPTS="help,version,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
@@ -360,9 +382,13 @@ while [ "$#" -gt 0 ]; do
             shift 1
             ;;
 
+    (--version)
+            version
+            exit 0
+            ;;
+
     (--help|-h)
             usage
-            shift
             exit 0
             ;;
 
