@@ -2,7 +2,16 @@
 # NOTE(mnasiadka): external_ids:system-id uniquely identifies a physical system, used by OVN and other controllers
 - name: Set system-id
   become: true
-  command: docker exec openvswitch_vswitchd ovs-vsctl set Open_vSwitch . external_ids:system-id={{ openvswitch_system_id }}
+  kolla_toolbox:
+    user: root
+    module_name: openvswitch_db
+    module_args:
+      table: Open_vSwitch
+      record: .
+      col: external_ids
+      key: system-id
+      value: "{{ openvswitch_system_id }}"
+      state: present
 
 - name: Ensuring OVS bridge is properly setup
   become: true
