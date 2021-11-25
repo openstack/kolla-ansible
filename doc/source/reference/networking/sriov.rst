@@ -71,6 +71,13 @@ VFs enabled:
    [sriov_nic]
    exclude_devices =
 
+To use OpenvSwitch hardware offloading modify `/etc/kolla/globals.yml``:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   openvswitch_hw_offload: "yes"
+
 Run deployment.
 
 Verification
