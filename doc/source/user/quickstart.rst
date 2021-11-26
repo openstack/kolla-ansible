@@ -245,6 +245,15 @@ Install Kolla for development
 
       cp kolla-ansible/ansible/inventory/* .
 
+Install Ansible Galaxy requirements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install Ansible Galaxy dependencies (Yoga release onwards):
+
+.. code-block:: console
+
+   kolla-ansible install-deps
+
 Configure Ansible
 ~~~~~~~~~~~~~~~~~
 

@@ -112,6 +112,13 @@ First, upgrade the ``kolla-ansible`` package:
    If you are running from Git repository, then just checkout the desired
    branch and run ``pip3 install --upgrade`` with the repository directory.
 
+If upgrading to a Yoga release or later, install or upgrade Ansible Galaxy
+dependencies:
+
+.. code-block:: console
+
+   kolla-ansible install-deps
+
 The inventory file for the deployment should be updated, as the newer sample
 inventory files may have updated layout or other relevant changes.
 The ``diff`` tool (or similar) is your friend in this task.
