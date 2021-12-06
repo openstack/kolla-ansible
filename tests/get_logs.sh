@@ -93,12 +93,11 @@ copy_logs() {
 
     # bifrost related logs
     if [[ $(docker ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
-        for service in dnsmasq ironic-api ironic-conductor ironic-inspector mariadb nginx rabbitmq-server; do
+        for service in dnsmasq ironic ironic-api ironic-conductor ironic-inspector mariadb nginx; do
             mkdir -p ${LOG_DIR}/kolla/$service
             docker exec bifrost_deploy systemctl status $service > ${LOG_DIR}/kolla/$service/systemd-status-$service.txt
         done
         docker exec bifrost_deploy journalctl -u mariadb > ${LOG_DIR}/kolla/mariadb/mariadb.txt
-        docker exec bifrost_deploy journalctl -u rabbitmq-server > ${LOG_DIR}/kolla/rabbitmq-server/rabbitmq.txt
     fi
 
     # haproxy related logs
