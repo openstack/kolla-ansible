@@ -51,7 +51,17 @@ and versioning may differ depending on deploy configuration):
    CONTAINER ID   IMAGE                                                               COMMAND         CREATED          STATUS        PORTS  NAMES
    97d25657d55e   operator:5000/kolla/centos-source-neutron-vpnaas-agent:4.0.0   "kolla_start"   44 minutes ago   Up 44 minutes        neutron_vpnaas_agent
 
-Kolla-Ansible includes a small script that can be used in tandem with
+.. warning::
+
+   You are free to use the following ``init-runonce`` script for demo
+   purposes but note it does **not** have to be run in order to use your
+   cloud. Depending on your customisations, it may not work, or it may
+   conflict with the resources you want to create. You have been warned.
+
+   Similarly, the ``init-vpn`` script does **not** have to be run unless
+   you want to follow this particular demo.
+
+Kolla Ansible includes a small script that can be used in tandem with
 ``tools/init-runonce`` to verify the VPN using two routers and two Nova VMs:
 
 .. code-block:: console
