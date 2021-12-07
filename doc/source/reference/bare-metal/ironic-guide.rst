@@ -128,13 +128,6 @@ Run the deploy as usual:
 
 Post-deployment configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A script named `init-runonce` is supplied as part of kolla-ansible to
-initialise the cloud with some defaults (only to be used for demo purposes):
-
-.. code-block:: console
-
-  tools/init-runonce
-
 The :ironic-doc:`Ironic documentation <install/configure-glance-images>`
 describes how to create the deploy kernel and ramdisk and register them with
 Glance. In this example we're reusing the same images that were fetched for the
@@ -198,12 +191,16 @@ Use the following commands to wait for the resources to become available:
 
 Booting the baremetal
 ~~~~~~~~~~~~~~~~~~~~~
-You can now use the following sample command to boot the baremetal instance:
+Assuming you have followed the examples above and created the demo resources
+as shown in the :doc:`../../user/quickstart`, you can now use the following
+example command to boot the baremetal instance:
 
 .. code-block:: console
 
   openstack server create --image cirros --flavor my-baremetal-flavor \
     --key-name mykey --network public1 demo1
+
+In other cases you will need to adapt the command to match your environment.
 
 Notes
 ~~~~~
