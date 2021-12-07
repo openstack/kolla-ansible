@@ -90,17 +90,6 @@ Source credentials file.
 
    $ . /etc/kolla/admin-openrc.sh
 
-Create base neutron networks and glance images.
-
-.. code-block:: console
-
-   $ ./tools/init-runonce
-
-.. note::
-
-   ``init-runonce`` file is located in ``$PYTHON_PATH/kolla-ansible``
-   folder in kolla-ansible installation from pip.
-
 In kolla-ansible git repository a `tacker demo <https://github.com/openstack/kolla-ansible/tree/master/contrib/demos/tacker>`_
 is present in ``kolla-ansible/contrib/demos/tacker/`` that will
 create a very basic VNF from a cirros image in ``demo-net`` network.
@@ -116,11 +105,20 @@ Install python-tackerclient.
 
    $ pip install python-tackerclient
 
-Execute ``deploy-tacker-demo`` script to initialize the VNF creation.
+.. warning::
+
+   You are free to use the following ``init-runonce`` script for demo
+   purposes but note it does **not** have to be run in order to use your
+   cloud. Depending on your customisations, it may not work, or it may
+   conflict with the resources you want to create. You have been warned.
+
+From kolla-ansible git repository, execute ``init-runonce`` and
+``deploy-tacker-demo`` scripts to initialize the demo VNF creation.
 
 .. code-block:: console
 
-   $ ./deploy-tacker-demo
+   $ ./tools/init-runonce
+   $ ./contrib/demos/tacker/deploy-tacker-demo
 
 Tacker demo script will create sample VNF Descriptor (VNFD) file,
 then register a default VIM, create a tacker VNFD and finally
@@ -173,3 +171,6 @@ can be cleaned up executing ``cleanup-tacker`` script.
 
    $ ./cleanup-tacker
 
+.. warning::
+
+   The above does not clean up resources created by ``init-runonce``.
