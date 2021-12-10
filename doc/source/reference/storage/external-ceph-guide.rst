@@ -202,6 +202,13 @@ for Ceph includes following steps:
       Required Ceph identity caps for manila user are documented in
       :manila-doc:`CephFS Native driver <admin/cephfs_driver.html#authorizing-the-driver-to-communicate-with-ceph>`.
 
+   .. important::
+
+      CephFS driver in the Wallaby (or later) release requires a Ceph identity
+      with a different set of Ceph capabilities when compared to the driver
+      in a pre-Wallaby release - please refer to Manila
+      :manila-doc:`CephFS Native driver Documentation <admin/cephfs_driver.html#authorizing-the-driver-to-communicate-with-ceph>`.
+
 #. Copy Ceph configuration file to ``/etc/kolla/config/manila/ceph.conf``
 #. Copy Ceph keyring to ``/etc/kolla/config/manila/<ceph_manila_keyring>``
 
