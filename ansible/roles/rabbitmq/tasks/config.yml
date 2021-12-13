@@ -97,5 +97,23 @@
   notify:
     - Restart rabbitmq container
 
+- name: Copying over enabled_plugins
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/enabled_plugins"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/rabbitmq/{{ inventory_hostname }}/enabled_plugins"
+    - "{{ node_custom_config }}/rabbitmq/enabled_plugins"
+    - "enabled_plugins.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart rabbitmq container
+
 - include_tasks: copy-certs.yml
   when: rabbitmq_enable_tls | bool
