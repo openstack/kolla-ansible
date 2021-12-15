@@ -1,0 +1,10 @@
+---
+- name: Reload cinder services to remove RPC version pin
+  vars:
+    service: "{{ item.value }}"
+  become: true
+  kolla_docker:
+    action: "restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+  with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"

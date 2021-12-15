@@ -201,6 +201,15 @@ cinder_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_cinder_auth: "{{ openstack_auth }}"
 
+# After upgrading cinder, services will have an RPC version cap in place.  We
+# need to restart all services in order to allow them to use the latest RPC
+# version. Ideally, there would be a way to check whether all cinder services
+# are using the latest version, but currently there is not. Instead, wait a
+# short time for all cinder services to update the version of their service in
+# the database.  This seems to take around 10 seconds, but the default is 30 to
+# allow room for slowness.
+cinder_rpc_version_startup_delay: 30
+
 
 ####################
 # Cinder
