@@ -147,6 +147,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['neutron-bgp-dragent'] }}"
     volumes: "{{ neutron_bgp_dragent_default_volumes + neutron_bgp_dragent_extra_volumes }}"
     dimensions: "{{ neutron_bgp_dragent_dimensions }}"
+    healthcheck: "{{ neutron_bgp_dragent_healthcheck }}"
   neutron-infoblox-ipam-agent:
     container_name: "neutron_infoblox_ipam_agent"
     image: "{{ neutron_infoblox_ipam_agent_image_full }}"
@@ -342,6 +343,19 @@ neutron_metadata_agent_healthcheck:
   start_period: "{{ neutron_metadata_agent_healthcheck_start_period }}"
   test: "{% if neutron_metadata_agent_enable_healthchecks | bool %}{{ neutron_metadata_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_metadata_agent_healthcheck_timeout }}"
+
+neutron_bgp_dragent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_bgp_dragent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_bgp_dragent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_bgp_dragent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_bgp_dragent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-bgp-dragent {{ om_rpc_port }}"]
+neutron_bgp_dragent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_bgp_dragent_healthcheck:
+  interval: "{{ neutron_bgp_dragent_healthcheck_interval }}"
+  retries: "{{ neutron_bgp_dragent_healthcheck_retries }}"
+  start_period: "{{ neutron_bgp_dragent_healthcheck_start_period }}"
+  test: "{% if neutron_bgp_dragent_enable_healthchecks | bool %}{{ neutron_bgp_dragent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_bgp_dragent_healthcheck_timeout }}"
 
 neutron_openvswitch_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_openvswitch_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
