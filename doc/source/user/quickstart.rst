@@ -554,7 +554,14 @@ Using OpenStack
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.
 
-   * For deployment or evaluation, run ``init-runonce`` script.
+   .. warning::
+
+      You are free to use the following ``init-runonce`` script for demo
+      purposes but note it does **not** have to be run in order to use your
+      cloud. Depending on your customisations, it may not work, or it may
+      conflict with the resources you want to create. You have been warned.
+
+   * For deployment or evaluation, run:
 
      If using a virtual environment:
 
