@@ -22,7 +22,7 @@ Internal API interface (``api_interface``)
   used by HAProxy to access the Swift proxy servers.
 Swift Storage interface (``swift_storage_interface``)
   This interface is used by the Swift proxy server to access the account,
-  container and object servers. Defaults to ``storage_interface``.
+  container and object servers.
 Swift replication interface (``swift_replication_interface``)
   This interface is used for Swift storage replication traffic.
   This is optional as the default configuration uses
