@@ -173,15 +173,12 @@ nova_api_bootstrap_extra_volumes: "{{ nova_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-nova_admin_base_endpoint: "{{ admin_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}"
 nova_internal_base_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}"
 nova_public_base_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}"
 
-nova_legacy_admin_endpoint: "{{ nova_admin_base_endpoint }}/v2/%(tenant_id)s"
 nova_legacy_internal_endpoint: "{{ nova_internal_base_endpoint }}/v2/%(tenant_id)s"
 nova_legacy_public_endpoint: "{{ nova_public_base_endpoint }}/v2/%(tenant_id)s"
 
-nova_admin_endpoint: "{{ nova_admin_base_endpoint }}/v2.1"
 nova_internal_endpoint: "{{ nova_internal_base_endpoint }}/v2.1"
 nova_public_endpoint: "{{ nova_public_base_endpoint }}/v2.1"
 
@@ -202,14 +199,12 @@ nova_ks_services:
     type: "compute_legacy"
     description: "OpenStack Compute Service (Legacy 2.0)"
     endpoints:
-      - {'interface': 'admin', 'url': '{{ nova_legacy_admin_endpoint }}'}
       - {'interface': 'internal', 'url': '{{ nova_legacy_internal_endpoint }}'}
       - {'interface': 'public', 'url': '{{ nova_legacy_public_endpoint }}'}
   - name: "nova"
     type: "compute"
     description: "OpenStack Compute Service"
     endpoints:
-      - {'interface': 'admin', 'url': '{{ nova_admin_endpoint }}'}
       - {'interface': 'internal', 'url': '{{ nova_internal_endpoint }}'}
       - {'interface': 'public', 'url': '{{ nova_public_endpoint }}'}
 
