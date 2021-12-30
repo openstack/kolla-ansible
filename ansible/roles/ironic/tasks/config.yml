@@ -12,7 +12,7 @@
     - item.value.enabled | bool
   with_dict: "{{ ironic_services }}"
 
-- name: Check if policies shall be overwritten
+- name: Check if Ironic policies shall be overwritten
   stat:
     path: "{{ item }}"
   delegate_to: localhost
@@ -24,12 +24,31 @@
         - "{{ node_custom_config }}/ironic/"
       skip: true
 
+- name: Check if Ironic Inspector policies shall be overwritten
+  stat:
+    path: "{{ item }}"
+  delegate_to: localhost
+  run_once: True
+  register: ironic_inspector_policy
+  with_first_found:
+    - files: "{{ supported_policy_format_list }}"
+      paths:
+        - "{{ node_custom_config }}/ironic/inspector/"
+      skip: true
+
 - name: Set ironic policy file
   set_fact:
     ironic_policy_file: "{{ ironic_policy.results.0.stat.path | basename }}"
     ironic_policy_file_path: "{{ ironic_policy.results.0.stat.path }}"
   when:
     - ironic_policy.results
+
+- name: Set ironic-inspector policy file
+  set_fact:
+    ironic_inspector_policy_file: "{{ ironic_inspector_policy.results.0.stat.path | basename }}"
+    ironic_inspector_policy_file_path: "{{ ironic_inspector_policy.results.0.stat.path }}"
+  when:
+    - ironic_inspector_policy.results
 
 - include_tasks: copy-certs.yml
   when:
@@ -224,12 +243,11 @@
   notify:
     - Restart ironic-ipxe container
 
-- name: Copying over existing policy file
+- name: Copying over existing Ironic policy file
   vars:
     services_require_policy_json:
       - ironic-api
       - ironic-conductor
-      - ironic-inspector
   template:
     src: "{{ ironic_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ ironic_policy_file }}"
@@ -238,6 +256,24 @@
   when:
     - ironic_policy_file is defined
     - item.key in services_require_policy_json
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ironic_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
+- name: Copying over existing Ironic Inspector policy file
+  vars:
+    services_require_inspector_policy_json:
+      - ironic-inspector
+  template:
+    src: "{{ ironic_inspector_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item.key }}/{{ ironic_inspector_policy_file }}"
+    mode: "0660"
+  become: true
+  when:
+    - ironic_inspector_policy_file is defined
+    - item.key in services_require_inspector_policy_json
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ironic_services }}"
