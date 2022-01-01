@@ -10,7 +10,7 @@
     - name: set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
-        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'monasca'] }}"
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'monasca', 'venus'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -468,6 +468,13 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "prometheus-efk"
+
+        - name: Run test-venus.sh script
+          script:
+            cmd: test-venus.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "venus"
 
       when: scenario != "bifrost"
 
