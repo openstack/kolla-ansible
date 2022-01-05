@@ -77,7 +77,7 @@ Full
 ----
 
 For a full backup, start a new container using the Mariabackup image with the
-following options on the master database node:
+following options on the first database node:
 
 .. code-block:: console
 
@@ -92,14 +92,14 @@ following options on the master database node:
    (dbrestore) $ mbstream -x -C /backup/restore/full/ < mysqlbackup-04-10-2018.qp.xbc.xbs
    (dbrestore) $ mariabackup --prepare --target-dir /backup/restore/full
 
-Stop the MariaDB instance.
+Stop the MariaDB instance on all nodes:
 
 .. code-block:: console
 
-   docker stop mariadb
+   kolla-ansible -i multinode stop -t mariadb --yes-i-really-really-mean-it
 
 Delete the old data files (or move them elsewhere), and copy the backup into
-place:
+place, again on the first node:
 
 .. code-block:: console
 
@@ -111,7 +111,9 @@ place:
    (dbrestore) $ rm -rf /var/lib/mysql/\.[^\.]*
    (dbrestore) $ mariabackup --copy-back --target-dir /backup/restore/full
 
-Then you can restart MariaDB with the restored data in place:
+Then you can restart MariaDB with the restored data in place.
+
+For single node deployments:
 
 .. code-block:: console
 
@@ -119,6 +121,18 @@ Then you can restart MariaDB with the restored data in place:
    docker logs mariadb
    81004 15:48:27 mysqld_safe WSREP: Running position recovery with --log_error='/var/lib/mysql//wsrep_recovery.BDTAm8' --pid-file='/var/lib/mysql//scratch-recover.pid'
    181004 15:48:30 mysqld_safe WSREP: Recovered position 9388319e-c7bd-11e8-b2ce-6e9ec70d9926:58
+
+For multinode deployment restores, a MariaDB recovery role should be run,
+pointing to the first node of the cluster:
+
+.. code-block:: console
+
+   kolla-ansible -i multinode mariadb_recovery -e mariadb_recover_inventory_name=controller1
+
+The above procedure is valid also for a disaster recovery scenario. In such
+case, first copy MariaDB backup file from the external source into
+``mariadb_backup`` volume on the first node of the cluster. From there,
+use the same steps as mentioned in the procedure above.
 
 Incremental
 -----------
