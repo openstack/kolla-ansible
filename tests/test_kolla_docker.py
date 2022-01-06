@@ -26,9 +26,13 @@ from docker.types import Ulimit
 from oslotest import base
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
-kolla_docker_file = os.path.join(this_dir, '..', 'ansible',
+ansible_dir = os.path.join(this_dir, '..', 'ansible')
+kolla_docker_file = os.path.join(ansible_dir,
                                  'library', 'kolla_docker.py')
+docker_worker_file = os.path.join(ansible_dir,
+                                  'module_utils', 'kolla_docker_worker.py')
 kd = imp.load_source('kolla_docker', kolla_docker_file)
+dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
 
 
 class ModuleArgsTest(base.BaseTestCase):
@@ -222,7 +226,7 @@ class TestMainModule(base.BaseTestCase):
         self.fake_data = copy.deepcopy(FAKE_DATA)
 
     @mock.patch("kolla_docker.traceback.format_exc")
-    @mock.patch("kolla_docker.get_docker_client")
+    @mock.patch("kolla_docker_worker.get_docker_client")
     @mock.patch("kolla_docker.generate_module")
     def test_docker_client_exception(self, mock_generate_module, mock_dclient,
                                      mock_traceback):
@@ -730,7 +734,7 @@ class TestImage(base.BaseTestCase):
         return_data = self.dw.compare_config()
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
@@ -745,7 +749,7 @@ class TestImage(base.BaseTestCase):
         return_data = self.dw.compare_config()
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
@@ -760,7 +764,7 @@ class TestImage(base.BaseTestCase):
         return_data = self.dw.compare_config()
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
@@ -780,7 +784,7 @@ class TestImage(base.BaseTestCase):
         return_data = self.dw.compare_config()
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
@@ -795,7 +799,7 @@ class TestImage(base.BaseTestCase):
         self.assertRaises(Exception, self.dw.compare_config)  # noqa: H202
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
@@ -814,7 +818,7 @@ class TestImage(base.BaseTestCase):
         self.assertRaises(docker_error.APIError, self.dw.compare_config)
         self.dw.dc.exec_create.assert_called_once_with(
             FAKE_DATA['params']['name'],
-            kd.COMPARE_CONFIG_CMD,
+            dwm.COMPARE_CONFIG_CMD,
             user='root')
         self.dw.dc.exec_start.assert_called_once_with(job)
         self.dw.dc.exec_inspect.assert_called_once_with(job)
