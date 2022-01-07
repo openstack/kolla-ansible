@@ -30,6 +30,7 @@ function filter_out_expected_critical {
         # Sometimes we see this during shutdown (upgrade).
         # See: https://bugs.launchpad.net/neutron/+bug/1863579
         grep -v "WSREP has not yet prepared node for application use"
+        grep -v "Failed to fetch token data from identity server"
         ;;
     *)
         # We have to provide some pass-through consumer to avoid:
