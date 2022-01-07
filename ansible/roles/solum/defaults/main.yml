@@ -7,6 +7,7 @@ solum_services:
     image: "{{ solum_api_image_full }}"
     volumes: "{{ solum_api_default_volumes + solum_api_extra_volumes }}"
     dimensions: "{{ solum_api_dimensions }}"
+    healthcheck: "{{ solum_api_healthcheck }}"
   solum-worker:
     container_name: solum_worker
     group: solum-worker
@@ -14,6 +15,7 @@ solum_services:
     image: "{{ solum_worker_image_full }}"
     volumes: "{{ solum_worker_default_volumes + solum_worker_extra_volumes }}"
     dimensions: "{{ solum_worker_dimensions }}"
+    healthcheck: "{{ solum_worker_healthcheck }}"
   solum-deployer:
     container_name: solum_deployer
     group: solum-deployer
@@ -21,6 +23,7 @@ solum_services:
     image: "{{ solum_deployer_image_full }}"
     volumes: "{{ solum_deployer_default_volumes + solum_deployer_extra_volumes }}"
     dimensions: "{{ solum_deployer_dimensions }}"
+    healthcheck: "{{ solum_deployer_healthcheck }}"
     haproxy:
       solum_application_deployment:
         enabled: "{{ enable_solum }}"
@@ -53,6 +56,7 @@ solum_services:
     image: "{{ solum_conductor_image_full }}"
     volumes: "{{ solum_conductor_default_volumes + solum_conductor_extra_volumes }}"
     dimensions: "{{ solum_conductor_dimensions }}"
+    healthcheck: "{{ solum_conductor_healthcheck }}"
 
 ####################
 # Database
@@ -88,6 +92,58 @@ solum_api_dimensions: "{{ default_container_dimensions }}"
 solum_worker_dimensions: "{{ default_container_dimensions }}"
 solum_deployer_dimensions: "{{ default_container_dimensions }}"
 solum_conductor_dimensions: "{{ default_container_dimensions }}"
+
+solum_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+solum_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+solum_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+solum_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+solum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ solum_application_deployment_port }}"]
+solum_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+solum_api_healthcheck:
+  interval: "{{ solum_api_healthcheck_interval }}"
+  retries: "{{ solum_api_healthcheck_retries }}"
+  start_period: "{{ solum_api_healthcheck_start_period }}"
+  test: "{% if solum_api_enable_healthchecks | bool %}{{ solum_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ solum_api_healthcheck_timeout }}"
+
+solum_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+solum_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+solum_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+solum_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+solum_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port solum-worker {{ om_rpc_port }}"]
+solum_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+solum_worker_healthcheck:
+  interval: "{{ solum_worker_healthcheck_interval }}"
+  retries: "{{ solum_worker_healthcheck_retries }}"
+  start_period: "{{ solum_worker_healthcheck_start_period }}"
+  test: "{% if solum_worker_enable_healthchecks | bool %}{{ solum_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ solum_worker_healthcheck_timeout }}"
+
+solum_deployer_enable_healthchecks: "{{ enable_container_healthchecks }}"
+solum_deployer_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+solum_deployer_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+solum_deployer_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+solum_deployer_healthcheck_test: ["CMD-SHELL", "healthcheck_port solum-deployer {{ om_rpc_port }}"]
+solum_deployer_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+solum_deployer_healthcheck:
+  interval: "{{ solum_deployer_healthcheck_interval }}"
+  retries: "{{ solum_deployer_healthcheck_retries }}"
+  start_period: "{{ solum_deployer_healthcheck_start_period }}"
+  test: "{% if solum_deployer_enable_healthchecks | bool %}{{ solum_deployer_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ solum_deployer_healthcheck_timeout }}"
+
+solum_conductor_enable_healthchecks: "{{ enable_container_healthchecks }}"
+solum_conductor_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+solum_conductor_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+solum_conductor_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+solum_conductor_healthcheck_test: ["CMD-SHELL", "healthcheck_port solum-conductor {{ om_rpc_port }}"]
+solum_conductor_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+solum_conductor_healthcheck:
+  interval: "{{ solum_conductor_healthcheck_interval }}"
+  retries: "{{ solum_conductor_healthcheck_retries }}"
+  start_period: "{{ solum_conductor_healthcheck_start_period }}"
+  test: "{% if solum_conductor_enable_healthchecks | bool %}{{ solum_conductor_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ solum_conductor_healthcheck_timeout }}"
 
 solum_api_default_volumes:
   - "{{ node_config_directory }}/solum-api/:{{ container_config_directory }}/:ro"
