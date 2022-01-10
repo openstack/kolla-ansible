@@ -68,7 +68,21 @@
     - nova_spicehtml5proxy.enabled | bool
     - inventory_hostname in groups[nova_spicehtml5proxy.group]
 
-- name: Checking free port for Nova SSH
+- name: Checking free port for Nova SSH (API interface)
+  vars:
+    nova_ssh: "{{ nova_cell_services['nova-ssh'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ nova_ssh_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['nova_ssh'] is not defined
+    - nova_ssh.enabled | bool
+    - inventory_hostname in groups[nova_ssh.group]
+
+- name: Checking free port for Nova SSH (migration interface)
   vars:
     nova_ssh: "{{ nova_cell_services['nova-ssh'] }}"
   wait_for:
@@ -78,6 +92,7 @@
     timeout: 1
     state: stopped
   when:
+    - migration_interface_address != api_interface_address
     - container_facts['nova_ssh'] is not defined
     - nova_ssh.enabled | bool
     - inventory_hostname in groups[nova_ssh.group]
