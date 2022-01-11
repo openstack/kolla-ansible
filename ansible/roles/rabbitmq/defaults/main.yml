@@ -88,3 +88,15 @@ rabbitmq_server_additional_erl_args: "+S 2:2 +sbwt none +sbwtdcpu none +sbwtdio 
 rabbitmq_tls_options: {}
 # To avoid split-brain
 rabbitmq_cluster_partition_handling: "pause_minority"
+
+####################
+# Plugins
+####################
+rabbitmq_enable_prometheus_plugin: "{{ enable_prometheus }}"
+rabbitmq_plugins:
+  - name: "rabbitmq_management"
+    enabled: True
+  - name: "rabbitmq_prometheus"
+    enabled: "{{ rabbitmq_enable_prometheus_plugin | bool }}"
+
+rabbitmq_enabled_plugins: "{{ rabbitmq_plugins | selectattr('enabled', 'equalto', true) | list }}"
