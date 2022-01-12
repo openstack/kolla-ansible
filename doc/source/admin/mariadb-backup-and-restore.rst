@@ -83,7 +83,7 @@ following options on the master database node:
 
    docker run --rm -it --volumes-from mariadb --name dbrestore \
       --volume mariadb_backup:/backup \
-      kolla/centos-binary-mariadb:train \
+      kolla/centos-binary-mariadb-server:|KOLLA_OPENSTACK_RELEASE| \
       /bin/bash
    (dbrestore) $ cd /backup
    (dbrestore) $ rm -rf /backup/restore
@@ -105,7 +105,7 @@ place:
 
    docker run --rm -it --volumes-from mariadb --name dbrestore \
       --volume mariadb_backup:/backup \
-      kolla/centos-binary-mariadb:train \
+      kolla/centos-binary-mariadb-server:|KOLLA_OPENSTACK_RELEASE| \
       /bin/bash
    (dbrestore) $ rm -rf /var/lib/mysql/*
    (dbrestore) $ rm -rf /var/lib/mysql/\.[^\.]*
@@ -134,7 +134,7 @@ incremental backup,
 
    docker run --rm -it --volumes-from mariadb --name dbrestore \
       --volume mariadb_backup:/backup --tmpfs /backup/restore \
-      kolla/centos-binary-mariadb:train \
+      kolla/centos-binary-mariadb-server:|KOLLA_OPENSTACK_RELEASE| \
       /bin/bash
    (dbrestore) $ cd /backup
    (dbrestore) $ rm -rf /backup/restore
