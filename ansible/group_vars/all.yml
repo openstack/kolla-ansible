@@ -434,6 +434,7 @@ outward_rabbitmq_port: "5674"
 outward_rabbitmq_management_port: "15674"
 outward_rabbitmq_cluster_port: "25674"
 outward_rabbitmq_epmd_port: "4371"
+outward_rabbitmq_prometheus_port: "15694"
 
 ovsdb_port: "6640"
 
@@ -450,7 +451,7 @@ prometheus_node_exporter_port: "9100"
 prometheus_mysqld_exporter_port: "9104"
 prometheus_haproxy_exporter_port: "9101"
 prometheus_memcached_exporter_port: "9150"
-prometheus_rabbitmq_exporter_port: "15692"
+prometheus_rabbitmq_exporter_port: "{{ rabbitmq_prometheus_port }}"
 # Default cadvisor port of 8080 already in use
 prometheus_cadvisor_port: "18080"
 
@@ -473,6 +474,7 @@ rabbitmq_port: "{{ '5671' if rabbitmq_enable_tls | bool else '5672' }}"
 rabbitmq_management_port: "15672"
 rabbitmq_cluster_port: "25672"
 rabbitmq_epmd_port: "4369"
+rabbitmq_prometheus_port: "15692"
 
 redis_port: "6379"
 redis_sentinel_port: "26379"
@@ -799,6 +801,14 @@ outward_rabbitmq_user: "openstack"
 rabbitmq_enable_tls: "no"
 # CA certificate bundle in RabbitMQ container.
 rabbitmq_cacert: "/etc/ssl/certs/{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.trust.crt' }}"
+rabbitmq_enable_prometheus_plugin: "{{ enable_prometheus }}"
+rabbitmq_plugins:
+  - name: "rabbitmq_management"
+    enabled: True
+  - name: "rabbitmq_prometheus"
+    enabled: "{{ rabbitmq_enable_prometheus_plugin | bool }}"
+
+rabbitmq_enabled_plugins: "{{ rabbitmq_plugins | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Qdrouterd options
