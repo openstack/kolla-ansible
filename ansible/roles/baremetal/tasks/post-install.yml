@@ -201,7 +201,11 @@
   when: ansible_facts.distribution == "Ubuntu"
 
 - name: Remove apparmor profile for libvirt
-  command: apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
+  shell: |
+    apparmor_parser -v -R /etc/apparmor.d/usr.sbin.libvirtd && \
+    ln -vsf /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/disable
+  args:
+    executable: /bin/bash
   become: True
   when:
     - ansible_facts.distribution == "Ubuntu"
