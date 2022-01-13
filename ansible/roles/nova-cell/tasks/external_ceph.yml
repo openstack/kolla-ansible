@@ -32,7 +32,7 @@
     - external_ceph_cephx_enabled | bool
 
 - name: Copy over ceph nova keyring file
-  copy:
+  template:
     src: "{{ nova_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
@@ -47,7 +47,7 @@
     - Restart {{ item }} container
 
 - name: Copy over ceph cinder keyring file
-  copy:
+  template:
     src: "{{ cinder_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     mode: "0660"
@@ -98,7 +98,7 @@
 - name: Extract nova key from file
   set_fact:
     nova_cephx_raw_key:
-      "{{ lookup('file', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
+      "{{ lookup('template', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
   changed_when: false
   run_once: True
   when:
@@ -108,7 +108,7 @@
 - name: Extract cinder key from file
   set_fact:
     cinder_cephx_raw_key:
-      "{{ lookup('file', cinder_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
+      "{{ lookup('template', cinder_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
   changed_when: false
   run_once: True
   when:
