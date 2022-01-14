@@ -1,0 +1,55 @@
+---
+- name: Install ceph-common
+  block:
+    - block:
+        - name: Install ceph apt gpg key
+          apt_key:
+            url: "{{ ceph_apt_key_file }}"
+            id: "{{ ceph_apt_key_id }}"
+            state: present
+          become: True
+
+        - name: Enable ceph apt repository
+          apt_repository:
+            repo: "{{ ceph_apt_repo }}"
+            filename: ceph
+          become: True
+
+        - name: Install apt packages
+          package:
+            name: "{{ ceph_apt_package }}"
+            state: present
+          become: True
+      when: ansible_facts.os_family == 'Debian'
+
+    - block:
+        - name: Enable ceph yum repository
+          yum_repository:
+            name: ceph
+            description: Ceph main Repository
+            baseurl: "{{ ceph_yum_baseurl }}"
+            gpgcheck: "{{ ceph_yum_gpgcheck | bool }}"
+            gpgkey: "{{ ceph_yum_gpgkey }}"
+          become: True
+
+        - name: Enable epel yum repository
+          package:
+            name: "{{ epel_yum_package }}"
+            state: present
+          become: True
+
+        - name: Install ceph rpm gpg key
+          rpm_key:
+            state: present
+            key: "{{ ceph_yum_gpgkey }}"
+          become: True
+          when:
+            - ceph_yum_gpgcheck | bool
+
+        - name: Install RPM packages
+          package:
+            name: "{{ ceph_yum_package }}"
+            state: present
+            enablerepo: epel
+          become: True
+      when: ansible_facts.os_family == 'RedHat'
