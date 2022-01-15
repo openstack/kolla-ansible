@@ -41,6 +41,15 @@
     - inventory_hostname not in groups['bifrost'] or
       hostvars[inventory_hostname]['api_interface'] | replace('-', '_') in hostvars[inventory_hostname].ansible_facts
 
+- name: Ensure unprivileged users can use ping
+  become: true
+  sysctl:
+    name: net.ipv4.ping_group_range
+    value: '0 2147483647'
+    state: present
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  when: ansible_facts.os_family == 'RedHat'
+
 # NOTE(osmanlicilegi): The distribution might come with cloud-init installed, and manage_etc_hosts
 # configuration enabled. If so, it will override the file /etc/hosts from cloud-init templates at
 # every boot, which will break RabbitMQ. To prevent this happens, first we check whether cloud-init
