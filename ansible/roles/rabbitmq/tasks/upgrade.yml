@@ -16,6 +16,28 @@
   when: inventory_hostname in groups[role_rabbitmq_groups]
   register: rabbitmq_differs
 
+- name: List RabbitMQ policies
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  become: true
+  command: "docker exec {{ service.container_name }} rabbitmqctl list_policies --silent"
+  when: inventory_hostname in groups[role_rabbitmq_groups]
+  run_once: true
+  register: rabbitmq_policies
+  changed_when: false
+
+# NOTE(dszumski): This can be removed in the Zed cycle
+- name: Remove ha-all policy from RabbitMQ
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  become: true
+  command: "docker exec {{ service.container_name }} rabbitmqctl clear_policy ha-all"
+  when:
+    - inventory_hostname in groups[role_rabbitmq_groups] and 'ha-all' in rabbitmq_policies.stdout
+  run_once: true
+
 - import_tasks: config.yml
 
 - import_tasks: check-containers.yml
