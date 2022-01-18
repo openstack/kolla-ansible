@@ -187,7 +187,6 @@ keepalived_virtual_router_id: "51"
 #######################
 # Elasticsearch Options
 #######################
-es_heap_size: "1G"
 elasticsearch_datadir_volume: "elasticsearch"
 
 elasticsearch_internal_endpoint: "{{ internal_protocol }}://{{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
@@ -943,8 +942,6 @@ cinder_backup_mount_options_nfs: ""
 #######################
 # Cloudkitty options
 #######################
-# Valid option is gnocchi
-cloudkitty_collector_backend: "gnocchi"
 # Valid options are 'sqlalchemy' or 'influxdb'. The default value is
 # 'influxdb', which matches the default in Cloudkitty since the Stein release.
 # When the backend is "influxdb", we also enable Influxdb.
@@ -970,7 +967,7 @@ designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn |
 # Neutron options
 #######################
 neutron_bgp_router_id: "1.1.1.1"
-neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br-ex' }}"
+neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br_dpdk' if enable_ovs_dpdk | bool else 'br-ex' }}"
 # Comma-separated type of enabled ml2 type drivers
 neutron_type_drivers: "flat,vlan,vxlan{% if neutron_plugin_agent == 'ovn' %},geneve{% endif %}"
 # Comma-separated types of tenant networks (should be listed in 'neutron_type_drivers')
