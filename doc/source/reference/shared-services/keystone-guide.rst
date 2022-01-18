@@ -247,8 +247,8 @@ Identity provider's endpoint:
 certificate_file
 ****************
 
-Path to the Identity Provider certificate file, the file must be named as
-'certificate-key-id.pem'. E.g.
+Optional path to the Identity Provider certificate file.  If included,
+the file must be named as 'certificate-key-id.pem'. E.g.:
 
 .. code-block::
 
