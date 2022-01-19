@@ -7,7 +7,7 @@ Overview
 
 Libvirt is the most commonly used virtualisation driver in OpenStack. It uses
 libvirt, backed by QEMU and when available, KVM. Libvirt is executed in the
-``nova_libvirt`` container.
+``nova_libvirt`` container, or as a daemon running on the host.
 
 Hardware Virtualisation
 =======================
@@ -41,6 +41,21 @@ generated with other passwords using and stored in ``passwords.yml``.
 The list of enabled authentication mechanisms is configured via
 ``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
 TLS is enabled, or ``["DIGEST-MD5"]`` otherwise.
+
+Host vs containerised libvirt
+=============================
+
+By default, Kolla Ansible deploys libvirt in a ``nova_libvirt`` container. In
+some cases it may be preferable to run libvirt as a daemon on the compute hosts
+instead.
+
+Kolla Ansible does not currently support deploying and configuring
+libvirt as a host daemon. However, since the Yoga release, if a libvirt daemon
+has already been set up, then Kolla Ansible may be configured to use it. This
+may be achieved by setting ``enable_nova_libvirt_container`` to ``false``.
+
+Migration of hosts from a containerised libvirt to host libvirt is currently
+not supported.
 
 .. libvirt-tls:
 
@@ -77,13 +92,13 @@ will have to supply Kolla Ansible the following pieces of information:
     they can verify that all the certificates being used were signed by the CA
     and should be trusted.
 
-* serverkey.pem
+* serverkey.pem (not used when using a host libvirt daemon)
 
   - This is the private key for the server, and is no different than the
     private key of a TLS certificate. It should be carefully protected, just
     like the private key of a TLS certificate.
 
-* servercert.pem
+* servercert.pem (not used when using a host libvirt daemon)
 
   - This is the public certificate for the server. Libvirt will present this
     certificate to any connection made to the TLS port. This is no different

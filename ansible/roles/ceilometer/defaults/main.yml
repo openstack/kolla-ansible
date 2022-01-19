@@ -134,7 +134,7 @@ ceilometer_compute_default_volumes:
   - "/run/:/run/:shared"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
-  - "nova_libvirt:/var/lib/libvirt"
+  - "{{ ceilometer_libvirt_volume }}:/var/lib/libvirt"
   - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 ceilometer_ipmi_default_volumes:
   - "{{ node_config_directory }}/ceilometer-ipmi/:{{ container_config_directory }}/:ro"
@@ -149,6 +149,8 @@ ceilometer_notification_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_central_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_compute_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_ipmi_extra_volumes: "{{ ceilometer_extra_volumes }}"
+
+ceilometer_libvirt_volume: "{{ 'nova_libvirt' if enable_nova_libvirt_container | bool else '/var/lib/libvirt' }}"
 
 ####################
 # OpenStack

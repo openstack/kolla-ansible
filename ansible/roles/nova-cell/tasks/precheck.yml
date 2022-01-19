@@ -111,13 +111,26 @@
     - nova_libvirt.enabled | bool
     - inventory_hostname in groups[nova_libvirt.group]
 
-- name: Checking that libvirt is not running
+- name: Checking that host libvirt is not running
   vars:
     nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
   stat: path=/var/run/libvirt/libvirt-sock
   register: result
   failed_when: result.stat.exists
   when:
-    - nova_compute_virt_type in ['kvm', 'qemu']
     - container_facts['nova_libvirt'] is not defined
+    - nova_libvirt.enabled | bool
+    - inventory_hostname in groups[nova_libvirt.group]
+
+- name: Checking that nova_libvirt container is not running
+  vars:
+    nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
+  fail:
+    msg: >-
+      The nova_libvirt container is running, however it has been disabled via
+      the 'enable_nova_libvirt_container' flag. Stop and remove the container
+      manually, taking care to migrate any state to the host libvirt daemon.
+  when:
+    - container_facts['nova_libvirt'] is defined
+    - not nova_libvirt.enabled | bool
     - inventory_hostname in groups[nova_libvirt.group]
