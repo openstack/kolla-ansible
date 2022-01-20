@@ -1,25 +1,4 @@
 ---
-# TODO(mgoddard): Remove this check in the Y cycle after chrony has been
-# dropped for a cycle.
-- name: Get container facts
-  become: true
-  kolla_container_facts:
-    name:
-      - chrony
-  register: container_facts
-
-- name: Fail if chrony container is running
-  fail:
-    msg: >-
-      A chrony container is running, but the chrony container is no longer
-      supported from the Xena release.
-
-      The chrony container may be cleaned up via 'kolla-ansible
-      chrony-cleanup'. You should then install and configure a suitable host
-      NTP daemon before running these prechecks again.
-  when:
-    - "'chrony' in container_facts"
-
 - block:
     - name: Check for a running host NTP daemon  # noqa command-instead-of-module
       vars:
@@ -39,8 +18,8 @@
     - name: Fail if a host NTP daemon is not running
       fail:
         msg: >-
-          No host NTP daemon is running, and the Kolla Ansible chrony container
-          is disabled. Please install and configure a host NTP daemon.
+          No host NTP daemon is running.
+          Please install and configure a host NTP daemon.
           Alternatively, set 'prechecks_enable_host_ntp_checks' to 'false' to
           disable this check if not using one of the following NTP daemons:
           chrony, ntpd, systemd-timesyncd.
