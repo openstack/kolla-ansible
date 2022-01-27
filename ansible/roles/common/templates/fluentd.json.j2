@@ -1,17 +1,7 @@
-{% set fluentd_user = fluentd_binary %}
-{% set fluentd_dir = '/etc/' ~ fluentd_binary %}
-
-{% if fluentd_binary == 'fluentd' %}
-    {% set fluentd_conf = 'fluent.conf' %}
-    {% if kolla_base_distro in ['ubuntu', 'debian'] %}
-        {% set fluentd_cmd = '/usr/local/bin/fluentd -c ' ~ fluentd_dir ~ '/' ~ fluentd_conf %}
-    {% else %}
-        {% set fluentd_cmd = '/usr/bin/fluentd -c ' ~ fluentd_dir ~ '/' ~ fluentd_conf %}
-    {% endif %}
-{% elif fluentd_binary == 'td-agent' %}
-    {% set fluentd_conf = fluentd_binary ~ '.conf' %}
-    {% set fluentd_cmd = '/usr/sbin/td-agent' %}
-{% endif %}
+{% set fluentd_user = 'td-agent' %}
+{% set fluentd_dir = '/etc/td-agent' %}
+{% set fluentd_conf = 'td-agent.conf' %}
+{% set fluentd_cmd = '/usr/sbin/td-agent' %}
 
 {
     "command": "{{ fluentd_cmd }} -o /var/log/kolla/fluentd/fluentd.log",

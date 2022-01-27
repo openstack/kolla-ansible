@@ -1,6 +1,6 @@
 ---
 # NOTE(mnasiadka): external_ids:system-id uniquely identifies a physical system, used by OVN and other controllers
-- name: Set system-id
+- name: Set system-id and hw-offload
   become: true
   kolla_toolbox:
     user: root
@@ -8,10 +8,13 @@
     module_args:
       table: Open_vSwitch
       record: .
-      col: external_ids
-      key: system-id
-      value: "{{ openvswitch_system_id }}"
-      state: present
+      col: "{{ item.col }}"
+      key: "{{ item.name }}"
+      value: "{{ item.value }}"
+      state: "{{ item.state | default('present') }}"
+  loop:
+    - { col: "external_ids", name: "system-id", value: "{{ openvswitch_system_id }}" }
+    - { col: "other_config", name: "hw-offload", value: true, state: "{{ 'present' if openvswitch_hw_offload | bool else 'absent' }}" }
 
 - name: Ensuring OVS bridge is properly setup
   become: true
