@@ -1,6 +1,5 @@
 [DEFAULT]
 debug = {{ cinder_logging_debug }}
-
 log_dir = /var/log/kolla/cinder
 {% if service_name == "cinder-api" %}
 log_file = cinder-api.log
@@ -13,7 +12,9 @@ use_stderr = false
 
 my_ip = {{ api_interface_address }}
 
-volume_name_template = volume-%s
+
+osapi_volume_workers = {{ openstack_service_workers }}
+volume_name_template = vol_%s
 
 glance_api_servers = {{ glance_internal_endpoint }}
 
@@ -114,6 +115,8 @@ max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 [keystone_authtoken]
+service_token_roles = service
+service_token_roles_required = true
 service_type = volume
 # security fix, always validate service tokens
 # see: https://security.openstack.org/ossa/OSSA-2023-003.html
@@ -228,8 +231,8 @@ lightos_skip_ssl_verify = {{ lightbits_skip_ssl_verify }}
 lightos_jwt = {{ lightbits_JWT }}
 {% endif %}
 
-[privsep_entrypoint]
-helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
+[privsep_osbrick]
+helper_command = sudo -E cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
 
 {% if enable_osprofiler | bool %}
 [profiler]

@@ -192,8 +192,8 @@ rabbit_transient_quorum_queue = true
 policy_file = {{ nova_policy_file }}
 {% endif %}
 
-[privsep_entrypoint]
-helper_command=sudo nova-rootwrap /etc/nova/rootwrap.conf privsep-helper --config-file /etc/nova/nova.conf
+[privsep_osbrick]
+helper_command = sudo -E nova-rootwrap /etc/nova/rootwrap.conf privsep-helper --config-file /etc/nova/nova.conf
 
 [guestfs]
 debug = {{ nova_logging_debug }}
@@ -253,7 +253,9 @@ passthrough_whitelist = {{ nova_pci_passthrough_whitelist | to_json }}
 {% endif %}
 
 [service_user]
-send_service_user_token = true
+send_service_user_token = True
+service_type = compute
+www_authenticate_uri = {{ keystone_internal_url }}
 auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
@@ -264,3 +266,6 @@ password = {{ nova_keystone_password }}
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 valid_interfaces = internal
+memcache_security_strategy = ENCRYPT
+memcache_secret_key = {{ memcache_secret_key }}
+memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
