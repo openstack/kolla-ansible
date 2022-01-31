@@ -73,3 +73,14 @@ driver = {{ ironic_inspector_pxe_filter }}
 [iptables]
 dnsmasq_interface = {{ ironic_dnsmasq_interface }}
 {% endif %}
+
+[coordination]
+{% if ironic_coordination_backend == 'redis' %}
+backend_url = {{ redis_connection_string }}
+{% elif ironic_coordination_backend == 'etcd' %}
+# NOTE(yoctozepto): etcd-compatible tooz drivers do not support multiple endpoints here (verified in Stein, Train)
+# NOTE(yoctozepto): we must use etcd3gw (aka etcd3+http) due to issues with alternative (etcd3) and eventlet (as used by cinder)
+# see https://bugs.launchpad.net/kolla-ansible/+bug/1854932
+# and https://review.opendev.org/466098 for details
+backend_url = etcd3+{{ etcd_protocol }}://{{ 'api' | kolla_address(groups['etcd'][0]) | put_address_in_context('url') }}:{{ etcd_client_port }}
+{% endif %}
