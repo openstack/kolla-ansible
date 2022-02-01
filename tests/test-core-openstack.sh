@@ -55,6 +55,28 @@ function create_a_volume_from_image {
     done
 }
 
+function create_an_image_from_volume {
+    local image_name=$1
+    local volume_name=$2
+
+    local attempt
+
+    # NOTE(yoctozepto): Adding explicit microversion of Victoria as a sane default to work
+    # around the bug: https://storyboard.openstack.org/#!/story/2009287
+    openstack --os-volume-api-version 3.62 image create --volume $volume_name $image_name
+    attempt=1
+    while [[ $(openstack image show $image_name -f value -c status) != "active" ]]; do
+        echo "Image $image_name not active yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 11 ]]; then
+            echo "Image $image_name failed to become active"
+            openstack image show $image_name
+            return 1
+        fi
+        sleep 30
+    done
+}
+
 function attach_and_detach_a_volume {
     local volume_name=$1
     local instance_name=$2
@@ -219,6 +241,22 @@ function test_instance_boot {
 
             echo "SUCCESS: Cinder volume upgrade stability (PHASE: $PHASE)"
         fi
+
+        echo "TESTING: Glance image from Cinder volume and back to volume"
+
+        create_a_volume test_volume_to_image
+        openstack volume show test_volume_to_image
+        create_an_image_from_volume test_image_from_volume test_volume_to_image
+
+        create_a_volume_from_image test_volume_from_image_from_volume test_image_from_volume
+        openstack volume show test_volume_from_image_from_volume
+        attach_and_detach_a_volume test_volume_from_image_from_volume kolla_boot_test
+
+        delete_a_volume test_volume_from_image_from_volume
+        openstack image delete test_image_from_volume
+        delete_a_volume test_volume_to_image
+
+        echo "SUCCESS: Glance image from Cinder volume and back to volume"
     fi
 
     echo "TESTING: Floating ip allocation"
