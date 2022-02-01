@@ -88,6 +88,8 @@ copy_logs() {
 
     # cephadm related logs
     mkdir -p ${LOG_DIR}/ceph
+    sudo cp /etc/ceph/ceph.conf ${LOG_DIR}/ceph
+    sudo cp -Rf /var/run/ceph/* ${LOG_DIR}/ceph
     sudo cephadm shell -- ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
     sudo cephadm shell -- ceph --connect-timeout 5 osd tree > ${LOG_DIR}/ceph/ceph_osd_tree.txt
 

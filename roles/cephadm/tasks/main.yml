@@ -49,6 +49,7 @@
          --skip-dashboard
          --skip-firewalld
          --mon-ip={{ mon_ip }}
+         --mon-addrv='[v2:{{ mon_ip }}:3300,v1:{{ mon_ip }}:6789]'
   become: True
   register: cephadm_bootstrap_output
 
@@ -62,6 +63,13 @@
   template:
     src: templates/cephadm.yml.j2
     dest: "/var/run/ceph/{{ ceph_fsid }}/cluster.yml"
+  become: True
+
+- name: Check Ceph Orchestrator state
+  command:
+    cmd: >
+         cephadm shell --
+         ceph orch status --detail
   become: True
 
 - name: Apply cluster spec
