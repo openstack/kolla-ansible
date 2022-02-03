@@ -1,0 +1,84 @@
+---
+- name: Ensuring private libvirt directory exist
+  file:
+    path: "{{ libvirt_dir }}"
+    state: "directory"
+    mode: "0770"
+
+- name: Creating libvirt SSL configuration file
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ kolla_certificates_dir }}/{{ item }}"
+    mode: "0660"
+  with_items:
+    - "openssl-kolla-libvirt.cnf"
+
+- name: Creating libvirt certificate key
+  command: >
+    openssl genrsa
+    -out "{{ libvirt_dir }}/libvirt.key" 2048
+  args:
+    creates: "{{ libvirt_dir }}/libvirt.key"
+
+- name: Creating libvirt certificate signing request
+  command: >
+    openssl req
+    -new
+    -key "{{ libvirt_dir }}/libvirt.key"
+    -out "{{ libvirt_dir }}/libvirt.csr"
+    -config "{{ kolla_certificates_dir }}/openssl-kolla-libvirt.cnf"
+    -sha256
+  args:
+    creates: "{{ libvirt_dir }}/libvirt.csr"
+
+- name: Creating libvirt certificate
+  command: >
+    openssl x509
+    -req
+    -in "{{ libvirt_dir }}/libvirt.csr"
+    -CA "{{ root_dir }}/root.crt"
+    -CAkey "{{ root_dir }}/root.key"
+    -CAcreateserial
+    -extensions v3_req
+    -extfile "{{ kolla_certificates_dir }}/openssl-kolla-libvirt.cnf"
+    -out "{{ libvirt_dir }}/libvirt.crt"
+    -days 500
+    -sha256
+  args:
+    creates: "{{ libvirt_dir }}/libvirt.crt"
+
+- name: Setting permissions on libvirt key
+  file:
+    path: "{{ libvirt_dir }}/libvirt.key"
+    mode: "0660"
+    state: file
+
+- name: Ensure libvirt output directory exists
+  file:
+    path: "{{ certificates_libvirt_output_dir }}"
+    state: directory
+    mode: "0770"
+
+- name: Copy libvirt root CA to default configuration location
+  copy:
+    src: "{{ root_dir }}/root.crt"
+    dest: "{{ certificates_libvirt_output_dir }}/cacert.pem"
+    mode: "0660"
+
+- name: Copy libvirt cert to default configuration locations
+  copy:
+    src: "{{ libvirt_dir }}/libvirt.crt"
+    dest: "{{ certificates_libvirt_output_dir }}/{{ item }}cert.pem"
+    mode: "0660"
+  loop:
+    - server
+    - client
+
+- name: Copy libvirt key to default configuration locations
+  copy:
+    src: "{{ libvirt_dir }}/libvirt.key"
+    dest: "{{ certificates_libvirt_output_dir }}/{{ item }}key.pem"
+    mode: "0660"
+  loop:
+    - server
+    - client
