@@ -6,6 +6,20 @@
             "dest": "/etc/zun/zun.conf",
             "owner": "zun",
             "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/{{ ceph_cinder_keyring }}",
+            "dest": "/etc/ceph/{{ ceph_cinder_keyring }}",
+            "owner": "zun",
+            "perm": "0600",
+            "optional": {{ (not zun_configure_for_cinder_ceph | bool) | string | lower }}
+        },
+        {
+            "source": "{{ container_config_directory }}/ceph.conf",
+            "dest": "/etc/ceph/ceph.conf",
+            "owner": "zun",
+            "perm": "0600",
+            "optional": {{ (not zun_configure_for_cinder_ceph | bool) | string | lower }}
         }{% if zun_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ zun_policy_file }}",
@@ -19,6 +33,10 @@
             "path": "/var/log/kolla/zun",
             "owner": "zun:kolla",
             "recurse": true
-        }
+        }{% if zun_configure_for_cinder_ceph | bool %},
+        {
+            "path": "/var/lib/zun",
+            "owner": "zun:kolla"
+        }{% endif %}
     ]
 }
