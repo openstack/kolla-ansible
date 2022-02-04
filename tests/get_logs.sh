@@ -29,7 +29,7 @@ copy_logs() {
 
     df -h > ${LOG_DIR}/system_logs/df.txt
     free  > ${LOG_DIR}/system_logs/free.txt
-    parted -l > ${LOG_DIR}/system_logs/parted-l.txt
+    lsblk > ${LOG_DIR}/system_logs/lsblk.txt
     mount > ${LOG_DIR}/system_logs/mount.txt
     env > ${LOG_DIR}/system_logs/env.txt
 
