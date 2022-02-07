@@ -1,0 +1,18 @@
+[req]
+prompt = no
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[req_distinguished_name]
+countryName = US
+stateOrProvinceName = NC
+localityName = RTP
+organizationalUnitName = kolla
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+{% for host in groups['compute'] %}
+DNS.{{ loop.index }} = {{ hostvars[host].migration_hostname | default(hostvars[host].ansible_facts.nodename) }}
+{% endfor %}

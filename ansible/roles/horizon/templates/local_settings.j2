@@ -515,6 +515,15 @@ POLICY_FILES_PATH = '/etc/openstack-dashboard'
 #    ('default', 'Default', 'themes/default'),
 #    ('material', 'Material', 'themes/material'),
 #]
+{% if horizon_custom_themes | length > 0 %}
+AVAILABLE_THEMES = [
+     ('default', 'Default', 'themes/default'),
+     ('material', 'Material', 'themes/material'),
+{% for theme in horizon_custom_themes %}
+     ('{{ theme.name|e }}', '{{ theme.label|e }}', '/etc/openstack-dashboard/themes/{{ theme.name|e }}'),
+{% endfor %}
+]
+{% endif %}
 
 LOGGING = {
     'version': 1,

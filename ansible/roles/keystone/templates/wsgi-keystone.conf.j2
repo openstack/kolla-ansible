@@ -79,6 +79,7 @@ LogLevel info
 {% for idp in keystone_identity_providers %}
 {% if idp.protocol == 'openid' %}
     <LocationMatch /v3/auth/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/websso>
+      OIDCDiscoverURL {{ keystone_public_url }}/redirect_uri?iss={{ idp.identifier | urlencode }}
       Require valid-user
       AuthType openid-connect
     </LocationMatch>
