@@ -19,7 +19,7 @@ function check_openstack_log_file_for_level {
 function check_fluentd_log_file_for_level {
     # $1: file
     # $2: log level
-    sudo egrep "\[$2\]" $1
+    sudo egrep "\[$2\]:" $1
 }
 
 function filter_out_expected_critical {
