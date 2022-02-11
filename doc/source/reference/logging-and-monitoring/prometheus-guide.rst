@@ -45,6 +45,20 @@ and data retention size to 30 gigabytes:
 
    prometheus_cmdline_extras: "--query.timeout=1m --storage.tsdb.retention.size=30GB"
 
+Configuration options
+~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table:: Configuration options
+   :widths: 25 25 75
+   :header-rows: 1
+
+   * - Option
+     - Default
+     - Description
+   * - prometheus_scrape_interval
+     - 60s
+     - Default scape interval for all jobs
+
 Extending prometheus.cfg
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
