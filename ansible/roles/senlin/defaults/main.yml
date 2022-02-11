@@ -19,7 +19,8 @@ senlin_services:
         enabled: "{{ enable_senlin }}"
         mode: "http"
         external: true
-        port: "{{ senlin_api_port }}"
+        external_fqdn: "{{ senlin_external_fqdn }}"
+        port: "{{ senlin_api_public_port }}"
         listen_port: "{{ senlin_api_listen_port }}"
   senlin-conductor:
     container_name: senlin_conductor
@@ -186,8 +187,8 @@ senlin_health_manager_extra_volumes: "{{ senlin_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-senlin_internal_endpoint: "{{ internal_protocol }}://{{ senlin_internal_fqdn | put_address_in_context('url') }}:{{ senlin_api_port }}"
-senlin_public_endpoint: "{{ public_protocol }}://{{ senlin_external_fqdn | put_address_in_context('url') }}:{{ senlin_api_port }}"
+senlin_internal_endpoint: "{{ senlin_internal_fqdn | kolla_url(internal_protocol, senlin_api_port) }}"
+senlin_public_endpoint: "{{ senlin_external_fqdn | kolla_url(public_protocol, senlin_api_public_port) }}"
 
 senlin_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -137,8 +137,10 @@ backend {{ service_name }}_back
 {{ userlist_macro(haproxy_name, auth_user, auth_pass) }}
         {% endif %}
         {% if with_frontend %}
+            {% if not (external|bool and haproxy_single_external_frontend|bool and mode == 'http') %}
 {{ frontend_macro(haproxy_name, haproxy_service.port, mode, external,
                   frontend_http_extra, frontend_tcp_extra) }}
+            {% endif %}
         {% endif %}
         {# Redirect (to https) is a special case, as it does not include a backend #}
         {% if with_backend and mode != 'redirect' %}

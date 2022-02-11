@@ -156,6 +156,21 @@
   notify:
     - Restart proxysql container
 
+- name: Copying over haproxy single external frontend config
+  vars:
+    service: "{{ loadbalancer_services['haproxy'] }}"
+  template:
+    src: "haproxy/haproxy_external_frontend.cfg.j2"
+    dest: "{{ node_config_directory }}/haproxy/services.d/external-frontend.cfg"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - haproxy_single_external_frontend | bool
+  notify:
+    - Restart haproxy container
+
 - name: Copying over custom haproxy services configuration
   vars:
     service: "{{ loadbalancer_services['haproxy'] }}"

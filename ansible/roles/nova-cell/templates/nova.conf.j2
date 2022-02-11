@@ -49,7 +49,7 @@ novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups[nova_cell_compute_group] %}
-novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn | put_address_in_context('url') }}:{{ nova_novncproxy_port }}/vnc_lite.html
+novncproxy_base_url = {{ nova_novncproxy_fqdn | kolla_url(public_protocol,  nova_novncproxy_public_port, '/vnc_lite.html') }}
 {% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
@@ -61,7 +61,7 @@ enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups[nova_cell_compute_group] %}
-html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
+html5proxy_base_url = {{ nova_spicehtml5proxy_fqdn | kolla_url(public_protocol, nova_spicehtml5proxy_public_port, '/spice_auto.html') }}
 {% endif %}
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
@@ -74,7 +74,7 @@ enabled = false
 {% if enable_nova_serialconsole_proxy | bool %}
 [serial_console]
 enabled = true
-base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn | put_address_in_context('url') }}:{{ nova_serialproxy_port }}/
+base_url = {{ nova_serialproxy_fqdn | kolla_url(nova_serialproxy_protocol, nova_serialproxy_public_port) }}/
 serialproxy_host = {{ api_interface_address }}
 serialproxy_port = {{ nova_serialproxy_listen_port }}
 proxyclient_address = {{ api_interface_address }}

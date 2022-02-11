@@ -20,6 +20,7 @@ import jinja2
 
 from kolla_ansible.exception import FilterError
 from kolla_ansible.kolla_address import kolla_address
+from kolla_ansible.kolla_url import kolla_url
 from kolla_ansible.put_address_in_context import put_address_in_context
 
 from kolla_ansible.tests.unit.helpers import _to_bool
@@ -323,3 +324,66 @@ class TestKollaAddressFilter(unittest.TestCase):
             },
         })
         self.assertEqual(addr, kolla_address(context, 'api'))
+
+
+class TestKollaUrlFilter(unittest.TestCase):
+
+    def test_https_443_path(self):
+        protocol = 'https'
+        fqdn = 'kolla.external'
+        port = 443
+        path = '/v2'
+        self.assertEqual("https://kolla.external/v2",
+                         kolla_url(fqdn, protocol, port, path))
+
+    def test_http_80_path(self):
+        protocol = 'http'
+        fqdn = 'kolla.external'
+        port = 80
+        path = '/v2'
+        self.assertEqual("http://kolla.external/v2",
+                         kolla_url(fqdn, protocol, port, path))
+
+    def test_https_8443_path(self):
+        protocol = 'https'
+        fqdn = 'kolla.external'
+        port = 8443
+        path = '/v2'
+        self.assertEqual("https://kolla.external:8443/v2",
+                         kolla_url(fqdn, protocol, port, path))
+
+    def test_http_8080_path(self):
+        protocol = 'http'
+        fqdn = 'kolla.external'
+        port = 8080
+        path = '/v2'
+        self.assertEqual("http://kolla.external:8080/v2",
+                         kolla_url(fqdn, protocol, port, path))
+
+    def test_https_443_nopath(self):
+        protocol = 'https'
+        fqdn = 'kolla.external'
+        port = 443
+        self.assertEqual("https://kolla.external",
+                         kolla_url(fqdn, protocol, port))
+
+    def test_http_80_nopath(self):
+        protocol = 'http'
+        fqdn = 'kolla.external'
+        port = 80
+        self.assertEqual("http://kolla.external",
+                         kolla_url(fqdn, protocol, port))
+
+    def test_https_8443_nopath(self):
+        protocol = 'https'
+        fqdn = 'kolla.external'
+        port = 8443
+        self.assertEqual("https://kolla.external:8443",
+                         kolla_url(fqdn, protocol, port))
+
+    def test_http_8080_nopath(self):
+        protocol = 'http'
+        fqdn = 'kolla.external'
+        port = 8080
+        self.assertEqual("http://kolla.external:8080",
+                         kolla_url(fqdn, protocol, port))

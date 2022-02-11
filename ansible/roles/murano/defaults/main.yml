@@ -13,11 +13,14 @@ murano_services:
         mode: "http"
         external: false
         port: "{{ murano_api_port }}"
+        listen_port: "{{ murano_api_listen_port }}"
       murano_api_external:
         enabled: "{{ enable_murano }}"
         mode: "http"
         external: true
-        port: "{{ murano_api_port }}"
+        external_fqdn: "{{ murano_external_fqdn }}"
+        port: "{{ murano_api_public_port }}"
+        listen_port: "{{ murano_api_listen_port }}"
   murano-engine:
     container_name: murano_engine
     group: murano-engine
@@ -90,8 +93,8 @@ murano_engine_extra_volumes: "{{ murano_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-murano_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}"
-murano_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ murano_api_port }}"
+murano_internal_endpoint: "{{ murano_internal_fqdn | kolla_url(internal_protocol, murano_api_port) }}"
+murano_public_endpoint: "{{ murano_external_fqdn | kolla_url(public_protocol, murano_api_public_port) }}"
 
 murano_logging_debug: "{{ openstack_logging_debug }}"
 

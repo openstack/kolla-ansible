@@ -21,7 +21,8 @@ nova_services:
         enabled: "{{ enable_nova }}"
         mode: "http"
         external: true
-        port: "{{ nova_api_port }}"
+        external_fqdn: "{{ nova_external_fqdn }}"
+        port: "{{ nova_api_public_port }}"
         listen_port: "{{ nova_api_listen_port }}"
         tls_backend: "{{ nova_enable_tls_backend }}"
       nova_metadata:
@@ -35,6 +36,7 @@ nova_services:
         enabled: "{{ nova_enable_external_metadata }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ nova_metadata_external_fqdn }}"
         port: "{{ nova_metadata_port }}"
         listen_port: "{{ nova_metadata_listen_port }}"
         tls_backend: "{{ nova_enable_tls_backend }}"
@@ -196,8 +198,8 @@ nova_api_bootstrap_extra_volumes: "{{ nova_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-nova_internal_base_endpoint: "{{ internal_protocol }}://{{ nova_internal_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}"
-nova_public_base_endpoint: "{{ public_protocol }}://{{ nova_external_fqdn | put_address_in_context('url') }}:{{ nova_api_port }}"
+nova_internal_base_endpoint: "{{ nova_internal_fqdn | kolla_url(internal_protocol, nova_api_port) }}"
+nova_public_base_endpoint: "{{ nova_external_fqdn | kolla_url(public_protocol,  nova_api_public_port) }}"
 
 nova_legacy_internal_endpoint: "{{ nova_internal_base_endpoint }}/v2/%(tenant_id)s"
 nova_legacy_public_endpoint: "{{ nova_public_base_endpoint }}/v2/%(tenant_id)s"

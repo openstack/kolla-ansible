@@ -14,11 +14,14 @@ blazar_services:
         mode: "http"
         external: false
         port: "{{ blazar_api_port }}"
+        listen_port: "{{ blazar_api_listen_port }}"
       blazar_api_external:
         enabled: "{{ enable_blazar }}"
         mode: "http"
         external: true
-        port: "{{ blazar_api_port }}"
+        external_fqdn: "{{ blazar_external_fqdn }}"
+        port: "{{ blazar_api_public_port }}"
+        listen_port: "{{ blazar_api_listen_port }}"
   blazar-manager:
     container_name: blazar_manager
     group: blazar-manager
@@ -126,8 +129,8 @@ blazar_manager_extra_volumes: "{{ blazar_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-blazar_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ blazar_api_port }}/v1"
-blazar_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ blazar_api_port }}/v1"
+blazar_internal_endpoint: "{{ blazar_internal_fqdn | kolla_url(internal_protocol, blazar_api_port, '/v1') }}"
+blazar_public_endpoint: "{{ blazar_external_fqdn | kolla_url(public_protocol, blazar_api_public_port, '/v1') }}"
 
 blazar_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -14,11 +14,14 @@ sahara_services:
         mode: "http"
         external: false
         port: "{{ sahara_api_port }}"
+        listen_port: "{{ sahara_api_listen_port }}"
       sahara_api_external:
         enabled: "{{ enable_sahara }}"
         mode: "http"
         external: true
-        port: "{{ sahara_api_port }}"
+        external_fqdn: "{{ sahara_external_fqdn }}"
+        port: "{{ sahara_api_public_port }}"
+        listen_port: "{{ sahara_api_listen_port }}"
   sahara-engine:
     container_name: sahara_engine
     group: sahara-engine
@@ -122,8 +125,8 @@ sahara_engine_extra_volumes: "{{ sahara_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-sahara_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ sahara_api_port }}"
-sahara_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ sahara_api_port }}"
+sahara_internal_endpoint: "{{ sahara_internal_fqdn | kolla_url(internal_protocol, sahara_api_port) }}"
+sahara_public_endpoint: "{{ sahara_external_fqdn | kolla_url(public_protocol, sahara_api_public_port) }}"
 
 sahara_logging_debug: "{{ openstack_logging_debug }}"
 

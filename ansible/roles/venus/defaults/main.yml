@@ -18,6 +18,7 @@ venus_services:
         enabled: "{{ enable_venus }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ venus_external_fqdn }}"
         port: "{{ venus_api_port }}"
   venus-manager:
     container_name: venus_manager
@@ -93,8 +94,8 @@ venus_manager_extra_volumes: "{{ venus_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-venus_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ venus_api_port }}/v1.0/%(tenant_id)s"
-venus_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ venus_api_port }}/v1.0/%(tenant_id)s"
+venus_internal_endpoint: "{{ venus_internal_fqdn | kolla_url(internal_protocol, venus_api_port) }}"
+venus_public_endpoint: "{{ venus_external_fqdn | kolla_url(external_protocol, venus_api_port) }}"
 
 venus_logging_debug: "{{ openstack_logging_debug }}"
 
