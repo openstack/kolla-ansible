@@ -54,8 +54,27 @@ libvirt as a host daemon. However, since the Yoga release, if a libvirt daemon
 has already been set up, then Kolla Ansible may be configured to use it. This
 may be achieved by setting ``enable_nova_libvirt_container`` to ``false``.
 
-Migration of hosts from a containerised libvirt to host libvirt is currently
-not supported.
+Migration from container to host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``kolla-ansible nova-libvirt-cleanup`` command may be used to clean up the
+``nova_libvirt`` container and related items on hosts, once it has
+been disabled. This should be run after the compute service has been disabled,
+and all active VMs have been migrated away from the host.
+
+By default, the command will fail if there are any VMs running on the host. If
+you are sure that it is safe to clean up the ``nova_libvirt`` container with
+running VMs, setting ``nova_libvirt_cleanup_running_vms_fatal`` to ``false``
+will allow the command to proceed.
+
+The ``nova_libvirt`` container has several associated Docker volumes:
+``libvirtd``, ``nova_libvirt_qemu`` and ``nova_libvirt_secrets``. By default,
+these volumes are not cleaned up. If you are sure that the data in these
+volumes can be safely removed, setting ``nova_libvirt_cleanup_remove_volumes``
+to ``true`` will cause the Docker volumes to be removed.
+
+A future extension could support migration of existing VMs, but this is
+currently out of scope.
 
 .. libvirt-tls:
 
