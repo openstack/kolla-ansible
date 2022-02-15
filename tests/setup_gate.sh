@@ -97,7 +97,8 @@ EOF
     # supported.
     if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 8 ]]; then
         sudo tee -a /etc/kolla/kolla-build.conf <<EOF
-base_tag = 8
+base_tag = stream8
+base_image = quay.io/centos/centos
 EOF
     fi
 
