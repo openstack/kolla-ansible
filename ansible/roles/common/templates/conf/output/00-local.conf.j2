@@ -1,81 +1,17 @@
-{% if enable_swift | bool and (inventory_hostname in groups['swift-proxy-server'] or inventory_hostname in groups['swift-account-server'] or inventory_hostname in groups['swift-container-server'] or inventory_hostname in groups['swift-object-server']) %}
-<match syslog.{{ syslog_swift_facility }}.**>
+{% for item in syslog_facilities | selectattr('enabled') %}
+<match syslog.{{ item.facility }}.**>
   @type copy
   <store>
     @type file
-    path /var/log/kolla/swift/swift_latest
+    path /var/log/kolla/{{ item.logdir }}/{{ item.logfile }}
     append true
     # Disable timestamp in filename for logs
     <buffer []>
-      path /var/log/kolla/swift/swift_latest.*.buffer
+      path /var/log/kolla/{{ item.logdir }}/{{ item.logfile }}.*.buffer
     </buffer>
-  </store>
-{% if log_direct_to_elasticsearch %}
-  <store>
-       @type elasticsearch
-       host {{ elasticsearch_address }}
-       port {{ elasticsearch_port }}
-       scheme {{ fluentd_elasticsearch_scheme }}
-{% if fluentd_elasticsearch_path != '' %}
-       path {{ fluentd_elasticsearch_path }}
-{% endif %}
-{% if fluentd_elasticsearch_scheme == 'https' %}
-       ssl_version {{ fluentd_elasticsearch_ssl_version }}
-       ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
-{% if fluentd_elasticsearch_cacert | length > 0 %}
-       ca_file {{ fluentd_elasticsearch_cacert }}
-{% endif %}
-{% endif %}
-{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
-       user {{ fluentd_elasticsearch_user }}
-       password {{ fluentd_elasticsearch_password }}
-{% endif %}
-       logstash_format true
-       logstash_prefix {{ kibana_log_prefix }}
-       flush_interval 15s
-       reconnect_on_error true
-       buffer_type file
-       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ syslog_swift_facility }}.*
-       suppress_type_name true
-  </store>
-{% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
-  <store>
-     @type monasca
-     keystone_url {{ keystone_internal_url }}
-     monasca_api {{ monasca_log_api_internal_endpoint }}
-     monasca_api_version v2.0
-     username {{ monasca_agent_user }}
-     password {{ monasca_agent_password }}
-     domain_id default
-     project_name {{ monasca_control_plane_project }}
-     message_field_name Payload
-     buffer_type file
-     buffer_path /var/lib/fluentd/data/monasca.buffer/{{ syslog_swift_facility }}.*
-     max_retry_wait 1800s
-     disable_retry_limit true
-     <buffer>
-       chunk_limit_size 8m
-     </buffer>
-  </store>
-{% endif %}
-</match>
-{% endif %}
-
-{% if enable_haproxy | bool and inventory_hostname in groups['loadbalancer'] %}
-<match syslog.{{ syslog_haproxy_facility }}.**>
-  @type copy
-  <store>
-    @type file
-    path /var/log/kolla/haproxy/haproxy_latest
-    append true
-    # Disable timestamp in filename for logs
-    <buffer []>
-      path /var/log/kolla/haproxy/haproxy_latest.*.buffer
-    </buffer>
-    # Don't prepend syslog tag or timestamp to log output
     <format>
-      output_tag false
-      output_time false
+      output_tag {{ item.output_tag | default(false) | lower }}
+      output_time {{ item.output_time | default(false) | lower }}
     </format>
   </store>
 {% if log_direct_to_elasticsearch %}
@@ -103,7 +39,7 @@
        flush_interval 15s
        reconnect_on_error true
        buffer_type file
-       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ syslog_haproxy_facility }}.*
+       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ item.facility }}.*
        suppress_type_name true
   </store>
 {% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
@@ -118,7 +54,7 @@
      project_name {{ monasca_control_plane_project }}
      message_field_name Payload
      buffer_type file
-     buffer_path /var/lib/fluentd/data/monasca.buffer/{{ syslog_haproxy_facility }}.*
+     buffer_path /var/lib/fluentd/data/monasca.buffer/{{ item.facility }}.*
      max_retry_wait 1800s
      disable_retry_limit true
      <buffer>
@@ -127,134 +63,4 @@
   </store>
 {% endif %}
 </match>
-{% endif %}
-
-{% if glance_enable_tls_backend | bool %}
-<match syslog.{{ syslog_glance_tls_proxy_facility }}.**>
-  @type copy
-  <store>
-    @type file
-    path /var/log/kolla/glance-tls-proxy/glance-tls-proxy
-    append true
-    # Disable timestamp in filename for logs
-    <buffer []>
-      path /var/log/kolla/glance-tls-proxy/glance-tls-proxy.*.buffer
-    </buffer>
-    # Don't prepend syslog tag or timestamp to log output
-    <format>
-      output_tag false
-      output_time false
-    </format>
-  </store>
-{% if log_direct_to_elasticsearch %}
-  <store>
-       @type elasticsearch
-       host {{ elasticsearch_address }}
-       port {{ elasticsearch_port }}
-       scheme {{ fluentd_elasticsearch_scheme }}
-{% if fluentd_elasticsearch_path != '' %}
-       path {{ fluentd_elasticsearch_path }}
-{% endif %}
-{% if fluentd_elasticsearch_scheme == 'https' %}
-       ssl_version {{ fluentd_elasticsearch_ssl_version }}
-       ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
-{% endif %}
-{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
-       user {{ fluentd_elasticsearch_user }}
-       password {{ fluentd_elasticsearch_password }}
-{% endif %}
-       logstash_format true
-       logstash_prefix {{ kibana_log_prefix }}
-       flush_interval 15s
-       reconnect_on_error true
-       buffer_type file
-       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ syslog_glance_tls_proxy_facility }}.*
-       suppress_type_name true
-  </store>
-{% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
-  <store>
-     @type monasca
-     keystone_url {{ keystone_internal_url }}
-     monasca_api {{ monasca_log_api_internal_endpoint }}
-     monasca_api_version v2.0
-     username {{ monasca_agent_user }}
-     password {{ monasca_agent_password }}
-     domain_id default
-     project_name {{ monasca_control_plane_project }}
-     message_field_name Payload
-     buffer_type file
-     buffer_path /var/lib/fluentd/data/monasca.buffer/{{ syslog_glance_tls_proxy_facility }}.*
-     max_retry_wait 1800s
-     disable_retry_limit true
-     <buffer>
-       chunk_limit_size 8m
-     </buffer>
-  </store>
-{% endif %}
-</match>
-{% endif %}
-
-{% if neutron_enable_tls_backend | bool %}
-<match syslog.{{ syslog_neutron_tls_proxy_facility }}.**>
-  @type copy
-  <store>
-    @type file
-    path /var/log/kolla/neutron-tls-proxy/neutron-tls-proxy
-    append true
-    # Disable timestamp in filename for logs
-    <buffer []>
-      path /var/log/kolla/neutron-tls-proxy/neutron-tls-proxy.*.buffer
-    </buffer>
-    # Don't prepend syslog tag or timestamp to log output
-    <format>
-      output_tag false
-      output_time false
-    </format>
-  </store>
-{% if log_direct_to_elasticsearch %}
-  <store>
-       @type elasticsearch
-       host {{ elasticsearch_address }}
-       port {{ elasticsearch_port }}
-       scheme {{ fluentd_elasticsearch_scheme }}
-{% if fluentd_elasticsearch_path != '' %}
-       path {{ fluentd_elasticsearch_path }}
-{% endif %}
-{% if fluentd_elasticsearch_scheme == 'https' %}
-       ssl_version {{ fluentd_elasticsearch_ssl_version }}
-       ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
-{% endif %}
-{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
-       user {{ fluentd_elasticsearch_user }}
-       password {{ fluentd_elasticsearch_password }}
-{% endif %}
-       logstash_format true
-       logstash_prefix {{ kibana_log_prefix }}
-       flush_interval 15s
-       reconnect_on_error true
-       buffer_type file
-       buffer_path /var/lib/fluentd/data/elasticsearch.buffer/{{ syslog_neutron_tls_proxy_facility }}.*
-       suppress_type_name true
-  </store>
-{% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
-  <store>
-     @type monasca
-     keystone_url {{ keystone_internal_url }}
-     monasca_api {{ monasca_log_api_internal_endpoint }}
-     monasca_api_version v2.0
-     username {{ monasca_agent_user }}
-     password {{ monasca_agent_password }}
-     domain_id default
-     project_name {{ monasca_control_plane_project }}
-     message_field_name Payload
-     buffer_type file
-     buffer_path /var/lib/fluentd/data/monasca.buffer/{{ syslog_neutron_tls_proxy_facility }}.*
-     max_retry_wait 1800s
-     disable_retry_limit true
-     <buffer>
-       chunk_limit_size 8m
-     </buffer>
-  </store>
-{% endif %}
-</match>
-{% endif %}
+{% endfor %}

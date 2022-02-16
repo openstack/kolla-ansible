@@ -19,34 +19,13 @@
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
             "recurse": true
         },
-{% if enable_haproxy | bool and inventory_hostname in groups['loadbalancer'] %}
+{% for facility in syslog_facilities | selectattr('enabled') %}
         {
-            "path": "/var/log/kolla/haproxy",
+            "path": "/var/log/kolla/{{ facility.logdir }}",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
             "recurse": true
         },
-{% endif %}
-{% if glance_enable_tls_backend | bool %}
-        {
-            "path": "/var/log/kolla/glance-tls-proxy",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
-            "recurse": true
-        },
-{% endif %}
-{% if neutron_enable_tls_backend | bool %}
-        {
-            "path": "/var/log/kolla/neutron-tls-proxy",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
-            "recurse": true
-        },
-{% endif %}
-{% if enable_swift | bool and (inventory_hostname in groups['swift-proxy-server'] or inventory_hostname in groups['swift-account-server'] or inventory_hostname in groups['swift-container-server'] or inventory_hostname in groups['swift-object-server']) %}
-        {
-            "path": "/var/log/kolla/swift",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
-            "recurse": true
-        },
-{% endif %}
+{% endfor %}
         {
             "path": "/var/lib/fluentd/data",
             "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
