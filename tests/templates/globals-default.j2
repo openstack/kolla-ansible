@@ -1,6 +1,6 @@
 ---
-{% if ansible_os_family == 'Debian' %}
-# Force the use of python3 on Debian and Ubuntu remote hosts. These distros
+{% if ansible_os_family == 'Debian' or ansible_facts.distribution == "openEuler" %}
+# Force the use of python3 on Debian, Ubuntu and openEuler remote hosts. These distros
 # typically have an unversioned Python interpreter which links to python2.7.
 ansible_python_interpreter: /usr/bin/python3
 {% endif %}
@@ -14,6 +14,9 @@ docker_custom_config:
   debug: true
   registry-mirrors:
     - {{ infra_dockerhub_mirror }}
+{% if ansible_facts.distribution == "openEuler" %}
+  exec-opts: ["native.umask=normal"]
+{% endif %}
 
 {% if kolla_python_version is defined and not is_previous_release %}
 distro_python_version: "{{ kolla_python_version }}"
