@@ -19,6 +19,7 @@
       - prometheus_openstack_exporter
       - prometheus_elasticsearch_exporter
       - prometheus_blackbox_exporter
+      - prometheus_libvirt_exporter
   register: container_facts
 
 - name: Checking free port for Prometheus server
@@ -149,3 +150,17 @@
     - enable_prometheus_blackbox_exporter | bool
   with_items:
     - "{{ prometheus_blackbox_exporter_port }}"
+
+- name: Checking free ports for Prometheus libvirt-exporter
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_libvirt_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-libvirt-exporter']
+    - enable_prometheus_libvirt_exporter | bool
+  with_items:
+    - "{{ prometheus_libvirt_exporter_port }}"
