@@ -14,6 +14,7 @@
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
+        ansible_collection_kolla_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/ansible-collection-kolla"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
@@ -71,9 +72,9 @@
       set_fact:
         need_build_image: true
       when:
-        # NOTE(yoctozepto): if there is any tested change that does not belong to kolla-ansible,
-        # then kolla images should be built
-        - item.project.short_name != "kolla-ansible"
+        # NOTE(yoctozepto): build container images if there is any tested
+        # change that impacts them.
+        - item.project.short_name not in ["ansible-collection-kolla", "kayobe", "kolla-ansible"]
       with_items: "{{ zuul['items'] }}"
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
@@ -85,6 +86,17 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
+        - name: checkout the previous ansible-collection-kolla branch
+          shell:
+            cmd: |
+              git checkout stable/{{ previous_release | lower }}
+              echo "ansible-collection-kolla checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_collection_kolla_src_dir }}"
+          # TODO(mgoddard): Do this unconditionally when previous_release is
+          # yoga.
+          when: previous_release != 'xena'
+
         - name: checkout the previous kolla-ansible branch
           shell:
             cmd: |
@@ -187,6 +199,26 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
+    # TODO(mgoddard): Do this unconditionally when previous_release is yoga.
+    - block:
+        - name: slurp requirements.yml
+          slurp:
+            src: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          register: requirements_yml
+
+        - name: write requirements.yml
+          copy:
+            content: "{{ new_requirements | to_nice_yaml }}"
+            dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          vars:
+            old_requirements: "{{ requirements_yml.content | b64decode | from_yaml }}"
+            new_requirement:
+              name: "{{ ansible_collection_kolla_src_dir }}"
+              type: dir
+            new_requirements:
+              collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
+      when: not is_upgrade or previous_release != 'xena'
+
     - name: ensure /etc/ansible exists
       file:
         path: /etc/ansible
@@ -213,6 +245,12 @@
         {{ kolla_ansible_src_dir }}
         ansible{{ ansible_version_constraint }}
         ara<1.0.0
+
+    # TODO(mgoddard): do this unconditionally when previous release is Yoga.
+    - name: install Ansible collections
+      command: >-
+        kolla-ansible install-deps
+      when: not is_upgrade or previous_release != 'xena'
 
     - name: get ARA callback plugin path
       command: "python3 -m ara.setup.callback_plugins"
@@ -506,6 +544,14 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
+        - name: checkout the current ansible-collection-kolla branch
+          shell:
+            cmd: |
+              git checkout {{ zuul.branch }}
+              echo "ansible-collection-kolla checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_collection_kolla_src_dir }}"
+
         - name: checkout the current kolla-ansible branch
           shell:
             cmd: |
@@ -540,11 +586,32 @@
               dest: /etc/kolla/config/nova/nova-compute.conf
           when: item.when | default(true)
 
+        - name: slurp requirements.yml
+          slurp:
+            src: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          register: requirements_yml
+
+        - name: write requirements.yml
+          copy:
+            content: "{{ new_requirements | to_nice_yaml }}"
+            dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          vars:
+            old_requirements: "{{ requirements_yml.content | b64decode | from_yaml }}"
+            new_requirement:
+              name: "{{ ansible_collection_kolla_src_dir }}"
+              type: dir
+            new_requirements:
+              collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
+
         - name: upgrade kolla-ansible
           command: >-
             python3 -m pip install --user
             -c {{ upper_constraints_file }}
             {{ kolla_ansible_src_dir }}
+
+        - name: install Ansible collections
+          command: >-
+            kolla-ansible install-deps
 
         # Update passwords.yml to include any new passwords added in this
         # release.

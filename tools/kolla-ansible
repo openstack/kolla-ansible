@@ -124,6 +124,15 @@ function find_base_dir {
     fi
 }
 
+function install_deps {
+    echo "Installing Ansible Galaxy dependencies"
+    ansible-galaxy collection install -r ${BASEDIR}/requirements.yml --force
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to install Ansible Galaxy dependencies" >&2
+        exit 1
+    fi
+}
+
 function process_cmd {
     echo "$ACTION : $CMD"
     $CMD
@@ -162,6 +171,7 @@ Environment variables:
     EXTRA_OPTS                         Additional arguments to pass to ansible-playbook
 
 Commands:
+    install-deps         Install Ansible Galaxy dependencies
     prechecks            Do pre-deployment checks for hosts
     check                Do post-deployment smoke tests
     mariadb_recovery     Recover a completely stopped mariadb cluster
@@ -211,6 +221,7 @@ cat <<EOF
 --diff -D
 --verbose -v
 --version
+install-deps
 prechecks
 check
 mariadb_recovery
@@ -405,6 +416,10 @@ done
 
 case "$1" in
 
+(install-deps)
+        install_deps
+        exit 0
+        ;;
 (prechecks)
         ACTION="Pre-deployment checking"
         EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=precheck"
