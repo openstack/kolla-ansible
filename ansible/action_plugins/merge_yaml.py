@@ -55,6 +55,14 @@ options:
     default: False
     required: False
     type: bool
+  yaml_width:
+    description:
+      - The maximum width of the YAML document. By default, Ansible uses the
+        PyYAML library which has a default 80 symbol string length limit.
+        To change the limit, the new value can be used here.
+    default: None
+    required: False
+    type: int
 author: Sean Mooney
 '''
 
@@ -68,6 +76,7 @@ Merge multiple yaml files:
         sources:
           - "/tmp/default.yml"
           - "/tmp/override.yml"
+        yaml_width: 131072
         dest:
           - "/tmp/out.yml"
 '''
@@ -113,6 +122,7 @@ class ActionModule(action.ActionBase):
         output = {}
         sources = self._task.args.get('sources', None)
         extend_lists = self._task.args.get('extend_lists', False)
+        yaml_width = self._task.args.get('yaml_width', None)
         if not isinstance(sources, list):
             sources = [sources]
         for source in sources:
@@ -127,11 +137,13 @@ class ActionModule(action.ActionBase):
         try:
             result_file = os.path.join(local_tempdir, 'source')
             with open(result_file, 'w') as f:
-                f.write(yaml.dump(output, default_flow_style=False))
+                f.write(yaml.dump(output, default_flow_style=False,
+                                  width=yaml_width))
 
             new_task = self._task.copy()
             new_task.args.pop('sources', None)
             new_task.args.pop('extend_lists', None)
+            new_task.args.pop('yaml_width', None)
             new_task.args.update(
                 dict(
                     src=result_file
