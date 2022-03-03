@@ -3,7 +3,7 @@
 set +o errexit
 
 copy_logs() {
-    LOG_DIR=/tmp/logs
+    LOG_DIR=${LOG_DIR:-/tmp/logs}
 
     cp -rnL /var/lib/docker/volumes/kolla_logs/_data/* ${LOG_DIR}/kolla/
     cp -rnL /etc/kolla/* ${LOG_DIR}/kolla_configs/
@@ -69,6 +69,7 @@ copy_logs() {
     getent ahostsv6 $(hostname)) &> ${LOG_DIR}/system_logs/getent_ahostsvX.txt
 
     sysctl -a &> ${LOG_DIR}/system_logs/sysctl.txt
+    lsmod &> ${LOG_DIR}/system_logs/lsmod.txt
 
     if [ `command -v dpkg` ]; then
         dpkg -l > ${LOG_DIR}/system_logs/dpkg-l.txt

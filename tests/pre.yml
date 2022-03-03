@@ -56,6 +56,24 @@
         path: "{{ logs_dir }}"
         state: "directory"
 
+    - name: Ensure /tmp/logs/pre dir
+      file:
+        path: "{{ logs_dir }}/pre"
+        state: "directory"
+
+    - name: Run diagnostics script
+      environment:
+        LOG_DIR: "{{ logs_dir }}/pre"
+        KOLLA_INTERNAL_VIP_ADDRESS: "{{ kolla_internal_vip_address }}"
+      script: get_logs.sh
+      register: get_logs_result
+      become: true
+      failed_when: false
+
+    - name: Print get_logs output
+      debug:
+        msg: "{{ get_logs_result.stdout }}"
+
     - name: Ensure node directories
       file:
         path: "{{ logs_dir }}/{{ item }}"
