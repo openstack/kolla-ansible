@@ -66,20 +66,8 @@ You may optionally pass extra kernel parameters to the inspection kernel using:
 
 in ``/etc/kolla/globals.yml``.
 
-Enable iPXE booting (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can optionally enable booting via iPXE by setting ``enable_ironic_ipxe`` to
-true in ``/etc/kolla/globals.yml``:
-
-.. code-block:: yaml
-
-   enable_ironic_ipxe: "yes"
-
-When iPXE booting is enabled, the ``ironic_ipxe`` container is used to serve
-the iPXE boot images as described below. Regardless of the setting above, the
-same container is used to support the ``direct`` deploy interface.
-
+Configure iPXE HTTP server port (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
 ``/etc/kolla/globals.yml``:
 
@@ -87,25 +75,31 @@ The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
 
     ironic_ipxe_port: "8089"
 
-The following changes will occur if iPXE booting is enabled:
+Revert to plain PXE (not recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting with Yoga, Ironic has changed the default PXE from plain PXE to iPXE.
+Kolla Ansible follows this upstream decision but allows users to revert to
+plain PXE. Please note Kolla Ansible does not support plain PXE and iPXE at the
+same time - the user must choose one.
 
-- Ironic will be configured with the ``ipxe_enabled`` configuration option set
-  to true
-- The inspection ramdisk and kernel will be loaded via iPXE
-- The DHCP servers will be configured to chainload iPXE from an existing PXE
-  environment. You may also boot directly to iPXE by some other means e.g by
-  burning it to the option rom of your ethernet card.
+If you have to revert to plain iPXE, set:
 
-Note that due to a limitation in Kolla Ansible, PXE and iPXE cannot be used
-together in a single deployment.
+.. code-block:: yaml
 
-In order to enable the iPXE driver in Ironic, set the ``[DEFAULT]
-enabled_boot_interfaces`` option in ``/etc/kolla/config/ironic.conf``:
+   enable_ironic_ipxe: "no"
+
+And also remove ``ipxe`` from the ``enabled_boot_interfaces`` in
+``/etc/kolla/config/ironic.conf``, leaving only ``pxe`` (and possibly other
+alternatives) around:
 
 .. code-block:: yaml
 
    [DEFAULT]
-   enabled_boot_interfaces = ipxe
+   enabled_boot_interfaces = pxe
+
+When iPXE booting is enabled, the ``ironic_ipxe`` container is used to serve
+the iPXE boot images as described below. Regardless of that setting, the
+same container is used to support the ``direct`` deploy interface.
 
 Attach ironic to external keystone (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
