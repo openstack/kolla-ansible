@@ -1,5 +1,3 @@
-.. libvirt-tls-guide:
-
 ====================================
 Libvirt - Nova Virtualisation Driver
 ====================================
@@ -23,16 +21,39 @@ hardware virtualisation (e.g. Virtualisation Technology (VT) BIOS configuration
 on Intel systems), ``qemu`` may be used to provide less performant
 software-emulated virtualisation.
 
+SASL Authentication
+===================
+
+The default configuration of Kolla Ansible is to run libvirt over TCP,
+authenticated with SASL. This should not be considered as providing a secure,
+encrypted channel, since the username/password SASL mechanisms available for
+TCP are no longer considered cryptographically secure. However, it does at
+least provide some authentication for the libvirt API. For a more secure
+encrypted channel, use :ref`libvirt TLS <libvirt-tls>`.
+
+SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
+to ``true``.
+
+The username is configured via ``libvirt_sasl_authname``, and defaults to
+``kolla``. The password is configured via ``libvirt_sasl_password``, and is
+generated with other passwords using and stored in ``passwords.yml``.
+
+The list of enabled authentication mechanisms is configured via
+``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
+TLS is enabled, or ``["DIGEST-MD5"]`` otherwise.
+
+.. libvirt-tls:
+
 Libvirt TLS
 ===========
 
 The default configuration of Kolla Ansible is to run libvirt over TCP, with
-authentication disabled. As long as one takes steps to protect who can access
-the port this works well. However, in the case where you want live-migration to
-be allowed across hypervisors one may want to either add some level of
-authentication to the connections or make sure VM data is passed between
-hypervisors in a secure manner. To do this we can enable TLS for libvirt and
-make nova use it.
+SASL authentication. As long as one takes steps to protect who can access
+the network this works well. However, in a less trusted environment one may
+want to use encryption when accessing the libvirt API. To do this we can enable
+TLS for libvirt and make nova use it. Mutual TLS is configured, providing
+authentication of clients via certificates. SASL authentication provides a
+further level of security.
 
 Using libvirt TLS
 ~~~~~~~~~~~~~~~~~
