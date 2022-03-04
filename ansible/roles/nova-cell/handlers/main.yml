@@ -93,6 +93,7 @@
   vars:
     service_name: "nova-libvirt"
     service: "{{ nova_cell_services[service_name] }}"
+    nova_libvirt_notify: "{{ ['Create libvirt SASL user'] if libvirt_enable_sasl | bool else [] }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -111,6 +112,20 @@
   until: restart_nova_libvirt is success
   when:
     - kolla_action != "config"
+  notify: "{{ nova_libvirt_notify }}"
+
+# The SASL user needs to exist in order for nova-compute to start successfully.
+- name: Create libvirt SASL user
+  become: true
+  shell:
+    cmd: >
+      set -o pipefail &&
+      echo {{ libvirt_sasl_password }} |
+      docker exec -i nova_libvirt
+      saslpasswd2 -c -p -a libvirt {{ libvirt_sasl_authname }}
+    executable: /bin/bash
+  changed_when: true
+  no_log: true
 
 - name: Restart nova-compute container
   vars:

@@ -1,0 +1,27 @@
+---
+features:
+  - |
+    Adds support for libvirt SASL authentication. It is enabled by default.
+    `LP#1964013 <https://bugs.launchpad.net/kolla-ansible/+bug/1964013>`__
+security:
+  - |
+    Fixes an issue where the default configuration of libvirt did not use
+    authentication for the API exposed over TCP on the internal API network.
+    This allowed anyone with access to the internal API network read-write
+    access to libvirt. While the internal API network is typically trusted,
+    other services on this network generally at least require authentication.
+
+    SASL authentication is now enabled for libvirt by default. Kolla Ansible
+    supports libvirt TLS since the Train release, and this is recommended to
+    provide a higher level of security. `LP#1964013
+    <https://bugs.launchpad.net/kolla-ansible/+bug/1964013>`__
+upgrade:
+  - |
+    The addition of libvirt SASL authentication requires a new password in
+    ``passwords.yml``, ``libvirt_sasl_password``. This may be generated using
+    the existing ``kolla-genpwd`` and ``kolla-mergepwd`` tooling.
+  - |
+    The addition of libvirt SASL authentication requires both the
+    ``nova_libvirt`` and ``nova_compute`` containers to be updated
+    simultaneously, using new images with the necessary Cyrus SASL
+    dependencies, as well as configuration containing the SASL credentials.
