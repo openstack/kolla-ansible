@@ -66,14 +66,14 @@ You may optionally pass extra kernel parameters to the inspection kernel using:
 
 in ``/etc/kolla/globals.yml``.
 
-Configure iPXE HTTP server port (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
-``/etc/kolla/globals.yml``:
+Configure conductor's HTTP server port (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The port used for conductor's HTTP server is controlled via
+``ironic_http_port`` in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-    ironic_ipxe_port: "8089"
+    ironic_http_port: "8089"
 
 Revert to plain PXE (not recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
