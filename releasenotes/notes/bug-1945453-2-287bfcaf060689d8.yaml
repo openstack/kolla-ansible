@@ -1,0 +1,16 @@
+---
+security:
+  - |
+    Explicitly removes the ``net.ipv4.ip_forward`` sysctl from
+    ``/etc/sysctl.conf`` on hosts with Neutron L3 Agent. In the absence of
+    another source for this sysctl, it should revert to the default of 0 after
+    the next reboot. This is a follow up to a previous change which stopped
+    setting the sysctl, but leaves existing systems with the original value of
+    1 set.
+
+    A deployer looking to more aggressively change the value may set
+    ``neutron_l3_agent_host_ipv4_ip_forward`` to 0 using a Yoga release of
+    Kolla Ansible. This option will be removed in future. Any deployments
+    still relying on the previous value may set
+    ``neutron_l3_agent_host_ipv4_ip_forward`` to 1.
+    `LP#1945453 <https://launchpad.net/bugs/1945453>`__
