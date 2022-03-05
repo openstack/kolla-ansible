@@ -36,9 +36,9 @@ Inspector inspection network:
    ironic_dnsmasq_default_gateway: 192.168.5.1
 
 In the same file, specify the PXE bootloader file for Ironic Inspector. The
-file is relative to the ``/tftpboot`` directory. The default is ``pxelinux.0``,
-and should be correct for x86 systems. Other platforms may require a different
-value, for example aarch64 on Debian requires
+file is relative to the ``/var/lib/ironic/tftpboot`` directory. The default is
+``pxelinux.0``, and should be correct for x86 systems. Other platforms may
+require a differentvalue, for example aarch64 on Debian requires
 ``debian-installer/arm64/bootnetaa64.efi``.
 
 .. code-block:: yaml
@@ -78,28 +78,22 @@ The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
 Revert to plain PXE (not recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Starting with Yoga, Ironic has changed the default PXE from plain PXE to iPXE.
-Kolla Ansible follows this upstream decision but allows users to revert to
-plain PXE. Please note Kolla Ansible does not support plain PXE and iPXE at the
-same time - the user must choose one.
-
-If you have to revert to plain iPXE, set:
+Kolla Ansible follows this upstream decision by choosing iPXE as the default
+for Ironic Inspector but allows users to revert to the previous default of
+plain PXE by setting the following in
+``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
    enable_ironic_ipxe: "no"
 
-And also remove ``ipxe`` from the ``enabled_boot_interfaces`` in
-``/etc/kolla/config/ironic.conf``, leaving only ``pxe`` (and possibly other
-alternatives) around:
+To revert Ironic to previous default as well, set ``pxe`` as
+``default_boot_interface`` in ``/etc/kolla/config/ironic.conf``:
 
 .. code-block:: yaml
 
    [DEFAULT]
-   enabled_boot_interfaces = pxe
-
-When iPXE booting is enabled, the ``ironic_ipxe`` container is used to serve
-the iPXE boot images as described below. Regardless of that setting, the
-same container is used to support the ``direct`` deploy interface.
+   default_boot_interface = pxe
 
 Attach ironic to external keystone (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
