@@ -44,3 +44,22 @@
   run_once: True
   delegate_to: "{{ groups[ironic_inspector.group][0] }}"
   when: inventory_hostname in groups[ironic_inspector.group]
+
+- name: Running Ironic-PXE bootstrap container
+  vars:
+    ironic_pxe: "{{ ironic_services['ironic-pxe'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ ironic_pxe.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_ironic_pxe"
+    restart_policy: no
+    volumes: "{{ ironic_pxe.volumes }}"
+  when: inventory_hostname in groups[ironic_pxe.group]
