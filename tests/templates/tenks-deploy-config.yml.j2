@@ -1,0 +1,55 @@
+---
+# This file holds the config given to Tenks when running `deploy-tenks.sh`.
+
+node_types:
+  type0:
+    memory_mb: 1024
+    vcpus: 1
+    volumes:
+      # There is a minimum disk space capacity requirement of 4GiB when using Ironic Python Agent:
+      # https://github.com/openstack/ironic-python-agent/blob/master/ironic_python_agent/utils.py#L290
+      - capacity: 4GiB
+    physical_networks:
+      - physnet1
+    console_log_enabled: true
+    # We seem to hit issues with missing cpu features in CI as a result of using host-model, e.g:
+    # https://zuul.opendev.org/t/openstack/build/02c33ab51664419a88a5a54ad22852a9/log/primary/system_logs/libvirt/qemu/tk0.txt.gz#38
+    cpu_mode:
+specs:
+  - type: type0
+    count: 1
+    ironic_config:
+      resource_class: test-rc
+      network_interface: flat
+
+nova_flavors:
+  - resource_class: test-rc
+    node_type: type0
+
+physnet_mappings:
+  physnet1: {{ neutron_external_bridge_name }}
+
+deploy_kernel: ipa.vmlinuz
+deploy_ramdisk: ipa.initramfs
+
+default_boot_mode: "bios"
+
+# Use the libvirt daemon deployed by Kolla Ansible in the nova_libvirt
+# container. Tenks will install libvirt client packages.
+libvirt_host_install_daemon: false
+
+# Nested virtualisation is not working well in CI currently. Force the use of
+# QEMU.
+libvirt_vm_engine: "qemu"
+
+# QEMU may not be installed on the host, so set the path and avoid
+# autodetection.
+libvirt_vm_emulator: "{% if ansible_facts.os_family == 'RedHat' %}/usr/libexec/qemu-kvm{% else %}/usr/bin/qemu-system-x86_64{% endif %}"
+
+# Specify a log path in the kolla_logs Docker volume. It is accessible on the
+# host at the same path.
+libvirt_vm_default_console_log_dir: "/var/log/kolla/tenks"
+
+# Console logs are owned by the ID of the Nova user in the nova_libvirt
+# container.
+libvirt_vm_log_owner: 42436

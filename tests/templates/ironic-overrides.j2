@@ -1,19 +1,25 @@
-[DEFAULT]
-# Enable all fake hardware types and interfaces.
-enabled_hardware_types = fake-hardware
-enabled_boot_interfaces = fake
-enabled_console_interfaces = ipmitool-socat,no-console
-enabled_deploy_interfaces = fake
-enabled_inspect_interfaces = inspector,no-inspect
-enabled_management_interfaces = fake
-enabled_network_interfaces = noop,flat,neutron
-default_network_interface = neutron
-enabled_power_interfaces = fake
-enabled_raid_interfaces = agent,no-raid
-default_raid_interface = no-raid
-enabled_rescue_interfaces = fake
-enabled_vendor_interfaces = no-vendor
-
 [neutron]
 cleaning_network = public1
 provisioning_network = public1
+
+# This IPMI configuration has been taken from the metal3.io ironic-image
+# project [1]. It is necessary to make IPMI reliable in Kolla Ansible Ironic
+# jobs. Without it, we saw the following error:
+#   Error setting Chassis Boot Parameter 5
+# [1] https://github.com/metal3-io/ironic-image/commit/6bc1499d8bb04c2c859b970b3739c3a8ed66ae2a
+[ipmi]
+# use_ipmitool_retries transfers the responsibility of retrying to ipmitool
+# when supported. If set to false, then ipmitool is called as follows :
+#    $ipmitool -R 1 -N 1 ...
+# and Ironic handles the retry loop.
+use_ipmitool_retries = true
+# The following parameters are the defaults in Ironic. They are used in the
+# following way if use_ipmitool_retries is set to true:
+#    $ipmitool -R <X> -N <Y> ...
+# where :
+#    X = command_retry_timeout / min_command_interval
+#    Y = min_command_interval
+# If use_ipmitool_retries is false, then ironic retries X times, with an
+# interval of Y in between each tries.
+min_command_interval = 5
+command_retry_timeout = 60
