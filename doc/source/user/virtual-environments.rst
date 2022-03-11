@@ -10,6 +10,10 @@ and other virtual environments. Kolla-ansible largely avoids this problem by
 deploying services in Docker containers, however some python dependencies must
 be installed both on the Ansible control host and the target hosts.
 
+Kolla Ansible supports the default Python 3 versions provided by the
+:kolla-ansible-doc:`supported Operating Systems <user/support-matrix>`. For
+more information see `tested runtimes <|TESTED_RUNTIMES_GOVERNANCE_URL|>`_.
+
 Ansible Control Host
 ====================
 
