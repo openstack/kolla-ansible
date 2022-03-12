@@ -55,7 +55,13 @@
             "owner": "nova",
             "perm": "0600",
             "optional": true
-        }
+        }{% if nova_compute_virt_type in ['kvm', 'qemu'] and libvirt_enable_sasl | bool %},
+        {
+            "source": "{{ container_config_directory }}/auth.conf",
+            "dest": "/var/lib/nova/.config/libvirt/auth.conf",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {
