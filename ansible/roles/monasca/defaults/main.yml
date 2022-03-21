@@ -78,26 +78,6 @@ monasca_services:
     image: "{{ monasca_agent_image_full }}"
     volumes: "{{ monasca_agent_forwarder_default_volumes + monasca_agent_forwarder_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
-  # TODO(dszumski): Remove monasca-grafana entry here and all other references after the
-  # Xena release. It exists here to support cleanup operations.
-  monasca-grafana:
-    container_name: monasca_grafana
-    group: monasca-grafana
-    enabled: false
-    image: "{{ monasca_grafana_image_full }}"
-    volumes: "{{ monasca_grafana_default_volumes + monasca_grafana_extra_volumes }}"
-    dimensions: "{{ monasca_grafana_dimensions }}"
-    haproxy:
-      monasca_grafana_server:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: false
-        port: "{{ monasca_grafana_server_port }}"
-      monasca_grafana_server_external:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: true
-        port: "{{ monasca_grafana_server_port }}"
 
 ####################
 # Databases
@@ -244,10 +224,6 @@ monasca_persister_image: "{{ docker_registry ~ '/' if docker_registry else '' }}
 monasca_persister_tag: "{{ monasca_tag }}"
 monasca_persister_image_full: "{{ monasca_persister_image }}:{{ monasca_persister_tag }}"
 
-monasca_grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-grafana"
-monasca_grafana_tag: "{{ monasca_tag }}"
-monasca_grafana_image_full: "{{ monasca_grafana_image }}:{{ monasca_grafana_tag }}"
-
 monasca_agent_dimensions: "{{ default_container_dimensions }}"
 monasca_api_dimensions: "{{ default_container_dimensions }}"
 monasca_log_api_dimensions: "{{ default_container_dimensions }}"
@@ -256,7 +232,6 @@ monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 monasca_thresh_dimensions: "{{ default_container_dimensions }}"
 monasca_notification_dimensions: "{{ default_container_dimensions }}"
 monasca_persister_dimensions: "{{ default_container_dimensions }}"
-monasca_grafana_dimensions: "{{ default_container_dimensions }}"
 
 monasca_agent_collector_default_volumes:
   - "{{ node_config_directory }}/monasca-agent-collector/:{{ container_config_directory }}/:ro"
@@ -308,11 +283,6 @@ monasca_persister_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
-monasca_grafana_default_volumes:
-  - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla/"
 
 monasca_extra_volumes: "{{ default_extra_volumes }}"
 monasca_agent_collector_extra_volumes: "{{ monasca_extra_volumes }}"
@@ -324,7 +294,6 @@ monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_thresh_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_notification_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_persister_extra_volumes: "{{ monasca_extra_volumes }}"
-monasca_grafana_extra_volumes: "{{ monasca_extra_volumes }}"
 
 ####################
 # OpenStack
