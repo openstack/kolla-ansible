@@ -35,7 +35,8 @@ Configure Designate options in ``/etc/kolla/globals.yml``
 .. code-block:: yaml
 
    dns_interface: "eth1"
-   designate_ns_record: "sample.openstack.org"
+   designate_ns_record:
+     - "ns1.sample.openstack.org"
 
 .. important::
 
