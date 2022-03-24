@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from jinja2.filters import contextfilter
+from jinja2.filters import pass_context
 from jinja2.runtime import Undefined
 
 from kolla_ansible.exception import FilterError
 from kolla_ansible.helpers import _call_bool_filter
 
 
-@contextfilter
+@pass_context
 def kolla_address(context, network_name, hostname=None):
     """returns IP address on the requested network
 
