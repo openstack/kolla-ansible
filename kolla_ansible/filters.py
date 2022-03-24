@@ -18,7 +18,7 @@ from kolla_ansible import exception
 from kolla_ansible.helpers import _call_bool_filter
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def service_enabled(context, service):
     """Return whether a service is enabled.
 
@@ -34,7 +34,7 @@ def service_enabled(context, service):
     return _call_bool_filter(context, enabled)
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def service_mapped_to_host(context, service):
     """Return whether a service is mapped to this host.
 
@@ -62,7 +62,7 @@ def service_mapped_to_host(context, service):
         service.get("container_name", "<unknown>"))
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def service_enabled_and_mapped_to_host(context, service):
     """Return whether a service is enabled and mapped to this host.
 
@@ -74,7 +74,7 @@ def service_enabled_and_mapped_to_host(context, service):
             service_mapped_to_host(context, service))
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def select_services_enabled_and_mapped_to_host(context, services):
     """Select services that are enabled and mapped to this host.
 
