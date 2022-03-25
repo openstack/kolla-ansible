@@ -36,10 +36,6 @@ memcache_security_strategy = ENCRYPT
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-[service:sink]
-enabled_notification_handlers = nova_fixed, neutron_floatingip
-workers = {{ openstack_service_workers }}
-
 {% if service_name == 'designate-mdns' %}
 [service:mdns]
 listen = {{ 'dns' | kolla_address | put_address_in_context('url') }}:{{ designate_mdns_port }}
@@ -62,6 +58,11 @@ connection = mysql+pymysql://{{ designate_database_user }}:{{ designate_database
 max_retries = 10
 idle_timeout = 3600
 
+{% if service_name == 'designate-sink' and designate_enable_notifications_sink | bool %}
+[service:sink]
+enabled_notification_handlers = nova_fixed, neutron_floatingip
+workers = {{ openstack_service_workers }}
+
 [handler:nova_fixed]
 #NOTE: zone_id must be manually filled an ID from openstack zone list
 zone_id =
@@ -79,6 +80,7 @@ zone_id =
 notification_topics = {{ designate_notifications_topic_name }}
 control_exchange = neutron
 formatv4 = '%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s'
+{% endif %}
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}

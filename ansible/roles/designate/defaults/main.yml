@@ -64,7 +64,7 @@ designate_services:
   designate-sink:
     container_name: designate_sink
     group: designate-sink
-    enabled: true
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
     image: "{{ designate_sink_image_full }}"
     volumes: "{{ designate_sink_default_volumes + designate_sink_extra_volumes }}"
     dimensions: "{{ designate_sink_dimensions }}"
@@ -304,11 +304,9 @@ designate_infoblox_ns_group: ""
 ####################
 # Notifications
 ####################
-designate_notifications_topic_name: "notifications_designate"
-
 designate_notification_topics:
   - name: "{{ designate_notifications_topic_name }}"
-    enabled: True
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
 
 designate_enabled_notification_topics: "{{ designate_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
 
