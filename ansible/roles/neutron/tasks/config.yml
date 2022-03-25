@@ -142,6 +142,18 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over ssh key
+  become: true
+  vars:
+    neutron_server: "{{ neutron_services['neutron-server'] }}"
+  template:
+    src: "id_rsa"
+    dest: "{{ node_config_directory }}/neutron-server/id_rsa"
+    mode: 0600
+  when:
+    - neutron_server.enabled | bool
+    - neutron_server.host_in_groups | bool
+
 - name: Copying over ml2_conf.ini
   become: true
   vars:
