@@ -12,6 +12,10 @@
       group_by:
         key: "openstack_release_{{ openstack_release }}"
 
+    - name: Group hosts based on OS distribution
+      group_by:
+        key: "kolla_distribution_{{ ansible_facts['distribution'] }}"
+
     - name: Group hosts based on Kolla action
       group_by:
         key: "kolla_action_{{ kolla_action }}"
@@ -91,6 +95,16 @@
         - enable_zookeeper_{{ enable_zookeeper | bool }}
         - enable_zun_{{ enable_zun | bool }}
   tags: always
+
+- name: Check CentOS variant
+  gather_facts: false
+  # Apply only on CentOS hosts
+  hosts: kolla_distribution_CentOS
+  tasks:
+    - name: Slurp /etc/centos-release
+      slurp:
+        src: /etc/centos-release
+      register: kolla_centos_release
 
 - name: Apply role prechecks
   gather_facts: false
