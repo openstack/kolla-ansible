@@ -1,0 +1,29 @@
+---
+- block:
+    - name: Get container facts
+      become: true
+      kolla_container_facts:
+        name:
+          - "{{ service.container_name }}"
+      register: container_facts
+
+    - block:
+        - name: List RabbitMQ policies
+          become: true
+          command: "docker exec {{ service.container_name }} rabbitmqctl list_policies --silent"
+          register: rabbitmq_policies
+          changed_when: false
+
+        # NOTE(dszumski): This can be removed in the Zed cycle
+        - name: Remove ha-all policy from RabbitMQ
+          become: true
+          command: "docker exec {{ service.container_name }} rabbitmqctl clear_policy ha-all"
+          when:
+            - "'ha-all' in rabbitmq_policies.stdout"
+      when: container_facts[service.container_name] is defined
+
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
+  run_once: true
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
