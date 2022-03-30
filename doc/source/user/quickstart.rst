@@ -48,7 +48,7 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS or RHEL 8, run:
+   For CentOS, RHEL 8 or openEuler, run:
 
    .. code-block:: console
 
@@ -67,7 +67,7 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
 
 #. Install the virtual environment dependencies.
 
-   For CentOS or RHEL 8, you don't need to do anything.
+   For CentOS, RHEL 8 or openEuler, you don't need to do anything.
 
    For Debian or Ubuntu, run:
 
@@ -105,7 +105,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
 #. Install ``pip``.
 
-   For CentOS or RHEL, run:
+   For CentOS, RHEL or openEuler, run:
 
    .. code-block:: console
 
@@ -131,6 +131,12 @@ If installing Kolla Ansible in a virtual environment, skip this section.
    .. code-block:: console
 
       sudo dnf install ansible
+
+   For openEuler, run:
+
+   .. code-block:: console
+
+      sudo pip install ansible
 
    For Debian or Ubuntu, run:
 
@@ -334,7 +340,7 @@ than one node, edit ``multinode`` inventory:
       errors in the ``ping`` module. To quickly install Python with Ansible you
       can run: for Debian or Ubuntu:
       ``ansible -i multinode all -m raw -a "apt -y install python3"``,
-      and for CentOS or RHEL:
+      and for CentOS, RHEL or openEuler:
       ``ansible -i multinode all -m raw -a "dnf -y install python3"``.
 
 Kolla passwords
