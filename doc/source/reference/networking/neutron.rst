@@ -164,3 +164,14 @@ via ``neutron_mlnx_physnet_mappings`` which is presented to
 
    neutron_mlnx_physnet_mappings:
      ibphysnet: "ib0"
+
+SSH authentication in external systems (switches)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Kolla, by default, generates and copies an ssh key to the ``neutron_server``
+container (under ``/var/lib/neutron/.ssh/id_rsa``) which can be used for
+authentication in external systems (e.g. in ``networking-generic-switch`` or
+``networking-ansible`` managed switches).
+
+You can set ``neutron_ssh_key`` variable in ``passwords.yml`` to control the
+used key.
