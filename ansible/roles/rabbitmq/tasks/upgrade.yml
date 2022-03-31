@@ -22,7 +22,7 @@
     service: "{{ rabbitmq_services[service_name] }}"
   become: true
   command: "docker exec {{ service.container_name }} rabbitmqctl list_policies --silent"
-  when: inventory_hostname in groups[role_rabbitmq_groups]
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
   run_once: true
   register: rabbitmq_policies
   changed_when: false
@@ -34,8 +34,9 @@
     service: "{{ rabbitmq_services[service_name] }}"
   become: true
   command: "docker exec {{ service.container_name }} rabbitmqctl clear_policy ha-all"
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
   when:
-    - inventory_hostname in groups[role_rabbitmq_groups] and 'ha-all' in rabbitmq_policies.stdout
+    - "'ha-all' in rabbitmq_policies.stdout"
   run_once: true
 
 - import_tasks: config.yml
