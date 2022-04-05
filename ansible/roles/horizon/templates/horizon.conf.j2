@@ -1,4 +1,4 @@
-{% set python_path = '/usr/share/openstack-dashboard' if horizon_install_type == 'binary' else '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
+{% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 
 {% if horizon_enable_tls_backend | bool %}
 {% if kolla_base_distro in ['centos']  %}
@@ -22,11 +22,7 @@ TraceEnable off
     WSGIScriptReloading On
     WSGIDaemonProcess horizon-http processes={{ horizon_wsgi_processes }} threads={{ horizon_wsgi_threads }} user=horizon group=horizon display-name=horizon
     WSGIProcessGroup horizon-http
-{% if kolla_base_distro in ['debian'] and horizon_install_type == 'binary' %}
-    WSGIScriptAlias / {{ python_path }}/wsgi.py
-{% else %}
     WSGIScriptAlias / {{ python_path }}/openstack_dashboard/wsgi.py
-{% endif %}
     WSGIPassAuthorization On
     WSGIApplicationGroup %{GLOBAL}
 
@@ -34,11 +30,7 @@ TraceEnable off
         Require all granted
     </Location>
 
-{% if kolla_base_distro in ['debian', 'ubuntu'] and horizon_install_type == 'binary' %}
-    Alias /static /var/lib/openstack-dashboard/static
-{% else %}
     Alias /static {{ python_path }}/static
-{% endif %}
     <Location "/static">
         SetHandler None
     </Location>
