@@ -198,7 +198,7 @@ FAKE_DATA = {
     'container_inspect': {
         'Config': {
             'Env': ['KOLLA_BASE_DISTRO=ubuntu',
-                    'KOLLA_INSTALL_TYPE=binary',
+                    'KOLLA_INSTALL_TYPE=source',
                     'KOLLA_INSTALL_METATYPE=rdo'],
             'Hostname': 'node2',
             'Volumes': {'/var/lib/kolla/config_files/': {}}},
@@ -544,7 +544,7 @@ class TestContainer(base.BaseTestCase):
 
     def test_get_container_env(self):
         fake_env = dict(KOLLA_BASE_DISTRO='ubuntu',
-                        KOLLA_INSTALL_TYPE='binary',
+                        KOLLA_INSTALL_TYPE='source',
                         KOLLA_INSTALL_METATYPE='rdo')
         self.dw = get_DockerWorker({'name': 'my_container',
                                     'action': 'get_container_env'})
@@ -1212,12 +1212,12 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
                  'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=binary']
+                 'KOLLA_INSTALL_TYPE=source']
         )}
         self.dw = get_DockerWorker({
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='ubuntu',
-                                KOLLA_INSTALL_TYPE='binary')})
+                                KOLLA_INSTALL_TYPE='source')})
 
         self.assertFalse(self.dw.compare_environment(container_info))
 
@@ -1225,12 +1225,12 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
                  'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=binary']
+                 'KOLLA_INSTALL_TYPE=source']
         )}
         self.dw = get_DockerWorker({
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='centos',
-                                KOLLA_INSTALL_TYPE='binary')})
+                                KOLLA_INSTALL_TYPE='source')})
 
         self.assertTrue(self.dw.compare_environment(container_info))
 
