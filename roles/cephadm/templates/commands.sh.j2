@@ -1,0 +1,23 @@
+# Status
+ceph orch status --detail
+
+# Apply cluster spec
+ceph orch apply -i /var/run/ceph/cluster.yml
+
+# OSDs
+{% for osd in cephadm_ceph_osd_devices %}
+ceph orch daemon add osd {{ osd }}
+{% endfor %}
+
+# Pools
+{% for pool in cephadm_ceph_pools %}
+ceph osd pool create {{ pool }}
+{% endfor %}
+
+# Users
+{% for user in cephadm_ceph_users %}
+ceph auth get-or-create {{ user }}
+{% endfor %}
+
+# Health
+ceph health detail
