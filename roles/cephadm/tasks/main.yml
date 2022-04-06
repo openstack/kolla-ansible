@@ -65,43 +65,18 @@
     dest: "/var/run/ceph/{{ ceph_fsid }}/cluster.yml"
   become: True
 
-- name: Check Ceph Orchestrator state
-  command:
-    cmd: >
-         cephadm shell --
-         ceph orch status --detail
+- name: Template out command spec
+  template:
+    src: templates/commands.sh.j2
+    dest: "/var/run/ceph/{{ ceph_fsid }}/commands.sh"
   become: True
 
-- name: Apply cluster spec
+- name: Run commands
   command:
     cmd: >
          cephadm shell --
-         ceph orch apply -i /var/run/ceph/cluster.yml
+         bash /var/run/ceph/commands.sh
   become: True
-
-- name: Add osds
-  command:
-    cmd: >
-         cephadm shell --
-         ceph orch daemon add osd {{ item }}
-  become: True
-  loop: "{{ cephadm_ceph_osd_devices }}"
-
-- name: Create and initialise pools for OpenStack services
-  command:
-    cmd: >
-         cephadm shell --
-         ceph osd pool create {{ item }}
-  with_items: "{{ cephadm_ceph_pools }}"
-  become: true
-
-- name: Create users for OpenStack services
-  command:
-    cmd: >
-         cephadm shell --
-         ceph auth get-or-create {{ item }}
-  become: true
-  with_items: "{{ cephadm_ceph_users }}"
 
 # TODO(mnasiadka): Fix merge_configs to support tabs
 - name: Generate ceph.conf without tabs
@@ -112,10 +87,5 @@
       mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_'+api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
   copy:
     content: "{{ ceph_conf_fixed }}"
-    dest: /etc/ceph/ceph.conf
-  become: True
-
-- name: Check ceph health
-  command:
-    cmd: cephadm shell -- ceph health detail
+    dest: "/etc/ceph/ceph.conf.fixed"
   become: True
