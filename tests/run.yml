@@ -21,7 +21,7 @@
         need_build_image: "{{ kolla_build_images | default(false) }}"
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'ovn', 'lets-encrypt'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'ovn', 'lets-encrypt', 'container-engine-migration'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
@@ -561,6 +561,15 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "skyline-sso"
 
+        - name: Run test-container-engine-migration.sh script
+          script:
+            cmd: test-container-engine-migration.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
+            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
+          when: scenario == "container-engine-migration"
       when: scenario != "bifrost"
 
 # NOTE(yoctozepto): each host checks itself
@@ -792,6 +801,11 @@
 - hosts: all
   any_errors_fatal: true
   tasks:
+    - name: Change container engine after the migration
+      set_fact:
+        container_engine: podman
+      when: scenario == "container-engine-migration"
+
     - name: Post-deploy/upgrade sanity checks
       block:
         - name: Run check-failure.sh script

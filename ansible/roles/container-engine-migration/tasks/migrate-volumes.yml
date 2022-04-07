@@ -1,0 +1,69 @@
+---
+- name: Get list of all containers
+  become: true
+  kolla_container_facts:
+    action: get_containers_names
+    container_engine: "{{ current_engine }}"
+  register: containers
+
+- import_tasks: ovs-cleanup.yml
+  when:
+    - "'openvswitch_vswitchd' in containers.container_names"
+    - neutron_plugin_agent == 'openvswitch'
+
+- name: Stop all containers
+  become: true
+  kolla_container:
+    action: "stop_container"
+    name: "{{ item }}"
+    container_engine: "{{ current_engine }}"
+  with_items: "{{ containers.container_names }}"
+
+- name: Create directory for target container engine volumes
+  become: true
+  file:
+    path: "{{ engine_data[target_engine].volumes_dir }}"
+    state: directory
+    mode: "{{ engine_data[target_engine].volumes_mode }}"
+
+- name: Find current container engine volumes
+  become: true
+  find:
+    paths: "{{ engine_data[current_engine].volumes_dir }}"
+    file_type: directory
+  register: container_volumes
+
+# NOTE(r-krcek): The following block is workaround for problem where podman
+# changes directory permissions after starting a container from any UID:GID
+# to root after migration.
+- block:
+    - name: Pre-create volumes in target engine
+      become: true
+      kolla_container:
+        action: "create_volume"
+        name: "{{ item.path | basename }}"
+        common_options: "{{ docker_common_options }}"
+      with_items: "{{ container_volumes.files }}"
+
+    - name: Move volumes to target_engine volume directory
+      vars:
+        target_path: "{{ engine_data[target_engine].volumes_dir }}/{{ item.path | basename }}"
+        source_path: "{{ item.path }}/_data"
+      become: true
+      command: "mv -f {{ source_path }} {{ target_path }}"
+      with_items: "{{ container_volumes.files }}"
+
+    - name: Cleanup volumes
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ container_volumes.files }}"
+  when: container_volumes.matched > 0
+
+# NOTE(mhiner): this prevents RabbitMQ failing to establish connection
+# to other instances in multinode deployment
+- name: Remove old Mnesia tables
+  become: true
+  file:
+    path: "{{ engine_data[target_engine].volumes_dir }}/rabbitmq/_data/mnesia"
+    state: absent
