@@ -391,28 +391,6 @@ There are a few options that are required to deploy Kolla Ansible:
 
      kolla_base_distro: "centos"
 
-  Next "type" of installation needs to be configured.
-  Choices are:
-
-  binary
-   using repositories like apt or dnf
-
-  source (default)
-   using raw source archives, git repositories or local source directory
-
-  .. note::
-
-     This only affects OpenStack services. Infrastructure services are
-     always "binary".
-
-  .. note::
-
-     Source builds are proven to be slightly more reliable than binary.
-
-  .. code-block:: console
-
-     kolla_install_type: "source"
-
 * Networking
 
   Kolla Ansible requires a few networking options to be set.

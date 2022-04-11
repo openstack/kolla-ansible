@@ -76,14 +76,6 @@ logs with index patterns matching either ``^flog-.*`` or ``^monasca-.*`` by
 default. If this is undesirable, then you can update the
 ``elasticsearch_curator_index_pattern`` variable accordingly.
 
-Currently Monasca is only supported using the ``source`` install type Kolla
-images. If you are using the ``binary`` install type you should set the
-following override in ``/etc/kolla/globals.yml``:
-
-.. code-block:: yaml
-
-   monasca_install_type: "source"
-
 Stand-alone configuration (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
