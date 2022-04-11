@@ -62,7 +62,6 @@
         - enable_ovn_{{ enable_ovn | bool }}
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
-        - enable_qdrouterd_{{ enable_qdrouterd | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
         - enable_redis_{{ enable_redis | bool }}
         - enable_sahara_{{ enable_sahara | bool }}
@@ -511,17 +510,6 @@
         role_rabbitmq_prometheus_port: '{{ outward_rabbitmq_prometheus_port }}',
         role_rabbitmq_user: '{{ outward_rabbitmq_user }}',
         when: enable_outward_rabbitmq | bool }
-
-- name: Apply role qdrouterd
-  gather_facts: false
-  hosts:
-    - qdrouterd
-    - '&enable_qdrouterd_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: qdrouterd,
-        tags: qdrouterd,
-        when: enable_qdrouterd | bool }
 
 - name: Apply role etcd
   gather_facts: false
