@@ -59,6 +59,9 @@ ironic_services:
     group: ironic-pxe
     enabled: true
     image: "{{ ironic_pxe_image_full }}"
+    environment:
+      TFTPBOOT_PATH: /var/lib/ironic/tftpboot
+      HTTPBOOT_PATH: /var/lib/ironic/httpboot
     volumes: "{{ ironic_pxe_default_volumes + ironic_pxe_extra_volumes }}"
     dimensions: "{{ ironic_pxe_dimensions }}"
   ironic-ipxe:
@@ -195,21 +198,18 @@ ironic_conductor_default_volumes:
   - "/run:/run:shared"
   - "kolla_logs:/var/log/kolla"
   - "ironic:/var/lib/ironic"
-  - "ironic_pxe:/tftpboot/"
-  - "ironic_ipxe:/httpboot/"
   - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
 ironic_pxe_default_volumes:
   - "{{ node_config_directory }}/ironic-pxe/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "ironic_pxe:/tftpboot/"
+  - "ironic:/var/lib/ironic"
   - "kolla_logs:/var/log/kolla"
 ironic_ipxe_default_volumes:
   - "{{ node_config_directory }}/ironic-ipxe/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "ironic:/var/lib/ironic:ro"
-  - "ironic_ipxe:/httpboot/"
+  - "ironic:/var/lib/ironic"
   - "kolla_logs:/var/log/kolla"
 ironic_inspector_default_volumes:
   - "{{ node_config_directory }}/ironic-inspector/:{{ container_config_directory }}/:ro"
@@ -260,6 +260,7 @@ ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
 ironic_ipxe_url: "http://{{ api_interface_address | put_address_in_context('url') }}:{{ ironic_ipxe_port }}"
 ironic_enable_rolling_upgrade: "yes"
+ironic_upgrade_skip_wait_check: false
 ironic_inspector_kernel_cmdline_extras: []
 ironic_inspector_pxe_filter: "{% if enable_neutron | bool %}dnsmasq{% else %}noop{% endif %}"
 
