@@ -58,7 +58,6 @@
         # buster see https://github.com/docker/for-linux/issues/711.
         push: "{{ base_distro != 'debian' }}"
         base: "{{ base_distro }}"
-        install_type: "{{ install_type }}"
         registry: "127.0.0.1:4000"
         namespace: lokolla
         tag: "{{ build_image_tag }}"
@@ -334,7 +333,8 @@
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
-        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}{{ base_distro }}-{{ install_type }}-swift-base:{{ docker_image_tag }}"
+        # TODO(yoctozepto): Remove hardcoded "source" when Kolla omits this part.
+        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}{{ base_distro }}-source-swift-base:{{ docker_image_tag }}"
         # NOTE(yoctozepto): no IPv6 for now
         STORAGE_NODES: "{{ groups['all'] | map('extract', hostvars,
                            ['ansible_'+api_interface_name, 'ipv4', 'address'])
