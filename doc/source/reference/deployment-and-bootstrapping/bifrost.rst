@@ -119,13 +119,6 @@ bifrost image.
         cd kolla
         tox -e genconfig
 
-   * Modify ``kolla-build.conf``, setting ``install_type`` to ``source``:
-
-     .. path etc/kolla/kolla-build.conf
-     .. code-block:: ini
-
-        install_type = source
-
 Alternatively, instead of using ``kolla-build.conf``, a ``source`` build can
 be enabled by appending ``--type source`` to the :command:`kolla-build` or
 ``tools/build.py`` command.
@@ -192,13 +185,6 @@ different than ``network_interface``.  For example to use ``eth1``:
 
 Note that this interface should typically have L2 network connectivity with the
 bare metal cloud hosts in order to provide DHCP leases with PXE boot options.
-
-Since bifrost only supports the source image type, ensure that this is
-reflected in ``globals.yml``
-
-.. code-block:: yaml
-
-   kolla_install_type: source
 
 Prepare Bifrost Configuration
 -----------------------------
