@@ -45,9 +45,9 @@
   delegate_to: "{{ groups[ironic_inspector.group][0] }}"
   when: inventory_hostname in groups[ironic_inspector.group]
 
-- name: Running Ironic-PXE bootstrap container
+- name: Running ironic-tftp bootstrap container
   vars:
-    ironic_pxe: "{{ ironic_services['ironic-pxe'] }}"
+    ironic_tftp: "{{ ironic_services['ironic-tftp'] }}"
   become: true
   kolla_docker:
     action: "start_container"
@@ -58,10 +58,10 @@
       HTTPBOOT_PATH: /var/lib/ironic/httpboot
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ ironic_pxe.image }}"
+    image: "{{ ironic_tftp.image }}"
     labels:
       BOOTSTRAP:
-    name: "bootstrap_ironic_pxe"
+    name: "bootstrap_ironic_tftp"
     restart_policy: no
-    volumes: "{{ ironic_pxe.volumes }}"
-  when: inventory_hostname in groups[ironic_pxe.group]
+    volumes: "{{ ironic_tftp.volumes }}"
+  when: inventory_hostname in groups[ironic_tftp.group]

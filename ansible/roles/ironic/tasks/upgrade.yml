@@ -27,6 +27,20 @@
   run_once: true
   when: not ironic_upgrade_skip_wait_check | bool
 
+# TODO(yoctozepto): Remove this task in Zed.
+- name: Remove old Ironic containers
+  become: true
+  kolla_docker:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item }}"
+  with_items:
+    # NOTE(yoctozepto): Removing conductor to avoid it
+    # thinking that the tftp and http servers are available.
+    - ironic_conductor
+    - ironic_pxe
+    - ironic_ipxe
+
 - include_tasks: rolling_upgrade.yml
   when: ironic_enable_rolling_upgrade | bool
 
