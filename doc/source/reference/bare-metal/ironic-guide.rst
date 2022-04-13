@@ -85,7 +85,7 @@ plain PXE by setting the following in
 
 .. code-block:: yaml
 
-   enable_ironic_ipxe: "no"
+   ironic_dnsmasq_serve_ipxe: "no"
 
 To revert Ironic to previous default as well, set ``pxe`` as
 ``default_boot_interface`` in ``/etc/kolla/config/ironic.conf``:
