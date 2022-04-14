@@ -71,9 +71,9 @@
       set_fact:
         need_build_image: true
       when:
-        # NOTE(yoctozepto): if there is any tested change that does not belong to kolla-ansible,
-        # then kolla images should be built
-        - item.project.short_name != "kolla-ansible"
+        # NOTE(yoctozepto): build container images if there is any tested
+        # change that impacts them.
+        - item.project.short_name not in ["ansible-collection-kolla", "kayobe", "kolla-ansible", "tenks"]
       with_items: "{{ zuul['items'] }}"
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
@@ -166,7 +166,9 @@
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
           when: "{{ scenario == 'ironic' }}"
-
+        - src: "tests/templates/tenks-deploy-config.yml.j2"
+          dest: "{{ ansible_env.HOME }}/tenks.yml"
+          when: "{{ scenario == 'ironic' }}"
       when: item.when | default(true)
 
     - block:
@@ -411,13 +413,23 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "scenario_nfv"
 
-        - name: Run test-ironic.sh script
-          script:
-            cmd: test-ironic.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            TLS_ENABLED: "{{ tls_enabled }}"
+        - block:
+            - name: Run deploy-tenks.sh script
+              script:
+                cmd: deploy-tenks.sh
+                executable: /bin/bash
+                chdir: "{{ kolla_ansible_src_dir }}"
+              environment:
+                TENKS_VENV_PATH: "{{ ansible_env.HOME }}/tenks-venv"
+                TENKS_SRC_PATH: "{{ ansible_env.HOME }}/src/opendev.org/openstack/tenks"
+
+            - name: Run test-ironic.sh script
+              script:
+                cmd: test-ironic.sh
+                executable: /bin/bash
+                chdir: "{{ kolla_ansible_src_dir }}"
+              environment:
+                TLS_ENABLED: "{{ tls_enabled }}"
           when: scenario == "ironic"
 
         - name: Run test-magnum.sh script
