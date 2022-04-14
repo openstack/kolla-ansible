@@ -14,12 +14,14 @@
   register: container_facts
 
 - block:
+    # NOTE(mgoddard): pgrep exit status 1 means no match.
     - name: Check if there are any running VMs
       become: true
       shell:
         cmd: >
           set -o pipefail &&
-          pgrep -l qemu | awk '!/qemu-ga/  && !/qemu-img/ {print $1}'
+          { pgrep -l qemu || test $? = 1; } | awk '!/qemu-ga/  && !/qemu-img/ {print $1}'
+        executable: /bin/bash
       register: running_vms
 
     - name: Fail if there are any running VMs
