@@ -96,7 +96,7 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
 
    .. code-block:: console
 
-      pip install 'ansible==5.*'
+      pip install 'ansible>=4,<6'
 
 Install dependencies not using a virtual environment
 ----------------------------------------------------
@@ -147,7 +147,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
    .. note::
 
       If the installed Ansible version does not meet the requirements, one can
-      use pip: ``sudo pip install -U 'ansible==5.*'``.
+      use pip: ``sudo pip install -U 'ansible>=4,<6'``.
       Beware system package upgrades might interfere with that so it
       is recommended to uninstall the system package first. One might be better
       off with the virtual environment method to avoid this pitfall.

@@ -26,7 +26,7 @@ python virtual environment on the Ansible control host. For example:
    source /path/to/venv/bin/activate
    pip install -U pip
    pip install kolla-ansible
-   pip install 'ansible==5.*'
+   pip install 'ansible>=4,<6'
    deactivate
 
 To use the virtual environment, it should first be activated:
