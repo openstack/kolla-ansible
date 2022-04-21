@@ -46,7 +46,26 @@
   listen:
     - Restart keepalived container
 
-- name: Restart backup haproxy container
+# NOTE(yoctozepto): We need the following to be stop-start as haproxy and
+# proxysql need to be reconfigured simultaneously when switching between them.
+
+- name: Stop backup haproxy container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    # NOTE(kevko): backup node might not have haproxy yet - ignore
+    ignore_missing: true
+    common_options: "{{ docker_common_options }}"
+    name: "haproxy"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+  listen:
+    - Restart haproxy container
+    - Restart keepalived container
+
+- name: Start backup haproxy container
   vars:
     service_name: "haproxy"
     service: "{{ loadbalancer_services[service_name] }}"
@@ -64,6 +83,7 @@
     - kolla_action != "config"
     - groups.kolla_ha_is_master_False is defined
     - inventory_hostname in groups.kolla_ha_is_master_False
+    - service.enabled | bool
   listen:
     - Restart haproxy container
     - Restart keepalived container
@@ -92,6 +112,7 @@
     - kolla_action != "config"
     - groups.kolla_ha_is_master_False is defined
     - inventory_hostname in groups.kolla_ha_is_master_False
+    - service.enabled | bool
   listen:
     - Restart keepalived container
   notify:
@@ -103,6 +124,8 @@
   become: true
   kolla_docker:
     action: "stop_container"
+    # NOTE(yoctozepto): master node might not have haproxy yet - ignore
+    ignore_missing: true
     common_options: "{{ docker_common_options }}"
     name: "haproxy"
   when:
@@ -143,6 +166,7 @@
     - kolla_action != "config"
     - groups.kolla_ha_is_master_True is defined
     - inventory_hostname in groups.kolla_ha_is_master_True
+    - service.enabled | bool
   listen:
     - Restart haproxy container
     - Restart keepalived container
@@ -171,12 +195,20 @@
     - kolla_action != "config"
     - groups.kolla_ha_is_master_True is defined
     - inventory_hostname in groups.kolla_ha_is_master_True
+    - service.enabled | bool
   listen:
     - Restart keepalived container
   notify:
     - Wait for virtual IP to appear
 
-- name: Wait for virtual IP to appear
+- name: Wait for haproxy to listen on VIP
+  vars:
+    service_name: "haproxy"
+    service: "{{ loadbalancer_services[service_name] }}"
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ haproxy_monitor_port }}"
+  when:
+    - service.enabled | bool
+  listen:
+    - Wait for virtual IP to appear
