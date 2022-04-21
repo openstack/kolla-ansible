@@ -12,5 +12,5 @@ sinks:
           - gnocchi://
 {% endif %}
 {% if enable_ceilometer_prometheus_pushgateway | bool %}
-          - prometheus://{{ ceilometer_prometheus_pushgateway_host }}:{{ ceilometer_prometheus_pushgateway_port }}/metrics/job/openstack-telemetry
+          - prometheus://{{ ceilometer_prometheus_pushgateway_host }}:{{ ceilometer_prometheus_pushgateway_port }}/metrics/job/openstack-telemetry{% if ceilometer_prometheus_pushgateway_options %}/?{{ (ceilometer_prometheus_pushgateway_options|dict2items|rejectattr("value", "equalto", None)|list|items2dict).items() | map("join", "=") | join("&")}}{% endif %}
 {% endif %}
