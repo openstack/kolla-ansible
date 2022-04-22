@@ -202,6 +202,13 @@ Install Kolla-ansible for deployment or evaluation
 
       cp /path/to/venv/share/kolla-ansible/ansible/inventory/* .
 
+   For ``all-in-one`` scenario in virtual environment add the following
+   to the very beginning of the inventory:
+
+   .. code-block:: console
+
+      localhost ansible_python_interpreter=python
+
    If not using a virtual environment, run:
 
    .. code-block:: console
