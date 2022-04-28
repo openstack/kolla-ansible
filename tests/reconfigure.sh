@@ -14,7 +14,6 @@ function reconfigure {
     # trigger a real reconfigure
     kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/reconfigure-prechecks
     kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure &> /tmp/logs/ansible/reconfigure
-    kolla-ansible -i ${RAW_INVENTORY} -vvv check &> /tmp/logs/ansible/check-reconfigure
 }
 
 
