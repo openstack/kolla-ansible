@@ -42,14 +42,27 @@
   tasks:
     # NOTE(yoctozepto): we use gawk to add time to each logged line
     # outside of Ansible (e.g. for init-runonce)
-    - name: Install gawk and Python modules
-      package:
+    - name: Install gawk and Python modules (Debian/Ubuntu)
+      apt:
         name:
           - gawk
           - python3-pip
           - python3-setuptools
           - python3-wheel
       become: true
+      when: ansible_facts.os_family == 'Debian'
+
+    # NOTE(mnasiadka): python3-wheel is in crb repo for EL9
+    - name: Install gawk and Python modules (RedHat)
+      dnf:
+        enablerepo: "crb"
+        name:
+          - gawk
+          - python3-pip
+          - python3-setuptools
+          - python3-wheel
+      become: true
+      when: ansible_facts.os_family == 'RedHat'
 
     - name: Install lvm on storage scenarios
       become: true

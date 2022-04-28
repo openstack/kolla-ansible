@@ -6,6 +6,12 @@
     recurse: yes
   become: True
 
+- name: Install centos-release-ceph
+  dnf:
+    name: "centos-release-ceph-{{ cephadm_ceph_release }}"
+  become: True
+  when: cephadm_use_package_from_distribution | bool
+
 - name: Enable Ceph base yum repository
   yum_repository:
     name: "{{ item.shortname }}"
@@ -14,3 +20,4 @@
     gpgkey: "{{ cephadm_ceph_rpm_gpg_key }}"
   loop: "{{ cephadm_ceph_rpm_repos }}"
   become: True
+  when: not cephadm_use_package_from_distribution | bool

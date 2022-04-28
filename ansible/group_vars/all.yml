@@ -161,7 +161,14 @@ docker_common_options:
 # Dimensions options
 ####################
 # Dimension options for Docker Containers
-default_container_dimensions: {}
+# NOTE(mnasiadka): Lower 1073741816 nofile limit on EL9 (RHEL9/CentOS Stream 9/Rocky Linux 9)
+#                  fixes at least rabbitmq and mariadb
+default_container_dimensions: "{{ default_container_dimensions_el9 if (ansible_facts.os_family == 'RedHat' and ansible_facts.distribution_major_version == '9') else '{}' }}"
+default_container_dimensions_el9:
+  ulimits:
+    nofile:
+      soft: 1048576
+      hard: 1048576
 
 #####################
 # Healthcheck options
@@ -1175,6 +1182,7 @@ distro_python_version_map: {
 }
 
 distro_python_version: "{{ distro_python_version_map[kolla_base_distro] }}"
+kolla_base_distro_version: "{{ ansible_facts.distribution_major_version }}"
 
 ##########
 # Telegraf

@@ -48,6 +48,15 @@ function prepare_images {
         return
     fi
 
+    if [[ $BASE_DISTRO == "centos" ]] && [[ $BASE_DISTRO_MAJOR_VERSION -eq 9 ]]; then
+        sudo tee -a /etc/kolla/kolla-build.conf <<EOF
+
+[DEFAULT]
+base_tag = stream9
+EOF
+
+    fi
+
     if [[ $SCENARIO != "bifrost" ]]; then
         GATE_IMAGES="^cron,^fluentd,^glance,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^neutron,^nova-,^openvswitch,^rabbitmq,^horizon,^heat,^placement"
     else
