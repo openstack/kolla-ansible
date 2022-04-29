@@ -79,3 +79,17 @@ Cells
 
 Information on using Nova Cells V2 to scale out can be found in
 :doc:`nova-cells-guide`.
+
+Failure handling
+================
+
+Compute service registration
+----------------------------
+
+During deployment, Kolla Ansible waits for Nova compute services to register
+themselves. By default, if a compute service does not register itself before
+the timeout, that host will be marked as failed in the Ansible run. This
+behaviour is useful at scale, where failures are more frequent.
+
+Alternatively, to fail all hosts in a cell when any compute service fails
+to register, set ``nova_compute_registration_fatal`` to ``true``.
