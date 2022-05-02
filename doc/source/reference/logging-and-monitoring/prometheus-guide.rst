@@ -57,7 +57,7 @@ Configuration options
      - Description
    * - prometheus_scrape_interval
      - 60s
-     - Default scape interval for all jobs
+     - Default scrape interval for all jobs
 
 Extending prometheus.cfg
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +67,7 @@ If you want to add extra targets to scrape, you can extend the default
 ``{{ node_custom_config }}/prometheus/prometheus.yml.d``. These should have the
 same format as ``prometheus.yml``. These additional configs are merged so
 that any list items are extended. For example, if using the default value for
-``node_custom_config``, you could add additional targets to scape by defining
+``node_custom_config``, you could add additional targets to scrape by defining
 ``/etc/kolla/config/prometheus/prometheus.yml.d/10-custom.yml`` containing the
 following:
 
