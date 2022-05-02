@@ -1,0 +1,26 @@
+---
+features:
+  - |
+    Adds support for multiple DHCP ranges in the Ironic Inspector DHCP server.
+
+upgrade:
+  - |
+    Modifies the default lease time of the Ironic Inspector DHCP server to 10
+    minutes. This is small enough to use small pools of IP addresses for
+    inspection but gives more room for the inspection to succeed.
+    This default can be changed globally via
+    ``ironic_dnsmasq_dhcp_default_lease_time`` variable or per range via
+    ``lease_time`` parameter.
+  - |
+    Replace usage of ``ironic_dnsmasq_dhcp_range`` together with
+    ``ironic_dnsmasq_default_gateway`` to ``ironic_dnsmasq_dhcp_ranges``.
+    For example, if you have::
+
+      ironic_dnsmasq_dhcp_range: "10.42.0.2,10.42.0.254,255.255.255.0"
+      ironic_dnsmasq_default_gateway: "10.42.0.1"
+
+    replace it with::
+
+      ironic_dnsmasq_dhcp_ranges:
+        - range: "10.42.0.2,10.42.0.254,255.255.255.0"
+          routers: "10.42.0.1"
