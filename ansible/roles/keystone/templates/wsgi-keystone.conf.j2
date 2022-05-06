@@ -8,7 +8,11 @@ LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
 {% endif %}
 {% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
+{% if kolla_action == 'upgrade' %}
+# NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
+# TODO(yoctozepto): Remove after Zed.
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_admin_listen_port }}
+{% endif %}
 
 ServerSignature Off
 ServerTokens Prod
@@ -104,6 +108,9 @@ LogLevel info
 {% endif %}
 </VirtualHost>
 
+{% if kolla_action == 'upgrade' %}
+# NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
+# TODO(yoctozepto): Remove after Zed.
 <VirtualHost *:{{ keystone_admin_listen_port }}>
     WSGIDaemonProcess keystone-admin processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=keystone-admin
     WSGIProcessGroup keystone-admin
@@ -123,3 +130,4 @@ LogLevel info
     SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
 {% endif %}
 </VirtualHost>
+{% endif %}
