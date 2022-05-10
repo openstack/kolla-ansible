@@ -74,7 +74,6 @@
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
         - enable_trove_{{ enable_trove | bool }}
-        - enable_venus_{{ enable_venus | bool }}
         - enable_vitrage_{{ enable_vitrage | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
         - enable_zookeeper_{{ enable_zookeeper | bool }}
@@ -327,11 +326,6 @@
             tasks_from: loadbalancer
           tags: trove
           when: enable_trove | bool
-        - include_role:
-            name: venus
-            tasks_from: loadbalancer
-          tags: venus
-          when: enable_venus | bool
         - include_role:
             name: vitrage
             tasks_from: loadbalancer
@@ -1126,15 +1120,3 @@
     - { role: masakari,
         tags: masakari,
         when: enable_masakari | bool }
-
-- name: Apply role venus
-  gather_facts: false
-  hosts:
-    - venus-api
-    - venus-manager
-    - '&enable_venus_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: venus,
-        tags: venus,
-        when: enable_venus | bool }
