@@ -26,6 +26,18 @@
       vars:
         bridge_name: "{{ neutron_external_bridge_name }}"
         bridge_member_name: "{{ neutron_external_vxlan_interface_name }}"
+    - role: multi-node-vxlan-overlay
+      vars:
+        vxlan_interface_name: "{{ external_api_interface_name }}"
+        vxlan_vni: 10002
+      when: external_api_interface_name is defined
+    - role: multi-node-managed-addressing
+      vars:
+        managed_interface_name: "{{ external_api_interface_name }}"
+        managed_network_prefix: "{{ external_api_network_prefix }}"
+        managed_network_prefix_length: "{{ external_api_network_prefix_length }}"
+        managed_network_address_family: "{{ address_family }}"
+      when: external_api_interface_name is defined
     # TODO(mnasiadka): Update ipv6 jobs to test ipv6 in Neutron
     - role: multi-node-managed-addressing
       vars:
