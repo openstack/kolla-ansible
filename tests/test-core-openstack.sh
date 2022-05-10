@@ -8,6 +8,7 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_smoke {
+    openstack --debug endpoint list
     openstack --debug compute service list
     openstack --debug network agent list
     openstack --debug orchestration service list
