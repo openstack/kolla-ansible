@@ -196,6 +196,22 @@ volume_driver = cinder.volume.drivers.quobyte.QuobyteDriver
 quobyte_volume_url = quobyte://{{ quobyte_storage_host }}/{{ quobyte_storage_volume }}
 {% endif %}
 
+{% if enable_cinder_backend_pure_iscsi | bool %}
+[Pure-FlashArray-iscsi]
+volume_backend_name = {{ pure_iscsi_backend }}
+volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
+san_ip = {{ pure_san_ip }}
+pure_api_token = {{ pure_api_token }}
+{% endif %}
+
+{% if enable_cinder_backend_pure_fc | bool %}
+[Pure-FlashArray-fc]
+volume_backend_name = {{ pure_fc_backend }}
+volume_driver = cinder.volume.drivers.pure.PureFCDriver
+san_ip = {{ pure_san_ip }}
+pure_api_token = {{ pure_api_token }}
+{% endif %}
+
 [privsep_entrypoint]
 helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
 
