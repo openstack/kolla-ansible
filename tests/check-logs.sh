@@ -22,10 +22,6 @@ function filter_out_expected_critical {
     # job.
 
     case $1 in
-    */placement-api.log)
-        # Sometimes we see this during upgrade when keystone is down.
-        grep -v "Failed to fetch token data from identity server"
-        ;;
     */neutron-server.log)
         # Sometimes we see this during shutdown (upgrade).
         # See: https://bugs.launchpad.net/neutron/+bug/1863579
