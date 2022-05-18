@@ -4,14 +4,8 @@
 Keystone - Identity service
 ===========================
 
-Tokens
-------
-
-The Keystone token provider is configured via ``keystone_token_provider``. The
-default value for this is ``fernet``.
-
 Fernet Tokens
-~~~~~~~~~~~~~
+-------------
 
 Fernet tokens require the use of keys that must be synchronised between
 Keystone servers. Kolla Ansible deploys two containers to handle this -
