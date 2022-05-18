@@ -11,6 +11,9 @@ redis_services:
   redis-sentinel:
     container_name: redis_sentinel
     group: redis
+    environment:
+      REDIS_CONF: "{{ redis_conf_path }}"
+      REDIS_GEN_CONF: "{{ redis_generated_conf_path }}"
     enabled: true
     image: "{{ redis_sentinel_image_full }}"
     volumes: "{{ redis_sentinel_default_volumes + redis_sentinel_extra_volumes }}"
@@ -70,3 +73,6 @@ redis_sentinel_default_volumes:
 
 redis_extra_volumes: "{{ default_extra_volumes }}"
 redis_sentinel_extra_volumes: "{{ default_extra_volumes }}"
+
+redis_conf_path: "/etc/redis/redis.conf"
+redis_generated_conf_path: "/etc/redis/redis-regenerated-by-config-rewrite.conf"
