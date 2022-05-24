@@ -56,8 +56,12 @@ def generate_RSA(bits=4096):
 
 def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
            fernet_keys, hmac_md5_keys):
-    with open(passwords_file, 'r') as f:
-        passwords = yaml.safe_load(f.read())
+    try:
+        with open(passwords_file, 'r') as f:
+            passwords = yaml.safe_load(f.read())
+    except FileNotFoundError:
+        print(f"ERROR: Passwords file \"{passwords_file}\" is missing")
+        sys.exit(1)
 
     if not isinstance(passwords, dict):
         print("ERROR: Passwords file not in expected key/value format")
