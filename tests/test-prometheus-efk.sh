@@ -39,6 +39,9 @@ function check_elasticsearch {
         --location
         --fail
     )
+    if [[ "$TLS_ENABLED" = "True" ]]; then
+        args+=(--cacert $OS_CACERT)
+    fi
     if ! curl "${args[@]}" $ELASTICSEARCH_URL > $output_path; then
         return 1
     fi
