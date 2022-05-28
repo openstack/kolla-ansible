@@ -195,14 +195,19 @@ keystone_enabled_notification_topics: "{{ keystone_notification_topics | selecta
 ####################
 # Keystone
 ####################
+keystone_service_endpoints:
+  - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
+  - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
+
+# TODO(yoctozepto): Remove admin_endpoint leftovers in Antelope (2023.1).
+keystone_service_admin_endpoint: {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
+keystone_create_admin_endpoint: false
+
 keystone_ks_services:
   - name: "keystone"
     type: "identity"
     description: "Openstack Identity Service"
-    endpoints:
-      - {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
-      - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
-      - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
+    endpoints: "{{ keystone_service_endpoints + ([keystone_service_admin_endpoint] if kolla_action == 'upgrade' or keystone_create_admin_endpoint | bool else []) }}"
 
 ####################
 # TLS
