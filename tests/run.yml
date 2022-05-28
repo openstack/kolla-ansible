@@ -678,9 +678,15 @@
             TLS_ENABLED: "{{ tls_enabled }}"
           when: dashboard_enabled
 
+        # NOTE(yoctozepto): We need the script module here to avoid
+        # a bug in Glance OSC [1][2] which results in a failure when a volume
+        # is given as a source. The stdin works differently in shell/command
+        # than script.
+        # [1] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L114-L120
+        # [2] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L414
         - name: Run test-core-openstack.sh script
-          shell:
-            cmd: tests/test-core-openstack.sh
+          script:
+            cmd: test-core-openstack.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
