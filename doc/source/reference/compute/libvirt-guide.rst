@@ -99,10 +99,11 @@ Libvirt TLS can be enabled in Kolla Ansible by setting the following option in
 
    libvirt_tls: "yes"
 
-Creation of the TLS certificates is currently out-of-scope for Kolla Ansible.
-You will need to either use an existing Internal CA or you will need to
-generate your own offline CA. For the TLS communication to work correctly you
-will have to supply Kolla Ansible the following pieces of information:
+Creation of production-ready TLS certificates is currently out-of-scope for
+Kolla Ansible.  You will need to either use an existing Internal CA or you will
+need to generate your own offline CA. For the TLS communication to work
+correctly you will have to supply Kolla Ansible the following pieces of
+information:
 
 * cacert.pem
 
@@ -171,3 +172,11 @@ copied into the nova-compute and nova-libvirt containers. With this option
 disabled you will also be responsible for restarting the nova-compute and
 nova-libvirt containers when the certs are updated, as kolla-ansible will not
 be able to tell when the files have changed.
+
+Generating certificates for test and development
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since the Yoga release, the ``kolla-ansible certificates`` command generates
+certificates for libvirt TLS. A single key and certificate is used for all
+hosts, with a Subject Alternative Name (SAN) entry for each compute host
+hostname.
