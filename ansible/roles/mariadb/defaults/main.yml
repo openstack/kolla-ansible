@@ -42,7 +42,7 @@ mariadb_services:
     dimensions: "{{ mariadb_clustercheck_dimensions }}"
     environment:
       MYSQL_USERNAME: "{{ mariadb_monitor_user }}"
-      MYSQL_PASSWORD: ""
+      MYSQL_PASSWORD: "{% if enable_proxysql | bool %}{{ mariadb_monitor_password }}{% endif %}"
       MYSQL_HOST: "{{ api_interface_address }}"
       AVAILABLE_WHEN_DONOR: "1"
 
@@ -107,7 +107,7 @@ mariabackup_image_full: "{{ mariabackup_image }}:{{ mariabackup_tag }}"
 
 mariadb_backup_host: "{{ groups[mariadb_shard_group][0] }}"
 mariadb_backup_database_schema: "PERCONA_SCHEMA"
-mariadb_backup_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}backup{% else %}backup_{{ mariadb_shard_name }}{% endif %}"
+mariadb_backup_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}backup{% else %}{{ mariadb_shard_backup_user_prefix }}{{ mariadb_shard_id | string }}{% endif %}"
 mariadb_backup_type: "full"
 mariadb_backup_possible: "{{ mariadb_loadbalancer != 'haproxy' or inventory_hostname in mariadb_default_database_shard_hosts }}"
 
@@ -119,4 +119,4 @@ enable_mariadb_clustercheck: "{{ enable_haproxy }}"
 ####################
 # Sharding
 ####################
-mariadb_shard_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}{{ database_user }}{% else %}root_{{ mariadb_shard_name }}{% endif %}"
+mariadb_shard_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}{{ database_user }}{% else %}{{ mariadb_shard_root_user_prefix }}{{ mariadb_shard_id | string }}{% endif %}"

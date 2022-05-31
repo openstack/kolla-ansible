@@ -26,6 +26,86 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
 
+- name: Ensuring proxysql service config subdirectories exist
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  file:
+    path: "{{ node_config_directory }}/proxysql/{{ item }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_items:
+    - "users"
+    - "rules"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Ensuring keepalived checks subdir exists
+  vars:
+    service: "{{ loadbalancer_services['keepalived'] }}"
+  file:
+    path: "{{ node_config_directory }}/keepalived/checks"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Remove mariadb.cfg if proxysql enabled
+  vars:
+    service: "{{ loadbalancer_services['keepalived'] }}"
+  file:
+    path: "{{ node_config_directory }}/haproxy/services.d/mariadb.cfg"
+    state: absent
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - loadbalancer_services.proxysql.enabled | bool
+  notify:
+    - Restart haproxy container
+
+- name: Removing checks for services which are disabled
+  vars:
+    service: "{{ loadbalancer_services['keepalived'] }}"
+  file:
+    path: "{{ node_config_directory }}/keepalived/checks/check_alive_{{ item.key }}.sh"
+    state: absent
+  become: true
+  with_dict: "{{ loadbalancer_services }}"
+  when:
+    - inventory_hostname in groups[service.group]
+    - item.key != 'keepalived'
+    - not item.value.enabled | bool
+      or not inventory_hostname in groups[item.value.group]
+    - service.enabled | bool
+  notify:
+    - Restart keepalived container
+
+- name: Copying checks for services which are enabled
+  vars:
+    service: "{{ loadbalancer_services['keepalived'] }}"
+  template:
+    src: "keepalived/check_alive_{{ item.key }}.sh.j2"
+    dest: "{{ node_config_directory }}/keepalived/checks/check_alive_{{ item.key }}.sh"
+    mode: "0770"
+  become: true
+  with_dict: "{{ loadbalancer_services }}"
+  when:
+    - inventory_hostname in groups[service.group]
+    - inventory_hostname in groups[item.value.group]
+    - item.key != 'keepalived'
+    - item.value.enabled | bool
+    - service.enabled | bool
+  notify:
+    - Restart keepalived container
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}/{{ item.key }}.json.j2"
@@ -56,6 +136,24 @@
     - "haproxy/haproxy_main.cfg.j2"
   notify:
     - Restart haproxy container
+
+- name: Copying over proxysql config
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/proxysql/proxysql.yaml"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/proxysql/{{ inventory_hostname }}/proxysql.yaml"
+    - "{{ node_custom_config }}/proxysql/proxysql.yaml"
+    - "proxysql/proxysql.yaml.j2"
+  notify:
+    - Restart proxysql container
 
 - name: Copying over custom haproxy services configuration
   vars:
@@ -148,3 +246,21 @@
     - "haproxy/haproxy_run.sh.j2"
   notify:
     - Restart haproxy container
+
+- name: Copying over proxysql start script
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/proxysql/proxysql_run.sh"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/proxysql/{{ inventory_hostname }}/proxysql_run.sh"
+    - "{{ node_custom_config }}/proxysql/proxysql_run.sh"
+    - "proxysql/proxysql_run.sh.j2"
+  notify:
+    - Restart proxysql container

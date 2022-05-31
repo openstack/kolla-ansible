@@ -10,6 +10,7 @@
   kolla_container_facts:
     name:
       - haproxy
+      - proxysql
       - keepalived
   register: container_facts
 
@@ -29,6 +30,14 @@
     - enable_haproxy | bool
     - inventory_hostname in groups['loadbalancer']
 
+- name: Group hosts by whether they are running ProxySQL
+  group_by:
+    key: "proxysql_running_{{ container_facts['proxysql'] is defined }}"
+  changed_when: false
+  when:
+    - enable_proxysql | bool
+    - inventory_hostname in groups['loadbalancer']
+
 - name: Set facts about whether we can run HAProxy and keepalived VIP prechecks
   vars:
     # NOTE(mgoddard): We can only reliably run this precheck if all hosts in
@@ -38,6 +47,7 @@
   set_fact:
     keepalived_vip_prechecks: "{{ all_hosts_in_batch and groups['keepalived_running_True'] is not defined }}"
     haproxy_vip_prechecks: "{{ all_hosts_in_batch and groups['haproxy_running_True'] is not defined }}"
+    proxysql_vip_prechecks: "{{ all_hosts_in_batch and groups['proxysql_running_True'] is not defined }}"
 
 - name: Checking if external haproxy certificate exists
   run_once: true
@@ -140,6 +150,31 @@
   when:
     - enable_haproxy | bool
     - haproxy_vip_prechecks
+    - inventory_hostname in groups['loadbalancer']
+    - api_interface_address != kolla_internal_vip_address
+
+- name: Checking free port for ProxySQL admin (api interface)
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ proxysql_admin_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_proxysql | bool
+    - container_facts['proxysql'] is not defined
+    - inventory_hostname in groups['loadbalancer']
+
+- name: Checking free port for ProxySQL admin (vip interface)
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ proxysql_admin_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_proxysql | bool
+    - proxysql_vip_prechecks
     - inventory_hostname in groups['loadbalancer']
     - api_interface_address != kolla_internal_vip_address
 
@@ -470,7 +505,7 @@
     - haproxy_stat.find('manila_api') == -1
     - haproxy_vip_prechecks
 
-- name: Checking free port for MariaDB HAProxy
+- name: Checking free port for MariaDB HAProxy/ProxySQL
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ database_port }}"
@@ -481,7 +516,7 @@
     - enable_mariadb | bool
     - inventory_hostname in groups['loadbalancer']
     - haproxy_stat.find('mariadb') == -1
-    - haproxy_vip_prechecks
+    - haproxy_vip_prechecks or proxysql_vip_prechecks
 
 - name: Checking free port for Masakari API HAProxy
   wait_for:

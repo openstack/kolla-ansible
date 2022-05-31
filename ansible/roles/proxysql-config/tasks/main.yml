@@ -1,0 +1,24 @@
+---
+- name: "Copying over {{ proxysql_project }} users config"
+  template:
+    src: "users.yaml.j2"
+    dest: "{{ node_config_directory }}/proxysql/users/{{ proxysql_project }}.yaml"
+    mode: "0660"
+  become: true
+  when:
+    - enable_proxysql | bool
+    - proxysql_config_users | bool
+  notify:
+    - Restart proxysql container
+
+- name: "Copying over {{ proxysql_project }} rules config"
+  template:
+    src: "rules.yaml.j2"
+    dest: "{{ node_config_directory }}/proxysql/rules/{{ proxysql_project }}.yaml"
+    mode: "0660"
+  become: true
+  when:
+    - enable_proxysql | bool
+    - proxysql_config_rules | bool
+  notify:
+    - Restart proxysql container
