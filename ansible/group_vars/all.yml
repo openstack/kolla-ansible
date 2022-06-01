@@ -525,7 +525,8 @@ vitrage_api_port: "8999"
 
 public_protocol: "{{ 'https' if kolla_enable_tls_external | bool else 'http' }}"
 internal_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
-admin_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
+# TODO(yoctozepto): Remove after Zed. Kept for compatibility only.
+admin_protocol: "{{ internal_protocol }}"
 
 ####################
 # OpenStack options
@@ -849,7 +850,8 @@ kibana_log_prefix: "flog"
 keystone_internal_fqdn: "{{ kolla_internal_fqdn }}"
 keystone_external_fqdn: "{{ kolla_external_fqdn }}"
 
-keystone_admin_url: "{{ admin_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
+# TODO(yoctozepto): Remove after Zed. Kept for compatibility only.
+keystone_admin_url: "{{ keystone_internal_url }}"
 keystone_internal_url: "{{ internal_protocol }}://{{ keystone_internal_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
 keystone_public_url: "{{ public_protocol }}://{{ keystone_external_fqdn | put_address_in_context('url') }}:{{ keystone_public_port }}"
 
@@ -877,7 +879,7 @@ keystone_default_user_role: "_member_"
 # OpenStack authentication string. You should only need to override these if you
 # are changing the admin tenant/project or user.
 openstack_auth:
-  auth_url: "{{ keystone_admin_url }}"
+  auth_url: "{{ keystone_internal_url }}"
   username: "{{ keystone_admin_user }}"
   password: "{{ keystone_admin_password }}"
   user_domain_name: "{{ default_user_domain_name }}"
