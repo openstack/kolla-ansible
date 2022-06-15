@@ -93,9 +93,6 @@
               echo "ansible-collection-kolla checked out to:"
               git log --pretty=oneline  -1
             chdir: "{{ ansible_collection_kolla_src_dir }}"
-          # TODO(mgoddard): Do this unconditionally when previous_release is
-          # yoga.
-          when: previous_release != 'xena'
 
         - name: checkout the previous kolla-ansible branch
           shell:
@@ -205,7 +202,6 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
-    # TODO(mgoddard): Do this unconditionally when previous_release is yoga.
     - block:
         - name: slurp requirements.yml
           slurp:
@@ -223,7 +219,6 @@
               type: dir
             new_requirements:
               collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
-      when: not is_upgrade or previous_release != 'xena'
 
     - name: ensure /etc/ansible exists
       file:
@@ -252,11 +247,9 @@
         ansible{{ ansible_version_constraint }}
         ara<1.0.0
 
-    # TODO(mgoddard): do this unconditionally when previous release is Yoga.
     - name: install Ansible collections
       command: >-
         kolla-ansible install-deps
-      when: not is_upgrade or previous_release != 'xena'
 
     - name: get ARA callback plugin path
       command: "python3 -m ara.setup.callback_plugins"
@@ -577,9 +570,12 @@
               git log --pretty=oneline  -1
             chdir: "{{ ansible_collection_kolla_src_dir }}"
 
+        # NOTE(frickler): We modified requirements.yml, need to revert the
+        # changes in order for the branch checkout to succeed
         - name: checkout the current kolla-ansible branch
           shell:
             cmd: |
+              git checkout requirements.yml
               git checkout {{ zuul.branch }}
               echo "kolla-ansible checked out to:"
               git log --pretty=oneline  -1
