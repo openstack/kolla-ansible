@@ -688,19 +688,27 @@
         tags: ovs-dpdk,
         when: "(enable_openvswitch | bool) and (enable_ovs_dpdk | bool)"}
 
-- name: Apply role ovn
+- name: Apply role ovn-db
   gather_facts: false
   hosts:
-    - ovn-controller
     - ovn-nb-db
     - ovn-northd
     - ovn-sb-db
     - '&enable_ovn_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
-    - { role: ovn,
-        tags: ovn,
-        when: enable_ovn | bool }
+    - { role: ovn-db,
+        tags: [ovn, ovn-db] }
+
+- name: Apply role ovn-controller
+  gather_facts: false
+  hosts:
+    - ovn-controller
+    - '&enable_ovn_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: ovn-controller,
+        tags: [ovn, ovn-controller] }
 
 - name: Apply role neutron
   gather_facts: false

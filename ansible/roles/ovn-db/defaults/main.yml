@@ -1,12 +1,5 @@
 ---
-ovn_services:
-  ovn-controller:
-    container_name: ovn_controller
-    group: ovn-controller
-    enabled: true
-    image: "{{ ovn_controller_image_full }}"
-    volumes: "{{ ovn_controller_default_volumes + ovn_controller_extra_volumes }}"
-    dimensions: "{{ ovn_controller_dimensions }}"
+ovn_db_services:
   ovn-northd:
     container_name: ovn_northd
     group: ovn-northd
@@ -36,10 +29,6 @@ ovn_services:
 ovn_install_type: "{{ kolla_install_type }}"
 ovn_tag: "{{ openstack_tag }}"
 
-ovn_controller_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ovn_install_type }}-ovn-controller"
-ovn_controller_tag: "{{ ovn_tag }}"
-ovn_controller_image_full: "{{ ovn_controller_image }}:{{ ovn_controller_tag }}"
-
 ovn_northd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ovn_install_type }}-ovn-northd"
 ovn_northd_tag: "{{ ovn_tag }}"
 ovn_northd_image_full: "{{ ovn_northd_image }}:{{ ovn_northd_tag }}"
@@ -52,16 +41,10 @@ ovn_sb_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 ovn_sb_db_tag: "{{ ovn_tag }}"
 ovn_sb_db_image_full: "{{ ovn_sb_db_image }}:{{ ovn_sb_db_tag }}"
 
-ovn_controller_dimensions: "{{ default_container_dimensions }}"
 ovn_northd_dimensions: "{{ default_container_dimensions }}"
 ovn_nb_db_dimensions: "{{ default_container_dimensions }}"
 ovn_sb_db_dimensions: "{{ default_container_dimensions }}"
 
-ovn_controller_default_volumes:
-  - "{{ node_config_directory }}/ovn-controller/:{{ container_config_directory }}/:ro"
-  - "/run/openvswitch:/run/openvswitch:shared"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "kolla_logs:/var/log/kolla/"
 ovn_northd_default_volumes:
   - "{{ node_config_directory }}/ovn-northd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -77,11 +60,10 @@ ovn_sb_db_default_volumes:
   - "ovn_sb_db:/var/lib/openvswitch/ovn-sb/"
   - "kolla_logs:/var/log/kolla/"
 
-ovn_extra_volumes: "{{ default_extra_volumes }}"
-ovn_controller_extra_volumes: "{{ ovn_extra_volumes }}"
-ovn_northd_extra_volumes: "{{ ovn_extra_volumes }}"
-ovn_nb_db_extra_volumes: "{{ ovn_extra_volumes }}"
-ovn_sb_db_extra_volumes: "{{ ovn_extra_volumes }}"
+ovn_db_extra_volumes: "{{ default_extra_volumes + (ovn_extra_volumes | default([])) }}"
+ovn_northd_extra_volumes: "{{ ovn_db_extra_volumes }}"
+ovn_nb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
+ovn_sb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
 
 #####
 # OVN
