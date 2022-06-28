@@ -110,6 +110,411 @@ class TestFilters(unittest.TestCase):
                           filters.service_mapped_to_host, self.context,
                           service)
 
+    def test_extract_haproxy_services_empty_dict(self):
+        example_service = {}
+        actual = filters.extract_haproxy_services(
+            self.context, example_service)
+        # No change
+        self.assertDictEqual({}, actual)
+
+    def test_extract_haproxy_services_no_haproxy_dict(self):
+        example_service = {
+            "keystone-ssh": {
+                "container_name": "keystone_ssh",
+                "dimensions": {},
+                "enabled": True,
+                "group": "keystone",
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_listen sshd 8023"
+                    ],
+                    "timeout": "30"
+                },
+                "image": "keystone-ssh:latest",
+                "volumes": [
+                    "/etc/kolla/keystone-ssh/:/var/lib/kolla/config_files/:ro",
+                    "/etc/localtime:/etc/localtime:ro",
+                    "",
+                    "kolla_logs:/var/log/kolla/",
+                    "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+                ]
+            }
+        }
+        actual = filters.extract_haproxy_services(self.context,
+                                                  example_service)
+        self.assertDictEqual({}, actual)
+
+    def test_extract_haproxy_services_haproxy_dict(self):
+        example_service = {
+            "keystone": {
+                "container_name": "keystone",
+                "dimensions": {},
+                "enabled": True,
+                "group": "keystone",
+                "haproxy": {
+                    "keystone_admin": {
+                        "enabled": True,
+                        "external": False,
+                        "listen_port": "35357",
+                        "mode": "http",
+                        "port": "35357",
+                        "tls_backend": True
+                    },
+                    "keystone_external": {
+                        "backend_http_extra": [],
+                        "enabled": True,
+                        "external": True,
+                        "listen_port": "5000",
+                        "mode": "http",
+                        "port": "5000",
+                        "tls_backend": True
+                    },
+                    "keystone_internal": {
+                        "backend_http_extra": [],
+                        "enabled": True,
+                        "external": False,
+                        "listen_port": "5000",
+                        "mode": "http",
+                        "port": "5000",
+                        "tls_backend": True
+                    }
+                },
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_curl https://1.2.3.4:5000"
+                    ],
+                    "timeout": "30"
+                },
+                "image": "keystone:latest",
+                "volumes": [
+                    "/etc/kolla/keystone/:/var/lib/kolla/config_files/:ro",
+                    "/etc/localtime:/etc/localtime:ro",
+                    "",
+                    "",
+                    "kolla_logs:/var/log/kolla/",
+                    "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+                ]
+            }
+        }
+        expected = {
+            'keystone_admin': {
+                'enabled': True,
+                'external': False,
+                'listen_port': '35357',
+                'mode': 'http',
+                'port': '35357',
+                'tls_backend': True
+            },
+            'keystone_external': {
+                'backend_http_extra': [],
+                'enabled': True,
+                'external': True,
+                'listen_port': '5000',
+                'mode': 'http',
+                'port': '5000',
+                'tls_backend': True
+            },
+            'keystone_internal': {
+                'backend_http_extra': [],
+                'enabled': True,
+                'external': False,
+                'listen_port': '5000',
+                'mode': 'http',
+                'port': '5000',
+                'tls_backend': True
+            }
+        }
+        actual = filters.extract_haproxy_services(self.context,
+                                                  example_service)
+        self.assertDictEqual(expected, actual)
+
+    def test_extract_two_services_with_haproxy_dict(self):
+        example_service = {
+            "glance-api": {
+                "container_name": "glance_api",
+                "dimensions": {},
+                "enabled": True,
+                "environment": {
+                    "http_proxy": "",
+                    "https_proxy": "",
+                    "no_proxy": "127.0.0.1,localhost,1.2.3.4,1.2.3.4"
+                },
+                "group": "glance-api",
+                "haproxy": {
+                    "glance_api": {
+                        "backend_http_extra": [
+                            "timeout server 6h"
+                        ],
+                        "custom_member_list": [
+                            "server someserver 1.2.3.4:9292 "
+                            "check inter 2000 rise 2 fall 5",
+                            ""
+                        ],
+                        "enabled": False,
+                        "external": False,
+                        "frontend_http_extra": [
+                            "timeout client 6h"
+                        ],
+                        "mode": "http",
+                        "port": "9292"
+                    },
+                    "glance_api_external": {
+                        "backend_http_extra": [
+                            "timeout server 6h"
+                        ],
+                        "custom_member_list": [
+                            "server someserver 1.2.3.4:9292 "
+                            "check inter 2000 rise 2 fall 5",
+                            ""
+                        ],
+                        "enabled": False,
+                        "external": True,
+                        "frontend_http_extra": [
+                            "timeout client 6h"
+                        ],
+                        "mode": "http",
+                        "port": "9292"
+                    }
+                },
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_curl http://localhost:9292"
+                    ],
+                    "timeout": "30"
+                },
+                "host_in_groups": True,
+                "image": "centos-source-glance-api:latest",
+                "privileged": False,
+                "volumes": [
+                    "/etc/localtime:/etc/localtime:ro",
+                    "",
+                    "glance:/var/lib/glance/",
+                    "",
+                    "kolla_logs:/var/log/kolla/",
+                    "",
+                    ""
+                ]
+            },
+            "glance-tls-proxy": {
+                "container_name": "glance_tls_proxy",
+                "dimensions": {},
+                "enabled": True,
+                "group": "glance-api",
+                "haproxy": {
+                    "glance_tls_proxy": {
+                        "backend_http_extra": [
+                            "timeout server 6h"
+                        ],
+                        "custom_member_list": [
+                            "server someserver 1.2.3.4:9292 "
+                            "check inter 2000 rise 2 fall 5 ssl verify "
+                            "required ca-file ca-bundle.trust.crt",
+                            ""
+                        ],
+                        "enabled": True,
+                        "external": False,
+                        "frontend_http_extra": [
+                            "timeout client 6h"
+                        ],
+                        "mode": "http",
+                        "port": "9292",
+                        "tls_backend": "yes"
+                    },
+                    "glance_tls_proxy_external": {
+                        "backend_http_extra": [
+                            "timeout server 6h"
+                        ],
+                        "custom_member_list": [
+                            "server someserver 1.2.3.4:9292 "
+                            "check inter 2000 rise 2 fall 5 ssl verify "
+                            "required ca-file ca-bundle.trust.crt",
+                            ""
+                        ],
+                        "enabled": True,
+                        "external": True,
+                        "frontend_http_extra": [
+                            "timeout client 6h"
+                        ],
+                        "mode": "http",
+                        "port": "9292",
+                        "tls_backend": "yes"
+                    }
+                },
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_curl -u openstack:asdf 1.2.3.4:9293"
+                    ],
+                    "timeout": "30"
+                },
+                "host_in_groups": True,
+                "image": "centos-source-haproxy:latest",
+                "volumes": [
+                    "/etc/localtime:/etc/localtime:ro",
+                    "",
+                    "kolla_logs:/var/log/kolla/"
+                ]
+            }
+        }
+        expected = {
+            "glance_api": {
+                "backend_http_extra": [
+                    "timeout server 6h"
+                ],
+                'custom_member_list': ['server someserver '
+                                       '1.2.3.4:9292 check inter 2000 '
+                                       'rise 2 fall 5',
+                                       ''],
+                "enabled": False,
+                "external": False,
+                "frontend_http_extra": [
+                    "timeout client 6h"
+                ],
+                "mode": "http",
+                "port": "9292"
+            },
+            "glance_api_external": {
+                "backend_http_extra": [
+                    "timeout server 6h"
+                ],
+                'custom_member_list': ['server someserver '
+                                       '1.2.3.4:9292 check inter 2000 '
+                                       'rise 2 fall 5',
+                                       ''],
+                "enabled": False,
+                "external": True,
+                "frontend_http_extra": [
+                    "timeout client 6h"
+                ],
+                "mode": "http",
+                "port": "9292"
+            },
+            "glance_tls_proxy": {
+                "backend_http_extra": [
+                    "timeout server 6h"
+                ],
+                'custom_member_list': ['server someserver 1.2.3.4:9292 '
+                                       'check inter 2000 rise 2 fall 5 '
+                                       'ssl verify required ca-file '
+                                       'ca-bundle.trust.crt',
+                                       ''],
+                "enabled": True,
+                "external": False,
+                "frontend_http_extra": [
+                    "timeout client 6h"
+                ],
+                "mode": "http",
+                "port": "9292",
+                "tls_backend": "yes"
+            },
+            "glance_tls_proxy_external": {
+                "backend_http_extra": [
+                    "timeout server 6h"
+                ],
+                'custom_member_list': ['server someserver 1.2.3.4:9292 '
+                                       'check inter 2000 rise 2 fall 5 '
+                                       'ssl verify required ca-file '
+                                       'ca-bundle.trust.crt',
+                                       ''],
+
+                "enabled": True,
+                "external": True,
+                "frontend_http_extra": [
+                    "timeout client 6h"
+                ],
+                "mode": "http",
+                "port": "9292",
+                "tls_backend": "yes"
+            }
+        }
+        actual = filters.extract_haproxy_services(self.context,
+                                                  example_service)
+        self.assertDictEqual(expected, actual)
+
+    def test_extract_haproxy_services_haproxy_dict_duplicate(self):
+        example_service = {
+            "keystone": {
+                "container_name": "keystone",
+                "dimensions": {},
+                "enabled": True,
+                "group": "keystone",
+                "haproxy": {
+                    "keystone_admin": {
+                        "enabled": True,
+                        "external": False,
+                        "listen_port": "35357",
+                        "mode": "http",
+                        "port": "35357",
+                        "tls_backend": True
+                    },
+                },
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_curl https://1.2.3.4:5000"
+                    ],
+                    "timeout": "30"
+                },
+                "image": "keystone:latest",
+                "volumes": [
+                    "/etc/kolla/keystone/:/var/lib/kolla/config_files/:ro",
+                    "kolla_logs:/var/log/kolla/"
+                ]
+            },
+            "keystone-ssh": {
+                "container_name": "keystone_ssh",
+                "dimensions": {},
+                "enabled": True,
+                "group": "keystone",
+                "haproxy": {
+                    "keystone_admin": {
+                        "enabled": True,
+                        "external": False,
+                        "listen_port": "35357",
+                        "mode": "http",
+                        "port": "35357",
+                        "tls_backend": True
+                    },
+                },
+                "healthcheck": {
+                    "interval": "30",
+                    "retries": "3",
+                    "start_period": "5",
+                    "test": [
+                        "CMD-SHELL",
+                        "healthcheck_listen sshd 8023"
+                    ],
+                    "timeout": "30"
+                },
+                "image": "keystone-ssh:latest",
+                "volumes": [
+                    "/etc/kolla/keystone-ssh/:/var/lib/kolla/config_files/:ro",
+                    "kolla_logs:/var/log/kolla/"
+                ]
+            }
+        }
+        self.assertRaises(exception.FilterError,
+                          filters.extract_haproxy_services,
+                          self.context, example_service)
+
     @mock.patch.object(filters, 'service_enabled')
     @mock.patch.object(filters, 'service_mapped_to_host')
     def test_service_enabled_and_mapped_to_host(self, mock_mapped,

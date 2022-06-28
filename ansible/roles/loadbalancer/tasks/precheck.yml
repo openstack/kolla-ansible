@@ -838,3 +838,23 @@
     - inventory_hostname in groups['loadbalancer']
     - haproxy_stat.find('vitrage_api') == -1
     - haproxy_vip_prechecks
+
+- name: Firewalld checks
+  block:
+    - name: Check if firewalld is running  # noqa command-instead-of-module
+      become: true
+      command:
+        cmd: "systemctl is-active firewalld"
+      register: firewalld_is_active
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if firewalld is not running
+      fail:
+        msg: >-
+          firewalld is not running.
+          Please install and configure firewalld.
+      when:
+        - firewalld_is_active.rc != 0
+  when:
+    - enable_external_api_firewalld | bool
