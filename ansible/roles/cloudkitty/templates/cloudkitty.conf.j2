@@ -56,11 +56,6 @@ collector = {{ cloudkitty_collector_backend }}
 metrics_conf = /etc/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}
 {% endif %}
 
-[fetcher_keystone]
-keystone_version = 3
-auth_section = keystone_authtoken
-region_name = {{ openstack_region_name }}
-
 {% if cloudkitty_collector_backend == "gnocchi" %}
 [collector_gnocchi]
 auth_section = keystone_authtoken
@@ -82,6 +77,16 @@ cafile = {{ cloudkitty_prometheus_cafile }}
 {% endif %}
 
 insecure = {{ cloudkitty_prometheus_insecure_connections }}
+{% endif %}
+
+[fetcher]
+backend = {{ cloudkitty_fetcher_backend }}
+
+{% if cloudkitty_fetcher_backend == "keystone" %}
+[fetcher_keystone]
+keystone_version = 3
+auth_section = keystone_authtoken
+region_name = {{ openstack_region_name }}
 {% endif %}
 
 [api]

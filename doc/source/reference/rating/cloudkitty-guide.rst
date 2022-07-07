@@ -51,6 +51,17 @@ Alternatively, to use the Monasca collector backend:
 
    cloudkitty_collector_backend: monasca
 
+CloudKitty Fetcher Backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CloudKitty natively supports multiple fetcher backends.
+
+By default Kolla Ansible uses the ``keystone`` backend. This can be changed
+using the ``cloudkitty_fetcher_backend`` option.
+
+You will need to provide extra configuration for non-default fetchers in
+``/etc/kolla/config/cloudkitty.conf``.
+
 Cloudkitty Storage Backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
