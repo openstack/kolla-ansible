@@ -59,7 +59,11 @@ CloudKitty natively supports multiple fetcher backends.
 By default Kolla Ansible uses the ``keystone`` backend. This can be changed
 using the ``cloudkitty_fetcher_backend`` option.
 
-You will need to provide extra configuration for non-default fetchers in
+Kolla Ansible also supports the ``prometheus`` backend type, which is
+configured to discover scopes from the ``id`` label of the
+``openstack_identity_project_info`` metric of OpenStack exporter.
+
+You will need to provide extra configuration for unsupported fetchers in
 ``/etc/kolla/config/cloudkitty.conf``.
 
 Cloudkitty Storage Backend

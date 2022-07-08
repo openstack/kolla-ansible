@@ -89,6 +89,19 @@ auth_section = keystone_authtoken
 region_name = {{ openstack_region_name }}
 {% endif %}
 
+{% if cloudkitty_fetcher_backend == "prometheus" %}
+[fetcher_prometheus]
+metric = openstack_identity_project_info
+scope_attribute = id
+prometheus_url = {{ cloudkitty_prometheus_url }}
+
+{% if cloudkitty_prometheus_cafile is defined %}
+cafile = {{ cloudkitty_prometheus_cafile }}
+{% endif %}
+
+insecure = {{ cloudkitty_prometheus_insecure_connections }}
+{% endif %}
+
 [api]
 host_ip = {{ api_interface_address }}
 port = {{ cloudkitty_api_port }}
