@@ -54,3 +54,15 @@
     - enable_cinder | bool
     - enable_cinder_backend_lvm | bool
     - inventory_hostname in groups['cinder-volume']
+
+- name: Check if S3 configurations are defined
+  assert:
+    that:
+      - vars[item] is defined
+    msg: "Cinder backup S3 backend is enabled, either the {{ item }} or {{ item | replace('cinder_backup_','') }} variable must be defined."
+  with_items:
+    - cinder_backup_s3_url
+    - cinder_backup_s3_bucket
+    - cinder_backup_s3_access_key
+    - cinder_backup_s3_secret_key
+  when: cinder_backup_driver == "s3"

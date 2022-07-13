@@ -201,6 +201,34 @@ in Kolla, the following parameter must be specified in ``globals.yml``:
 All configuration for custom NFS backend should be performed
 via ``cinder.conf`` in config overrides directory.
 
+Cinder-Backup with S3 Backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuring Cinder-Backup for S3 includes the following steps:
+
+#. Enable Cinder-Backup S3 backend in ``globals.yml``:
+
+.. code-block:: yaml
+
+   cinder_backup_driver: "s3"
+
+#. Configure S3 connection details in ``/etc/kolla/globals.yml``:
+
+   * ``cinder_backup_s3_url`` (example: ``http://127.0.0.1:9000``)
+   * ``cinder_backup_s3_access_key`` (example: ``minio``)
+   * ``cinder_backup_s3_bucket`` (example: ``cinder``)
+   * ``cinder_backup_s3_secret_key`` (example: ``admin``)
+
+#. If you wish to use a single S3 backend for all supported services,
+use the following variables:
+
+   * ``s3_url``
+   * ``s3_access_key``
+   * ``s3_glance_bucket``
+   * ``s3_secret_key``
+
+   All Cinder-Backup S3 configurations use these options as default values.
+
 Customizing backend names in cinder.conf
 ----------------------------------------
 
