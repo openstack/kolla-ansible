@@ -24,7 +24,7 @@ fi
 if [[ "${containers_to_kill}" =~ "openvswitch_vswitchd" ]] && [[ "${containers_running}" =~ "neutron_openvswitch_agent" ]]; then
 echo "Removing ovs bridge..."
 (sudo docker exec -u root neutron_openvswitch_agent neutron-ovs-cleanup \
-    --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini \
+    --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/openvswitch_agent.ini \
     --ovs_all_ports) > /dev/null
 (sudo docker exec -it openvswitch_vswitchd bash -c 'for br in `ovs-vsctl list-br`;do ovs-vsctl --if-exists del-br $br;done') > /dev/null
 fi
