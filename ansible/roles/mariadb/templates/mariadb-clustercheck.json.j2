@@ -1,13 +1,6 @@
 {
-    "command": "/usr/sbin/xinetd -dontfork -filelog /var/log/kolla/mariadb/xinetd.log",
-    "config_files": [
-        {
-            "source": "{{ container_config_directory }}/clustercheck",
-            "dest": "/etc/xinetd.d/clustercheck",
-            "owner": "root",
-            "perm": "0600"
-        }
-    ],
+    "command": "socat {% if network_address_family == 'ipv6' %}-6{% endif %} -d -lf/var/log/kolla/mariadb/mariadb-clustercheck.log tcp-l:{{ mariadb_clustercheck_port }},fork,bind={{ api_interface_address }} EXEC:clustercheck",
+    "config_files": [],
     "permissions": [
         {
             "path": "/var/log/kolla/mariadb",
