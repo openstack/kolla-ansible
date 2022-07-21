@@ -2,8 +2,12 @@ global:
   scrape_interval: {{ prometheus_scrape_interval }}
   scrape_timeout: 10s
   evaluation_interval: 15s
+{% if prometheus_external_labels %}
   external_labels:
-    monitor: 'kolla'
+{% for label, value in prometheus_external_labels.items() %}
+    {{ label }}: {{ value }}
+{% endfor %}
+{% endif %}
 
 {% if prometheus_alert_rules.files is defined and prometheus_alert_rules.files | length  > 0 %}
 rule_files:
