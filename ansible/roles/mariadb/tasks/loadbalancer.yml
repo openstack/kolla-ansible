@@ -38,19 +38,9 @@
   failed_when: False
   run_once: True
 
-- name: "Configure haproxy for {{ project_name }}"
+- name: "Configure loadbalancer for {{ project_name }}"
   import_role:
-    name: haproxy-config
+    name: loadbalancer-config
   vars:
     project_services: "{{ mariadb_services }}"
   tags: always
-  when: not enable_proxysql | bool
-
-- name: "Configure proxysql for {{ project_name }}"
-  import_role:
-    name: proxysql-config
-  vars:
-    project: "mariadb"
-    project_database_shard: "{{ mariadb_shards_info }}"
-  tags: always
-  when: enable_proxysql | bool
