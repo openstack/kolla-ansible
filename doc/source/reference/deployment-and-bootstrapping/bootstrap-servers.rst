@@ -196,18 +196,21 @@ file. Example:
     }
 
 
-Disabling firewalls
-~~~~~~~~~~~~~~~~~~~
+Enabling/Disabling firewalls
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Kolla Ansible does not support configuration of host firewalls, and instead
-attempts to disable them.
+Kolla Ansible supports configuration of host firewalls.
 
-On Debian family systems where the UFW firewall is enabled, a default policy
-will be added to allow all traffic.
+Currently only Firewalld is supported.
 
-On Red Hat family systems where firewalld is installed, it will be disabled.
+On Debian family systems Firewalld will need to be installed beforehand.
 
-This behaviour can be avoided by setting ``disable_firewall`` to ``false``.
+On Red Hat family systems firewalld should be installed by default.
+
+To enable configuration of the system firewall set ``disable_firewall``
+to ``false`` and set ``enable_external_api_firewalld`` to ``true``.
+
+For further information. See :doc:`../../user/security`
 
 Creation of Python virtual environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
