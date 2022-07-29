@@ -23,6 +23,7 @@
     - kolla_action != "config"
   listen:
     - Restart haproxy container
+    - Restart proxysql container
     - Restart keepalived container
 
 - name: Group HA nodes by status
@@ -35,6 +36,7 @@
     - kolla_action != "config"
   listen:
     - Restart haproxy container
+    - Restart proxysql container
     - Restart keepalived container
 
 - name: Stop backup keepalived container
@@ -71,6 +73,26 @@
     - Restart haproxy container
     - Restart keepalived container
 
+- name: Stop backup proxysql container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    # NOTE(kevko): backup node might not have proxysql yet - ignore
+    ignore_missing: true
+    common_options: "{{ docker_common_options }}"
+    name: "proxysql"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+  listen:
+    # NOTE(kevko): We need the following "Restart haproxy container" as
+    # there is nothing to trigger "Restart proxysql container" when
+    # proxysql is deconfigured.
+    - Restart haproxy container
+    - Restart proxysql container
+    - Restart keepalived container
+
 - name: Start backup haproxy container
   vars:
     service_name: "haproxy"
@@ -101,6 +123,40 @@
     host: "{{ api_interface_address }}"
     port: "{{ haproxy_monitor_port }}"
 
+- name: Start backup proxysql container
+  vars:
+    service_name: "proxysql"
+    service: "{{ loadbalancer_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_False is defined
+    - inventory_hostname in groups.kolla_ha_is_master_False
+    - service.enabled | bool
+  listen:
+    # NOTE(kevko): We need the following "Restart haproxy container" as
+    # there is nothing to trigger "Restart proxysql container" when
+    # proxysql is configured.
+    - Restart haproxy container
+    - Restart proxysql container
+    - Restart keepalived container
+  notify:
+    - Wait for backup proxysql to start
+
+- name: Wait for backup proxysql to start
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ proxysql_admin_port }}"
+
 - name: Start backup keepalived container
   vars:
     service_name: "keepalived"
@@ -124,7 +180,7 @@
   notify:
     - Wait for virtual IP to appear
 
-# NOTE(yoctozepto): This is to ensure haproxy can close any open connections
+# NOTE(yoctozepto): This is to ensure haproxy, proxysql can close any open connections
 # to the VIP address.
 - name: Stop master haproxy container
   become: true
@@ -139,6 +195,22 @@
     - groups.kolla_ha_is_master_True is defined
     - inventory_hostname in groups.kolla_ha_is_master_True
   listen:
+    - Restart haproxy container
+    - Restart keepalived container
+
+- name: Stop master proxysql container
+  become: true
+  kolla_docker:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "proxysql"
+    ignore_missing: true
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+  listen:
+    - Restart proxysql container
     - Restart keepalived container
 
 - name: Stop master keepalived container
@@ -184,6 +256,36 @@
     host: "{{ api_interface_address }}"
     port: "{{ haproxy_monitor_port }}"
 
+- name: Start master proxysql container
+  vars:
+    service_name: "proxysql"
+    service: "{{ loadbalancer_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"
+    - groups.kolla_ha_is_master_True is defined
+    - inventory_hostname in groups.kolla_ha_is_master_True
+    - service.enabled | bool
+  listen:
+    - Restart proxysql container
+    - Restart keepalived container
+  notify:
+    - Wait for master proxysql to start
+
+- name: Wait for master proxysql to start
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ proxysql_admin_port }}"
+
 - name: Start master keepalived container
   vars:
     service_name: "keepalived"
@@ -214,6 +316,18 @@
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ haproxy_monitor_port }}"
+  when:
+    - service.enabled | bool
+  listen:
+    - Wait for virtual IP to appear
+
+- name: Wait for proxysql to listen on VIP
+  vars:
+    service_name: "proxysql"
+    service: "{{ loadbalancer_services[service_name] }}"
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ proxysql_admin_port }}"
   when:
     - service.enabled | bool
   listen:

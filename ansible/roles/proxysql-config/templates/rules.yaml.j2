@@ -1,0 +1,18 @@
+# This configuration file is used to configure proxysql rules,
+# in our case we define the schemaname and the mysql galera cluster
+# group which query is routed to.
+#
+# Query rules are a very powerful vehicle to control traffic passing
+# through ProxySQL and are configured in the mysql_query_rules table:
+#
+# ProxySQL Admin> SHOW CREATE TABLE mysql_query_rules\G
+#
+# https://proxysql.com/documentation/main-runtime/#mysql_query_rules
+mysql_query_rules:
+{% for rule in proxysql_project_database_shard['rules'] %}
+{% set WRITER_GROUP = rule['shard_id'] | int * 10 %}
+  - schemaname: "{{ rule['schema'] }}"
+    destination_hostgroup: {{ WRITER_GROUP }}
+    apply: 1
+    active: 1
+{% endfor %}
