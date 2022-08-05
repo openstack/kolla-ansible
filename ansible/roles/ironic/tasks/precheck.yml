@@ -11,7 +11,9 @@
     name:
       - ironic_api
       - ironic_inspector
+      # TODO(yoctozepto): Remove ironic_ipxe entry in Zed.
       - ironic_ipxe
+      - ironic_http
   register: container_facts
 
 - name: Checking free port for Ironic API
@@ -36,17 +38,18 @@
     - container_facts['ironic_inspector'] is not defined
     - inventory_hostname in groups['ironic-inspector']
 
-- name: Checking free port for Ironic iPXE
+- name: Checking free port for Ironic HTTP server
   wait_for:
     host: "{{ api_interface_address }}"
-    port: "{{ ironic_ipxe_port }}"
+    port: "{{ ironic_http_port }}"
     connect_timeout: 1
     timeout: 1
     state: stopped
   when:
-    - enable_ironic_ipxe | bool
+    # TODO(yoctozepto): Remove ironic_ipxe entry in Zed.
     - container_facts['ironic_ipxe'] is not defined
-    - inventory_hostname in groups['ironic-ipxe']
+    - container_facts['ironic_http'] is not defined
+    - inventory_hostname in groups['ironic-http']
 
 - name: Checking ironic-agent files exist for Ironic Inspector
   stat:
@@ -58,18 +61,17 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - (not enable_ironic_ipxe | bool and inventory_hostname in groups['ironic-pxe']) or
-        (enable_ironic_ipxe | bool and inventory_hostname in groups['ironic-ipxe'])
+    - (not ironic_dnsmasq_serve_ipxe | bool and inventory_hostname in groups['ironic-tftp']) or
+        (ironic_dnsmasq_serve_ipxe | bool and inventory_hostname in groups['ironic-http'])
     - not enable_ironic_pxe_uefi | bool
   with_items:
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
 
-- name: Ensure dnsmasq_dhcp_range configured for Ironic Dnsmasq
+- name: Ensure ironic_dnsmasq_dhcp_ranges is configured
   fail:
     msg: >
-      ironic_dnsmasq_dhcp_range must be set when enable ironic
+      ironic_dnsmasq_dhcp_ranges must be a list
   connection: local
   run_once: True
-  when:
-    - ironic_dnsmasq_dhcp_range is none
+  when: not ironic_dnsmasq_dhcp_ranges is sequence

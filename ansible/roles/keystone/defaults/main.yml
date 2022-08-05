@@ -1,6 +1,4 @@
 ---
-project_name: "keystone"
-
 keystone_services:
   keystone:
     container_name: "keystone"
@@ -27,8 +25,10 @@ keystone_services:
         port: "{{ keystone_public_port }}"
         listen_port: "{{ keystone_public_listen_port }}"
         backend_http_extra: "{{ ['balance source'] if enable_keystone_federation | bool else [] }}"
+      # NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
+      # TODO(yoctozepto): Remove after Zed.
       keystone_admin:
-        enabled: "{{ enable_keystone }}"
+        enabled: "{{ enable_keystone and kolla_action == 'upgrade' }}"
         mode: "http"
         external: false
         tls_backend: "{{ keystone_enable_tls_backend }}"
@@ -37,7 +37,7 @@ keystone_services:
   keystone-ssh:
     container_name: "keystone_ssh"
     group: "keystone"
-    enabled: "{{ keystone_token_provider == 'fernet' }}"
+    enabled: true
     image: "{{ keystone_ssh_image_full }}"
     volumes:
       - "{{ node_config_directory }}/keystone-ssh/:{{ container_config_directory }}/:ro"
@@ -50,7 +50,7 @@ keystone_services:
   keystone-fernet:
     container_name: "keystone_fernet"
     group: "keystone"
-    enabled: "{{ keystone_token_provider == 'fernet' }}"
+    enabled: true
     image: "{{ keystone_fernet_image_full }}"
     volumes:
       - "{{ node_config_directory }}/keystone-fernet/:{{ container_config_directory }}/:ro"
@@ -79,18 +79,17 @@ keystone_groupname: "keystone"
 ####################
 # Docker
 ####################
-keystone_install_type: "{{ kolla_install_type }}"
 keystone_tag: "{{ openstack_tag }}"
 
-keystone_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ keystone_install_type }}-keystone"
+keystone_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone"
 keystone_service_tag: "{{ keystone_tag }}"
 keystone_image_full: "{{ keystone_image }}:{{ keystone_service_tag }}"
 
-keystone_fernet_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ keystone_install_type }}-keystone-fernet"
+keystone_fernet_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone-fernet"
 keystone_fernet_tag: "{{ keystone_tag }}"
 keystone_fernet_image_full: "{{ keystone_fernet_image }}:{{ keystone_fernet_tag }}"
 
-keystone_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ keystone_install_type }}-keystone-ssh"
+keystone_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone-ssh"
 keystone_ssh_tag: "{{ keystone_tag }}"
 keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 
@@ -143,7 +142,7 @@ keystone_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/keystone/keystone:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/keystone' if keystone_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{% if keystone_token_provider == 'fernet' %}keystone_fernet_tokens:/etc/keystone/fernet-keys{% endif %}"
+  - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
 
 keystone_extra_volumes: "{{ default_extra_volumes }}"
 
@@ -187,7 +186,7 @@ keystone_ks_services:
     type: "identity"
     description: "Openstack Identity Service"
     endpoints:
-      - {'interface': 'admin', 'url': '{{ keystone_admin_url }}'}
+      - {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
       - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
       - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
 
@@ -214,4 +213,8 @@ keystone_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kol
 keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol','equalto','openid') | list | count > 0 }}"
 keystone_should_remove_attribute_mappings: False
 keystone_should_remove_identity_providers: False
+keystone_federation_oidc_response_type: "id_token"
 keystone_federation_oidc_scopes: "openid email profile"
+
+# OIDC caching
+keystone_oidc_enable_memcached: "{{ enable_memcached }}"

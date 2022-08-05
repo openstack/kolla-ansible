@@ -1,0 +1,37 @@
+{% set pxe_dir = ('/var/lib/ironic/tftpboot/grub' if kolla_base_distro in ['ubuntu', 'debian'] else '/var/lib/ironic/tftpboot/EFI/centos') if enable_ironic_pxe_uefi | bool else '/var/lib/ironic/tftpboot/pxelinux.cfg' %}
+{% set pxe_cfg = 'grub.cfg' if enable_ironic_pxe_uefi | bool else 'default' %}
+
+{
+    "command": "/usr/sbin/in.tftpd --verbose --foreground --user root --address 0.0.0.0:69 --map-file /map-file /var/lib/ironic/tftpboot",
+    "config_files": [
+{% if not ironic_dnsmasq_serve_ipxe | bool and groups['ironic-inspector'] | length > 0 %}
+{% if not enable_ironic_pxe_uefi | bool %}
+        {
+            "source": "{{ container_config_directory }}/ironic-agent.kernel",
+            "dest": "/var/lib/ironic/tftpboot/ironic-agent.kernel",
+            "owner": "root",
+            "perm": "0644"
+        },
+        {
+            "source": "{{ container_config_directory }}/ironic-agent.initramfs",
+            "dest": "/var/lib/ironic/tftpboot/ironic-agent.initramfs",
+            "owner": "root",
+            "perm": "0644"
+        },
+{% endif %}
+        {
+            "source": "{{ container_config_directory }}/default",
+            "dest": "{{ pxe_dir }}/{{ pxe_cfg }}",
+            "owner": "root",
+            "perm": "0644"
+        }
+{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "{{ pxe_dir }}",
+            "owner": "ironic:ironic",
+            "recurse": true
+        }
+    ]
+}

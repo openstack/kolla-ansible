@@ -1,6 +1,4 @@
 ---
-project_name: "neutron"
-
 neutron_services:
   neutron-server:
     container_name: "neutron_server"
@@ -13,13 +11,13 @@ neutron_services:
     healthcheck: "{{ neutron_server_healthcheck }}"
     haproxy:
       neutron_server:
-        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool}}"
+        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool }}"
         mode: "http"
         external: false
         port: "{{ neutron_server_port }}"
         listen_port: "{{ neutron_server_listen_port }}"
       neutron_server_external:
-        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool}}"
+        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool }}"
         mode: "http"
         external: true
         port: "{{ neutron_server_port }}"
@@ -71,7 +69,7 @@ neutron_services:
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3'] or neutron_ovn_dhcp_agent | bool }}"
+    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] or neutron_ovn_dhcp_agent | bool }}"
     group: "neutron-dhcp-agent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-dhcp-agent'] }}"
     volumes: "{{ neutron_dhcp_agent_default_volumes + neutron_dhcp_agent_extra_volumes }}"
@@ -81,7 +79,7 @@ neutron_services:
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] }}"
+    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] }}"
     environment:
       KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
@@ -96,7 +94,7 @@ neutron_services:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_sriov_agent_default_volumes + neutron_sriov_agent_extra_volumes }}"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
@@ -104,7 +102,7 @@ neutron_services:
   neutron-mlnx-agent:
     container_name: "neutron_mlnx_agent"
     image: "{{ neutron_mlnx_agent_image_full }}"
-    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_mlnx_agent_default_volumes + neutron_mlnx_agent_extra_volumes }}"
     dimensions: "{{ neutron_mlnx_agent_dimensions }}"
@@ -112,7 +110,7 @@ neutron_services:
     container_name: "neutron_eswitchd"
     image: "{{ neutron_eswitchd_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_eswitchd_default_volumes + neutron_eswitchd_extra_volumes }}"
     dimensions: "{{ neutron_eswitchd_dimensions }}"
@@ -120,7 +118,7 @@ neutron_services:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in [ 'ovn', 'vmware_nsxv', 'vmware_nsxv3' ] }}"
+    enabled: "{{ neutron_plugin_agent not in [ 'ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-metadata-agent']
@@ -142,7 +140,7 @@ neutron_services:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_bgp_dragent | bool and neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_dvs'] }}"
+    enabled: "{{ enable_neutron_bgp_dragent | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] }}"
     group: "neutron-bgp-dragent"
     host_in_groups: "{{ inventory_hostname in groups['neutron-bgp-dragent'] }}"
     volumes: "{{ neutron_bgp_dragent_default_volumes + neutron_bgp_dragent_extra_volumes }}"
@@ -175,6 +173,7 @@ neutron_services:
     host_in_groups: "{{ inventory_hostname in groups['ironic-neutron-agent'] }}"
     volumes: "{{ ironic_neutron_agent_default_volumes + ironic_neutron_agent_extra_volumes }}"
     dimensions: "{{ ironic_neutron_agent_dimensions }}"
+    healthcheck: "{{ ironic_neutron_agent_healthcheck }}"
   neutron-tls-proxy:
     container_name: neutron_tls_proxy
     group: neutron-server
@@ -211,66 +210,65 @@ neutron_database_address: "{{ database_address | put_address_in_context('url') }
 ####################
 # Docker
 ####################
-neutron_install_type: "{{ kolla_install_type }}"
 neutron_tag: "{{ openstack_tag }}"
 
-neutron_dhcp_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-dhcp-agent"
+neutron_dhcp_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-dhcp-agent"
 neutron_dhcp_agent_tag: "{{ neutron_tag }}"
 neutron_dhcp_agent_image_full: "{{ neutron_dhcp_agent_image }}:{{ neutron_dhcp_agent_tag }}"
 
-neutron_l3_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-l3-agent"
+neutron_l3_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-l3-agent"
 neutron_l3_agent_tag: "{{ neutron_tag }}"
 neutron_l3_agent_image_full: "{{ neutron_l3_agent_image }}:{{ neutron_l3_agent_tag }}"
 
-neutron_sriov_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-sriov-agent"
+neutron_sriov_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-sriov-agent"
 neutron_sriov_agent_tag: "{{ neutron_tag }}"
 neutron_sriov_agent_image_full: "{{ neutron_sriov_agent_image }}:{{ neutron_sriov_agent_tag }}"
 
-neutron_mlnx_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-mlnx-agent"
+neutron_mlnx_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-mlnx-agent"
 neutron_mlnx_agent_tag: "{{ neutron_tag }}"
 neutron_mlnx_agent_image_full: "{{ neutron_mlnx_agent_image }}:{{ neutron_mlnx_agent_tag }}"
 
-neutron_eswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-mlnx-agent"
+neutron_eswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-mlnx-agent"
 neutron_eswitchd_tag: "{{ neutron_mlnx_agent_tag }}"
 neutron_eswitchd_image_full: "{{ neutron_eswitchd_image }}:{{ neutron_eswitchd_tag }}"
 
-neutron_linuxbridge_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-linuxbridge-agent"
+neutron_linuxbridge_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-linuxbridge-agent"
 neutron_linuxbridge_agent_tag: "{{ neutron_tag }}"
 neutron_linuxbridge_agent_image_full: "{{ neutron_linuxbridge_agent_image }}:{{ neutron_linuxbridge_agent_tag }}"
 
-neutron_metadata_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-metadata-agent"
+neutron_metadata_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-metadata-agent"
 neutron_metadata_agent_tag: "{{ neutron_tag }}"
 neutron_metadata_agent_image_full: "{{ neutron_metadata_agent_image }}:{{ neutron_metadata_agent_tag }}"
 
-neutron_ovn_metadata_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-metadata-agent"
+neutron_ovn_metadata_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-metadata-agent"
 neutron_ovn_metadata_agent_tag: "{{ neutron_tag }}"
 neutron_ovn_metadata_agent_image_full: "{{ neutron_ovn_metadata_agent_image }}:{{ neutron_ovn_metadata_agent_tag }}"
 
-neutron_openvswitch_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-openvswitch-agent"
+neutron_openvswitch_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-openvswitch-agent"
 neutron_openvswitch_agent_tag: "{{ neutron_tag }}"
 neutron_openvswitch_agent_image_full: "{{ neutron_openvswitch_agent_image }}:{{ neutron_openvswitch_agent_tag }}"
 
-neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-server"
+neutron_server_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-server"
 neutron_server_tag: "{{ neutron_tag }}"
 neutron_server_image_full: "{{ neutron_server_image }}:{{ neutron_server_tag }}"
 
-neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-bgp-dragent"
+neutron_bgp_dragent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-bgp-dragent"
 neutron_bgp_dragent_tag: "{{ neutron_tag }}"
 neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_dragent_tag }}"
 
-neutron_infoblox_ipam_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-infoblox-ipam-agent"
+neutron_infoblox_ipam_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-infoblox-ipam-agent"
 neutron_infoblox_ipam_agent_tag: "{{ neutron_tag }}"
 neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}:{{ neutron_infoblox_ipam_agent_tag }}"
 
-neutron_metering_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-neutron-metering-agent"
+neutron_metering_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-metering-agent"
 neutron_metering_agent_tag: "{{ neutron_tag }}"
 neutron_metering_agent_image_full: "{{ neutron_metering_agent_image }}:{{ neutron_metering_agent_tag }}"
 
-ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-ironic-neutron-agent"
+ironic_neutron_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-neutron-agent"
 ironic_neutron_agent_tag: "{{ neutron_tag }}"
 ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
 
-neutron_tls_proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ neutron_install_type }}-haproxy"
+neutron_tls_proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/haproxy"
 neutron_tls_proxy_tag: "{{ neutron_tag }}"
 neutron_tls_proxy_image_full: "{{ neutron_tls_proxy_image }}:{{ neutron_tls_proxy_tag }}"
 
@@ -422,6 +420,19 @@ neutron_sriov_agent_healthcheck:
   test: "{% if neutron_sriov_agent_enable_healthchecks | bool %}{{ neutron_sriov_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_sriov_agent_healthcheck_timeout }}"
 
+ironic_neutron_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+ironic_neutron_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ironic_neutron_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ironic_neutron_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ironic_neutron_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port ironic-neutron-agent {{ om_rpc_port }}"]
+ironic_neutron_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ironic_neutron_agent_healthcheck:
+  interval: "{{ ironic_neutron_agent_healthcheck_interval }}"
+  retries: "{{ ironic_neutron_agent_healthcheck_retries }}"
+  start_period: "{{ ironic_neutron_agent_healthcheck_start_period }}"
+  test: "{% if ironic_neutron_agent_enable_healthchecks | bool %}{{ ironic_neutron_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ironic_neutron_agent_healthcheck_timeout }}"
+
 neutron_dhcp_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -552,6 +563,7 @@ openstack_neutron_auth: "{{ openstack_auth }}"
 
 # Set to KOLLA_SKIP to skip setting these (even if set already - total ignore).
 # Set to KOLLA_UNSET to make Kolla unset these in the managed sysctl.conf file.
+neutron_l3_agent_host_ipv4_ip_forward: KOLLA_UNSET
 neutron_l3_agent_host_rp_filter_mode: KOLLA_SKIP
 neutron_l3_agent_host_ipv4_neigh_gc_thresh1: 128
 neutron_l3_agent_host_ipv4_neigh_gc_thresh2: 28672
@@ -570,6 +582,8 @@ neutron_subprojects:
     enabled: "{{ enable_neutron_bgp_dragent | bool }}"
   - name: "neutron-vpnaas"
     enabled: "{{ enable_neutron_vpnaas | bool }}"
+  - name: "vmware-nsx"
+    enabled: "{{ neutron_plugin_agent in ['vmware_dvs', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] }}"
 
 ####################
 # Mechanism drivers
@@ -600,7 +614,7 @@ extension_drivers:
     enabled: "{{ enable_neutron_qos | bool }}"
   - name: "port_security"
     enabled: true
-  - name: "dns"
+  - name: "subnet_dns_publish_fixed_ip"
     enabled: "{{ enable_designate | bool }}"
   - name: "sfc"
     enabled: "{{ enable_neutron_sfc | bool }}"
@@ -655,8 +669,8 @@ neutron_service_plugins: "{{ service_plugins | selectattr('enabled', 'equalto', 
 neutron_notification_topics:
   - name: notifications
     enabled: "{{ enable_ceilometer | bool or enable_neutron_infoblox_ipam_agent | bool }}"
-  - name: notifications_designate
-    enabled: "{{ enable_designate | bool }}"
+  - name: "{{ designate_notifications_topic_name }}"
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
   - name: vitrage_notifications
     enabled: "{{ enable_vitrage | bool }}"
 
@@ -714,6 +728,19 @@ nsxv3_api_managers: "127.0.0.1"
 nsxv3_default_tier0_router: "tier0 router uuid"
 nsxv3_default_vlan_tz: "vlan TZ uuid"
 nsxv3_default_overlay_tz: "overlay TZ uuid"
+
+####################
+# VMware NSXP
+####################
+vmware_nsxp_metadata_proxy: "metadata proxy uuid or name"
+vmware_nsxp_dhcp_profile: "dhcp service uuid or name"
+vmware_nsxp_native_dhcp_metadata: "true"
+vmware_nsxp_api_user: "admin"
+vmware_nsxp_insecure: "True"
+vmware_nsxp_api_managers: "127.0.0.1"
+vmware_nsxp_default_tier0_router: "tier0 router uuid or name"
+vmware_nsxp_default_vlan_tz: "vlan TZ uuid or name"
+vmware_nsxp_default_overlay_tz: "overlay TZ uuid or name"
 
 ####################
 # VMware DVS

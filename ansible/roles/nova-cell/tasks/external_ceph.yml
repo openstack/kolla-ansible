@@ -1,14 +1,4 @@
 ---
-- name: Ensuring config directory exists
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    state: "directory"
-    mode: "0770"
-  become: true
-  with_items:
-    - "nova-libvirt/secrets"
-  when: inventory_hostname in groups[nova_cell_compute_group]
-
 - name: Check nova keyring file
   stat:
     path: "{{ node_custom_config }}/nova/{{ ceph_nova_keyring }}"
@@ -31,74 +21,10 @@
     - cinder_backend_ceph | bool
     - external_ceph_cephx_enabled | bool
 
-- name: Copy over ceph nova keyring file
-  copy:
-    src: "{{ nova_cephx_keyring_file.stat.path }}"
-    dest: "{{ node_config_directory }}/{{ item }}/"
-    mode: "0660"
-  become: true
-  with_items:
-    - nova-compute
-  when:
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - nova_backend == "rbd"
-    - external_ceph_cephx_enabled | bool
-  notify:
-    - Restart {{ item }} container
-
-- name: Copy over ceph cinder keyring file
-  copy:
-    src: "{{ cinder_cephx_keyring_file.stat.path }}"
-    dest: "{{ node_config_directory }}/{{ item }}/"
-    mode: "0660"
-  become: true
-  with_items:  # NOTE: nova-libvirt does not need it
-    - nova-compute
-  when:
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - nova_backend == "rbd"
-    - external_ceph_cephx_enabled | bool
-  notify:
-    - Restart {{ item }} container
-
-- name: Copy over ceph.conf
-  template:
-    src: "{{ node_custom_config }}/nova/ceph.conf"
-    dest: "{{ node_config_directory }}/{{ item }}/"
-    mode: "0660"
-  become: true
-  with_items:
-    - nova-compute
-    - nova-libvirt
-  when:
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - nova_backend == "rbd"
-  notify:
-    - Restart {{ item }} container
-
-- name: Pushing nova secret xml for libvirt
-  template:
-    src: "secret.xml.j2"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.xml"
-    mode: "0600"
-  become: true
-  when:
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - item.enabled | bool
-  with_items:
-    - uuid: "{{ rbd_secret_uuid }}"
-      name: "client.nova secret"
-      enabled: "{{ nova_backend == 'rbd' }}"
-    - uuid: "{{ cinder_rbd_secret_uuid }}"
-      name: "client.cinder secret"
-      enabled: "{{ cinder_backend_ceph }}"
-  notify:
-    - Restart nova-libvirt container
-
 - name: Extract nova key from file
   set_fact:
     nova_cephx_raw_key:
-      "{{ lookup('file', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
+      "{{ lookup('template', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
   changed_when: false
   run_once: True
   when:
@@ -115,37 +41,154 @@
     - cinder_backend_ceph | bool
     - external_ceph_cephx_enabled | bool
 
-- name: Pushing secrets key for libvirt
-  copy:
-    content: "{{ item.result }}"
-    dest: "{{ node_config_directory }}/nova-libvirt/secrets/{{ item.uuid }}.base64"
-    mode: "0600"
-  become: true
-  when:
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - item.enabled | bool
-    - external_ceph_cephx_enabled | bool
-  with_items:
-    # NOTE(yoctozepto): 'default' filter required due to eager evaluation of item content
-    # which will be undefined if the applicable condition is False
-    - uuid: "{{ rbd_secret_uuid }}"
-      result: "{{ nova_cephx_raw_key | default }}"
-      enabled: "{{ nova_backend == 'rbd' }}"
-    - uuid: "{{ cinder_rbd_secret_uuid }}"
-      result: "{{ cinder_cephx_raw_key | default }}"
-      enabled: "{{ cinder_backend_ceph }}"
-  notify:
-    - Restart nova-libvirt container
-  no_log: True
-
-- name: Ensuring config directory has correct owner and permission
-  become: true
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    recurse: yes
+- name: Copy over ceph nova keyring file
+  template:
+    src: "{{ nova_cephx_keyring_file.stat.path }}"
+    dest: "{{ node_config_directory }}/{{ item }}/"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
+    mode: "0660"
+  become: true
   with_items:
-    - "nova-compute"
-    - "nova-libvirt/secrets"
-  when: inventory_hostname in groups[nova_cell_compute_group]
+    - nova-compute
+  when:
+    - inventory_hostname in groups[nova_cell_compute_group]
+    - nova_backend == "rbd"
+    - external_ceph_cephx_enabled | bool
+  notify:
+    - Restart {{ item }} container
+
+- name: Copy over ceph cinder keyring file
+  template:
+    src: "{{ cinder_cephx_keyring_file.stat.path }}"
+    dest: "{{ node_config_directory }}/{{ item }}/"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0660"
+  become: true
+  with_items:  # NOTE: nova-libvirt does not need it
+    - nova-compute
+  when:
+    - inventory_hostname in groups[nova_cell_compute_group]
+    - nova_backend == "rbd"
+    - external_ceph_cephx_enabled | bool
+  notify:
+    - Restart {{ item }} container
+
+- name: Copy over ceph.conf
+  vars:
+    service: "{{ nova_cell_services[item] }}"
+  template:
+    src: "{{ node_custom_config }}/nova/ceph.conf"
+    dest: "{{ node_config_directory }}/{{ item }}/"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0660"
+  become: true
+  with_items:
+    - nova-compute
+    - nova-libvirt
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+    - nova_backend == "rbd"
+  notify:
+    - Restart {{ item }} container
+
+- block:
+    - name: Ensure /etc/ceph directory exists (host libvirt)
+      file:
+        path: "/etc/ceph/"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0755"
+      become: true
+
+    - name: Copy over ceph.conf (host libvirt)
+      template:
+        src: "{{ node_custom_config }}/nova/ceph.conf"
+        dest: "/etc/ceph/ceph.conf"
+        owner: "root"
+        group: "root"
+        mode: "0644"
+      become: true
+  when:
+    - not enable_nova_libvirt_container | bool
+    - inventory_hostname in groups[nova_cell_compute_group]
+    - nova_backend == "rbd"
+
+- block:
+    - name: Ensuring libvirt secrets directory exists
+      vars:
+        service: "{{ nova_cell_services['nova-libvirt'] }}"
+      file:
+        path: "{{ libvirt_secrets_dir }}"
+        state: "directory"
+        owner: "{{ config_owner_user }}"
+        group: "{{ config_owner_group }}"
+        mode: "0770"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+
+    - name: Pushing nova secret xml for libvirt
+      vars:
+        service: "{{ nova_cell_services['nova-libvirt'] }}"
+      template:
+        src: "secret.xml.j2"
+        dest: "{{ libvirt_secrets_dir }}/{{ item.uuid }}.xml"
+        owner: "{{ config_owner_user }}"
+        group: "{{ config_owner_group }}"
+        mode: "0600"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+        - item.enabled | bool
+      with_items:
+        - uuid: "{{ rbd_secret_uuid }}"
+          name: "client.nova secret"
+          enabled: "{{ nova_backend == 'rbd' }}"
+        - uuid: "{{ cinder_rbd_secret_uuid }}"
+          name: "client.cinder secret"
+          enabled: "{{ cinder_backend_ceph }}"
+      notify: "{{ libvirt_restart_handlers }}"
+
+    - name: Pushing secrets key for libvirt
+      vars:
+        service: "{{ nova_cell_services['nova-libvirt'] }}"
+      copy:
+        content: "{{ item.result }}"
+        dest: "{{ libvirt_secrets_dir }}/{{ item.uuid }}.base64"
+        owner: "{{ config_owner_user }}"
+        group: "{{ config_owner_group }}"
+        mode: "0600"
+      become: true
+      when:
+        - inventory_hostname in groups[service.group]
+        - item.enabled | bool
+        - external_ceph_cephx_enabled | bool
+      with_items:
+        # NOTE(yoctozepto): 'default' filter required due to eager evaluation of item content
+        # which will be undefined if the applicable condition is False
+        - uuid: "{{ rbd_secret_uuid }}"
+          result: "{{ nova_cephx_raw_key | default }}"
+          enabled: "{{ nova_backend == 'rbd' }}"
+        - uuid: "{{ cinder_rbd_secret_uuid }}"
+          result: "{{ cinder_cephx_raw_key | default }}"
+          enabled: "{{ cinder_backend_ceph }}"
+      notify: "{{ libvirt_restart_handlers }}"
+      no_log: True
+  vars:
+    libvirt_secrets_dir: >-
+      {{ (node_config_directory ~ '/nova-libvirt/secrets')
+         if enable_nova_libvirt_container | bool
+         else '/etc/libvirt/secrets' }}
+    # NOTE(mgoddard): When running libvirt as a host daemon, on CentOS it
+    # appears to pick up secrets automatically, while on Ubuntu it requires a
+    # reload. This may be due to differences in tested versions of libvirt
+    # (8.0.0 vs 6.0.0). Reload should be low overhead, so do it always.
+    libvirt_restart_handlers: >-
+      {{ ['Restart nova-libvirt container']
+         if enable_nova_libvirt_container | bool else
+         ['Reload libvirtd'] }}

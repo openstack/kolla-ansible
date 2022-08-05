@@ -24,7 +24,7 @@
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
-    pid_mode: "{{ service.pid_mode | default(emit) }}"
+    pid_mode: "{{ service.pid_mode | default(omit) }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
   when:
@@ -117,6 +117,7 @@
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment | default(omit) }}"
   when:
     - kolla_action != "config"
 
@@ -138,6 +139,21 @@
 - name: Restart prometheus-blackbox-exporter container
   vars:
     service_name: "prometheus-blackbox-exporter"
+    service: "{{ prometheus_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart prometheus-libvirt-exporter container
+  vars:
+    service_name: "prometheus-libvirt-exporter"
     service: "{{ prometheus_services[service_name] }}"
   become: true
   kolla_docker:

@@ -13,13 +13,13 @@
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
-    environment: "{{ upgrade_environment if ironic_enable_rolling_upgrade|bool else bootstrap_environment }}"
+    environment: "{{ upgrade_environment if ironic_enable_rolling_upgrade | bool else bootstrap_environment }}"
     image: "{{ ironic_api.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic"
     restart_policy: no
-    volumes: "{{ ironic_api.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ ironic_api.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[ironic_api.group][0] }}"
   when: inventory_hostname in groups[ironic_api.group]
@@ -40,7 +40,28 @@
       BOOTSTRAP:
     name: "bootstrap_ironic_inspector"
     restart_policy: no
-    volumes: "{{ ironic_inspector.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ ironic_inspector.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[ironic_inspector.group][0] }}"
   when: inventory_hostname in groups[ironic_inspector.group]
+
+- name: Running ironic-tftp bootstrap container
+  vars:
+    ironic_tftp: "{{ ironic_services['ironic-tftp'] }}"
+  become: true
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      TFTPBOOT_PATH: /var/lib/ironic/tftpboot
+      HTTPBOOT_PATH: /var/lib/ironic/httpboot
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ ironic_tftp.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_ironic_tftp"
+    restart_policy: no
+    volumes: "{{ ironic_tftp.volumes }}"
+  when: inventory_hostname in groups[ironic_tftp.group]

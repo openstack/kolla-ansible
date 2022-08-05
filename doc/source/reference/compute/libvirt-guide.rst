@@ -1,5 +1,3 @@
-.. libvirt-tls-guide:
-
 ====================================
 Libvirt - Nova Virtualisation Driver
 ====================================
@@ -9,7 +7,7 @@ Overview
 
 Libvirt is the most commonly used virtualisation driver in OpenStack. It uses
 libvirt, backed by QEMU and when available, KVM. Libvirt is executed in the
-``nova_libvirt`` container.
+``nova_libvirt`` container, or as a daemon running on the host.
 
 Hardware Virtualisation
 =======================
@@ -23,16 +21,73 @@ hardware virtualisation (e.g. Virtualisation Technology (VT) BIOS configuration
 on Intel systems), ``qemu`` may be used to provide less performant
 software-emulated virtualisation.
 
+SASL Authentication
+===================
+
+The default configuration of Kolla Ansible is to run libvirt over TCP,
+authenticated with SASL. This should not be considered as providing a secure,
+encrypted channel, since the username/password SASL mechanisms available for
+TCP are no longer considered cryptographically secure. However, it does at
+least provide some authentication for the libvirt API. For a more secure
+encrypted channel, use :ref`libvirt TLS <libvirt-tls>`.
+
+SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
+to ``true``.
+
+The username is configured via ``libvirt_sasl_authname``, and defaults to
+``kolla``. The password is configured via ``libvirt_sasl_password``, and is
+generated with other passwords using and stored in ``passwords.yml``.
+
+The list of enabled authentication mechanisms is configured via
+``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
+TLS is enabled, or ``["DIGEST-MD5"]`` otherwise.
+
+Host vs containerised libvirt
+=============================
+
+By default, Kolla Ansible deploys libvirt in a ``nova_libvirt`` container. In
+some cases it may be preferable to run libvirt as a daemon on the compute hosts
+instead.
+
+Kolla Ansible does not currently support deploying and configuring
+libvirt as a host daemon. However, since the Yoga release, if a libvirt daemon
+has already been set up, then Kolla Ansible may be configured to use it. This
+may be achieved by setting ``enable_nova_libvirt_container`` to ``false``.
+
+Migration from container to host
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``kolla-ansible nova-libvirt-cleanup`` command may be used to clean up the
+``nova_libvirt`` container and related items on hosts, once it has
+been disabled. This should be run after the compute service has been disabled,
+and all active VMs have been migrated away from the host.
+
+By default, the command will fail if there are any VMs running on the host. If
+you are sure that it is safe to clean up the ``nova_libvirt`` container with
+running VMs, setting ``nova_libvirt_cleanup_running_vms_fatal`` to ``false``
+will allow the command to proceed.
+
+The ``nova_libvirt`` container has several associated Docker volumes:
+``libvirtd``, ``nova_libvirt_qemu`` and ``nova_libvirt_secrets``. By default,
+these volumes are not cleaned up. If you are sure that the data in these
+volumes can be safely removed, setting ``nova_libvirt_cleanup_remove_volumes``
+to ``true`` will cause the Docker volumes to be removed.
+
+A future extension could support migration of existing VMs, but this is
+currently out of scope.
+
+.. libvirt-tls:
+
 Libvirt TLS
 ===========
 
 The default configuration of Kolla Ansible is to run libvirt over TCP, with
-authentication disabled. As long as one takes steps to protect who can access
-the port this works well. However, in the case where you want live-migration to
-be allowed across hypervisors one may want to either add some level of
-authentication to the connections or make sure VM data is passed between
-hypervisors in a secure manner. To do this we can enable TLS for libvirt and
-make nova use it.
+SASL authentication. As long as one takes steps to protect who can access
+the network this works well. However, in a less trusted environment one may
+want to use encryption when accessing the libvirt API. To do this we can enable
+TLS for libvirt and make nova use it. Mutual TLS is configured, providing
+authentication of clients via certificates. SASL authentication provides a
+further level of security.
 
 Using libvirt TLS
 ~~~~~~~~~~~~~~~~~
@@ -44,10 +99,11 @@ Libvirt TLS can be enabled in Kolla Ansible by setting the following option in
 
    libvirt_tls: "yes"
 
-Creation of the TLS certificates is currently out-of-scope for Kolla Ansible.
-You will need to either use an existing Internal CA or you will need to
-generate your own offline CA. For the TLS communication to work correctly you
-will have to supply Kolla Ansible the following pieces of information:
+Creation of production-ready TLS certificates is currently out-of-scope for
+Kolla Ansible.  You will need to either use an existing Internal CA or you will
+need to generate your own offline CA. For the TLS communication to work
+correctly you will have to supply Kolla Ansible the following pieces of
+information:
 
 * cacert.pem
 
@@ -56,13 +112,13 @@ will have to supply Kolla Ansible the following pieces of information:
     they can verify that all the certificates being used were signed by the CA
     and should be trusted.
 
-* serverkey.pem
+* serverkey.pem (not used when using a host libvirt daemon)
 
   - This is the private key for the server, and is no different than the
     private key of a TLS certificate. It should be carefully protected, just
     like the private key of a TLS certificate.
 
-* servercert.pem
+* servercert.pem (not used when using a host libvirt daemon)
 
   - This is the public certificate for the server. Libvirt will present this
     certificate to any connection made to the TLS port. This is no different
@@ -116,3 +172,11 @@ copied into the nova-compute and nova-libvirt containers. With this option
 disabled you will also be responsible for restarting the nova-compute and
 nova-libvirt containers when the certs are updated, as kolla-ansible will not
 be able to tell when the files have changed.
+
+Generating certificates for test and development
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since the Yoga release, the ``kolla-ansible certificates`` command generates
+certificates for libvirt TLS. A single key and certificate is used for all
+hosts, with a Subject Alternative Name (SAN) entry for each compute host
+hostname.

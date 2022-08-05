@@ -1,0 +1,14 @@
+---
+- import_playbook: gather-facts.yml
+
+- name: Remove nova_libvirt container
+  gather_facts: false
+  hosts:
+    - compute
+  serial: '{{ kolla_serial|default("0") }}'
+  tags:
+    - nova-libvirt-cleanup
+  tasks:
+    - import_role:
+        name: nova-cell
+        tasks_from: libvirt-cleanup.yml

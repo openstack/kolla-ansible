@@ -1,6 +1,4 @@
 ---
-project_name: "kibana"
-
 kibana_services:
   kibana:
     container_name: "kibana"
@@ -19,7 +17,7 @@ kibana_services:
         auth_user: "{{ kibana_user }}"
         auth_pass: "{{ kibana_password }}"
       kibana_external:
-        enabled: "{{ enable_kibana }}"
+        enabled: "{{ enable_kibana_external | bool }}"
         mode: "http"
         external: true
         port: "{{ kibana_server_port }}"
@@ -39,8 +37,7 @@ kibana_elasticsearch_ssl_verify: true
 ####################
 # Docker
 ####################
-kibana_install_type: "{{ kolla_install_type }}"
-kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kibana_install_type }}-kibana"
+kibana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/kibana"
 kibana_tag: "{{ openstack_tag }}"
 kibana_image_full: "{{ kibana_image }}:{{ kibana_tag }}"
 kibana_dimensions: "{{ default_container_dimensions }}"

@@ -1,6 +1,4 @@
 ---
-project_name: "zun"
-
 zun_services:
   zun-api:
     container_name: zun_api
@@ -70,22 +68,21 @@ zun_database_address: "{{ database_address | put_address_in_context('url') }}:{{
 ####################
 ## Docker
 ####################
-zun_install_type: "{{ kolla_install_type }}"
 zun_tag: "{{ openstack_tag }}"
 
-zun_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-api"
+zun_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/zun-api"
 zun_api_tag: "{{ zun_tag }}"
 zun_api_image_full: "{{ zun_api_image }}:{{ zun_api_tag }}"
 
-zun_wsproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-wsproxy"
+zun_wsproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/zun-wsproxy"
 zun_wsproxy_tag: "{{ zun_tag }}"
 zun_wsproxy_image_full: "{{ zun_wsproxy_image }}:{{ zun_wsproxy_tag }}"
 
-zun_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-compute"
+zun_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/zun-compute"
 zun_compute_tag: "{{ zun_tag }}"
 zun_compute_image_full: "{{ zun_compute_image }}:{{ zun_compute_tag }}"
 
-zun_cni_daemon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ zun_install_type }}-zun-cni-daemon"
+zun_cni_daemon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/zun-cni-daemon"
 zun_cni_daemon_tag: "{{ zun_tag }}"
 zun_cni_daemon_image_full: "{{ zun_cni_daemon_image }}:{{ zun_cni_daemon_tag }}"
 
@@ -171,6 +168,7 @@ zun_compute_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "/dev:/dev"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
+  - "{% if zun_configure_for_cinder_ceph | bool %}/var/lib/zun:/var/lib/zun:shared{% endif %}"
 zun_cni_daemon_default_volumes:
   - "{{ node_config_directory }}/zun-cni-daemon/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"

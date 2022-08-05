@@ -1,15 +1,9 @@
 ---
-project_name: "nova"
-
-# NOTE(yoctozepto): we need this for the nova-cell role because this role's
-# vars prefix does not match "{{ project_name }}"
-kolla_role_name: "nova_cell"
-
 nova_cell_services:
   nova-libvirt:
     container_name: nova_libvirt
     group: "{{ nova_cell_compute_group }}"
-    enabled: "{{ nova_compute_virt_type in ['kvm', 'qemu'] }}"
+    enabled: "{{ enable_nova_libvirt_container }}"
     image: "{{ nova_libvirt_image_full }}"
     pid_mode: "host"
     cgroupns_mode: "host"
@@ -203,39 +197,38 @@ nova_cell_notify_rabbitmq_users:
 ####################
 # Docker
 ####################
-nova_install_type: "{{ kolla_install_type }}"
 nova_tag: "{{ openstack_tag }}"
 
-nova_libvirt_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-libvirt"
+nova_libvirt_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-libvirt"
 nova_libvirt_tag: "{{ nova_tag }}"
 nova_libvirt_image_full: "{{ nova_libvirt_image }}:{{ nova_libvirt_tag }}"
 nova_libvirt_cpu_mode: "{{ 'host-passthrough' if ansible_facts.architecture == 'aarch64' else '' }}"
 
-nova_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-ssh"
+nova_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-ssh"
 nova_ssh_tag: "{{ nova_tag }}"
 nova_ssh_image_full: "{{ nova_ssh_image }}:{{ nova_ssh_tag }}"
 
-nova_novncproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-novncproxy"
+nova_novncproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-novncproxy"
 nova_novncproxy_tag: "{{ nova_tag }}"
 nova_novncproxy_image_full: "{{ nova_novncproxy_image }}:{{ nova_novncproxy_tag }}"
 
-nova_spicehtml5proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-spicehtml5proxy"
+nova_spicehtml5proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-spicehtml5proxy"
 nova_spicehtml5proxy_tag: "{{ nova_tag }}"
 nova_spicehtml5proxy_image_full: "{{ nova_spicehtml5proxy_image }}:{{ nova_spicehtml5proxy_tag }}"
 
-nova_serialproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-serialproxy"
+nova_serialproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-serialproxy"
 nova_serialproxy_tag: "{{ nova_tag }}"
 nova_serialproxy_image_full: "{{ nova_serialproxy_image }}:{{ nova_serialproxy_tag }}"
 
-nova_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-conductor"
+nova_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-conductor"
 nova_conductor_tag: "{{ nova_tag }}"
 nova_conductor_image_full: "{{ nova_conductor_image }}:{{ nova_conductor_tag }}"
 
-nova_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-compute"
+nova_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-compute"
 nova_compute_tag: "{{ nova_tag }}"
 nova_compute_image_full: "{{ nova_compute_image }}:{{ nova_compute_tag }}"
 
-nova_compute_ironic_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ nova_install_type }}-nova-compute-ironic"
+nova_compute_ironic_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/nova-compute-ironic"
 nova_compute_ironic_tag: "{{ nova_tag }}"
 nova_compute_ironic_image_full: "{{ nova_compute_ironic_image }}:{{ nova_compute_ironic_tag }}"
 
@@ -405,7 +398,7 @@ nova_compute_default_volumes:
   - "/dev:/dev"
   - "kolla_logs:/var/log/kolla/"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
-  - "libvirtd:/var/lib/libvirt"
+  - "{{ nova_libvirt_volume }}:/var/lib/libvirt"
   - "{{ nova_instance_datadir_volume }}:/var/lib/nova/"
   - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
@@ -435,6 +428,8 @@ nova_compute_ironic_extra_volumes: "{{ nova_extra_volumes }}"
 # Used by bootstrapping containers.
 nova_cell_bootstrap_extra_volumes: "{{ nova_extra_volumes }}"
 
+nova_libvirt_volume: "{{ 'libvirtd' if enable_nova_libvirt_container | bool else '/var/lib/libvirt' }}"
+
 ####################
 # HAProxy
 ####################
@@ -453,8 +448,6 @@ openstack_nova_auth: "{{ openstack_auth }}"
 # Set to KOLLA_SKIP to skip setting these (even if set already - total ignore).
 # Set to KOLLA_UNSET to make Kolla unset these in the managed sysctl.conf file.
 nova_compute_host_rp_filter_mode: KOLLA_SKIP
-
-nova_safety_upgrade: "no"
 
 nova_libvirt_port: "{{'16514' if libvirt_tls | bool  else '16509'}}"
 nova_ssh_port: "8022"
@@ -494,14 +487,20 @@ nova_compute_startup_delay: 30
 # nova_cell_conductor_has_api_database to no.
 nova_cell_conductor_has_api_database: "yes"
 
+# Whether the failure of a nova-compute service to register itself is fatal to
+# the Kolla Ansible run.  This is evaluated on a per-cell basis. Default
+# behaviour is to only fail the host on which the compute service failed to
+# register itself.
+nova_compute_registration_fatal: false
+
 ####################
 # Notification
 ####################
 nova_notification_topics:
   - name: notifications
     enabled: "{{ enable_ceilometer | bool or enable_neutron_infoblox_ipam_agent | bool }}"
-  - name: notifications_designate
-    enabled: "{{ enable_designate | bool }}"
+  - name: "{{ designate_notifications_topic_name }}"
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
   - name: vitrage_notifications
     enabled: "{{ enable_vitrage | bool }}"
 
@@ -537,6 +536,14 @@ migration_hostname: "{{ ansible_facts.nodename }}"
 # It does not change that often (in fact, most likely never ever).
 qemu_user_gid: 42427
 
+# Whether to enable libvirt SASL authentication.
+libvirt_enable_sasl: true
+# Username for libvirt SASL.
+libvirt_sasl_authname: "nova"
+# List of enabled libvirt SASL authentication mechanisms.
+libvirt_sasl_mech_list:
+  - "{{ 'SCRAM-SHA-256' if libvirt_tls | bool else 'DIGEST-MD5' }}"
+
 ####################
 # Kolla
 ####################
@@ -556,3 +563,14 @@ enable_shared_var_lib_nova_mnt: "{{ enable_cinder_backend_nfs | bool or enable_c
 ###################################
 
 nova_pci_passthrough_whitelist: "{{ enable_neutron_sriov | bool | ternary(neutron_sriov_physnet_mappings | dict2items(key_name='physical_network', value_name='devname'), []) }}"
+
+##################
+# Libvirt cleanup
+##################
+
+# The following options pertain to the kolla-ansible nova-libvirt-cleanup command.
+
+# Whether to fail when there are running VMs.
+nova_libvirt_cleanup_running_vms_fatal: true
+# Whether to remove Docker volumes.
+nova_libvirt_cleanup_remove_volumes: false

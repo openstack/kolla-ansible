@@ -1,6 +1,4 @@
 ---
-project_name: "ceilometer"
-
 ceilometer_services:
   ceilometer-notification:
     container_name: ceilometer_notification
@@ -40,22 +38,21 @@ ceilometer_services:
 ####################
 # Docker
 ####################
-ceilometer_install_type: "{{ kolla_install_type }}"
 ceilometer_tag: "{{ openstack_tag }}"
 
-ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-notification"
+ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-notification"
 ceilometer_notification_tag: "{{ ceilometer_tag }}"
 ceilometer_notification_image_full: "{{ ceilometer_notification_image }}:{{ ceilometer_notification_tag }}"
 
-ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-central"
+ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-central"
 ceilometer_central_tag: "{{ ceilometer_tag }}"
 ceilometer_central_image_full: "{{ ceilometer_central_image }}:{{ ceilometer_central_tag }}"
 
-ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-compute"
+ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-compute"
 ceilometer_compute_tag: "{{ ceilometer_tag }}"
 ceilometer_compute_image_full: "{{ ceilometer_compute_image }}:{{ ceilometer_compute_tag }}"
 
-ceilometer_ipmi_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ceilometer_install_type }}-ceilometer-ipmi"
+ceilometer_ipmi_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-ipmi"
 ceilometer_ipmi_tag: "{{ ceilometer_tag }}"
 ceilometer_ipmi_image_full: "{{ ceilometer_ipmi_image }}:{{ ceilometer_ipmi_tag }}"
 
@@ -136,7 +133,7 @@ ceilometer_compute_default_volumes:
   - "/run/:/run/:shared"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
-  - "nova_libvirt:/var/lib/libvirt"
+  - "{{ ceilometer_libvirt_volume }}:/var/lib/libvirt"
   - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 ceilometer_ipmi_default_volumes:
   - "{{ node_config_directory }}/ceilometer-ipmi/:{{ container_config_directory }}/:ro"
@@ -151,6 +148,8 @@ ceilometer_notification_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_central_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_compute_extra_volumes: "{{ ceilometer_extra_volumes }}"
 ceilometer_ipmi_extra_volumes: "{{ ceilometer_extra_volumes }}"
+
+ceilometer_libvirt_volume: "{{ 'nova_libvirt' if enable_nova_libvirt_container | bool else '/var/lib/libvirt' }}"
 
 ####################
 # OpenStack
@@ -184,6 +183,18 @@ ceilometer_ks_users:
 # Backend
 ####################
 
-ceilometer_database_type: "gnocchi"
+ceilometer_database_type: "{{ 'gnocchi' if (enable_gnocchi | bool) else '' }}"
 
 ceilometer_upgrade_params: ""
+
+####################
+# Pushgateway
+####################
+ceilometer_prometheus_pushgateway_host: "127.0.0.1"
+ceilometer_prometheus_pushgateway_port: "9091"
+## Options
+ceilometer_prometheus_pushgateway_options:
+#  timeout: 180
+#  max_retries: 5
+#  batch: no
+#  verify_ssl: no

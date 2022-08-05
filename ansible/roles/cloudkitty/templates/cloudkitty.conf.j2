@@ -17,8 +17,9 @@ max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 [keystone_authtoken]
+service_type = rating
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -55,11 +56,6 @@ collector = {{ cloudkitty_collector_backend }}
 metrics_conf = /etc/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}
 {% endif %}
 
-[fetcher_keystone]
-keystone_version = 3
-auth_section = keystone_authtoken
-region_name = {{ openstack_region_name }}
-
 {% if cloudkitty_collector_backend == "gnocchi" %}
 [collector_gnocchi]
 auth_section = keystone_authtoken
@@ -74,6 +70,29 @@ interface = {{ cloudkitty_monasca_interface }}
 
 {% if cloudkitty_collector_backend == "prometheus" %}
 [collector_prometheus]
+prometheus_url = {{ cloudkitty_prometheus_url }}
+
+{% if cloudkitty_prometheus_cafile is defined %}
+cafile = {{ cloudkitty_prometheus_cafile }}
+{% endif %}
+
+insecure = {{ cloudkitty_prometheus_insecure_connections }}
+{% endif %}
+
+[fetcher]
+backend = {{ cloudkitty_fetcher_backend }}
+
+{% if cloudkitty_fetcher_backend == "keystone" %}
+[fetcher_keystone]
+keystone_version = 3
+auth_section = keystone_authtoken
+region_name = {{ openstack_region_name }}
+{% endif %}
+
+{% if cloudkitty_fetcher_backend == "prometheus" %}
+[fetcher_prometheus]
+metric = openstack_identity_project_info
+scope_attribute = id
 prometheus_url = {{ cloudkitty_prometheus_url }}
 
 {% if cloudkitty_prometheus_cafile is defined %}

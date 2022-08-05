@@ -1,6 +1,4 @@
 ---
-project_name: "cloudkitty"
-
 cloudkitty_services:
   cloudkitty-api:
     container_name: "cloudkitty_api"
@@ -42,14 +40,13 @@ cloudkitty_database_address: "{{ database_address | put_address_in_context('url'
 ####################
 # Docker
 ####################
-cloudkitty_install_type: "{{ kolla_install_type }}"
 cloudkitty_tag: "{{ openstack_tag }}"
 
-cloudkitty_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cloudkitty_install_type }}-cloudkitty-api"
+cloudkitty_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cloudkitty-api"
 cloudkitty_api_tag: "{{ cloudkitty_tag }}"
 cloudkitty_api_image_full: "{{ cloudkitty_api_image }}:{{ cloudkitty_api_tag }}"
 
-cloudkitty_processor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cloudkitty_install_type }}-cloudkitty-processor"
+cloudkitty_processor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cloudkitty-processor"
 cloudkitty_processor_tag: "{{ cloudkitty_tag }}"
 cloudkitty_processor_image_full: "{{ cloudkitty_processor_image }}:{{ cloudkitty_processor_tag }}"
 
@@ -73,7 +70,7 @@ cloudkitty_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 cloudkitty_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 cloudkitty_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 cloudkitty_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-cloudkitty_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ cloudkitty_api_port}}"]
+cloudkitty_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ cloudkitty_api_port }}"]
 cloudkitty_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 cloudkitty_api_healthcheck:
   interval: "{{ cloudkitty_api_healthcheck_interval }}"
@@ -129,18 +126,11 @@ cloudkitty_custom_metrics_yaml_file: "metrics.yml"
 ####################
 # Storage backend
 ####################
-# Valid options are 'sqlalchemy', 'influxdb' or 'elasticsearch'. The default value is
-# 'influxdb', which matches the default in Cloudkitty since the Stein release.
-# When the backend is "influxdb" or "elasticsearch", we also enable the required service
-# accordingly.
-# Additionally, we use cloudkitty API v2 for any backend but sqlalchemy.
-cloudkitty_storage_backend: "influxdb"
-
 # InfluxDB retention policy to use (defaults to autogen).
 # cloudkitty_influxdb_retention_policy: "autogen"
 
 # Set to true to use SSL for InfluxDB connections.
-# cloudkitty_influxdb_use_ssl: false
+cloudkitty_influxdb_use_ssl: false
 
 # Path of the CA certificate to trust for HTTPS connections.
 # cloudkitty_influxdb_cafile: "{{ openstack_cacert }}"
@@ -175,7 +165,7 @@ cloudkitty_collector_backend: "gnocchi"
 cloudkitty_monasca_interface: "internal"
 
 # Set prometheus collector URL.
-cloudkitty_prometheus_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_port }}"
+cloudkitty_prometheus_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_port }}/api/v1"
 
 # Path of the CA certificate to trust for HTTPS connections.
 # cloudkitty_prometheus_cafile: "{{ openstack_cacert }}"
@@ -183,6 +173,13 @@ cloudkitty_prometheus_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | p
 # Set to true to authorize insecure HTTPS connections to Prometheus.
 # This means, HTTPS connections without validating the certificate used by prometheus.
 cloudkitty_prometheus_insecure_connections: false
+
+####################
+# Fetcher
+####################
+# Valid options are 'keystone', 'source', 'gnocchi', 'monasca' or 'prometheus'.
+# The default value is 'keystone', which matches the default in CloudKitty.
+cloudkitty_fetcher_backend: "keystone"
 
 ####################
 # Keystone

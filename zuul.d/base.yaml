@@ -4,10 +4,10 @@
     pre-run: tests/pre.yml
     run: tests/run.yml
     post-run: tests/post.yml
-    attempts: 5
     timeout: 7200
     post-timeout: 1800
     required-projects:
+      - openstack/ansible-collection-kolla
       - openstack/kolla
       - openstack/kolla-ansible
       - openstack/requirements
@@ -26,7 +26,7 @@
       - ^kolla_ansible/tests/
       - ^zuul\.d/
     vars:
-      previous_release: xena
+      previous_release: yoga
       scenario: core
       virt_type: qemu
       is_upgrade: no
@@ -74,16 +74,20 @@
       - ^tests/test-bifrost.sh
     vars:
       scenario: bifrost
-      install_type: source
 
 - job:
     name: kolla-ansible-ironic-base
     parent: kolla-ansible-base
     voting: false
     files:
-      - ^ansible/roles/(ironic|nova|nova-cell)/
-      - ^tests/test-ironic.sh
-      - ^tests/test-dashboard.sh
+      - ^ansible/roles/(ironic|neutron|nova|nova-cell)/
+      - ^tests/deploy-tenks\.sh$
+      - ^tests/templates/ironic-overrides\.j2$
+      - ^tests/templates/tenks-deploy-config\.yml\.j2$
+      - ^tests/test-dashboard\.sh$
+      - ^tests/test-ironic\.sh$
+    required-projects:
+      - openstack/tenks
     vars:
       scenario: ironic
 
@@ -227,6 +231,16 @@
       - ^tests/test-prometheus-efk.sh
     vars:
       scenario: prometheus-efk
+
+- job:
+    name: kolla-ansible-venus-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/(common|elasticsearch|venus)/
+      - ^tests/test-venus.sh
+    vars:
+      scenario: venus
 
 - job:
     name: kolla-ansible-hashi-vault-base

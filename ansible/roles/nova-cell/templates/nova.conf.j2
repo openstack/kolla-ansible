@@ -84,7 +84,7 @@ proxyclient_address = {{ api_interface_address }}
 [ironic]
 username = {{ ironic_keystone_user }}
 password = {{ ironic_keystone_password }}
-auth_url = {{ openstack_auth.auth_url }}/v3
+auth_url = {{ openstack_auth.auth_url }}
 cafile = {{ openstack_cacert }}
 auth_type = password
 project_name = service
@@ -107,7 +107,7 @@ num_retries = 3
 [cinder]
 catalog_info = volumev3:cinderv3:internalURL
 os_region_name = {{ openstack_region_name }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_name = {{ default_project_domain_name }}
 user_domain_id = {{ default_user_domain_id }}
@@ -120,10 +120,10 @@ cafile = {{ openstack_cacert }}
 [neutron]
 metadata_proxy_shared_secret = {{ metadata_secret }}
 service_metadata_proxy = true
-{% if neutron_plugin_agent == 'vmware_nsxv3' %}
+{% if neutron_plugin_agent in ['vmware_nsxv3', 'vmware_nsxp'] %}
 ovs_bridge = {{ ovs_bridge }}
 {% endif %}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 cafile = {{ openstack_cacert }}
 project_domain_name = {{ default_project_domain_name }}
@@ -203,7 +203,7 @@ debug = {{ nova_logging_debug }}
 
 [placement]
 auth_type = password
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 username = {{ placement_keystone_user }}
 password = {{ placement_keystone_password }}
 user_domain_name = {{ default_user_domain_name }}

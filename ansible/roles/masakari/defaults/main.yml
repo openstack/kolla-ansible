@@ -1,6 +1,4 @@
 ---
-project_name: "masakari"
-
 masakari_services:
   masakari-api:
     container_name: masakari_api
@@ -30,7 +28,7 @@ masakari_services:
   masakari-instancemonitor:
     container_name: masakari_instancemonitor
     group: masakari-instancemonitor
-    enabled: true
+    enabled: "{{ enable_masakari_instancemonitor | bool }}"
     image: "{{ masakari_monitors_image_full }}"
     volumes: "{{ masakari_instancemonitor_default_volumes + masakari_instancemonitor_extra_volumes }}"
     privileged: True
@@ -38,7 +36,7 @@ masakari_services:
   masakari-hostmonitor:
     container_name: masakari_hostmonitor
     group: masakari-hostmonitor
-    enabled: true
+    enabled: "{{ enable_masakari_hostmonitor | bool }}"
     ipc_mode: host
     image: "{{ masakari_monitors_image_full }}"
     volumes: "{{ masakari_hostmonitor_default_volumes + masakari_hostmonitor_extra_volumes }}"
@@ -55,18 +53,17 @@ masakari_database_address: "{{ database_address | put_address_in_context('url') 
 ####################
 # Docker
 ####################
-masakari_install_type: "{{ kolla_install_type }}"
 masakari_tag: "{{ openstack_tag }}"
 
-masakari_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-api"
+masakari_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/masakari-api"
 masakari_api_tag: "{{ masakari_tag }}"
 masakari_api_image_full: "{{ masakari_api_image }}:{{ masakari_api_tag }}"
 
-masakari_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-engine"
+masakari_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/masakari-engine"
 masakari_engine_tag: "{{ masakari_tag }}"
 masakari_engine_image_full: "{{ masakari_engine_image }}:{{ masakari_engine_tag }}"
 
-masakari_monitors_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ masakari_install_type }}-masakari-monitors"
+masakari_monitors_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/masakari-monitors"
 masakari_monitors_tag: "{{ masakari_tag }}"
 masakari_monitors_image_full: "{{ masakari_monitors_image }}:{{ masakari_monitors_tag }}"
 
@@ -152,3 +149,14 @@ masakari_ks_users:
     user: "{{ masakari_keystone_user }}"
     password: "{{ masakari_keystone_password }}"
     role: "admin"
+
+####################
+# libvirt
+####################
+# Whether to enable libvirt SASL authentication.
+libvirt_enable_sasl: true
+# Username for libvirt SASL.
+libvirt_sasl_authname: "nova"
+# List of enabled libvirt SASL authentication mechanisms.
+libvirt_sasl_mech_list:
+  - "{{ 'SCRAM-SHA-256' if libvirt_tls | bool else 'DIGEST-MD5' }}"

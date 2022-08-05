@@ -21,6 +21,9 @@
 # By default, we do not provide a gather subset.
 #kolla_ansible_setup_gather_subset: "{{ omit }}"
 
+# Dummy variable to allow Ansible to accept this file.
+workaround_ansible_issue_8743: yes
+
 ###############
 # Kolla options
 ###############
@@ -29,9 +32,6 @@
 
 # Valid options are ['centos', 'debian', 'rhel', 'ubuntu']
 #kolla_base_distro: "centos"
-
-# Valid options are [ binary, source ]
-#kolla_install_type: "source"
 
 # Do not override this unless you know what you are doing.
 #openstack_release: "master"
@@ -43,7 +43,7 @@
 #openstack_tag_suffix: ""
 
 # Location of configuration overrides
-#node_custom_config: "/etc/kolla/config"
+#node_custom_config: "{{ node_config }}/config"
 
 # This should be a VIP, an unused IP on your network that will float between
 # the hosts running keepalived for high-availability. If you want to run an
@@ -95,15 +95,6 @@
 ###################
 # Messaging options
 ###################
-# Below is an example of an separate backend that provides brokerless
-# messaging for oslo.messaging RPC communications
-
-#om_rpc_transport: "amqp"
-#om_rpc_user: "{{ qdrouterd_user }}"
-#om_rpc_password: "{{ qdrouterd_password }}"
-#om_rpc_port: "{{ qdrouterd_port }}"
-#om_rpc_group: "qdrouterd"
-
 # Whether to enable TLS for oslo.messaging communication with RabbitMQ.
 #om_enable_rabbitmq_tls: "{{ rabbitmq_enable_tls | bool }}"
 # CA certificate bundle in containers using oslo.messaging with RabbitMQ TLS.
@@ -127,6 +118,7 @@
 # the 'network_interface'. These interfaces must contain an IP address.
 #kolla_external_vip_interface: "{{ network_interface }}"
 #api_interface: "{{ network_interface }}"
+# NOTE: storage_interface is deprecated, please set swift_storage_interface directly instead
 #storage_interface: "{{ network_interface }}"
 #swift_storage_interface: "{{ storage_interface }}"
 #swift_replication_interface: "{{ swift_storage_interface }}"
@@ -153,8 +145,8 @@
 # addresses for that reason.
 #neutron_external_interface: "eth1"
 
-# Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_dvs ]
-# if vmware_nsxv3 is selected, enable_openvswitch MUST be set to "no" (default is yes)
+# Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_nsxp, vmware_dvs ]
+# if vmware_nsxv3 or vmware_nsxp is selected, enable_openvswitch MUST be set to "no" (default is yes)
 #neutron_plugin_agent: "openvswitch"
 
 # Valid options are [ internal, infoblox ]
@@ -214,6 +206,15 @@
 #default_container_healthcheck_retries: 3
 #default_container_healthcheck_start_period: 5
 
+##################
+# Firewall options
+##################
+# Configures firewalld on both ubuntu and centos systems
+# for enabled services.
+# firewalld should be installed beforehand.
+# disable_firewall: "true"
+# enable_external_api_firewalld: "false"
+# external_api_firewalld_zone: "public"
 
 #############
 # TLS options
@@ -305,6 +306,8 @@
 #enable_cinder_backend_lvm: "no"
 #enable_cinder_backend_nfs: "no"
 #enable_cinder_backend_quobyte: "no"
+#enable_cinder_backend_pure_iscsi: "no"
+#enable_cinder_backend_pure_fc: "no"
 #enable_cloudkitty: "no"
 #enable_collectd: "no"
 #enable_cyborg: "no"
@@ -318,6 +321,7 @@
 #enable_gnocchi: "no"
 #enable_gnocchi_statsd: "no"
 #enable_grafana: "{{ enable_monasca | bool }}"
+#enable_grafana_external: "{{ enable_grafana | bool }}"
 #enable_heat: "{{ enable_openstack_core | bool }}"
 #enable_horizon: "{{ enable_openstack_core | bool }}"
 #enable_horizon_blazar: "{{ enable_blazar | bool }}"
@@ -344,12 +348,11 @@
 #enable_horizon_zun: "{{ enable_zun | bool }}"
 #enable_influxdb: "{{ enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb') }}"
 #enable_ironic: "no"
-#enable_ironic_ipxe: "no"
 #enable_ironic_neutron_agent: "{{ enable_neutron | bool and enable_ironic | bool }}"
-#enable_ironic_pxe_uefi: "no"
 #enable_iscsid: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
 #enable_kafka: "{{ enable_monasca | bool }}"
 #enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bool else 'no' }}"
+#enable_kibana_external: "{{ enable_kibana | bool }}"
 #enable_kuryr: "no"
 #enable_magnum: "no"
 #enable_manila: "no"
@@ -387,7 +390,7 @@
 #enable_osprofiler: "no"
 #enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"
 #enable_prometheus: "no"
-#enable_qdrouterd: "{{ 'yes' if om_rpc_transport == 'amqp' else 'no' }}"
+#enable_proxysql: "no"
 #enable_redis: "no"
 #enable_sahara: "no"
 #enable_senlin: "no"
@@ -400,6 +403,7 @@
 #enable_telegraf: "no"
 #enable_trove: "no"
 #enable_trove_singletenant: "no"
+#enable_venus: "no"
 #enable_vitrage: "no"
 #enable_watcher: "no"
 #enable_zookeeper: "{{ enable_kafka | bool or enable_storm | bool }}"
@@ -463,9 +467,6 @@
 # Keystone - Identity Options
 #############################
 
-# Valid options are [ fernet ]
-#keystone_token_provider: 'fernet'
-
 #keystone_admin_user: "admin"
 
 #keystone_admin_project: "admin"
@@ -522,6 +523,7 @@
 # Enable / disable Cinder backends
 #cinder_backend_ceph: "no"
 #cinder_backend_vmwarevc_vmdk: "no"
+#cinder_backend_vmware_vstorage_object: "no"
 #cinder_volume_group: "cinder-volumes"
 # Valid options are [ '', redis, etcd ]
 #cinder_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
@@ -548,7 +550,8 @@
 ###################
 # Valid options are [ bind9 ]
 #designate_backend: "bind9"
-#designate_ns_record: "sample.openstack.org"
+#designate_ns_record:
+#  - "ns1.example.org"
 # Valid options are [ '', redis ]
 #designate_coordination_backend: "{{ 'redis' if enable_redis|bool else '' }}"
 
@@ -594,10 +597,12 @@
 #############################
 # dnsmasq bind interface for Ironic Inspector, by default is network_interface
 #ironic_dnsmasq_interface: "{{ network_interface }}"
-# The following value must be set when enabling ironic, the value format is
-# "192.168.0.10,192.168.0.100,255.255.255.0" the last being an optional netmask.
-#ironic_dnsmasq_dhcp_range:
-# PXE bootloader file for Ironic Inspector, relative to /tftpboot.
+# The following value must be set when enabling ironic, the value format is a
+# list of ranges - at least one must be configured, for example:
+# - range: 192.168.0.10,192.168.0.100
+# See Kolla Ansible docs on Ironic for details.
+#ironic_dnsmasq_dhcp_ranges:
+# PXE bootloader file for Ironic Inspector, relative to /var/lib/ironic/tftpboot.
 #ironic_dnsmasq_boot_file: "pxelinux.0"
 
 # Configure ironic upgrade option, due to currently kolla support
@@ -609,6 +614,9 @@
 
 # List of extra kernel parameters passed to the kernel used during inspection
 #ironic_inspector_kernel_cmdline_extras: []
+
+# Valid options are [ '', redis, etcd ]
+#ironic_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
 
 ######################################
 # Manila - Shared File Systems Options
@@ -703,10 +711,19 @@
 #enable_prometheus_fluentd_integration: "{{ enable_prometheus | bool and enable fluentd | bool }}"
 #enable_prometheus_memcached: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
+#enable_prometheus_alertmanager_external: "{{ enable_prometheus_alertmanager | bool }}"
 #enable_prometheus_ceph_mgr_exporter: "no"
 #enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
 #enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
+#enable_prometheus_libvirt_exporter: "{{ enable_prometheus | bool and enable_nova | bool and nova_compute_virt_type in ['kvm', 'qemu'] }}"
+#enable_prometheus_etcd_integration: "{{ enable_prometheus | bool and enable_etcd | bool }}"
+
+# The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager).
+# prometheus_external_labels:
+#   <labelname>: <labelvalue>
+# By default, prometheus_external_labels is empty
+#prometheus_external_labels:
 
 # List of extra parameters passed to prometheus. You can add as many to the list.
 #prometheus_cmdline_extras:
@@ -714,6 +731,15 @@
 # List of extra parameters passed to cAdvisor. By default system cgroups
 # and container labels are not exposed to reduce time series cardinality.
 #prometheus_cadvisor_cmdline_extras: "--docker_only --store_container_labels=false --disable_metrics=percpu,referenced_memory,cpu_topology,resctrl,udp,advtcp,sched,hugetlb,memory_numa,tcp,process"
+
+# Extra parameters passed to Prometheus exporters.
+#prometheus_blackbox_exporter_cmdline_extras:
+#prometheus_elasticsearch_exporter_cmdline_extras:
+#prometheus_haproxy_exporter_cmdline_extras:
+#prometheus_memcached_exporter_cmdline_extras:
+#prometheus_mysqld_exporter_cmdline_extras:
+#prometheus_node_exporter_cmdline_extras:
+#prometheus_openstack_exporter_cmdline_extras:
 
 # Example of setting endpoints for prometheus ceph mgr exporter.
 # You should add all ceph mgr's in your external ceph deployment.

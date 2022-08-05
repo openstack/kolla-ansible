@@ -13,18 +13,18 @@ Kolla can deploy a full working Swift setup in either a **all-in-one** or
 Networking
 ~~~~~~~~~~
 
-The following networks are used by Swift:
+The following interfaces are used by Swift:
 
-External API network (``kolla_external_vip_interface``)
-  This network is used by users to access the Swift public API.
-Internal API network (``api_interface``)
-  This network is used by users to access the Swift internal API. It is also
+External API interface (``kolla_external_vip_interface``)
+  This interface is used by users to access the Swift public API.
+Internal API interface (``api_interface``)
+  This interface is used by users to access the Swift internal API. It is also
   used by HAProxy to access the Swift proxy servers.
-Swift Storage network (``swift_storage_interface``)
-  This network is used by the Swift proxy server to access the account,
-  container and object servers. Defaults to ``storage_interface``.
-Swift replication network (``swift_replication_network``)
-  This network is used for Swift storage replication traffic.
+Swift Storage interface (``swift_storage_interface``)
+  This interface is used by the Swift proxy server to access the account,
+  container and object servers.
+Swift replication interface (``swift_replication_interface``)
+  This interface is used for Swift storage replication traffic.
   This is optional as the default configuration uses
   the ``swift_storage_interface`` for replication traffic.
 

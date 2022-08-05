@@ -1,6 +1,4 @@
 ---
-project_name: "designate"
-
 designate_services:
   designate-api:
     container_name: designate_api
@@ -66,7 +64,7 @@ designate_services:
   designate-sink:
     container_name: designate_sink
     group: designate-sink
-    enabled: true
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
     image: "{{ designate_sink_image_full }}"
     volumes: "{{ designate_sink_default_volumes + designate_sink_extra_volumes }}"
     dimensions: "{{ designate_sink_dimensions }}"
@@ -84,34 +82,33 @@ designate_database_address: "{{ database_address | put_address_in_context('url')
 ####################
 # Docker
 ####################
-designate_install_type: "{{ kolla_install_type }}"
 designate_tag: "{{ openstack_tag }}"
 
-designate_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-central"
+designate_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-central"
 designate_central_tag: "{{ designate_tag }}"
 designate_central_image_full: "{{ designate_central_image }}:{{ designate_central_tag }}"
 
-designate_producer_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-producer"
+designate_producer_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-producer"
 designate_producer_tag: "{{ designate_tag }}"
 designate_producer_image_full: "{{ designate_producer_image }}:{{ designate_producer_tag }}"
 
-designate_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-api"
+designate_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-api"
 designate_api_tag: "{{ designate_tag }}"
 designate_api_image_full: "{{ designate_api_image }}:{{ designate_api_tag }}"
 
-designate_backend_bind9_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-backend-bind9"
+designate_backend_bind9_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-backend-bind9"
 designate_backend_bind9_tag: "{{ designate_tag }}"
 designate_backend_bind9_image_full: "{{ designate_backend_bind9_image }}:{{ designate_backend_bind9_tag }}"
 
-designate_mdns_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-mdns"
+designate_mdns_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-mdns"
 designate_mdns_tag: "{{ designate_tag }}"
 designate_mdns_image_full: "{{ designate_mdns_image }}:{{ designate_mdns_tag }}"
 
-designate_sink_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-sink"
+designate_sink_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-sink"
 designate_sink_tag: "{{ designate_tag }}"
 designate_sink_image_full: "{{ designate_sink_image }}:{{ designate_sink_tag }}"
 
-designate_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ designate_install_type }}-designate-worker"
+designate_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-worker"
 designate_worker_tag: "{{ designate_tag }}"
 designate_worker_image_full: "{{ designate_worker_image }}:{{ designate_worker_tag }}"
 
@@ -269,12 +266,7 @@ designate_sink_extra_volumes: "{{ designate_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
-designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
-
 designate_logging_debug: "{{ openstack_logging_debug }}"
-
-designate_keystone_user: "designate"
 
 openstack_designate_auth: "{{ openstack_auth }}"
 
@@ -311,11 +303,9 @@ designate_infoblox_ns_group: ""
 ####################
 # Notifications
 ####################
-designate_notifications_topic_name: "notifications_designate"
-
 designate_notification_topics:
   - name: "{{ designate_notifications_topic_name }}"
-    enabled: True
+    enabled: "{{ designate_enable_notifications_sink | bool }}"
 
 designate_enabled_notification_topics: "{{ designate_notification_topics | selectattr('enabled', 'equalto', true) | list }}"
 

@@ -13,17 +13,6 @@
       - keystone_ssh
   register: container_facts
 
-- name: Checking free port for Keystone Admin
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ keystone_admin_listen_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts['keystone'] is not defined
-    - inventory_hostname in groups['keystone']
-
 - name: Checking free port for Keystone Public
   wait_for:
     host: "{{ api_interface_address }}"
@@ -67,5 +56,3 @@
       120, 240, 480, 720, 1440, 3600, 7200, 10800, 14400, 21600, 43200, 60480,
       120960, 151200, 201600, 302400, 604800. These values ensure an evenly-spaced
       run schedule as they divide 7 days without remainder.
-  when:
-    - keystone_token_provider == 'fernet'

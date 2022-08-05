@@ -137,3 +137,21 @@
     - service.enabled | bool
   notify:
     - Restart masakari-api container
+
+- name: Copying over libvirt SASL configuration
+  become: true
+  vars:
+    service_name: "{{ item.service }}"
+    service: "{{ masakari_services[service_name] }}"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item.dest }}"
+    mode: "0660"
+  when:
+    - libvirt_enable_sasl | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - { src: "auth.conf.j2", dest: "auth.conf", service: "masakari-instancemonitor" }
+  notify:
+    - Restart {{ service_name }} container

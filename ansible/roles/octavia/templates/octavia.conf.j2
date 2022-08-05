@@ -44,7 +44,7 @@ max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 [service_auth]
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 username = {{ octavia_keystone_user }}
 password = {{ octavia_keystone_password }}
@@ -58,8 +58,9 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [keystone_authtoken]
+service_type = load-balancer
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}

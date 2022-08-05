@@ -18,27 +18,57 @@ Enable Ironic in ``/etc/kolla/globals.yml``:
    enable_ironic: "yes"
 
 In the same file, define a network interface as the default NIC for dnsmasq and
-a range of IP addresses that will be available for use by Ironic inspector.
-The optional netmask of the network should be provided in case when DHCP-relay
-is used. Finally, define a network to be used for the Ironic cleaning network:
+define a network to be used for the Ironic cleaning network:
 
 .. code-block:: yaml
 
    ironic_dnsmasq_interface: "eth1"
-   ironic_dnsmasq_dhcp_range: "192.168.5.100,192.168.5.110,255.255.255.0"
    ironic_cleaning_network: "public1"
 
-In the same file, optionally a default gateway to be used for the Ironic
-Inspector inspection network:
+Finally, define at least one DHCP range for Ironic inspector:
 
 .. code-block:: yaml
 
-   ironic_dnsmasq_default_gateway: 192.168.5.1
+   ironic_dnsmasq_dhcp_ranges:
+     - range: "192.168.5.100,192.168.5.110"
+
+Another example of a single range with a router (multiple routers
+are possible by separating addresses with commas):
+
+.. code-block:: yaml
+
+   ironic_dnsmasq_dhcp_ranges:
+     - range: "192.168.5.100,192.168.5.110"
+       routers: "192.168.5.1"
+
+To support DHCP relay, it is also possible to define a netmask in the range.
+It is advisable to also provide a router to allow the traffic to reach the
+Ironic server.
+
+.. code-block:: yaml
+
+  ironic_dnsmasq_dhcp_ranges:
+    - range: "192.168.5.100,192.168.5.110,255.255.255.0"
+      routers: "192.168.5.1"
+
+Multiple ranges are possible, they can be either for directly-connected
+interfaces or relays (if with netmask):
+
+.. code-block:: yaml
+
+  ironic_dnsmasq_dhcp_ranges:
+    - range: "192.168.5.100,192.168.5.110"
+    - range: "192.168.6.100,192.168.6.110,255.255.255.0"
+      routers: "192.168.6.1"
+
+The default lease time for each range can be configured globally via
+``ironic_dnsmasq_dhcp_default_lease_time`` variable or per range via
+``lease_time`` parameter.
 
 In the same file, specify the PXE bootloader file for Ironic Inspector. The
-file is relative to the ``/tftpboot`` directory. The default is ``pxelinux.0``,
-and should be correct for x86 systems. Other platforms may require a different
-value, for example aarch64 on Debian requires
+file is relative to the ``/var/lib/ironic/tftpboot`` directory. The default is
+``pxelinux.0``, and should be correct for x86 systems. Other platforms may
+require a differentvalue, for example aarch64 on Debian requires
 ``debian-installer/arm64/bootnetaa64.efi``.
 
 .. code-block:: yaml
@@ -66,46 +96,34 @@ You may optionally pass extra kernel parameters to the inspection kernel using:
 
 in ``/etc/kolla/globals.yml``.
 
-Enable iPXE booting (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can optionally enable booting via iPXE by setting ``enable_ironic_ipxe`` to
-true in ``/etc/kolla/globals.yml``:
+Configure conductor's HTTP server port (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The port used for conductor's HTTP server is controlled via
+``ironic_http_port`` in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   enable_ironic_ipxe: "yes"
+    ironic_http_port: "8089"
 
-When iPXE booting is enabled, the ``ironic_ipxe`` container is used to serve
-the iPXE boot images as described below. Regardless of the setting above, the
-same container is used to support the ``direct`` deploy interface.
-
-The port used for the iPXE webserver is controlled via ``ironic_ipxe_port`` in
+Revert to plain PXE (not recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting with Yoga, Ironic has changed the default PXE from plain PXE to iPXE.
+Kolla Ansible follows this upstream decision by choosing iPXE as the default
+for Ironic Inspector but allows users to revert to the previous default of
+plain PXE by setting the following in
 ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-    ironic_ipxe_port: "8089"
+   ironic_dnsmasq_serve_ipxe: "no"
 
-The following changes will occur if iPXE booting is enabled:
-
-- Ironic will be configured with the ``ipxe_enabled`` configuration option set
-  to true
-- The inspection ramdisk and kernel will be loaded via iPXE
-- The DHCP servers will be configured to chainload iPXE from an existing PXE
-  environment. You may also boot directly to iPXE by some other means e.g by
-  burning it to the option rom of your ethernet card.
-
-Note that due to a limitation in Kolla Ansible, PXE and iPXE cannot be used
-together in a single deployment.
-
-In order to enable the iPXE driver in Ironic, set the ``[DEFAULT]
-enabled_boot_interfaces`` option in ``/etc/kolla/config/ironic.conf``:
+To revert Ironic to previous default as well, set ``pxe`` as
+``default_boot_interface`` in ``/etc/kolla/config/ironic.conf``:
 
 .. code-block:: yaml
 
    [DEFAULT]
-   enabled_boot_interfaces = ipxe
+   default_boot_interface = pxe
 
 Attach ironic to external keystone (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

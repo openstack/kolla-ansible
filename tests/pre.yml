@@ -56,6 +56,24 @@
         path: "{{ logs_dir }}"
         state: "directory"
 
+    - name: Ensure /tmp/logs/pre dir
+      file:
+        path: "{{ logs_dir }}/pre"
+        state: "directory"
+
+    - name: Run diagnostics script
+      environment:
+        LOG_DIR: "{{ logs_dir }}/pre"
+        KOLLA_INTERNAL_VIP_ADDRESS: "{{ kolla_internal_vip_address }}"
+      script: get_logs.sh
+      register: get_logs_result
+      become: true
+      failed_when: false
+
+    - name: Print get_logs output
+      debug:
+        msg: "{{ get_logs_result.stdout }}"
+
     - name: Ensure node directories
       file:
         path: "{{ logs_dir }}/{{ item }}"
@@ -81,7 +99,34 @@
     - name: set new hostname based on ansible inventory file
       hostname:
         name: "{{ inventory_hostname }}"
+        use: systemd
       become: true
+
+    # NOTE(wxy): There are some issues on openEuler, fix them by hand.
+    # 1. iptables-legacy is used by default.
+    # 2. NTP sync doesn't work by default.
+    - block:
+        # The CentOS Stream 8 in container uses iptables-nft while the host
+        # openEuler uses iptables-legacy by default. We should update openEuler
+        # to keep iptables the same.
+        # Ubuntu 20.04 container OS uses iptables-legacy by default. It works
+        # well on openEuler.
+        - name: Set iptables from legacy to nft for centos stream container
+          shell:
+            cmd: |
+              dnf install -y iptables-nft
+              iptables-save  > iptables.txt
+              iptables-nft-restore < iptables.txt
+              update-alternatives --set iptables /usr/sbin/iptables-nft
+          become: true
+          when: base_distro == 'centos'
+
+        # The command `timedatectl status` always times out if the command
+        # `timedatectl show-timesync` is not run first.
+        - name: Let ntp service work
+          shell: timedatectl show-timesync
+          become: true
+      when: ansible_facts.distribution == 'openEuler'
 
     - name: Wait for ntp time sync
       command: timedatectl status
@@ -90,31 +135,3 @@
       until: "'synchronized: yes' in timedatectl_status.stdout"
       retries: 90
       delay: 10
-
-    # TODO(mgoddard): Remove this task in the Y cycle after chrony has been
-    # dropped for a cycle.
-    # NOTE(mgoddard): For upgrades, test the case where we are running
-    # a chrony container, but keep the default of disabled after the
-    # upgrade.
-    - block:
-        - name: Remove host NTP packages
-          become: true
-          package:
-            name:
-              - chrony
-              - ntp
-            state: absent
-
-        # NOTE(mgoddard): removing the systemd-timesyncd package fails, so stop
-        # and disable it instead.
-        - name: Stop systemd-timesyncd service
-          become: true
-          service:
-            name: systemd-timesyncd
-            enabled: no
-            state: stopped
-          when: ansible_os_family == 'Debian'
-      when:
-        - is_upgrade
-        # cephadm gets grumpy without a host-level chrony.
-        - scenario != 'cephadm'

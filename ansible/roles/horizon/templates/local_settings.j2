@@ -224,7 +224,7 @@ WEBSSO_ENABLED = True
 # Do not remove the mandatory credentials mechanism.
 # Note: The last two tuples are sample mapping keys to a identity provider
 # and federation protocol combination (WEBSSO_IDP_MAPPING).
-WEBSSO_KEYSTONE_URL = "{{ keystone_public_url }}/v3"
+WEBSSO_KEYSTONE_URL = "{{ keystone_public_url }}"
 WEBSSO_CHOICES = (
     ("credentials", _("Keystone Credentials")),
     {% for idp in keystone_identity_providers %}
@@ -515,6 +515,15 @@ POLICY_FILES_PATH = '/etc/openstack-dashboard'
 #    ('default', 'Default', 'themes/default'),
 #    ('material', 'Material', 'themes/material'),
 #]
+{% if horizon_custom_themes | length > 0 %}
+AVAILABLE_THEMES = [
+     ('default', 'Default', 'themes/default'),
+     ('material', 'Material', 'themes/material'),
+{% for theme in horizon_custom_themes %}
+     ('{{ theme.name|e }}', '{{ theme.label|e }}', '/etc/openstack-dashboard/themes/{{ theme.name|e }}'),
+{% endfor %}
+]
+{% endif %}
 
 LOGGING = {
     'version': 1,
@@ -847,16 +856,13 @@ REST_API_REQUIRED_SETTINGS = [
 
 {% if enable_murano | bool and enable_barbican | bool %}
 KEY_MANAGER = {
-        'auth_url': '{{ keystone_internal_url }}/v3',
+        'auth_url': '{{ keystone_internal_url }}',
         'username': '{{ murano_keystone_user }}',
         'user_domain_name': '{{ default_project_domain_name }}',
         'password': '{{ murano_keystone_password }}',
         'project_name': 'service',
         'project_domain_name': '{{ default_project_domain_name }}'
 }
-{% endif %}
-{% if kolla_base_distro in ['debian', 'ubuntu'] and horizon_install_type == 'binary' %}
-STATIC_ROOT = "/var/lib/openstack-dashboard/static/"
 {% endif %}
 
 # Allow operators to overwrite variables (LP: #1769970).

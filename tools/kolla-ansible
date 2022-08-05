@@ -68,8 +68,8 @@ function check_environment_coherence {
         exit 1
     fi
 
-    local ANSIBLE_VERSION_MIN=2.10
-    local ANSIBLE_VERSION_MAX=2.11
+    local ANSIBLE_VERSION_MIN=2.11
+    local ANSIBLE_VERSION_MAX=2.12
 
     if [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | head -n1) != "$ANSIBLE_VERSION_MIN" ]] ||
        [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | tail -n1) != "$ANSIBLE_VERSION_MAX" ]]; then
@@ -124,6 +124,15 @@ function find_base_dir {
     fi
 }
 
+function install_deps {
+    echo "Installing Ansible Galaxy dependencies"
+    ansible-galaxy collection install -r ${BASEDIR}/requirements.yml --force
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to install Ansible Galaxy dependencies" >&2
+        exit 1
+    fi
+}
+
 function process_cmd {
     echo "$ACTION : $CMD"
     $CMD
@@ -162,8 +171,8 @@ Environment variables:
     EXTRA_OPTS                         Additional arguments to pass to ansible-playbook
 
 Commands:
+    install-deps         Install Ansible Galaxy dependencies
     prechecks            Do pre-deployment checks for hosts
-    check                Do post-deployment smoke tests
     mariadb_recovery     Recover a completely stopped mariadb cluster
     mariadb_backup       Take a backup of MariaDB databases
                              --full (default)
@@ -188,7 +197,7 @@ Commands:
     upgrade-bifrost      Upgrades an existing bifrost container
     genconfig            Generate configuration files for enabled OpenStack services
     prune-images         Prune orphaned Kolla images
-    chrony-cleanup       Clean up disabled chrony containers
+    nova-libvirt-cleanup Clean up disabled nova_libvirt containers
 EOF
 }
 
@@ -212,8 +221,8 @@ cat <<EOF
 --diff -D
 --verbose -v
 --version
+install-deps
 prechecks
-check
 mariadb_recovery
 mariadb_backup
 monasca_cleanup
@@ -234,6 +243,7 @@ upgrade
 upgrade-bifrost
 genconfig
 prune-images
+nova-libvirt-cleanup
 EOF
 }
 
@@ -406,13 +416,13 @@ done
 
 case "$1" in
 
+(install-deps)
+        install_deps
+        exit 0
+        ;;
 (prechecks)
         ACTION="Pre-deployment checking"
         EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=precheck"
-        ;;
-(check)
-        ACTION="Post-deployment checking"
-        EXTRA_OPTS="$EXTRA_OPTS -e kolla_action=check"
         ;;
 (mariadb_recovery)
         ACTION="Attempting to restart mariadb cluster"
@@ -533,9 +543,9 @@ EOF
             exit 1
         fi
         ;;
-(chrony-cleanup)
-        ACTION="Cleanup disabled chrony containers"
-        PLAYBOOK="${BASEDIR}/ansible/chrony-cleanup.yml"
+(nova-libvirt-cleanup)
+        ACTION="Cleanup disabled nova_libvirt containers"
+        PLAYBOOK="${BASEDIR}/ansible/nova-libvirt-cleanup.yml"
         ;;
 (bash-completion)
         bash_completion

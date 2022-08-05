@@ -1,0 +1,27 @@
+---
+- name: Copying over ceph.conf for Zun
+  copy:
+    src: "{{ node_custom_config }}/zun/zun-compute/ceph.conf"
+    dest: "{{ node_config_directory }}/zun-compute/"
+    mode: "0660"
+  become: true
+  notify:
+    - Restart zun-compute container
+
+- name: Copy over Ceph keyring files for zun-compute
+  copy:
+    src: "{{ node_custom_config }}/zun/zun-compute/{{ ceph_cinder_keyring }}"
+    dest: "{{ node_config_directory }}/zun-compute/"
+    mode: "0660"
+  become: true
+  when: external_ceph_cephx_enabled | bool
+  notify:
+    - Restart zun-compute container
+
+- name: Ensuring config directory has correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/zun-compute"
+    recurse: yes
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"

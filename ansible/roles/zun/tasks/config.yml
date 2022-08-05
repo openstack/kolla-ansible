@@ -12,6 +12,11 @@
     - item.value.enabled | bool
   with_dict: "{{ zun_services }}"
 
+- include_tasks: external_ceph.yml
+  when:
+    - zun_configure_for_cinder_ceph | bool
+    - inventory_hostname in groups['zun-compute']
+
 - name: Check if policies shall be overwritten
   stat:
     path: "{{ item }}"

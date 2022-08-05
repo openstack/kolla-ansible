@@ -94,8 +94,29 @@
 - name: Copying over libvirt TLS keys
   include_tasks: config-libvirt-tls.yml
   when:
+    - inventory_hostname in groups[nova_cell_compute_group]
     - libvirt_tls | bool
     - libvirt_tls_manage_certs | bool
+
+- name: Copying over libvirt SASL configuration
+  become: true
+  vars:
+    service_name: "{{ item.service }}"
+    service: "{{ nova_cell_services[service_name] }}"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item.dest }}"
+    mode: "0660"
+  when:
+    - libvirt_enable_sasl | bool
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_items:
+    - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-compute" }
+    - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-libvirt" }
+    - { src: "sasl.conf.j2", dest: "sasl.conf", service: "nova-libvirt" }
+  notify:
+    - Restart {{ service_name }} container
 
 - name: Copying files for nova-ssh
   become: true

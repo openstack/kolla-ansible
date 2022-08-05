@@ -1,6 +1,4 @@
 ---
-project_name: "grafana"
-
 grafana_services:
   grafana:
     container_name: grafana
@@ -16,7 +14,7 @@ grafana_services:
         external: false
         port: "{{ grafana_server_port }}"
       grafana_server_external:
-        enabled: "{{ enable_grafana }}"
+        enabled: "{{ enable_grafana_external | bool }}"
         mode: "http"
         external: true
         port: "{{ grafana_server_port }}"
@@ -39,7 +37,7 @@ grafana_data_sources:
       database: "telegraf"
       name: "telegraf"
       type: "influxdb"
-      url: "{{ infuxdb_internal_endpoint }}"
+      url: "{{ influxdb_internal_endpoint }}"
       access: "proxy"
       basicAuth: false
   elasticsearch:
@@ -66,8 +64,7 @@ grafana_data_sources:
 ##########
 # Grafana
 ##########
-grafana_install_type: "{{ kolla_install_type }}"
-grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ grafana_install_type }}-grafana"
+grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/grafana"
 grafana_tag: "{{ openstack_tag }}"
 grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"

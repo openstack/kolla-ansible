@@ -5,16 +5,6 @@ log_dir = /var/log/kolla/placement
 
 state_path = /var/lib/placement
 
-osapi_compute_listen = {{ api_interface_address }}
-
-# Though my_ip is not used directly, lots of other variables use $my_ip
-my_ip = {{ api_interface_address }}
-
-transport_url = {{ rpc_transport_url }}
-
-[api]
-use_forwarded_for = true
-
 [oslo_middleware]
 enable_proxy_headers_parsing = True
 
@@ -35,8 +25,9 @@ memcache_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address
 
 
 [keystone_authtoken]
+service_type = placement
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}

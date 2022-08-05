@@ -1,5 +1,5 @@
 {% set keystone_log_dir = '/var/log/kolla/keystone' %}
-{% set binary_path = '/usr/bin' if keystone_install_type == 'binary' else '/var/lib/kolla/venv/bin' %}
+{% set binary_path = '/var/lib/kolla/venv/bin' %}
 {% if keystone_enable_tls_backend | bool %}
 {% if kolla_base_distro in ['centos']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
@@ -8,7 +8,11 @@ LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
 {% endif %}
 {% endif %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
+{% if kolla_action == 'upgrade' %}
+# NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
+# TODO(yoctozepto): Remove after Zed.
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_admin_listen_port }}
+{% endif %}
 
 ServerSignature Off
 ServerTokens Prod
@@ -56,7 +60,7 @@ LogLevel info
 {% if keystone_enable_federation_openid %}
     OIDCClaimPrefix "OIDC-"
     OIDCClaimDelimiter ";"
-    OIDCResponseType "id_token"
+    OIDCResponseType "{{ keystone_federation_oidc_response_type }}"
     OIDCScope "{{ keystone_federation_oidc_scopes }}"
     OIDCMetadataDir {{ keystone_container_federation_oidc_metadata_folder }}
 {% if keystone_federation_openid_certificate_key_ids | length > 0 %}
@@ -64,6 +68,10 @@ LogLevel info
 {% endif %}
     OIDCCryptoPassphrase {{ keystone_federation_openid_crypto_password }}
     OIDCRedirectURI {{ keystone_public_url }}/redirect_uri
+{% if enable_memcached | bool and keystone_oidc_enable_memcached | bool %}
+    OIDCCacheType memcache
+    OIDCMemCacheServers "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %} {% endif %}{% endfor %}"
+{% endif %}
 
     <Location ~ "/redirect_uri">
       Require valid-user
@@ -79,6 +87,7 @@ LogLevel info
 {% for idp in keystone_identity_providers %}
 {% if idp.protocol == 'openid' %}
     <LocationMatch /v3/auth/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/websso>
+      OIDCDiscoverURL {{ keystone_public_url }}/redirect_uri?iss={{ idp.identifier | urlencode }}
       Require valid-user
       AuthType openid-connect
     </LocationMatch>
@@ -99,6 +108,9 @@ LogLevel info
 {% endif %}
 </VirtualHost>
 
+{% if kolla_action == 'upgrade' %}
+# NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
+# TODO(yoctozepto): Remove after Zed.
 <VirtualHost *:{{ keystone_admin_listen_port }}>
     WSGIDaemonProcess keystone-admin processes={{ openstack_service_workers }} threads=1 user=keystone group=keystone display-name=keystone-admin
     WSGIProcessGroup keystone-admin
@@ -118,3 +130,4 @@ LogLevel info
     SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
 {% endif %}
 </VirtualHost>
+{% endif %}

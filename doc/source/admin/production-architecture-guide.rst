@@ -54,13 +54,14 @@ In Kolla operators should configure following network interfaces:
   ``kolla_enable_tls_external`` is set to yes. Defaults to
   ``network_interface``.
 
-* ``storage_interface`` - This is the interface that is used by Swift.
-  This can be heavily utilized so it's recommended to use a high speed
-  network fabric. Defaults to ``network_interface``.
+* ``storage_interface`` (**deprecated**) - Sets the default for
+  ``swift_storage_interface``. Defaults to ``network_interface``.
+  Please set ``swift_storage_interface`` directly instead.
 
 * ``swift_storage_interface`` - This interface is used by Swift for storage
   access traffic.  This can be heavily utilized so it's recommended to use
-  a high speed network fabric. Defaults to ``storage_interface``.
+  a high speed network fabric. Defaults to ``storage_interface``, will default
+  directly to ``network_interface`` in a future release.
 
 * ``swift_replication_interface`` - This interface is used by Swift for storage
   replication traffic.  This can be heavily utilized so it's recommended to use

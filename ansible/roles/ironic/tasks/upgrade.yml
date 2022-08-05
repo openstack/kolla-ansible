@@ -1,6 +1,59 @@
 ---
+- name: Wait for Ironic nodes not to wait
+  become: true
+  command: >
+    docker exec kolla_toolbox openstack
+    --os-interface {{ openstack_interface }}
+    --os-auth-url {{ openstack_auth.auth_url }}
+    --os-username {{ openstack_auth.username }}
+    --os-password {{ openstack_auth.password }}
+    --os-identity-api-version 3
+    --os-user-domain-name {{ openstack_auth.user_domain_name }}
+    --os-system-scope {{ openstack_auth.system_scope }}
+    --os-region-name {{ openstack_region_name }}
+    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
+    baremetal node list --format json --column "Provisioning State"
+  register: ironic_nodes
+  changed_when: false
+  retries: 10
+  delay: 30
+  until:
+    - ironic_nodes is success
+    - (ironic_nodes.stdout |
+       from_json |
+       map(attribute='Provisioning State') |
+       select('search', '\\bwait\\b') |
+       length) == 0
+  run_once: true
+  when: not ironic_upgrade_skip_wait_check | bool
+
+# TODO(yoctozepto): Remove this task in Zed.
+- name: Remove old Ironic containers
+  become: true
+  kolla_docker:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item }}"
+  with_items:
+    # NOTE(yoctozepto): Removing conductor to avoid it
+    # thinking that the tftp and http servers are available.
+    - ironic_conductor
+    - ironic_pxe
+    - ironic_ipxe
+
 - include_tasks: rolling_upgrade.yml
   when: ironic_enable_rolling_upgrade | bool
 
 - include_tasks: legacy_upgrade.yml
   when: not ironic_enable_rolling_upgrade | bool
+
+# TODO(yoctozepto): Remove this task in Zed.
+- name: Remove old Ironic volumes
+  become: true
+  kolla_docker:
+    action: "remove_volume"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item }}"
+  with_items:
+    - ironic_pxe
+    - ironic_ipxe

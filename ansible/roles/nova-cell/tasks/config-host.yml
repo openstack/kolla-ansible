@@ -39,6 +39,7 @@
     dest: "/etc/udev/rules.d/99-kolla-kvm.rules"
     mode: "0644"
   when:
+    - enable_nova_libvirt_container | bool
     - nova_compute_virt_type == 'kvm'
     - inventory_hostname in groups[nova_cell_compute_group]
 
@@ -51,6 +52,7 @@
     name: qemu-kvm.service
     masked: true
   when:
+    - enable_nova_libvirt_container | bool
     - nova_compute_virt_type == 'kvm'
     - ansible_facts.distribution == 'Ubuntu'
     - inventory_hostname in groups[nova_cell_compute_group]

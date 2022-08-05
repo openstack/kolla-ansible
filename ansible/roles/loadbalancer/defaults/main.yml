@@ -1,6 +1,4 @@
 ---
-project_name: "loadbalancer"
-
 loadbalancer_services:
   haproxy:
     container_name: haproxy
@@ -11,6 +9,15 @@ loadbalancer_services:
     volumes: "{{ haproxy_default_volumes + haproxy_extra_volumes }}"
     dimensions: "{{ haproxy_dimensions }}"
     healthcheck: "{{ haproxy_healthcheck }}"
+  proxysql:
+    container_name: proxysql
+    group: loadbalancer
+    enabled: "{{ enable_proxysql | bool }}"
+    image: "{{ proxysql_image_full }}"
+    privileged: False
+    volumes: "{{ proxysql_default_volumes + proxysql_extra_volumes }}"
+    dimensions: "{{ proxysql_dimensions }}"
+    healthcheck: "{{ proxysql_healthcheck }}"
   keepalived:
     container_name: keepalived
     group: loadbalancer
@@ -24,15 +31,17 @@ loadbalancer_services:
 ####################
 # Docker
 ####################
-keepalived_install_type: "{{ kolla_install_type }}"
-keepalived_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ keepalived_install_type }}-keepalived"
+keepalived_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keepalived"
 keepalived_tag: "{{ openstack_tag }}"
 keepalived_image_full: "{{ keepalived_image }}:{{ keepalived_tag }}"
 
-haproxy_install_type: "{{ kolla_install_type }}"
-haproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ haproxy_install_type }}-haproxy"
+haproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/haproxy"
 haproxy_tag: "{{ openstack_tag }}"
 haproxy_image_full: "{{ haproxy_image }}:{{ haproxy_tag }}"
+
+proxysql_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/proxysql"
+proxysql_tag: "{{ openstack_tag }}"
+proxysql_image_full: "{{ proxysql_image }}:{{ proxysql_tag }}"
 
 syslog_server: "{{ api_interface_address }}"
 syslog_haproxy_facility: "local1"
@@ -48,6 +57,7 @@ haproxy_process_cpu_map: "no"
 haproxy_defaults_max_connections: 10000
 
 haproxy_dimensions: "{{ default_container_dimensions }}"
+proxysql_dimensions: "{{ default_container_dimensions }}"
 keepalived_dimensions: "{{ default_container_dimensions }}"
 
 haproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
@@ -63,20 +73,57 @@ haproxy_healthcheck:
   test: "{% if haproxy_enable_healthchecks | bool %}{{ haproxy_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ haproxy_healthcheck_timeout }}"
 
+proxysql_enable_healthchecks: "{{ enable_container_healthchecks }}"
+proxysql_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+proxysql_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+proxysql_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+proxysql_healthcheck_test: ["CMD-SHELL", "healthcheck_listen proxysql {{ proxysql_admin_port }}"]
+proxysql_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+proxysql_healthcheck:
+  interval: "{{ proxysql_healthcheck_interval }}"
+  retries: "{{ proxysql_healthcheck_retries }}"
+  start_period: "{{ proxysql_healthcheck_start_period }}"
+  test: "{% if proxysql_enable_healthchecks | bool %}{{ proxysql_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ proxysql_healthcheck_timeout }}"
+
 haproxy_default_volumes:
   - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
+proxysql_default_volumes:
+  - "{{ node_config_directory }}/proxysql/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "proxysql:/var/lib/proxysql/"
+  - "proxysql_socket:/var/lib/kolla/proxysql/"
 keepalived_default_volumes:
   - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "haproxy_socket:/var/lib/kolla/haproxy/"
+  - "{{ 'haproxy_socket:/var/lib/kolla/haproxy/' if enable_haproxy | bool else '' }}"
+  - "{{ 'proxysql_socket:/var/lib/kolla/proxysql/' if enable_proxysql | bool else '' }}"
 
 haproxy_extra_volumes: "{{ default_extra_volumes }}"
+proxysql_extra_volumes: "{{ default_extra_volumes }}"
 keepalived_extra_volumes: "{{ default_extra_volumes }}"
+
+# Default proxysql values
+proxysql_workers: "{{ openstack_service_workers }}"
+
+# The maximum number of client connections that the proxy can handle.
+# After this number is reached, new connections will be rejected with
+# the #HY000 error, and the error message Too many connections.
+#
+# As proxysql can route queries to several mariadb clusters, this
+# value is set to 4x {{ proxysql_backend_max_connections }}
+proxysql_max_connections: 40000
+# The maximum number of connections to mariadb backends.
+proxysql_backend_max_connections: 10000
+proxysql_admin_user: "kolla-admin"
+proxysql_stats_user: "kolla-stats"
 
 # Default timeout values
 haproxy_http_request_timeout: "10s"
@@ -93,5 +140,8 @@ haproxy_defaults_balance: "roundrobin"
 # Avoid TCP connections refusing to die after VIP switch
 # https://bugs.launchpad.net/kolla-ansible/+bug/1917068
 haproxy_host_ipv4_tcp_retries2: "KOLLA_UNSET"
+
+# HAProxy socket admin permissions enable
+haproxy_socket_level_admin: "no"
 
 kolla_externally_managed_cert: False

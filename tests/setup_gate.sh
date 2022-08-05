@@ -101,6 +101,11 @@ function prepare_images {
         # FIXME(mgoddard): No need for OpenStack core images.
         GATE_IMAGES+=",^elasticsearch,^grafana,^influxdb,^kafka,^kibana,^logstash,^monasca,^storm,^zookeeper"
     fi
+
+    if [[ $SCENARIO == "venus" ]]; then
+        GATE_IMAGES="^cron,^elasticsearch,^fluentd,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
+    fi
+
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}

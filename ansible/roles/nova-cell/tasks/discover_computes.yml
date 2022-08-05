@@ -1,77 +1,23 @@
 ---
-# We need to wait for all expected compute services to register before running
-# cells v2 host discovery. This includes virtualised compute services and
-# ironic compute services.
-# Work with --limit by including only hosts in ansible_play_batch.
-- name: Build a list of expected compute service hosts
-  vars:
-    # For virt, use ansible_facts.nodename rather than inventory_hostname, since this
-    # is similar to what nova uses internally as its default for the
-    # [DEFAULT] host config option.
-    virt_compute_service_hosts: >-
-      {{ virt_computes_in_batch |
-         map('extract', hostvars, ['ansible_facts', 'nodename']) |
-         list }}
-    # For ironic, use {{ansible_facts.hostname}}-ironic since this is what we
-    # configure for [DEFAULT] host in nova.conf.
-    ironic_compute_service_hosts: >-
-      {{ ironic_computes_in_batch |
-         map('extract', hostvars, ['ansible_facts', 'hostname']) |
-         map('regex_replace', '^(.*)$', '\1-ironic') |
-         list }}
-  set_fact:
-    expected_compute_service_hosts: "{{ virt_compute_service_hosts + ironic_compute_service_hosts }}"
-  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+# Discover compute hosts for a cell.
 
-- name: Waiting for nova-compute services to register themselves
-  become: true
-  command: >
-    docker exec kolla_toolbox openstack
-    --os-interface {{ openstack_interface }}
-    --os-auth-url {{ openstack_auth.auth_url }}
-    --os-username {{ openstack_auth.username }}
-    --os-password {{ openstack_auth.password }}
-    --os-identity-api-version 3
-    --os-user-domain-name {{ openstack_auth.user_domain_name }}
-    --os-system-scope {{ openstack_auth.system_scope }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
-    compute service list --format json --column Host --service nova-compute
-  register: nova_compute_services
-  changed_when: false
-  retries: 20
-  delay: 10
-  until:
-    - nova_compute_services is success
-    # A list containing the 'Host' field of compute services that have
-    # registered themselves.  Don't exclude compute services that are disabled
-    # since these could have been explicitly disabled by the operator. While we
-    # could exclude services that are down, the nova-manage cell_v2
-    # discover_hosts does not do this so let's not block on it here.
-    # NOTE(mgoddard): Cannot factor this out into an intermediary variable
-    # before ansible 2.8, due to
-    # https://bugs.launchpad.net/kolla-ansible/+bug/1835817.
-    - (nova_compute_services.stdout |
-       from_json |
-       map(attribute='Host') |
-       list)
-      is superset(expected_compute_service_hosts)
-  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+- block:
+    - import_tasks: get_cell_settings.yml
 
-- import_tasks: get_cell_settings.yml
-  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+    - name: Fail if cell settings not found
+      fail:
+        msg: >-
+          Unable to find settings for {{ nova_cell_name or 'the default cell' }}.
+      when: not nova_cell_settings
 
-- name: Fail if cell settings not found
-  fail:
-    msg: >-
-      Unable to find settings for {{ nova_cell_name or 'the default cell' }}.
-  when: not nova_cell_settings
-  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+    # TODO(yoctozepto): no need to do --by-service if ironic not used
+    - name: Discover nova hosts
+      become: true
+      command: >
+        docker exec nova_conductor nova-manage cell_v2 discover_hosts --by-service --cell_uuid {{ nova_cell_settings.cell_uuid }}
+      changed_when: False
 
-# TODO(yoctozepto): no need to do --by-service if ironic not used
-- name: Discover nova hosts
-  become: true
-  command: >
-    docker exec nova_conductor nova-manage cell_v2 discover_hosts --by-service --cell_uuid {{ nova_cell_settings.cell_uuid }}
-  changed_when: False
+  # Delegate to a cell conductor.
   delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  # Fail all hosts if any of these once-per-cell tasks fail.
+  any_errors_fatal: true

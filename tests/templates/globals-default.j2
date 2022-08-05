@@ -1,12 +1,15 @@
 ---
-{% if ansible_os_family == 'Debian' %}
-# Force the use of python3 on Debian and Ubuntu remote hosts. These distros
+{% if ansible_os_family == 'Debian' or ansible_facts.distribution == "openEuler" %}
+# Force the use of python3 on Debian, Ubuntu and openEuler remote hosts. These distros
 # typically have an unversioned Python interpreter which links to python2.7.
 ansible_python_interpreter: /usr/bin/python3
 {% endif %}
 
 kolla_base_distro: "{{ base_distro }}"
+# Zed dropped install_type so we have it only on upgrades
+{% if is_upgrade %}
 kolla_install_type: "{{ install_type }}"
+{% endif %}
 network_interface: "{{ api_interface_name }}"
 network_address_family: "{{ address_family }}"
 docker_restart_policy: "no"
@@ -14,14 +17,13 @@ docker_custom_config:
   debug: true
   registry-mirrors:
     - {{ infra_dockerhub_mirror }}
+{% if ansible_facts.distribution == "openEuler" %}
+  exec-opts: ["native.umask=normal"]
+{% endif %}
 
 {% if kolla_python_version is defined and not is_previous_release %}
 distro_python_version: "{{ kolla_python_version }}"
 {% endif %}
-
-# Use a random router id, otherwise it may result in the same router id
-# in the CI gate.
-keepalived_virtual_router_id: "{{ 250 | random(1) }}"
 
 # MariaDB/Galera - fine tune gmcast.peer_timeout
 mariadb_wsrep_extra_provider_options:
@@ -97,12 +99,12 @@ enable_aodh: "yes"
 
 {% if scenario == "ironic" %}
 enable_ironic: "yes"
-ironic_dnsmasq_dhcp_range: "10.42.0.2,10.42.0.254,255.255.255.0"
+ironic_dnsmasq_dhcp_ranges:
+  - range: "10.42.0.2,10.42.0.254,255.255.255.0"
 {% endif %}
 
 {% if scenario == "masakari" %}
 enable_masakari: "yes"
-enable_hacluster: "yes"
 {% endif %}
 
 {% if scenario == "cells" %}
@@ -146,6 +148,7 @@ openstack_cacert: "/etc/pki/tls/certs/ca-bundle.crt"
 {% endif %}
 kolla_admin_openrc_cacert: "{% raw %}{{ kolla_certificates_dir }}{% endraw %}/ca/root.crt"
 rabbitmq_enable_tls: "yes"
+libvirt_tls: "yes"
 {% endif %}
 
 {% if scenario == 'linuxbridge' %}
@@ -193,3 +196,8 @@ octavia_amp_flavor:
 octavia_network_type: "tenant"
 {% endif %}
 
+{% if scenario == "venus" %}
+enable_elasticsearch: "yes"
+enable_keystone: "yes"
+enable_venus: "yes"
+{% endif %}

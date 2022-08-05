@@ -2,7 +2,7 @@
 debug = {{ ironic_logging_debug }}
 log_dir = /var/log/kolla/ironic-inspector
 
-{% if not enable_keystone | bool %}
+{% if not ironic_enable_keystone_integration | bool %}
 auth_strategy = noauth
 {% endif %}
 listen_address = {{ api_interface_address }}
@@ -20,7 +20,7 @@ ssl_ca_file = {{ om_rabbitmq_cacert }}
 
 [ironic]
 {% if ironic_enable_keystone_integration | bool %}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -37,8 +37,9 @@ endpoint_override = {{ ironic_internal_endpoint }}
 
 {% if ironic_enable_keystone_integration | bool %}
 [keystone_authtoken]
+service_type = baremetal-introspection
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -72,4 +73,15 @@ driver = {{ ironic_inspector_pxe_filter }}
 {% if ironic_inspector_pxe_filter == 'iptables' %}
 [iptables]
 dnsmasq_interface = {{ ironic_dnsmasq_interface }}
+{% endif %}
+
+[coordination]
+{% if ironic_coordination_backend == 'redis' %}
+backend_url = {{ redis_connection_string }}
+{% elif ironic_coordination_backend == 'etcd' %}
+# NOTE(yoctozepto): etcd-compatible tooz drivers do not support multiple endpoints here (verified in Stein, Train)
+# NOTE(yoctozepto): we must use etcd3gw (aka etcd3+http) due to issues with alternative (etcd3) and eventlet (as used by cinder)
+# see https://bugs.launchpad.net/kolla-ansible/+bug/1854932
+# and https://review.opendev.org/466098 for details
+backend_url = etcd3+{{ etcd_protocol }}://{{ 'api' | kolla_address(groups['etcd'][0]) | put_address_in_context('url') }}:{{ etcd_client_port }}
 {% endif %}

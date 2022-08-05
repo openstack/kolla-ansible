@@ -13,6 +13,7 @@
   with_dict: "{{ ovsdpdk_services }}"
 
 - name: Copying over config.json files for services
+  become: true
   template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
@@ -25,8 +26,9 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying ovs-dpdkctl tool
+  become: true
   copy:
-    src: ../tools/ovs-dpdkctl.sh
+    src: ovs-dpdkctl.sh
     dest: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh"
     mode: "0770"
 

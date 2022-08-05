@@ -76,14 +76,6 @@ logs with index patterns matching either ``^flog-.*`` or ``^monasca-.*`` by
 default. If this is undesirable, then you can update the
 ``elasticsearch_curator_index_pattern`` variable accordingly.
 
-Currently Monasca is only supported using the ``source`` install type Kolla
-images. If you are using the ``binary`` install type you should set the
-following override in ``/etc/kolla/globals.yml``:
-
-.. code-block:: yaml
-
-   monasca_install_type: "source"
-
 Stand-alone configuration (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -122,19 +114,18 @@ additional configuration:
 
 .. code-block:: yaml
 
-   keystone_admin_url: "http://172.28.128.254:35357"
    keystone_internal_url: "http://172.28.128.254:5000"
    monasca_openstack_auth:
-     auth_url: "{{ keystone_admin_url }}"
+     auth_url: "{{ keystone_internal_url }}"
      username: "admin"
      password: "{{ external_keystone_admin_password }}"
      project_name: "admin"
      domain_name: "default"
      user_domain_name: "default"
 
-In this example it is assumed that the external Keystone admin and internal
-URLs are `http://172.28.128.254:35357` and `http://172.28.128.254:5000`
-respectively, and that the external Keystone admin password is defined by
+In this example it is assumed that the external Keystone's internal URL is
+`http://172.28.128.254:5000`, and that the external Keystone's admin password
+is defined by
 the variable `external_keystone_admin_password` which you will most likely
 want to save in `/etc/kolla/passwords.yml`. Note that the Keystone URLs can
 be obtained from the external OpenStack CLI, for example:
@@ -142,13 +133,12 @@ be obtained from the external OpenStack CLI, for example:
 .. code-block:: console
 
    openstack endpoint list --service identity
-   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
-   | ID                               | Region    | Service Name | Service Type | Enabled | Interface | URL                         |
-   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
-   | 162365440e6c43d092ad6069f0581a57 | RegionOne | keystone     | identity     | True    | admin     | http://172.28.128.254:35357 |
-   | 6d768ee2ce1c4302a49e9b7ac2af472c | RegionOne | keystone     | identity     | True    | public    | http://172.28.128.254:5000  |
-   | e02067a58b1946c7ae53abf0cfd0bf11 | RegionOne | keystone     | identity     | True    | internal  | http://172.28.128.254:5000  |
-   +----------------------------------+-----------+--------------+--------------+---------+-----------+-----------------------------+
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+----------------------------+
+   | ID                               | Region    | Service Name | Service Type | Enabled | Interface | URL                        |
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+----------------------------+
+   | 6d768ee2ce1c4302a49e9b7ac2af472c | RegionOne | keystone     | identity     | True    | public    | http://172.28.128.254:5000 |
+   | e02067a58b1946c7ae53abf0cfd0bf11 | RegionOne | keystone     | identity     | True    | internal  | http://172.28.128.254:5000 |
+   +----------------------------------+-----------+--------------+--------------+---------+-----------+----------------------------+
 
 If you are also using Kolla Ansible to manage the external OpenStack
 installation, the external Keystone admin password will most likely

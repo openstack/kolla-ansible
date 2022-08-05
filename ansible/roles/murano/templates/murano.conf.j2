@@ -21,8 +21,9 @@ max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 [keystone_authtoken]
+service_type = application-catalog
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -37,8 +38,8 @@ memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
 [murano_auth]
-auth_uri = {{ keystone_internal_url }}/v3
-auth_url = {{ keystone_admin_url }}
+auth_uri = {{ keystone_internal_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_name = {{ default_project_domain_name }}
 user_domain_name = {{ default_user_domain_name }}
@@ -85,7 +86,7 @@ virtual_host = {{ murano_agent_rabbitmq_vhost }}
 {% if enable_barbican | bool %}
 [key_manager]
 auth_type = keystone_password
-auth_url = {{ keystone_internal_url }}/v3
+auth_url = {{ keystone_internal_url }}
 username = {{ murano_keystone_user }}
 password = {{ murano_keystone_password }}
 user_domain_name = {{ default_project_domain_name }}

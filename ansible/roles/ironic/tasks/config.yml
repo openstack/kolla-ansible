@@ -127,10 +127,10 @@
 
 - name: Copying pxelinux.cfg default
   vars:
-    service: "{{ ironic_services['ironic-pxe'] }}"
+    service: "{{ ironic_services['ironic-tftp'] }}"
   template:
     src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-pxe/default"
+    dest: "{{ node_config_directory }}/ironic-tftp/default"
     mode: "0660"
   become: true
   with_first_found:
@@ -143,16 +143,16 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - not enable_ironic_pxe_uefi | bool
-    - not enable_ironic_ipxe | bool
+    - not ironic_dnsmasq_serve_ipxe | bool
   notify:
-    - Restart ironic-pxe container
+    - Restart ironic-tftp container
 
 - name: Copying ironic_pxe_uefi.cfg default
   vars:
-    service: "{{ ironic_services['ironic-pxe'] }}"
+    service: "{{ ironic_services['ironic-tftp'] }}"
   template:
     src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-pxe/default"
+    dest: "{{ node_config_directory }}/ironic-tftp/default"
     mode: "0660"
   become: true
   with_first_found:
@@ -164,14 +164,14 @@
     - service.enabled | bool
     - enable_ironic_pxe_uefi | bool
   notify:
-    - Restart ironic-pxe container
+    - Restart ironic-tftp container
 
 - name: Copying ironic-agent kernel and initramfs (PXE)
   vars:
-    service: "{{ ironic_services['ironic-pxe'] }}"
+    service: "{{ ironic_services['ironic-tftp'] }}"
   copy:
     src: "{{ node_custom_config }}/ironic/{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-pxe/{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-tftp/{{ item }}"
     mode: "0660"
   become: true
   with_items:
@@ -183,16 +183,16 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
     - not enable_ironic_pxe_uefi | bool
-    - not enable_ironic_ipxe | bool
+    - not ironic_dnsmasq_serve_ipxe | bool
   notify:
-    - Restart ironic-pxe container
+    - Restart ironic-tftp container
 
 - name: Copying ironic-agent kernel and initramfs (iPXE)
   vars:
-    service: "{{ ironic_services['ironic-ipxe'] }}"
+    service: "{{ ironic_services['ironic-http'] }}"
   copy:
     src: "{{ node_custom_config }}/ironic/{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-ipxe/{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-http/{{ item }}"
     mode: "0660"
   become: true
   with_items:
@@ -204,14 +204,14 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
-    - Restart ironic-ipxe container
+    - Restart ironic-http container
 
 - name: Copying inspector.ipxe
   vars:
-    service: "{{ ironic_services['ironic-ipxe'] }}"
+    service: "{{ ironic_services['ironic-http'] }}"
   template:
     src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-ipxe/inspector.ipxe"
+    dest: "{{ node_config_directory }}/ironic-http/inspector.ipxe"
     mode: "0660"
   become: true
   with_first_found:
@@ -224,24 +224,24 @@
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
   notify:
-    - Restart ironic-ipxe container
+    - Restart ironic-http container
 
 - name: Copying iPXE apache config
   vars:
-    service: "{{ ironic_services['ironic-ipxe'] }}"
+    service: "{{ ironic_services['ironic-http'] }}"
   template:
     src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-ipxe/httpd.conf"
+    dest: "{{ node_config_directory }}/ironic-http/httpd.conf"
     mode: "0660"
   become: true
   with_first_found:
-    - "{{ node_custom_config }}/ironic/ironic-ipxe-httpd.conf"
-    - "ironic-ipxe-httpd.conf.j2"
+    - "{{ node_custom_config }}/ironic/ironic-http-httpd.conf"
+    - "ironic-http-httpd.conf.j2"
   when:
     - service.enabled | bool
     - inventory_hostname in groups[service.group]
   notify:
-    - Restart ironic-ipxe container
+    - Restart ironic-http container
 
 - name: Copying over existing Ironic policy file
   vars:

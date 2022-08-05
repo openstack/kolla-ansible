@@ -1,6 +1,4 @@
 ---
-project_name: "horizon"
-
 horizon_services:
   horizon:
     container_name: horizon
@@ -39,7 +37,7 @@ horizon_services:
         enabled: "{{ enable_horizon }}"
         mode: "http"
         external: false
-        port: "{% if kolla_enable_tls_internal|bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
+        port: "{% if kolla_enable_tls_internal | bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
@@ -47,7 +45,7 @@ horizon_services:
           - "balance source"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_redirect:
-        enabled: "{{ enable_horizon|bool and kolla_enable_tls_internal|bool }}"
+        enabled: "{{ enable_horizon | bool and kolla_enable_tls_internal | bool }}"
         mode: "redirect"
         external: false
         port: "{{ horizon_port }}"
@@ -56,7 +54,7 @@ horizon_services:
         enabled: "{{ enable_horizon }}"
         mode: "http"
         external: true
-        port: "{% if kolla_enable_tls_external|bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
+        port: "{% if kolla_enable_tls_external | bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
@@ -64,7 +62,7 @@ horizon_services:
           - "balance source"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_external_redirect:
-        enabled: "{{ enable_horizon|bool and kolla_enable_tls_external|bool }}"
+        enabled: "{{ enable_horizon | bool and kolla_enable_tls_external | bool }}"
         mode: "redirect"
         external: true
         port: "{{ horizon_port }}"
@@ -77,6 +75,8 @@ horizon_services:
 horizon_keystone_domain_choices:
   Default: default
 
+horizon_custom_themes: []
+
 ####################
 # Database
 ####################
@@ -87,8 +87,7 @@ horizon_database_address: "{{ database_address | put_address_in_context('url') }
 ####################
 # Docker
 ####################
-horizon_install_type: "{{ kolla_install_type }}"
-horizon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ horizon_install_type }}-horizon"
+horizon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/horizon"
 horizon_tag: "{{ openstack_tag }}"
 horizon_image_full: "{{ horizon_image }}:{{ horizon_tag }}"
 
@@ -123,7 +122,7 @@ horizon_extra_volumes: "{{ default_extra_volumes }}"
 # OpenStack
 ####################
 horizon_logging_debug: "{{ openstack_logging_debug }}"
-horizon_keystone_url: "{{ keystone_public_url if horizon_use_keystone_public_url | bool else keystone_internal_url }}/v3"
+horizon_keystone_url: "{{ keystone_public_url if horizon_use_keystone_public_url | bool else keystone_internal_url }}"
 
 
 ####################

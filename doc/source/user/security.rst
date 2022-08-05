@@ -76,3 +76,84 @@ via SSH) is default configuration owner and group in target nodes.
 From Rocky release, Kolla support connection using any user which has
 passwordless sudo capability. For setting custom owner user and group, user
 can set ``config_owner_user`` and ``config_owner_group`` in ``globals.yml``.
+
+FirewallD
+~~~~~~~~~
+Prior to Zed, Kolla Ansible would disable any system firewall leaving
+configuration up to the end users. Firewalld is now supported and will
+configure external api ports for each enabled OpenStack service.
+
+The following variables should be configured in Kolla Ansible's
+``globals.yml``
+
+* external_api_firewalld_zone
+    * The default zone to configure ports on for external API Access
+    * String - defaults to the public zone
+* enable_external_api_firewalld
+    * Setting to true will enable external API ports configuration
+    * Bool - set to true or false
+* disable_firewall
+    * Setting to false will stop Kolla Ansible
+      from disabling the systems firewall
+    * Bool - set to true or false
+
+
+Prerequsites
+============
+Firewalld needs to be installed beforehand.
+
+Kayobe can be used to automate the installation and configuration of firewalld
+before running Kolla Ansible. If you do not use Kayobe you must ensure that
+that firewalld has been installed and setup correctly.
+
+You can check the current active zones by running the command below.
+If the output of the command is blank then no zones are configured as active.
+
+.. code-block:: console
+
+   sudo firewall-cmd --get-active-zones
+
+You should ensure that the system is reachable via SSH to avoid lockout,
+to add ssh to a particular zone run the following command.
+
+.. code-block:: console
+
+   sudo firewall-cmd --permanent --zone=<zone>  --add-service=ssh
+
+You should also set the required interface on a particular zone by running the
+below command. This will mark the zone as active on the specified interface.
+
+.. code-block:: console
+
+   sudo firewall-cmd --permanent --zone=<zone> --change-interface=<interface>
+
+if more than one interface is required on a specific zone this can be achieved
+by running
+
+.. code-block:: console
+
+   sudo firewall-cmd --permanent --zone=public --add-interface=<additional interface>
+
+Any other ports that need to be opened on the system should be done
+before hand. The following command will add additional ports to a zone
+
+.. code-block:: console
+
+   sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
+
+Dependent on your infrastructure security policy you may wish to add a policy
+of drop on the public zone this can be achieved by running the following
+command.
+
+.. code-block:: console
+
+   sudo firewall-cmd --permanent --set-target=DROP --zone=public
+
+To apply changes to the system firewall run
+
+.. code-block:: console
+
+   sudo firewalld-cmd --reload
+
+For additional information and configuration please see:
+https://firewalld.org/documentation/man-pages/firewall-cmd.html

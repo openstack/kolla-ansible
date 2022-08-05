@@ -1,6 +1,4 @@
 ---
-project_name: "monasca"
-
 monasca_services:
   monasca-api:
     container_name: monasca_api
@@ -80,26 +78,6 @@ monasca_services:
     image: "{{ monasca_agent_image_full }}"
     volumes: "{{ monasca_agent_forwarder_default_volumes + monasca_agent_forwarder_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
-  # TODO(dszumski): Remove monasca-grafana entry here and all other references after the
-  # Xena release. It exists here to support cleanup operations.
-  monasca-grafana:
-    container_name: monasca_grafana
-    group: monasca-grafana
-    enabled: false
-    image: "{{ monasca_grafana_image_full }}"
-    volumes: "{{ monasca_grafana_default_volumes + monasca_grafana_extra_volumes }}"
-    dimensions: "{{ monasca_grafana_dimensions }}"
-    haproxy:
-      monasca_grafana_server:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: false
-        port: "{{ monasca_grafana_server_port }}"
-      monasca_grafana_server_external:
-        enabled: "{{ enable_monasca }}"
-        mode: "http"
-        external: true
-        port: "{{ monasca_grafana_server_port }}"
 
 ####################
 # Databases
@@ -142,7 +120,7 @@ monasca_default_topic_partitions: 30
 
 # The default number of topic replicas. Generally you should not change
 # this.
-monasca_default_topic_replication_factor: "{{ kafka_broker_count if kafka_broker_count|int < 3 else 3 }}"
+monasca_default_topic_replication_factor: "{{ kafka_broker_count if kafka_broker_count | int < 3 else 3 }}"
 
 # Kafka topic names used by Monasca services
 monasca_metrics_topic: "metrics"
@@ -219,36 +197,31 @@ monasca_metric_pipeline_threads: 2
 ####################
 
 # NOTE(dszumski): Binary support for Monasca images is not yet available in Kolla
-monasca_install_type: "{{ kolla_install_type }}"
 monasca_tag: "{{ openstack_tag }}"
 
-monasca_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-agent"
+monasca_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/monasca-agent"
 monasca_agent_tag: "{{ monasca_tag }}"
 monasca_agent_image_full: "{{ monasca_agent_image }}:{{ monasca_agent_tag }}"
 
-monasca_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-api"
+monasca_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/monasca-api"
 monasca_api_tag: "{{ monasca_tag }}"
 monasca_api_image_full: "{{ monasca_api_image }}:{{ monasca_api_tag }}"
 
-monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ kolla_install_type }}-logstash"
+monasca_logstash_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/logstash"
 monasca_logstash_tag: "{{ monasca_tag }}"
 monasca_logstash_image_full: "{{ monasca_logstash_image }}:{{ monasca_logstash_tag }}"
 
-monasca_thresh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-thresh"
+monasca_thresh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/monasca-thresh"
 monasca_thresh_tag: "{{ monasca_tag }}"
 monasca_thresh_image_full: "{{ monasca_thresh_image }}:{{ monasca_thresh_tag }}"
 
-monasca_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-notification"
+monasca_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/monasca-notification"
 monasca_notification_tag: "{{ monasca_tag }}"
 monasca_notification_image_full: "{{ monasca_notification_image }}:{{ monasca_notification_tag }}"
 
-monasca_persister_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-persister"
+monasca_persister_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/monasca-persister"
 monasca_persister_tag: "{{ monasca_tag }}"
 monasca_persister_image_full: "{{ monasca_persister_image }}:{{ monasca_persister_tag }}"
-
-monasca_grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ monasca_install_type }}-monasca-grafana"
-monasca_grafana_tag: "{{ monasca_tag }}"
-monasca_grafana_image_full: "{{ monasca_grafana_image }}:{{ monasca_grafana_tag }}"
 
 monasca_agent_dimensions: "{{ default_container_dimensions }}"
 monasca_api_dimensions: "{{ default_container_dimensions }}"
@@ -258,7 +231,6 @@ monasca_log_metrics_dimensions: "{{ default_container_dimensions }}"
 monasca_thresh_dimensions: "{{ default_container_dimensions }}"
 monasca_notification_dimensions: "{{ default_container_dimensions }}"
 monasca_persister_dimensions: "{{ default_container_dimensions }}"
-monasca_grafana_dimensions: "{{ default_container_dimensions }}"
 
 monasca_agent_collector_default_volumes:
   - "{{ node_config_directory }}/monasca-agent-collector/:{{ container_config_directory }}/:ro"
@@ -310,11 +282,6 @@ monasca_persister_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
-monasca_grafana_default_volumes:
-  - "{{ node_config_directory }}/monasca-grafana/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla/"
 
 monasca_extra_volumes: "{{ default_extra_volumes }}"
 monasca_agent_collector_extra_volumes: "{{ monasca_extra_volumes }}"
@@ -326,7 +293,6 @@ monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_thresh_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_notification_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_persister_extra_volumes: "{{ monasca_extra_volumes }}"
-monasca_grafana_extra_volumes: "{{ monasca_extra_volumes }}"
 
 ####################
 # OpenStack

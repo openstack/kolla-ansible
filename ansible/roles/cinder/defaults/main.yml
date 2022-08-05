@@ -1,6 +1,4 @@
 ---
-project_name: "cinder"
-
 cinder_services:
   cinder-api:
     container_name: cinder_api
@@ -64,22 +62,21 @@ cinder_database_address: "{{ database_address | put_address_in_context('url') }}
 ####################
 # Docker
 ####################
-cinder_install_type: "{{ kolla_install_type }}"
 cinder_tag: "{{ openstack_tag }}"
 
-cinder_volume_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cinder_install_type }}-cinder-volume"
+cinder_volume_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cinder-volume"
 cinder_volume_tag: "{{ cinder_tag }}"
 cinder_volume_image_full: "{{ cinder_volume_image }}:{{ cinder_volume_tag }}"
 
-cinder_scheduler_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cinder_install_type }}-cinder-scheduler"
+cinder_scheduler_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cinder-scheduler"
 cinder_scheduler_tag: "{{ cinder_tag }}"
 cinder_scheduler_image_full: "{{ cinder_scheduler_image }}:{{ cinder_scheduler_tag }}"
 
-cinder_backup_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cinder_install_type }}-cinder-backup"
+cinder_backup_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cinder-backup"
 cinder_backup_tag: "{{ cinder_tag }}"
 cinder_backup_image_full: "{{ cinder_backup_image }}:{{ cinder_backup_tag }}"
 
-cinder_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ cinder_install_type }}-cinder-api"
+cinder_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cinder-api"
 cinder_api_tag: "{{ cinder_tag }}"
 cinder_api_image_full: "{{ cinder_api_image }}:{{ cinder_api_tag }}"
 
@@ -92,7 +89,7 @@ cinder_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 cinder_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 cinder_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 cinder_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-cinder_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if cinder_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ cinder_api_listen_port}}"]
+cinder_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if cinder_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ cinder_api_listen_port }}"]
 cinder_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 cinder_api_healthcheck:
   interval: "{{ cinder_api_healthcheck_interval }}"
@@ -201,6 +198,15 @@ cinder_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_cinder_auth: "{{ openstack_auth }}"
 
+# After upgrading cinder, services will have an RPC version cap in place.  We
+# need to restart all services in order to allow them to use the latest RPC
+# version. Ideally, there would be a way to check whether all cinder services
+# are using the latest version, but currently there is not. Instead, wait a
+# short time for all cinder services to update the version of their service in
+# the database.  This seems to take around 10 seconds, but the default is 30 to
+# allow room for slowness.
+cinder_rpc_version_startup_delay: 30
+
 
 ####################
 # Cinder
@@ -216,12 +222,18 @@ cinder_backends:
     enabled: "{{ enable_cinder_backend_hnas_nfs | bool }}"
   - name: "vmwarevc-vmdk"
     enabled: "{{ cinder_backend_vmwarevc_vmdk | bool }}"
+  - name: "vmware-vstorage-object"
+    enabled: "{{ cinder_backend_vmware_vstorage_object | bool }}"
   - name: "QuobyteHD"
     enabled: "{{ enable_cinder_backend_quobyte | bool }}"
+  - name: "Pure-FlashArray-iscsi"
+    enabled: "{{ enable_cinder_backend_pure_iscsi | bool }}"
+  - name: "Pure-FlashArray-fc"
+    enabled: "{{ enable_cinder_backend_pure_fc | bool }}"
 
 skip_cinder_backend_check: False
 
-cinder_enabled_backends: "{{ cinder_backends|selectattr('enabled', 'equalto', true)|list }}"
+cinder_enabled_backends: "{{ cinder_backends | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Notification
@@ -250,6 +262,14 @@ hnas_nfs_svc0_hdp:
 quobyte_storage_host:
 quobyte_storage_volume:
 
+
+################################
+# Pure FlashArray Storage Driver
+################################
+pure_iscsi_backend: "pure_iscsi_backend"
+pure_fc_backend: "pure_fc_backend"
+pure_api_token:
+pure_san_ip:
 
 ####################
 # Kolla

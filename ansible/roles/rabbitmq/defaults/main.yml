@@ -1,6 +1,4 @@
 ---
-project_name: "rabbitmq"
-
 rabbitmq_services:
   rabbitmq:
     container_name: "{{ project_name }}"
@@ -51,8 +49,7 @@ haproxy_outward_rabbitmq_server_timeout: "1h"
 ####################
 # Docker
 ####################
-rabbitmq_install_type: "{{ kolla_install_type }}"
-rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ rabbitmq_install_type }}-rabbitmq"
+rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq"
 rabbitmq_tag: "{{ openstack_tag }}"
 rabbitmq_image_full: "{{ rabbitmq_image }}:{{ rabbitmq_tag }}"
 rabbitmq_dimensions: "{{ default_container_dimensions }}"
@@ -81,12 +78,21 @@ rabbitmq_extra_volumes: "{{ default_extra_volumes }}"
 ####################
 # Message-Broker
 ####################
-rabbitmq_user: "openstack"
-rabbitmq_cluster_name: "openstack"
-rabbitmq_hostname: "{{ ansible_facts.hostname }}"
 rabbitmq_pid_file: "/var/lib/rabbitmq/mnesia/rabbitmq.pid"
 rabbitmq_server_additional_erl_args: "+S 2:2 +sbwt none +sbwtdcpu none +sbwtdio none"
 # Dict of TLS options for RabbitMQ. Keys will be prefixed with 'ssl_options.'.
 rabbitmq_tls_options: {}
 # To avoid split-brain
 rabbitmq_cluster_partition_handling: "pause_minority"
+
+####################
+# Plugins
+####################
+rabbitmq_enable_prometheus_plugin: "{{ enable_prometheus }}"
+rabbitmq_plugins:
+  - name: "rabbitmq_management"
+    enabled: True
+  - name: "rabbitmq_prometheus"
+    enabled: "{{ rabbitmq_enable_prometheus_plugin | bool }}"
+
+rabbitmq_enabled_plugins: "{{ rabbitmq_plugins | selectattr('enabled', 'equalto', true) | list }}"

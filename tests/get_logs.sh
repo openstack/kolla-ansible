@@ -3,7 +3,7 @@
 set +o errexit
 
 copy_logs() {
-    LOG_DIR=/tmp/logs
+    LOG_DIR=${LOG_DIR:-/tmp/logs}
 
     cp -rnL /var/lib/docker/volumes/kolla_logs/_data/* ${LOG_DIR}/kolla/
     cp -rnL /etc/kolla/* ${LOG_DIR}/kolla_configs/
@@ -29,7 +29,7 @@ copy_logs() {
 
     df -h > ${LOG_DIR}/system_logs/df.txt
     free  > ${LOG_DIR}/system_logs/free.txt
-    parted -l > ${LOG_DIR}/system_logs/parted-l.txt
+    lsblk > ${LOG_DIR}/system_logs/lsblk.txt
     mount > ${LOG_DIR}/system_logs/mount.txt
     env > ${LOG_DIR}/system_logs/env.txt
     systemctl status > ${LOG_DIR}/system_logs/systemctl_status.txt
@@ -69,6 +69,7 @@ copy_logs() {
     getent ahostsv6 $(hostname)) &> ${LOG_DIR}/system_logs/getent_ahostsvX.txt
 
     sysctl -a &> ${LOG_DIR}/system_logs/sysctl.txt
+    lsmod &> ${LOG_DIR}/system_logs/lsmod.txt
 
     if [ `command -v dpkg` ]; then
         dpkg -l > ${LOG_DIR}/system_logs/dpkg-l.txt
@@ -88,6 +89,8 @@ copy_logs() {
 
     # cephadm related logs
     mkdir -p ${LOG_DIR}/ceph
+    sudo cp /etc/ceph/ceph.conf ${LOG_DIR}/ceph
+    sudo cp /var/run/ceph/*/cluster.yml ${LOG_DIR}/ceph/cluster.yml
     sudo cephadm shell -- ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
     sudo cephadm shell -- ceph --connect-timeout 5 osd tree > ${LOG_DIR}/ceph/ceph_osd_tree.txt
 

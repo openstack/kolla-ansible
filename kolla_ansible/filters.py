@@ -18,7 +18,7 @@ from kolla_ansible import exception
 from kolla_ansible.helpers import _call_bool_filter
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def service_enabled(context, service):
     """Return whether a service is enabled.
 
@@ -34,7 +34,29 @@ def service_enabled(context, service):
     return _call_bool_filter(context, enabled)
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
+def extract_haproxy_services(context, services):
+    """Return a Dict of haproxy services
+
+      :param context: Jinja2 Context object.
+      :param service: Services definition, dict.
+      :returns: A Dict.
+    """
+    haproxy = {}
+    for key in services:
+        service = services.get(key)
+        if service_enabled(context, service):
+            service_haproxy = service.get('haproxy')
+            if service_haproxy:
+                if not set(haproxy).isdisjoint(set(service_haproxy)):
+                    raise exception.FilterError(
+                        "haproxy service names should be unique")
+                haproxy.update(service_haproxy)
+
+    return haproxy
+
+
+@jinja2.pass_context
 def service_mapped_to_host(context, service):
     """Return whether a service is mapped to this host.
 
@@ -62,7 +84,7 @@ def service_mapped_to_host(context, service):
         service.get("container_name", "<unknown>"))
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def service_enabled_and_mapped_to_host(context, service):
     """Return whether a service is enabled and mapped to this host.
 
@@ -74,7 +96,7 @@ def service_enabled_and_mapped_to_host(context, service):
             service_mapped_to_host(context, service))
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def select_services_enabled_and_mapped_to_host(context, services):
     """Select services that are enabled and mapped to this host.
 
@@ -89,6 +111,7 @@ def select_services_enabled_and_mapped_to_host(context, services):
 
 def get_filters():
     return {
+        "extract_haproxy_services": extract_haproxy_services,
         "service_enabled": service_enabled,
         "service_mapped_to_host": service_mapped_to_host,
         "service_enabled_and_mapped_to_host": (

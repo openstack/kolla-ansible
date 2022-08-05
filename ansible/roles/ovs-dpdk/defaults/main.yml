@@ -39,9 +39,9 @@ ovsdpdk_services:
 ####################
 ovs_bridge_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
 ovs_port_mappings: "{% for bridge in neutron_bridge_name.split(',') %} {{ neutron_external_interface.split(',')[loop.index0] }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
-tunnel_interface_network: "{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['network']}}/{{hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['netmask'] }}"
+tunnel_interface_network: "{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['network'] }}/{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['netmask'] }}"
 tunnel_interface_cidr: "{{ dpdk_tunnel_interface_address }}/{{ tunnel_interface_network | ipaddr('prefix') }}"
-ovs_cidr_mappings: "{% if neutron_bridge_name.split(',')|length != 1 %} {neutron_bridge_name.split(',')[0]}:{{ tunnel_interface_cidr }} {% else %} {{ neutron_bridge_name }}:{{ tunnel_interface_cidr }} {% endif %}"
+ovs_cidr_mappings: "{% if neutron_bridge_name.split(',') | length != 1 %} {neutron_bridge_name.split(',')[0]}:{{ tunnel_interface_cidr }} {% else %} {{ neutron_bridge_name }}:{{ tunnel_interface_cidr }} {% endif %}"
 ovs_mem_channels: 4
 ovs_socket_mem: 1024
 ovs_hugepage_mountpoint: /dev/hugepages
@@ -53,21 +53,16 @@ ovs_hugepage_mountpoint: /dev/hugepages
 # valid values are indexed or named.
 ovs_physical_port_policy: named
 
-project_name: "ovs"
-neutron_bridge_name: "br_dpdk"
-
-
 ####################
 # Docker
 ####################
-ovsdpdk_install_type: "{{ kolla_install_type }}"
 ovsdpdk_tag: "{{ openstack_tag }}"
 
-ovsdpdk_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ovsdpdk_install_type }}-ovsdpdk-db"
+ovsdpdk_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ovsdpdk-db"
 ovsdpdk_db_tag: "{{ ovsdpdk_tag }}"
 ovsdpdk_db_image_full: "{{ ovsdpdk_db_image }}:{{ ovsdpdk_db_tag }}"
 
-ovsdpdk_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ kolla_base_distro }}-{{ ovsdpdk_install_type }}-ovsdpdk-vswitchd"
+ovsdpdk_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ovsdpdk-vswitchd"
 ovsdpdk_vswitchd_tag: "{{ ovsdpdk_tag }}"
 ovsdpdk_vswitchd_image_full: "{{ ovsdpdk_vswitchd_image }}:{{ ovsdpdk_vswitchd_tag }}"
 ovsdpdk_db_dimensions: "{{ default_container_dimensions }}"

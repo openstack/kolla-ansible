@@ -1,0 +1,28 @@
+# This configuration file is used to configure proxysql users,
+# in our case we just define default_hostgroup and the mysql galera
+# cluster group where user is routed to.
+#
+# This is used especially when services are creating databases, users
+# and connects via user 'root_shard_SHARD_ID', so ProxySQL know
+# where to route this query.
+#
+# Table mysql_users defines MySQL users that clients can use to connect to
+# ProxySQL, and then used to connect to backends.
+#
+# ProxySQL Admin> SHOW CREATE TABLE mysql_users\G
+#
+# https://proxysql.com/documentation/main-runtime/#mysql_users
+
+mysql_users:
+{% for user in proxysql_project_database_shard['users'] %}
+{% if user['shard_id'] is defined %}
+{% set WRITER_GROUP = user['shard_id'] | int * 10 %}
+{% endif %}
+  - username: "{{ user['user'] }}"
+    password: "{{ user['password'] }}"
+{% if user['shard_id'] is defined %}
+    default_hostgroup: {{ WRITER_GROUP }}
+{% endif %}
+    transaction_persistent: 1
+    active: 1
+{% endfor %}

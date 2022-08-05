@@ -13,16 +13,12 @@ use_stderr = False
 
 my_ip = {{ api_interface_address }}
 
-osapi_volume_workers = {{ openstack_service_workers }}
 volume_name_template = volume-%s
 
 glance_api_servers = {{ glance_internal_endpoint }}
 
 glance_num_retries = {{ groups['glance-api'] | length }}
-glance_api_version = 2
 glance_ca_certificates_file = {{ openstack_cacert }}
-
-os_region_name = {{ openstack_region_name }}
 
 {% if cinder_enabled_backends %}
 enabled_backends = {{ cinder_enabled_backends|map(attribute='name')|join(',') }}
@@ -53,9 +49,6 @@ backup_swift_user =
 backup_swift_key =
 {% endif %}
 {% endif %}
-
-osapi_volume_listen = {{ api_interface_address }}
-osapi_volume_listen_port = {{ cinder_api_listen_port }}
 
 api_paste_config = /etc/cinder/api-paste.ini
 
@@ -88,7 +81,7 @@ policy_file = {{ cinder_policy_file }}
 
 [nova]
 interface = internal
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -105,8 +98,9 @@ max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
 [keystone_authtoken]
+service_type = volume
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -175,8 +169,17 @@ hnas_svc0_hdp = {{ hnas_nfs_svc0_hdp }}
 
 {% if cinder_backend_vmwarevc_vmdk | bool %}
 [vmwarevc-vmdk]
-volume_backend_name=vmwarevc-vmdk
 volume_driver = cinder.volume.drivers.vmware.vmdk.VMwareVcVmdkDriver
+vmware_host_ip = {{ vmware_vcenter_host_ip }}
+vmware_host_username = {{ vmware_vcenter_host_username }}
+vmware_host_password = {{ vmware_vcenter_host_password }}
+vmware_cluster_name = {{ vmware_vcenter_cluster_name }}
+vmware_insecure = True
+{% endif %}
+
+{% if cinder_backend_vmware_vstorage_object | bool %}
+[vmware-vstorage-object]
+volume_driver = cinder.volume.drivers.vmware.fcd.VMwareVStorageObjectDriver
 vmware_host_ip = {{ vmware_vcenter_host_ip }}
 vmware_host_username = {{ vmware_vcenter_host_username }}
 vmware_host_password = {{ vmware_vcenter_host_password }}
@@ -188,6 +191,22 @@ vmware_insecure = True
 [QuobyteHD]
 volume_driver = cinder.volume.drivers.quobyte.QuobyteDriver
 quobyte_volume_url = quobyte://{{ quobyte_storage_host }}/{{ quobyte_storage_volume }}
+{% endif %}
+
+{% if enable_cinder_backend_pure_iscsi | bool %}
+[Pure-FlashArray-iscsi]
+volume_backend_name = {{ pure_iscsi_backend }}
+volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
+san_ip = {{ pure_san_ip }}
+pure_api_token = {{ pure_api_token }}
+{% endif %}
+
+{% if enable_cinder_backend_pure_fc | bool %}
+[Pure-FlashArray-fc]
+volume_backend_name = {{ pure_fc_backend }}
+volume_driver = cinder.volume.drivers.pure.PureFCDriver
+san_ip = {{ pure_san_ip }}
+pure_api_token = {{ pure_api_token }}
 {% endif %}
 
 [privsep_entrypoint]

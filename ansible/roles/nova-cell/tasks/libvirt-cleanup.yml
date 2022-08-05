@@ -1,0 +1,82 @@
+---
+- name: Fail if nova_libvirt container is enabled
+  fail:
+    msg: >-
+      The nova_libvirt container has not been cleaned up because it is enabled.
+      It may be disabled by setting enable_nova_libvirt_container to false.
+  when: enable_nova_libvirt_container | bool
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    name:
+      - nova_libvirt
+  register: container_facts
+
+- block:
+    # NOTE(mgoddard): pgrep exit status 1 means no match.
+    - name: Check if there are any running VMs
+      become: true
+      shell:
+        cmd: >
+          set -o pipefail &&
+          { pgrep -l qemu || test $? = 1; } | awk '!/qemu-ga/  && !/qemu-img/ {print $1}'
+        executable: /bin/bash
+      register: running_vms
+
+    - name: Fail if there are any running VMs
+      fail:
+        msg: >-
+          Refusing to remove nova_libvirt container with running VMs:
+          {{ running_vms.stdout }}
+      when:
+        - running_vms.stdout != ''
+        - nova_libvirt_cleanup_running_vms_fatal | bool
+
+    - name: Stop and remove nova_libvirt container
+      become: true
+      kolla_docker:
+        action: "stop_and_remove_container"
+        name: nova_libvirt
+  when: container_facts['nova_libvirt'] is defined
+
+- name: Remove nova_libvirt Docker volumes
+  become: true
+  kolla_docker:
+    action: "remove_volume"
+    name: "{{ item }}"
+  loop:
+    - libvirtd
+    - nova_libvirt_qemu
+    - nova_libvirt_secrets
+  when: nova_libvirt_cleanup_remove_volumes | bool
+
+- name: Remove config for nova_libvirt
+  become: true
+  file:
+    path: "{{ node_config_directory }}/nova-libvirt"
+    state: "absent"
+
+# Revert the changes applied in config-host.yml.
+- block:
+    - name: Remove udev kolla kvm rules
+      become: true
+      file:
+        path: "/etc/udev/rules.d/99-kolla-kvm.rules"
+        state: absent
+
+    - name: Reset /dev/kvm ownership
+      become: true
+      file:
+        path: /dev/kvm
+        group: kvm
+
+    - name: Unmask qemu-kvm service
+      become: true
+      systemd:
+        name: qemu-kvm.service
+        masked: false
+      when:
+        - ansible_facts.distribution == 'Ubuntu'
+  when:
+    - nova_compute_virt_type == 'kvm'

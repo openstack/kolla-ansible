@@ -10,7 +10,7 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -28,7 +28,7 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -46,7 +46,7 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -64,7 +64,7 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -83,7 +83,7 @@
     image: "{{ service.image }}"
     pid_mode: "{{ service.pid_mode | default('') }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -93,6 +93,7 @@
   vars:
     service_name: "nova-libvirt"
     service: "{{ nova_cell_services[service_name] }}"
+    nova_libvirt_notify: "{{ ['Create libvirt SASL user'] if libvirt_enable_sasl | bool else [] }}"
   become: true
   kolla_docker:
     action: "recreate_or_restart_container"
@@ -102,7 +103,7 @@
     pid_mode: "{{ service.pid_mode | default('') }}"
     cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   register: restart_nova_libvirt
@@ -112,6 +113,26 @@
   until: restart_nova_libvirt is success
   when:
     - kolla_action != "config"
+  notify: "{{ nova_libvirt_notify }}"
+
+# The SASL user needs to exist in order for nova-compute to start successfully.
+- name: Create libvirt SASL user
+  become: true
+  shell:
+    cmd: >
+      set -o pipefail &&
+      echo {{ libvirt_sasl_password }} |
+      docker exec -i nova_libvirt
+      saslpasswd2 -c -p -a libvirt {{ libvirt_sasl_authname }}
+    executable: /bin/bash
+  changed_when: true
+  no_log: true
+
+- name: Reload libvirtd
+  become: true
+  service:
+    name: libvirtd
+    state: reloaded
 
 - name: Restart nova-compute container
   vars:
@@ -126,7 +147,7 @@
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
     ipc_mode: "{{ service.ipc_mode }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
@@ -143,7 +164,7 @@
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     privileged: "{{ service.privileged | default(False) }}"
-    volumes: "{{ service.volumes|reject('equalto', '')|list }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:

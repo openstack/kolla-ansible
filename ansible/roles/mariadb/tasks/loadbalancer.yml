@@ -1,7 +1,56 @@
 ---
+# NOTE(kevko): We have to ignore errors
+# as new deployments have no galera
+# running. In that case, user will be created
+# in mariadb role.
+#
+# It doesn't matter that creating monitor user
+# is also in the mariadb role.
+#
+# If user is switching from haproxy to proxysql,
+# monitor user has to be created before proxysql
+# will start, otherwise proxysql will evaluate
+# mariadb backends are down, because no monitor
+# user (only old haproxy user without pass).
+#
+# Creating monitor user in mariadb role is too late.
+
+- name: Ensure mysql monitor user exist
+  vars:
+    shard_id: "{{ item.key }}"
+    host: "{{ mariadb_shards_info.shards[shard_id].hosts[0] }}"
+  become: true
+  kolla_toolbox:
+    module_name: mysql_user
+    module_args:
+      login_host: "{{ host }}"
+      login_port: "{{ mariadb_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      name: "{{ mariadb_monitor_user }}"
+      password: "{% if enable_proxysql | bool %}{{ mariadb_monitor_password }}{% endif %}"
+      host: "%"
+      priv: "*.*:USAGE"
+  tags: always
+  with_dict: "{{ mariadb_shards_info.shards }}"
+  loop_control:
+    label: "{{ host }}"
+  failed_when: False
+  run_once: True
+
 - name: "Configure haproxy for {{ project_name }}"
   import_role:
     name: haproxy-config
   vars:
     project_services: "{{ mariadb_services }}"
   tags: always
+  when: not enable_proxysql | bool
+
+- name: "Configure proxysql for {{ project_name }}"
+  import_role:
+    name: proxysql-config
+  vars:
+    project: "mariadb"
+    project_database_shard: "{{ mariadb_shards_info }}"
+  tags: always
+  when: enable_proxysql | bool

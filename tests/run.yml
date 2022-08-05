@@ -10,10 +10,11 @@
     - name: set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
-        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'monasca'] }}"
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'monasca', 'venus'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
+        ansible_collection_kolla_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/ansible-collection-kolla"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
@@ -53,11 +54,11 @@
       DEFAULT:
         profile: gate
         logs_dir: /tmp/logs/build
+        quiet: true
         # NOTE(yoctozepto): we cannot build and push at the same time on debian
         # buster see https://github.com/docker/for-linux/issues/711.
         push: "{{ base_distro != 'debian' }}"
         base: "{{ base_distro }}"
-        install_type: "{{ install_type }}"
         registry: "127.0.0.1:4000"
         namespace: lokolla
         tag: "{{ build_image_tag }}"
@@ -71,9 +72,9 @@
       set_fact:
         need_build_image: true
       when:
-        # NOTE(yoctozepto): if there is any tested change that does not belong to kolla-ansible,
-        # then kolla images should be built
-        - item.project.short_name != "kolla-ansible"
+        # NOTE(yoctozepto): build container images if there is any tested
+        # change that impacts them.
+        - item.project.short_name not in ["ansible-collection-kolla", "kayobe", "kolla-ansible", "tenks"]
       with_items: "{{ zuul['items'] }}"
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
@@ -85,6 +86,14 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
+        - name: checkout the previous ansible-collection-kolla branch
+          shell:
+            cmd: |
+              git checkout stable/{{ previous_release | lower }}
+              echo "ansible-collection-kolla checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_collection_kolla_src_dir }}"
+
         - name: checkout the previous kolla-ansible branch
           shell:
             cmd: |
@@ -150,6 +159,10 @@
         # globals.yml
         - src: "tests/templates/globals-default.j2"
           dest: /etc/kolla/globals.yml
+        # global.conf
+        - src: "tests/templates/global.conf.j2"
+          dest: /etc/kolla/config/global.conf
+          when: "{{ openstack_core_enabled }}"
         # nova-compute.conf
         - src: "tests/templates/nova-compute-overrides.j2"
           dest: /etc/kolla/config/nova/nova-compute.conf
@@ -166,7 +179,9 @@
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
           when: "{{ scenario == 'ironic' }}"
-
+        - src: "tests/templates/tenks-deploy-config.yml.j2"
+          dest: "{{ ansible_env.HOME }}/tenks.yml"
+          when: "{{ scenario == 'ironic' }}"
       when: item.when | default(true)
 
     - block:
@@ -187,6 +202,24 @@
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
+    - block:
+        - name: slurp requirements.yml
+          slurp:
+            src: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          register: requirements_yml
+
+        - name: write requirements.yml
+          copy:
+            content: "{{ new_requirements | to_nice_yaml }}"
+            dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          vars:
+            old_requirements: "{{ requirements_yml.content | b64decode | from_yaml }}"
+            new_requirement:
+              name: "{{ ansible_collection_kolla_src_dir }}"
+              type: dir
+            new_requirements:
+              collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
+
     - name: ensure /etc/ansible exists
       file:
         path: /etc/ansible
@@ -202,8 +235,8 @@
 
     - name: install kolla-ansible and dependencies
       vars:
-        ansible_version_min: "==2.10.*"
-        ansible_version_max: "==4.*"
+        ansible_version_min: "==4.*"
+        ansible_version_max: "==5.*"
         # Test latest ansible version on Ubuntu, minimum supported on others.
         ansible_version_constraint: >-
           {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
@@ -213,6 +246,10 @@
         {{ kolla_ansible_src_dir }}
         ansible{{ ansible_version_constraint }}
         ara<1.0.0
+
+    - name: install Ansible collections
+      command: >-
+        kolla-ansible install-deps
 
     - name: get ARA callback plugin path
       command: "python3 -m ara.setup.callback_plugins"
@@ -263,7 +300,7 @@
       set_fact:
         # NOTE(yoctozepto): no support for upgrades for now
         docker_image_tag: "{{ build_image_tag if need_build_image else (zuul.branch | basename) ~ docker_image_tag_suffix }}"
-        docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else 'kolla/' }}"
+        docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else '{{ zuul_site_mirror_fqdn }}:4447/openstack.kolla/' }}"
 
     # NOTE(yoctozepto): k-a octavia-certificates should run before k-a bootstrap-servers
     # because the latter hijacks /etc/kolla permissions (due to same directory on the
@@ -294,7 +331,7 @@
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
-        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}{{ base_distro }}-{{ install_type }}-swift-base:{{ docker_image_tag }}"
+        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}{{ base_distro }}-swift-base:{{ docker_image_tag }}"
         # NOTE(yoctozepto): no IPv6 for now
         STORAGE_NODES: "{{ groups['all'] | map('extract', hostvars,
                            ['ansible_'+api_interface_name, 'ipv4', 'address'])
@@ -324,7 +361,7 @@
         - name: copy ceph.conf to enabled services
           copy:
             remote_src: True
-            src: "/etc/ceph/ceph.conf"
+            src: "/etc/ceph/ceph.conf.fixed"
             dest: "/etc/kolla/config/{{ item.name }}/ceph.conf"
           with_items: "{{ cephadm_kolla_ceph_services }}"
 
@@ -411,13 +448,23 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "scenario_nfv"
 
-        - name: Run test-ironic.sh script
-          script:
-            cmd: test-ironic.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            TLS_ENABLED: "{{ tls_enabled }}"
+        - block:
+            - name: Run deploy-tenks.sh script
+              script:
+                cmd: deploy-tenks.sh
+                executable: /bin/bash
+                chdir: "{{ kolla_ansible_src_dir }}"
+              environment:
+                TENKS_VENV_PATH: "{{ ansible_env.HOME }}/tenks-venv"
+                TENKS_SRC_PATH: "{{ ansible_env.HOME }}/src/opendev.org/openstack/tenks"
+
+            - name: Run test-ironic.sh script
+              script:
+                cmd: test-ironic.sh
+                executable: /bin/bash
+                chdir: "{{ kolla_ansible_src_dir }}"
+              environment:
+                TLS_ENABLED: "{{ tls_enabled }}"
           when: scenario == "ironic"
 
         - name: Run test-magnum.sh script
@@ -467,7 +514,16 @@
             cmd: test-prometheus-efk.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            TLS_ENABLED: "{{ tls_enabled }}"
           when: scenario == "prometheus-efk"
+
+        - name: Run test-venus.sh script
+          script:
+            cmd: test-venus.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "venus"
 
       when: scenario != "bifrost"
 
@@ -506,9 +562,20 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
+        - name: checkout the current ansible-collection-kolla branch
+          shell:
+            cmd: |
+              git checkout {{ zuul.branch }}
+              echo "ansible-collection-kolla checked out to:"
+              git log --pretty=oneline  -1
+            chdir: "{{ ansible_collection_kolla_src_dir }}"
+
+        # NOTE(frickler): We modified requirements.yml, need to revert the
+        # changes in order for the branch checkout to succeed
         - name: checkout the current kolla-ansible branch
           shell:
             cmd: |
+              git checkout requirements.yml
               git checkout {{ zuul.branch }}
               echo "kolla-ansible checked out to:"
               git log --pretty=oneline  -1
@@ -517,7 +584,7 @@
         - name: checkout the current requirements branch
           shell:
             cmd: |
-              git checkout {{ zuul.branch }}
+              git checkout {{ zuul.projects["opendev.org/openstack/requirements"].checkout }}
               echo "requirements checked out to:"
               git log --pretty=oneline  -1
             chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
@@ -540,11 +607,32 @@
               dest: /etc/kolla/config/nova/nova-compute.conf
           when: item.when | default(true)
 
+        - name: slurp requirements.yml
+          slurp:
+            src: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          register: requirements_yml
+
+        - name: write requirements.yml
+          copy:
+            content: "{{ new_requirements | to_nice_yaml }}"
+            dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
+          vars:
+            old_requirements: "{{ requirements_yml.content | b64decode | from_yaml }}"
+            new_requirement:
+              name: "{{ ansible_collection_kolla_src_dir }}"
+              type: dir
+            new_requirements:
+              collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
+
         - name: upgrade kolla-ansible
           command: >-
             python3 -m pip install --user
             -c {{ upper_constraints_file }}
             {{ kolla_ansible_src_dir }}
+
+        - name: install Ansible collections
+          command: >-
+            kolla-ansible install-deps
 
         # Update passwords.yml to include any new passwords added in this
         # release.
@@ -586,9 +674,15 @@
             TLS_ENABLED: "{{ tls_enabled }}"
           when: dashboard_enabled
 
+        # NOTE(yoctozepto): We need the script module here to avoid
+        # a bug in Glance OSC [1][2] which results in a failure when a volume
+        # is given as a source. The stdin works differently in shell/command
+        # than script.
+        # [1] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L114-L120
+        # [2] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L414
         - name: Run test-core-openstack.sh script
-          shell:
-            cmd: tests/test-core-openstack.sh
+          script:
+            cmd: test-core-openstack.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:

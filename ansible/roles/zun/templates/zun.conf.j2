@@ -16,11 +16,6 @@ capsule_driver = cri
 [network]
 driver = kuryr
 
-[api]
-host_ip = {{ api_interface_address }}
-port = {{ zun_api_port }}
-workers = {{ openstack_service_workers }}
-
 [database]
 connection = mysql+pymysql://{{ zun_database_user }}:{{ zun_database_password }}@{{ zun_database_address }}/{{ zun_database_name }}
 connection_recycle_time = {{ database_connection_recycle_time }}
@@ -32,7 +27,7 @@ max_retries = -1
 # - best keep them both in sync
 [keystone_auth]
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -53,8 +48,9 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 # keystone_authtoken sections are used and Zun internals may use either -
 # - best keep them both in sync
 [keystone_authtoken]
+service_type = container
 www_authenticate_uri = {{ keystone_internal_url }}
-auth_url = {{ keystone_admin_url }}
+auth_url = {{ keystone_internal_url }}
 auth_type = password
 project_domain_id = {{ default_project_domain_id }}
 user_domain_id = {{ default_user_domain_id }}
@@ -118,7 +114,7 @@ host_shared_with_nova = {{ inventory_hostname in groups['compute'] and enable_no
 [websocket_proxy]
 wsproxy_host = {{ api_interface_address }}
 wsproxy_port = {{ zun_wsproxy_port }}
-base_url = ws://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ zun_wsproxy_port }}
+base_url = {{ zun_wsproxy_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ zun_wsproxy_port }}
 
 [docker]
 api_url = tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
