@@ -164,3 +164,17 @@
     - enable_prometheus_libvirt_exporter | bool
   with_items:
     - "{{ prometheus_libvirt_exporter_port }}"
+
+- name: Checking free ports for Prometheus msteams
+  wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['prometheus_msteams'] is not defined
+    - inventory_hostname in groups['prometheus-msteams']
+    - enable_prometheus_msteams | bool
+  with_items:
+    - "{{ prometheus_msteams_port }}"
