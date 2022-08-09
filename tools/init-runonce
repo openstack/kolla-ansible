@@ -47,11 +47,15 @@ for i in curl openstack; do
     fi
 done
 
-# Test for credentials set
-if [[ "${OS_USERNAME}" == "" ]]; then
-    echo "No Keystone credentials specified. Try running source /etc/kolla/admin-openrc.sh command"
-    exit
+# Test for clouds.yaml
+if [[ ! -f /etc/openstack/clouds.yaml ]]; then
+    echo "/etc/openstack/clouds.yaml is missing."
+    echo " Did your deploy finish successfully?"
+    exit 1
 fi
+
+# Select admin account from clouds.yaml
+export OS_CLOUD=kolla-admin
 
 # Test to ensure configure script is run only once
 if $KOLLA_OPENSTACK_COMMAND image list | grep -q cirros; then
@@ -144,7 +148,7 @@ Done.
 
 To deploy a demo instance, run:
 
-openstack server create \\
+openstack --os-cloud=kolla-admin server create \\
     --image ${IMAGE_NAME} \\
     --flavor m1.tiny \\
     --key-name mykey \\
