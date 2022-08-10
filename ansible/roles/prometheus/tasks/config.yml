@@ -237,3 +237,37 @@
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
+
+- name: Copying over prometheus msteams config file
+  vars:
+    service: "{{ prometheus_services['prometheus-msteams'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-msteams/msteams.yml"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-msteams.yml"
+    - "{{ node_custom_config }}/prometheus/prometheus-msteams.yml"
+    - "{{ role_path }}/templates/prometheus-msteams.yml.j2"
+  notify:
+    - Restart prometheus-msteams container
+
+- name: Copying over prometheus msteams template file
+  vars:
+    service: "{{ prometheus_services['prometheus-msteams'] }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-msteams/msteams.tmpl"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-msteams.tmpl"
+    - "{{ node_custom_config }}/prometheus/prometheus-msteams.tmpl"
+    - "{{ role_path }}/templates/prometheus-msteams.tmpl"
+  notify:
+    - Restart prometheus-msteams container
