@@ -32,6 +32,20 @@ placement_database_user: "{% if use_preconfigured_databases | bool and use_commo
 placement_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+placement_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ placement_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+placement_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+placement_database_shard:
+  users:
+    - user: "{{ placement_database_user }}"
+      password: "{{ placement_database_password }}"
+  rules:
+    - schema: "{{ placement_database_name }}"
+      shard_id: "{{ placement_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 placement_tag: "{{ openstack_tag }}"

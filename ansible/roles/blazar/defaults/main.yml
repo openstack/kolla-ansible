@@ -41,6 +41,19 @@ blazar_database_name: "blazar"
 blazar_database_user: "blazar"
 blazar_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+blazar_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ blazar_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+blazar_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+blazar_database_shard:
+  users:
+    - user: "{{ blazar_database_user }}"
+      password: "{{ blazar_database_password }}"
+  rules:
+    - schema: "{{ blazar_database_name }}"
+      shard_id: "{{ blazar_database_shard_id }}"
+
 
 ####################
 # Docker

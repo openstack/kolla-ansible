@@ -68,6 +68,19 @@ keystone_database_name: "keystone"
 keystone_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}keystone{% endif %}"
 keystone_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+keystone_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ keystone_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+keystone_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+keystone_database_shard:
+  users:
+    - user: "{{ keystone_database_user }}"
+      password: "{{ keystone_database_password }}"
+  rules:
+    - schema: "{{ keystone_database_name }}"
+      shard_id: "{{ keystone_database_shard_id }}"
+
 
 ####################
 # Fernet

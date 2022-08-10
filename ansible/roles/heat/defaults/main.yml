@@ -62,6 +62,19 @@ heat_database_name: "heat"
 heat_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}heat{% endif %}"
 heat_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+heat_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ heat_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+heat_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+heat_database_shard:
+  users:
+    - user: "{{ heat_database_user }}"
+      password: "{{ heat_database_password }}"
+  rules:
+    - schema: "{{ heat_database_name }}"
+      shard_id: "{{ heat_database_shard_id }}"
+
 
 ####################
 # Docker
