@@ -71,7 +71,7 @@ def namespace_haproxy_for_cell(services, cell_name):
         # name.
         return "{}_{}".format(name, cell_name) if cell_name else name
 
-    # Service name must be namespaced as haproxy-config uses this as the
+    # Service name must be namespaced as loadbalancer-config uses this as the
     # config file name.
     services = {
         _namespace(service_name): service
