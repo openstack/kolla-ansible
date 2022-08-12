@@ -200,3 +200,55 @@ in Kolla, the following parameter must be specified in ``globals.yml``:
 
 All configuration for custom NFS backend should be performed
 via ``cinder.conf`` in config overrides directory.
+
+Customizing backend names in cinder.conf
+----------------------------------------
+
+.. note::
+
+   This is an advanced configuration option. You cannot change these variables
+   if you already have volumes that use the old name without additional steps.
+   Sensible defaults exist out of the box.
+
+The following variables are available to customise the default backend name
+that appears in cinder.conf:
+
+.. list-table:: Variables to customize backend name
+   :widths: 50 25 25
+   :header-rows: 1
+
+   * - Driver
+     - Variable
+     - Default value
+   * - Ceph
+     - cinder_backend_ceph_name
+     - rbd-1
+   * - Logical Volume Manager (LVM)
+     - cinder_backend_lvm_name
+     - lvm-1
+   * - Network File System (NFS)
+     - cinder_backend_nfs_name
+     - nfs-1
+   * - Hitachi NAS Platform NFS
+     - cinder_backend_hnas_nfs_name
+     - hnas-nfs
+   * - VMware Virtual Machine Disk File
+     - cinder_backend_vmwarevc_vmdk_name
+     - vmwarevc-vmdk
+   * - VMware VStorage (Object Storage)
+     - cinder_backend_vmware_vstorage_object_name
+     - vmware-vstorage-object
+   * - Quobyte Storage for OpenStack
+     - cinder_backend_quobyte_name
+     - QuobyteHD
+   * - Pure Storage FlashArray for OpenStack (iSCSI)
+     - cinder_backend_pure_iscsi_name
+     - Pure-FlashArray-iscsi
+   * - Pure Storage FlashArray for OpenStack
+     - cinder_backend_pure_fc_name
+     - Pure-FlashArray-fc
+
+These are the names you use when
+`configuring <https://docs.openstack.org/cinder/latest/admin/multi-backend.html#volume-type>`_
+``volume_backend_name`` on cinder volume types. It can sometimes be
+useful to provide a more descriptive name.
