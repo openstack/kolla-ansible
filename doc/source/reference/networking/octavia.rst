@@ -115,6 +115,10 @@ resources:
 
 The configuration for these resources may be customised before deployment.
 
+Note that for this to work access to the Nova and Neutron APIs is required.
+This is true also for the ``kolla-ansible genconfig`` command and when using
+Ansible check mode.
+
 Customize Amphora flavor
 ------------------------
 
