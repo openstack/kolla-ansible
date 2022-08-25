@@ -20,14 +20,15 @@ A very simple registry may be deployed on the current host as follows:
 .. code-block:: console
 
    docker run -d \
+    --network host \
     --name registry \
     --restart=always \
-    -p 4000:5000 \
+    -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 \
     -v registry:/var/lib/registry \
     registry:2
 
 Here we are using port 4000 to avoid a conflict with Keystone. If the registry
-is not running on the same host as Keystone, the ``-p`` argument may be
+is not running on the same host as Keystone, the ``-e`` argument may be
 omitted.
 
 Edit ``globals.yml`` and add the following, where ``192.168.1.100:4000`` is the
