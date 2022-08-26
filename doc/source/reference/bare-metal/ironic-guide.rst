@@ -176,12 +176,12 @@ describes how to create Nova flavors for bare metal.  For example:
 
 .. code-block:: console
 
-  openstack flavor create --ram 512 --disk 1 --vcpus 1 my-baremetal-flavor
-  openstack flavor set my-baremetal-flavor --property \
-    resources:CUSTOM_BAREMETAL_RESOURCE_CLASS=1 \
-    resources:resources:VCPU=0 \
-    resources:resources:MEMORY_MB=0 \
-    resources:resources:DISK_GB=0
+  openstack flavor create my-baremetal-flavor \
+    --ram 512 --disk 1 --vcpus 1 \
+    --property resources:CUSTOM_BAREMETAL_RESOURCE_CLASS=1 \
+    --property resources:VCPU=0 \
+    --property resources:MEMORY_MB=0 \
+    --property resources:DISK_GB=0
 
 The :ironic-doc:`Ironic documentation <install/enrollment>` describes how to
 enroll baremetal nodes and ports.  In the following example ensure to
