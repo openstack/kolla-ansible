@@ -1,0 +1,43 @@
+{% set wsgi_directory = '/var/lib/kolla/venv/bin' %}
+{% if trove_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
+Listen {{ api_interface_address | put_address_in_context('url') }}:{{ trove_api_listen_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+TimeOut {{ kolla_httpd_timeout }}
+KeepAliveTimeout {{ kolla_httpd_keep_alive }}
+
+{% if trove_logging_debug | bool %}
+LogLevel info
+{% endif %}
+
+<VirtualHost *:{{ trove_api_listen_port }}>
+    WSGIDaemonProcess trove-api processes={{ trove_api_workers }} threads=1 user=trove group=trove display-name=trove-api
+    WSGIProcessGroup trove-api
+    WSGIScriptAlias / {{ wsgi_directory }}/trove-wsgi
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIPassAuthorization On
+    <IfVersion >= 2.4>
+      ErrorLogFormat "%{cu}t %M"
+    </IfVersion>
+    ErrorLog /var/log/kolla/trove/trove-api-error.log
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog /var/log/kolla/trove/trove-api-access.log logformat
+    <Directory {{ wsgi_directory }}>
+        <Files trove-wsgi>
+            Require all granted
+        </Files>
+    </Directory>
+{% if trove_enable_tls_backend | bool %}
+    SSLEngine On
+    SSLCertificateFile /etc/trove/certs/trove-cert.pem
+    SSLCertificateKeyFile /etc/trove/certs/trove-key.pem
+{% endif %}
+</VirtualHost>
