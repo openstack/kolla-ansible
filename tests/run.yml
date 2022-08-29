@@ -283,30 +283,9 @@
     - name: generate passwords
       command: "{{ kolla_ansible_venv_path }}/bin/kolla-genpwd"
 
-    - name: slurp kolla passwords
-      slurp:
-        src: /etc/kolla/passwords.yml
-      register: passwords_yml
-
-    - name: write out kolla SSH private key
-      copy:
-        content: "{{ (passwords_yml.content | b64decode | from_yaml).kolla_ssh_key.private_key }}"
-        dest: ~/.ssh/id_rsa_kolla
-        mode: 0600
-
-    - name: authorise kolla public key for zuul user
-      authorized_key:
-        user: "{{ ansible_env.USER }}"
-        key: "{{ (passwords_yml.content | b64decode | from_yaml).kolla_ssh_key.public_key }}"
-      # Delegate to each host in turn. If more tasks require execution on all
-      # hosts in future, break out into a separate play.
-      with_inventory_hostnames:
-        - all
-      delegate_to: "{{ item }}"
-
     - name: Record the running state of the environment as seen by the setup module
       shell:
-        cmd: "{{ kolla_ansible_venv_path }}/bin/ansible all -i {{ kolla_inventory_path }} -e ansible_user={{ ansible_user }} -m setup > /tmp/logs/ansible/initial-setup"
+        cmd: "{{ kolla_ansible_venv_path }}/bin/ansible all -i {{ kolla_inventory_path }} -m setup > /tmp/logs/ansible/initial-setup"
 
     - name: Set facts for actions
       set_fact:
