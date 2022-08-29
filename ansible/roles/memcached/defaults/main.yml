@@ -19,12 +19,7 @@ memcached_services:
         backend_tcp_extra:
           - "option srvtcpka"
           - "timeout server 3600s"
-        custom_member_list: "{{ haproxy_members.split(';') }}"
-
-####################
-# HAProxy
-####################
-haproxy_members: "{% for host in groups['memcached'] %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ memcached_port }} check inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+        active_passive: true
 
 ####################
 # Docker
