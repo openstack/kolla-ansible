@@ -55,7 +55,8 @@ def hashicorp_vault_client(vault_namespace, vault_addr, vault_role_id,
                              namespace=vault_namespace)
     else:
         client = hvac.Client(url=vault_addr, namespace=vault_namespace)
-        client.auth_approle(vault_role_id, vault_secret_id)
+        client.auth.approle.login(role_id=vault_role_id,
+                                  secret_id=vault_secret_id)
 
     if not client.is_authenticated():
         print('Failed to authenticate to vault')
