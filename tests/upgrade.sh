@@ -9,6 +9,9 @@ export PYTHONUNBUFFERED=1
 
 function upgrade {
     RAW_INVENTORY=/etc/kolla/inventory
+
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+
     # generate self-signed certificates for the optional internal TLS tests
     if [[ "$TLS_ENABLED" = "True" ]]; then
         kolla-ansible -i ${RAW_INVENTORY} -vvv certificates > /tmp/logs/ansible/certificates

@@ -132,6 +132,9 @@ EOF
 setup_openstack_clients
 
 RAW_INVENTORY=/etc/kolla/inventory
+
+source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
 kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
+deactivate
 
 prepare_images

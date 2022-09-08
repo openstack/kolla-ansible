@@ -10,6 +10,8 @@ export PYTHONUNBUFFERED=1
 function reconfigure {
     RAW_INVENTORY=/etc/kolla/inventory
 
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+
     # TODO(jeffrey4l): make some configure file change and
     # trigger a real reconfigure
     kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/reconfigure-prechecks
