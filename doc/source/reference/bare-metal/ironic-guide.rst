@@ -6,8 +6,9 @@ Ironic - Bare Metal provisioning
 
 Overview
 ~~~~~~~~
-Ironic works well in Kolla, though it is not thoroughly tested as part of Kolla
-CI, so may be subject to instability.
+Ironic is the OpenStack service for handling bare metal, i.e., the physical
+machines. It can work standalone as well as with other OpenStack services
+(notably, Neutron and Nova).
 
 Pre-deployment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
