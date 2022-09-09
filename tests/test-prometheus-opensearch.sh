@@ -7,22 +7,22 @@ set -o pipefail
 # Enable unbuffered output
 export PYTHONUNBUFFERED=1
 
-function check_kibana {
+function check_opensearch_dashboards {
     # Perform and validate a basic status page check
-    KIBANA_URL=${OS_AUTH_URL%:*}:5601/api/status
+    OPENSEARCH_DASHBOARDS_URL=${OS_AUTH_URL%:*}:5601/api/status
     output_path=$1
-    kibana_password=$(awk '$1 == "kibana_password:" { print $2 }' /etc/kolla/passwords.yml)
+    opensearch_dashboards_password=$(awk '$1 == "opensearch_dashboards_password:" { print $2 }' /etc/kolla/passwords.yml)
     args=(
         --include
         --location
         --fail
         --user
-        kibana:$kibana_password
+        opensearch:$opensearch_dashboards_password
     )
     if [[ "$TLS_ENABLED" = "True" ]]; then
         args+=(--cacert $OS_CACERT)
     fi
-    if ! curl "${args[@]}" $KIBANA_URL > $output_path; then
+    if ! curl "${args[@]}" $OPENSEARCH_DASHBOARDS_URL > $output_path; then
         return 1
     fi
     if ! grep 'Looking good' $output_path >/dev/null; then
@@ -30,9 +30,9 @@ function check_kibana {
     fi
 }
 
-function check_elasticsearch {
+function check_opensearch {
     # Verify that we see a healthy index created due to Fluentd forwarding logs
-    ELASTICSEARCH_URL=${OS_AUTH_URL%:*}:9200/_cluster/health
+    OPENSEARCH_URL=${OS_AUTH_URL%:*}:9200/_cluster/health
     output_path=$1
     args=(
         --include
@@ -42,7 +42,7 @@ function check_elasticsearch {
     if [[ "$TLS_ENABLED" = "True" ]]; then
         args+=(--cacert $OS_CACERT)
     fi
-    if ! curl "${args[@]}" $ELASTICSEARCH_URL > $output_path; then
+    if ! curl "${args[@]}" $OPENSEARCH_URL > $output_path; then
         return 1
     fi
     # NOTE(mgoddard): Status may be yellow because no indices have been
@@ -96,38 +96,38 @@ function check_prometheus {
     fi
 }
 
-function test_kibana {
-    echo "TESTING: Kibana"
+function test_opensearch_dashboards {
+    echo "TESTING: OpenSearch Dashboards"
     output_path=$(mktemp)
     attempt=1
-    while ! check_kibana $output_path; do
-        echo "Kibana not accessible yet"
+    while ! check_opensearch_dashboards $output_path; do
+        echo "OpenSearch Dashboards not accessible yet"
         attempt=$((attempt+1))
         if [[ $attempt -eq 12 ]]; then
-            echo "FAILED: Kibana did not become accessible. Response:"
+            echo "FAILED: OpenSearch Dashboards did not become accessible. Response:"
             cat $output_path
             return 1
         fi
         sleep 10
     done
-    echo "SUCCESS: Kibana"
+    echo "SUCCESS: OpenSearch Dashboards"
 }
 
-function test_elasticsearch {
-    echo "TESTING: Elasticsearch"
+function test_opensearch {
+    echo "TESTING: OpenSearch"
     output_path=$(mktemp)
     attempt=1
-    while ! check_elasticsearch $output_path; do
-        echo "Elasticsearch not accessible yet"
+    while ! check_opensearch $output_path; do
+        echo "OpenSearch not accessible yet"
         attempt=$((attempt+1))
         if [[ $attempt -eq 12 ]]; then
-            echo "FAILED: Elasticsearch did not become accessible. Response:"
+            echo "FAILED: OpenSearch did not become accessible. Response:"
             cat $output_path
             return 1
         fi
         sleep 10
     done
-    echo "SUCCESS: Elasticsearch"
+    echo "SUCCESS: OpenSearch"
 }
 
 function test_grafana {
@@ -165,25 +165,25 @@ function test_prometheus {
     echo "SUCCESS: Prometheus"
 }
 
-function test_prometheus_efk_logged {
+function test_prometheus_opensearch_logged {
     . /etc/kolla/admin-openrc.sh
 
-    test_kibana
-    test_elasticsearch
+    test_opensearch_dashboards
+    test_opensearch
     test_grafana
     test_prometheus
 }
 
-function test_prometheus_efk {
-    echo "Testing prometheus and EFK"
-    test_prometheus_efk_logged > /tmp/logs/ansible/test-prometheus-efk 2>&1
+function test_prometheus_opensearch {
+    echo "Testing prometheus and OpenSearch"
+    test_prometheus_opensearch_logged > /tmp/logs/ansible/test-prometheus-opensearch 2>&1
     result=$?
     if [[ $result != 0 ]]; then
-        echo "Testing prometheus and EFK failed. See ansible/test-prometheus-efk for details"
+        echo "Testing prometheus and OpenSearch failed. See ansible/test-prometheus-opensearch for details"
     else
-        echo "Successfully tested prometheus and EFK. See ansible/test-prometheus-efk for details"
+        echo "Successfully tested prometheus and OpenSearch. See ansible/test-prometheus-opensearch for details"
     fi
     return $result
 }
 
-test_prometheus_efk
+test_prometheus_opensearch

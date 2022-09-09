@@ -76,9 +76,10 @@
 
 - name: Copying over td-agent.conf
   vars:
-    log_direct_to_elasticsearch: >-
-      {{ enable_elasticsearch | bool or
-           ( elasticsearch_address != kolla_internal_fqdn ) }}
+    log_direct_to_elasticsearch: "{{ elasticsearch_address is defined }}"
+    log_direct_to_opensearch: >-
+      {{ enable_opensearch | bool or
+           ( opensearch_address != kolla_internal_fqdn ) }}
     # Inputs
     fluentd_input_files: "{{ default_input_files_enabled | customise_fluentd(customised_input_files) }}"
     default_input_files_enabled: "{{ default_input_files | selectattr('enabled') | map(attribute='name') | list }}"
@@ -125,6 +126,8 @@
         enabled: true
       - name: "conf/output/01-es.conf.j2"
         enabled: "{{ log_direct_to_elasticsearch }}"
+      - name: "conf/output/03-opensearch.conf.j2"
+        enabled: "{{ log_direct_to_opensearch }}"
     customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | list }}"
   template:
     src: "td-agent.conf.j2"
@@ -154,7 +157,6 @@
       - { name: "collectd", enabled: "{{ enable_collectd | bool }}" }
       - { name: "cyborg", enabled: "{{ enable_cyborg | bool }}" }
       - { name: "designate", enabled: "{{ enable_designate | bool }}" }
-      - { name: "elasticsearch", enabled: "{{ enable_elasticsearch | bool }}" }
       - { name: "etcd", enabled: "{{ enable_etcd | bool }}" }
       - { name: "fluentd", enabled: "{{ enable_fluentd | bool }}" }
       - { name: "freezer", enabled: "{{ enable_freezer | bool }}" }
@@ -171,7 +173,6 @@
       - { name: "ironic-inspector", enabled: "{{ enable_ironic | bool }}" }
       - { name: "kafka", enabled: "{{ enable_kafka | bool }}" }
       - { name: "keystone", enabled: "{{ enable_keystone | bool }}" }
-      - { name: "kibana", enabled: "{{ enable_kibana | bool }}" }
       - { name: "kuryr", enabled: "{{ enable_kuryr | bool }}" }
       - { name: "magnum", enabled: "{{ enable_magnum | bool }}" }
       - { name: "manila", enabled: "{{ enable_manila | bool }}" }
@@ -184,6 +185,7 @@
       - { name: "nova", enabled: "{{ enable_nova | bool }}" }
       - { name: "nova-libvirt", enabled: "{{ enable_nova | bool and enable_nova_libvirt_container | bool }}" }
       - { name: "octavia", enabled: "{{ enable_octavia | bool }}" }
+      - { name: "opensearch", enabled: "{{ enable_opensearch | bool or enable_opensearch_dashboards | bool }}" }
       - { name: "openvswitch", enabled: "{{ enable_openvswitch | bool }}" }
       - { name: "outward-rabbitmq", enabled: "{{ enable_outward_rabbitmq | bool }}" }
       - { name: "placement", enabled: "{{ enable_placement | bool }}" }

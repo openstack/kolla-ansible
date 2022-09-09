@@ -1,0 +1,33 @@
+---
+- name: Restart opensearch container
+  vars:
+    service_name: "opensearch"
+    service: "{{ opensearch_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"
+
+- name: Restart opensearch-dashboards container
+  vars:
+    service_name: "opensearch-dashboards"
+    service: "{{ opensearch_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment | default(omit) }}"
+    image: "{{ service.image }}"
+    name: "{{ service.container_name }}"
+    volumes: "{{ service.volumes }}"
+  when:
+    - kolla_action != "config"

@@ -28,7 +28,6 @@
         - enable_collectd_{{ enable_collectd | bool }}
         - enable_cyborg_{{ enable_cyborg | bool }}
         - enable_designate_{{ enable_designate | bool }}
-        - enable_elasticsearch_{{ enable_elasticsearch | bool }}
         - enable_etcd_{{ enable_etcd | bool }}
         - enable_freezer_{{ enable_freezer | bool }}
         - enable_glance_{{ enable_glance | bool }}
@@ -42,7 +41,6 @@
         - enable_iscsid_{{ enable_iscsid | bool }}
         - enable_kafka_{{ enable_kafka | bool }}
         - enable_keystone_{{ enable_keystone | bool }}
-        - enable_kibana_{{ enable_kibana | bool }}
         - enable_kuryr_{{ enable_kuryr | bool }}
         - enable_loadbalancer_{{ enable_loadbalancer | bool }}
         - enable_magnum_{{ enable_magnum | bool }}
@@ -56,6 +54,8 @@
         - enable_neutron_{{ enable_neutron | bool }}
         - enable_nova_{{ enable_nova | bool }}
         - enable_octavia_{{ enable_octavia | bool }}
+        - enable_opensearch_{{ enable_opensearch | bool }}
+        - enable_opensearch_dashboards_{{ enable_opensearch_dashboards | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_ovn_{{ enable_ovn | bool }}
@@ -154,11 +154,6 @@
           tags: designate
           when: enable_designate | bool
         - include_role:
-            name: elasticsearch
-            tasks_from: loadbalancer
-          tags: elasticsearch
-          when: enable_elasticsearch | bool
-        - include_role:
             name: freezer
             tasks_from: loadbalancer
           tags: freezer
@@ -203,11 +198,6 @@
             tasks_from: loadbalancer
           tags: keystone
           when: enable_keystone | bool
-        - include_role:
-            name: kibana
-            tasks_from: loadbalancer
-          tags: kibana
-          when: enable_kibana | bool
         - include_role:
             name: magnum
             tasks_from: loadbalancer
@@ -271,6 +261,11 @@
             tasks_from: loadbalancer
           tags: octavia
           when: enable_octavia | bool
+        - include_role:
+            name: opensearch
+            tasks_from: loadbalancer
+          tags: opensearch
+          when: enable_opensearch | bool
         - include_role:
             name: prometheus
             tasks_from: loadbalancer
@@ -512,25 +507,15 @@
     - { role: keystone,
         tags: keystone }
 
-- name: Apply role elasticsearch
+- name: Apply role opensearch
   gather_facts: false
   hosts:
-    - elasticsearch
-    - '&enable_elasticsearch_True'
+    - opensearch
+    - '&enable_opensearch_True'
   serial: '{{ kolla_serial|default("0") }}'
   roles:
-    - { role: elasticsearch,
-        tags: elasticsearch }
-
-- name: Apply role kibana
-  gather_facts: false
-  hosts:
-    - kibana
-    - '&enable_kibana_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: kibana,
-        tags: kibana }
+    - { role: opensearch,
+        tags: opensearch }
 
 - name: Apply role kafka
   gather_facts: false
