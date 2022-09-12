@@ -38,7 +38,11 @@ zone_id = ${ZONE_ID}
 EOF
 
     RAW_INVENTORY=/etc/kolla/inventory
+    deactivate
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
     kolla-ansible -i ${RAW_INVENTORY} --tags designate -vvv reconfigure &> /tmp/logs/ansible/reconfigure-designate
+    deactivate
+    source ~/openstackclient-venv/bin/activate
 
     # Create an instance, and check that its name resolves.
     openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net dns-test --wait
