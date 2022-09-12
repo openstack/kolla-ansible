@@ -28,7 +28,6 @@ class ContainerWorker(ABC):
         self.changed = False
         # Use this to store arguments to pass to exit_json().
         self.result = {}
-        self._cgroupns_mode_supported = True
 
         self.systemd = SystemdWorker(self.params)
 
@@ -141,8 +140,6 @@ class ContainerWorker(ABC):
         pass
 
     def compare_cgroupns_mode(self, container_info):
-        if not self._cgroupns_mode_supported:
-            return False
         new_cgroupns_mode = self.params.get('cgroupns_mode')
         if new_cgroupns_mode is None:
             # means we don't care what it is
