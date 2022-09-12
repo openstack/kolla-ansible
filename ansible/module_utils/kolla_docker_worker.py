@@ -19,8 +19,6 @@ import os
 from ansible.module_utils.kolla_container_worker import COMPARE_CONFIG_CMD
 from ansible.module_utils.kolla_container_worker import ContainerWorker
 
-from distutils.version import StrictVersion
-
 
 def get_docker_client():
     return docker.APIClient
@@ -38,13 +36,8 @@ class DockerWorker(ContainerWorker):
 
         self.dc = get_docker_client()(**options)
 
-        self._cgroupns_mode_supported = (
-            StrictVersion(self.dc._version) >= StrictVersion('1.41'))
-        self._dimensions_kernel_memory_removed = (
-            StrictVersion(self.dc._version) >= StrictVersion('1.42'))
-
-        if self._dimensions_kernel_memory_removed:
-            self.dimension_map.pop('kernel_memory', None)
+        self._dimensions_kernel_memory_removed = True
+        self.dimension_map.pop('kernel_memory', None)
 
     def generate_tls(self):
         tls = {'verify': self.params.get('tls_verify')}
@@ -304,12 +297,11 @@ class DockerWorker(ContainerWorker):
 
         host_config = self.dc.create_host_config(**options)
 
-        if self._cgroupns_mode_supported:
-            # NOTE(yoctozepto): python-docker does not support CgroupnsMode
-            # natively so we stuff it in manually.
-            cgroupns_mode = self.params.get('cgroupns_mode')
-            if cgroupns_mode is not None:
-                host_config['CgroupnsMode'] = cgroupns_mode
+        # NOTE(yoctozepto): python-docker does not support CgroupnsMode
+        # natively so we stuff it in manually.
+        cgroupns_mode = self.params.get('cgroupns_mode')
+        if cgroupns_mode is not None:
+            host_config['CgroupnsMode'] = cgroupns_mode
 
         # detached containers should only log to journald
         if self.params.get('detach'):
