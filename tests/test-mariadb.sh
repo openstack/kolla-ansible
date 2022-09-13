@@ -32,6 +32,7 @@ function test_recovery {
 
 function test_mariadb_logged {
     RAW_INVENTORY=/etc/kolla/inventory
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
     test_recovery
 }
 
