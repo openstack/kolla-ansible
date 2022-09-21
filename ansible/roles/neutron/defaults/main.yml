@@ -31,25 +31,24 @@ neutron_services:
       KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
-      ( inventory_hostname in groups['compute']
+      (inventory_hostname in groups['compute']
       or (enable_manila_backend_generic | bool and inventory_hostname in groups['manila-share'])
       or inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
-      and not enable_nova_fake | bool
-      ) or
-      ( inventory_hostname in groups['neutron-dhcp-agent']
+      and not enable_nova_fake | bool)
+      or
+      (inventory_hostname in groups['neutron-dhcp-agent']
       or inventory_hostname in groups['neutron-l3-agent']
       or inventory_hostname in groups['neutron-metadata-agent']
-      and enable_nova_fake | bool
-      )
+      and enable_nova_fake | bool)
       }}
     volumes: "{{ neutron_openvswitch_agent_default_volumes + neutron_openvswitch_agent_extra_volumes }}"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
     healthcheck: "{{ neutron_openvswitch_agent_healthcheck }}"
   neutron-linuxbridge-agent:
     container_name: "neutron_linuxbridge_agent"
-    image: "{{  neutron_linuxbridge_agent_image_full }}"
+    image: "{{ neutron_linuxbridge_agent_image_full }}"
     privileged: True
     enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
     environment:
@@ -94,7 +93,7 @@ neutron_services:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
+    enabled: "{{ enable_neutron_sriov | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_sriov_agent_default_volumes + neutron_sriov_agent_extra_volumes }}"
     dimensions: "{{ neutron_sriov_agent_dimensions }}"
@@ -102,7 +101,7 @@ neutron_services:
   neutron-mlnx-agent:
     container_name: "neutron_mlnx_agent"
     image: "{{ neutron_mlnx_agent_image_full }}"
-    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_mlnx_agent_default_volumes + neutron_mlnx_agent_extra_volumes }}"
     dimensions: "{{ neutron_mlnx_agent_dimensions }}"
@@ -110,7 +109,7 @@ neutron_services:
     container_name: "neutron_eswitchd"
     image: "{{ neutron_eswitchd_image_full }}"
     privileged: True
-    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
+    enabled: "{{ enable_neutron_mlnx | bool and neutron_plugin_agent not in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] }}"
     host_in_groups: "{{ inventory_hostname in groups['compute'] }}"
     volumes: "{{ neutron_eswitchd_default_volumes + neutron_eswitchd_extra_volumes }}"
     dimensions: "{{ neutron_eswitchd_dimensions }}"
@@ -118,7 +117,7 @@ neutron_services:
     container_name: "neutron_metadata_agent"
     image: "{{ neutron_metadata_agent_image_full }}"
     privileged: True
-    enabled: "{{ neutron_plugin_agent not in [ 'ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp' ] }}"
+    enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp'] }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-metadata-agent']
@@ -398,7 +397,7 @@ neutron_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 neutron_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 neutron_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{% if neutron_enable_tls_backend | bool %}localhost{% else %}{{ api_interface_address |  put_address_in_context('url') }}{% endif %}:{{ neutron_server_listen_port }}"]
+neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{% if neutron_enable_tls_backend | bool %}localhost{% else %}{{ api_interface_address | put_address_in_context('url') }}{% endif %}:{{ neutron_server_listen_port }}"]
 neutron_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 neutron_server_healthcheck:
   interval: "{{ neutron_server_healthcheck_interval }}"
@@ -411,7 +410,7 @@ neutron_tls_proxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_tls_proxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 neutron_tls_proxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 neutron_tls_proxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_tls_proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl -u {{ haproxy_user }}:{{ haproxy_password }} {{ api_interface_address |  put_address_in_context('url') }}:{{ neutron_tls_proxy_stats_port }}"]
+neutron_tls_proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl -u {{ haproxy_user }}:{{ haproxy_password }} {{ api_interface_address | put_address_in_context('url') }}:{{ neutron_tls_proxy_stats_port }}"]
 neutron_tls_proxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 neutron_tls_proxy_healthcheck:
   interval: "{{ neutron_tls_proxy_healthcheck_interval }}"
