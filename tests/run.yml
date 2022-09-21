@@ -287,11 +287,12 @@
       shell:
         cmd: "{{ kolla_ansible_venv_path }}/bin/ansible all -i {{ kolla_inventory_path }} -m setup > /tmp/logs/ansible/initial-setup"
 
-    - name: Set facts for actions
+    - name: Set facts for Swift initialisation
       set_fact:
         # NOTE(yoctozepto): no support for upgrades for now
-        docker_image_tag: "{{ build_image_tag if need_build_image else (zuul.branch | basename) ~ docker_image_tag_suffix }}"
+        docker_image_tag: "{{ build_image_tag if need_build_image else (zuul.branch | basename) ~ '-' ~ base_distro ~ '-' ~ base_distro_version ~ docker_image_tag_suffix }}"
         docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else '{{ zuul_site_mirror_fqdn }}:4447/openstack.kolla/' }}"
+      when: scenario in ['swift']
 
     # NOTE(yoctozepto): k-a octavia-certificates should run before k-a bootstrap-servers
     # because the latter hijacks /etc/kolla permissions (due to same directory on the
@@ -327,7 +328,7 @@
         executable: /bin/bash
         chdir: "{{ kolla_ansible_src_dir }}"
       environment:
-        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}{{ base_distro }}-swift-base:{{ docker_image_tag }}"
+        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}swift-base:{{ docker_image_tag }}"
         # NOTE(yoctozepto): no IPv6 for now
         STORAGE_NODES: "{{ groups['all'] | map('extract', hostvars,
                            ['ansible_'+api_interface_name, 'ipv4', 'address'])
