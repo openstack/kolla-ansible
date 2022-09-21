@@ -94,6 +94,14 @@ below:
       - name: "mappingId1"
         file: "/full/qualified/path/to/mapping/json/file/to/mappingId1"
 
+In some cases it's necessary to add JWKS (JSON Web Key Set) uri.
+It is required for auth-openidc endpoint - which is
+used by OpenStack command line client. Example config shown below:
+
+.. code-block:: yaml
+
+    keystone_federation_oidc_jwks_uri: "https://<AUTH PROVIDER>/<ID>/discovery/v2.0/keys"
+
 Identity providers configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
