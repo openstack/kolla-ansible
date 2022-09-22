@@ -42,7 +42,7 @@ horizon_services:
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
         backend_http_extra:
-          - "balance source"
+          - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_redirect:
         enabled: "{{ enable_horizon | bool and kolla_enable_tls_internal | bool }}"
@@ -59,7 +59,7 @@ horizon_services:
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
         backend_http_extra:
-          - "balance source"
+          - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_external_redirect:
         enabled: "{{ enable_horizon | bool and kolla_enable_tls_external | bool }}"
