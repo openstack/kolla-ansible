@@ -246,6 +246,7 @@ Validate OpenStack is operational:
 .. code-block:: console
 
    kolla-ansible post-deploy
+   export OS_CLIENT_CONFIG_FILE=/etc/kolla/clouds.yaml
    export OS_CLOUD=kolla-admin
    openstack user list
 
