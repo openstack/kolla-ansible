@@ -8,24 +8,19 @@
   when:
     - inventory_hostname in groups[nova_cell_compute_group]
 
-- name: Setting sysctl values
+- name: Enable bridge-nf-call sysctl variables
   become: true
-  vars:
-    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
   sysctl:
-    name: "{{ item.name }}"
-    state: "{{ should_set | ternary('present', 'absent') }}"
-    value: "{{ should_set | ternary(item.value, omit) }}"
-    sysctl_set: "{{ should_set }}"
+    name: "{{ item }}"
+    state: present
+    value: "1"
+    sysctl_set: true
     sysctl_file: "{{ kolla_sysctl_conf_path }}"
-  with_items:
-    - { name: "net.bridge.bridge-nf-call-iptables", value: 1}
-    - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1}
-    - { name: "net.ipv4.conf.all.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
-    - { name: "net.ipv4.conf.default.rp_filter", value: "{{ nova_compute_host_rp_filter_mode }}"}
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
   when:
     - set_sysctl | bool
-    - item.value != 'KOLLA_SKIP'
     - inventory_hostname in groups[nova_cell_compute_group]
 
 # NOTE(yoctozepto): Part of bug #1681461 fix.
