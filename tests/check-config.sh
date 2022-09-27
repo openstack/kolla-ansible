@@ -21,6 +21,7 @@ function check_config {
                 -not -regex .*key \
                 -not -regex ".*ca-certificates.*" \
                 -not -path /etc/kolla \
+                -not -path /etc/kolla/clouds.yaml \
                 -not -regex .*-openrc.sh \
                 -not -name globals.yml \
                 -not -name header \

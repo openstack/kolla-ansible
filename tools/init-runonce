@@ -48,14 +48,18 @@ for i in curl openstack; do
 done
 
 # Test for clouds.yaml
-if [[ ! -f /etc/openstack/clouds.yaml ]]; then
-    echo "/etc/openstack/clouds.yaml is missing."
+if [[ ! -f /etc/kolla/clouds.yaml ]]; then
+    echo "/etc/kolla/clouds.yaml is missing."
     echo " Did your deploy finish successfully?"
     exit 1
 fi
 
+# Specify clouds.yaml file to use
+export OS_CLIENT_CONFIG_FILE=/etc/kolla/clouds.yaml
+
 # Select admin account from clouds.yaml
 export OS_CLOUD=kolla-admin
+
 
 # Test to ensure configure script is run only once
 if $KOLLA_OPENSTACK_COMMAND image list | grep -q cirros; then
