@@ -4,6 +4,7 @@ set -o errexit
 set -o pipefail
 
 KOLLA_DEBUG=${KOLLA_DEBUG:-0}
+KOLLA_CONFIG_PATH=${KOLLA_CONFIG_PATH:-/etc/kolla}
 
 KOLLA_OPENSTACK_COMMAND=openstack
 
@@ -48,14 +49,14 @@ for i in curl openstack; do
 done
 
 # Test for clouds.yaml
-if [[ ! -f /etc/kolla/clouds.yaml ]]; then
-    echo "/etc/kolla/clouds.yaml is missing."
+if [[ ! -f ${KOLLA_CONFIG_PATH}/clouds.yaml ]]; then
+    echo "${KOLLA_CONFIG_PATH}/clouds.yaml is missing."
     echo " Did your deploy finish successfully?"
     exit 1
 fi
 
 # Specify clouds.yaml file to use
-export OS_CLIENT_CONFIG_FILE=/etc/kolla/clouds.yaml
+export OS_CLIENT_CONFIG_FILE=${KOLLA_CONFIG_PATH}/clouds.yaml
 
 # Select admin account from clouds.yaml
 export OS_CLOUD=kolla-admin
