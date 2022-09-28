@@ -1,4 +1,13 @@
-{% set pxe_dir = ('/var/lib/ironic/tftpboot/grub' if kolla_base_distro in ['ubuntu', 'debian'] else '/var/lib/ironic/tftpboot/EFI/centos') if enable_ironic_pxe_uefi | bool else '/var/lib/ironic/tftpboot/pxelinux.cfg' %}
+{% if enable_ironic_pxe_uefi | bool %}
+  {% if kolla_base_distro in ['debian', 'ubuntu'] %}
+    {% set pxe_dir = '/var/lib/ironic/tftpboot/grub' %}
+  {% elif kolla_base_distro in ['centos', 'rocky'] %}
+    {% set pxe_dir = '/var/lib/ironic/tftpboot/EFI/{{ kolla_base_distro }}' %}
+  {% endif %}
+{% else %}
+  {% set pxe_dir = '/var/lib/ironic/tftpboot/pxelinux.cfg' %}
+{% endif %}
+
 {% set pxe_cfg = 'grub.cfg' if enable_ironic_pxe_uefi | bool else 'default' %}
 
 {
