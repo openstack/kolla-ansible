@@ -21,7 +21,7 @@ function create_a_volume {
 
     local attempt
 
-    openstack volume create --size 2 $volume_name
+    openstack volume create --size 1 $volume_name
     attempt=1
     while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
         echo "Volume $volume_name not available yet"
