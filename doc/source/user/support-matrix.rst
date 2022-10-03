@@ -21,12 +21,18 @@ Kolla Ansible supports the following host Operating Systems (OS):
    host OS. The Victoria release will in future support both CentOS Linux 8 and
    CentOS Stream 8, and provides a route for migration.
 
-* CentOS Stream 8
+.. note::
+
+   CentOS Stream 9 is supported as a host OS while Kolla does not publish CS9
+   based images. Users can build them on their own.
+
+
+
+* CentOS Stream 9
 * Debian Bullseye (11)
 * openEuler 22.03 LTS
-* RHEL 8 (deprecated)
-* Rocky Linux 8
-* Ubuntu Focal (20.04)
+* Rocky Linux 9
+* Ubuntu Jammy (22.04)
 
 Supported container images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +42,7 @@ OS distribution. The following values are supported for ``kolla_base_distro``:
 
 * ``centos``
 * ``debian``
-* ``rhel`` (deprecated)
+* ``rocky``
 * ``ubuntu``
 
 For details of which images are supported on which distributions, see the
