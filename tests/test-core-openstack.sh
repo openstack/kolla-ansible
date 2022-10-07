@@ -21,7 +21,7 @@ function create_a_volume {
 
     local attempt
 
-    openstack volume create --size 2 $volume_name
+    openstack volume create --size 1 $volume_name
     attempt=1
     while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
         echo "Volume $volume_name not available yet"
@@ -41,17 +41,17 @@ function create_a_volume_from_image {
 
     local attempt
 
-    openstack volume create --image $image_name --size 2 $volume_name
+    openstack volume create --image $image_name --size 1 $volume_name
     attempt=1
     while [[ $(openstack volume show $volume_name -f value -c status) != "available" ]]; do
         echo "Volume $volume_name not available yet"
         attempt=$((attempt+1))
-        if [[ $attempt -eq 10 ]]; then
+        if [[ $attempt -eq 11 ]]; then
             echo "Volume $volume_name failed to become available"
             openstack volume show $volume_name
             return 1
         fi
-        sleep 10
+        sleep 30
     done
 }
 
