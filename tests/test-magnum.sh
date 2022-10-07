@@ -15,7 +15,7 @@ function test_magnum_clusters {
 }
 
 function test_trove {
-  # smoke test
+    # smoke test
     openstack database instance list
     openstack database cluster list
 }
