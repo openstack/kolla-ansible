@@ -402,6 +402,7 @@ memcached_port: "11211"
 
 mistral_api_port: "8989"
 
+# TODO(dougszu): Remove in A cycle
 monasca_api_port: "8070"
 monasca_log_api_port: "{{ monasca_api_port }}"
 monasca_agent_forwarder_port: "17123"
@@ -650,7 +651,7 @@ enable_fluentd: "yes"
 enable_freezer: "no"
 enable_gnocchi: "no"
 enable_gnocchi_statsd: "no"
-enable_grafana: "{{ enable_monasca | bool }}"
+enable_grafana: "no"
 enable_grafana_external: "{{ enable_grafana | bool }}"
 enable_hacluster: "{{ enable_masakari_hostmonitor | bool }}"
 enable_heat: "{{ enable_openstack_core | bool }}"
@@ -665,7 +666,6 @@ enable_horizon_magnum: "{{ enable_magnum | bool }}"
 enable_horizon_manila: "{{ enable_manila | bool }}"
 enable_horizon_masakari: "{{ enable_masakari | bool }}"
 enable_horizon_mistral: "{{ enable_mistral | bool }}"
-enable_horizon_monasca: "{{ enable_monasca | bool }}"
 enable_horizon_murano: "{{ enable_murano | bool }}"
 enable_horizon_neutron_vpnaas: "{{ enable_neutron_vpnaas | bool }}"
 enable_horizon_octavia: "{{ enable_octavia | bool }}"
@@ -677,13 +677,13 @@ enable_horizon_trove: "{{ enable_trove | bool }}"
 enable_horizon_vitrage: "{{ enable_vitrage | bool }}"
 enable_horizon_watcher: "{{ enable_watcher | bool }}"
 enable_horizon_zun: "{{ enable_zun | bool }}"
-enable_influxdb: "{{ enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb') }}"
+enable_influxdb: "{{ enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb' }}"
 enable_ironic: "no"
 enable_ironic_neutron_agent: "{{ enable_neutron | bool and enable_ironic | bool }}"
 # TODO(yoctozepto): Remove the deprecated enable_ironic_pxe_uefi in Zed.
 enable_ironic_pxe_uefi: "no"
 enable_iscsid: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
-enable_kafka: "{{ enable_monasca | bool }}"
+enable_kafka: "no"
 enable_kuryr: "no"
 enable_magnum: "no"
 enable_manila: "no"
@@ -697,7 +697,6 @@ enable_masakari: "no"
 enable_masakari_instancemonitor: "{{ enable_masakari | bool }}"
 enable_masakari_hostmonitor: "{{ enable_masakari | bool }}"
 enable_mistral: "no"
-enable_monasca: "no"
 enable_multipathd: "no"
 enable_murano: "no"
 enable_neutron_vpnaas: "no"
@@ -732,7 +731,7 @@ enable_sahara: "no"
 enable_senlin: "no"
 enable_skydive: "no"
 enable_solum: "no"
-enable_storm: "{{ enable_monasca | bool and monasca_enable_alerting_pipeline | bool }}"
+enable_storm: "no"
 enable_swift: "no"
 enable_swift_s3api: "no"
 enable_swift_recon: "no"
@@ -764,31 +763,6 @@ num_nova_fake_per_node: 5
 enable_destroy_images: "no"
 
 ####################
-# Monasca options
-####################
-monasca_enable_alerting_pipeline: True
-
-# Send logs from the control plane to the Monasca API. Monasca will then persist
-# them in Elasticsearch. If this is disabled, control plane logs will be sent
-# directly to Elasticsearch.
-monasca_ingest_control_plane_logs: True
-
-monasca_api_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}"
-monasca_api_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}"
-
-monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
-monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
-
-# The OpenStack username used by the Monasca Agent and the Fluentd Monasca
-# plugin to post logs and metrics from the control plane to Monasca.
-monasca_agent_user: "monasca-agent"
-
-# The OpenStack project to which the control plane logs and metrics are
-# tagged with. Only users with the monasca read only user role, or higher
-# can access these from the Monasca APIs.
-monasca_control_plane_project: "monasca_control_plane"
-
-####################
 # Global Options
 ####################
 # List of containers to skip during stop command in YAML list format
@@ -802,13 +776,13 @@ skip_stop_containers: []
 ####################
 
 elasticsearch_address: "{{ kolla_internal_fqdn }}"
-enable_elasticsearch: "{{ 'yes' if enable_central_logging | bool or enable_osprofiler | bool or enable_skydive | bool or enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'elasticsearch') else 'no' }}"
+enable_elasticsearch: "{{ 'yes' if enable_central_logging | bool or enable_osprofiler | bool or enable_skydive | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'elasticsearch') else 'no' }}"
 
 # If using Curator an actions file will need to be defined. Please see
 # the documentation.
 enable_elasticsearch_curator: "no"
 
-enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bool else 'no' }}"
+enable_kibana: "{{ enable_central_logging | bool }}"
 enable_kibana_external: "{{ enable_kibana | bool }}"
 
 ####################

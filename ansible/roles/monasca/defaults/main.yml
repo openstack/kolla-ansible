@@ -3,25 +3,25 @@ monasca_services:
   monasca-api:
     container_name: monasca_api
     group: monasca-api
-    enabled: true
+    enabled: false
     image: "{{ monasca_api_image_full }}"
     volumes: "{{ monasca_api_default_volumes + monasca_api_extra_volumes }}"
     dimensions: "{{ monasca_api_dimensions }}"
     haproxy:
       monasca_api:
-        enabled: "{{ enable_monasca }}"
+        enabled: false
         mode: "http"
         external: false
         port: "{{ monasca_api_port }}"
       monasca_api_external:
-        enabled: "{{ enable_monasca }}"
+        enabled: false
         mode: "http"
         external: true
         port: "{{ monasca_api_port }}"
   monasca-log-persister:
     container_name: monasca_log_persister
     group: monasca-log-persister
-    enabled: true
+    enabled: false
     image: "{{ monasca_logstash_image_full }}"
     volumes: "{{ monasca_log_persister_default_volumes + monasca_log_persister_extra_volumes }}"
     dimensions: "{{ monasca_log_persister_dimensions }}"
@@ -37,7 +37,7 @@ monasca_services:
   monasca-thresh:
     container_name: monasca_thresh
     group: monasca-thresh
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
+    enabled: false
     image: "{{ monasca_thresh_image_full }}"
     volumes: "{{ monasca_thresh_default_volumes + monasca_thresh_extra_volumes }}"
     dimensions: "{{ monasca_thresh_dimensions }}"
@@ -45,21 +45,21 @@ monasca_services:
   monasca-notification:
     container_name: monasca_notification
     group: monasca-notification
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
+    enabled: false
     image: "{{ monasca_notification_image_full }}"
     volumes: "{{ monasca_notification_default_volumes + monasca_notification_extra_volumes }}"
     dimensions: "{{ monasca_notification_dimensions }}"
   monasca-persister:
     container_name: monasca_persister
     group: monasca-persister
-    enabled: true
+    enabled: false
     image: "{{ monasca_persister_image_full }}"
     volumes: "{{ monasca_persister_default_volumes + monasca_persister_extra_volumes }}"
     dimensions: "{{ monasca_persister_dimensions }}"
   monasca-agent-collector:
     container_name: monasca_agent_collector
     group: monasca-agent-collector
-    enabled: true
+    enabled: false
     image: "{{ monasca_agent_image_full }}"
     pid_mode: "host"
     volumes: "{{ monasca_agent_collector_default_volumes + monasca_agent_collector_extra_volumes }}"
@@ -67,145 +67,17 @@ monasca_services:
   monasca-agent-statsd:
     container_name: monasca_agent_statsd
     group: monasca-agent-statsd
-    enabled: true
+    enabled: false
     image: "{{ monasca_agent_image_full }}"
     volumes: "{{ monasca_agent_statsd_default_volumes + monasca_agent_statsd_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
   monasca-agent-forwarder:
     container_name: monasca_agent_forwarder
     group: monasca-agent-forwarder
-    enabled: true
+    enabled: false
     image: "{{ monasca_agent_image_full }}"
     volumes: "{{ monasca_agent_forwarder_default_volumes + monasca_agent_forwarder_extra_volumes }}"
     dimensions: "{{ monasca_agent_dimensions }}"
-
-####################
-# Databases
-####################
-monasca_database_name: "monasca"
-monasca_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}monasca{% endif %}"
-monasca_database_address: "{{ database_address }}"
-monasca_database_port: "{{ database_port }}"
-
-monasca_influxdb_name: "monasca"
-monasca_influxdb_address: "{{ influxdb_address }}"
-monasca_influxdb_http_port: "{{ influxdb_http_port }}"
-monasca_influxdb_retention_policy:
-  name: 'monasca_metrics'
-  duration: "1w"
-  replication_count: 1
-
-####################
-# Database sharding
-####################
-monasca_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ monasca_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
-monasca_database_shard:
-  users:
-    - user: "{{ monasca_database_user }}"
-      password: "{{ monasca_database_password }}"
-  rules:
-    - schema: "{{ monasca_database_name }}"
-      shard_id: "{{ monasca_database_shard_id }}"
-    - schema: "{{ monasca_grafana_database_name }}"
-      shard_id: "{{ monasca_database_shard_id }}"
-
-
-####################
-# Monasca
-####################
-
-monasca_kafka_servers: "{% for host in groups['kafka'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_zookeeper_servers: "{% for host in groups['zookeeper'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ zookeeper_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_memcached_servers: "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_elasticsearch_servers: "{% for host in groups['elasticsearch'] %}'{{ internal_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ elasticsearch_port }}'{% if not loop.last %},{% endif %}{% endfor %}"
-monasca_storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ 'api' | kolla_address(host) }}'{% if not loop.last %},{% endif %}{% endfor %}"
-# NOTE(dszumski): Only one NTP server is currently supported by the Monasca Agent plugin
-monasca_ntp_server: "0.pool.ntp.org"
-
-# The default number of Kafka topic partitions. This effectively limits
-# the maximum number of workers per topic, counted over all nodes in the
-# Monasca deployment. For example, if you have a 3 node Monasca
-# deployment, you will by default have 3 instances of Monasca Persister,
-# with each instance having 2 workers by default for the metrics topic.
-# In this case, each worker on the metrics topic will be assigned 5
-# partitions of the metrics topic. If you increase the worker or instance
-# count, you may need to increase the partition count to ensure that all
-# workers can get a share of the work.
-monasca_default_topic_partitions: 30
-
-# The default number of topic replicas. Generally you should not change
-# this.
-monasca_default_topic_replication_factor: "{{ kafka_broker_count if kafka_broker_count | int < 3 else 3 }}"
-
-# Kafka topic names used by Monasca services
-monasca_metrics_topic: "metrics"
-monasca_raw_logs_topic: "logs"
-monasca_transformed_logs_topic: "transformed-logs"
-monasca_events_topic: "events"
-monasca_alarm_state_transitions_topic: "alarm-state-transitions"
-monasca_alarm_notifications_topic: "alarm-notifications"
-monasca_alarm_notifications_retry_topic: "retry-notifications"
-monasca_periodic_notifications_topic: "60-seconds-notifications"
-
-# Kafka topic configuration. Most users will not need to modify these
-# settings, however for deployments where resources are tightly
-# constrained, or very large deployments where there are many parallel
-# workers, it is worth considering changing them. Note that if you do
-# change these settings, then you will need to manually remove each
-# topic from the Kafka deployment for the change to take effect when
-# the Monasca service is reconfigured.
-monasca_all_topics:
-  - name: "{{ monasca_metrics_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: True
-  - name: "{{ monasca_raw_logs_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: True
-  - name: "{{ monasca_transformed_logs_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: False
-  - name: "{{ monasca_events_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
-  - name: "{{ monasca_alarm_state_transitions_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
-  - name: "{{ monasca_alarm_notifications_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
-  - name: "{{ monasca_alarm_notifications_retry_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
-  - name: "{{ monasca_periodic_notifications_topic }}"
-    partitions: "{{ monasca_default_topic_partitions }}"
-    replication_factor: "{{ monasca_default_topic_replication_factor }}"
-    enabled: "{{ monasca_enable_alerting_pipeline | bool }}"
-
-# NOTE(dszumski): Due to the way monasca-notification is currently
-# implemented it is not recommended to change this period.
-monasca_periodic_notifications_period: 60
-
-# Agent settings
-monasca_agent_max_buffer_size: 1000
-monasca_agent_backlog_send_rate: 1000
-monasca_agent_max_batch_size: 1000
-monasca_agent_check_frequency: 30
-
-# Processing pipeline threads. In a large scale deployment you will likely
-# want to tune these with finer precision. For example, if you have a very
-# high log throughput, the log metrics service consumer may require a
-# higher thread count than the producer. You will also want to ensure that
-# the total number of threads across all instances of a service does not
-# exceed the Kafka topic partition count.
-monasca_log_pipeline_threads: 2
-monasca_metric_pipeline_threads: 2
 
 ####################
 # Docker
@@ -308,60 +180,3 @@ monasca_log_metrics_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_thresh_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_notification_extra_volumes: "{{ monasca_extra_volumes }}"
 monasca_persister_extra_volumes: "{{ monasca_extra_volumes }}"
-
-####################
-# OpenStack
-####################
-monasca_openstack_auth: "{{ openstack_auth }}"
-
-monasca_keystone_user: "monasca"
-monasca_default_authorized_roles:
-  - admin
-monasca_read_only_authorized_roles:
-  - monasca-read-only-user
-# NOTE(dszumski): The first role in this list is assigned to the monasca-agent
-# user for monitoring the OpenStack deployment.
-monasca_agent_authorized_roles:
-  - agent
-monasca_delegate_authorized_roles:
-  - admin
-
-monasca_api_internal_endpoint: "{{ monasca_api_internal_base_endpoint }}/v2.0"
-monasca_api_public_endpoint: "{{ monasca_api_public_base_endpoint }}/v2.0"
-
-monasca_logging_debug: "{{ openstack_logging_debug }}"
-
-monasca_api_workers: "{{ openstack_service_workers }}"
-
-####################
-# Keystone
-####################
-monasca_ks_services:
-  - name: "monasca-api"
-    type: "monitoring"
-    description: "Monasca monitoring as a service"
-    endpoints:
-      - {'interface': 'internal', 'url': '{{ monasca_api_internal_endpoint }}'}
-      - {'interface': 'public', 'url': '{{ monasca_api_public_endpoint }}'}
-  - name: "monasca-log-api"
-    type: "logging"
-    description: "Monasca logging as a service"
-    endpoints:
-      - {'interface': 'internal', 'url': '{{ monasca_log_api_internal_endpoint }}'}
-      - {'interface': 'public', 'url': '{{ monasca_log_api_public_endpoint }}'}
-
-monasca_ks_users:
-  - project: "service"
-    user: "{{ monasca_keystone_user }}"
-    password: "{{ monasca_keystone_password }}"
-    role: "admin"
-  - project: "{{ monasca_control_plane_project }}"
-    user: "{{ monasca_agent_user }}"
-    password: "{{ monasca_agent_password }}"
-    role: "{{ monasca_agent_authorized_roles | first }}"
-
-monasca_ks_roles:
-  - "{{ monasca_default_authorized_roles }}"
-  - "{{ monasca_agent_authorized_roles }}"
-  - "{{ monasca_read_only_authorized_roles }}"
-  - "{{ monasca_delegate_authorized_roles }}"

@@ -77,9 +77,8 @@
 - name: Copying over td-agent.conf
   vars:
     log_direct_to_elasticsearch: >-
-      {{ ( enable_elasticsearch | bool or
-           ( elasticsearch_address != kolla_internal_fqdn )) and
-         ( not enable_monasca | bool or not monasca_ingest_control_plane_logs | bool ) }}
+      {{ enable_elasticsearch | bool or
+           ( elasticsearch_address != kolla_internal_fqdn ) }}
     # Inputs
     fluentd_input_files: "{{ default_input_files_enabled | customise_fluentd(customised_input_files) }}"
     default_input_files_enabled: "{{ default_input_files | selectattr('enabled') | map(attribute='name') | list }}"
@@ -102,8 +101,6 @@
         enabled: true
       - name: "conf/input/08-prometheus.conf.j2"
         enabled: "{{ enable_prometheus_fluentd_integration | bool }}"
-      - name: "conf/input/09-monasca.conf.j2"
-        enabled: true
       - name: "conf/input/10-openvswitch.conf.j2"
         enabled: true
     customised_input_files: "{{ find_custom_fluentd_inputs.files | map(attribute='path') | list }}"
@@ -128,8 +125,6 @@
         enabled: true
       - name: "conf/output/01-es.conf.j2"
         enabled: "{{ log_direct_to_elasticsearch }}"
-      - name: "conf/output/02-monasca.conf.j2"
-        enabled: "{{ enable_monasca | bool and monasca_ingest_control_plane_logs | bool }}"
     customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | list }}"
   template:
     src: "td-agent.conf.j2"
@@ -183,7 +178,6 @@
       - { name: "mariadb", enabled: "{{ enable_mariadb | bool }}" }
       - { name: "masakari", enabled: "{{ enable_masakari | bool }}" }
       - { name: "mistral", enabled: "{{ enable_mistral | bool }}" }
-      - { name: "monasca", enabled: "{{ enable_monasca | bool }}" }
       - { name: "murano", enabled: "{{ enable_murano | bool }}" }
       - { name: "neutron", enabled: "{{ enable_neutron | bool }}" }
       - { name: "neutron-tls-proxy", enabled: "{{ neutron_enable_tls_backend | bool }}" }

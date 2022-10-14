@@ -45,25 +45,6 @@
          flush_interval 15s
        </buffer>
   </store>
-{% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
-  <store>
-     @type monasca
-     keystone_url {{ keystone_internal_url }}
-     monasca_api {{ monasca_log_api_internal_endpoint }}
-     monasca_api_version v2.0
-     username {{ monasca_agent_user }}
-     password {{ monasca_agent_password }}
-     domain_id default
-     project_name {{ monasca_control_plane_project }}
-     message_field_name Payload
-     max_retry_wait 1800s
-     disable_retry_limit true
-     <buffer>
-       @type file
-       path /var/lib/fluentd/data/monasca.buffer/{{ item.facility }}.*
-       chunk_limit_size 8m
-     </buffer>
-  </store>
 {% endif %}
 </match>
 {% endfor %}

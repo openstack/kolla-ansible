@@ -27,12 +27,6 @@ check_failure() {
         exit 1;
     fi
 
-    # NOTE(mgoddard): monasca-thresh is a one-shot container that exits but
-    # remains in place, leaving it with a status of exited. This is harmless.
-    if [[ "$failed_containers" = "monasca_thresh" ]]; then
-        return
-    fi
-
     if [[ -n "$failed_containers" ]]; then
         exit 1;
     fi
