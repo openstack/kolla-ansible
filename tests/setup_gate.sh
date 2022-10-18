@@ -106,6 +106,10 @@ function prepare_images {
         GATE_IMAGES="^cron,^opensearch,^fluentd,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
     fi
 
+    if [[ $SCENARIO == "skyline" ]]; then
+        GATE_IMAGES+=",^skyline"
+    fi
+
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [DEFAULT]
 engine = ${CONTAINER_ENGINE}
