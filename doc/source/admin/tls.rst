@@ -59,7 +59,7 @@ If deploying on Debian or Ubuntu:
 
   openstack_cacert: "/etc/ssl/certs/ca-certificates.crt"
 
-If on CentOS or RHEL:
+If on CentOS or Rocky:
 
 .. code-block:: yaml
 
@@ -185,12 +185,12 @@ file is named ``internal.crt``, it will be named
 For Debian and Ubuntu containers, the certificate files will be copied to the
 ``/usr/local/share/ca-certificates/`` directory.
 
-For CentOS and RHEL containers, the certificate files will be copied to the
+For CentOS and Rocky containers, the certificate files will be copied to the
 ``/etc/pki/ca-trust/source/anchors/`` directory.
 
 In both cases, valid certificates will be added to the system trust store -
 ``/etc/ssl/certs/ca-certificates.crt`` on Debian and Ubuntu, and
-``/etc/pki/tls/certs/ca-bundle.crt`` on CentOS and RHEL.
+``/etc/pki/tls/certs/ca-bundle.crt`` on CentOS and Rocky.
 
 Configuring a CA bundle
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +205,7 @@ To use the system trust store on Debian or Ubuntu:
 
    openstack_cacert: /etc/ssl/certs/ca-certificates.crt
 
-For CentOS or RHEL:
+For CentOS or Rocky:
 
 .. code-block:: yaml
 
