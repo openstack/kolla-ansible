@@ -24,7 +24,8 @@ Kolla Ansible supports the following host Operating Systems (OS):
 .. note::
 
    CentOS Stream 9 is supported as a host OS while Kolla does not publish CS9
-   based images. Users can build them on their own.
+   based images. Users can build them on their own. We recommend using Rocky
+   Linux 9 images instead.
 
 
 
