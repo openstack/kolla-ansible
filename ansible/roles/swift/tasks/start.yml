@@ -1,10 +1,10 @@
 ---
 - name: Looking up disks for Swift
   become: true
-  command: docker exec -t kolla_toolbox sudo -E ansible localhost
+  command: "{{ kolla_container_engine }} exec -t kolla_toolbox sudo -E ansible localhost
     -m find_disks
-    -a "name={{ swift_devices_name }}
-        match_mode={{ swift_devices_match_mode }}"
+    -a \"name={{ swift_devices_name }}
+        match_mode={{ swift_devices_match_mode }}\""
   register: swift_disk_lookup
   changed_when: swift_disk_lookup.stdout.find('localhost | SUCCESS => ') != -1 and
                     (swift_disk_lookup.stdout.split('localhost | SUCCESS => ')[1] | from_json).changed
