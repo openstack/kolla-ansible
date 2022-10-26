@@ -33,6 +33,11 @@ description:
   - A module targerting at invoking ansible module in kolla_toolbox
     container as used by Kolla project.
 options:
+  container_engine:
+    description:
+      - Name of container engine to use
+    required: True
+    type: str
   module_name:
     description:
       - The module name to invoke
@@ -73,10 +78,12 @@ EXAMPLES = '''
   tasks:
     - name: Ensure the direct absent
       kolla_toolbox:
+        container_engine: docker
         module_name: file
         module_args: path=/tmp/a state=absent
     - name: Create mysql database
       kolla_toolbox:
+        container_engine: docker
         module_name: mysql_db
         module_args:
           login_host: 192.168.1.10
@@ -85,6 +92,7 @@ EXAMPLES = '''
           name: testdb
     - name: Creating default user role
       kolla_toolbox:
+        container_engine: docker
         module_name: os_keystone_role
         module_args:
           name: _member_
@@ -138,6 +146,7 @@ def docker_supports_environment_in_exec(client):
 
 def main():
     specs = dict(
+        container_engine=dict(required=True, type='str'),
         module_name=dict(required=True, type='str'),
         module_args=dict(type='str'),
         module_extra_vars=dict(type='json'),
