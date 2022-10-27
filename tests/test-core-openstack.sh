@@ -77,6 +77,26 @@ function create_an_image_from_volume {
     done
 }
 
+function create_an_image_from_instance {
+    local image_name=$1
+    local instance_name=$2
+
+    local attempt
+
+    openstack server image create $instance_name --name $image_name
+    attempt=1
+    while [[ $(openstack image show $image_name -f value -c status) != "active" ]]; do
+        echo "Image $image_name not active yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 11 ]]; then
+            echo "Image $image_name failed to become active"
+            openstack image show $image_name
+            return 1
+        fi
+        sleep 30
+    done
+}
+
 function attach_and_detach_a_volume {
     local volume_name=$1
     local instance_name=$2
@@ -258,6 +278,11 @@ function test_instance_boot {
 
         echo "SUCCESS: Glance image from Cinder volume and back to volume"
     fi
+
+    echo "TESTING: Instance image upload"
+    create_an_image_from_instance image_from_instance kolla_boot_test
+    openstack image delete image_from_instance
+    echo "SUCCESS: Instance image upload"
 
     echo "TESTING: Floating ip allocation"
     fip_addr=$(create_fip)
