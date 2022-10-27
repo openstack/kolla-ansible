@@ -10,6 +10,9 @@ export PYTHONUNBUFFERED=1
 function upgrade {
     local ansible_extra_vars
     RAW_INVENTORY=/etc/kolla/inventory
+
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+
     # TODO(mgoddard): Remove this block in the Y cycle after chrony has been
     # dropped for a cycle.
     # NOTE(mgoddard): Remove the chrony container and install a host chrony
