@@ -44,7 +44,7 @@
 # [1] https://github.com/influxdata/influxdb-python#influxdb-pre-v110-users
 - name: List influxdb databases
   become: true
-  command: "docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'show databases'"
+  command: "{{ kolla_container_engine }} exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'show databases'"
   run_once: True
   delegate_to: "{{ groups['influxdb'][0] }}"
   register: monasca_influxdb_database
@@ -53,7 +53,7 @@
 - name: Creating monasca influxdb database
   become: true
   command: >
-    docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute
+    {{ kolla_container_engine }} exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute
     'CREATE DATABASE {{ monasca_influxdb_name }} WITH DURATION {{ monasca_influxdb_retention_policy.duration }}
     REPLICATION  {{ monasca_influxdb_retention_policy.replication_count }} NAME {{ monasca_influxdb_retention_policy.name }}'
   run_once: True
@@ -68,7 +68,7 @@
 - name: List monasca kafka topics
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --zookeeper localhost
     --list
   register: kafka_topics
@@ -78,7 +78,7 @@
 - name: Create monasca kafka topics if they don't exist
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --create
     --topic {{ item.name }}
     --partitions {{ item.partitions }}
@@ -94,7 +94,7 @@
 - name: Remove monasca kafka topics for disabled services
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --delete
     --topic "{{ item.name }}"
     --zookeeper localhost

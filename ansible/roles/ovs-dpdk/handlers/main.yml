@@ -26,7 +26,7 @@
     service_name: "ovsdpdk-db"
     service: "{{ ovsdpdk_services[service_name] }}"
   become: true
-  command: docker exec "{{ service.container_name }}" ovs-vsctl --no-wait show
+  command: "{{ kolla_container_engine }} exec {{ service.container_name }} ovs-vsctl --no-wait show"
   register: check_result
   until: check_result is success
   changed_when: False
@@ -39,7 +39,7 @@
     service: "{{ ovsdpdk_services[service_name] }}"
   become: true
   command: >
-    docker exec {{ service.container_name }} /bin/sh -c
+    {{ kolla_container_engine }} exec {{ service.container_name }} /bin/sh -c
     'CONFIG_FILE={{ container_config_directory }}/ovs-dpdkctl.conf {{ container_config_directory }}/ovs-dpdkctl.sh init'
   register: status
   changed_when: status.stdout.find('changed') != -1
@@ -73,7 +73,7 @@
     service: "{{ ovsdpdk_services[service_name] }}"
   become: true
   command: >
-    docker exec {{ service.container_name }} /bin/sh -c
+    {{ kolla_container_engine }} exec {{ service.container_name }} /bin/sh -c
     'CONFIG_FILE={{ container_config_directory }}/ovs-dpdkctl.conf {{ container_config_directory }}/ovs-dpdkctl.sh init'
   register: status
   changed_when: status.stdout.find('changed') != -1
