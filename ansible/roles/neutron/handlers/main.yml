@@ -87,7 +87,23 @@
   when:
     - kolla_action != "config"
 
-- name: Restart neutron-l3-agent container
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - neutron_l3_agent
+  register: container_facts
+  when:
+    - kolla_action != "config"
+  listen: Restart neutron-l3-agent container
+
+- name: Group hosts
+  group_by:
+    key: neutron_l3_agent_running_{{ container_facts['neutron_l3_agent'] is defined }}
+  listen: Restart neutron-l3-agent container
+
+- name: Start stopped neutron-l3-agent container
   vars:
     service_name: "neutron-l3-agent"
     service: "{{ neutron_services[service_name] }}"
@@ -104,6 +120,41 @@
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
     - kolla_action != "config"
+    - groups['neutron_l3_agent_running_False'] is defined
+    - inventory_hostname in groups['neutron_l3_agent_running_False']
+  listen: Restart neutron-l3-agent container
+
+- name: Wait if container starting
+  wait_for:
+    timeout: "{{ neutron_l3_agent_failover_delay }}"
+  when:
+    - groups['neutron_l3_agent_running_False'] is defined
+    - groups['neutron_l3_agent_running_True'] is defined
+    - kolla_action != "config"
+  listen: Restart neutron-l3-agent container
+
+- name: Restart running neutron-l3-agent container
+  vars:
+    service_name: "neutron-l3-agent"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"
+    - inventory_hostname == item
+  loop: "{{ groups['neutron_l3_agent_running_True'] | default([]) }}"
+  loop_control:
+    pause: "{{ neutron_l3_agent_failover_delay }}"
+  listen: Restart neutron-l3-agent container
 
 - name: Restart neutron-sriov-agent container
   vars:
