@@ -62,6 +62,19 @@ heat_database_name: "heat"
 heat_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}heat{% endif %}"
 heat_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+heat_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ heat_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+heat_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+heat_database_shard:
+  users:
+    - user: "{{ heat_database_user }}"
+      password: "{{ heat_database_password }}"
+  rules:
+    - schema: "{{ heat_database_name }}"
+      shard_id: "{{ heat_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -88,7 +101,7 @@ heat_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 heat_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 heat_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 heat_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-heat_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ heat_api_listen_port }}"]
+heat_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ heat_api_listen_port }}"]
 heat_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 heat_api_healthcheck:
   interval: "{{ heat_api_healthcheck_interval }}"
@@ -101,7 +114,7 @@ heat_api_cfn_enable_healthchecks: "{{ enable_container_healthchecks }}"
 heat_api_cfn_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 heat_api_cfn_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 heat_api_cfn_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-heat_api_cfn_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ heat_api_cfn_listen_port }}"]
+heat_api_cfn_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ heat_api_cfn_listen_port }}"]
 heat_api_cfn_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 heat_api_cfn_healthcheck:
   interval: "{{ heat_api_cfn_healthcheck_interval }}"
@@ -166,6 +179,9 @@ heat_stack_owner_role: "heat_stack_owner"
 
 openstack_heat_auth: "{{ openstack_auth }}"
 
+heat_api_cfn_workers: "{{ openstack_service_workers }}"
+heat_api_workers: "{{ openstack_service_workers }}"
+heat_engine_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

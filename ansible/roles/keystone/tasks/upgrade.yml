@@ -10,7 +10,7 @@
     module_args:
       login_host: "{{ database_address }}"
       login_port: "{{ database_port }}"
-      login_user: "{{ database_user }}"
+      login_user: "{{ keystone_database_shard_root_user }}"
       login_password: "{{ database_password }}"
       variable: log_bin_trust_function_creators
       value: 1
@@ -39,11 +39,21 @@
     module_args:
       login_host: "{{ database_address }}"
       login_port: "{{ database_port }}"
-      login_user: "{{ database_user }}"
+      login_user: "{{ keystone_database_shard_root_user }}"
       login_password: "{{ database_password }}"
       variable: log_bin_trust_function_creators
       value: 0
   run_once: True
   when:
-    - inventory_hostname == groups['keystone'][-1]
     - not use_preconfigured_databases | bool
+
+# TODO(yoctozepto): Remove after Zed (in AA).
+# This is needed to update the admin endpoint as the port has
+# changed in the same release (Zed), i.e., the admin endpoint uses the
+# same port as the other ones (public, internal).
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_keystone_auth }}"
+    service_ks_register_services: "{{ keystone_ks_services }}"
+  run_once: True

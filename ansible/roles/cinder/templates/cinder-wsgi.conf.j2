@@ -1,5 +1,5 @@
 {% if cinder_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos']  %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
 {% else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
@@ -18,7 +18,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ cinder_api_listen_port }}>
-    WSGIDaemonProcess cinder-api processes={{ openstack_service_workers }} threads=1 user=cinder group=cinder display-name=cinder-api
+    WSGIDaemonProcess cinder-api processes={{ cinder_api_workers }} threads=1 user=cinder group=cinder display-name=cinder-api
     WSGIProcessGroup cinder-api
     WSGIScriptAlias / /var/www/cgi-bin/cinder/cinder-wsgi
     WSGIApplicationGroup %{GLOBAL}

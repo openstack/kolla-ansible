@@ -52,7 +52,7 @@ frontend {{ service_name }}_front
 {% endmacro %}
 
 {%- macro backend_macro(service_name, listen_port, service_mode, host_group,
-                        custom_member_list, backend_http_extra,
+                        active_passive, custom_member_list, backend_http_extra,
                         backend_tcp_extra, auth_user, auth_pass, tls_backend) %}
 backend {{ service_name }}_back
     {% if service_mode == 'redirect' %}
@@ -98,7 +98,7 @@ backend {{ service_name }}_back
     {% if hostvars[host][service_weight] is defined and hostvars[host][service_weight] | int != 0 and hostvars[host][service_weight] | int <= 256 %}
         {% set backend_weight_info = 'weight %s'|format(hostvars[host][service_weight]) %}
     {% endif %}
-    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check_final }} {{ backend_tls_info }} {{ backend_weight_info }}
+    server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check_final }}{% if active_passive and not loop.first %} backup{% endif %} {{ backend_tls_info }} {{ backend_weight_info }}
         {% endfor %}
     {% endif %}
 {% endmacro %}
@@ -107,6 +107,8 @@ backend {{ service_name }}_back
 {%- for haproxy_name, haproxy_service in haproxy.items() %}
     {# External defaults to false #}
     {% set external = haproxy_service.external|default(false)|bool %}
+    {# Active/passive defaults to false #}
+    {% set active_passive = haproxy_service.active_passive|default(false)|bool %}
     {# Skip anything that is external when the external vip is not enabled #}
     {% if haproxy_service.enabled|bool and (not external or haproxy_enable_external_vip|bool)%}
         {# Here we define variables and their defaults #}
@@ -140,7 +142,7 @@ backend {{ service_name }}_back
         {% endif %}
         {# Redirect (to https) is a special case, as it does not include a backend #}
         {% if with_backend and mode != 'redirect' %}
-{{ backend_macro(haproxy_name, listen_port, mode, host_group,
+{{ backend_macro(haproxy_name, listen_port, mode, host_group, active_passive,
                  custom_member_list, backend_http_extra, backend_tcp_extra,
                  auth_user, auth_pass, tls_backend) }}
         {% endif %}

@@ -36,7 +36,7 @@ elasticsearch_enable_keystone_registration: False
 
 elasticsearch_cluster_name: "kolla_logging"
 es_heap_size: "1g"
-es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }}{%endif%} -Dlog4j2.formatMsgNoLookups=true"
+es_java_opts: "{% if es_heap_size %}-Xms{{ es_heap_size }} -Xmx{{ es_heap_size }}{% endif %} -Dlog4j2.formatMsgNoLookups=true"
 
 #######################
 # Elasticsearch Curator
@@ -62,7 +62,7 @@ elasticsearch_curator_dry_run: false
 
 # Index prefix pattern. Any indices matching this regex will
 # be managed by Curator.
-elasticsearch_curator_index_pattern: "^{{ '(monasca|' + kibana_log_prefix + ')' if enable_monasca|bool else kibana_log_prefix }}-.*"  # noqa var-spacing
+elasticsearch_curator_index_pattern: "^{{ '(monasca|' + kibana_log_prefix + ')' if enable_monasca | bool else kibana_log_prefix }}-.*"  # noqa jinja[spacing]
 
 # Duration after which an index is staged for deletion. This is
 # implemented by closing the index. Whilst in this state the index
@@ -103,7 +103,7 @@ elasticsearch_enable_healthchecks: "{{ enable_container_healthchecks }}"
 elasticsearch_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 elasticsearch_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 elasticsearch_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-elasticsearch_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ elasticsearch_port }}"]
+elasticsearch_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"]
 elasticsearch_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 elasticsearch_healthcheck:
   interval: "{{ elasticsearch_healthcheck_interval }}"

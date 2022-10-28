@@ -104,6 +104,19 @@ glance_database_name: "glance"
 glance_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}glance{% endif %}"
 glance_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+glance_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ glance_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+glance_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+glance_database_shard:
+  users:
+    - user: "{{ glance_database_user }}"
+      password: "{{ glance_database_password }}"
+  rules:
+    - schema: "{{ glance_database_name }}"
+      shard_id: "{{ glance_database_shard_id }}"
+
 
 ####################
 # HAProxy
@@ -132,7 +145,7 @@ glance_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 glance_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 glance_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 glance_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-glance_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{% if glance_enable_tls_backend | bool %}localhost{% else %}{{ api_interface_address |  put_address_in_context('url') }}{% endif %}:{{ glance_api_listen_port }}"]
+glance_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{% if glance_enable_tls_backend | bool %}localhost{% else %}{{ api_interface_address | put_address_in_context('url') }}{% endif %}:{{ glance_api_listen_port }}"]
 glance_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 glance_api_healthcheck:
   interval: "{{ glance_api_healthcheck_interval }}"
@@ -145,7 +158,7 @@ glance_tls_proxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
 glance_tls_proxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 glance_tls_proxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 glance_tls_proxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-glance_tls_proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl -u {{ haproxy_user }}:{{ haproxy_password }} {{ api_interface_address |  put_address_in_context('url') }}:{{ glance_tls_proxy_stats_port }}"]
+glance_tls_proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl -u {{ haproxy_user }}:{{ haproxy_password }} {{ api_interface_address | put_address_in_context('url') }}:{{ glance_tls_proxy_stats_port }}"]
 glance_tls_proxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 glance_tls_proxy_healthcheck:
   interval: "{{ glance_tls_proxy_healthcheck_interval }}"
@@ -208,6 +221,8 @@ glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', tr
 glance_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_glance_auth: "{{ openstack_auth }}"
+
+glance_api_workers: "{{ openstack_service_workers }}"
 
 ###################
 # Kolla

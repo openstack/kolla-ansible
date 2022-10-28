@@ -58,6 +58,10 @@ function prepare_images {
         GATE_IMAGES+=",^cinder"
     fi
 
+    if [[ $SCENARIO == "cells" ]]; then
+        GATE_IMAGES+=",^proxysql"
+    fi
+
     if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
         if [[ $BASE_DISTRO != "centos" ]]; then
@@ -137,6 +141,9 @@ EOF
 setup_openstack_clients
 
 RAW_INVENTORY=/etc/kolla/inventory
-kolla-ansible -i ${RAW_INVENTORY} -e ansible_user=$USER -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
+
+source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+kolla-ansible -i ${RAW_INVENTORY} -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
+deactivate
 
 prepare_images

@@ -144,7 +144,7 @@ be enabled by appending ``--type source`` to the :command:`kolla-build` or
 
       .. code-block:: console
 
-         --base [centos|debian|rhel|ubuntu]
+         --base [centos|debian|rocky|ubuntu]
 
 Configure and Deploy a Bifrost Container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

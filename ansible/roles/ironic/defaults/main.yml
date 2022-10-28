@@ -96,6 +96,22 @@ ironic_inspector_database_name: "ironic_inspector"
 ironic_inspector_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}ironic_inspector{% endif %}"
 ironic_inspector_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+ironic_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ ironic_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+ironic_database_shard:
+  users:
+    - user: "{{ ironic_database_user }}"
+      password: "{{ ironic_database_password }}"
+    - user: "{{ ironic_inspector_database_user }}"
+      password: "{{ ironic_inspector_database_password }}"
+  rules:
+    - schema: "{{ ironic_database_name }}"
+      shard_id: "{{ ironic_database_shard_id }}"
+    - schema: "{{ ironic_inspector_database_name }}"
+      shard_id: "{{ ironic_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -133,7 +149,7 @@ ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 ironic_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 ironic_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-ironic_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ ironic_api_listen_port }}"]
+ironic_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if ironic_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ ironic_api_listen_port }}"]
 ironic_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 ironic_api_healthcheck:
   interval: "{{ ironic_api_healthcheck_interval }}"
@@ -246,6 +262,7 @@ openstack_ironic_auth: "{{ openstack_auth }}"
 
 openstack_ironic_inspector_auth: "{{ openstack_auth }}"
 
+ironic_api_workers: "{{ openstack_service_workers }}"
 
 #########
 # Ironic
@@ -253,8 +270,7 @@ openstack_ironic_inspector_auth: "{{ openstack_auth }}"
 ironic_dnsmasq_interface: "{{ api_interface }}"
 ironic_dnsmasq_dhcp_ranges:
 ironic_dnsmasq_dhcp_default_lease_time: "10m"
-# TODO(yoctozepto): Do not rely on deprecated enable_ironic_ipxe in Zed.
-ironic_dnsmasq_serve_ipxe: "{{ enable_ironic_ipxe | default(\"yes\") }}"
+ironic_dnsmasq_serve_ipxe: true
 ironic_dnsmasq_boot_file: "{% if ironic_dnsmasq_serve_ipxe | bool %}undionly.kpxe{% else %}pxelinux.0{% endif %}"
 ironic_dnsmasq_uefi_ipxe_boot_file: "snponly.efi"
 ironic_cleaning_network:

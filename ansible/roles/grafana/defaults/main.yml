@@ -27,6 +27,20 @@ grafana_database_user: "{% if use_preconfigured_databases | bool and use_common_
 grafana_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+grafana_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ grafana_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+grafana_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+grafana_database_shard:
+  users:
+    - user: "{{ grafana_database_user }}"
+      password: "{{ grafana_database_password }}"
+  rules:
+    - schema: "{{ grafana_database_name }}"
+      shard_id: "{{ grafana_database_shard_id }}"
+
+
+####################
 # Datasource
 ####################
 grafana_data_sources:

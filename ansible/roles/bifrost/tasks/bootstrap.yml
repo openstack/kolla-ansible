@@ -5,7 +5,7 @@
     is_debian: "{{ kolla_base_distro in ['debian', 'ubuntu'] }}"
   become: true
   command: >
-     docker exec bifrost_deploy
+     {{ kolla_container_engine }} exec bifrost_deploy
      bash -c 'mkdir -p /var/log/kolla/ironic &&
      chown ironic:ironic /var/log/kolla/ironic &&
      mkdir -p /var/log/kolla/ironic-inspector &&
@@ -16,7 +16,7 @@
 - name: Bootstrap bifrost (this may take several minutes)
   become: true
   command: >
-     docker exec bifrost_deploy
+     {{ kolla_container_engine }} exec bifrost_deploy
      bash -c
      'ansible-playbook {{ bifrost_deploy_verbosity }}
      -i /bifrost/playbooks/inventory/target
@@ -26,7 +26,7 @@
 - name: Installing ssh keys
   become: true
   command: >
-     docker exec bifrost_deploy
+     {{ kolla_container_engine }} exec bifrost_deploy
      bash -c 'mkdir /root/.ssh ; mkdir /home/ironic/.ssh;
      cp -f /etc/bifrost/id_rsa /root/.ssh/id_rsa &&
      cp -f /etc/bifrost/id_rsa.pub /root/.ssh/id_rsa.pub &&

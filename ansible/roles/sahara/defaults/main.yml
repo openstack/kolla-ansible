@@ -37,6 +37,19 @@ sahara_database_name: "sahara"
 sahara_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}sahara{% endif %}"
 sahara_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+sahara_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ sahara_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+sahara_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+sahara_database_shard:
+  users:
+    - user: "{{ sahara_database_user }}"
+      password: "{{ sahara_database_password }}"
+  rules:
+    - schema: "{{ sahara_database_name }}"
+      shard_id: "{{ sahara_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -58,7 +71,7 @@ sahara_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 sahara_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 sahara_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 sahara_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-sahara_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ sahara_api_port }}"]
+sahara_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ sahara_api_port }}"]
 sahara_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 sahara_api_healthcheck:
   interval: "{{ sahara_api_healthcheck_interval }}"
@@ -112,6 +125,7 @@ sahara_keystone_user: "sahara"
 
 openstack_sahara_auth: "{{ openstack_auth }}"
 
+sahara_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 ## Kolla

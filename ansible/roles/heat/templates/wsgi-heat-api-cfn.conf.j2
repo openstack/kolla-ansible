@@ -1,7 +1,7 @@
 {% set heat_log_dir = '/var/log/kolla/heat' %}
 {% set binary_path = '/var/lib/kolla/venv/bin' %}
 {% if heat_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos']  %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
 {% else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
@@ -29,7 +29,7 @@ CustomLog "{{ heat_log_dir }}/apache-cfn-access.log" common
 </IfModule>
 
 <VirtualHost *:{{ heat_api_cfn_listen_port }}>
-    WSGIDaemonProcess heat-api-cfn processes={{ openstack_service_workers }} threads=1 user=heat group=heat display-name=heat-api-cfn
+    WSGIDaemonProcess heat-api-cfn processes={{ heat_api_cfn_workers }} threads=1 user=heat group=heat display-name=heat-api-cfn
     WSGIProcessGroup heat-api-cfn
     WSGIScriptAlias / {{ binary_path }}/heat-wsgi-api-cfn
     WSGIApplicationGroup %{GLOBAL}

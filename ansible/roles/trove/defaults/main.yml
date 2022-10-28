@@ -44,6 +44,19 @@ trove_database_name: "trove"
 trove_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}trove{% endif %}"
 trove_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+trove_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ trove_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+trove_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+trove_database_shard:
+  users:
+    - user: "{{ trove_database_user }}"
+      password: "{{ trove_database_password }}"
+  rules:
+    - schema: "{{ trove_database_name }}"
+      shard_id: "{{ trove_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -70,7 +83,7 @@ trove_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 trove_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 trove_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 trove_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-trove_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ trove_api_port }}"]
+trove_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ trove_api_port }}"]
 trove_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 trove_api_healthcheck:
   interval: "{{ trove_api_healthcheck_interval }}"
@@ -144,6 +157,7 @@ trove_keystone_user: "trove"
 
 openstack_trove_auth: "{{ openstack_auth }}"
 
+trove_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

@@ -17,7 +17,7 @@ horizon_services:
       ENABLE_MASAKARI: "{{ 'yes' if enable_horizon_masakari | bool else 'no' }}"
       ENABLE_MISTRAL: "{{ 'yes' if enable_horizon_mistral | bool else 'no' }}"
       ENABLE_MONASCA: "{{ 'yes' if enable_horizon_monasca | bool else 'no' }}"
-      ENABLE_MURANO: "{{ 'yes' if  enable_horizon_murano | bool else 'no' }}"
+      ENABLE_MURANO: "{{ 'yes' if enable_horizon_murano | bool else 'no' }}"
       ENABLE_NEUTRON_VPNAAS: "{{ 'yes' if enable_horizon_neutron_vpnaas | bool else 'no' }}"
       ENABLE_OCTAVIA: "{{ 'yes' if enable_horizon_octavia | bool else 'no' }}"
       ENABLE_SAHARA: "{{ 'yes' if enable_horizon_sahara | bool else 'no' }}"
@@ -42,7 +42,7 @@ horizon_services:
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
         backend_http_extra:
-          - "balance source"
+          - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_redirect:
         enabled: "{{ enable_horizon | bool and kolla_enable_tls_internal | bool }}"
@@ -59,7 +59,7 @@ horizon_services:
         frontend_http_extra:
           - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
         backend_http_extra:
-          - "balance source"
+          - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
         tls_backend: "{{ horizon_enable_tls_backend }}"
       horizon_external_redirect:
         enabled: "{{ enable_horizon | bool and kolla_enable_tls_external | bool }}"
@@ -85,6 +85,20 @@ horizon_database_user: "{% if use_preconfigured_databases | bool and use_common_
 horizon_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+horizon_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ horizon_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+horizon_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+horizon_database_shard:
+  users:
+    - user: "{{ horizon_database_user }}"
+      password: "{{ horizon_database_password }}"
+  rules:
+    - schema: "{{ horizon_database_name }}"
+      shard_id: "{{ horizon_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 horizon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/horizon"
@@ -97,7 +111,7 @@ horizon_enable_healthchecks: "{{ enable_container_healthchecks }}"
 horizon_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 horizon_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 horizon_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-horizon_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if horizon_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ horizon_listen_port }}"]
+horizon_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if horizon_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ horizon_listen_port }}"]
 horizon_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 horizon_healthcheck:
   interval: "{{ horizon_healthcheck_interval }}"

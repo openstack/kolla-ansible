@@ -96,6 +96,21 @@ monasca_influxdb_retention_policy:
   replication_count: 1
 
 ####################
+# Database sharding
+####################
+monasca_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ monasca_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+monasca_database_shard:
+  users:
+    - user: "{{ monasca_database_user }}"
+      password: "{{ monasca_database_password }}"
+  rules:
+    - schema: "{{ monasca_database_name }}"
+      shard_id: "{{ monasca_database_shard_id }}"
+    - schema: "{{ monasca_grafana_database_name }}"
+      shard_id: "{{ monasca_database_shard_id }}"
+
+
+####################
 # Monasca
 ####################
 
@@ -315,6 +330,8 @@ monasca_api_internal_endpoint: "{{ monasca_api_internal_base_endpoint }}/v2.0"
 monasca_api_public_endpoint: "{{ monasca_api_public_base_endpoint }}/v2.0"
 
 monasca_logging_debug: "{{ openstack_logging_debug }}"
+
+monasca_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Keystone

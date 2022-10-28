@@ -42,8 +42,8 @@ kolla_ansible_setup_gather_subset: "{{ omit }}"
 # Valid options are [ COPY_ONCE, COPY_ALWAYS ]
 config_strategy: "COPY_ALWAYS"
 
-# Valid options are ['centos', 'debian', 'rhel', 'ubuntu']
-kolla_base_distro: "centos"
+# Valid options are ['centos', 'debian', 'rocky', 'ubuntu']
+kolla_base_distro: "rocky"
 
 kolla_internal_vip_address: "{{ kolla_internal_address | default('') }}"
 kolla_internal_fqdn: "{{ kolla_internal_vip_address }}"
@@ -86,6 +86,10 @@ database_port: "3306"
 database_connection_recycle_time: 10
 database_max_pool_size: 1
 
+####################
+# Container engine options
+####################
+kolla_container_engine: "docker"
 
 ####################
 # Docker options
@@ -152,7 +156,14 @@ docker_common_options:
 # Dimensions options
 ####################
 # Dimension options for Docker Containers
-default_container_dimensions: {}
+# NOTE(mnasiadka): Lower 1073741816 nofile limit on EL9 (RHEL9/CentOS Stream 9/Rocky Linux 9)
+#                  fixes at least rabbitmq and mariadb
+default_container_dimensions: "{{ default_container_dimensions_el9 if ansible_facts.os_family == 'RedHat' else '{}' }}"
+default_container_dimensions_el9:
+  ulimits:
+    nofile:
+      soft: 1048576
+      hard: 1048576
 
 #####################
 # Healthcheck options
@@ -220,9 +231,7 @@ network_interface: "eth0"
 neutron_external_interface: "eth1"
 kolla_external_vip_interface: "{{ network_interface }}"
 api_interface: "{{ network_interface }}"
-# NOTE: storage_interface is deprecated, please set swift_storage_interface directly instead
-storage_interface: "{{ network_interface }}"
-swift_storage_interface: "{{ storage_interface }}"
+swift_storage_interface: "{{ network_interface }}"
 swift_replication_interface: "{{ swift_storage_interface }}"
 migration_interface: "{{ api_interface }}"
 tunnel_interface: "{{ network_interface }}"
@@ -254,6 +263,8 @@ dpdk_tunnel_interface_address: "{{ 'dpdk_tunnel' | kolla_address }}"
 ironic_http_interface_address: "{{ 'ironic_http' | kolla_address }}"
 
 # Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_nsxp, vmware_dvs ]
+# Do note linuxbridge is *EXPERIMENTAL* in Neutron since Zed and it requires extra tweaks to config to be usable.
+# For details, see: https://docs.openstack.org/neutron/latest/admin/config-experimental-framework.html
 neutron_plugin_agent: "openvswitch"
 
 # Valid options are [ internal, infoblox ]
@@ -461,6 +472,9 @@ prometheus_etcd_integration_port: "{{ etcd_client_port }}"
 # Prometheus alertmanager ports
 prometheus_alertmanager_port: "9093"
 prometheus_alertmanager_cluster_port: "9094"
+
+# Prometheus MSTeams port
+prometheus_msteams_port: "9095"
 
 # Prometheus openstack-exporter ports
 prometheus_openstack_exporter_port: "9198"
@@ -759,11 +773,11 @@ monasca_enable_alerting_pipeline: True
 # directly to Elasticsearch.
 monasca_ingest_control_plane_logs: True
 
-monasca_api_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
-monasca_api_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_api_port }}"
+monasca_api_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}"
+monasca_api_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_api_port }}"
 
-monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
-monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn  | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
+monasca_log_api_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ monasca_log_api_port }}"
 
 # The OpenStack username used by the Monasca Agent and the Fluentd Monasca
 # plugin to post logs and metrics from the control plane to Monasca.
@@ -983,7 +997,7 @@ designate_coordination_backend: "{{ 'redis' if enable_redis | bool else '' }}"
 designate_internal_endpoint: "{{ internal_protocol }}://{{ designate_internal_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 designate_public_endpoint: "{{ public_protocol }}://{{ designate_external_fqdn | put_address_in_context('url') }}:{{ designate_api_port }}"
 
-designate_enable_notifications_sink: "yes"
+designate_enable_notifications_sink: "{{ enable_designate | bool }}"
 designate_notifications_topic_name: "notifications_designate"
 
 #######################
@@ -1030,6 +1044,11 @@ nova_instance_datadir_volume: "{{ 'nova_compute' if enable_nova_libvirt_containe
 nova_safety_upgrade: "no"
 # Valid options are [ none, novnc, spice ]
 nova_console: "novnc"
+
+#######################
+# Nova Database
+#######################
+nova_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
 
 #######################
 # Murano options
@@ -1123,11 +1142,13 @@ enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
 enable_prometheus_alertmanager_external: "{{ enable_prometheus_alertmanager | bool }}"
 enable_prometheus_ceph_mgr_exporter: "no"
 enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
+enable_prometheus_openstack_exporter_external: "no"
 enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
 enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
 enable_prometheus_rabbitmq_exporter: "{{ enable_prometheus | bool and enable_rabbitmq | bool }}"
 enable_prometheus_libvirt_exporter: "{{ enable_prometheus | bool and enable_nova | bool and nova_compute_virt_type in ['kvm', 'qemu'] }}"
 enable_prometheus_etcd_integration: "{{ enable_prometheus | bool and enable_etcd | bool }}"
+enable_prometheus_msteams: "no"
 
 prometheus_alertmanager_user: "admin"
 prometheus_scrape_interval: "60s"
@@ -1139,6 +1160,7 @@ prometheus_ceph_mgr_exporter_endpoints: []
 prometheus_openstack_exporter_endpoint_type: "internal"
 prometheus_openstack_exporter_compute_api_version: "latest"
 prometheus_libvirt_exporter_interval: "60s"
+prometheus_msteams_webhook_url:
 
 ############
 # Vitrage
@@ -1168,15 +1190,16 @@ kafka_broker_count: "{{ groups['kafka'] | length }}"
 # Internal Image options
 #########################
 distro_python_version_map: {
-  "centos": "3.6",
+  "centos": "3.9",
   "debian": "3.9",
-  "rhel": "3.6",
+  "rocky": "3.9",
   "ubuntu": "3.10"
 }
 
 kolla_base_distro_version_default_map: {
-  "centos": "stream8",
+  "centos": "stream9",
   "debian": "bullseye",
+  "rocky": "9",
   "ubuntu": "jammy",
 }
 

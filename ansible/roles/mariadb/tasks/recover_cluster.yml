@@ -77,8 +77,8 @@
       changed_when: false
 
     - name: Writing hostname of host with the largest seqno to temp file
-      copy:
-        content: "{{ inventory_hostname }}"
+      template:
+        src: "hostname.j2"
         dest: "{{ mariadb_recover_tmp_file_path }}"
         mode: 0644
       delegate_to: localhost
@@ -142,7 +142,7 @@
 
 - name: Set first MariaDB container as primary
   become: true
-  shell: "docker exec {{ mariadb_service.container_name }} mysql -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
+  shell: "{{ kolla_container_engine }} exec {{ mariadb_service.container_name }} mysql -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
   no_log: True
   when:
     - bootstrap_host is defined
@@ -151,7 +151,7 @@
 - name: Wait for MariaDB to become operational
   become: true
   command: >-
-    docker exec {{ mariadb_service.container_name }}
+    {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
     mysql -uroot -p{{ database_password }}
     --silent --skip-column-names
     -e 'SHOW STATUS LIKE "wsrep_evs_state"'
@@ -175,6 +175,7 @@
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment | default({}) }}"
+    healthcheck: "{{ item.value.healthcheck | default(omit) }}"
   with_dict: "{{ mariadb_services }}"
   when:
     - bootstrap_host is defined
@@ -205,6 +206,7 @@
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment | default({}) }}"
+    healthcheck: "{{ item.value.healthcheck | default(omit) }}"
   with_dict: "{{ mariadb_services }}"
   when:
     - bootstrap_host is defined

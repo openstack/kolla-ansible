@@ -11,14 +11,10 @@ bind_host = 127.0.0.1
 bind_host = {{ api_interface_address }}
 {% endif %}
 bind_port = {{ glance_api_listen_port }}
-workers = {{ openstack_service_workers }}
+workers = {{ glance_api_workers }}
 
 {% if glance_store_backends %}
 enabled_backends = {% for key in glance_store_backends %}{{ key.name }}:{{ key.type }}{% if not loop.last %}, {% endif %}{% endfor %}
-{% endif %}
-
-{% if glance_backend_ceph | bool %}
-show_multiple_locations = True
 {% endif %}
 
 {% if glance_enable_property_protection | bool %}
@@ -80,7 +76,6 @@ filesystem_store_datadir = /var/lib/glance/images/
 [rbd]
 rbd_store_user = {{ ceph_glance_user }}
 rbd_store_pool = {{ ceph_glance_pool_name }}
-rbd_store_chunk_size = 8
 {% endif %}
 
 {% if glance_backend_swift | bool %}

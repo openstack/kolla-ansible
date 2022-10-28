@@ -51,6 +51,20 @@ masakari_database_user: "{% if use_preconfigured_databases | bool and use_common
 masakari_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+masakari_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ masakari_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+masakari_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+masakari_database_shard:
+  users:
+    - user: "{{ masakari_database_user }}"
+      password: "{{ masakari_database_password }}"
+  rules:
+    - schema: "{{ masakari_database_name }}"
+      shard_id: "{{ masakari_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 masakari_tag: "{{ openstack_tag }}"
@@ -119,6 +133,7 @@ masakari_keystone_user: "masakari"
 
 openstack_masakari_auth: "{{ openstack_auth }}"
 
+masakari_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

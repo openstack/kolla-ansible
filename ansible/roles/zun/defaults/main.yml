@@ -64,6 +64,19 @@ zun_database_name: "zun"
 zun_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}zun{% endif %}"
 zun_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+zun_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ zun_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+zun_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+zun_database_shard:
+  users:
+    - user: "{{ zun_database_user }}"
+      password: "{{ zun_database_password }}"
+  rules:
+    - schema: "{{ zun_database_name }}"
+      shard_id: "{{ zun_database_shard_id }}"
+
 
 ####################
 ## Docker
@@ -96,7 +109,7 @@ zun_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 zun_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 zun_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 zun_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-zun_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ zun_api_port }}"]
+zun_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ zun_api_port }}"]
 zun_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 zun_api_healthcheck:
   interval: "{{ zun_api_healthcheck_interval }}"
@@ -194,6 +207,7 @@ zun_keystone_user: "zun"
 
 openstack_zun_auth: "{{ openstack_auth }}"
 
+zun_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

@@ -74,6 +74,21 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over Nova compute provider config
+  become: true
+  vars:
+    service: "{{ nova_cell_services['nova-compute'] }}"
+  copy:
+    content: "{{ nova_cell_compute_provider_config | to_nice_yaml(indent=2) }}"
+    dest: "{{ node_config_directory }}/nova-compute/provider_config.yaml"
+    mode: "0660"
+  when:
+    - inventory_hostname in groups[service.group]
+    - nova_cell_compute_provider_config is defined
+    - service.enabled | bool
+  notify:
+    - Restart nova-compute container
+
 - name: Copying over libvirt configuration
   become: true
   vars:

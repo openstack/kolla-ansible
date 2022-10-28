@@ -127,7 +127,6 @@ def check_json_j2():
             'api_interface_address': '',
             'kolla_internal_fqdn': '',
             'octavia_provider_drivers': '',
-            'storage_interface': 'storage_interface',
         }
         data = template.render(**context)
         json.loads(data)

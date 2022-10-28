@@ -30,8 +30,8 @@ workaround_ansible_issue_8743: yes
 # Valid options are [ COPY_ONCE, COPY_ALWAYS ]
 #config_strategy: "COPY_ALWAYS"
 
-# Valid options are ['centos', 'debian', 'rhel', 'ubuntu']
-#kolla_base_distro: "centos"
+# Valid options are ['centos', 'debian', 'rocky', 'ubuntu']
+#kolla_base_distro: "rocky"
 
 # Do not override this unless you know what you are doing.
 #openstack_release: "master"
@@ -70,6 +70,13 @@ workaround_ansible_issue_8743: yes
 
 # Optionally change the path to sysctl.conf modified by Kolla Ansible plays.
 #kolla_sysctl_conf_path: /etc/sysctl.conf
+
+################
+# Container engine
+################
+
+# Valid options are [ docker ]
+# kolla_container_engine: docker
 
 ################
 # Docker options
@@ -118,9 +125,7 @@ workaround_ansible_issue_8743: yes
 # the 'network_interface'. These interfaces must contain an IP address.
 #kolla_external_vip_interface: "{{ network_interface }}"
 #api_interface: "{{ network_interface }}"
-# NOTE: storage_interface is deprecated, please set swift_storage_interface directly instead
-#storage_interface: "{{ network_interface }}"
-#swift_storage_interface: "{{ storage_interface }}"
+#swift_storage_interface: "{{ network_interface }}"
 #swift_replication_interface: "{{ swift_storage_interface }}"
 #tunnel_interface: "{{ network_interface }}"
 #dns_interface: "{{ network_interface }}"
@@ -147,6 +152,8 @@ workaround_ansible_issue_8743: yes
 
 # Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_nsxp, vmware_dvs ]
 # if vmware_nsxv3 or vmware_nsxp is selected, enable_openvswitch MUST be set to "no" (default is yes)
+# Do note linuxbridge is *EXPERIMENTAL* in Neutron since Zed and it requires extra tweaks to config to be usable.
+# For details, see: https://docs.openstack.org/neutron/latest/admin/config-experimental-framework.html
 #neutron_plugin_agent: "openvswitch"
 
 # Valid options are [ internal, infoblox ]
@@ -718,6 +725,7 @@ workaround_ansible_issue_8743: yes
 #enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_libvirt_exporter: "{{ enable_prometheus | bool and enable_nova | bool and nova_compute_virt_type in ['kvm', 'qemu'] }}"
 #enable_prometheus_etcd_integration: "{{ enable_prometheus | bool and enable_etcd | bool }}"
+#enable_prometheus_msteams: "no"
 
 # The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager).
 # prometheus_external_labels:

@@ -7,6 +7,12 @@ mariadb_services:
     image: "{{ mariadb_image_full }}"
     volumes: "{{ mariadb_default_volumes + mariadb_extra_volumes }}"
     dimensions: "{{ mariadb_dimensions }}"
+    healthcheck: "{{ mariadb_healthcheck }}"
+    environment:
+      MYSQL_USERNAME: "{{ mariadb_monitor_user }}"
+      MYSQL_PASSWORD: "{% if enable_proxysql | bool %}{{ mariadb_monitor_password }}{% endif %}"
+      MYSQL_HOST: "{{ api_interface_address }}"
+      AVAILABLE_WHEN_DONOR: "1"
     haproxy:
       mariadb:
         enabled: "{{ enable_mariadb | bool and not enable_external_mariadb_load_balancer | bool }}"
@@ -87,6 +93,19 @@ mariadb_clustercheck_default_volumes:
 mariadb_extra_volumes: "{{ default_extra_volumes }}"
 mariadb_clustercheck_extra_volumes: "{{ default_extra_volumes }}"
 
+mariadb_enable_healthchecks: "{{ enable_container_healthchecks }}"
+mariadb_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+mariadb_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+mariadb_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+mariadb_healthcheck_test: ["CMD-SHELL", "/usr/bin/clustercheck"]
+mariadb_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+mariadb_healthcheck:
+  interval: "{{ mariadb_healthcheck_interval }}"
+  retries: "{{ mariadb_healthcheck_retries }}"
+  start_period: "{{ mariadb_healthcheck_start_period }}"
+  test: "{% if mariadb_enable_healthchecks | bool %}{{ mariadb_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ mariadb_healthcheck_timeout }}"
+
 ########################################
 # Vars used within recover_cluster.yml
 ########################################
@@ -120,3 +139,4 @@ enable_mariadb_clustercheck: "{{ enable_haproxy }}"
 # Sharding
 ####################
 mariadb_shard_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}{{ database_user }}{% else %}{{ mariadb_shard_root_user_prefix }}{{ mariadb_shard_id | string }}{% endif %}"
+mariadb_database_shard: "{{ mariadb_shards_info }}"

@@ -70,6 +70,19 @@ octavia_database_name: "octavia"
 octavia_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia{% endif %}"
 octavia_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+octavia_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+octavia_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+octavia_database_shard:
+  users:
+    - user: "{{ octavia_database_user }}"
+      password: "{{ octavia_database_password }}"
+  rules:
+    - schema: "{{ octavia_database_name }}"
+      shard_id: "{{ octavia_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -106,7 +119,7 @@ octavia_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 octavia_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 octavia_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 octavia_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-octavia_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if octavia_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ octavia_api_listen_port }}"]
+octavia_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if octavia_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ octavia_api_listen_port }}"]
 octavia_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 octavia_api_healthcheck:
   interval: "{{ octavia_api_healthcheck_interval }}"
@@ -206,6 +219,10 @@ octavia_keystone_user: "octavia"
 octavia_service_auth_project: "service"
 
 openstack_octavia_auth: "{{ openstack_auth }}"
+
+octavia_api_workers: "{{ openstack_service_workers }}"
+octavia_healthmanager_health_workers: "{{ openstack_service_workers }}"
+octavia_healthmanager_stats_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Keystone
@@ -331,8 +348,8 @@ octavia_amp_network:
 octavia_amp_network_cidr: 10.1.0.0/24
 
 # Octavia provider drivers
-octavia_provider_drivers: "amphora:Amphora provider{% if neutron_plugin_agent == 'ovn'%}, ovn:OVN provider{% endif %}"
-octavia_provider_agents: "amphora_agent{% if neutron_plugin_agent == 'ovn'%}, ovn{% endif %}"
+octavia_provider_drivers: "amphora:Amphora provider{% if neutron_plugin_agent == 'ovn' %}, ovn:OVN provider{% endif %}"
+octavia_provider_agents: "amphora_agent{% if neutron_plugin_agent == 'ovn' %}, ovn{% endif %}"
 
 ####################
 # TLS

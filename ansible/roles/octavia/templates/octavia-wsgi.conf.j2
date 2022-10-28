@@ -1,6 +1,6 @@
 {% set wsgi_directory = '/var/lib/kolla/venv/bin' %}
 {% if octavia_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos']  %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
 {% else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
@@ -19,7 +19,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ octavia_api_listen_port }}>
-    WSGIDaemonProcess octavia-api processes={{ openstack_service_workers }} threads=1 user=octavia group=octavia display-name=octavia-api
+    WSGIDaemonProcess octavia-api processes={{ octavia_api_workers }} threads=1 user=octavia group=octavia display-name=octavia-api
     WSGIProcessGroup octavia-api
     WSGIScriptAlias / {{ wsgi_directory }}/octavia-wsgi
     WSGIApplicationGroup %{GLOBAL}

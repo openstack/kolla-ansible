@@ -78,6 +78,19 @@ designate_database_name: "designate"
 designate_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}designate{% endif %}"
 designate_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+designate_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ designate_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+designate_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+designate_database_shard:
+  users:
+    - user: "{{ designate_database_user }}"
+      password: "{{ designate_database_password }}"
+  rules:
+    - schema: "{{ designate_database_name }}"
+      shard_id: "{{ designate_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -124,7 +137,7 @@ designate_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 designate_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 designate_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 designate_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
+designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
 designate_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 designate_api_healthcheck:
   interval: "{{ designate_api_healthcheck_interval }}"
@@ -270,6 +283,13 @@ designate_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_designate_auth: "{{ openstack_auth }}"
 
+designate_api_workers: "{{ openstack_service_workers }}"
+designate_worker_workers: "{{ openstack_service_workers }}"
+designate_producer_workers: "{{ openstack_service_workers }}"
+designate_central_workers: "{{ openstack_service_workers }}"
+designate_sink_workers: "{{ openstack_service_workers }}"
+designate_mdns_workers: "{{ openstack_service_workers }}"
+designate_backend_bind9_workers: "{{ [ansible_facts.processor_vcpus, 32] | min }}"
 
 ####################
 # Kolla

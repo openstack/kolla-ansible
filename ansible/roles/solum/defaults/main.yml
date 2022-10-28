@@ -65,6 +65,19 @@ solum_database_name: "solum"
 solum_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}solum{% endif %}"
 solum_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+solum_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ solum_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+solum_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+solum_database_shard:
+  users:
+    - user: "{{ solum_database_user }}"
+      password: "{{ solum_database_password }}"
+  rules:
+    - schema: "{{ solum_database_name }}"
+      shard_id: "{{ solum_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -96,7 +109,7 @@ solum_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 solum_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 solum_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 solum_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-solum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ solum_application_deployment_port }}"]
+solum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ solum_application_deployment_port }}"]
 solum_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 solum_api_healthcheck:
   interval: "{{ solum_api_healthcheck_interval }}"
@@ -190,6 +203,7 @@ solum_keystone_user: "solum"
 
 openstack_solum_auth: "{{ openstack_auth }}"
 
+solum_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

@@ -13,7 +13,7 @@ prometheus_services:
         mode: "http"
         external: false
         port: "{{ prometheus_port }}"
-        custom_member_list: "{{ prometheus_haproxy_members.split(';') }}"
+        active_passive: "{{ prometheus_active_passive | bool }}"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -65,6 +65,7 @@ prometheus_services:
         port: "{{ prometheus_alertmanager_port }}"
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
+        active_passive: "{{ prometheus_alertmanager_active_passive | bool }}"
       prometheus_alertmanager_external:
         enabled: "{{ enable_prometheus_alertmanager_external | bool }}"
         mode: "http"
@@ -72,6 +73,7 @@ prometheus_services:
         port: "{{ prometheus_alertmanager_port }}"
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
+        active_passive: "{{ prometheus_alertmanager_active_passive | bool }}"
   prometheus-openstack-exporter:
     container_name: "prometheus_openstack_exporter"
     group: "prometheus-openstack-exporter"
@@ -86,6 +88,11 @@ prometheus_services:
         enabled: "{{ enable_prometheus_openstack_exporter | bool }}"
         mode: "http"
         external: false
+        port: "{{ prometheus_openstack_exporter_port }}"
+      prometheus_openstack_exporter_external:
+        enabled: "{{ enable_prometheus_openstack_exporter_external | bool }}"
+        mode: "http"
+        external: true
         port: "{{ prometheus_openstack_exporter_port }}"
   prometheus-elasticsearch-exporter:
     container_name: prometheus_elasticsearch_exporter
@@ -108,6 +115,14 @@ prometheus_services:
     image: "{{ prometheus_libvirt_exporter_image_full }}"
     volumes: "{{ prometheus_libvirt_exporter_default_volumes + prometheus_libvirt_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_libvirt_exporter_dimensions }}"
+  prometheus-msteams:
+    container_name: "prometheus_msteams"
+    group: "prometheus-msteams"
+    enabled: "{{ enable_prometheus_msteams | bool }}"
+    environment: "{{ prometheus_msteams_container_proxy }}"
+    image: "{{ prometheus_msteams_image_full }}"
+    volumes: "{{ prometheus_msteams_default_volumes + prometheus_msteams_extra_volumes }}"
+    dimensions: "{{ prometheus_msteams_dimensions }}"
 
 ####################
 # Prometheus Server
@@ -124,7 +139,7 @@ prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bo
 # HAProxy
 ####################
 prometheus_active_passive: true
-prometheus_haproxy_members: "{% for host in groups['prometheus'] %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ prometheus_port }} check inter 2000 rise 2 fall 5{% if not loop.first %}{% if prometheus_active_passive | bool %} backup{% endif %}{% endif %};{% endfor %}"
+prometheus_alertmanager_active_passive: true
 
 ####################
 # Blackbox
@@ -189,6 +204,10 @@ prometheus_libvirt_exporter_image: "{{ docker_registry ~ '/' if docker_registry 
 prometheus_libvirt_exporter_tag: "{{ prometheus_tag }}"
 prometheus_libvirt_exporter_image_full: "{{ prometheus_libvirt_exporter_image }}:{{ prometheus_libvirt_exporter_tag }}"
 
+prometheus_msteams_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/prometheus-msteams"
+prometheus_msteams_tag: "{{ prometheus_tag }}"
+prometheus_msteams_image_full: "{{ prometheus_msteams_image }}:{{ prometheus_msteams_tag }}"
+
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_haproxy_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -200,6 +219,7 @@ prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_libvirt_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_msteams_dimensions: "{{ default_container_dimensions }}"
 
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
@@ -265,6 +285,11 @@ prometheus_libvirt_exporter_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/run/libvirt:/run/libvirt:ro"
+prometheus_msteams_default_volumes:
+  - "{{ node_config_directory }}/prometheus-msteams/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
 
 prometheus_extra_volumes: "{{ default_extra_volumes }}"
 prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
@@ -278,6 +303,9 @@ prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_blackbox_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_msteams_extra_volumes: "{{ prometheus_extra_volumes }}"
+
+prometheus_msteams_container_proxy: "{{ container_proxy }}"
 
 prometheus_openstack_exporter_disabled_volume: "{{ '--disable-service.volume' if not enable_cinder | bool else '' }}"
 prometheus_openstack_exporter_disabled_dns: "{{ '--disable-service.dns' if not enable_designate | bool else '' }}"
@@ -293,3 +321,5 @@ prometheus_memcached_exporter_cmdline_extras: ""
 prometheus_mysqld_exporter_cmdline_extras: ""
 prometheus_node_exporter_cmdline_extras: ""
 prometheus_openstack_exporter_cmdline_extras: ""
+
+prometheus_alertmanager_external_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_alertmanager_port }}"

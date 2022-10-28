@@ -34,6 +34,20 @@ cyborg_database_user: "{% if use_preconfigured_databases | bool and use_common_m
 cyborg_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 ####################
+# Database sharding
+####################
+cyborg_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ cyborg_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+cyborg_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+cyborg_database_shard:
+  users:
+    - user: "{{ cyborg_database_user }}"
+      password: "{{ cyborg_database_password }}"
+  rules:
+    - schema: "{{ cyborg_database_name }}"
+      shard_id: "{{ cyborg_database_shard_id }}"
+
+
+####################
 # Docker
 ####################
 cyborg_tag: "{{ openstack_tag }}"
@@ -58,7 +72,7 @@ cyborg_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 cyborg_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 cyborg_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 cyborg_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-cyborg_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ cyborg_api_port }}"]
+cyborg_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ cyborg_api_port }}"]
 cyborg_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 cyborg_api_healthcheck:
   interval: "{{ cyborg_api_healthcheck_interval }}"

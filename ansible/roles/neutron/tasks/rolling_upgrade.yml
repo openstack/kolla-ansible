@@ -37,7 +37,7 @@
 
 - name: Checking neutron pending contract scripts
   become: true
-  command: "docker exec -t neutron_server neutron-db-manage --subproject {{ item }} has_offline_migrations"
+  command: "{{ kolla_container_engine }} exec -t neutron_server neutron-db-manage --subproject {{ item }} has_offline_migrations"
   register: neutron_check_contract_db_stdout
   ignore_errors: yes
   with_items: "{{ neutron_rolling_upgrade_services }}"
@@ -48,6 +48,7 @@
     neutron_server: "{{ neutron_services['neutron-server'] }}"
     first_neutron_server_host: "{{ groups[neutron_server.group][0] }}"
     results_of_check_pending_contract_scripts: "{{ hostvars[first_neutron_server_host]['neutron_check_contract_db_stdout'] }}"
+    # NOTE(hrw): no idea
     filter_rc: "results[?rc!=`0`]"
     is_stop_neutron_server: "{{ results_of_check_pending_contract_scripts | json_query(filter_rc) }}"
   become: true

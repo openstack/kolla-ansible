@@ -1,12 +1,12 @@
 ---
-- name: Creating monasca database
+- name: Creating monasca databases
   become: true
   kolla_toolbox:
     module_name: mysql_db
     module_args:
       login_host: "{{ monasca_database_address }}"
       login_port: "{{ monasca_database_port }}"
-      login_user: "{{ database_user }}"
+      login_user: "{{ monasca_database_shard_root_user }}"
       login_password: "{{ database_password }}"
       name: "{{ item }}"
   run_once: True
@@ -23,7 +23,7 @@
     module_args:
       login_host: "{{ monasca_database_address }}"
       login_port: "{{ monasca_database_port }}"
-      login_user: "{{ database_user }}"
+      login_user: "{{ monasca_database_shard_root_user }}"
       login_password: "{{ database_password }}"
       name: "{{ monasca_database_user }}"
       password: "{{ monasca_database_password }}"
@@ -44,7 +44,7 @@
 # [1] https://github.com/influxdata/influxdb-python#influxdb-pre-v110-users
 - name: List influxdb databases
   become: true
-  command: "docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'show databases'"
+  command: "{{ kolla_container_engine }} exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute 'show databases'"
   run_once: True
   delegate_to: "{{ groups['influxdb'][0] }}"
   register: monasca_influxdb_database
@@ -53,7 +53,7 @@
 - name: Creating monasca influxdb database
   become: true
   command: >
-    docker exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute
+    {{ kolla_container_engine }} exec influxdb influx -host {{ monasca_influxdb_address }} -port {{ monasca_influxdb_http_port }} -execute
     'CREATE DATABASE {{ monasca_influxdb_name }} WITH DURATION {{ monasca_influxdb_retention_policy.duration }}
     REPLICATION  {{ monasca_influxdb_retention_policy.replication_count }} NAME {{ monasca_influxdb_retention_policy.name }}'
   run_once: True
@@ -68,7 +68,7 @@
 - name: List monasca kafka topics
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --zookeeper localhost
     --list
   register: kafka_topics
@@ -78,7 +78,7 @@
 - name: Create monasca kafka topics if they don't exist
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --create
     --topic {{ item.name }}
     --partitions {{ item.partitions }}
@@ -94,7 +94,7 @@
 - name: Remove monasca kafka topics for disabled services
   become: true
   command: >
-    docker exec kafka /opt/kafka/bin/kafka-topics.sh
+    {{ kolla_container_engine }} exec kafka /opt/kafka/bin/kafka-topics.sh
     --delete
     --topic "{{ item.name }}"
     --zookeeper localhost

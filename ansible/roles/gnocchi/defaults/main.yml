@@ -51,6 +51,19 @@ gnocchi_database_name: "gnocchi"
 gnocchi_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}gnocchi{% endif %}"
 gnocchi_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+gnocchi_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ gnocchi_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+gnocchi_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+gnocchi_database_shard:
+  users:
+    - user: "{{ gnocchi_database_user }}"
+      password: "{{ gnocchi_database_password }}"
+  rules:
+    - schema: "{{ gnocchi_database_name }}"
+      shard_id: "{{ gnocchi_database_shard_id }}"
+
 
 ####################
 # Docker
@@ -77,7 +90,7 @@ gnocchi_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 gnocchi_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 gnocchi_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 gnocchi_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-gnocchi_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ gnocchi_api_listen_port }}"]
+gnocchi_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ gnocchi_api_listen_port }}"]
 gnocchi_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 gnocchi_api_healthcheck:
   interval: "{{ gnocchi_api_healthcheck_interval }}"
@@ -151,6 +164,8 @@ gnocchi_metricd_workers: "{{ openstack_service_workers }}"
 gnocchi_keystone_user: "gnocchi"
 
 openstack_gnocchi_auth: "{{ openstack_auth }}"
+
+gnocchi_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Keystone

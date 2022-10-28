@@ -1,7 +1,7 @@
 {% set log_dir = '/var/log/kolla/placement' %}
 {% set wsgi_directory = '/var/lib/kolla/venv/bin' %}
 {% if placement_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos']  %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
 {% else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
@@ -20,7 +20,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ placement_api_listen_port }}>
-    WSGIDaemonProcess placement-api processes={{ openstack_service_workers }} threads=1 user=placement group=placement display-name=placement-api
+    WSGIDaemonProcess placement-api processes={{ placement_api_workers }} threads=1 user=placement group=placement display-name=placement-api
     WSGIProcessGroup placement-api
     WSGIScriptAlias / {{ wsgi_directory }}/placement-api
     WSGIApplicationGroup %{GLOBAL}

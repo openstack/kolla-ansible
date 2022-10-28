@@ -1,7 +1,7 @@
 {% set nova_log_dir = '/var/log/kolla/nova' %}
 {% set wsgi_directory = '/var/lib/kolla/venv/bin' %}
 {% if nova_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos']  %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
 {% else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
@@ -33,7 +33,7 @@ LogLevel info
 {% endif %}
 
 <VirtualHost *:{{ nova_api_listen_port }}>
-    WSGIDaemonProcess nova-api processes={{ openstack_service_workers }} threads=1 user=nova group=nova display-name=nova-api
+    WSGIDaemonProcess nova-api processes={{ nova_api_workers }} threads=1 user=nova group=nova display-name=nova-api
     WSGIProcessGroup nova-api
     WSGIScriptAlias / {{ wsgi_directory }}/nova-api-wsgi
     WSGIApplicationGroup %{GLOBAL}
@@ -52,7 +52,7 @@ LogLevel info
 </VirtualHost>
 
 <VirtualHost *:{{ nova_metadata_listen_port }}>
-    WSGIDaemonProcess nova-metadata processes={{ openstack_service_workers }} threads=1 user=nova group=nova display-name=nova-metadata-api
+    WSGIDaemonProcess nova-metadata processes={{ nova_metadata_api_workers }} threads=1 user=nova group=nova display-name=nova-metadata-api
     WSGIProcessGroup nova-metadata
     WSGIScriptAlias / {{ wsgi_directory }}/nova-metadata-wsgi
     WSGIApplicationGroup %{GLOBAL}

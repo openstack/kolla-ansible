@@ -68,6 +68,19 @@ keystone_database_name: "keystone"
 keystone_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}keystone{% endif %}"
 keystone_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+keystone_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ keystone_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+keystone_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+keystone_database_shard:
+  users:
+    - user: "{{ keystone_database_user }}"
+      password: "{{ keystone_database_password }}"
+  rules:
+    - schema: "{{ keystone_database_name }}"
+      shard_id: "{{ keystone_database_shard_id }}"
+
 
 ####################
 # Fernet
@@ -101,7 +114,7 @@ keystone_enable_healthchecks: "{{ enable_container_healthchecks }}"
 keystone_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 keystone_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 keystone_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-keystone_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{ api_interface_address |  put_address_in_context('url') }}:{{ keystone_public_listen_port }}"]
+keystone_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}"]
 keystone_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 keystone_healthcheck:
   interval: "{{ keystone_healthcheck_interval }}"
@@ -153,6 +166,7 @@ keystone_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_keystone_auth: "{{ openstack_auth }}"
 
+keystone_api_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla
@@ -181,14 +195,19 @@ keystone_enabled_notification_topics: "{{ keystone_notification_topics | selecta
 ####################
 # Keystone
 ####################
+keystone_service_endpoints:
+  - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
+  - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
+
+# TODO(yoctozepto): Remove admin_endpoint leftovers in Antelope (2023.1).
+keystone_service_admin_endpoint: {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
+keystone_create_admin_endpoint: false
+
 keystone_ks_services:
   - name: "keystone"
     type: "identity"
     description: "Openstack Identity Service"
-    endpoints:
-      - {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
-      - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
-      - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
+    endpoints: "{{ keystone_service_endpoints + ([keystone_service_admin_endpoint] if kolla_action == 'upgrade' or keystone_create_admin_endpoint | bool else []) }}"
 
 ####################
 # TLS
@@ -206,11 +225,12 @@ keystone_container_federation_oidc_attribute_mappings_folder: "{{ container_conf
 keystone_host_federation_oidc_metadata_folder: "{{ node_config_directory }}/keystone/federation/oidc/metadata"
 keystone_host_federation_oidc_idp_certificate_folder: "{{ node_config_directory }}/keystone/federation/oidc/cert"
 keystone_host_federation_oidc_attribute_mappings_folder: "{{ node_config_directory }}/keystone/federation/oidc/attribute_maps"
+keystone_federation_oidc_jwks_uri: ""
 
 # These variables are used to define multiple trusted Horizon dashboards.
 # keystone_trusted_dashboards: ['<https://dashboardServerOne/auth/websso/>', '<https://dashboardServerTwo/auth/websso/>', '<https://dashboardServerN/auth/websso/>']
 keystone_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
-keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol','equalto','openid') | list | count > 0 }}"
+keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 keystone_should_remove_attribute_mappings: False
 keystone_should_remove_identity_providers: False
 keystone_federation_oidc_response_type: "id_token"

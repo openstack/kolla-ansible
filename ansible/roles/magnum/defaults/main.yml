@@ -39,6 +39,19 @@ magnum_database_name: "magnum"
 magnum_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}magnum{% endif %}"
 magnum_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+####################
+# Database sharding
+####################
+magnum_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ magnum_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+magnum_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+magnum_database_shard:
+  users:
+    - user: "{{ magnum_database_user }}"
+      password: "{{ magnum_database_password }}"
+  rules:
+    - schema: "{{ magnum_database_name }}"
+      shard_id: "{{ magnum_database_shard_id }}"
+
 
 ####################
 # Magnum
@@ -69,7 +82,7 @@ magnum_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 magnum_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 magnum_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 magnum_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-magnum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address |  put_address_in_context('url') }}:{{ magnum_api_port }}"]
+magnum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ magnum_api_port }}"]
 magnum_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 magnum_api_healthcheck:
   interval: "{{ magnum_api_healthcheck_interval }}"
@@ -125,6 +138,8 @@ magnum_trustee_domain: "magnum"
 
 openstack_magnum_auth: "{{ openstack_auth }}"
 
+magnum_api_workers: "{{ openstack_service_workers }}"
+magnum_conductor_workers: "{{ openstack_service_workers }}"
 
 ####################
 # Kolla

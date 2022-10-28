@@ -48,7 +48,7 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS, RHEL 8 or openEuler, run:
+   For CentOS, Rocky or openEuler, run:
 
    .. code-block:: console
 
@@ -67,7 +67,7 @@ If not installing Kolla Ansible in a virtual environment, skip this section.
 
 #. Install the virtual environment dependencies.
 
-   For CentOS, RHEL 8 or openEuler, you don't need to do anything.
+   For CentOS, Rocky or openEuler, you don't need to do anything.
 
    For Debian or Ubuntu, run:
 
@@ -105,7 +105,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 
 #. Install ``pip``.
 
-   For CentOS, RHEL or openEuler, run:
+   For CentOS, Rocky or openEuler, run:
 
    .. code-block:: console
 
@@ -126,7 +126,7 @@ If installing Kolla Ansible in a virtual environment, skip this section.
 #. Install `Ansible <http://www.ansible.com>`__. Kolla Ansible requires at least
    Ansible ``4`` and supports up to ``5``.
 
-   For CentOS or RHEL, run:
+   For CentOS or Rocky, run:
 
    .. code-block:: console
 
@@ -347,7 +347,7 @@ than one node, edit ``multinode`` inventory:
       errors in the ``ping`` module. To quickly install Python with Ansible you
       can run: for Debian or Ubuntu:
       ``ansible -i multinode all -m raw -a "apt -y install python3"``,
-      and for CentOS, RHEL or openEuler:
+      and for CentOS, Rocky or openEuler:
       ``ansible -i multinode all -m raw -a "dnf -y install python3"``.
 
 Kolla passwords
@@ -388,15 +388,15 @@ There are a few options that are required to deploy Kolla Ansible:
   Kolla provides choice of several Linux distributions in containers:
 
   - CentOS Stream (``centos``)
-  - Ubuntu (``ubuntu``)
   - Debian (``debian``)
-  - RHEL (``rhel``, deprecated)
+  - Rocky (``rocky``)
+  - Ubuntu (``ubuntu``)
 
-  For newcomers, we recommend to use CentOS Stream 8 or Ubuntu 20.04.
+  For newcomers, we recommend to use Rocky Linux 9 or Ubuntu 22.04.
 
   .. code-block:: console
 
-     kolla_base_distro: "centos"
+     kolla_base_distro: "rocky"
 
 * Networking
 
@@ -537,15 +537,14 @@ Using OpenStack
 
       pip install python-openstackclient -c https://releases.openstack.org/constraints/upper/|KOLLA_OPENSTACK_RELEASE|
 
-#. OpenStack requires an openrc file where credentials for admin user
-   are set. To generate this file:
+#. OpenStack requires a ``clouds.yaml`` file where credentials for the
+   admin user are set. To generate this file:
 
    * For deployment or evaluation, run:
 
      .. code-block:: console
 
         kolla-ansible post-deploy
-        . /etc/kolla/admin-openrc.sh
 
    * For development, run:
 
@@ -553,7 +552,10 @@ Using OpenStack
 
         cd kolla-ansible/tools
         ./kolla-ansible post-deploy
-        . /etc/kolla/admin-openrc.sh
+
+   * The file will be generated in /etc/kolla/clouds.yaml, you can use it by
+     copying it to /etc/openstack or ~/.config/openstack or setting
+     OS_CLIENT_CONFIG_FILE environment variable.
 
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.

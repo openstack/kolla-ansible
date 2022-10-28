@@ -118,36 +118,31 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 [oslo_concurrency]
 lock_path = /var/lib/cinder/tmp
 
-
 {% if enable_cinder_backend_lvm | bool %}
-[lvm-1]
+[{{ cinder_backend_lvm_name }}]
 volume_group = {{ cinder_volume_group }}
 volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
-volume_backend_name = lvm-1
+volume_backend_name = {{ cinder_backend_lvm_name }}
 target_helper = {{ cinder_target_helper }}
 target_protocol = iscsi
 {% endif %}
 
 {% if cinder_backend_ceph | bool %}
-[rbd-1]
+[{{ cinder_backend_ceph_name }}]
 volume_driver = cinder.volume.drivers.rbd.RBDDriver
-volume_backend_name = rbd-1
+volume_backend_name = {{ cinder_backend_ceph_name }}
 rbd_pool = {{ ceph_cinder_pool_name }}
 rbd_ceph_conf = /etc/ceph/ceph.conf
-rbd_flatten_volume_from_snapshot = false
-rbd_max_clone_depth = 5
-rbd_store_chunk_size = 4
 rados_connect_timeout = 5
 rbd_user = {{ ceph_cinder_user }}
 rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 report_discard_supported = True
-image_upload_use_cinder_backend = True
 {% endif %}
 
 {% if enable_cinder_backend_nfs | bool %}
-[nfs-1]
+[{{ cinder_backend_nfs_name }}]
 volume_driver = cinder.volume.drivers.nfs.NfsDriver
-volume_backend_name = nfs-1
+volume_backend_name = {{ cinder_backend_nfs_name }}
 nfs_shares_config = /etc/cinder/nfs_shares
 nfs_snapshot_support = True
 nas_secure_file_permissions = False
@@ -155,7 +150,7 @@ nas_secure_file_operations = False
 {% endif %}
 
 {% if enable_cinder_backend_hnas_nfs | bool %}
-[hnas-nfs]
+[{{ cinder_backend_hnas_nfs_name }}]
 volume_driver = cinder.volume.drivers.hitachi.hnas_nfs.HNASNFSDriver
 nfs_shares_config = /home/cinder/nfs_shares
 volume_backend_name = {{ hnas_nfs_backend }}
@@ -168,7 +163,7 @@ hnas_svc0_hdp = {{ hnas_nfs_svc0_hdp }}
 {% endif %}
 
 {% if cinder_backend_vmwarevc_vmdk | bool %}
-[vmwarevc-vmdk]
+[{{ cinder_backend_vmwarevc_vmdk_name }}]
 volume_driver = cinder.volume.drivers.vmware.vmdk.VMwareVcVmdkDriver
 vmware_host_ip = {{ vmware_vcenter_host_ip }}
 vmware_host_username = {{ vmware_vcenter_host_username }}
@@ -178,7 +173,7 @@ vmware_insecure = True
 {% endif %}
 
 {% if cinder_backend_vmware_vstorage_object | bool %}
-[vmware-vstorage-object]
+[{{ cinder_backend_vmware_vstorage_object_name }}]
 volume_driver = cinder.volume.drivers.vmware.fcd.VMwareVStorageObjectDriver
 vmware_host_ip = {{ vmware_vcenter_host_ip }}
 vmware_host_username = {{ vmware_vcenter_host_username }}
@@ -188,13 +183,13 @@ vmware_insecure = True
 {% endif %}
 
 {% if enable_cinder_backend_quobyte | bool %}
-[QuobyteHD]
+[{{ cinder_backend_quobyte_name }}]
 volume_driver = cinder.volume.drivers.quobyte.QuobyteDriver
 quobyte_volume_url = quobyte://{{ quobyte_storage_host }}/{{ quobyte_storage_volume }}
 {% endif %}
 
 {% if enable_cinder_backend_pure_iscsi | bool %}
-[Pure-FlashArray-iscsi]
+[{{ cinder_backend_pure_iscsi_name }}]
 volume_backend_name = {{ pure_iscsi_backend }}
 volume_driver = cinder.volume.drivers.pure.PureISCSIDriver
 san_ip = {{ pure_san_ip }}
@@ -202,7 +197,7 @@ pure_api_token = {{ pure_api_token }}
 {% endif %}
 
 {% if enable_cinder_backend_pure_fc | bool %}
-[Pure-FlashArray-fc]
+[{{ cinder_backend_pure_fc_name }}]
 volume_backend_name = {{ pure_fc_backend }}
 volume_driver = cinder.volume.drivers.pure.PureFCDriver
 san_ip = {{ pure_san_ip }}

@@ -11,6 +11,8 @@
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment | default(omit) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
 
 # NOTE(yoctozepto): We have to loop this to avoid breaking on connection resets
 - name: Wait for MariaDB service port liveness
@@ -28,7 +30,7 @@
 - name: Wait for MariaDB service to sync WSREP
   become: true
   command: >-
-    docker exec {{ mariadb_service.container_name }}
+    {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
     mysql -uroot -p{{ database_password }}
     --silent --skip-column-names
     -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
