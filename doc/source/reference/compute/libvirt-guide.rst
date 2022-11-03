@@ -54,6 +54,23 @@ libvirt as a host daemon. However, since the Yoga release, if a libvirt daemon
 has already been set up, then Kolla Ansible may be configured to use it. This
 may be achieved by setting ``enable_nova_libvirt_container`` to ``false``.
 
+When the firewall driver is set to ``openvswitch``, libvirt will plug VMs
+directly into the integration bridge, ``br-int``. To do this it uses the
+``ovs-vsctl`` utility. The search path for this binary is controlled by the
+``$PATH`` environment variable (as seen by the libvirt process). There are a
+few options to ensure that this binary can be found:
+
+* Set ``openvswitch_ovs_vsctl_wrapper_enabled`` to ``True``. This will install
+  a wrapper script to the path: ``/usr/bin/ovs-vsctl`` that will execute
+  ``ovs-vsctl`` in the context of the ``openvswitch_vswitchd`` container. This
+  option is useful if you do not have openvswitch installed on the host. It
+  also has the advantage that the ``ovs-vsctl`` utility will match the version
+  of the server.
+
+* Install openvswitch on the hypervisor. Kolla mounts ``/run/openvswitch`` from
+  the host into the ``openvswitch_vswitchd`` container. This means that socket
+  is in the location ``ovs-vsctl`` expects with its default options.
+
 Migration from container to host
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

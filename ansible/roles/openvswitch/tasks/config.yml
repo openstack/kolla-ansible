@@ -52,3 +52,16 @@
     - service.enabled | bool
   notify:
     - "Restart openvswitch-db-server container"
+
+- name: Copying over ovs-vsctl wrapper
+  vars:
+    service: "{{ openvswitch_services['openvswitch-vswitchd'] }}"
+  template:
+    src: "ovs-vsctl.j2"
+    dest: "/usr/bin/ovs-vsctl"
+    mode: "0755"
+  become: true
+  when:
+    - service.host_in_groups | bool
+    - service.enabled | bool
+    - openvswitch_ovs_vsctl_wrapper_enabled | bool
