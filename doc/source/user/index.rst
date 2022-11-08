@@ -6,6 +6,7 @@ User Guides
    :maxdepth: 2
 
    quickstart
+   quickstart-development
    support-matrix
    virtual-environments
    multinode
