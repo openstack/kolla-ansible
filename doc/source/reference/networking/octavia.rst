@@ -2,10 +2,10 @@
 Octavia
 =======
 
-Octavia provides load balancing as a service. This guide covers configuration
-of Octavia for the Amphora driver. See the :octavia-doc:`Octavia documentation
-<>` for full details. The :octavia-doc:`installation guide
-<install/install-ubuntu.html>` is a useful reference.
+Octavia provides load balancing as a service. This guide covers two providers:
+
+* Amphora
+* OVN
 
 Enabling Octavia
 ================
@@ -16,14 +16,22 @@ Enable the octavia service in ``globals.yml``:
 
    enable_octavia: "yes"
 
+Amphora provider
+================
+
+This section covers configuration of Octavia for the Amphora driver. See the
+:octavia-doc:`Octavia documentation <>` for full details. The
+:octavia-doc:`installation guide <install/install-ubuntu.html>` is a useful
+reference.
+
 Certificates
-============
+------------
 
 Octavia requires various TLS certificates for operation. Since the Victoria
 release, Kolla Ansible supports generating these certificates automatically.
 
 Option 1: Automatically generating Certificates
------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Kolla Ansible provides default values for the certificate issuer and owner
 fields. You can customize this via ``globals.yml``, for example:
@@ -45,7 +53,7 @@ The certificates and keys will be generated under
 ``/etc/kolla/config/octavia``.
 
 Option 2: Manually generating certificates
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Follow the :octavia-doc:`octavia documentation
 <admin/guides/certificates.html>` to generate certificates for Amphorae. These
@@ -68,7 +76,7 @@ used to encrypt the CA key:
 .. _octavia-network:
 
 Networking
-==========
+----------
 
 Octavia worker and health manager nodes must have access to the Octavia
 management network for communication with Amphorae.
@@ -91,7 +99,7 @@ the traffic is also bridged to Open vSwitch on the controllers.
 This interface should have an IP address on the Octavia management subnet.
 
 Registering OpenStack resources
-===============================
+-------------------------------
 
 Since the Victoria release, there are two ways to configure Octavia.
 
@@ -103,7 +111,7 @@ The first option is simpler, and is recommended for new users. The second
 option provides more flexibility, at the cost of complexity for the operator.
 
 Option 1: Automatic resource registration (default, recommended)
-================================================================
+----------------------------------------------------------------
 
 For automatic resource registration, Kolla Ansible will register the following
 resources:
@@ -116,7 +124,7 @@ resources:
 The configuration for these resources may be customised before deployment.
 
 Customize Amphora flavor
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The default amphora flavor is named ``amphora`` with 1 VCPUs, 1GB RAM and 5GB
 disk. you can customize this flavor by changing ``octavia_amp_flavor`` in
@@ -147,7 +155,7 @@ The following defaults are used:
      disk: 5
 
 Customise network and subnet
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configure Octavia management network and subnet with ``octavia_amp_network`` in
 ``globals.yml``. This must be a network that is :ref:`accessible from the
@@ -209,7 +217,7 @@ Once the installation is completed, you need to :ref:`register an amphora image
 in glance <octavia-amphora-image>`.
 
 Option 2: Manual resource registration
-======================================
+--------------------------------------
 
 In this case, Kolla Ansible will not register resources for Octavia. Set
 ``octavia_auto_configure`` to no in ``globals.yml``:
@@ -241,7 +249,7 @@ as follows:
    existing Amphorae.
 
 Amphora flavor
---------------
+~~~~~~~~~~~~~~
 
 Register the flavor in Nova:
 
@@ -252,7 +260,7 @@ Register the flavor in Nova:
 Make a note of the ID of the flavor, or specify one via ``--id``.
 
 Keypair
--------
+~~~~~~~
 
 Register the keypair in Nova:
 
@@ -261,7 +269,7 @@ Register the keypair in Nova:
    openstack keypair create --public-key <path to octavia public key> octavia_ssh_key
 
 Network and subnet
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Register the management network and subnet in Neutron. This must be a network
 that is :ref:`accessible from the controllers <octavia-network>`. Typically
@@ -281,7 +289,7 @@ a VLAN provider network is used.
 Make a note of the ID of the network.
 
 Security group
---------------
+~~~~~~~~~~~~~~
 
 Register the security group in Neutron.
 
@@ -295,7 +303,7 @@ Register the security group in Neutron.
 Make a note of the ID of the security group.
 
 Kolla Ansible configuration
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following options should be added to ``globals.yml``.
 
@@ -316,7 +324,7 @@ Now deploy Octavia:
 .. _octavia-amphora-image:
 
 Amphora image
-=============
+-------------
 
 It is necessary to build an Amphora image. On CentOS / Rocky 9:
 
@@ -374,10 +382,10 @@ Register the image in Glance:
    the tag is "amphora", octavia uses the tag to determine which image to use.
 
 Debug
-=====
+-----
 
 SSH to an amphora
------------------
+~~~~~~~~~~~~~~~~~
 
 login into one of octavia-worker nodes, and ssh into amphora.
 
@@ -391,14 +399,14 @@ login into one of octavia-worker nodes, and ssh into amphora.
    octavia-worker nodes.
 
 Upgrade
-=======
+-------
 
 If you upgrade from the Ussuri release, you must disable
 ``octavia_auto_configure`` in ``globals.yml`` and keep your other octavia
 config as before.
 
 Development or Testing
-======================
+----------------------
 
 Kolla Ansible provides a simple way to setup Octavia networking for
 development or testing, when using the Neutron Open vSwitch ML2 mechanism
@@ -414,3 +422,17 @@ Add ``octavia_network_type`` to ``globals.yml`` and set the value to ``tenant``
    octavia_network_type: "tenant"
 
 Next，follow the deployment instructions as normal.
+
+OVN provider
+============
+
+This section covers configuration of Octavia for the OVN driver. See the
+:octavia-doc:`Octavia documentation <>` and :ovn-octavia-provider-doc:`OVN
+Octavia provider documentation <>` for full details.
+
+To enable the OVN provider, set the following options in ``globals.yml``:
+
+.. code-block:: yaml
+
+   octavia_provider_drivers: "ovn:OVN provider"
+   octavia_provider_agents: "ovn"
