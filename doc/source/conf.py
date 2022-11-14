@@ -110,6 +110,7 @@ openstack_projects = [
     'octavia',
     'oslo.messaging',
     'oslotest',
+    'ovn-octavia-provider',
     'swift',
     'watcher',
 ]
