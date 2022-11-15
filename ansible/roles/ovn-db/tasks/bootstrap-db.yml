@@ -1,0 +1,48 @@
+---
+- name: Get OVN_Northbound cluster leader
+  become: true
+  command: "docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound"
+  changed_when: False
+  register: ovn_nb_cluster_status
+
+- name: Configure OVN NB connection settings
+  vars:
+    search_string: "Role: leader"
+  become: true
+  command: "docker exec ovn_nb_db ovn-nbctl --inactivity-probe={{ ovn_nb_db_inactivity_probe }} set-connection ptcp:{{ ovn_nb_db_port }}:0.0.0.0"
+  when: ovn_nb_cluster_status is search(search_string)
+
+- name: Get OVN_Southbound cluster leader
+  become: true
+  command: "docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound"
+  changed_when: False
+  register: ovn_sb_cluster_status
+
+- name: Configure OVN SB connection settings
+  vars:
+    search_string: "Role: leader"
+  become: true
+  command: "docker exec ovn_sb_db ovn-sbctl --inactivity-probe={{ ovn_sb_db_inactivity_probe }} set-connection ptcp:{{ ovn_sb_db_port }}:0.0.0.0"
+  when: ovn_sb_cluster_status is search(search_string)
+
+- name: Wait for ovn-nb-db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_nb_db_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_ovn_nb_db_port
+  until: check_ovn_nb_db_port is success
+  retries: 10
+  delay: 6
+
+- name: Wait for ovn-sb-db
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_sb_db_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_ovn_sb_db_port
+  until: check_ovn_sb_db_port is success
+  retries: 10
+  delay: 6
