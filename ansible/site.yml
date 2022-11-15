@@ -51,7 +51,6 @@
         - enable_masakari_{{ enable_masakari | bool }}
         - enable_memcached_{{ enable_memcached | bool }}
         - enable_mistral_{{ enable_mistral | bool }}
-        - enable_monasca_{{ enable_monasca | bool }}
         - enable_multipathd_{{ enable_multipathd | bool }}
         - enable_murano_{{ enable_murano | bool }}
         - enable_neutron_{{ enable_neutron | bool }}
@@ -239,11 +238,6 @@
             tasks_from: loadbalancer
           tags: mistral
           when: enable_mistral | bool
-        - include_role:
-            name: monasca
-            tasks_from: loadbalancer
-          tags: monasca
-          when: enable_monasca | bool
         - include_role:
             name: murano
             tasks_from: loadbalancer
@@ -831,24 +825,6 @@
   roles:
     - { role: ceilometer,
         tags: ceilometer }
-
-- name: Apply role monasca
-  gather_facts: false
-  hosts:
-    - monasca-agent-collector
-    - monasca-agent-forwarder
-    - monasca-agent-statsd
-    - monasca-api
-    - monasca-log-persister
-    - monasca-log-metrics
-    - monasca-thresh
-    - monasca-notification
-    - monasca-persister
-    - '&enable_monasca_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: monasca,
-        tags: monasca }
 
 - name: Apply role aodh
   gather_facts: false

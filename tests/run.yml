@@ -10,7 +10,7 @@
     - name: set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
-        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'monasca', 'venus'] }}"
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'venus'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -22,7 +22,7 @@
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'swift', 'ovn'] }}"
-        dashboard_enabled: "{{ openstack_core_enabled or scenario in ['monasca'] }}"
+        dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
         kolla_ansible_venv_path: "{{ ansible_env.HOME }}/kolla-ansible-venv"
@@ -484,13 +484,6 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "octavia"
-
-        - name: Run test-monasca.sh script
-          script:
-            cmd: test-monasca.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "monasca"
 
         - name: Run test-masakari.sh script
           script:

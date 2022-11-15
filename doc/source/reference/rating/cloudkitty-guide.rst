@@ -33,8 +33,6 @@ By default Kolla Ansible uses the Gnocchi backend,
 however we also support using the following backend types:
 
 - ``prometheus`` - Use Prometheus metrics as dataset for cloudkitty to process.
-- ``monasca`` - Use Openstack Monasca metrics as dataset for cloudkitty to
-  process.
 
 The configuration parameter related to this option is
 ``cloudkitty_collector_backend``.
@@ -44,12 +42,6 @@ To use the Prometheus collector backend:
 .. code-block:: yaml
 
    cloudkitty_collector_backend: prometheus
-
-Alternatively, to use the Monasca collector backend:
-
-.. code-block:: yaml
-
-   cloudkitty_collector_backend: monasca
 
 CloudKitty Fetcher Backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

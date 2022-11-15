@@ -33,8 +33,7 @@
 
 # Rename internal Fluent message field to match other logs. This removes
 # all other fields by default, including the original message field. This is
-# intented to avoid duplication of the log message and to prevent passing
-# invalid dimensions to Monasca, if it is enabled. Note that if this step
+# intented to avoid duplication of the log message. Note that if this step
 # is moved to the format folder, then it will applied after the second step
 # below which will break the logic.
 <filter fluent.**>
@@ -51,25 +50,3 @@
         log_level ${tag_parts[1]}
     </record>
 </filter>
-
-{% if enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
-# Kolla configures Fluentd to extract timestamps from OpenStack service
-# logs, however these timestamps are not saved in the event and are not
-# forwarded to Monasca. Here we save the timestamp which has been
-# *parsed* by Fluentd to a field which is part of the event and *is*
-# therefore forwarded to Monasca. If no timestamp is parsed, then this
-# should stamp the event with the current time. Note that since Kolla
-# configures Fluentd to keep the time key, the original, *unparsed*
-# timestamp, if present, will also be forwarded to Monasca as part of the
-# event. However, because the logs which are collected by Fluentd use a
-# variety of time formats the format of this timestamp is irregular and
-# is therefore dropped in the Monasca log pipeline in favour of the
-# timestamp added here. In the future we could investigate getting the
-# Fluentd Monasca plugin to add this timestamp.
-<filter *.**>
-  @type record_transformer
-  <record>
-    timestamp ${time}
-  </record>
-</filter>
-{% endif %}

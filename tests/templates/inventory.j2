@@ -10,10 +10,6 @@
 {% for host in hostvars if host in ['primary'] %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
-{% elif scenario == 'monasca' %}
-{% for host in hostvars if host in ['primary', 'secondary1', 'secondary2'] %}
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
-{% endfor %}
 {% else %}
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
@@ -46,15 +42,9 @@ control
 {% endfor %}
 
 [monitoring]
-{% if scenario == 'monasca' %}
-{% for host in hostvars if host in ['secondary3', 'secondary4', 'secondary5'] %}
-{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
-{% endfor %}
-{% else %}
 {% for host in hostvars %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
-{% endif %}
 
 [deployment]
 {% for host in hostvars %}
@@ -157,16 +147,6 @@ control
 
 [outward-rabbitmq:children]
 control
-
-[monasca-agent:children]
-compute
-control
-monitoring
-network
-storage
-
-[monasca:children]
-monitoring
 
 [storm:children]
 monitoring
@@ -461,34 +441,6 @@ murano
 
 [murano-engine:children]
 murano
-
-# Monasca
-[monasca-agent-collector:children]
-monasca-agent
-
-[monasca-agent-forwarder:children]
-monasca-agent
-
-[monasca-agent-statsd:children]
-monasca-agent
-
-[monasca-api:children]
-monasca
-
-[monasca-log-persister:children]
-monasca
-
-[monasca-log-metrics:children]
-monasca
-
-[monasca-thresh:children]
-monasca
-
-[monasca-notification:children]
-monasca
-
-[monasca-persister:children]
-monasca
 
 # Storm
 [storm-worker:children]
