@@ -66,6 +66,19 @@ glance_services:
         tls_backend: "yes"
 
 ####################
+# Config Validate
+####################
+glance_config_validation:
+  - generator: "/glance/etc/oslo-config-generator/glance-api.conf"
+    config: "/etc/glance/glance-api.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-cache.conf"
+    config: "/etc/glance/glance-cache.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-manage.conf"
+    config: "/etc/glance/glance-manage.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-scrubber.conf"
+    config: "/etc/glance/glance-scrubber.conf"
+
+####################
 # HAProxy
 ####################
 haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5;{% endfor %}"

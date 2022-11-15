@@ -1,0 +1,49 @@
+---
+- name: "{{ project_name }} : {{ service.container_name }} | Get info on container"
+  become: True
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - "{{ service.container_name }}"
+  register: container_info
+
+- name: "{{ project_name }} : {{ service.container_name }} | Validate configurations"
+  become: True
+  command: >
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    bash -c "[[ -f {{ inner_item['config'] }} ]] && oslo-config-validator --config-file {{ inner_item['generator'] }} --input-file {{ inner_item['config'] }}"
+  when:
+    - container_info._containers | length > 0
+  register: result
+  failed_when: result.rc not in [0, 1]  # rc 1 is expected when errors are found in the config file, or when the config file doesn't exist
+  with_items: "{{ service_config_validation }}"
+  loop_control:
+    label: "{{ inner_item['config'] | basename }}"
+    loop_var: inner_item
+  changed_when: False
+
+- name: "{{ project_name }} : {{ service.container_name }} | Ensure log directory exists"
+  become: True
+  file:
+    path: "{{ output_dir }}"
+    state: directory
+  when:
+    - result.results | map(attribute='rc', default=0) | select('equalto', 1) | list | length > 0
+    - result.results | map(attribute='stderr', default="") | select('ne', "") | list | length > 0
+  delegate_to: localhost
+
+- name: "{{ project_name }} : {{ service.container_name }} | Log configuration errors"
+  become: True
+  copy:
+    content: "{{ inner_item.stderr }}"
+    dest: "{{ output_dir }}/{{ inner_item.inner_item.config | basename }}.err"
+  when:
+    - container_info._containers | length > 0
+    - inner_item.rc is defined
+    - inner_item.rc == 1
+    - inner_item.stderr != ""
+  loop: "{{ result.results }}"
+  loop_control:
+    label: "{{ inner_item.inner_item.config | basename }}"
+    loop_var: inner_item
+  delegate_to: localhost
