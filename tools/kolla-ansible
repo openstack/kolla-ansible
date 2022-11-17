@@ -2,8 +2,13 @@
 #
 # This script can be used to interact with kolla via ansible.
 
+set -o errexit
+
 # do not use _PYTHON_BIN directly, use $(get_python_bin) instead
 _PYTHON_BIN=""
+
+ANSIBLE_VERSION_MIN=2.12
+ANSIBLE_VERSION_MAX=2.13
 
 function get_python_bin {
     if [ -n "$_PYTHON_BIN" ]; then
@@ -16,6 +21,7 @@ function get_python_bin {
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: Ansible is not installed in the current (virtual) environment." >&2
+        echo "Ansible version should be between $ANSIBLE_VERSION_MIN and $ANSIBLE_VERSION_MAX." >&2
         exit 1
     fi
 
@@ -68,8 +74,6 @@ function check_environment_coherence {
         exit 1
     fi
 
-    local ANSIBLE_VERSION_MIN=2.12
-    local ANSIBLE_VERSION_MAX=2.13
 
     if [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | head -n1) != "$ANSIBLE_VERSION_MIN" ]] ||
        [[ $(printf "%s\n" "$ANSIBLE_VERSION_MIN" "$ANSIBLE_VERSION_MAX" "$ansible_version" | sort -V | tail -n1) != "$ANSIBLE_VERSION_MAX" ]]; then
@@ -557,7 +561,7 @@ EOF
 esac
 
 GLOBALS_DIR="${CONFIG_DIR}/globals.d"
-EXTRA_GLOBALS=$(find ${GLOBALS_DIR} -maxdepth 1 -type f -name '*.yml' -printf ' -e @%p' 2>/dev/null)
+EXTRA_GLOBALS=$(find ${GLOBALS_DIR} -maxdepth 1 -type f -name '*.yml' -printf ' -e @%p' || true 2>/dev/null)
 PASSWORDS_FILE="${PASSWORDS_FILE:-${CONFIG_DIR}/passwords.yml}"
 CONFIG_OPTS="-e @${CONFIG_DIR}/globals.yml ${EXTRA_GLOBALS} -e @${PASSWORDS_FILE} -e CONFIG_DIR=${CONFIG_DIR}"
 CMD="ansible-playbook $CONFIG_OPTS $EXTRA_OPTS $PLAYBOOK $VERBOSITY"
