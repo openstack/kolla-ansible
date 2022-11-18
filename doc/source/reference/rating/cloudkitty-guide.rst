@@ -29,10 +29,8 @@ CloudKitty Collector backend
 
 CloudKitty natively supports multiple collector backends.
 
-By default Kolla Ansible uses the Gnocchi backend,
-however we also support using the following backend types:
-
-- ``prometheus`` - Use Prometheus metrics as dataset for cloudkitty to process.
+By default Kolla Ansible uses the Gnocchi backend. Using data
+collected by Prometheus is also supported.
 
 The configuration parameter related to this option is
 ``cloudkitty_collector_backend``.
