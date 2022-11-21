@@ -5,12 +5,25 @@ set +o errexit
 copy_logs() {
     LOG_DIR=${LOG_DIR:-/tmp/logs}
 
-    cp -rnL /var/lib/docker/volumes/kolla_logs/_data/* ${LOG_DIR}/kolla/
+    if [ "$CONTAINER_ENGINE" = "docker" ]; then
+        VOLUMES_DIR="/var/lib/docker/volumes"
+    elif [ "$CONTAINER_ENGINE" = "podman" ]; then
+        VOLUMES_DIR="/var/lib/containers/storage/volumes"
+    else
+        echo "Invalid container engine: ${CONTAINER_ENGINE}"
+        exit 1
+    fi
+
+    cp -rnL ${VOLUMES_DIR}/kolla_logs/_data/* ${LOG_DIR}/kolla/
     cp -rnL /etc/kolla/* ${LOG_DIR}/kolla_configs/
     # Don't save the IPA images.
     rm ${LOG_DIR}/kolla_configs/config/ironic/ironic-agent.{kernel,initramfs}
     mkdir ${LOG_DIR}/system_configs/
-    cp -rL /etc/{hostname,hosts,host.conf,resolv.conf,nsswitch.conf,docker,systemd} ${LOG_DIR}/system_configs/
+    cp -rL /etc/{hostname,hosts,host.conf,resolv.conf,nsswitch.conf,systemd} ${LOG_DIR}/system_configs/
+    # copy docker configs if used
+    if [ "$CONTAINER_ENGINE" = "docker" ]; then
+        cp -rL /etc/docker/ ${LOG_DIR}/system_configs/
+    fi
     # Remove /var/log/kolla link to not double the data uploaded
     unlink /var/log/kolla
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
@@ -18,10 +31,14 @@ copy_logs() {
 
     if [[ -x "$(command -v journalctl)" ]]; then
         journalctl --no-pager > ${LOG_DIR}/system_logs/syslog.txt
-        journalctl --no-pager -u docker.service > ${LOG_DIR}/system_logs/docker.log
-        journalctl --no-pager -u containerd.service > ${LOG_DIR}/system_logs/containerd.log
+        journalctl --no-pager -u ${CONTAINER_ENGINE}.service > ${LOG_DIR}/system_logs/${CONTAINER_ENGINE}.log
+        if [ "$CONTAINER_ENGINE" = "docker" ]; then
+            journalctl --no-pager -u containerd.service > ${LOG_DIR}/system_logs/containerd.log
+        fi
     else
-        cp /var/log/upstart/docker.log ${LOG_DIR}/system_logs/docker.log
+        if [ "$CONTAINER_ENGINE" = "docker" ]; then
+            cp /var/log/upstart/docker.log ${LOG_DIR}/system_logs/docker.log
+        fi
     fi
 
     cp -r /etc/sudoers.d ${LOG_DIR}/system_logs/
@@ -81,8 +98,12 @@ copy_logs() {
     # final memory usage and process list
     ps -eo user,pid,ppid,lwp,%cpu,%mem,size,rss,cmd > ${LOG_DIR}/system_logs/ps.txt
 
-    # docker related information
-    (docker info && docker images && docker ps -a && docker network ls && docker inspect $(docker ps -aq)) > ${LOG_DIR}/system_logs/docker-info.txt
+    # container engine related information
+    (${CONTAINER_ENGINE} info &&
+    ${CONTAINER_ENGINE} images &&
+    ${CONTAINER_ENGINE} ps -a &&
+    ${CONTAINER_ENGINE} network ls &&
+    ${CONTAINER_ENGINE} inspect $(${CONTAINER_ENGINE} ps -aq)) > ${LOG_DIR}/system_logs/${CONTAINER_ENGINE}-info.txt
 
     # save dbus services
     dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames > ${LOG_DIR}/system_logs/dbus-services.txt
@@ -98,28 +119,28 @@ copy_logs() {
     fi
 
     # bifrost related logs
-    if [[ $(docker ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
+    if [[ $(${CONTAINER_ENGINE} ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
         for service in dnsmasq ironic ironic-api ironic-conductor ironic-inspector mariadb nginx; do
             mkdir -p ${LOG_DIR}/kolla/$service
-            docker exec bifrost_deploy systemctl status $service > ${LOG_DIR}/kolla/$service/systemd-status-$service.txt
+            ${CONTAINER_ENGINE} exec bifrost_deploy systemctl status $service > ${LOG_DIR}/kolla/$service/systemd-status-$service.txt
         done
-        docker exec bifrost_deploy journalctl -u mariadb > ${LOG_DIR}/kolla/mariadb/mariadb.txt
+        ${CONTAINER_ENGINE} exec bifrost_deploy journalctl -u mariadb > ${LOG_DIR}/kolla/mariadb/mariadb.txt
     fi
 
     # haproxy related logs
-    if [[ $(docker ps --filter name=haproxy --format "{{.Names}}") ]]; then
+    if [[ $(${CONTAINER_ENGINE} ps --filter name=haproxy --format "{{.Names}}") ]]; then
         mkdir -p ${LOG_DIR}/kolla/haproxy
-        docker exec haproxy bash -c 'echo show stat | socat stdio /var/lib/kolla/haproxy/haproxy.sock' > ${LOG_DIR}/kolla/haproxy/stats.txt
+        ${CONTAINER_ENGINE} exec haproxy bash -c 'echo show stat | socat stdio /var/lib/kolla/haproxy/haproxy.sock' > ${LOG_DIR}/kolla/haproxy/stats.txt
     fi
 
     # FIXME: remove
-    if [[ $(docker ps -a --filter name=ironic_inspector --format "{{.Names}}") ]]; then
+    if [[ $(${CONTAINER_ENGINE} ps -a --filter name=ironic_inspector --format "{{.Names}}") ]]; then
         mkdir -p ${LOG_DIR}/kolla/ironic-inspector
-        ls -lR /var/lib/docker/volumes/ironic_inspector_dhcp_hosts > ${LOG_DIR}/kolla/ironic-inspector/var-lib-ls.txt
+        ls -lR ${VOLUMES_DIR}/ironic_inspector_dhcp_hosts > ${LOG_DIR}/kolla/ironic-inspector/var-lib-ls.txt
     fi
 
-    for container in $(docker ps -a --format "{{.Names}}"); do
-        docker logs --timestamps --tail all ${container} &> ${LOG_DIR}/docker_logs/${container}.txt
+    for container in $(${CONTAINER_ENGINE} ps -a --format "{{.Names}}"); do
+        ${CONTAINER_ENGINE} logs --timestamps --tail all ${container} &> ${LOG_DIR}/container_logs/${container}.txt
     done
 
     # Rename files to .txt; this is so that when displayed via
@@ -128,7 +149,7 @@ copy_logs() {
     # download it, etc.
 
     # Rename all .log files to .txt files
-    for f in $(find ${LOG_DIR}/{system_logs,kolla,docker_logs} -name "*.log"); do
+    for f in $(find ${LOG_DIR}/{system_logs,kolla,${CONTAINER_ENGINE}_logs} -name "*.log"); do
         mv $f ${f/.log/.txt}
     done
 

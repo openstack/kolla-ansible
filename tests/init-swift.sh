@@ -10,7 +10,7 @@ function init_swift_logged {
     # the order is important due to port incrementation
     for ring in object account container; do
         # create the *.builder files
-        sudo docker run \
+        sudo ${CONTAINER_ENGINE} run \
             --rm \
             -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
             $KOLLA_SWIFT_BASE_IMAGE \
@@ -19,7 +19,7 @@ function init_swift_logged {
 
         # add nodes to them
         for node in ${STORAGE_NODES[@]}; do
-            sudo docker run \
+            sudo ${CONTAINER_ENGINE} run \
                 --rm \
                 -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
                 $KOLLA_SWIFT_BASE_IMAGE \
@@ -28,7 +28,7 @@ function init_swift_logged {
         done
 
         # create the *.ring.gz files
-        sudo docker run \
+        sudo ${CONTAINER_ENGINE} run \
             --rm \
             -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
             $KOLLA_SWIFT_BASE_IMAGE \
@@ -36,7 +36,7 @@ function init_swift_logged {
             /etc/kolla/config/swift/$ring.builder rebalance
 
         # display contents for debugging
-        sudo docker run \
+        sudo ${CONTAINER_ENGINE} run \
             --rm \
             -v /etc/kolla/config/swift/:/etc/kolla/config/swift/ \
             $KOLLA_SWIFT_BASE_IMAGE \
