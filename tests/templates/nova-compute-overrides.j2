@@ -3,4 +3,13 @@
 cpu_mode=custom
 # cpu_model=max fails to boot multiple images with QEMU 7.0 and -M virt (works with "-M virt-6.2")
 cpu_model=cortex-a72
+{% elif ansible_architecture == 'x86_64' %}
+# RHEL 9 are being compiled for the x86_64-v2 architecture which is
+# newer than the qemu default of qemu64. Nehalem is apparently the
+# oldest model that works for x86_64-v2 and is expected to work on
+# Intel and AMD cpus with kvm or qemu.
+{% if virt_type == 'kvm' %}
+cpu_mode=custom
+cpu_model=Nehalem
+{% endif %}
 {% endif %}
