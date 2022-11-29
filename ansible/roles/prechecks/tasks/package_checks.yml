@@ -3,7 +3,9 @@
   command: "{{ ansible_facts.python.executable }} -c \"import docker; print(docker.__version__)\""
   register: result
   changed_when: false
-  when: inventory_hostname in groups['baremetal']
+  when:
+    - inventory_hostname in groups['baremetal']
+    - kolla_container_engine == 'docker'
   failed_when: result is failed or result.stdout is version(docker_py_version_min, '<')
 
 # NOTE(osmanlicilegi): ansible_version.full includes patch number that's useless
