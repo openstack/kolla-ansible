@@ -198,11 +198,13 @@ keepalived_virtual_router_id: "51"
 
 
 #######################
-# Elasticsearch Options
-#######################
-elasticsearch_datadir_volume: "elasticsearch"
+## Opensearch Options
+########################
+opensearch_datadir_volume: "opensearch"
 
-elasticsearch_internal_endpoint: "{{ internal_protocol }}://{{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
+opensearch_internal_endpoint: "{{ internal_protocol }}://{{ opensearch_address | put_address_in_context('url') }}:{{ opensearch_port }}"
+opensearch_dashboards_user: "opensearch"
+opensearch_log_index_prefix: "{{ kibana_log_prefix if kibana_log_prefix is defined else 'flog' }}"
 
 ###################
 # Messaging options
@@ -315,8 +317,6 @@ designate_bind_port: "53"
 designate_mdns_port: "{{ '53' if designate_backend == 'infoblox' else '5354' }}"
 designate_rndc_port: "953"
 
-elasticsearch_port: "9200"
-
 etcd_client_port: "2379"
 etcd_peer_port: "2380"
 etcd_enable_tls: "{{ kolla_enable_tls_backend }}"
@@ -378,8 +378,6 @@ keystone_public_listen_port: "{{ keystone_public_port }}"
 keystone_admin_port: "35357"
 keystone_admin_listen_port: "{{ keystone_admin_port }}"
 keystone_ssh_port: "8023"
-
-kibana_server_port: "5601"
 
 kuryr_port: "23750"
 
@@ -446,6 +444,13 @@ octavia_external_fqdn: "{{ kolla_external_fqdn }}"
 octavia_api_port: "9876"
 octavia_api_listen_port: "{{ octavia_api_port }}"
 octavia_health_manager_port: "5555"
+
+# NOTE: If an external ElasticSearch cluster port is specified,
+# we default to using that port in services with ElasticSearch
+# endpoints. This is for backwards compatibility.
+opensearch_port: "{{ elasticsearch_port | default('9200') }}"
+opensearch_dashboards_port: "5601"
+opensearch_dashboards_port_external: "{{ opensearch_dashboards_port }}"
 
 ovn_nb_db_port: "6641"
 ovn_sb_db_port: "6642"
@@ -784,15 +789,13 @@ skip_stop_containers: []
 # Logging options
 ####################
 
-elasticsearch_address: "{{ kolla_internal_fqdn }}"
-enable_elasticsearch: "{{ 'yes' if enable_central_logging | bool or enable_osprofiler | bool or enable_skydive | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'elasticsearch') else 'no' }}"
-
-# If using Curator an actions file will need to be defined. Please see
-# the documentation.
-enable_elasticsearch_curator: "no"
-
-enable_kibana: "{{ enable_central_logging | bool }}"
-enable_kibana_external: "{{ enable_kibana | bool }}"
+# NOTE: If an external ElasticSearch cluster address is configured, all
+# services with ElasticSearch endpoints should be configured to log
+# to the external cluster by default. This is for backwards compatibility.
+opensearch_address: "{{ elasticsearch_address if elasticsearch_address is defined else kolla_internal_fqdn }}"
+enable_opensearch: "{{ enable_central_logging | bool or enable_osprofiler | bool or enable_skydive | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'elasticsearch') }}"
+enable_opensearch_dashboards: "{{ enable_opensearch | bool }}"
+enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }}"
 
 ####################
 # Redis options
@@ -805,8 +808,8 @@ redis_connection_string_extras: "&db=0&socket_timeout=60&retry_on_timeout=yes"
 ####################
 # valid values: ["elasticsearch", "redis"]
 osprofiler_backend: "elasticsearch"
-elasticsearch_connection_string: "elasticsearch://{{ elasticsearch_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"
-osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else elasticsearch_connection_string }}"
+opensearch_connection_string: "elasticsearch://{{ opensearch_address | put_address_in_context('url') }}:{{ opensearch_port }}"
+osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else opensearch_connection_string }}"
 
 ####################
 # RabbitMQ options
@@ -852,12 +855,6 @@ kolla_tls_backend_key: "{{ kolla_certificates_dir }}/backend-key.pem"
 # ACME client options
 #####################
 acme_client_servers: []
-
-####################
-# Kibana options
-####################
-kibana_user: "kibana"
-kibana_log_prefix: "flog"
 
 ####################
 # Keystone options
@@ -1126,7 +1123,7 @@ enable_prometheus_alertmanager_external: "{{ enable_prometheus_alertmanager | bo
 enable_prometheus_ceph_mgr_exporter: "no"
 enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
 enable_prometheus_openstack_exporter_external: "no"
-enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
+enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_opensearch | bool }}"
 enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
 enable_prometheus_rabbitmq_exporter: "{{ enable_prometheus | bool and enable_rabbitmq | bool }}"
 enable_prometheus_libvirt_exporter: "{{ enable_prometheus | bool and enable_nova | bool and nova_compute_virt_type in ['kvm', 'qemu'] }}"

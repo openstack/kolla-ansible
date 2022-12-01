@@ -1,0 +1,17 @@
+---
+- name: Setting sysctl values
+  become: true
+  vars:
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
+  sysctl:
+    name: "{{ item.name }}"
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  with_items:
+    - { name: "vm.max_map_count", value: 262144}
+  when:
+    - set_sysctl | bool
+    - item.value != 'KOLLA_SKIP'
+    - inventory_hostname in groups['opensearch']

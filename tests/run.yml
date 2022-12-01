@@ -10,7 +10,7 @@
     - name: set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
-        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-efk', 'venus'] }}"
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-opensearch', 'venus'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -515,7 +515,20 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             TLS_ENABLED: "{{ tls_enabled }}"
-          when: scenario == "prometheus-efk"
+          when:
+            - is_upgrade
+            - scenario == "prometheus-opensearch"
+
+        - name: Run test-prometheus-opensearch.sh script
+          script:
+            cmd: test-prometheus-opensearch.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            TLS_ENABLED: "{{ tls_enabled }}"
+          when:
+            - not is_upgrade
+            - scenario == "prometheus-opensearch"
 
         - name: Run test-venus.sh script
           script:
@@ -700,6 +713,15 @@
             cmd: tests/test-swift.sh
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == 'swift'
+
+        - name: Run test-prometheus-opensearch.sh script
+          script:
+            cmd: test-prometheus-opensearch.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            TLS_ENABLED: "{{ tls_enabled }}"
+          when: scenario == "prometheus-opensearch"
       when: is_upgrade
 
     # Bifrost testing.

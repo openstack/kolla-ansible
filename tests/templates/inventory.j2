@@ -107,8 +107,10 @@ monitoring
 [kafka:children]
 control
 
+{% if is_upgrade %}
 [kibana:children]
 control
+{% endif %}
 
 [telegraf:children]
 compute
@@ -117,8 +119,10 @@ monitoring
 network
 storage
 
+{% if is_upgrade %}
 [elasticsearch:children]
 control
+{% endif %}
 
 # NOTE(yoctozepto): Until we are able to isolate network namespaces in k-a,
 # we are forced to separate Pacemaker remotes from full members.
@@ -291,9 +295,17 @@ common
 [kolla-toolbox:children]
 common
 
-# Elasticsearch Curator
+{% if is_upgrade %}
 [elasticsearch-curator:children]
 elasticsearch
+{% endif %}
+
+[opensearch:children]
+control
+
+# Opensearch Dashboards
+[opensearch-dashboards:children]
+opensearch
 
 # Glance
 [glance-api:children]
@@ -716,7 +728,11 @@ monitoring
 monitoring
 
 [prometheus-elasticsearch-exporter:children]
+{% if is_upgrade %}
 elasticsearch
+{% else %}
+opensearch
+{% endif %}
 
 [prometheus-blackbox-exporter:children]
 monitoring
