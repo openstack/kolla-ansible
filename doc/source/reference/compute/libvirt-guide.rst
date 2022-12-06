@@ -29,7 +29,7 @@ authenticated with SASL. This should not be considered as providing a secure,
 encrypted channel, since the username/password SASL mechanisms available for
 TCP are no longer considered cryptographically secure. However, it does at
 least provide some authentication for the libvirt API. For a more secure
-encrypted channel, use :ref`libvirt TLS <libvirt-tls>`.
+encrypted channel, use :ref:`libvirt TLS <libvirt-tls>`.
 
 SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
 to ``true``.
@@ -76,7 +76,7 @@ to ``true`` will cause the Docker volumes to be removed.
 A future extension could support migration of existing VMs, but this is
 currently out of scope.
 
-.. libvirt-tls:
+.. _libvirt-tls:
 
 Libvirt TLS
 ===========
