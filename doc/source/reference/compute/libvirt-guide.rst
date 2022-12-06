@@ -29,7 +29,7 @@ authenticated with SASL. This should not be considered as providing a secure,
 encrypted channel, since the username/password SASL mechanisms available for
 TCP are no longer considered cryptographically secure. However, it does at
 least provide some authentication for the libvirt API. For a more secure
-encrypted channel, use :ref`libvirt TLS <libvirt-tls>`.
+encrypted channel, use :ref:`libvirt TLS <libvirt-tls>`.
 
 SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
 to ``true``.
@@ -42,7 +42,7 @@ The list of enabled authentication mechanisms is configured via
 ``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
 TLS is enabled, or ``["DIGEST-MD5"]`` otherwise.
 
-.. libvirt-tls:
+.. _libvirt-tls:
 
 Libvirt TLS
 ===========
