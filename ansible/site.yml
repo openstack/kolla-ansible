@@ -39,7 +39,6 @@
         - enable_influxdb_{{ enable_influxdb | bool }}
         - enable_ironic_{{ enable_ironic | bool }}
         - enable_iscsid_{{ enable_iscsid | bool }}
-        - enable_kafka_{{ enable_kafka | bool }}
         - enable_keystone_{{ enable_keystone | bool }}
         - enable_kuryr_{{ enable_kuryr | bool }}
         - enable_loadbalancer_{{ enable_loadbalancer | bool }}
@@ -67,7 +66,6 @@
         - enable_senlin_{{ enable_senlin | bool }}
         - enable_skydive_{{ enable_skydive | bool }}
         - enable_solum_{{ enable_solum | bool }}
-        - enable_storm_{{ enable_storm | bool }}
         - enable_swift_{{ enable_swift | bool }}
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
@@ -75,7 +73,6 @@
         - enable_venus_{{ enable_venus | bool }}
         - enable_vitrage_{{ enable_vitrage | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
-        - enable_zookeeper_{{ enable_zookeeper | bool }}
         - enable_zun_{{ enable_zun | bool }}
   tags: always
 
@@ -348,16 +345,6 @@
     - { role: collectd,
         tags: collectd }
 
-- name: Apply role zookeeper
-  gather_facts: false
-  hosts:
-    - zookeeper
-    - '&enable_zookeeper_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: zookeeper,
-        tags: zookeeper }
-
 - name: Apply role influxdb
   gather_facts: false
   hosts:
@@ -516,27 +503,6 @@
   roles:
     - { role: opensearch,
         tags: opensearch }
-
-- name: Apply role kafka
-  gather_facts: false
-  hosts:
-    - kafka
-    - '&enable_kafka_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: kafka,
-        tags: kafka }
-
-- name: Apply role storm
-  gather_facts: false
-  hosts:
-    - storm-worker
-    - storm-nimbus
-    - '&enable_storm_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  roles:
-    - { role: storm,
-        tags: storm }
 
 - name: Apply role swift
   gather_facts: false

@@ -369,8 +369,6 @@ ironic_http_port: "8089"
 
 iscsi_port: "3260"
 
-kafka_port: "9092"
-
 keystone_public_port: "5000"
 keystone_public_listen_port: "{{ keystone_public_port }}"
 # NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
@@ -549,10 +547,6 @@ venus_api_port: "10010"
 
 watcher_api_port: "9322"
 
-zookeeper_client_port: "2181"
-zookeeper_peer_port: "2888"
-zookeeper_quorum_port: "3888"
-
 zun_api_port: "9517"
 zun_wsproxy_port: "6784"
 zun_wsproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'ws' }}"
@@ -697,7 +691,6 @@ enable_ironic_neutron_agent: "{{ enable_neutron | bool and enable_ironic | bool 
 # TODO(yoctozepto): Remove the deprecated enable_ironic_pxe_uefi in Zed.
 enable_ironic_pxe_uefi: "no"
 enable_iscsid: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
-enable_kafka: "no"
 enable_kuryr: "no"
 enable_magnum: "no"
 enable_manila: "no"
@@ -745,7 +738,6 @@ enable_sahara: "no"
 enable_senlin: "no"
 enable_skydive: "no"
 enable_solum: "no"
-enable_storm: "no"
 enable_swift: "no"
 enable_swift_s3api: "no"
 enable_swift_recon: "no"
@@ -756,7 +748,6 @@ enable_trove_singletenant: "no"
 enable_venus: "no"
 enable_vitrage: "no"
 enable_watcher: "no"
-enable_zookeeper: "{{ enable_kafka | bool or enable_storm | bool }}"
 enable_zun: "no"
 
 ovs_datapath: "{{ 'netdev' if enable_ovs_dpdk | bool else 'system' }}"
@@ -1155,16 +1146,6 @@ influxdb_address: "{{ kolla_internal_fqdn }}"
 influxdb_datadir_volume: "influxdb"
 
 influxdb_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ influxdb_http_port }}"
-
-#################
-# Kafka options
-#################
-kafka_datadir_volume: "kafka"
-
-# The number of brokers in a Kafka cluster. This is used for automatically
-# setting quantities such as topic replicas and it is not recommended to
-# change it unless you know what you are doing.
-kafka_broker_count: "{{ groups['kafka'] | length }}"
 
 #########################
 # Internal Image options

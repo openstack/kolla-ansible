@@ -1,5 +1,5 @@
 ---
-- name: Stop and remove containers for disabled storm services
+- name: Stop and remove containers for disabled kafka services
   become: true
   kolla_docker:
     action: "stop_and_remove_container"
@@ -7,7 +7,7 @@
   when:
     - inventory_hostname in groups[item.value.group]
     - not item.value.enabled | bool
-  with_dict: "{{ storm_services }}"
+  with_dict: "{{ kafka_services }}"
 
 - name: Removing config for any disabled services
   file:
@@ -17,6 +17,6 @@
   when:
     - inventory_hostname in groups[item.value.group]
     - not item.value.enabled | bool
-  with_dict: "{{ storm_services }}"
+  with_dict: "{{ kafka_services }}"
 
 # NOTE(dszumski): Docker volume removal is currently a manual procedure

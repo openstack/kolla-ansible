@@ -100,8 +100,6 @@ Kolla Ansible deploys containers for the following infrastructure components:
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
 - `Redis <https://redis.io/>`__ an in-memory data structure store.
-- `Zookeeper <https://zookeeper.apache.org/>`__ an open-source server which enables
-  highly reliable distributed coordination.
 
 Directories
 ===========

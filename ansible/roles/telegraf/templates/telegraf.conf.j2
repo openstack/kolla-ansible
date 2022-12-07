@@ -77,14 +77,6 @@
 [[inputs.redis]]
   servers = ["tcp://:{{ redis_master_password }}@{{ api_interface_address | put_address_in_context('url') }}:{{ redis_port }}"]
 {% endif %}
-{% if inventory_hostname in groups['zookeeper'] and enable_zookeeper | bool %}
-[[inputs.zookeeper]]
-  servers = ["{{ api_interface_address | put_address_in_context('url') }}:{{ zookeeper_client_port }}"]
-{% endif %}
-{% if inventory_hostname in groups['kafka'] and enable_kafka | bool %}
-[[inputs.kafka_consumer]]
-  brokers = ["{{ api_interface_address | put_address_in_context('url') }}:{{ kafka_port }}"]
-{% endif %}
 {% if inventory_hostname in groups['mariadb'] and (enable_mariadb or enable_external_mariadb_load_balancer) | bool %}
 [[inputs.mysql]]
   servers = ["{{ database_user }}:{{ database_password }}@{{ mariadb_proto }}({{ api_interface_address | put_address_in_context('url') }}:{{ database_port }})/"]

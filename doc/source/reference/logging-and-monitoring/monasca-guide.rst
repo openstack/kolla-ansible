@@ -20,7 +20,8 @@ The cleanup command can be invoked from the Kolla Ansible CLI, for example:
 
    kolla-ansible monasca_cleanup
 
-This will remove Monasca service containers, and service configuration.
+This will remove Monasca service containers (including Kafka, Storm and
+ZooKeeper), and service configuration.
 
 Following cleanup, you may also choose to remove unused container volumes.
 It is recommended to run this manually on each Monasca service host. Note

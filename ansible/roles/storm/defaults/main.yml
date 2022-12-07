@@ -3,7 +3,7 @@ storm_services:
   storm-worker:
     container_name: storm_worker
     group: storm-worker
-    enabled: "{{ enable_storm | bool }}"
+    enabled: false
     image: "{{ storm_image_full }}"
     environment:
       STORM_LOG_DIR: /var/log/kolla/storm
@@ -14,7 +14,7 @@ storm_services:
   storm-nimbus:
     container_name: storm_nimbus
     group: storm-nimbus
-    enabled: "{{ enable_storm | bool }}"
+    enabled: false
     image: "{{ storm_image_full }}"
     environment:
       STORM_LOG_DIR: /var/log/kolla/storm
@@ -23,12 +23,6 @@ storm_services:
     dimensions: "{{ storm_nimbus_dimensions }}"
     healthcheck: "{{ storm_nimbus_healthcheck }}"
 
-
-####################
-# Storm
-####################
-storm_log_settings: 'INFO,ROLLINGFILE'
-storm_nimbus_servers: "{% for host in groups['storm-nimbus'] %}'{{ 'api' | kolla_address(host) }}'{% if not loop.last %},{% endif %}{% endfor %}"
 
 ####################
 # Docker
