@@ -1,0 +1,65 @@
+---
+- name: Wait for OpenSearch to become ready
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_cluster/stats"
+      status_code: 200
+  register: result
+  until: result.get('status') == 200
+  retries: 30
+  delay: 2
+  run_once: true
+
+- name: Check if a log retention policy exists
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_plugins/_ism/policies/retention"
+      method: GET
+      status_code: 200, 404
+      return_content: yes
+  register: opensearch_retention_policy_check
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+
+- name: Create new log retention policy
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_plugins/_ism/policies/retention"
+      method: PUT
+      status_code: 201
+      return_content: yes
+      body: "{{ opensearch_retention_policy | from_yaml | to_json }}"
+      body_format: json
+  register: opensearch_retention_policy_create
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  changed_when: opensearch_retention_policy_create.status == 201
+  when: opensearch_retention_policy_check.status == 404
+
+- name: Apply retention policy to existing indicies
+  become: true
+  vars:
+    opensearch_set_policy_body: {"policy_id": "retention"}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_plugins/_ism/add/{{ opensearch_log_index_prefix }}-*"
+      method: POST
+      status_code: 200
+      return_content: yes
+      body: "{{ opensearch_set_policy_body | to_json }}"
+      body_format: json
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  changed_when: opensearch_retention_policy_create.status == 201
+  when: opensearch_retention_policy_check.status == 404
