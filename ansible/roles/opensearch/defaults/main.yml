@@ -56,6 +56,54 @@ opensearch_cluster_name: "kolla_logging"
 opensearch_heap_size: "1g"
 opensearch_java_opts: "{% if opensearch_heap_size %}-Xms{{ opensearch_heap_size }} -Xmx{{ opensearch_heap_size }}{% endif %} -Dlog4j2.formatMsgNoLookups=true"
 
+opensearch_apply_log_retention_policy: true
+
+# Duration after which an index is staged for deletion. This is implemented
+# by closing the index. Whilst in this state the index contributes negligible
+# load on the cluster and may be manually re-opened if required.
+# NOTE: We carry over legacy settings from ElasticSearch Curator if they
+# are set. This may be removed in a later release.
+opensearch_soft_retention_period_days: "{{ elasticsearch_curator_soft_retention_period_days | default(30) }}"
+
+# Duration after which an index is permanently erased from the cluster.
+opensearch_hard_retention_period_days: "{{ elasticsearch_curator_hard_retention_period_days | default(60) }}"
+
+opensearch_retention_policy: |
+  policy:
+    description: Retention policy for OpenStack logs
+    error_notification:
+    default_state: open
+    states:
+    - name: open
+      actions: []
+      transitions:
+      - state_name: close
+        conditions:
+          min_index_age: "{{ opensearch_soft_retention_period_days }}d"
+    - name: close
+      actions:
+      - retry:
+          count: 3
+          backoff: exponential
+          delay: 1m
+        close: {}
+      transitions:
+      - state_name: delete
+        conditions:
+          min_index_age: "{{ opensearch_hard_retention_period_days }}d"
+    - name: delete
+      actions:
+      - retry:
+          count: 3
+          backoff: exponential
+          delay: 1m
+        delete: {}
+      transitions: []
+    ism_template:
+    - index_patterns:
+      - "{{ opensearch_log_index_prefix }}-*"
+      priority: 1
+
 ####################
 # Keystone
 ####################
