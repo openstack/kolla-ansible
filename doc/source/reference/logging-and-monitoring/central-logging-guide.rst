@@ -34,6 +34,50 @@ By default OpenSearch is deployed on port ``9200``.
    ``opensearch`` to store the data of OpenSearch. The path can be set via
    the variable ``opensearch_datadir_volume``.
 
+Applying log retention policies
+-------------------------------
+
+To stop your disks filling up, the Index State Management plugin for
+OpenSearch can be used to define log retention policies. A default
+retention policy is applied to all indicies which match the
+``opensearch_log_index_prefix``. This policy first closes old indicies,
+and then eventually deletes them. It can be customised via the following
+variables:
+
+- ``opensearch_apply_log_retention_policy``
+- ``opensearch_soft_retention_period_days``
+- ``opensearch_hard_retention_period_days``
+
+By default the soft and hard retention periods are 30 and 60 days
+respectively. If you are upgrading from ElasticSearch, and have previously
+configured ``elasticsearch_curator_soft_retention_period_days`` or
+``elasticsearch_curator_hard_retention_period_days``, those variables will
+be used instead of the defaults. You should migrate your configuration to
+use the new variable names before the Caracal release.
+
+Advanced users may wish to customise the retention policy, which
+is possible by overriding ``opensearch_retention_policy`` with
+a valid policy. See the `Index Management plugin documentation <https://opensearch.org/docs/latest/im-plugin/index/>`__
+for further details.
+
+Updating log retention policies
+-------------------------------
+
+By design, Kolla Ansible will NOT update an existing retention
+policy in OpenSearch. This is to prevent policy changes that may have
+been made via the OpenSearch Dashboards UI, or external tooling,
+from being wiped out.
+
+There are three options for modifying an existing policy:
+
+1. Via the OpenSearch Dashboards UI. See the `Index Management plugin documentation <https://opensearch.org/docs/latest/im-plugin/index/>`__
+for further details.
+
+2. Via the OpenSearch API using external tooling.
+
+3. By manually removing the existing policy via the OpenSearch Dashboards
+   UI (or API), before re-applying the updated policy with Kolla Ansible.
+
 OpenSearch Dashboards
 ~~~~~~~~~~~~~~~~~~~~~
 
