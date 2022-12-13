@@ -29,22 +29,21 @@
   notify:
     - Restart {{ item.key }} container
 
-- name: Copying over opensearch service config files
+- name: Copying over opensearch service config file
   merge_yaml:
     sources:
-      - "{{ role_path }}/templates/{{ item.key }}.yml.j2"
+      - "{{ role_path }}/templates/opensearch.yml.j2"
       - "{{ node_custom_config }}/opensearch.yml"
-      - "{{ node_custom_config }}/opensearch/{{ item.key }}.yml"
-      - "{{ node_custom_config }}/opensearch/{{ inventory_hostname }}/{{ item.key }}.yml"
-    dest: "{{ node_config_directory }}/{{ item.key }}/{{ item.key }}.yml"
+      - "{{ node_custom_config }}/opensearch/opensearch.yml"
+      - "{{ node_custom_config }}/opensearch/{{ inventory_hostname }}/opensearch.yml"
+    dest: "{{ node_config_directory }}/opensearch/opensearch.yml"
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ opensearch_services }}"
+    - inventory_hostname in groups['opensearch']
+    - opensearch_services['opensearch'].enabled | bool
   notify:
-    - Restart {{ item.key }} container
+    - Restart opensearch container
 
 - name: Copying over opensearch-dashboards config file
   vars:
