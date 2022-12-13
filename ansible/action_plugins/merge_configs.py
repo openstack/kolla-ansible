@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2015 Sam Yaple
 # Copyright 2017 99Cloud Inc.
 #
