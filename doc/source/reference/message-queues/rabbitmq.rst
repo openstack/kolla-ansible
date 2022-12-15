@@ -109,3 +109,12 @@ https://erlang.org/doc/man/erl.html#emulator-flags
 The ``+sbwt none +sbwtdcpu none +sbwtdio none`` arguments prevent busy waiting
 of the scheduler, for more details see:
 https://www.rabbitmq.com/runtime.html#busy-waiting.
+
+High Availability
+~~~~~~~~~~~~~~~~~
+
+RabbitMQ offers two features that, when used together, allow for high
+availability. These are durable queues and classic queue mirroring. Setting the
+flag ``om_enable_rabbitmq_high_availability`` to ``true`` will enable both of
+these features. There are some queue types which are intentionally not mirrored
+using the exclusionary pattern ``^(?!(amq\\.)|(.*_fanout_)|(reply_)).*``.
