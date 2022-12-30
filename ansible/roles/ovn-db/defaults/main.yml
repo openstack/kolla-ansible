@@ -75,3 +75,24 @@ ovn_openflow_probe_interval: "60"
 ovn_db_inactivity_probe: "60000"
 ovn_sb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
 ovn_nb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
+# OVN startup commands
+ovn_nb_command: >-
+  /usr/share/ovn/scripts/ovn-ctl run_nb_ovsdb
+  --db-nb-addr={{ api_interface_address | put_address_in_context('url') }}
+  --db-nb-cluster-local-addr={{ api_interface_address | put_address_in_context('url') }}
+  {{ ovn_nb_db_bootstrap_args | default('') }}
+  --db-nb-sock=/run/ovn/ovnnb_db.sock
+  --db-nb-pidfile=/run/ovn/ovnnb_db.pid
+  --db-nb-file=/var/lib/openvswitch/ovn-nb/ovnnb.db
+  --ovn-nb-logfile=/var/log/kolla/openvswitch/ovn-nb-db.log
+ovn_sb_command: >-
+  /usr/share/ovn/scripts/ovn-ctl run_sb_ovsdb
+  --db-sb-addr={{ api_interface_address | put_address_in_context('url') }}
+  --db-sb-cluster-local-addr={{ api_interface_address | put_address_in_context('url') }}
+  {{ ovn_sb_db_bootstrap_args | default('') }}
+  --db-sb-sock=/run/ovn/ovnsb_db.sock
+  --db-sb-pidfile=/run/ovn/ovnsb_db.pid
+  --db-sb-file=/var/lib/openvswitch/ovn-sb/ovnsb.db
+  --ovn-sb-logfile=/var/log/kolla/openvswitch/ovn-sb-db.log
+
+ovn_db_path: "{{ '/var/run/openvswitch' if kolla_base_distro in ['debian', 'ubuntu'] else '/var/run/ovn' }}"
