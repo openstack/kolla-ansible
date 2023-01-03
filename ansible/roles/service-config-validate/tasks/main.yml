@@ -1,0 +1,13 @@
+---
+- name: "{{ project_name }} | Validate configurations for each service"
+  vars:
+    service_name: "{{ outer_item.key }}"
+    service: "{{ outer_item.value }}"
+    output_dir: "{{ service_config_validate_output_dir }}/{{ inventory_hostname }}/{{ project_name }}/{{ service_name }}"
+  include_tasks: validate.yml
+  loop: "{{ query('dict', service_config_validate_services | select_services_enabled_and_mapped_to_host) }}"
+  loop_control:
+    label: "{{ service_name }}"
+    loop_var: outer_item
+  when:
+    - service_config_validation is defined
