@@ -25,31 +25,30 @@
     - inventory_hostname in groups['neutron-server']
 
 - name: Checking number of network agents
-  fail:
-    msg: "Number of network agents are less than two when enabling agent ha"
+  assert:
+    that:
+      - groups['neutron-dhcp-agent'] | length > 1
+      - groups['neutron-l3-agent'] | length > 1
+    fail_msg: "Number of network agents are less than two when enabling agent ha"
   changed_when: false
   run_once: True
   when:
     - enable_neutron_agent_ha | bool
-    - groups['neutron-dhcp-agent'] | length < 2
-      or groups['neutron-l3-agent'] | length < 2
 
 - name: Checking tenant network types
+  assert:
+    that: item in type_drivers
+    fail_msg: "Tenant network type '{{ item }}' is not in type drivers [{{ neutron_type_drivers }}]"
+  with_items: "{{ tenant_network_types }}"
   vars:
     type_drivers: "{{ neutron_type_drivers.replace(' ', '').split(',') | reject('equalto', '') | list }}"
     tenant_network_types: "{{ neutron_tenant_network_types.replace(' ', '').split(',') | reject('equalto', '') | list }}"
-  fail:
-    msg: "Tenant network type '{{ item }}' is not in type drivers [{{ neutron_type_drivers }}]"
-  changed_when: false
-  when: item not in type_drivers
   run_once: true
-  with_items: "{{ tenant_network_types }}"
 
 - name: Checking whether Ironic enabled
-  fail:
-    msg: "Ironic must be enabled when using networking-baremetal/ironic-neutron-agent"
-  changed_when: false
+  assert:
+    that: enable_ironic | bool
+    fail_msg: "Ironic must be enabled when using networking-baremetal/ironic-neutron-agent"
   run_once: True
   when:
     - enable_ironic_neutron_agent | bool
-    - not (enable_ironic | bool)
