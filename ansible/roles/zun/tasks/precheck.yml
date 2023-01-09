@@ -49,10 +49,9 @@
     - inventory_hostname in groups['zun-cni-daemon']
 
 - name: Ensure kuryr enabled for zun
-  fail:
-    msg: "kuryr is required but not enabled"
+  assert:
+    that: enable_kuryr | bool
+    fail_msg: "kuryr is required but not enabled"
   run_once: True
-  changed_when: false
   when:
     - enable_zun | bool
-    - not enable_kuryr | bool
