@@ -11,6 +11,7 @@
     name:
       - rabbitmq
       - outward_rabbitmq
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for RabbitMQ
@@ -62,6 +63,7 @@
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
   command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
+  check_mode: false
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
 
@@ -149,6 +151,7 @@
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
   command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
+  check_mode: false
   register: outward_rabbitmq_hostnames
   with_items: "{{ groups['outward-rabbitmq'] }}"
   when:
