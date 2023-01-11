@@ -11,12 +11,14 @@
     name:
       - haproxy
       - keepalived
+  check_mode: false
   register: container_facts
 
 - name: Group hosts by whether they are running keepalived
   group_by:
     key: "keepalived_running_{{ container_facts['keepalived'] is defined }}"
   changed_when: false
+  check_mode: false
   when:
     - enable_keepalived | bool
     - inventory_hostname in groups['loadbalancer']
@@ -25,6 +27,7 @@
   group_by:
     key: "haproxy_running_{{ container_facts['haproxy'] is defined }}"
   changed_when: false
+  check_mode: false
   when:
     - enable_haproxy | bool
     - inventory_hostname in groups['loadbalancer']
@@ -96,6 +99,7 @@
   register: ping_output
   changed_when: false
   failed_when: ping_output.rc != 1
+  check_mode: false
   with_items:
     - address: "{{ kolla_internal_vip_address }}"
       command: "{{ 'ping' if kolla_internal_vip_address|ipv4 else 'ping6' }}"
@@ -152,6 +156,7 @@
   failed_when: >-
     ( ip_addr_output is failed or
      kolla_internal_vip_address | ipaddr(ip_addr_output.stdout.split()[3]) is none)
+  check_mode: false
   when:
     - enable_haproxy | bool
     - enable_keepalived | bool
@@ -163,6 +168,7 @@
   shell: echo "show stat" | docker exec -i haproxy socat unix-connect:/var/lib/kolla/haproxy/haproxy.sock stdio  # noqa 306
   register: haproxy_stat_shell
   changed_when: false
+  check_mode: false
   when: container_facts['haproxy'] is defined
 
 - name: Setting haproxy stat fact
