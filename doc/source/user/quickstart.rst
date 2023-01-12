@@ -49,13 +49,13 @@ execution, which is described in
 
    .. code-block:: console
 
-      sudo dnf install python3-devel libffi-devel gcc openssl-devel python3-libselinux
+      sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux
 
    For Debian or Ubuntu, run:
 
    .. code-block:: console
 
-      sudo apt install python3-dev libffi-dev gcc libssl-dev
+      sudo apt install git python3-dev libffi-dev gcc libssl-dev
 
 Install dependencies using a virtual environment
 ------------------------------------------------
