@@ -197,9 +197,7 @@ FAKE_DATA = {
 
     'container_inspect': {
         'Config': {
-            'Env': ['KOLLA_BASE_DISTRO=ubuntu',
-                    'KOLLA_INSTALL_TYPE=source',
-                    'KOLLA_INSTALL_METATYPE=rdo'],
+            'Env': ['KOLLA_BASE_DISTRO=ubuntu'],
             'Hostname': 'node2',
             'Volumes': {'/var/lib/kolla/config_files/': {}}},
         'Mounts': {},
@@ -543,9 +541,7 @@ class TestContainer(base.BaseTestCase):
         )
 
     def test_get_container_env(self):
-        fake_env = dict(KOLLA_BASE_DISTRO='ubuntu',
-                        KOLLA_INSTALL_TYPE='source',
-                        KOLLA_INSTALL_METATYPE='rdo')
+        fake_env = dict(KOLLA_BASE_DISTRO='ubuntu')
         self.dw = get_DockerWorker({'name': 'my_container',
                                     'action': 'get_container_env'})
         self.dw.dc.containers.return_value = self.fake_data['containers']
@@ -1211,26 +1207,22 @@ class TestAttrComp(base.BaseTestCase):
     def test_compare_environment_neg(self):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
-                 'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=source']
+                 'KOLLA_BASE_DISTRO=ubuntu']
         )}
         self.dw = get_DockerWorker({
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
-                                KOLLA_BASE_DISTRO='ubuntu',
-                                KOLLA_INSTALL_TYPE='source')})
+                                KOLLA_BASE_DISTRO='ubuntu')})
 
         self.assertFalse(self.dw.compare_environment(container_info))
 
     def test_compare_environment_pos(self):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
-                 'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=source']
+                 'KOLLA_BASE_DISTRO=ubuntu']
         )}
         self.dw = get_DockerWorker({
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
-                                KOLLA_BASE_DISTRO='centos',
-                                KOLLA_INSTALL_TYPE='source')})
+                                KOLLA_BASE_DISTRO='centos')})
 
         self.assertTrue(self.dw.compare_environment(container_info))
 
