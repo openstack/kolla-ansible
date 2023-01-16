@@ -20,6 +20,8 @@ function upgrade {
     # TODO(yoctozepto): Remove after Zed.
     kolla-ansible -i ${RAW_INVENTORY} -vvv deploy --tags keystone &> /tmp/logs/ansible/upgrade-deploy
     kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy &> /tmp/logs/ansible/upgrade-post-deploy
+
+    kolla-ansible -i ${RAW_INVENTORY} -vvv validate-config &> /tmp/logs/ansible/validate-config
 }
 
 
