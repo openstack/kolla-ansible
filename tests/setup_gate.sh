@@ -61,7 +61,7 @@ function prepare_images {
 
     if [[ $SCENARIO == "zun" ]]; then
         GATE_IMAGES+=",^zun,^kuryr,^etcd,^cinder,^iscsid"
-        if [[ $BASE_DISTRO != "centos" ]]; then
+        if [[ $BASE_DISTRO != "centos" && $BASE_DISTRO != "rocky" ]]; then
             GATE_IMAGES+=",^tgtd"
         fi
     fi
