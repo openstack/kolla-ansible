@@ -18,6 +18,10 @@ docker_custom_config:
   debug: true
   registry-mirrors:
     - {{ infra_dockerhub_mirror }}
+{% if need_build_image and is_previous_release %}
+  insecure-registries:
+    - primary:4000
+{% endif %}
 {% if ansible_facts.distribution == "openEuler" %}
   exec-opts: ["native.umask=normal"]
 {% endif %}
@@ -61,13 +65,6 @@ docker_registry_insecure: no
 docker_namespace: openstack.kolla
 {% if docker_image_tag_suffix %}
 openstack_tag_suffix: "{{ docker_image_tag_suffix }}"
-{% endif %}
-{% if need_build_image and is_previous_release %}
-# NOTE(mgoddard): Ensure that the insecure local registry is trusted, since it
-# will be the source of images during the upgrade.
-# NOTE(yoctozepto): this is required here for CI because we run templating
-# of docker systemd command only once
-docker_custom_option: "--insecure-registry primary:4000"
 {% endif %}
 {% endif %}
 
