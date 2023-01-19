@@ -14,4 +14,3 @@ logging and monitoring services available in kolla.
    monasca-guide
    osprofiler-guide
    prometheus-guide
-   skydive-guide
