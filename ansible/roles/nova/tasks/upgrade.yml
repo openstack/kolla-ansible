@@ -1,9 +1,24 @@
 ---
-- name: Check nova upgrade status
+- name: Run Nova upgrade checks
   become: true
-  command: "{{ kolla_container_engine }} exec -t nova_api nova-status upgrade check"
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  kolla_docker:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE_CHECK:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ nova_api.image }}"
+    labels:
+      UPGRADE:
+    name: "nova_upgrade_checks"
+    restart_policy: no
+    volumes: "{{ nova_api_default_volumes + nova_api_extra_volumes }}"
+  run_once: True
   register: nova_upgrade_check_stdout
-  when: inventory_hostname == groups['nova-api'][0]
+  delegate_to: "{{ groups['nova-api'][0] }}"
   failed_when: false
 
 - name: Upgrade status check result
