@@ -103,6 +103,7 @@
       - "neutron-sriov-agent"
       - "neutron-mlnx-agent"
       - "neutron-eswitchd"
+      - "neutron-ovn-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron.conf.j2"
@@ -404,6 +405,23 @@
   when:
     - neutron_bgp_dragent.enabled | bool
     - neutron_bgp_dragent.host_in_groups | bool
+  notify:
+    - "Restart {{ service_name }} container"
+
+- name: Copying over ovn_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-ovn-agent"
+    neutron_ovn_agent: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/ovn_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/ovn_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/ovn_agent.ini"
+    mode: "0660"
+  when:
+    - neutron_ovn_agent.enabled | bool
+    - neutron_ovn_agent.host_in_groups | bool
   notify:
     - "Restart {{ service_name }} container"
 
