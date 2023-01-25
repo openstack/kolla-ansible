@@ -109,6 +109,36 @@ to using the native OVS firewall driver by employing a configuration override
    [securitygroup]
    firewall_driver = openvswitch
 
+L3 agent high availability
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+L3 and DHCP agents can be created in a high availability (HA) state with:
+
+.. code-block:: yaml
+
+   enable_neutron_agent_ha: "yes"
+
+This allows networking to fail over across controllers if the active agent is
+stopped. If this option is enabled, it can be advantageous to also set:
+
+.. code-block:: yaml
+
+   neutron_l3_agent_failover_delay:
+
+Agents sometimes need to be restarted. This delay (in seconds) is invoked
+between the restart operations of each agent. When set properly, it will stop
+network outages caused by all agents restarting at the same time. The exact
+length of time it takes to restart is dependent on hardware and the number of
+routers present. A general rule of thumb is to set the value to ``40 + 3n``
+where ``n`` is the number of routers. For example, with 5 routers,
+``40 + (3 * 5) = 65`` so the value could be set to 65. A much better approach
+however would be to first time how long an outage lasts, then set the value
+accordingly.
+
+The default value is 0. A nonzero starting value would only result in
+outages if the failover time was greater than the delay, which would be more
+difficult to diagnose than consistent behaviour.
+
 OVN (ml2/ovn)
 ~~~~~~~~~~~~~
 
