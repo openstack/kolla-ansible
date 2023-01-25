@@ -1,4 +1,11 @@
 ---
+- name: Checking if system uses systemd
+  become: true
+  assert:
+    that:
+      - "ansible_facts.service_mgr == 'systemd'"
+  when: inventory_hostname in groups['baremetal']
+
 - name: Checking Docker version
   become: true
   command: "{{ kolla_container_engine }} --version"

@@ -9,6 +9,13 @@
     - kolla_container_engine == 'docker'
   failed_when: result is failed or result.stdout is version(docker_py_version_min, '<')
 
+- name: Checking dbus-python package
+  command: "{{ ansible_facts.python.executable }} -c \"import dbus\""
+  register: dbus_present
+  changed_when: false
+  when: inventory_hostname in groups['baremetal']
+  failed_when: dbus_present is failed
+
 # NOTE(osmanlicilegi): ansible_version.full includes patch number that's useless
 # to check. as ansible_version does not provide major.minor in dict, we need to
 # set it as variable.

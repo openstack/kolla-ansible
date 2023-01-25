@@ -25,14 +25,19 @@ from docker import errors as docker_error
 from docker.types import Ulimit
 from oslotest import base
 
+sys.modules['dbus'] = mock.MagicMock()
+
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
 ansible_dir = os.path.join(this_dir, '..', 'ansible')
 kolla_docker_file = os.path.join(ansible_dir,
                                  'library', 'kolla_docker.py')
 docker_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_docker_worker.py')
+systemd_worker_file = os.path.join(ansible_dir,
+                                   'module_utils', 'kolla_systemd_worker.py')
 kd = imp.load_source('kolla_docker', kolla_docker_file)
 dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
+swm = imp.load_source('kolla_systemd_worker', systemd_worker_file)
 
 
 class ModuleArgsTest(base.BaseTestCase):
@@ -157,6 +162,7 @@ FAKE_DATA = {
         'remove_on_exit': True,
         'volumes': None,
         'tty': False,
+        'client_timeout': 120,
     },
 
     'images': [
@@ -213,7 +219,8 @@ def get_DockerWorker(mod_param, docker_api_version='1.40'):
     module.params = mod_param
     with mock.patch("docker.APIClient") as MockedDockerClientClass:
         MockedDockerClientClass.return_value._version = docker_api_version
-        dw = kd.DockerWorker(module)
+        dw = dwm.DockerWorker(module)
+        dw.systemd = mock.MagicMock()
         return dw
 
 
@@ -400,11 +407,10 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.containers = mock.MagicMock(
             return_value=self.fake_data['containers'])
         self.dw.check_container_differs = mock.MagicMock(return_value=False)
-        self.dw.dc.start = mock.MagicMock()
         self.dw.start_container()
         self.assertTrue(self.dw.changed)
-        self.dw.dc.start.assert_called_once_with(
-            container=self.fake_data['params'].get('name'))
+        self.dw.dc.start.assert_not_called()
+        self.dw.systemd.start.assert_called_once()
 
     def test_start_container_no_detach(self):
         self.fake_data['params'].update({'name': 'my_container',
@@ -425,11 +431,57 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.logs.assert_has_calls([
             mock.call(name, stdout=True, stderr=False),
             mock.call(name, stdout=False, stderr=True)])
-        self.dw.dc.stop.assert_called_once_with(name, timeout=10)
+        self.dw.systemd.stop.assert_called_once_with()
         self.dw.dc.remove_container.assert_called_once_with(
             container=name, force=True)
         expected = {'rc': 0, 'stdout': 'fake stdout', 'stderr': 'fake stderr'}
         self.assertEqual(expected, self.dw.result)
+
+    def test_start_container_no_systemd(self):
+        self.fake_data['params'].update({'name': 'my_container',
+                                         'restart_policy': 'no',
+                                         'auth_username': 'fake_user',
+                                         'auth_password': 'fake_psw',
+                                         'auth_registry': 'myrepo/myapp',
+                                         'auth_email': 'fake_mail@foogle.com'})
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.images = mock.MagicMock(
+            return_value=self.fake_data['images'])
+        self.fake_data['containers'][0].update(
+            {'Status': 'Exited 2 days ago'})
+        self.dw.dc.containers = mock.MagicMock(
+            return_value=self.fake_data['containers'])
+        self.dw.check_container_differs = mock.MagicMock(return_value=False)
+        self.dw.dc.start = mock.MagicMock()
+        self.dw.start_container()
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.start.assert_called_once_with(
+            container=self.fake_data['params']['name']
+        )
+        self.dw.systemd.start.assert_not_called()
+
+    def test_start_container_systemd_start_fail(self):
+        self.fake_data['params'].update({'name': 'my_container',
+                                         'auth_username': 'fake_user',
+                                         'auth_password': 'fake_psw',
+                                         'auth_registry': 'myrepo/myapp',
+                                         'auth_email': 'fake_mail@foogle.com'})
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.images = mock.MagicMock(
+            return_value=self.fake_data['images'])
+        self.fake_data['containers'][0].update(
+            {'Status': 'Exited 2 days ago'})
+        self.dw.dc.containers = mock.MagicMock(
+            return_value=self.fake_data['containers'])
+        self.dw.check_container_differs = mock.MagicMock(return_value=False)
+        self.dw.systemd.start = mock.Mock(return_value=False)
+        self.dw.start_container()
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.start.assert_not_called()
+        self.dw.systemd.start.assert_called_once()
+        self.dw.module.fail_json.assert_called_once_with(
+            changed=True, msg='Container timed out',
+            **self.fake_data['containers'][0])
 
     def test_stop_container(self):
         self.dw = get_DockerWorker({'name': 'my_container',
@@ -439,7 +491,22 @@ class TestContainer(base.BaseTestCase):
 
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
-        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
+        self.dw.systemd.stop.assert_called_once()
+        self.dw.dc.stop.assert_not_called()
+        self.dw.module.fail_json.assert_not_called()
+
+    def test_stop_container_no_systemd(self):
+        self.dw = get_DockerWorker({'name': 'my_container',
+                                    'action': 'stop_container',
+                                    'restart_policy': 'no'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.stop_container()
+
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.containers.assert_called_once_with(all=True)
+        self.dw.systemd.stop.assert_not_called()
+        self.dw.dc.stop.assert_called_once_with(
+            'my_container', timeout=10)
         self.dw.module.fail_json.assert_not_called()
 
     def test_stop_container_already_stopped(self):
@@ -485,7 +552,7 @@ class TestContainer(base.BaseTestCase):
 
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_with(all=True)
-        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
+        self.dw.systemd.stop.assert_called_once()
         self.dw.dc.remove_container.assert_called_once_with(
             container='my_container', force=True)
 
@@ -497,7 +564,7 @@ class TestContainer(base.BaseTestCase):
 
         self.assertFalse(self.dw.changed)
         self.dw.dc.containers.assert_called_with(all=True)
-        self.assertFalse(self.dw.dc.stop.called)
+        self.assertFalse(self.dw.systemd.stop.called)
         self.assertFalse(self.dw.dc.remove_container.called)
 
     def test_restart_container(self):
@@ -512,9 +579,7 @@ class TestContainer(base.BaseTestCase):
 
         self.assertTrue(self.dw.changed)
         self.dw.dc.containers.assert_called_once_with(all=True)
-        self.dw.dc.inspect_container.assert_called_once_with('my_container')
-        self.dw.dc.stop.assert_called_once_with('my_container', timeout=10)
-        self.dw.dc.start.assert_called_once_with('my_container')
+        self.dw.systemd.restart.assert_called_once_with()
 
     def test_restart_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake-container',
@@ -526,6 +591,24 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.module.fail_json.assert_called_once_with(
             msg="No such container: fake-container")
+
+    def test_restart_container_systemd_timeout(self):
+        self.dw = get_DockerWorker({'name': 'my_container',
+                                    'action': 'restart_container'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.fake_data['container_inspect'].update(
+            self.fake_data['containers'][0])
+        self.dw.dc.inspect_container.return_value = (
+            self.fake_data['container_inspect'])
+        self.dw.systemd.restart = mock.Mock(return_value=False)
+        self.dw.restart_container()
+
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.containers.assert_called_with(all=True)
+        self.dw.systemd.restart.assert_called_once_with()
+        self.dw.module.fail_json.assert_called_once_with(
+            changed=True, msg="Container timed out",
+            **self.fake_data['containers'][0])
 
     def test_remove_container(self):
         self.dw = get_DockerWorker({'name': 'my_container',
@@ -1576,3 +1659,213 @@ class TestAttrComp(base.BaseTestCase):
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertIsNone(self.dw.parse_healthcheck(
                           self.fake_data['params']['healthcheck']))
+
+
+class TestSystemd(base.BaseTestCase):
+    def setUp(self) -> None:
+        super(TestSystemd, self).setUp()
+        self.params_dict = dict(
+            name='test',
+            restart_policy='no',
+            client_timeout=120,
+            restart_retries=10,
+            graceful_timeout=15
+        )
+        swm.sleep = mock.Mock()
+        self.sw = swm.SystemdWorker(self.params_dict)
+
+    def test_manager(self):
+        self.assertIsNotNone(self.sw)
+        self.assertIsNotNone(self.sw.manager)
+
+    def test_start(self):
+        self.sw.perform_action = mock.Mock(return_value=True)
+        self.sw.wait_for_unit = mock.Mock(return_value=True)
+
+        self.sw.start()
+        self.sw.perform_action.assert_called_once_with(
+            'StartUnit',
+            'kolla-test-container.service',
+            'replace'
+        )
+
+    def test_restart(self):
+        self.sw.perform_action = mock.Mock(return_value=True)
+        self.sw.wait_for_unit = mock.Mock(return_value=True)
+
+        self.sw.restart()
+        self.sw.perform_action.assert_called_once_with(
+            'RestartUnit',
+            'kolla-test-container.service',
+            'replace'
+        )
+
+    def test_stop(self):
+        self.sw.perform_action = mock.Mock(return_value=True)
+
+        self.sw.stop()
+        self.sw.perform_action.assert_called_once_with(
+            'StopUnit',
+            'kolla-test-container.service',
+            'replace'
+        )
+
+    def test_reload(self):
+        self.sw.perform_action = mock.Mock(return_value=True)
+
+        self.sw.reload()
+        self.sw.perform_action.assert_called_once_with(
+            'Reload',
+            'kolla-test-container.service',
+            'replace'
+        )
+
+    def test_enable(self):
+        self.sw.perform_action = mock.Mock(return_value=True)
+
+        self.sw.enable()
+        self.sw.perform_action.assert_called_once_with(
+            'EnableUnitFiles',
+            ['kolla-test-container.service'],
+            False,
+            True
+        )
+
+    def test_check_unit_change(self):
+        self.sw.generate_unit_file = mock.Mock()
+        self.sw.check_unit_file = mock.Mock(return_value=True)
+        open_mock = mock.mock_open(read_data='test data')
+        return_val = None
+
+        with mock.patch('builtins.open', open_mock, create=True):
+            return_val = self.sw.check_unit_change('test data')
+
+        self.assertFalse(return_val)
+        self.sw.generate_unit_file.assert_not_called()
+        open_mock.assert_called_with(
+            '/etc/systemd/system/kolla-test-container.service',
+            'r'
+        )
+        open_mock.return_value.read.assert_called_once()
+
+    def test_check_unit_change_diff(self):
+        self.sw.generate_unit_file = mock.Mock()
+        self.sw.check_unit_file = mock.Mock(return_value=True)
+        open_mock = mock.mock_open(read_data='new data')
+        return_val = None
+
+        with mock.patch('builtins.open', open_mock, create=True):
+            return_val = self.sw.check_unit_change('old data')
+
+        self.assertTrue(return_val)
+        self.sw.generate_unit_file.assert_not_called()
+        open_mock.assert_called_with(
+            '/etc/systemd/system/kolla-test-container.service',
+            'r'
+        )
+        open_mock.return_value.read.assert_called_once()
+
+    @mock.patch(
+        'kolla_systemd_worker.TEMPLATE',
+        """${name}, ${restart_policy},
+        ${graceful_timeout}, ${restart_timeout},
+        ${restart_retries}"""
+    )
+    def test_generate_unit_file(self):
+        self.sw = swm.SystemdWorker(self.params_dict)
+        p = self.params_dict
+        ref_string = f"""{p.get('name')}, {p.get('restart_policy')},
+        {p.get('graceful_timeout')}, {p.get('client_timeout')},
+        {p.get('restart_retries')}"""
+
+        ret_string = self.sw.generate_unit_file()
+
+        self.assertEqual(ref_string, ret_string)
+
+    def test_create_unit_file(self):
+        self.sw.generate_unit_file = mock.Mock(return_value='test data')
+        self.sw.check_unit_change = mock.Mock(return_value=True)
+        self.sw.reload = mock.Mock()
+        self.sw.enable = mock.Mock()
+        open_mock = mock.mock_open()
+        return_val = None
+
+        with mock.patch('builtins.open', open_mock, create=True):
+            return_val = self.sw.create_unit_file()
+
+        self.assertTrue(return_val)
+        open_mock.assert_called_with(
+            '/etc/systemd/system/kolla-test-container.service',
+            'w'
+        )
+        open_mock.return_value.write.assert_called_once_with('test data')
+        self.sw.reload.assert_called_once()
+        self.sw.enable.assert_called_once()
+
+    def test_create_unit_file_no_change(self):
+        self.sw.generate_unit_file = mock.Mock()
+        self.sw.check_unit_change = mock.Mock(return_value=False)
+        self.sw.reload = mock.Mock()
+        self.sw.enable = mock.Mock()
+        open_mock = mock.mock_open()
+
+        return_val = self.sw.create_unit_file()
+
+        self.assertFalse(return_val)
+        open_mock.assert_not_called()
+        self.sw.reload.assert_not_called()
+        self.sw.enable.assert_not_called()
+
+    def test_remove_unit_file(self):
+        self.sw.check_unit_file = mock.Mock(return_value=True)
+        os.remove = mock.Mock()
+        self.sw.reload = mock.Mock()
+
+        return_val = self.sw.remove_unit_file()
+
+        self.assertTrue(return_val)
+        os.remove.assert_called_once_with(
+            '/etc/systemd/system/kolla-test-container.service'
+        )
+        self.sw.reload.assert_called_once()
+
+    def test_get_unit_state(self):
+        unit_list = [
+            ('foo.service', '', 'loaded', 'active', 'exited'),
+            ('kolla-test-container.service', '', 'loaded', 'active', 'running')
+        ]
+        self.sw.manager.ListUnits = mock.Mock(return_value=unit_list)
+
+        state = self.sw.get_unit_state()
+
+        self.sw.manager.ListUnits.assert_called_once()
+        self.assertEqual('running', state)
+
+    def test_get_unit_state_not_exist(self):
+        unit_list = [
+            ('foo.service', '', 'loaded', 'active', 'exited'),
+            ('bar.service', '', 'loaded', 'active', 'running')
+        ]
+        self.sw.manager.ListUnits = mock.Mock(return_value=unit_list)
+
+        state = self.sw.get_unit_state()
+
+        self.sw.manager.ListUnits.assert_called_once()
+        self.assertIsNone(state)
+
+    def test_wait_for_unit(self):
+        self.sw.get_unit_state = mock.Mock()
+        self.sw.get_unit_state.side_effect = ['starting', 'running']
+
+        result = self.sw.wait_for_unit(10)
+
+        self.assertTrue(result)
+
+    def test_wait_for_unit_timeout(self):
+        self.sw.get_unit_state = mock.Mock()
+        self.sw.get_unit_state.side_effect = [
+            'starting', 'starting', 'failed', 'failed']
+
+        result = self.sw.wait_for_unit(10)
+
+        self.assertFalse(result)
