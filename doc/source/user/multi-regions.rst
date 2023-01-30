@@ -76,7 +76,8 @@ the value of ``kolla_internal_fqdn`` in RegionOne:
        username: "{{ keystone_admin_user }}"
        password: "{{ keystone_admin_password }}"
        user_domain_name: "{{ default_user_domain_name }}"
-       system_scope: "all"
+       project_name: "{{ keystone_admin_project }}"
+       domain_name: "default"
 
 .. note::
 
