@@ -128,6 +128,7 @@ def check_json_j2():
             'kolla_internal_fqdn': '',
             'octavia_provider_drivers': '',
             'storage_interface': 'storage_interface',
+            'rabbitmq_ha_replica_count': 2,
         }
         data = template.render(**context)
         json.loads(data)
