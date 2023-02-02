@@ -50,6 +50,8 @@ class DockerWorker(object):
 
         self._cgroupns_mode_supported = (
             StrictVersion(self.dc._version) >= StrictVersion('1.41'))
+        self._dimensions_kernel_memory_removed = (
+            StrictVersion(self.dc._version) >= StrictVersion('1.42'))
 
         self.systemd = SystemdWorker(self.params)
 
@@ -310,8 +312,11 @@ class DockerWorker(object):
             'memswap_limit': 'MemorySwap', 'cpu_period': 'CpuPeriod',
             'cpu_quota': 'CpuQuota', 'cpu_shares': 'CpuShares',
             'cpuset_cpus': 'CpusetCpus', 'cpuset_mems': 'CpusetMems',
-            'kernel_memory': 'KernelMemory', 'blkio_weight': 'BlkioWeight',
-            'ulimits': 'Ulimits'}
+            'blkio_weight': 'BlkioWeight', 'ulimits': 'Ulimits'}
+
+        if not self._dimensions_kernel_memory_removed:
+            dimension_map['kernel_memory'] = 'KernelMemory'
+
         unsupported = set(new_dimensions.keys()) - \
             set(dimension_map.keys())
         if unsupported:
