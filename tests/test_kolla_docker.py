@@ -260,6 +260,15 @@ class TestMainModule(base.BaseTestCase):
                                    docker_api_version='1.41')
         self.assertTrue(self.dw._cgroupns_mode_supported)
 
+    def test_sets_dimensions_kernelmemory_supported_true(self):
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw._dimensions_kernel_memory_removed)
+
+    def test_sets_dimensions_kernelmemory_supported_false(self):
+        self.dw = get_DockerWorker(self.fake_data['params'],
+                                   docker_api_version='1.42')
+        self.assertTrue(self.dw._dimensions_kernel_memory_removed)
+
 
 class TestContainer(base.BaseTestCase):
 
@@ -1316,6 +1325,22 @@ class TestAttrComp(base.BaseTestCase):
             'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.assertFalse(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_kernel_memory_1_42(self):
+        self.fake_data['params']['dimensions'] = {
+            'kernel_memory': '1024'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'],
+                                   docker_api_version='1.42')
+        self.dw.compare_dimensions(container_info)
+        self.dw.module.exit_json.assert_called_once_with(
+            failed=True, msg=repr("Unsupported dimensions"),
+            unsupported_dimensions=set(['kernel_memory']))
 
     def test_compare_container_state_pos(self):
         container_info = {'State': dict(Status='running')}
