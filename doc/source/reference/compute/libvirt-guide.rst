@@ -35,8 +35,9 @@ SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
 to ``true``.
 
 The username is configured via ``libvirt_sasl_authname``, and defaults to
-``kolla``. The password is configured via ``libvirt_sasl_password``, and is
-generated with other passwords using and stored in ``passwords.yml``.
+``nova``. The password is configured via ``libvirt_sasl_password``, and is
+generated with other passwords using ``kolla-mergepwd`` and ``kolla-genpwd``
+and stored in ``passwords.yml``.
 
 The list of enabled authentication mechanisms is configured via
 ``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
