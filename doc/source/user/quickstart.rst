@@ -190,6 +190,19 @@ There are a few options that are required to deploy Kolla Ansible:
 
      kolla_base_distro: "rocky"
 
+* AArch64 options
+
+  Kolla provides images for both x86-64 and aarch64 architectures. They are not
+  "multiarch" so users of aarch64 need to define "openstack_tag_suffix"
+  setting:
+
+  .. code-block:: console
+
+     openstack_tag_suffix: "-aarch64"
+
+  This way images built for aarch64 architecture will be used.
+
+
 * Networking
 
   Kolla Ansible requires a few networking options to be set.
