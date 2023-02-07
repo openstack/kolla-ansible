@@ -1,0 +1,186 @@
+---
+skyline_services:
+  skyline-apiserver:
+    container_name: skyline_apiserver
+    group: skyline-apiserver
+    enabled: true
+    image: "{{ skyline_apiserver_image_full }}"
+    volumes: "{{ skyline_apiserver_default_volumes + skyline_apiserver_extra_volumes }}"
+    dimensions: "{{ skyline_apiserver_dimensions }}"
+    healthcheck: "{{ skyline_apiserver_healthcheck }}"
+    haproxy:
+      skyline_apiserver:
+        enabled: "{{ enable_skyline }}"
+        mode: "http"
+        external: false
+        port: "{{ skyline_apiserver_port }}"
+        listen_port: "{{ skyline_apiserver_listen_port }}"
+        tls_backend: "{{ skyline_enable_tls_backend }}"
+      skyline_apiserver_external:
+        enabled: "{{ enable_skyline }}"
+        mode: "http"
+        external: true
+        port: "{{ skyline_apiserver_port }}"
+        listen_port: "{{ skyline_apiserver_listen_port }}"
+        tls_backend: "{{ skyline_enable_tls_backend }}"
+  skyline-console:
+    container_name: skyline_console
+    group: skyline-console
+    enabled: true
+    image: "{{ skyline_console_image_full }}"
+    volumes: "{{ skyline_console_default_volumes + skyline_console_extra_volumes }}"
+    dimensions: "{{ skyline_console_dimensions }}"
+    healthcheck: "{{ skyline_console_healthcheck }}"
+    haproxy:
+      skyline_console:
+        enabled: "{{ enable_skyline }}"
+        mode: "http"
+        external: false
+        port: "{{ skyline_console_port }}"
+        listen_port: "{{ skyline_console_listen_port }}"
+        tls_backend: "{{ skyline_enable_tls_backend }}"
+      skyline_console_external:
+        enabled: "{{ enable_skyline }}"
+        mode: "http"
+        external: true
+        port: "{{ skyline_console_port }}"
+        listen_port: "{{ skyline_console_listen_port }}"
+        tls_backend: "{{ skyline_enable_tls_backend }}"
+
+####################
+# Database
+####################
+skyline_database_name: "skyline"
+skyline_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}skyline{% endif %}"
+skyline_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
+
+####################
+# Database sharding
+####################
+skyline_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ skyline_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+skyline_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+skyline_database_shard:
+  users:
+    - user: "{{ skyline_database_user }}"
+      password: "{{ skyline_database_password }}"
+  rules:
+    - schema: "{{ skyline_database_name }}"
+      shard_id: "{{ skyline_database_shard_id }}"
+
+####################
+# Docker
+####################
+skyline_tag: "{{ openstack_tag }}"
+
+skyline_apiserver_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/skyline-apiserver"
+skyline_apiserver_tag: "{{ skyline_tag }}"
+skyline_apiserver_image_full: "{{ skyline_apiserver_image }}:{{ skyline_apiserver_tag }}"
+
+skyline_console_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/skyline-console"
+skyline_console_tag: "{{ skyline_tag }}"
+skyline_console_image_full: "{{ skyline_console_image }}:{{ skyline_console_tag }}"
+
+skyline_apiserver_dimensions: "{{ default_container_dimensions }}"
+skyline_console_dimensions: "{{ default_container_dimensions }}"
+
+skyline_apiserver_enable_healthchecks: "{{ enable_container_healthchecks }}"
+skyline_apiserver_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+skyline_apiserver_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+skyline_apiserver_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+skyline_apiserver_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if skyline_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ skyline_apiserver_listen_port }}/docs"]
+skyline_apiserver_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+skyline_apiserver_healthcheck:
+  interval: "{{ skyline_apiserver_healthcheck_interval }}"
+  retries: "{{ skyline_apiserver_healthcheck_retries }}"
+  start_period: "{{ skyline_apiserver_healthcheck_start_period }}"
+  test: "{% if skyline_apiserver_enable_healthchecks | bool %}{{ skyline_apiserver_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ skyline_apiserver_healthcheck_timeout }}"
+
+skyline_console_enable_healthchecks: "{{ enable_container_healthchecks }}"
+skyline_console_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+skyline_console_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+skyline_console_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+skyline_console_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if skyline_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ skyline_console_listen_port }}/docs"]
+skyline_console_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+skyline_console_healthcheck:
+  interval: "{{ skyline_console_healthcheck_interval }}"
+  retries: "{{ skyline_console_healthcheck_retries }}"
+  start_period: "{{ skyline_console_healthcheck_start_period }}"
+  test: "{% if skyline_console_enable_healthchecks | bool %}{{ skyline_console_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ skyline_console_healthcheck_timeout }}"
+
+skyline_apiserver_default_volumes:
+  - "{{ node_config_directory }}/skyline-apiserver/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+skyline_console_default_volumes:
+  - "{{ node_config_directory }}/skyline-console/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+skyline_extra_volumes: "{{ default_extra_volumes }}"
+skyline_apiserver_extra_volumes: "{{ skyline_extra_volumes }}"
+skyline_console_extra_volumes: "{{ skyline_extra_volumes }}"
+
+####################
+# OpenStack
+####################
+skyline_internal_endpoint: "{{ internal_protocol }}://{{ skyline_internal_fqdn | put_address_in_context('url') }}:{{ skyline_apiserver_port }}"
+skyline_public_endpoint: "{{ public_protocol }}://{{ skyline_external_fqdn | put_address_in_context('url') }}:{{ skyline_apiserver_port }}"
+
+skyline_logging_debug: "{{ openstack_logging_debug }}"
+
+openstack_skyline_auth: "{{ openstack_auth }}"
+
+####################
+# Skyline
+####################
+log_dir: /var/log/kolla/skyline
+skyline_access_token_expire_seconds: 3600
+skyline_access_token_renew_seconds: 1800
+skyline_backend_cors_origins: []
+skyline_nginx_prefix: /api/openstack
+# if set skyline_base_domains_ignore as true, we will not display
+# the domains like heat_user_domain when we login from skyline.
+skyline_base_domains_ignore: true
+skyline_system_admin_roles:
+  - admin
+skyline_system_reader_roles:
+  - system_reader
+skyline_keystone_url: "{{ keystone_internal_url }}/v3/"
+skyline_session_name: session
+skyline_reclaim_instance_interval: 604800
+
+skyline_gunicorn_debug_level: "{% if openstack_logging_debug | bool %}DEBUG{% else %}INFO{% endif %}"
+skyline_gunicorn_timeout: 300
+skyline_gunicorn_keepalive: 5
+skyline_gunicorn_workers: "{{ openstack_service_workers }}"
+
+skyline_ssl_certfile: "{{ '/etc/skyline/certs/skyline-cert.pem' if skyline_enable_tls_backend | bool else '' }}"
+skyline_ssl_keyfile: "{{ '/etc/skyline/certs/skyline-key.pem' if skyline_enable_tls_backend | bool else '' }}"
+
+####################
+# Keystone
+####################
+skyline_keystone_user: skyline
+skyline_ks_services:
+  - name: "skyline"
+    type: "panel"
+    description: "OpenStack Dashboard Service"
+    endpoints:
+      - {'interface': 'internal', 'url': '{{ skyline_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ skyline_public_endpoint }}'}
+
+skyline_ks_users:
+  - project: "service"
+    user: "{{ skyline_keystone_user }}"
+    password: "{{ skyline_keystone_password }}"
+    role: "admin"
+
+####################
+# TLS
+####################
+skyline_enable_tls_backend: "{{ kolla_enable_tls_backend }}"

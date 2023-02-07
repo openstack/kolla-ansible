@@ -1,0 +1,37 @@
+---
+- import_role:
+    name: service-precheck
+  vars:
+    service_precheck_services: "{{ skyline_services }}"
+    service_name: "{{ project_name }}"
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - skyline_apiserver
+      - skyline_console
+  register: container_facts
+
+- name: Checking free port for Skyline APIServer
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ skyline_apiserver_listen_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['skyline_apiserver'] is not defined
+    - inventory_hostname in groups['skyline-apiserver']
+
+- name: Checking free port for Skyline Console
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ skyline_console_listen_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['skyline_console'] is not defined
+    - inventory_hostname in groups['skyline-console']
