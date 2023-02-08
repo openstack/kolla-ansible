@@ -57,7 +57,7 @@ class ModuleArgsTest(base.BaseTestCase):
                          'start_container',
                          'stop_container',
                          'stop_and_remove_container']),
-            api_version=dict(required=False, type='str', default='auto'),
+            api_version=dict(required=False, type='str'),
             auth_email=dict(required=False, type='str'),
             auth_password=dict(required=False, type='str', no_log=True),
             auth_registry=dict(required=False, type='str'),
@@ -78,14 +78,14 @@ class ModuleArgsTest(base.BaseTestCase):
             cgroupns_mode=dict(required=False, type='str',
                                choices=['private', 'host']),
             privileged=dict(required=False, type='bool', default=False),
-            graceful_timeout=dict(required=False, type='int', default=10),
+            graceful_timeout=dict(required=False, type='int'),
             remove_on_exit=dict(required=False, type='bool', default=True),
             restart_policy=dict(
                 required=False, type='str', choices=['no',
                                                      'on-failure',
                                                      'always',
                                                      'unless-stopped']),
-            restart_retries=dict(required=False, type='int', default=10),
+            restart_retries=dict(required=False, type='int'),
             state=dict(required=False, type='str', default='running',
                        choices=['running',
                                 'exited',
@@ -99,7 +99,7 @@ class ModuleArgsTest(base.BaseTestCase):
             volumes_from=dict(required=False, type='list'),
             dimensions=dict(required=False, type='dict', default=dict()),
             tty=dict(required=False, type='bool', default=False),
-            client_timeout=dict(required=False, type='int', default=120),
+            client_timeout=dict(required=False, type='int'),
             healthcheck=dict(required=False, type='dict'),
             ignore_missing=dict(required=False, type='bool', default=False),
         )
@@ -133,9 +133,19 @@ class ModuleArgsTest(base.BaseTestCase):
 FAKE_DATA = {
 
     'params': {
+        'common_options': None,
+        'api_version': None,
+        'auth_username': None,
+        'auth_password': None,
+        'auth_registry': None,
+        'restart_policy': None,
+        'auth_email': None,
+        'restart_retries': None,
+        'graceful_timeout': None,
+        'client_timeout': None,
         'command': None,
         'detach': True,
-        'environment': {},
+        'environment': None,
         'host_config': {
             'network_mode': 'host',
             'ipc_mode': '',
@@ -209,14 +219,82 @@ FAKE_DATA = {
 
 }
 
+FAKE_DATA_COMMON_OPTS = {
+    'auth_username': 'kevko',
+    'auth_password': 'SECRET',
+    'auth_registry': 'Quay.io/kolla',
+    'restart_policy': 'unless-stopped',
+    'auth_email': 'kevko@kevko.org',
+    'restart_retries': 20,
+    'environment': {
+        'KOLLA_CONFIG_STRATEGY': 'COPY_ALWAYS'
+    },
+    'graceful_timeout': 60,
+    'client_timeout': 150
+}
+
 
 def get_DockerWorker(mod_param, docker_api_version='1.40'):
     module = mock.MagicMock()
-    module.params = mod_param
+    module.params = copy.deepcopy(mod_param)
+
+    common_options_defaults = {
+        'auth_email': None,
+        'auth_password': None,
+        'auth_registry': None,
+        'auth_username': None,
+        'environment': None,
+        'restart_policy': None,
+        'restart_retries': 10,
+        'api_version': 'auto',
+        'graceful_timeout': 10,
+        'client_timeout': 120,
+    }
+
+    new_args = module.params.pop('common_options', dict()) or dict()
+    env_module_environment = module.params.pop('environment', dict()) or dict()
+
+    for k, v in module.params.items():
+        if v is None:
+            if k in common_options_defaults:
+                if k in new_args:
+                    # From ansible groups vars the common options
+                    # can be string or int
+                    if isinstance(new_args[k], str) and new_args[k].isdigit():
+                        new_args[k] = int(new_args[k])
+                    continue
+                else:
+                    if common_options_defaults[k] is not None:
+                        new_args[k] = common_options_defaults[k]
+            else:
+                continue
+        if v is not None:
+            new_args[k] = v
+
+    env_module_common_options = new_args.pop('environment', dict())
+    new_args['environment'] = env_module_common_options
+    new_args['environment'].update(env_module_environment)
+
+    # if pid_mode = ""/None/False, remove it
+    if not new_args.get('pid_mode', False):
+        new_args.pop('pid_mode', None)
+    # if ipc_mode = ""/None/False, remove it
+    if not new_args.get('ipc_mode', False):
+        new_args.pop('ipc_mode', None)
+
+    module.params = new_args
+
     with mock.patch("docker.APIClient") as MockedDockerClientClass:
         MockedDockerClientClass.return_value._version = docker_api_version
         dw = kd.DockerWorker(module)
         return dw
+
+
+def inject_env_when_create_container(container_data):
+    container_env = container_data.get('environment', dict()) or dict()
+    container_svc_name = container_data.get('name').replace('_', '-')
+    container_env.update({'KOLLA_SERVICE_NAME': container_svc_name})
+    container_data['environment'] = container_env
 
 
 class TestMainModule(base.BaseTestCase):
@@ -224,6 +302,9 @@ class TestMainModule(base.BaseTestCase):
     def setUp(self):
         super(TestMainModule, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
+        self.fake_data_common_opts = copy.deepcopy(FAKE_DATA)
+        self.fake_data_common_opts['params']['common_options'] = \
+            FAKE_DATA_COMMON_OPTS
 
     @mock.patch("kolla_docker.traceback.format_exc")
     @mock.patch("kolla_docker_worker.get_docker_client")
@@ -273,6 +354,50 @@ class TestMainModule(base.BaseTestCase):
                                    docker_api_version='1.42')
         self.assertTrue(self.dw._dimensions_kernel_memory_removed)
 
+    def test_common_options_defaults(self):
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertEqual(self.dw.params['api_version'], 'auto')
+        self.assertEqual(self.dw.params['restart_retries'], 10)
+        self.assertEqual(self.dw.params['graceful_timeout'], 10)
+        self.assertEqual(self.dw.params['client_timeout'], 120)
+        self.assertEqual(self.dw.params['environment'], {})
+        self.assertNotIn('auth_email', self.dw.params)
+        self.assertNotIn('auth_password', self.dw.params)
+        self.assertNotIn('auth_registry', self.dw.params)
+        self.assertNotIn('auth_username', self.dw.params)
+        self.assertNotIn('restart_policy', self.dw.params)
+
+    def test_common_options(self):
+        self.dw = get_DockerWorker(self.fake_data_common_opts['params'])
+        self.assertEqual(self.dw.params['api_version'], 'auto')
+        self.assertEqual(self.dw.params['restart_retries'], 20)
+        self.assertEqual(self.dw.params['graceful_timeout'], 60)
+        self.assertEqual(self.dw.params['client_timeout'], 150)
+        self.assertEqual(self.dw.params['environment'],
+                         {'KOLLA_CONFIG_STRATEGY': 'COPY_ALWAYS'})
+        self.assertEqual(self.dw.params['auth_email'], 'kevko@kevko.org')
+        self.assertEqual(self.dw.params['auth_password'], 'SECRET')
+        self.assertEqual(self.dw.params['auth_registry'], 'Quay.io/kolla')
+        self.assertEqual(self.dw.params['auth_username'], 'kevko')
+        self.assertEqual(self.dw.params['restart_policy'], 'unless-stopped')
+
+    def test_common_options_overriden(self):
+        self.fake_data_common_opts['params']['restart_retries'] = 50
+        self.fake_data_common_opts['params']['graceful_timeout'] = 100
+        self.fake_data_common_opts['params']['auth_email'] = 'kevko@kevko.sk'
+        self.dw = get_DockerWorker(self.fake_data_common_opts['params'])
+        self.assertEqual(self.dw.params['api_version'], 'auto')
+        self.assertEqual(self.dw.params['restart_retries'], 50)
+        self.assertEqual(self.dw.params['graceful_timeout'], 100)
+        self.assertEqual(self.dw.params['client_timeout'], 150)
+        self.assertEqual(self.dw.params['environment'],
+                         {'KOLLA_CONFIG_STRATEGY': 'COPY_ALWAYS'})
+        self.assertEqual(self.dw.params['auth_email'], 'kevko@kevko.sk')
+        self.assertEqual(self.dw.params['auth_password'], 'SECRET')
+        self.assertEqual(self.dw.params['auth_registry'], 'Quay.io/kolla')
+        self.assertEqual(self.dw.params['auth_username'], 'kevko')
+        self.assertEqual(self.dw.params['restart_policy'], 'unless-stopped')
+
 
 class TestContainer(base.BaseTestCase):
 
@@ -293,6 +418,7 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.create_host_config = mock.MagicMock(
             return_value=self.fake_data['params']['host_config'])
         self.dw.create_container()
+        inject_env_when_create_container(self.fake_data['params'])
         self.assertTrue(self.dw.changed)
         self.fake_data['params'].pop('dimensions')
         self.fake_data['params']['host_config']['blkio_weight'] = '10'
@@ -323,6 +449,7 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.create_host_config = mock.MagicMock(
             return_value=self.fake_data['params']['host_config'])
         self.dw.create_container()
+        inject_env_when_create_container(self.fake_data['params'])
         self.assertTrue(self.dw.changed)
         expected_args = {'command', 'detach', 'environment', 'host_config',
                          'healthcheck', 'image', 'labels', 'name', 'tty',
