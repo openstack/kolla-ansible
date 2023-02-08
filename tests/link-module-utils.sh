@@ -7,7 +7,7 @@
 
 
 local_module_utils=${1}/ansible/module_utils
-env_module_utils=${2}/ansible/module_utils
+env_module_utils=$(/usr/bin/env python -c "import ansible; print(ansible.__path__[0] + '/module_utils')")
 
 for file_path in ${local_module_utils}/*.py; do
     file_name=$(basename ${file_path})
