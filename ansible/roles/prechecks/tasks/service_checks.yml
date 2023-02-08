@@ -4,6 +4,7 @@
   command: docker --version
   register: result
   changed_when: false
+  check_mode: false
   when: inventory_hostname in groups['baremetal']
   failed_when: result is failed
                or result.stdout | regex_replace('.*\\b(\\d+\\.\\d+\\.\\d+)\\b.*', '\\1')  is version(docker_version_min, '<')
@@ -19,12 +20,14 @@
   register: result
   changed_when: false
   failed_when: result.stdout | regex_replace('(.*ssh_key.*)', '')  is search(":")
+  check_mode: false
 
 - name: Check if nscd is running
   command: pgrep nscd
   ignore_errors: yes
   failed_when: false
   changed_when: false
+  check_mode: false
   register: nscd_status
 
 - name: Fail if nscd is running
