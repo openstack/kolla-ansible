@@ -1,0 +1,31 @@
+{% set ironic_prometheus_exporter_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set ironic_prometheus_exporter_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "/usr/sbin/{{ ironic_prometheus_exporter_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/ironic-prometheus-exporter-wsgi.conf",
+            "dest": "/etc/{{ ironic_prometheus_exporter_dir }}/ironic-prometheus-exporter-wsgi.conf",
+            "owner": "ironic",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/ironic.conf",
+            "dest": "/etc/ironic/ironic.conf",
+            "owner": "ironic",
+            "perm": "0600"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/ironic",
+            "owner": "ironic:ironic",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/ironic/metrics",
+            "owner": "ironic:ironic",
+            "recurse": true
+        }
+  ]
+}

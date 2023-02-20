@@ -81,7 +81,7 @@
     mode: "0660"
   become: true
   when:
-    - item.key in [ "ironic-api", "ironic-conductor" ]
+    - item.key in [ "ironic-api", "ironic-conductor", "ironic-prometheus-exporter" ]
     - inventory_hostname in groups[item.value.group]
     - item.value.enabled | bool
   with_dict: "{{ ironic_services }}"
@@ -242,6 +242,24 @@
     - inventory_hostname in groups[service.group]
   notify:
     - Restart ironic-http container
+
+- name: Copying over ironic-prometheus-exporter-wsgi.conf
+  vars:
+    service: "{{ ironic_services['ironic-prometheus-exporter'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/ironic-prometheus-exporter/ironic-prometheus-exporter-wsgi.conf"
+    mode: "0660"
+  become: true
+  with_first_found:
+    - "{{ node_config_directory }}/ironic/{{ inventory_hostname }}/ironic-prometheus-exporter-wsgi.conf"
+    - "{{ node_config_directory }}/ironic/ironic-prometheus-exporter-wsgi.conf"
+    - "ironic-prometheus-exporter-wsgi.conf.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - "Restart ironic-prometheus-exporter container"
 
 - name: Copying over existing Ironic policy file
   vars:

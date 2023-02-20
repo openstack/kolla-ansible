@@ -214,6 +214,14 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
+{% if enable_ironic_prometheus_exporter | bool %}
+  - job_name: ironic_prometheus_exporter
+    static_configs:
+{% for host in groups['ironic-conductor'] %}
+      - targets: ["{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['ironic_prometheus_exporter_port'] }}"]
+{% endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
   - job_name: alertmanager
     static_configs:

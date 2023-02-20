@@ -49,6 +49,18 @@
     - container_facts['ironic_http'] is not defined
     - inventory_hostname in groups['ironic-http']
 
+- name: Checking free port for Ironic Prometheus Exporter
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ironic_prometheus_exporter_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_ironic_prometheus_exporter | bool
+    - container_facts['ironic_prometheus_exporter'] is not defined
+    - inventory_hostname in groups['ironic-conductor']
+
 - name: Checking ironic-agent files exist for Ironic Inspector
   stat:
     path: "{{ ironic_agent_files_directory }}/ironic/{{ item }}"

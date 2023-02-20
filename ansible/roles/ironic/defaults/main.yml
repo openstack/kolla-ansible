@@ -85,6 +85,13 @@ ironic_services:
     image: "{{ ironic_dnsmasq_image_full }}"
     volumes: "{{ ironic_dnsmasq_default_volumes + ironic_dnsmasq_extra_volumes }}"
     dimensions: "{{ ironic_dnsmasq_dimensions }}"
+  ironic-prometheus-exporter:
+    container_name: ironic_prometheus_exporter
+    group: ironic-conductor
+    enabled: "{{ enable_ironic_prometheus_exporter }}"
+    image: "{{ ironic_prometheus_exporter_image_full }}"
+    volumes: "{{ ironic_prometheus_exporter_default_volumes + ironic_prometheus_exporter_extra_volumes }}"
+    dimensions: "{{ ironic_prometheus_exporter_dimensions }}"
 
 ####################
 # Config Validate
@@ -146,12 +153,17 @@ ironic_dnsmasq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ 
 ironic_dnsmasq_tag: "{{ ironic_tag }}"
 ironic_dnsmasq_image_full: "{{ ironic_dnsmasq_image }}:{{ ironic_dnsmasq_tag }}"
 
+ironic_prometheus_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-prometheus-exporter"
+ironic_prometheus_exporter_tag: "{{ ironic_tag }}"
+ironic_prometheus_exporter_image_full: "{{ ironic_prometheus_exporter_image }}:{{ ironic_prometheus_exporter_tag }}"
+
 ironic_api_dimensions: "{{ default_container_dimensions }}"
 ironic_conductor_dimensions: "{{ default_container_dimensions }}"
 ironic_tftp_dimensions: "{{ default_container_dimensions }}"
 ironic_http_dimensions: "{{ default_container_dimensions }}"
 ironic_inspector_dimensions: "{{ default_container_dimensions }}"
 ironic_dnsmasq_dimensions: "{{ default_container_dimensions }}"
+ironic_prometheus_exporter_dimensions: "{{ default_container_dimensions }}"
 
 ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -222,6 +234,7 @@ ironic_conductor_default_volumes:
   - "kolla_logs:/var/log/kolla"
   - "ironic:/var/lib/ironic"
   - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
+  - "ironic_prometheus_exporter_data:/var/lib/ironic/metrics"
 ironic_tftp_default_volumes:
   - "{{ node_config_directory }}/ironic-tftp/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -247,6 +260,12 @@ ironic_dnsmasq_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "ironic_inspector_dhcp_hosts:/etc/dnsmasq/dhcp-hostsdir:ro"
+ironic_prometheus_exporter_default_volumes:
+  - "{{ node_config_directory }}/ironic-prometheus-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla"
+  - "ironic_prometheus_exporter_data:/var/lib/ironic/metrics"
 
 ironic_extra_volumes: "{{ default_extra_volumes }}"
 ironic_api_extra_volumes: "{{ ironic_extra_volumes }}"
@@ -255,6 +274,7 @@ ironic_tftp_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_http_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_inspector_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_dnsmasq_extra_volumes: "{{ ironic_extra_volumes }}"
+ironic_prometheus_exporter_extra_volumes: "{{ ironic_extra_volumes }}"
 
 ####################
 # OpenStack
@@ -288,6 +308,9 @@ ironic_enable_rolling_upgrade: "yes"
 ironic_upgrade_skip_wait_check: false
 ironic_inspector_kernel_cmdline_extras: []
 ironic_inspector_pxe_filter: "{% if enable_neutron | bool %}dnsmasq{% else %}noop{% endif %}"
+ironic_prometheus_exporter_data_dir: "/var/lib/ironic-prometheus-exporter/data"
+ironic_prometheus_exporter_sensor_data_interval: 30
+ironic_prometheus_exporter_sensor_data_undeployed_nodes: "true"
 
 
 ####################

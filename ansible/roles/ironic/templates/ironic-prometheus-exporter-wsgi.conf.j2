@@ -1,0 +1,38 @@
+{% set ironic_log_dir = '/var/log/kolla/ironic' %}
+{% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
+Listen {{ api_interface_address | put_address_in_context('url') }}:{{ ironic_prometheus_exporter_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+
+<Directory "{{ python_path }}/ironic_prometheus_exporter/app">
+    <FilesMatch "^wsgi$">
+        AllowOverride None
+        Options None
+        Require all granted
+    </FilesMatch>
+</Directory>
+
+ErrorLog "{{ ironic_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ ironic_log_dir }}/apache-access.log" common
+</IfModule>
+
+{% if ironic_logging_debug | bool %}
+LogLevel info
+{% endif %}
+
+<VirtualHost *:{{ ironic_prometheus_exporter_port }}>
+    ErrorLog "{{ ironic_log_dir }}/ironic-prometheus-exporter-wsgi-error.log"
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "{{ ironic_log_dir }}/ironic-prometheus-exporter-wsgi-access.log" logformat
+
+    WSGIDaemonProcess ironic-prometheus-exporter processes={{ openstack_service_workers }} threads=1 user=ironic display-name=%{GROUP} python-path={{ python_path }}
+    WSGIProcessGroup ironic-prometheus-exporter
+    WSGIScriptAlias / {{ python_path }}/ironic_prometheus_exporter/app/wsgi.py
+    WSGIApplicationGroup %{GLOBAL}
+    <Location "/">
+        Require all granted
+    </Location>
+</VirtualHost>
