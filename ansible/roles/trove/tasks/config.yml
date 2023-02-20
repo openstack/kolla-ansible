@@ -33,7 +33,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - kolla_copy_ca_into_containers | bool or trove_enable_tls_backend | bool
 
 - name: Copying over config.json files for services
   template:
@@ -47,6 +47,24 @@
   with_dict: "{{ trove_services }}"
   notify:
     - "Restart {{ item.key }} container"
+
+- name: Copying over trove-wsgi.conf
+  vars:
+    service: "{{ trove_services['trove-api'] }}"
+  become: true
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/trove-api/trove-wsgi.conf"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove-wsgi.conf"
+    - "{{ node_custom_config }}/trove/trove-wsgi.conf"
+    - "trove-wsgi.conf.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart trove-api container
 
 - name: Copying over trove-guestagent.conf
   vars:
