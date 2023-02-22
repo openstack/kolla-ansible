@@ -88,11 +88,14 @@ copy_logs() {
     dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames > ${LOG_DIR}/system_logs/dbus-services.txt
 
     # cephadm related logs
-    mkdir -p ${LOG_DIR}/ceph
-    sudo cp /etc/ceph/ceph.conf ${LOG_DIR}/ceph
-    sudo cp /var/run/ceph/*/cluster.yml ${LOG_DIR}/ceph/cluster.yml
-    sudo cephadm shell -- ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
-    sudo cephadm shell -- ceph --connect-timeout 5 osd tree > ${LOG_DIR}/ceph/ceph_osd_tree.txt
+    if [ `command -v cephadm` ]; then
+        mkdir -p ${LOG_DIR}/ceph
+        sudo cp /etc/ceph/ceph.conf ${LOG_DIR}/ceph
+        sudo cp /var/run/ceph/*/cluster.yml ${LOG_DIR}/ceph/cluster.yml
+        sudo cp /var/log/ceph/cephadm.log* ${LOG_DIR}/ceph/
+        sudo cephadm shell -- ceph --connect-timeout 5 -s > ${LOG_DIR}/ceph/ceph_s.txt
+        sudo cephadm shell -- ceph --connect-timeout 5 osd tree > ${LOG_DIR}/ceph/ceph_osd_tree.txt
+    fi
 
     # bifrost related logs
     if [[ $(docker ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
