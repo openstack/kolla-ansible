@@ -65,10 +65,12 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `Octavia <https://docs.openstack.org/octavia/latest/>`__
 - `Sahara <https://docs.openstack.org/sahara/latest/>`__
 - `Senlin <https://docs.openstack.org/senlin/latest/>`__
+- Skyline (`APIServer <https://docs.openstack.org/skyline-apiserver/latest/>`__ and `Console <https://docs.openstack.org/skyline-console/latest/>`__)
 - `Solum <https://docs.openstack.org/solum/latest/>`__
 - `Swift <https://docs.openstack.org/swift/latest/>`__
 - `Tacker <https://docs.openstack.org/tacker/latest/>`__
 - `Trove <https://docs.openstack.org/trove/latest/>`__
+- `Venus <https://docs.openstack.org/venus/latest/>`__
 - `Vitrage <https://docs.openstack.org/vitrage/latest/>`__
 - `Watcher <https://docs.openstack.org/watcher/latest/>`__
 - `Zun <https://docs.openstack.org/zun/latest/>`__
