@@ -1,12 +1,6 @@
 ---
 - include_tasks: pkg_{{ ansible_os_family | lower }}.yml
 
-- name: Install cephadm
-  package:
-    name: cephadm
-    state: present
-  become: True
-
 - name: Ensure /etc/ceph exists
   file:
     path: /etc/ceph
@@ -42,13 +36,15 @@
     mon_ip: "{{ hostvars[inventory_hostname]['ansible_'+api_interface_name].ipv4.address }}"
   command:
     cmd: >
-         cephadm bootstrap
+         cephadm
+         --docker
+         bootstrap
          --ssh-private-key=/etc/ceph/cephadm.id
          --ssh-public-key=/etc/ceph/cephadm.pub
          --skip-monitoring-stack
          --skip-dashboard
          --skip-firewalld
-         --mon-addrv='[v2:{{ mon_ip }}:3300,v1:{{ mon_ip }}:6789]'
+         --mon-ip {{ mon_ip }}
   become: True
   register: cephadm_bootstrap_output
 
@@ -74,7 +70,7 @@
   command:
     cmd: >
          cephadm shell --
-         bash /var/run/ceph/commands.sh
+         bash -x /var/run/ceph/commands.sh
   become: True
 
 # TODO(mnasiadka): Fix merge_configs to support tabs
