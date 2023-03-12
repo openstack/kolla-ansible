@@ -27,9 +27,9 @@
     - iscsi_services.iscsid.enabled | bool
 
 - name: Check supported platforms for tgtd
-  fail:
-    msg:
-      The SCSI target daemon tgtd is not supported on CentOS/RHEL 8 and later
+  assert:
+    that: ansible_facts.os_family != 'RedHat'
+    fail_msg: >
+      The SCSI target daemon tgtd is not supported on CentOS/RHEL
   when:
-    - ansible_facts.os_family == 'RedHat'
     - enable_tgtd | bool
