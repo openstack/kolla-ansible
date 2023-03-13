@@ -59,7 +59,7 @@ flavor = {% if enable_glance_image_cache | bool %}keystone+cachemanagement{% els
 {% if glance_backend_vmware | bool %}
 default_backend = vmware
 {% elif glance_backend_ceph | bool %}
-default_backend = rbd
+default_backend = "{{ glance_ceph_backends[0].name }}"
 {% elif glance_backend_swift | bool %}
 default_backend = swift
 {% else %}
@@ -72,9 +72,12 @@ filesystem_store_datadir = /var/lib/glance/images/
 {% endif %}
 
 {% if glance_backend_ceph | bool %}
-[rbd]
+{% for backend in glance_ceph_backends %}
+[{{ backend.name }}]
 rbd_store_user = {{ ceph_glance_user }}
 rbd_store_pool = {{ ceph_glance_pool_name }}
+rbd_store_ceph_conf = /etc/ceph/{{ backend.cluster }}.conf
+{% endfor %}
 {% endif %}
 
 {% if glance_backend_swift | bool %}

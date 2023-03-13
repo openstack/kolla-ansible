@@ -234,8 +234,6 @@ cinder_api_workers: "{{ openstack_service_workers }}"
 # Cinder
 ####################
 cinder_backends:
-  - name: "{{ cinder_backend_ceph_name }}"
-    enabled: "{{ cinder_backend_ceph | bool }}"
   - name: "{{ cinder_backend_lvm_name }}"
     enabled: "{{ enable_cinder_backend_lvm | bool }}"
   - name: "{{ cinder_backend_nfs_name }}"
@@ -266,9 +264,17 @@ cinder_backend_pure_iscsi_name: "Pure-FlashArray-iscsi"
 cinder_backend_pure_fc_name: "Pure-FlashArray-fc"
 cinder_backend_pure_roce_name: "Pure-FlashArray-roce"
 
+cinder_ceph_backends:
+  - name: "{{ cinder_backend_ceph_name }}"
+    cluster: "ceph"
+    enabled: "{{ cinder_backend_ceph | bool }}"
+
+cinder_backup_backend_ceph_name: "rbd-1"
+cinder_backup_ceph_backend: "{{ cinder_ceph_backends | selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first }}"
+
 skip_cinder_backend_check: False
 
-cinder_enabled_backends: "{{ cinder_backends | selectattr('enabled', 'equalto', true) | list }}"
+cinder_enabled_backends: "{{ cinder_backends | selectattr('enabled', 'equalto', true) | list + cinder_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # Notification

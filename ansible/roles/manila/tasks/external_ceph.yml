@@ -1,23 +1,43 @@
 ---
-- name: Copying over ceph.conf for manila
-  template:
-    src: "{{ node_custom_config }}/manila/ceph.conf"
-    dest: "{{ node_config_directory }}/manila-share/ceph.conf"
+- name: Ensuring manila service ceph config subdir exists
+  vars:
+    service: "{{ manila_services['manila-share'] }}"
+  file:
+    path: "{{ node_config_directory }}/manila-share/ceph"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Copy over multiple ceph configs for Manila
+  merge_configs:
+    sources:
+      - "{{ node_custom_config }}/manila/{{ item.cluster }}.conf"
+      - "{{ node_custom_config }}/manila/manila-share/{{ item.cluster }}.conf"
+    dest: "{{ node_config_directory }}/manila-share/ceph/{{ item.cluster }}.conf"
     mode: "0660"
   become: true
   when:
     - inventory_hostname in groups['manila-share']
+    - item.enabled | bool
+  with_items: "{{ manila_ceph_backends }}"
   notify:
     - Restart manila-share container
 
-- name: Copy over Ceph keyring files for manila
+- name: Copy over ceph Manila keyrings
   template:
-    src: "{{ node_custom_config }}/manila/{{ ceph_manila_keyring }}"
-    dest: "{{ node_config_directory }}/manila-share/{{ ceph_manila_keyring }}"
-    mode: "0600"
+    src: "{{ node_custom_config }}/manila/{{ item.cluster }}.{{ ceph_manila_keyring }}"
+    dest: "{{ node_config_directory }}/manila-share/ceph/{{ item.cluster }}.{{ ceph_manila_keyring }}"
+    mode: "0660"
   become: true
+  with_items: "{{ manila_ceph_backends }}"
   when:
     - inventory_hostname in groups['manila-share']
+    - item.enabled | bool
   notify:
     - Restart manila-share container
 
