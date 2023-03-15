@@ -1,0 +1,33 @@
+<match **>
+    @type copy
+    <store>
+       @type opensearch
+       host {{ opensearch_address }}
+       port {{ opensearch_port }}
+       scheme {{ fluentd_opensearch_scheme }}
+{% if fluentd_opensearch_path != '' %}
+       path {{ fluentd_opensearch_path }}
+{% endif %}
+{% if fluentd_opensearch_scheme == 'https' %}
+       ssl_version {{ fluentd_opensearch_ssl_version }}
+       ssl_verify {{ fluentd_opensearch_ssl_verify }}
+{% if fluentd_opensearch_cacert | length > 0 %}
+       ca_file {{ fluentd_opensearch_cacert }}
+{% endif %}
+{% endif %}
+{% if fluentd_opensearch_user != '' and fluentd_opensearch_password != ''%}
+       user {{ fluentd_opensearch_user }}
+       password {{ fluentd_opensearch_password }}
+{% endif %}
+       logstash_format true
+       logstash_prefix {{ opensearch_log_index_prefix }}
+       reconnect_on_error true
+       request_timeout {{ fluentd_opensearch_request_timeout }}
+       suppress_type_name true
+       <buffer>
+         @type file
+         path /var/lib/fluentd/data/opensearch.buffer/openstack.*
+         flush_interval 15s
+       </buffer>
+    </store>
+</match>

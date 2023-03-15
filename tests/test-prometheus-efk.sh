@@ -162,13 +162,25 @@ function test_prometheus {
     echo "SUCCESS: Prometheus"
 }
 
+function test_opensearch_migration {
+    echo "MIGRATION: Migrating to Opensearch"
+    echo "enable_opensearch: true" >> /etc/kolla/globals.yml
+    RAW_INVENTORY=/etc/kolla/inventory
+    source ${KOLLA_ANSIBLE_VENV_PATH}/bin/activate
+    kolla-ansible -i ${RAW_INVENTORY} -vvv opensearch-migration
+    echo "SUCESS: Migrated to Opensearch"
+    tests/test-prometheus-opensearch.sh
+}
+
 function test_prometheus_efk_logged {
     . /etc/kolla/admin-openrc.sh
-
     test_kibana
     test_elasticsearch
     test_grafana
     test_prometheus
+    if [[ "$OPENSEARCH_MIGRATION" == "True" ]]; then
+        test_opensearch_migration
+    fi
 }
 
 function test_prometheus_efk {

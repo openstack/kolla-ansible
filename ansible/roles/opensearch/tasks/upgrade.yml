@@ -1,0 +1,48 @@
+---
+- name: Disable shard allocation
+  become: true
+  vars:
+    opensearch_shard_body: {"transient": {"cluster.routing.allocation.enable": "none"}}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_cluster/settings"
+      method: PUT
+      status_code: 200
+      return_content: yes
+      body: "{{ opensearch_shard_body | to_json }}"  # noqa jinja[invalid]
+      body_format: json
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+
+- name: Perform a flush
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_flush"
+      method: POST
+      status_code: 200
+      return_content: yes
+      body_format: json
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  retries: 10
+  delay: 5
+  register: result
+  until: ('status' in result) and result.status == 200
+
+- import_tasks: config-host.yml
+
+- import_tasks: config.yml
+
+- import_tasks: check-containers.yml
+
+- include_tasks: register.yml
+  when:
+    - opensearch_enable_keystone_registration | bool
+
+- name: Flush handlers
+  meta: flush_handlers

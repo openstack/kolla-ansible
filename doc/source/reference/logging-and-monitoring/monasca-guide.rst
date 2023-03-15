@@ -4,6 +4,10 @@
 Monasca - Monitoring service
 ============================
 
+.. note::
+
+   Monasca does not support OpenSearch.
+
 Overview
 ~~~~~~~~
 

@@ -84,8 +84,8 @@ Kolla Ansible deploys containers for the following infrastructure components:
   `InfluxDB <https://www.influxdata.com/products/influxdb-overview/>`__,
   `Prometheus <https://prometheus.io/>`__, and
   `Grafana <https://grafana.com/>`__ for performance monitoring.
-- `Elasticsearch <https://www.elastic.co/de/products/elasticsearch/>`__ and
-  `Kibana <https://www.elastic.co/de/products/kibana/>`__ to search, analyze,
+- `OpenSearch <https://opensearch.org/docs/latest/>`__ and
+  `OpenSearch Dashboards <https://opensearch.org/docs/latest/dashboards/index/>`__ to search, analyze,
   and visualize log messages.
 - `Etcd <https://etcd.io/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector

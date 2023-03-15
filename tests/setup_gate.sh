@@ -102,8 +102,8 @@ EOF
         GATE_IMAGES="^cron,^fluentd,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
-    if [[ $SCENARIO == "prometheus-efk" ]]; then
-        GATE_IMAGES="^cron,^elasticsearch,^fluentd,^grafana,^haproxy,^keepalived,^kibana,^kolla-toolbox,^mariadb,^memcached,^prometheus,^rabbitmq"
+    if [[ $SCENARIO == "prometheus-opensearch" ]]; then
+        GATE_IMAGES="^cron,^fluentd,^grafana,^haproxy,^keepalived,^kolla-toolbox,^mariadb,^memcached,^opensearch,^prometheus,^rabbitmq"
     fi
 
     if [[ $SCENARIO == "monasca" ]]; then
