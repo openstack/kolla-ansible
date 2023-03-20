@@ -1,0 +1,18 @@
+---
+upgrade:
+  - |
+    RabbitMQ replica count has changed from n to (n//2+1) where n is the number
+    of RabbitMQ nodes. That is, for a 3 node clusters, we request exactly 2
+    replicas, for a 1 node cluster, we request 1 replica, and for a 5 node
+    cluster, we request 3 replicas. This only has an effect if
+    `om_enable_rabbitmq_high_availability` is set to `True`, otherwise queues
+    are not replicated. The number of mirrored queues is not changed
+    automatically, and instead requires the queues to be recreated (for
+    example, by restarting RabbitMQ).
+    This follows the good practice advice here:
+    https://www.rabbitmq.com/ha.html#replication-factor
+    A major motivation is to reduce the load on RabbitMQ in larger
+    deployments. It is hoped, the improved performance should also
+    help rabbitmq recover more quickly from cluster issues.
+    Note that the contents of the RabbitMQ definitions.json are now changed,
+    meaning RabbitMQ containers will be restarted on next deploy/upgrade.

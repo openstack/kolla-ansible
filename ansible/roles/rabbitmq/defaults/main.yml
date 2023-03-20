@@ -89,10 +89,16 @@ rabbitmq_cluster_partition_handling: "pause_minority"
 # More details see:
 # https://www.rabbitmq.com/ha.html#promoting-unsynchronised-mirrors
 rabbitmq_ha_promote_on_shutdown:
+# The number of rabbitmq replicas should follow this advice:
+# https://www.rabbitmq.com/ha.html#replication-factor
+# This means, if you have three rabbit nodes, we request two
+# replicas of all queues and exchanges.
+# Note: this assumes an odd number of rabbitmq nodes.
 # If no replica count is specified, replicates across all nodes with definition
 # "ha-mode":"all". Otherwise, uses
 # "ha-mode":"exactly","ha-params":{{ rabbitmq_ha_replica_count | int }}
-rabbitmq_ha_replica_count:
+rabbitmq_server_count: "{{ groups[role_rabbitmq_groups] | length }}"
+rabbitmq_ha_replica_count: "{{ (rabbitmq_server_count | int // 2 + 1) }}"
 rabbitmq_extra_config: {}
 
 ####################
