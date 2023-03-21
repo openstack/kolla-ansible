@@ -7,17 +7,17 @@ set -o pipefail
 # Enable unbuffered output
 export PYTHONUNBUFFERED=1
 
-# TODO(yoctozepto): Avoid duplicating this from prometheus-efk
-function check_elasticsearch {
+# TODO(yoctozepto): Avoid duplicating this from prometheus-opensearch
+function check_opensearch {
     # Verify that we see a healthy index created due to Fluentd forwarding logs
-    local es_url=${OS_AUTH_URL%:*}:9200/_cluster/health
+    local opensearch_url=${OS_AUTH_URL%:*}:9200/_cluster/health
     output_path=$1
     args=(
         --include
         --location
         --fail
     )
-    if ! curl "${args[@]}" $es_url > $output_path; then
+    if ! curl "${args[@]}" $opensearch_url > $output_path; then
         return 1
     fi
     # NOTE(mgoddard): Status may be yellow because no indices have been
@@ -38,21 +38,21 @@ function check_venus {
     fi
 }
 
-function test_elasticsearch {
-    echo "TESTING: Elasticsearch"
+function test_opensearch {
+    echo "TESTING: OpenSearch"
     output_path=$(mktemp)
     attempt=1
-    while ! check_elasticsearch $output_path; do
-        echo "Elasticsearch not accessible yet"
+    while ! check_opensearch $output_path; do
+        echo "OpenSearch not accessible yet"
         attempt=$((attempt+1))
         if [[ $attempt -eq 12 ]]; then
-            echo "FAILED: Elasticsearch did not become accessible. Response:"
+            echo "FAILED: OpenSearch did not become accessible. Response:"
             cat $output_path
             return 1
         fi
         sleep 10
     done
-    echo "SUCCESS: Elasticsearch"
+    echo "SUCCESS: OpenSearch"
 }
 
 function test_venus {
@@ -75,12 +75,12 @@ function test_venus {
 function test_venus_scenario_logged {
     . /etc/kolla/admin-openrc.sh
 
-    test_elasticsearch
+    test_opensearch
     test_venus
 }
 
 function test_venus_scenario {
-    echo "Testing Venus and EFK"
+    echo "Testing Venus and OpenSearch"
     test_venus_scenario_logged > /tmp/logs/ansible/test-venus-scenario 2>&1
     result=$?
     if [[ $result != 0 ]]; then

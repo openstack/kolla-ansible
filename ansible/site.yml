@@ -57,6 +57,8 @@
         - enable_neutron_{{ enable_neutron | bool }}
         - enable_nova_{{ enable_nova | bool }}
         - enable_octavia_{{ enable_octavia | bool }}
+        - enable_opensearch_{{ enable_opensearch | bool }}
+        - enable_opensearch_dashboards_{{ enable_opensearch_dashboards | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
         - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_ovn_{{ enable_ovn | bool }}
@@ -283,6 +285,11 @@
             tasks_from: loadbalancer
           tags: octavia
           when: enable_octavia | bool
+        - include_role:
+            name: opensearch
+            tasks_from: loadbalancer
+          tags: opensearch
+          when: enable_opensearch | bool
         - include_role:
             name: prometheus
             tasks_from: loadbalancer
@@ -554,6 +561,17 @@
     - { role: elasticsearch,
         tags: elasticsearch,
         when: enable_elasticsearch | bool }
+
+- name: Apply role opensearch
+  gather_facts: false
+  hosts:
+    - opensearch
+    - '&enable_opensearch_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  roles:
+    - { role: opensearch,
+        tags: opensearch,
+        when: enable_opensearch | bool }
 
 - name: Apply role kibana
   gather_facts: false

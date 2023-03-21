@@ -704,6 +704,32 @@
     - haproxy_stat.find('octavia_api') == -1
     - haproxy_vip_prechecks
 
+- name: Checking free port for OpenSearch HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ opensearch_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_opensearch | bool
+    - inventory_hostname in groups['loadbalancer']
+    - haproxy_stat.find('opensearch') == -1
+    - haproxy_vip_prechecks
+
+- name: Checking free port for OpenSearch Dashboards HAProxy
+  wait_for:
+    host: "{{ kolla_internal_vip_address }}"
+    port: "{{ opensearch_dashboards_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - enable_opensearch_dashboards | bool
+    - inventory_hostname in groups['loadbalancer']
+    - haproxy_stat.find('opensearch_dashboards') == -1
+    - haproxy_vip_prechecks
+
 - name: Checking free port for RabbitMQ Management HAProxy
   wait_for:
     host: "{{ kolla_internal_vip_address }}"

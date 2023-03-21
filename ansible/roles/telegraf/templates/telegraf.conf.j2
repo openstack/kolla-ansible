@@ -60,6 +60,11 @@
   servers = ["{{ elasticsearch_proto }}://{{ api_interface_address | put_address_in_context('url') }}:{{ elasticsearch_port }}"]
   local = true
   cluster_health = true
+{% elif inventory_hostname in groups['opensearch'] and enable_opensearch | bool %}
+[[inputs.elasticsearch]]
+  servers = ["{{ opensearch_proto }}://{{ api_interface_address | put_address_in_context('url') }}:{{ opensearch_port }}"]
+  local = true
+  cluster_health = true
 {% endif %}
 {% if inventory_hostname in groups['rabbitmq'] and enable_rabbitmq | bool %}
 [[inputs.rabbitmq]]

@@ -80,6 +80,9 @@
       {{ ( enable_elasticsearch | bool or
            ( elasticsearch_address != kolla_internal_fqdn )) and
          ( not enable_monasca | bool or not monasca_ingest_control_plane_logs | bool ) }}
+    log_direct_to_opensearch: >-
+      {{ enable_opensearch | bool or
+           ( opensearch_address != kolla_internal_fqdn ) }}
     # Inputs
     fluentd_input_files: "{{ default_input_files_enabled | customise_fluentd(customised_input_files) }}"
     default_input_files_enabled: "{{ default_input_files | selectattr('enabled') | map(attribute='name') | list }}"
@@ -130,6 +133,8 @@
         enabled: "{{ log_direct_to_elasticsearch }}"
       - name: "conf/output/02-monasca.conf.j2"
         enabled: "{{ enable_monasca | bool and monasca_ingest_control_plane_logs | bool }}"
+      - name: "conf/output/03-opensearch.conf.j2"
+        enabled: "{{ log_direct_to_opensearch }}"
     customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | list }}"
   template:
     src: "td-agent.conf.j2"
@@ -190,6 +195,7 @@
       - { name: "nova", enabled: "{{ enable_nova | bool }}" }
       - { name: "nova-libvirt", enabled: "{{ enable_nova | bool and enable_nova_libvirt_container | bool }}" }
       - { name: "octavia", enabled: "{{ enable_octavia | bool }}" }
+      - { name: "opensearch", enabled: "{{ enable_opensearch | bool or enable_opensearch_dashboards | bool }}" }
       - { name: "openvswitch", enabled: "{{ enable_openvswitch | bool }}" }
       - { name: "outward-rabbitmq", enabled: "{{ enable_outward_rabbitmq | bool }}" }
       - { name: "placement", enabled: "{{ enable_placement | bool }}" }
