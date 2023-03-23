@@ -469,13 +469,16 @@ class DockerWorker(ContainerWorker):
                 msg="No such container: {}".format(name))
         else:
             self.changed = True
-            self.systemd.create_unit_file()
-
-            if not self.systemd.restart():
-                self.module.fail_json(
-                    changed=True,
-                    msg="Container timed out",
-                    **self.check_container())
+            if self.params.get('restart_policy') != 'no':
+                self.systemd.create_unit_file()
+                if not self.systemd.restart():
+                    self.module.fail_json(
+                        changed=True,
+                        msg="Container timed out",
+                        **self.check_container())
+            else:
+                self.dc.stop(name, timeout=graceful_timeout)
+                self.dc.start(name)
 
     def create_volume(self):
         if not self.check_volume():

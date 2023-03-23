@@ -617,6 +617,24 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.containers.assert_called_once_with(all=True)
         self.dw.systemd.restart.assert_called_once_with()
 
+    def test_restart_container_no_systemd(self):
+        self.dw = get_DockerWorker({'name': 'my_container',
+                                    'action': 'stop_container',
+                                    'restart_policy': 'no'})
+        self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.fake_data['container_inspect'].update(
+            self.fake_data['containers'][0])
+        self.dw.dc.inspect_container.return_value = (
+            self.fake_data['container_inspect'])
+        self.dw.restart_container()
+
+        self.assertTrue(self.dw.changed)
+        self.dw.dc.containers.assert_called_once_with(all=True)
+        self.dw.dc.stop.assert_called_once_with(
+            'my_container', timeout=10)
+        self.dw.dc.start.assert_called_once_with('my_container')
+        self.dw.module.fail_json.assert_not_called()
+
     def test_restart_container_not_exists(self):
         self.dw = get_DockerWorker({'name': 'fake-container',
                                     'action': 'restart_container'})
