@@ -100,9 +100,11 @@ rabbitmq_ha_promote_on_shutdown:
 rabbitmq_server_count: "{{ groups[role_rabbitmq_groups] | length }}"
 rabbitmq_ha_replica_count: "{{ (rabbitmq_server_count | int // 2 + 1) }}"
 # If no TTL is specified, messages will not expire
-rabbitmq_message_ttl_ms:
+# Set max message ttl to 10 mins (more than 1 min rpc timeout)
+# so we don't have queues with no consumers growing unbounded
+rabbitmq_message_ttl_ms: 600000
 # If no queue expiry is specified, queues will not expire
-rabbitmq_queue_expiry_ms:
+rabbitmq_queue_expiry_ms: 3600000
 rabbitmq_extra_config: {}
 
 ####################
