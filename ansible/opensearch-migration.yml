@@ -73,13 +73,73 @@
   gather_facts: false
   hosts: opensearch
   tasks:
-    - name: Create OpenSearch Docker volume
+    - name: Check if elasticsearch_datadir_volume is a directory
       become: true
-      command: "docker volume create opensearch"
+      stat:
+        path: "{{ elasticsearch_datadir_volume }}"
+      register: elasticsearch_datadir_stat
+      ignore_errors: true
 
-    - name: Migrate ElasticSearch data to OpenSearch
+    - name: Check if opensearch_datadir_volume is a directory
       become: true
-      command: "mv /var/lib/docker/volumes/elasticsearch/_data/nodes /var/lib/docker/volumes/opensearch/_data/"
+      stat:
+        path: "{{ opensearch_datadir_volume }}"
+      register: opensearch_datadir_stat
+      ignore_errors: true
+
+    - name: Create OpenSearch Docker volume if opensearch_datadir_volume is not a directory
+      become: true
+      docker_volume:
+        name: "{{ opensearch_datadir_volume }}"
+      when: opensearch_datadir_stat.stat.isdir is undefined or not opensearch_datadir_stat.stat.isdir
+
+    - name: Get Elasticsearch data directory mount point
+      become: true
+      docker_volume_info:
+        name: "{{ elasticsearch_datadir_volume }}"
+      register: elasticsearch_volume_info
+      ignore_errors: true
+
+    - name: Get file count in Elasticsearch data directory
+      become: true
+      find:
+        paths: "{{ elasticsearch_volume_info.volume.Mountpoint if elasticsearch_volume_info.volume.Mountpoint is defined else elasticsearch_datadir_volume }}"
+        file_type: file
+        recurse: yes
+      register: elasticsearch_volume_found_files
+
+    - name: Get OpenSearch data directory mount point
+      become: true
+      docker_volume_info:
+        name: "{{ opensearch_datadir_volume }}"
+      register: opensearch_volume_info
+      ignore_errors: true
+
+    - name: Set conditions for moving data
+      set_fact:
+        using_regular_folder: >-
+          {{ (elasticsearch_volume_info.volume.Mountpoint is undefined) and
+          (elasticsearch_datadir_stat.stat.isdir | default(false)) and
+          (elasticsearch_volume_found_files.files | default([]) | length > 0) and
+          (opensearch_volume_info.volume.Mountpoint is undefined) }}
+        using_docker_volume: >-
+          {{ (elasticsearch_volume_info.volume.Mountpoint is defined) and
+          (elasticsearch_volume_info.volume.Mountpoint | default('') != '') and
+          not (elasticsearch_volume_info.volume.Mountpoint | default('') == '/') and
+          (elasticsearch_datadir_stat.stat.exists == false) and
+          (opensearch_volume_info.volume.Mountpoint is defined) and
+          (elasticsearch_volume_found_files.files | length > 0) }}
+      become: true
+
+    - name: Move Elasticsearch data to OpenSearch (using regular folder)
+      become: true
+      shell: mv {{ elasticsearch_datadir_volume }}/* {{ opensearch_datadir_volume }}/
+      when: using_regular_folder
+
+    - name: Move Elasticsearch data to OpenSearch (using Docker volume)
+      become: true
+      shell: mv {{ elasticsearch_volume_info.volume.Mountpoint }}/* {{ opensearch_volume_info.volume.Mountpoint }}/
+      when: using_docker_volume
 
 - name: Deploy OpenSearch and OpenSearch Dashboards
   gather_facts: false
