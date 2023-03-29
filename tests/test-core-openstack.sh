@@ -159,7 +159,14 @@ function delete_a_volume {
 
 function create_instance {
     local name=$1
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${name}
+    local server_create_extra
+
+    if [[ $IP_VERSION -eq 6 ]]; then
+        # NOTE(yoctozepto): CirrOS has no IPv6 metadata support, hence need to use configdrive
+        server_create_extra="${server_create_extra} --config-drive True"
+    fi
+
+    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
     # If the status is not ACTIVE, print info and exit 1
     if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
         echo "FAILED: Instance is not active"
@@ -284,19 +291,27 @@ function test_instance_boot {
     openstack image delete image_from_instance
     echo "SUCCESS: Instance image upload"
 
-    echo "TESTING: Floating ip allocation"
-    fip_addr=$(create_fip)
-    attach_fip kolla_boot_test ${fip_addr}
-    echo "SUCCESS: Floating ip allocation"
+    if [[ $IP_VERSION -eq 4 ]]; then
+        echo "TESTING: Floating ip allocation"
+        fip_addr=$(create_fip)
+        attach_fip kolla_boot_test ${fip_addr}
+        echo "SUCCESS: Floating ip allocation"
+    else
+        # NOTE(yoctozepto): Neutron has no IPv6 NAT support, hence no floating ip addresses
+        local instance_addresses
+        fip_addr=$(openstack server show kolla_boot_test -f yaml -c addresses|tail -1|cut -d- -f2)
+    fi
 
-    echo "TESTING: PING&SSH to floating ip"
+    echo "TESTING: PING&SSH to instance"
     test_ssh kolla_boot_test ${fip_addr}
-    echo "SUCCESS: PING&SSH to floating ip"
+    echo "SUCCESS: PING&SSH to instance"
 
-    echo "TESTING: Floating ip deallocation"
-    detach_fip kolla_boot_test ${fip_addr}
-    delete_fip ${fip_addr}
-    echo "SUCCESS: Floating ip deallocation"
+    if [[ $IP_VERSION -eq 4 ]]; then
+        echo "TESTING: Floating ip deallocation"
+        detach_fip kolla_boot_test ${fip_addr}
+        delete_fip ${fip_addr}
+        echo "SUCCESS: Floating ip deallocation"
+    fi
 
     echo "TESTING: Server deletion"
     delete_instance kolla_boot_test

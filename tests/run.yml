@@ -408,9 +408,14 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
+            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
+            DEMO_NET_CIDR: "{{ neutron_tenant_network_prefix }}0/{{ neutron_tenant_network_prefix_length }}"
+            DEMO_NET_GATEWAY: "{{ neutron_tenant_network_prefix }}1"
+            DEMO_NET_DNS: "{{ neutron_tenant_network_dns_server }}"
             EXT_NET_CIDR: "{{ neutron_external_network_prefix }}0/{{ neutron_external_network_prefix_length }}"
             EXT_NET_RANGE: "start={{ neutron_external_network_prefix }}150,end={{ neutron_external_network_prefix }}199"
             EXT_NET_GATEWAY: "{{ neutron_external_network_prefix }}1"
+            EXT_NET_DEMO_ROUTER_ADDR: "{{ neutron_external_network_prefix }}10"
             SCENARIO: "{{ scenario }}"
           when: openstack_core_tested or scenario in ['ironic', 'magnum', 'scenario_nfv', 'zun', 'octavia']
 
@@ -423,6 +428,7 @@
             SCENARIO: "{{ scenario }}"
             HAS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
             PHASE: deploy
+            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
           when: openstack_core_tested
 
         - name: Run test-zun.sh script
@@ -695,6 +701,7 @@
             SCENARIO: "{{ scenario }}"
             HAS_UPGRADE: 'yes'
             PHASE: upgrade
+            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
           when: openstack_core_tested
 
         - name: Run test-swift.sh script
