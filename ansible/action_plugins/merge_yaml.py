@@ -19,8 +19,7 @@ import os
 import shutil
 import tempfile
 
-from yaml import dump
-from yaml import safe_load
+import yaml
 
 from ansible import constants
 from ansible import errors as ansible_errors
@@ -83,7 +82,7 @@ class ActionModule(action.ActionBase):
     def read_config(self, source):
         result = None
         # Only use config if present
-        if os.access(source, os.R_OK):
+        if source and os.access(source, os.R_OK):
             with open(source, 'r') as f:
                 template_data = f.read()
 
@@ -96,7 +95,7 @@ class ActionModule(action.ActionBase):
             self._templar.environment.loader.searchpath = searchpath
 
             template_data = self._templar.template(template_data)
-            result = safe_load(template_data)
+            result = yaml.safe_load(template_data)
         return result or {}
 
     def run(self, tmp=None, task_vars=None):
@@ -130,7 +129,7 @@ class ActionModule(action.ActionBase):
         try:
             result_file = os.path.join(local_tempdir, 'source')
             with open(result_file, 'w') as f:
-                f.write(dump(output, default_flow_style=False))
+                f.write(yaml.dump(output, default_flow_style=False))
 
             new_task = self._task.copy()
             new_task.args.pop('sources', None)
@@ -149,7 +148,11 @@ class ActionModule(action.ActionBase):
                 loader=self._loader,
                 templar=self._templar,
                 shared_loader_obj=self._shared_loader_obj)
-            result.update(copy_action.run(task_vars=task_vars))
+            copy_result = copy_action.run(task_vars=task_vars)
+            copy_result['invocation']['module_args'].update({
+                'src': result_file, 'sources': sources,
+                'extend_lists': extend_lists})
+            result.update(copy_result)
         finally:
             shutil.rmtree(local_tempdir)
         return result
