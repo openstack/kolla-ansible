@@ -22,6 +22,12 @@ the following:
 Migration
 ~~~~~~~~~
 
+.. warning::
+
+   Please backup Elasticsearch data before migration.
+   `Official Elasticsearch backup/restore procedure. <https://www.elastic.co/guide/en/elasticsearch/reference/7.17/snapshot-restore.html>`__
+
+
 In order to perform Elasticsearch to OpenSearch migration - modify
 ``/etc/kolla/globals.yml`` and change the following:
 

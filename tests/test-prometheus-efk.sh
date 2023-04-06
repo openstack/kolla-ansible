@@ -169,6 +169,8 @@ function test_opensearch_migration {
     source ${KOLLA_ANSIBLE_VENV_PATH}/bin/activate
     kolla-ansible -i ${RAW_INVENTORY} -vvv opensearch-migration
     echo "SUCESS: Migrated to Opensearch"
+    kolla-ansible -i ${RAW_INVENTORY} -vvv opensearch-migration
+    echo "IDEMPOTENCY TEST: Migration to Opensearch"
     tests/test-prometheus-opensearch.sh
 }
 
