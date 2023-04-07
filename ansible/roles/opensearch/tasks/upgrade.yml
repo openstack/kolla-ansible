@@ -67,16 +67,16 @@
     path: "{{ node_config_directory }}/haproxy/services.d/elasticsearch.cfg"
     state: "absent"
   become: true
-  when:
-    - inventory_hostname in groups['loadbalancer']
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['loadbalancer'] }}"
 
 - name: Delete Kibana load-balancer config
   file:
     path: "{{ node_config_directory }}/haproxy/services.d/kibana.cfg"
     state: "absent"
   become: true
-  when:
-    - inventory_hostname in groups['loadbalancer']
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['loadbalancer'] }}"
 
 # TODO: Use the volume name from defaults.yml
 - name: Create OpenSearch Docker volume
