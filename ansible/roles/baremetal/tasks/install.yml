@@ -68,6 +68,25 @@
     - ansible_facts.os_family == 'Debian'
     - not docker_unit_file.stat.exists
 
+- name: Ensure /etc/apt/preferences.d exists
+  file:
+    path: /etc/apt/preferences.d
+    state: directory
+    mode: 0755
+  when: ansible_facts.os_family == 'Debian'
+
+- name: Install docker apt pin
+  copy:
+    dest: "/etc/apt/preferences.d/docker"
+    content: |
+        Package: {{ docker_apt_package }}
+        Pin: version {{ docker_apt_package_pin }}
+        Pin-Priority: 1000
+  become: True
+  when:
+    - docker_apt_package_pin | length > 0
+    - ansible_facts.os_family == 'Debian'
+
 - name: Install apt packages
   package:
     name: "{{ (debian_pkg_install | join(' ')).split() }}"

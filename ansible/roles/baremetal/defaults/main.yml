@@ -8,13 +8,15 @@ docker_apt_repo: "deb {{ docker_apt_url }} {{ ansible_facts.distribution_release
 docker_apt_key_file: "gpg"
 docker_apt_key_id: "0EBFCD88"
 docker_apt_package: "docker-ce"
+docker_apt_package_pin: ""
 
 # Docker Yum repository configuration.
 docker_yum_url: "https://download.docker.com/linux/centos"
 docker_yum_baseurl: "{{ docker_yum_url }}/$releasever/$basearch/stable"
 docker_yum_gpgkey: "{{ docker_yum_url }}/gpg"
 docker_yum_gpgcheck: true
-docker_yum_package: "docker-ce"
+docker_yum_package: "{% if ansible_facts.distribution == 'openEuler' %}docker{{ '-' + docker_yum_package_pin if (docker_yum_package_pin | length > 0) else '' }}{% else %}docker-ce{{ '-' + docker_yum_package_pin if (docker_yum_package_pin | length > 0) else '' }}{% endif %}"
+docker_yum_package_pin: ""
 
 ceph_version: "pacific"
 epel_version: "8"
