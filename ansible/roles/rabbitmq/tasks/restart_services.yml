@@ -1,4 +1,21 @@
 ---
+- name: Get info on RabbitMQ container
+  become: True
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name: "rabbitmq"
+  register: container_info
+
+- name: Put RabbitMQ node into maintenance mode
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: "community.rabbitmq.rabbitmq_upgrade"
+    module_args:
+      action: "drain"
+    user: root
+  become: true
+  when: container_info._containers | length > 0
+
 - name: Restart rabbitmq container
   vars:
     service_name: "rabbitmq"
