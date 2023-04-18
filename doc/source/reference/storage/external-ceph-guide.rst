@@ -30,6 +30,14 @@ Configuring External Ceph
 
 Ceph integration is configured for different OpenStack services independently.
 
+.. note::
+
+    Commands like ``ceph config generate-minimal-conf`` generate configuration
+    files that have leading tabs. These tabs break Kolla Ansible's ini parser.
+    Be sure to remove the leading tabs from your ``ceph.conf`` files when
+    copying them in the following sections.
+
+
 Glance
 ------
 
