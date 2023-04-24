@@ -75,6 +75,16 @@ used to encrypt the CA key:
 
 .. _octavia-network:
 
+Monitoring certificate expiry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the following command to check if any of the certificates will
+expire within a given number of days:
+
+.. code-block:: console
+
+   kolla-ansible octavia-certificates --check-expiry <days>
+
 Networking
 ----------
 
