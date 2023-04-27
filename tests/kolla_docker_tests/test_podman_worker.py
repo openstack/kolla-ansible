@@ -373,7 +373,7 @@ class TestContainer(base.BaseTestCase):
 
     def test_start_container_no_systemd(self):
         self.fake_data['params'].update({'name': 'my_container',
-                                         'restart_policy': 'no',
+                                         'restart_policy': 'oneshot',
                                          'auth_username': 'fake_user',
                                          'auth_password': 'fake_psw',
                                          'auth_registry': 'myrepo/myapp',
@@ -437,7 +437,7 @@ class TestContainer(base.BaseTestCase):
     def test_stop_container_no_systemd(self):
         self.pw = get_PodmanWorker({'name': 'my_container',
                                     'action': 'stop_container',
-                                    'restart_policy': 'no'})
+                                    'restart_policy': 'oneshot'})
         full_cont_list = get_containers(self.fake_data['containers'])
         container = full_cont_list[0]
         self.pw.pc.containers.list.return_value = full_cont_list

@@ -535,7 +535,7 @@ class PodmanWorker(ContainerWorker):
 
         if container.status != 'running':
             self.changed = True
-            if self.params.get('restart_policy') == 'no':
+            if self.params.get('restart_policy') == 'oneshot':
                 container = self.check_container()
                 container.start()
             else:
@@ -583,7 +583,7 @@ class PodmanWorker(ContainerWorker):
         elif not (container.status == 'exited' or
                   container.status == 'stopped'):
             self.changed = True
-            if self.params.get('restart_policy') != 'no':
+            if self.params.get('restart_policy') != 'oneshot':
                 self.systemd.create_unit_file()
                 self.systemd.stop()
             else:

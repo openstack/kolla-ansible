@@ -180,6 +180,7 @@ options:
     choices:
       - no
       - on-failure
+      - oneshot
       - always
       - unless-stopped
   restart_retries:
@@ -314,6 +315,7 @@ def generate_module():
         restart_policy=dict(required=False, type='str', choices=[
                             'no',
                             'on-failure',
+                            'oneshot',
                             'always',
                             'unless-stopped']),
         restart_retries=dict(required=False, type='int'),
