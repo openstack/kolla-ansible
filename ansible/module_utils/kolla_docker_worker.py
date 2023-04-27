@@ -356,7 +356,7 @@ class DockerWorker(ContainerWorker):
         self.changed = True
         options = self.build_container_options()
         self.dc.create_container(**options)
-        if self.params.get('restart_policy') != 'no':
+        if self.params.get('restart_policy') != 'oneshot':
             self.changed |= self.systemd.create_unit_file()
 
     def recreate_or_restart_container(self):
@@ -399,7 +399,7 @@ class DockerWorker(ContainerWorker):
 
         if not container['Status'].startswith('Up '):
             self.changed = True
-            if self.params.get('restart_policy') == 'no':
+            if self.params.get('restart_policy') == 'oneshot':
                 self.dc.start(container=self.params.get('name'))
             else:
                 self.systemd.create_unit_file()
@@ -468,7 +468,7 @@ class DockerWorker(ContainerWorker):
                 msg="No such container: {}".format(name))
         else:
             self.changed = True
-            if self.params.get('restart_policy') != 'no':
+            if self.params.get('restart_policy') != 'oneshot':
                 self.systemd.create_unit_file()
                 if not self.systemd.restart():
                     self.module.fail_json(

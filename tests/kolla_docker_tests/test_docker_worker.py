@@ -475,7 +475,7 @@ class TestContainer(base.BaseTestCase):
 
     def test_start_container_no_systemd(self):
         self.fake_data['params'].update({'name': 'my_container',
-                                         'restart_policy': 'no',
+                                         'restart_policy': 'oneshot',
                                          'auth_username': 'fake_user',
                                          'auth_password': 'fake_psw',
                                          'auth_registry': 'myrepo/myapp',
@@ -534,7 +534,7 @@ class TestContainer(base.BaseTestCase):
     def test_stop_container_no_systemd(self):
         self.dw = get_DockerWorker({'name': 'my_container',
                                     'action': 'stop_container',
-                                    'restart_policy': 'no'})
+                                    'restart_policy': 'oneshot'})
         self.dw.dc.containers.return_value = self.fake_data['containers']
         self.dw.systemd.check_unit_file.return_value = False
         self.dw.stop_container()
@@ -621,7 +621,7 @@ class TestContainer(base.BaseTestCase):
     def test_restart_container_no_systemd(self):
         self.dw = get_DockerWorker({'name': 'my_container',
                                     'action': 'stop_container',
-                                    'restart_policy': 'no'})
+                                    'restart_policy': 'oneshot'})
         self.dw.dc.containers.return_value = self.fake_data['containers']
         self.fake_data['container_inspect'].update(
             self.fake_data['containers'][0])
