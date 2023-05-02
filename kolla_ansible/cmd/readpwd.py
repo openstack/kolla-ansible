@@ -14,6 +14,7 @@
 
 import argparse
 import os
+import stat
 import sys
 
 import hvac
@@ -28,6 +29,14 @@ def readpwd(passwords_file, vault_kv_path, vault_mount_point, vault_namespace,
 
     with open(passwords_file, 'r') as f:
         passwords = yaml.safe_load(f.read())
+
+    if os.stat(passwords_file).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-readable. The permissions will be changed.")
+
+    if os.stat(passwords_file).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-writeable. The permissions will be changed.")
 
     if not isinstance(passwords, dict):
         print("ERROR: Passwords file not in expected key/value format")
@@ -53,7 +62,15 @@ def readpwd(passwords_file, vault_kv_path, vault_mount_point, vault_namespace,
         except KeyError:
             vault_kv_passwords[password_key] = password_data['data']['data']
 
-    with open(passwords_file, 'w') as f:
+    try:
+        os.remove(passwords_file)
+    except OSError:
+        pass
+
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    mode = 0o640
+
+    with os.fdopen(os.open(passwords_file, flags, mode=mode), 'w') as f:
         yaml.safe_dump(vault_kv_passwords, f)
 
 
