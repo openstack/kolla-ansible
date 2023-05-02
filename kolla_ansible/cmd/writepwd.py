@@ -14,6 +14,7 @@
 
 import argparse
 import os
+import stat
 import sys
 
 import hvac
@@ -25,8 +26,17 @@ from kolla_ansible.hashi_vault import hashicorp_vault_client
 def writepwd(passwords_file, vault_kv_path, vault_mount_point, vault_namespace,
              vault_addr, vault_role_id, vault_secret_id, vault_token,
              vault_cacert):
+
     with open(passwords_file, 'r') as f:
         passwords = yaml.safe_load(f.read())
+
+    if os.stat(passwords_file).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-readable.")
+
+    if os.stat(passwords_file).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-writeable.")
 
     if not isinstance(passwords, dict):
         print("ERROR: Passwords file not in expected key/value format")
