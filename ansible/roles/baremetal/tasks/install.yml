@@ -159,7 +159,11 @@
   pip:
     # NOTE(hrw) docker 2.4.2 is in kolla-ansible requirements
     # NOTE(mnasiadka): docker 5.0.0 lacks six in deps but requires it
-    name: docker>=2.4.2,<5.0.0
+    # NOTE(mnasiadka): requests and urllib3 as a workaround for https://github.com/docker/docker-py/issues/3113
+    name:
+      - "docker>=2.4.2,<5.0.0"
+      - "requests<2.29.0"
+      - "urllib3<2"
     executable: "{{ virtualenv is none | ternary('pip3', omit) }}"
     virtualenv: "{{ virtualenv is none | ternary(omit, virtualenv) }}"
     virtualenv_site_packages: "{{ virtualenv is none | ternary(omit, virtualenv_site_packages) }}"
