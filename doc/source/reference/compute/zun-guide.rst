@@ -23,7 +23,19 @@ following variables:
    docker_configure_for_zun: "yes"
    containerd_configure_for_zun: "yes"
 
-Docker reconfiguration requires reboostrapping before deploy.
+
+Currently Kuryr does not support Docker 23 and later due to
+dropped --cluster-store option (bug
+`bug <https://bugs.launchpad.net/zun/+bug/2007142>`__).You need
+to cap docker by setting the following variables in globals.yml.
+
+.. code-block:: yaml
+
+   docker_apt_package_pin: "5:20.*"
+   docker_yum_package_pin: "20.*"
+
+Docker reconfiguration requires rebootstrapping before deploy.
+
 Make sure you understand the consequences of restarting Docker.
 Please see :ref:`rebootstrapping` for details.
 If it's initial deploy, then there is nothing to worry about
