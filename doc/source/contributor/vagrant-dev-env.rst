@@ -67,12 +67,6 @@ Next install the hostmanager plugin so all hosts are recorded in ``/etc/hosts``
 
    vagrant plugin install vagrant-hostmanager
 
-If you are going to use VirtualBox, then install vagrant-vbguest:
-
-.. code-block:: console
-
-   vagrant plugin install vagrant-vbguest
-
 Vagrant supports a wide range of virtualization technologies. If VirtualBox is
 used, the vbguest plugin will be required to install the VirtualBox Guest
 Additions in the virtual machine:
