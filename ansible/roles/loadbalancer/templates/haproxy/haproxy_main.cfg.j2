@@ -13,6 +13,9 @@ global
     cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
         {% endfor %}
     {% endif %}
+    {% if (haproxy_threads | int > 1) and (haproxy_process_cpu_map | bool) %}
+    cpu-map auto:1/all 0-63
+    {% endif %}
     stats socket /var/lib/kolla/haproxy/haproxy.sock group kolla mode 660{% if haproxy_socket_level_admin | bool %} level admin{% endif %}
 
     {% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
