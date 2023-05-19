@@ -109,7 +109,7 @@ EOF
 
     mkdir -p /tmp/logs/build
 
-    sudo docker run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
+    sudo $CONTAINER_ENGINE run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
 
     python3 -m venv ~/kolla-venv
     . ~/kolla-venv/bin/activate
@@ -121,8 +121,8 @@ EOF
     # NOTE(yoctozepto): due to debian buster we push after images are built
     # see https://github.com/docker/for-linux/issues/711
     if [[ "debian" == $BASE_DISTRO ]]; then
-        for img in $(sudo docker image ls --format '{{ .Repository }}:{{ .Tag }}' | grep lokolla/); do
-            sudo docker push $img;
+        for img in $(sudo ${CONTAINER_ENGINE} image ls --format '{{ .Repository }}:{{ .Tag }}' | grep lokolla/); do
+            sudo $CONTAINER_ENGINE push $img;
         done
     fi
 

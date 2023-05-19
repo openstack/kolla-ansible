@@ -154,7 +154,7 @@ def check_docker_become():
                           for x in YAML_INCLUDE_PATTERNS])
     excludes = r'|'.join([fnmatch.translate(x)
                           for x in YAML_EXCLUDE_PATTERNS])
-    docker_modules = ('kolla_docker', 'kolla_container_facts', 'kolla_toolbox')
+    ce_modules = ('kolla_docker', 'kolla_container_facts', 'kolla_toolbox')
     cmd_modules = ('command', 'shell')
     return_code = 0
     roles_path = os.path.join(PROJECT_ROOT, 'ansible', 'roles')
@@ -168,24 +168,27 @@ def check_docker_become():
                     tasks = yaml.safe_load(fp)
                 tasks = tasks or []
                 for task in tasks:
-                    for module in docker_modules:
+                    for module in ce_modules:
                         if module in task and not task.get('become'):
                             return_code = 1
                             LOG.error("Use of %s module without become in "
                                       "task %s in %s",
                                       module, task['name'], fullpath)
                     for module in cmd_modules:
-                        docker_without_become = False
+                        ce_without_become = False
                         if (module in task and not task.get('become')):
                             if (isinstance(task[module], str) and
-                                    (task[module]).startswith('docker')):
-                                docker_without_become = True
+                                    ((task[module]).startswith('docker') or
+                                     (task[module]).startswith('podman'))):
+                                ce_without_become = True
                             if (isinstance(task[module], dict) and
-                                    task[module]['cmd'].startswith('docker')):
-                                docker_without_become = True
-                            if docker_without_become:
+                                (task[module]['cmd'].startswith('docker') or
+                                    task[module]['cmd'].startswith('podman'))):
+                                ce_without_become = True
+                            if ce_without_become:
                                 return_code = 1
-                                LOG.error("Use of docker in %s module without "
+                                LOG.error("Use of container engine in %s "
+                                          "module without "
                                           "become in task %s in %s",
                                           module, task['name'], fullpath)
 

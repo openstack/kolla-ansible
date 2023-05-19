@@ -9,12 +9,14 @@ function test_zun_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
 
+    container_engine="${1:-docker}"
+
     echo "TESTING: Zun"
     openstack appcontainer service list
     openstack appcontainer host list
     openstack subnet set --no-dhcp demo-subnet
-    sudo docker pull alpine
-    sudo docker save alpine | openstack image create alpine --public --container-format docker --disk-format raw
+    sudo ${container_engine} pull alpine
+    sudo ${container_engine} save alpine | openstack image create alpine --public --container-format docker --disk-format raw
     openstack appcontainer run --net network=demo-net --name test alpine sleep 1000
     attempt=1
     while [[ $(openstack appcontainer show test -f value -c status) != "Running" ]]; do
@@ -160,7 +162,7 @@ function test_zun {
     if [[ -f $log_file ]]; then
         log_file=${log_file}-upgrade
     fi
-    test_zun_logged > $log_file 2>&1
+    test_zun_logged $1 > $log_file 2>&1
     result=$?
     if [[ $result != 0 ]]; then
         echo "Testing Zun failed. See ansible/test-zun for details"
@@ -170,4 +172,4 @@ function test_zun {
     return $result
 }
 
-test_zun
+test_zun $1

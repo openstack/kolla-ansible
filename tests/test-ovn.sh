@@ -15,18 +15,18 @@ function test_ovn {
 
     # List OVN NB/SB entries
     echo "OVN NB DB entries:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
 
     echo "OVN SB DB entries:"
-    sudo docker exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
+    sudo ${container_engine} exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
 
     # Test OVSDB cluster state
     if [[ $BASE_DISTRO =~ ^(debian|ubuntu)$ ]]; then
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/openvswitch/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/openvswitch/ovnsb_db.ctl cluster/status OVN_Southbound)
+        OVNNB_STATUS=$(sudo ${container_engine} exec ovn_nb_db ovs-appctl -t /var/run/openvswitch/ovnnb_db.ctl cluster/status OVN_Northbound)
+        OVNSB_STATUS=$(sudo ${container_engine} exec ovn_sb_db ovs-appctl -t /var/run/openvswitch/ovnsb_db.ctl cluster/status OVN_Southbound)
     else
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
+        OVNNB_STATUS=$(sudo ${container_engine} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
+        OVNSB_STATUS=$(sudo ${container_engine} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
     fi
 
     if [[ $(grep -o "at tcp:" <<< ${OVNNB_STATUS} | wc -l) != "3" ]]; then
@@ -84,9 +84,9 @@ function test_octavia {
     openstack floating ip set $lb_fip --port $lb_port_id
 
     echo "OVN NB entries for LB:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
     echo "OVN NB entries for NAT:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
 
     echo "Attempt to access the load balanced HTTP server."
     attempts=12
@@ -133,5 +133,5 @@ function test_ovn_setup {
 }
 
 
-
+container_engine=${1:-docker}
 test_ovn_setup

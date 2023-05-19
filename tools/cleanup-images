@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+container_engine="docker"
+
 # Move to top level directory
-REAL_PATH=$(python -c "import os;print os.path.realpath('$0')")
+REAL_PATH=$(python3 -c "import os;print(os.path.realpath('$0'))")
 cd "$(dirname "$REAL_PATH")/.."
 
 function process_cmd {
@@ -28,34 +30,50 @@ Options:
     --help, -h                             Show this usage information
     --image, -i <image>                    Delete selected images
     --image-version <image_version>        Set Kolla image version
+    --engine, -e <container_engine>        Container engine to be used
 EOF
 }
 
-SHORT_OPTS="ahi:"
-LONG_OPTS="all,dangling,help,image:,image-version:"
+SHORT_OPTS="ahi:e:"
+LONG_OPTS="all,dangling,help,image:,image-version:,engine:"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
 
-eval set -- "$ARGS"
+
+for arg do
+    shift
+    if [ "$arg" = "-e" ] || [ "$arg" = "--engine" ]; then
+        container_engine="$1"
+        continue
+    elif [ "$arg" = "$container_engine" ]; then
+        continue
+    fi
+    eval set -- "$@" "$arg"
+done
+
+# catch empty arguments
+if [ "$ARGS" = " --" ]; then
+    eval set -- "$ARGS"
+fi
 
 case "$1" in
 
     (--all|-a)
-            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version" --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo ${container_engine} images -a --filter "label=kolla_version" --format "{{.ID}}")"
             shift
             ;;
 
     (--dangling)
-            KOLLA_IMAGES="$(sudo docker images -a --filter dangling=true --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo ${container_engine} images -a --filter dangling=true --format "{{.ID}}")"
             shift
             ;;
 
     (--image|-i)
-            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version" --format "{{.Repository}}\t{{.ID}}" | grep -E "$2" | awk '{print $2}')"
+            KOLLA_IMAGES="$(sudo ${container_engine} images -a --filter "label=kolla_version" --format "{{.Repository}}\t{{.ID}}" | grep -E "$2" | awk '{print $2}')"
             shift 2
             ;;
 
     (--image-version)
-            KOLLA_IMAGES="$(sudo docker images -a --filter "label=kolla_version=${2}" --format "{{.ID}}")"
+            KOLLA_IMAGES="$(sudo ${container_engine} images -a --filter "label=kolla_version=${2}" --format "{{.ID}}")"
             shift 2
             ;;
 
@@ -73,5 +91,5 @@ case "$1" in
 
 esac
 
-CMD="sudo docker rmi -f $@ $KOLLA_IMAGES"
+CMD="sudo ${container_engine} rmi -f $@ -- $KOLLA_IMAGES"
 process_cmd

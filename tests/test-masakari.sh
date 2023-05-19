@@ -8,6 +8,7 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_hacluster_logged {
+    container_engine="${1:-docker}"
     local cluster_failure
     cluster_failure=0
 
@@ -17,17 +18,17 @@ function test_hacluster_logged {
     # var setting from the container which would cause these commands to log up
     # to 'trace' (likely a pacemaker bug)
 
-    if ! sudo docker exec hacluster_pacemaker cibadmin -VVVVVV --query --local; then
+    if ! sudo ${container_engine} exec hacluster_pacemaker cibadmin -VVVVVV --query --local; then
         cluster_failure=1
     fi
 
     local mon_output
 
-    if ! mon_output=$(sudo docker exec -e PCMK_debug=no hacluster_pacemaker crm_mon -VVVVV --one-shot); then
+    if ! mon_output=$(sudo ${container_engine} exec -e PCMK_debug=no hacluster_pacemaker crm_mon -VVVVV --one-shot); then
         cluster_failure=1
     fi
 
-    if ! sudo docker exec -e PCMK_debug=no hacluster_pacemaker crm_verify -VVVVV --live-check; then
+    if ! sudo ${container_engine} exec -e PCMK_debug=no hacluster_pacemaker crm_verify -VVVVV --live-check; then
         cluster_failure=1
     fi
 
@@ -81,7 +82,7 @@ function test_masakari_logged {
 
 function test_masakari {
     echo "Testing Masakari"
-    test_hacluster_logged > /tmp/logs/ansible/test-hacluster 2>&1
+    test_hacluster_logged $1 > /tmp/logs/ansible/test-hacluster 2>&1
     test_masakari_logged > /tmp/logs/ansible/test-masakari 2>&1
     result=$?
     if [[ $result != 0 ]]; then
@@ -92,4 +93,4 @@ function test_masakari {
     return $result
 }
 
-test_masakari
+test_masakari $1

@@ -132,6 +132,7 @@
         path: "/etc/docker"
         state: directory
       become: true
+      when: container_engine == 'docker'
 
     - name: Ensure configuration directories exist
       file:
@@ -327,6 +328,7 @@
         SCENARIO: "{{ scenario }}"
         UPPER_CONSTRAINTS: "{{ upper_constraints_file }}"
         KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
+        CONTAINER_ENGINE: "{{ container_engine }}"
 
     - name: Run init-swift.sh script
       script:
@@ -339,6 +341,7 @@
         STORAGE_NODES: "{{ groups['all'] | map('extract', hostvars,
                            ['ansible_'+api_interface_name, 'ipv4', 'address'])
                            | join(' ') }}"
+        CONTAINER_ENGINE: "{{ container_engine }}"
       when: scenario == 'swift'
 
     # At this point we have generated all necessary configuration, and are
@@ -445,6 +448,7 @@
           when: scenario == 'zun'
           environment:
             BASE_DISTRO: "{{ base_distro }}"
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run test-swift.sh script
           script:
@@ -472,6 +476,7 @@
                 # by default to ~/tenks-venv
                 TENKS_VENV_PATH: "{{ ansible_env.HOME }}/kolla-ansible-tenks-venv"
                 TENKS_SRC_PATH: "{{ ansible_env.HOME }}/src/opendev.org/openstack/tenks"
+                CONTAINER_ENGINE: "{{ container_engine }}"
 
             - name: Run test-ironic.sh script
               script:
@@ -504,6 +509,8 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "masakari"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run test-ovn.sh script
           script:
@@ -511,6 +518,8 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "ovn"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run test-mariadb.sh script
           script:
@@ -520,6 +529,7 @@
           when: scenario == "mariadb"
           environment:
             KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run test-prometheus-opensearch.sh script
           script:
@@ -551,6 +561,8 @@
             cmd: tests/check-failure.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run pre-upgrade check-config.sh script
           shell:
@@ -741,6 +753,8 @@
             cmd: tests/test-bifrost.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run upgrade-bifrost.sh script
           shell:
@@ -762,6 +776,8 @@
             cmd: tests/check-failure.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run check-config.sh script
           shell:
@@ -800,6 +816,8 @@
             cmd: tests/check-failure.sh
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
 
         - name: Run check-config.sh script
           shell:

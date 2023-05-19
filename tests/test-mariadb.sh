@@ -12,7 +12,7 @@ export PYTHONUNBUFFERED=1
 function mariadb_stop {
     echo "Stopping the database cluster"
     kolla-ansible -i ${RAW_INVENTORY} -vvv stop --yes-i-really-really-mean-it --tags mariadb --skip-tags common
-    if [[ $(sudo docker ps -q | grep mariadb | wc -l) -ne 0 ]]; then
+    if [[ $(sudo ${container_engine} ps -q | grep mariadb | wc -l) -ne 0 ]]; then
         echo "Failed to stop MariaDB cluster"
         return 1
     fi
@@ -48,4 +48,5 @@ function test_mariadb {
     return $result
 }
 
+container_engine="${1:-docker}"
 test_mariadb
