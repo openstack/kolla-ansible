@@ -171,6 +171,15 @@ This might be desired for example when Ironic bare metal nodes are
 used as a compute service. Currently OVN is not able to answer DHCP
 queries on port type external, this is where Neutron agent helps.
 
+In order to deploy Neutron OVN Agent you need to set the following:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_enable_ovn_agent: "yes"
+
+Currently the agent is only needed for QoS for hardware offloaded ports.
+
 Mellanox Infiniband (ml2/mlnx)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

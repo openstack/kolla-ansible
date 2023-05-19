@@ -322,3 +322,20 @@
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
     - kolla_action != "config"
+
+- name: Restart neutron-ovn-agent container
+  vars:
+    service_name: "neutron-ovn-agent"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_docker:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+  when:
+    - kolla_action != "config"

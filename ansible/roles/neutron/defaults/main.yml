@@ -197,6 +197,15 @@ neutron_services:
         port: "{{ neutron_server_port }}"
         listen_port: "{{ neutron_server_listen_port }}"
         tls_backend: "yes"
+  neutron-ovn-agent:
+    container_name: neutron_ovn_agent
+    group: neutron-ovn-agent
+    host_in_groups: "{{ inventory_hostname in groups['neutron-ovn-agent'] }}"
+    enabled: "{{ neutron_enable_ovn_agent | bool }}"
+    image: "{{ neutron_ovn_agent_image_full }}"
+    volumes: "{{ neutron_ovn_agent_default_volumes + neutron_ovn_agent_extra_volumes }}"
+    dimensions: "{{ neutron_ovn_agent_dimensions }}"
+    healthcheck: "{{ neutron_ovn_agent_healthcheck }}"
 
 ####################
 # Config Validate
@@ -312,6 +321,10 @@ neutron_tls_proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}
 neutron_tls_proxy_tag: "{{ haproxy_tag }}"
 neutron_tls_proxy_image_full: "{{ neutron_tls_proxy_image }}:{{ neutron_tls_proxy_tag }}"
 
+neutron_ovn_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/neutron-ovn-agent"
+neutron_ovn_agent_tag: "{{ neutron_tag }}"
+neutron_ovn_agent_image_full: "{{ neutron_ovn_agent_image }}:{{ neutron_ovn_agent_tag }}"
+
 neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
 neutron_dhcp_agent_dimensions: "{{ neutron_agent_dimensions }}"
@@ -329,6 +342,7 @@ neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_tls_proxy_dimensions: "{{ default_container_dimensions }}"
+neutron_ovn_agent_dimensions: "{{ neutron_agent_dimensions }}"
 
 neutron_dhcp_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_dhcp_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -460,6 +474,19 @@ neutron_sriov_agent_healthcheck:
   test: "{% if neutron_sriov_agent_enable_healthchecks | bool %}{{ neutron_sriov_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_sriov_agent_healthcheck_timeout }}"
 
+neutron_ovn_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_ovn_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_ovn_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_ovn_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_ovn_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port python {{ ovn_sb_db_port }}"]
+neutron_ovn_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_ovn_agent_healthcheck:
+  interval: "{{ neutron_ovn_agent_healthcheck_interval }}"
+  retries: "{{ neutron_ovn_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_ovn_agent_healthcheck_start_period }}"
+  test: "{% if neutron_ovn_agent_enable_healthchecks | bool %}{{ neutron_ovn_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_ovn_agent_healthcheck_timeout }}"
+
 ironic_neutron_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_neutron_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 ironic_neutron_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
@@ -571,6 +598,11 @@ neutron_tls_proxy_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+neutron_ovn_agent_default_volumes:
+  - "{{ node_config_directory }}/neutron-ovn-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
 
 neutron_extra_volumes: "{{ default_extra_volumes }}"
 neutron_dhcp_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -588,6 +620,7 @@ neutron_infoblox_ipam_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metering_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 ironic_neutron_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_tls_proxy_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_ovn_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 
 ####################
 # OpenStack
