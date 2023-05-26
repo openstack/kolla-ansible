@@ -210,16 +210,19 @@ function create_instance {
     attempts=10
     for i in $(seq 1 ${attempts}); do
         if openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}; then
-            # If the status is not ACTIVE, print info and exit 1
+            # If the status is not ACTIVE, print info, delete instance (for recreation) and exit 1
+            # if exceeded number of attempts
             if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
                 echo "FAILED: Instance is not active"
                 openstack --debug server show ${name}
                 openstack server delete ${name}
+                if [[ $i -eq ${attempts} ]]; then
+                    echo "Failed to create instance after ${attempts} attempts"
+                    exit 1
+                fi
             else
                 break
             fi
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to create instance after ${attempts} attempts"
         else
             echo "Cannot create instance, retrying"
             openstack server delete ${name}
