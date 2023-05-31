@@ -128,6 +128,9 @@ def check_json_j2():
             'kolla_internal_fqdn': '',
             'octavia_provider_drivers': '',
             'rabbitmq_ha_replica_count': 2,
+            'rabbitmq_message_ttl_ms': 600000,
+            'rabbitmq_queue_expiry_ms': 3600000,
+
         }
         data = template.render(**context)
         json.loads(data)
