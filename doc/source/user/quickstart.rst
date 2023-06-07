@@ -288,21 +288,21 @@ accordingly.
 
 #. Bootstrap servers with kolla deploy dependencies:
 
-  .. code-block:: console
+   .. code-block:: console
 
-     kolla-ansible -i ./all-in-one bootstrap-servers
+      kolla-ansible -i ./all-in-one bootstrap-servers
 
 #. Do pre-deployment checks for hosts:
 
-  .. code-block:: console
+   .. code-block:: console
 
-     kolla-ansible -i ./all-in-one prechecks
+      kolla-ansible -i ./all-in-one prechecks
 
 #. Finally proceed to actual OpenStack deployment:
 
-  .. code-block:: console
+   .. code-block:: console
 
-     kolla-ansible -i ./all-in-one deploy
+      kolla-ansible -i ./all-in-one deploy
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to
@@ -320,13 +320,15 @@ Using OpenStack
 #. OpenStack requires a ``clouds.yaml`` file where credentials for the
    admin user are set. To generate this file:
 
-     .. code-block:: console
+   .. code-block:: console
 
-        kolla-ansible post-deploy
+      kolla-ansible post-deploy
 
-   * The file will be generated in /etc/kolla/clouds.yaml, you can use it by
-     copying it to /etc/openstack or ~/.config/openstack or setting
-     OS_CLIENT_CONFIG_FILE environment variable.
+   .. note::
+
+      The file will be generated in ``/etc/kolla/clouds.yaml``, you can use it
+      by copying it to ``/etc/openstack`` or ``~/.config/openstack``, or by
+      setting the ``OS_CLIENT_CONFIG_FILE`` environment variable.
 
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.
