@@ -553,9 +553,11 @@ Using OpenStack
         cd kolla-ansible/tools
         ./kolla-ansible post-deploy
 
-   * The file will be generated in /etc/kolla/clouds.yaml, you can use it by
-     copying it to /etc/openstack or ~/.config/openstack or setting
-     OS_CLIENT_CONFIG_FILE environment variable.
+   .. note::
+
+      The file will be generated in /etc/kolla/clouds.yaml, you can use it by
+      copying it to /etc/openstack or ~/.config/openstack or setting
+      OS_CLIENT_CONFIG_FILE environment variable.
 
 #. Depending on how you installed Kolla Ansible, there is a script that will
    create example networks, images, and so on.
