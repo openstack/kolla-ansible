@@ -340,6 +340,6 @@ Using OpenStack
       cloud. Depending on your customisations, it may not work, or it may
       conflict with the resources you want to create. You have been warned.
 
-  .. code-block:: console
+   .. code-block:: console
 
-     /path/to/venv/share/kolla-ansible/init-runonce
+      /path/to/venv/share/kolla-ansible/init-runonce
