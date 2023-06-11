@@ -88,6 +88,7 @@
       protocol: "{{ item.1.protocol }}"
       port_range_min: "{{ item.1.src_port | default(omit) }}"
       port_range_max: "{{ item.1.dst_port | default(omit) }}"
+      ethertype: "IPv{{ octavia_network_address_family[-1] }}"
   with_subelements:
     - "{{ octavia_amp_security_groups }}"
     - rules
@@ -140,4 +141,21 @@
       ipv6_address_mode: "{{ octavia_amp_network['subnet']['ipv6_address_mode'] | default(omit) }}"
       ipv6_ra_mode: "{{ octavia_amp_network['subnet']['ipv6_ra_mode'] | default(omit) }}"
   run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Create loadbalancer management router for IPv6
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.router
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ octavia_amp_router['name'] }}"
+      interfaces: "{{ octavia_amp_router['subnet'] }}"
+  run_once: True
+  when: octavia_network_address_family == "ipv6"
   delegate_to: "{{ groups['octavia-api'][0] }}"
