@@ -299,7 +299,7 @@ octavia_amp_security_groups:
     name: "lb-mgmt-sec-grp"
     enabled: true
     rules:
-      - protocol: icmp
+      - protocol: "{{ 'ipv6-icmp' if octavia_network_address_family == 'ipv6' else 'icmp' }}"
       - protocol: tcp
         src_port: 22
         dst_port: 22
@@ -346,6 +346,10 @@ octavia_amp_network:
 
 # Octavia management network subnet CIDR.
 octavia_amp_network_cidr: 10.1.0.0/24
+
+octavia_amp_router:
+  name: lb-mgmt-router
+  subnet: "{{ octavia_amp_network['subnet']['name'] }}"
 
 # Octavia provider drivers
 octavia_provider_drivers: "amphora:Amphora provider{% if neutron_plugin_agent == 'ovn' %}, ovn:OVN provider{% endif %}"
