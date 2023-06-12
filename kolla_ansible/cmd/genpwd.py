@@ -16,6 +16,7 @@ import argparse
 import hmac
 import os
 import random
+import stat
 import string
 import sys
 
@@ -63,6 +64,14 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
         print(f"ERROR: Passwords file \"{passwords_file}\" is missing")
         sys.exit(1)
 
+    if os.stat(passwords_file).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-readable. The permissions will be changed.")
+
+    if os.stat(passwords_file).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-writeable. The permissions will be changed.")
+
     if not isinstance(passwords, dict):
         print("ERROR: Passwords file not in expected key/value format")
         sys.exit(1)
@@ -96,7 +105,15 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
                     for n in range(length)
                 ])
 
-    with open(passwords_file, 'w') as f:
+    try:
+        os.remove(passwords_file)
+    except OSError:
+        pass
+
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    mode = 0o640
+
+    with os.fdopen(os.open(passwords_file, flags, mode=mode), 'w') as f:
         f.write(yaml.safe_dump(passwords, default_flow_style=False))
 
 
