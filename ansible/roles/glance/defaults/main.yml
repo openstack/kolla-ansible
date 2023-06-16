@@ -213,9 +213,6 @@ glance_backends:
   - name: http
     type: http
     enabled: true
-  - name: rbd
-    type: rbd
-    enabled: "{{ glance_backend_ceph | bool }}"
   - name: vmware
     type: vmware
     enabled: "{{ glance_backend_vmware | bool }}"
@@ -226,7 +223,13 @@ glance_backends:
     type: swift
     enabled: "{{ glance_backend_swift | bool }}"
 
-glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list }}"
+glance_ceph_backends:
+  - name: "rbd"
+    type: "rbd"
+    cluster: "ceph"
+    enabled: "{{ glance_backend_ceph | bool }}"
+
+glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
 
 ####################
 # OpenStack

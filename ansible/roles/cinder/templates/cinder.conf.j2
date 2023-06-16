@@ -27,7 +27,7 @@ enabled_backends = {{ cinder_enabled_backends|map(attribute='name')|join(',') }}
 {% if service_name == "cinder-backup" and enable_cinder_backup | bool %}
 {% if cinder_backup_driver == "ceph" %}
 backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
-backup_ceph_conf = /etc/ceph/ceph.conf
+backup_ceph_conf = /etc/ceph/{{ cinder_backup_ceph_backend.cluster }}.conf
 backup_ceph_user = {{ ceph_cinder_backup_user }}
 backup_ceph_chunk_size = 134217728
 backup_ceph_pool = {{ ceph_cinder_backup_pool_name }}
@@ -137,15 +137,22 @@ target_protocol = iscsi
 {% endif %}
 
 {% if cinder_backend_ceph | bool %}
-[{{ cinder_backend_ceph_name }}]
+{% for backend in cinder_ceph_backends %}
+[{{ backend.name }}]
 volume_driver = cinder.volume.drivers.rbd.RBDDriver
-volume_backend_name = {{ cinder_backend_ceph_name }}
+volume_backend_name = {{ backend.name }}
 rbd_pool = {{ ceph_cinder_pool_name }}
-rbd_ceph_conf = /etc/ceph/ceph.conf
+rbd_ceph_conf = /etc/ceph/{{ backend.cluster }}.conf
 rados_connect_timeout = 5
 rbd_user = {{ ceph_cinder_user }}
+rbd_cluster_name = {{ backend.cluster }}
+rbd_keyring_conf = /etc/ceph/{{ backend.cluster }}.{{ ceph_cinder_keyring }}
 rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 report_discard_supported = True
+{% if backend.availability_zone is defined %}
+backend_availability_zone = {{ backend.availability_zone }}
+{% endif %}
+{% endfor %}
 {% endif %}
 
 {% if enable_cinder_backend_nfs | bool %}
