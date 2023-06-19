@@ -14,9 +14,7 @@
           cacert: "{{ service_ks_cacert }}"
       loop: "{{ service_ks_register_services }}"
       loop_control:
-        label:
-          name: "{{ item.name }}"
-          service_type: "{{ item.type }}"
+        label: "{{ item.name }} ({{ item.type }})"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -40,10 +38,7 @@
         - "{{ service_ks_register_services }}"
         - endpoints
       loop_control:
-        label:
-          service: "{{ item.0.name }}"
-          url: "{{ item.1.url }}"
-          interface: "{{ item.1.interface }}"
+        label: "{{ item.0.name }} -> {{ item.1.url }} -> {{ item.1.interface }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -82,9 +77,7 @@
           cacert: "{{ service_ks_cacert }}"
       with_items: "{{ service_ks_register_users }}"
       loop_control:
-        label:
-          user: "{{ item.user }}"
-          project: "{{ item.project }}"
+        label: "{{ item.user }} -> {{ item.project }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -121,10 +114,7 @@
           cacert: "{{ service_ks_cacert }}"
       with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
       loop_control:
-        label:
-          user: "{{ item.user }}"
-          role: "{{ item.role }}"
-          project: "{{ item.project }}"
+        label: "{{ item.user }} -> {{ item.project }} -> {{ item.role }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
