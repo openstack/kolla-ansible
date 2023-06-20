@@ -1382,7 +1382,76 @@ class TestAttrComp(base.BaseTestCase):
             'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
             'Ulimits': []}
         self.dw = get_DockerWorker(self.fake_data['params'])
-        self.assertTrue(self.dw.compare_dimensions(container_info))
+        resp = self.dw.compare_dimensions(container_info)
+        self.dw.module.fail_json.assert_not_called()
+        self.assertTrue(resp)
+
+    def test_compare_dimensions_using_short_notation_not_changed(self):
+        self.fake_data['params']['dimensions'] = {
+            'mem_limit': '1024', 'mem_reservation': '3M',
+            'memswap_limit': '2g'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 1024, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 2 * 1024 * 1024 * 1024,
+            'MemoryReservation': 3 * 1024 * 1024, 'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        resp = self.dw.compare_dimensions(container_info)
+        self.dw.module.fail_json.assert_not_called()
+        self.assertFalse(resp)
+
+    def test_compare_dimensions_key_no_more_supported(self):
+        self.fake_data['params']['dimensions'] = {
+            'mem_limit': '1024', 'mem_reservation': '3M',
+            'memswap_limit': '2g', 'kernel_memory': '4M'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'Memory': 1024, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 2 * 1024 * 1024 * 1024,
+            'MemoryReservation': 3 * 1024 * 1024, 'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.compare_dimensions(container_info)
+        expected_msg = ("The dimension [kernel_memory] is no more "
+                        "supported by Docker, please remove it from "
+                        "yours configs or change to the new one.")
+        self.dw.module.fail_json.assert_called_once_with(
+            failed=True, msg=expected_msg)
+
+    def test_compare_dimensions_invalid_unit(self):
+        self.fake_data['params']['dimensions'] = {
+            'mem_limit': '1024', 'mem_reservation': '3M',
+            'memswap_limit': '2g', 'kernel_memory': '4E'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 1024, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 2 * 1024 * 1024 * 1024,
+            'MemoryReservation': 3 * 1024 * 1024, 'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.compare_dimensions(container_info)
+        expected_msg = ("The docker dimension unit [e] is "
+                        "not supported for the dimension [4E]."
+                        " The currently supported units are "
+                        "['b', 'k', 'm', 'g'].")
+        self.dw.module.fail_json.assert_called_once_with(
+            failed=True, msg=expected_msg)
+
+    def test_compare_dimensions_using_short_notation_changed(self):
+        self.fake_data['params']['dimensions'] = {
+            'mem_limit': '10m', 'mem_reservation': '3M',
+            'memswap_limit': '1g'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 1024, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 2 * 1024 * 1024 * 1024,
+            'MemoryReservation': 3 * 1024 * 1024, 'Ulimits': []}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        resp = self.dw.compare_dimensions(container_info)
+        self.dw.module.fail_json.assert_not_called()
+        self.assertTrue(resp)
 
     def test_compare_dimensions_neg(self):
         self.fake_data['params']['dimensions'] = {
