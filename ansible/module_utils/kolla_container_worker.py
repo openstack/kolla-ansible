@@ -12,11 +12,13 @@
 
 from abc import ABC
 from abc import abstractmethod
+import logging
 import shlex
 
 from ansible.module_utils.kolla_systemd_worker import SystemdWorker
 
 COMPARE_CONFIG_CMD = ['/usr/local/bin/kolla_set_configs', '--check']
+LOG = logging.getLogger(__name__)
 
 
 class ContainerWorker(ABC):
@@ -205,6 +207,73 @@ class ContainerWorker(ABC):
     def compare_volumes(self, container_info):
         pass
 
+    def dimensions_differ(self, a, b, key):
+        """Compares two docker dimensions
+
+        As there are two representations of dimensions in docker, we should
+        normalize them to compare if they are the same.
+
+        If the dimension is no more supported due docker update,
+        an error is thrown to operator to fix the dimensions' config.
+
+        The available representations can be found at:
+
+        https://docs.docker.com/config/containers/resource_constraints/
+
+
+        :param a: Integer or String that represents a number followed or not
+                  by "b", "k", "m" or "g".
+        :param b: Integer or String that represents a number followed or not
+                  by "b", "k", "m" or "g".
+        :return: True if 'a' has the same logical value as 'b' or else
+                 False.
+        """
+
+        if a is None or b is None:
+            msg = ("The dimension [%s] is no more supported by Docker, "
+                   "please remove it from yours configs or change "
+                   "to the new one.") % key
+            LOG.error(msg)
+            self.module.fail_json(
+                failed=True,
+                msg=msg
+            )
+            return
+
+        unit_sizes = {
+            'b': 1,
+            'k': 1024
+        }
+        unit_sizes['m'] = unit_sizes['k'] * 1024
+        unit_sizes['g'] = unit_sizes['m'] * 1024
+        a = str(a)
+        b = str(b)
+        a_last_char = a[-1].lower()
+        b_last_char = b[-1].lower()
+        error_msg = ("The docker dimension unit [%s] is not supported for "
+                     "the dimension [%s]. The currently supported units "
+                     "are ['b', 'k', 'm', 'g'].")
+        if not a_last_char.isnumeric():
+            if a_last_char in unit_sizes:
+                a = str(int(a[:-1]) * unit_sizes[a_last_char])
+            else:
+                LOG.error(error_msg, a_last_char, a)
+                self.module.fail_json(
+                    failed=True,
+                    msg=error_msg % (a_last_char, a)
+                )
+
+        if not b_last_char.isnumeric():
+            if b_last_char in unit_sizes:
+                b = str(int(b[:-1]) * unit_sizes[b_last_char])
+            else:
+                LOG.error(error_msg, b_last_char, b)
+                self.module.fail_json(
+                    failed=True,
+                    msg=error_msg % (b_last_char, b)
+                )
+        return a != b
+
     def compare_dimensions(self, container_info):
         new_dimensions = self.params.get('dimensions')
 
@@ -223,12 +292,14 @@ class ContainerWorker(ABC):
             # check for a match. Otherwise, ensure it is set to the default.
             if key1 in new_dimensions:
                 if key1 == 'ulimits':
-                    if self.compare_ulimits(new_dimensions[key1],
-                                            current_dimensions[key2]):
+                    if self.compare_ulimits(new_dimensions.get(key1),
+                                            current_dimensions.get(key2)):
                         return True
-                elif new_dimensions[key1] != current_dimensions[key2]:
+                elif self.dimensions_differ(new_dimensions.get(key1),
+                                            current_dimensions.get(key2),
+                                            key1):
                     return True
-            elif current_dimensions[key2]:
+            elif current_dimensions.get(key2):
                 # The default values of all currently supported resources are
                 # '' or 0 - both falsy.
                 return True
