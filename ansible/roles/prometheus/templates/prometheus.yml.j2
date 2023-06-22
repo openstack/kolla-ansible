@@ -19,71 +19,103 @@ rule_files:
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets:
 {% for host in groups['prometheus'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ prometheus_port }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 
 {% if enable_prometheus_node_exporter | bool %}
   - job_name: node
     static_configs:
-      - targets:
 {% for host in groups['prometheus-node-exporter'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_mysqld_exporter | bool %}
   - job_name: mysqld
     static_configs:
-      - targets:
 {% for host in groups['prometheus-mysqld-exporter'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_haproxy_exporter | bool %}
   - job_name: haproxy
     static_configs:
-      - targets:
 {% for host in groups['prometheus-haproxy-exporter'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_rabbitmq_exporter | bool %}
   - job_name: rabbitmq
     static_configs:
-      - targets:
 {% for host in groups['rabbitmq'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_rabbitmq_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_memcached_exporter | bool %}
   - job_name: memcached
     static_configs:
-      - targets:
 {% for host in groups['prometheus-memcached-exporter'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_cadvisor | bool %}
   - job_name: cadvisor
     static_configs:
-      - targets:
 {% for host in groups["prometheus-cadvisor"] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_fluentd_integration | bool %}
   - job_name: fluentd
     static_configs:
-      - targets:
 {% for host in groups['fluentd'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_fluentd_integration_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -114,9 +146,13 @@ scrape_configs:
   - job_name: elasticsearch_exporter
     scrape_interval: {{ prometheus_elasticsearch_exporter_interval }}
     static_configs:
-      - targets:
 {% for host in groups["prometheus-elasticsearch-exporter"] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -155,27 +191,39 @@ scrape_configs:
     scrape_interval: {{ prometheus_libvirt_exporter_interval }}
     honor_labels: true
     static_configs:
-      - targets:
 {% for host in groups["prometheus-libvirt-exporter"] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_libvirt_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_etcd_integration | bool %}
   - job_name: etcd
     static_configs:
-      - targets:
 {% for host in groups["etcd"] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_etcd_integration_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
 {% if enable_prometheus_alertmanager | bool %}
   - job_name: alertmanager
     static_configs:
-      - targets:
 {% for host in groups['prometheus-alertmanager'] %}
+      - targets:
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 
 alerting:

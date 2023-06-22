@@ -156,3 +156,40 @@ files:
         - 192.168.1.1
       labels:
           job: ipmi_exporter
+
+Metric Instance labels
+~~~~~~~~~~~~~~~~~~~~~~
+
+Previously, Prometheus metrics used to label instances based on their IP
+addresses. This behaviour can now be changed such that instances can be
+labelled based on their inventory hostname instead. The IP address remains as
+the target address, therefore, even if the hostname is unresolvable, it doesn't
+pose an issue.
+
+The default behavior still labels instances with their IP addresses. However,
+this can be adjusted by changing the ``prometheus_instance_label`` variable.
+This variable accepts the following values:
+
+* ``None``: Instance labels will be IP addresses (default)
+* ``{{ ansible_facts.hostname }}``: Instance labels will be hostnames
+* ``{{ ansible_facts.nodename }}``: Instance labels will FQDNs
+
+To implement this feature, modify the configuration file
+``/etc/kolla/globals.yml`` and update the ``prometheus_instance_label``
+variable accordingly. Remember, changing this variable will cause Prometheus to
+scrape metrics with new names for a short period. This will result in duplicate
+metrics until all metrics are replaced with their new labels.
+
+.. code-block:: yaml
+
+   prometheus_instance_label: "{{ ansible_facts.hostname }}"
+
+This metric labeling feature may become the default setting in future releases.
+Therefore, if you wish to retain the current default (IP address labels), make
+sure to set the ``prometheus_instance_label`` variable to ``None``.
+
+.. note::
+
+   This feature may generate duplicate metrics temporarily while Prometheus
+   updates the metric labels. Please be aware of this while analyzing metrics
+   during the transition period.
