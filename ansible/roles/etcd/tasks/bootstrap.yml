@@ -1,0 +1,25 @@
+---
+- import_tasks: lookup_cluster.yml
+
+# NOTE(jan.gutter): The following two tasks set facts that aren't really used.
+# They serve the purpose to trigger the handlers for bootstrapping:
+# If no etcd data volumes exist, bootstrap a new initial cluster.
+# If some volumes exist, add the new nodes to an existing cluster.
+
+- name: Determine whether a new cluster needs bootstrapping
+  set_fact:
+    etcd_bootstrap_cluster: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+  when: not (etcd_cluster_exists | bool)
+  changed_when: not (etcd_cluster_exists | bool)
+  notify: Bootstrap etcd cluster
+
+- name: Determine when new services need bootstrapping
+  set_fact:
+    etcd_bootstrap_services: "{% for host in groups['etcd_had_volume_False'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+  when:
+    - etcd_cluster_exists | bool
+    - groups.etcd_had_volume_False is defined
+  changed_when:
+    - etcd_cluster_exists | bool
+    - groups.etcd_had_volume_False is defined
+  notify: Bootstrap etcd services

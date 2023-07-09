@@ -52,7 +52,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "cephadm" ]]; then
-        GATE_IMAGES+=",^cinder"
+        GATE_IMAGES+=",^cinder,^etcd"
     fi
 
     if [[ $SCENARIO == "cells" ]]; then

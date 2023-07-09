@@ -1,0 +1,60 @@
+---
+- name: Bootstrapping etcd cluster
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment:
+      KOLLA_BOOTSTRAP_STATUS: "bootstrap cluster"
+      ETCD_INITIAL_CLUSTER_STATE: "new"
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+      ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
+      ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+      ETCDCTL_API: "3"
+      ETCDCTL_ENDPOINTS: "{{ etcd_client_internal_endpoint }}"
+      ETCDCTL_WRITE_OUT: "json"
+      ETCD_DATA_DIR: "/var/lib/etcd"
+      ETCD_NAME: "{{ ansible_facts.hostname }}"
+      ETCD_ADVERTISE_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+      ETCD_LISTEN_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+      ETCD_LISTEN_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+      ETCD_OUT_FILE: "/var/log/kolla/etcd/etcd.log"
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      ETCD_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
+      ETCD_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
+      ETCD_PEER_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
+      ETCD_PEER_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
+    image: "{{ service.image }}"
+    name: "{{ service.container_name }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+
+- name: Wait for etcd service port liveness
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ etcd_client_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_etcd_port
+  until: check_etcd_port is success
+  retries: 10
+  delay: 6
+
+- name: Wait for etcd endpoints to be healthy
+  become: true
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  command: >-
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    etcdctl endpoint health
+  changed_when: false
+  register: result
+  until:
+    - result is success
+    - ((result.stdout | from_json | first)['health'] | default(False) | bool)
+  retries: 10
+  delay: 6

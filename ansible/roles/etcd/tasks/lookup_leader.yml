@@ -1,0 +1,41 @@
+---
+# NOTE(jan.gutter): These tasks assume a cluster is running
+- name: Check for the etcd leader
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  # NOTE(jan.gutter): We need to set the ETCD environment vars here to
+  # handle an upgrade scenario from older etcd containers. These can be
+  # removed once the new workflow has been in place for a cycle or two.
+  command: >-
+    {{ kolla_container_engine }} exec
+    -e ETCDCTL_API=3
+    -e ETCDCTL_ENDPOINTS="{{ etcd_client_internal_endpoint }}"
+    -e ETCDCTL_WRITE_OUT="json"
+    {{ service.container_name }}
+    etcdctl endpoint status
+  changed_when: false
+  when:
+    - inventory_hostname in (groups.etcd_had_volume_True | default([]))
+  register: etcd_endpoint_status_result
+
+- name: Divide hosts by their etcd leader status
+  vars:
+    etcd_endpoint_status: >-
+      {{ etcd_endpoint_status_result.stdout | default('[]') | from_json }}
+    etcd_member_id: >-
+      {{ etcd_endpoint_status[0]['Status']['header']['member_id']
+      | default('') }}
+    etcd_leader_id: >-
+      {{ etcd_endpoint_status[0]['Status']['leader']
+      | default('none') }}
+  group_by:
+    key: etcd_is_leader_{{ etcd_member_id == etcd_leader_id }}
+  changed_when: false
+
+- name: Set the etcd cluster leader
+  set_fact:
+    etcd_cluster_leader: "{{ groups.etcd_is_leader_True | sort | first }}"
+  when: groups.etcd_is_leader_True is defined
+  changed_when: false
