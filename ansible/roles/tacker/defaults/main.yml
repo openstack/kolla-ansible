@@ -15,12 +15,15 @@ tacker_services:
         mode: "http"
         external: false
         port: "{{ tacker_server_port }}"
+        listen_port: "{{ tacker_server_listen_port }}"
         custom_member_list: "{{ tacker_haproxy_members.split(';') }}"
       tacker_server_external:
         enabled: "{{ enable_tacker }}"
         mode: "http"
         external: true
-        port: "{{ tacker_server_port }}"
+        external_fqdn: "{{ tacker_external_fqdn }}"
+        port: "{{ tacker_server_public_port }}"
+        listen_port: "{{ tacker_server_listen_port }}"
         custom_member_list: "{{ tacker_haproxy_members.split(';') }}"
   tacker-conductor:
     container_name: "tacker_conductor"
@@ -134,8 +137,8 @@ tacker_hosts: "{{ [groups['tacker'] | first] }}"
 ####################
 # OpenStack
 ####################
-tacker_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ tacker_server_port }}"
-tacker_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ tacker_server_port }}"
+tacker_internal_endpoint: "{{ tacker_internal_fqdn | kolla_url(internal_protocol, tacker_server_port) }}"
+tacker_public_endpoint: "{{ tacker_external_fqdn | kolla_url(public_protocol, tacker_server_public_port) }}"
 
 tacker_logging_debug: "{{ openstack_logging_debug }}"
 

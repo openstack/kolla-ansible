@@ -13,11 +13,14 @@ freezer_services:
         mode: "http"
         external: false
         port: "{{ freezer_api_port }}"
+        listen_port: "{{ freezer_api_listen_port }}"
       freezer_api_external:
         enabled: "{{ enable_freezer }}"
         mode: "http"
         external: true
-        port: "{{ freezer_api_port }}"
+        external_fqdn: "{{ freezer_external_fqdn }}"
+        port: "{{ freezer_api_public_port }}"
+        listen_port: "{{ freezer_api_listen_port }}"
   freezer-scheduler:
     container_name: freezer_scheduler
     group: freezer-scheduler
@@ -97,8 +100,8 @@ freezer_scheduler_extra_volumes: "{{ freezer_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-freezer_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ freezer_api_port }}"
-freezer_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ freezer_api_port }}"
+freezer_internal_endpoint: "{{ freezer_internal_fqdn | kolla_url(internal_protocol, freezer_api_port) }}"
+freezer_public_endpoint: "{{ freezer_external_fqdn | kolla_url(public_protocol, freezer_api_public_port) }}"
 
 freezer_logging_debug: "{{ openstack_logging_debug }}"
 

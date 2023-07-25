@@ -20,9 +20,10 @@ trove_services:
         enabled: "{{ enable_trove }}"
         mode: "http"
         external: true
-        port: "{{ trove_api_port }}"
         listen_port: "{{ trove_api_listen_port }}"
         tls_backend: "{{ trove_enable_tls_backend }}"
+        external_fqdn: "{{ trove_external_fqdn }}"
+        port: "{{ trove_api_public_port }}"
   trove-conductor:
     container_name: trove_conductor
     group: trove-conductor
@@ -158,8 +159,8 @@ trove_taskmanager_extra_volumes: "{{ trove_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-trove_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
-trove_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
+trove_internal_endpoint: "{{ trove_internal_fqdn | kolla_url(internal_protocol, trove_api_port, '/v1.0/%(tenant_id)s') }}"
+trove_public_endpoint: "{{ trove_external_fqdn | kolla_url(public_protocol, trove_api_public_port, '/v1.0/%(tenant_id)s') }}"
 
 trove_logging_debug: "{{ openstack_logging_debug }}"
 

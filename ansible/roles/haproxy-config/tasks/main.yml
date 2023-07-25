@@ -22,6 +22,36 @@
   notify:
     - Restart haproxy container
 
+- name: "Add configuration for {{ project_name }} when using single external frontend"
+  vars:
+    service: "{{ item.value }}"
+  blockinfile:
+    create: yes
+    path: "{{ node_config_directory }}/haproxy/external-frontend-map"
+    insertafter: EOF
+    marker: "# {mark} {{ item.key }}"
+    mode: "0660"
+    block: |
+      {%- set haproxy = service.haproxy | default({}) %}
+      {%- for haproxy_name, haproxy_service in haproxy.items() %}
+      {% set external = haproxy_service.external | default(false) | bool %}
+      {% set enabled = haproxy_service.enabled | default(false) | bool %}
+      {% set with_frontend = haproxy_service.with_frontend | default(true) | bool %}
+      {% set mode = haproxy_service.mode | default('http') %}
+      {%- if external and with_frontend and enabled and mode == 'http' %}
+      {{ haproxy_service.external_fqdn }} {{ haproxy_name }}_back
+      {% endif -%}
+      {%- endfor -%}
+  become: true
+  with_dict: "{{ project_services }}"
+  when:
+    - haproxy_single_external_frontend | bool
+    - service.enabled | bool
+    - service.haproxy is defined
+    - enable_haproxy | bool
+  notify:
+    - Restart haproxy container
+
 - name: "Configuring firewall for {{ project_name }}"
   firewalld:
     offline: "yes"

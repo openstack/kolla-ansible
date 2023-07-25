@@ -30,24 +30,30 @@ solum_services:
         mode: "http"
         external: false
         port: "{{ solum_application_deployment_port }}"
+        listen_port: "{{ solum_application_deployment_listen_port }}"
         host_group: "solum-application-deployment"
       solum_application_deployment_external:
         enabled: "{{ enable_solum }}"
         mode: "http"
         external: true
-        port: "{{ solum_application_deployment_port }}"
+        external_fqdn: "{{ solum_application_deployment_external_fqdn }}"
+        port: "{{ solum_application_deployment_public_port }}"
+        listen_port: "{{ solum_application_deployment_listen_port }}"
         host_group: "solum-application-deployment"
       solum_image_builder:
         enabled: "{{ enable_solum }}"
         mode: "http"
         external: false
         port: "{{ solum_image_builder_port }}"
+        listen_port: "{{ solum_image_builder_listen_port }}"
         host_group: "solum-image-builder"
       solum_image_builder_external:
         enabled: "{{ enable_solum }}"
         mode: "http"
         external: true
-        port: "{{ solum_image_builder_port }}"
+        external_fqdn: "{{ solum_image_builder_external_fqdn }}"
+        port: "{{ solum_image_builder_public_port }}"
+        listen_port: "{{ solum_image_builder_listen_port }}"
         host_group: "solum-image-builder"
   solum-conductor:
     container_name: solum_conductor
@@ -198,11 +204,11 @@ solum_conductor_extra_volumes: "{{ solum_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-solum_image_builder_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ solum_image_builder_port }}"
-solum_image_builder_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ solum_image_builder_port }}"
+solum_image_builder_internal_endpoint: "{{ solum_image_builder_internal_fqdn | kolla_url(internal_protocol, solum_image_builder_port) }}"
+solum_image_builder_public_endpoint: "{{ solum_image_builder_external_fqdn | kolla_url(public_protocol, solum_image_builder_public_port) }}"
 
-solum_application_deployment_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ solum_application_deployment_port }}"
-solum_application_deployment_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ solum_application_deployment_port }}"
+solum_application_deployment_internal_endpoint: "{{ solum_application_deployment_internal_fqdn | kolla_url(internal_protocol, solum_application_deployment_port) }}"
+solum_application_deployment_public_endpoint: "{{ solum_application_deployment_external_fqdn | kolla_url(public_protocol, solum_application_deployment_public_port) }}"
 
 solum_logging_debug: "{{ openstack_logging_debug }}"
 

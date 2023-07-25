@@ -20,6 +20,7 @@ skyline_services:
         enabled: "{{ enable_skyline }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ skyline_apiserver_external_fqdn }}"
         port: "{{ skyline_apiserver_port }}"
         listen_port: "{{ skyline_apiserver_listen_port }}"
         tls_backend: "{{ skyline_enable_tls_backend }}"
@@ -43,6 +44,7 @@ skyline_services:
         enabled: "{{ enable_skyline }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ skyline_console_external_fqdn }}"
         port: "{{ skyline_console_port }}"
         listen_port: "{{ skyline_console_listen_port }}"
         tls_backend: "{{ skyline_enable_tls_backend }}"
@@ -128,8 +130,8 @@ skyline_console_extra_volumes: "{{ skyline_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-skyline_internal_endpoint: "{{ internal_protocol }}://{{ skyline_internal_fqdn | put_address_in_context('url') }}:{{ skyline_apiserver_port }}"
-skyline_public_endpoint: "{{ public_protocol }}://{{ skyline_external_fqdn | put_address_in_context('url') }}:{{ skyline_apiserver_port }}"
+skyline_apiserver_internal_base_endpoint: "{{ skyline_apiserver_internal_fqdn | kolla_url(internal_protocol, skyline_apiserver_port) }}"
+skyline_apiserver_public_base_endpoint: "{{ skyline_apiserver_external_fqdn | kolla_url(public_protocol, skyline_apiserver_public_port) }}"
 
 skyline_logging_debug: "{{ openstack_logging_debug }}"
 
@@ -171,8 +173,8 @@ skyline_ks_services:
     type: "panel"
     description: "OpenStack Dashboard Service"
     endpoints:
-      - {'interface': 'internal', 'url': '{{ skyline_internal_endpoint }}'}
-      - {'interface': 'public', 'url': '{{ skyline_public_endpoint }}'}
+      - {'interface': 'internal', 'url': '{{ skyline_apiserver_internal_base_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ skyline_apiserver_public_base_endpoint }}'}
 
 skyline_ks_users:
   - project: "service"

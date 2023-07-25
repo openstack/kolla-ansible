@@ -14,11 +14,14 @@ cloudkitty_services:
         mode: "http"
         external: false
         port: "{{ cloudkitty_api_port }}"
+        listen_port: "{{ cloudkitty_api_listen_port }}"
       cloudkitty_api_external:
         enabled: "{{ enable_cloudkitty }}"
         mode: "http"
         external: true
-        port: "{{ cloudkitty_api_port }}"
+        external_fqdn: "{{ cloudkitty_external_fqdn }}"
+        port: "{{ cloudkitty_api_public_port }}"
+        listen_port: "{{ cloudkitty_api_listen_port }}"
   cloudkitty-processor:
     container_name: "cloudkitty_processor"
     group: "cloudkitty-processor"
@@ -118,8 +121,8 @@ cloudkitty_api_extra_volumes: "{{ cloudkitty_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-cloudkitty_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"
-cloudkitty_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"
+cloudkitty_internal_endpoint: "{{ cloudkitty_internal_fqdn | kolla_url(internal_protocol, cloudkitty_api_port) }}"
+cloudkitty_public_endpoint: "{{ cloudkitty_external_fqdn | kolla_url(public_protocol, cloudkitty_api_public_port) }}"
 
 cloudkitty_logging_debug: "{{ openstack_logging_debug }}"
 

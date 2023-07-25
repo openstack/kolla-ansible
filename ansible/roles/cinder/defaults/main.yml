@@ -20,7 +20,8 @@ cinder_services:
         enabled: "{{ enable_cinder }}"
         mode: "http"
         external: true
-        port: "{{ cinder_api_port }}"
+        external_fqdn: "{{ cinder_external_fqdn }}"
+        port: "{{ cinder_api_public_port }}"
         listen_port: "{{ cinder_api_listen_port }}"
         tls_backend: "{{ cinder_enable_tls_backend }}"
   cinder-scheduler:
@@ -209,8 +210,8 @@ cinder_enable_conversion_tmpfs: false
 ####################
 # OpenStack
 ####################
-cinder_internal_base_endpoint: "{{ internal_protocol }}://{{ cinder_internal_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}"
-cinder_public_base_endpoint: "{{ public_protocol }}://{{ cinder_external_fqdn | put_address_in_context('url') }}:{{ cinder_api_port }}"
+cinder_internal_base_endpoint: "{{ cinder_internal_fqdn | kolla_url(internal_protocol, cinder_api_port) }}"
+cinder_public_base_endpoint: "{{ cinder_external_fqdn | kolla_url(public_protocol, cinder_api_public_port) }}"
 
 cinder_v3_internal_endpoint: "{{ cinder_internal_base_endpoint }}/v3/%(tenant_id)s"
 cinder_v3_public_endpoint: "{{ cinder_public_base_endpoint }}/v3/%(tenant_id)s"

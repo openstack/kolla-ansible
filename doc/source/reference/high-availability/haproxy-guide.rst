@@ -22,6 +22,26 @@ setting the following in ``/etc/kolla/globals.yml``:
    enable_haproxy: "no"
    enable_keepalived: "no"
 
+Single external frontend for services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Single external frontend for particular service can be enabled by adding the
+following in ``/etc/kolla/globals.yml`` (feature and example services):
+
+.. code-block:: yaml
+
+   haproxy_single_external_frontend: true
+
+   nova_external_fqdn: "nova.example.com"
+   neutron_external_fqdn: "neutron.example.com"
+   horizon_external_fqdn: "horizon.example.com"
+   opensearch_external_fqdn: "opensearch.example.com"
+   grafana_external_fqdn: "grafana.example.com"
+
+
+The abovementioned functionality allows for exposing of services on separate
+fqdns on commonly used port i.e. 443 instead of the usual high ports.
+
 Configuration
 ~~~~~~~~~~~~~
 

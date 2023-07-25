@@ -19,7 +19,8 @@ aodh_services:
         enabled: "{{ enable_aodh }}"
         mode: "http"
         external: true
-        port: "{{ aodh_api_port }}"
+        external_fqdn: "{{ aodh_external_fqdn }}"
+        port: "{{ aodh_api_public_port }}"
         listen_port: "{{ aodh_api_listen_port }}"
   aodh-evaluator:
     container_name: aodh_evaluator
@@ -207,8 +208,8 @@ aodh_notifier_extra_volumes: "{{ aodh_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-aodh_internal_endpoint: "{{ internal_protocol }}://{{ aodh_internal_fqdn | put_address_in_context('url') }}:{{ aodh_api_port }}"
-aodh_public_endpoint: "{{ public_protocol }}://{{ aodh_external_fqdn | put_address_in_context('url') }}:{{ aodh_api_port }}"
+aodh_internal_endpoint: "{{ aodh_internal_fqdn | kolla_url(internal_protocol, aodh_api_port) }}"
+aodh_public_endpoint: "{{ aodh_external_fqdn | kolla_url(public_protocol, aodh_api_public_port) }}"
 
 aodh_logging_debug: "{{ openstack_logging_debug }}"
 

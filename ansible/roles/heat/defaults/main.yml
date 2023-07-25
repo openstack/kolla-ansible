@@ -20,7 +20,8 @@ heat_services:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
-        port: "{{ heat_api_port }}"
+        external_fqdn: "{{ heat_external_fqdn }}"
+        port: "{{ heat_api_public_port }}"
         listen_port: "{{ heat_api_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
   heat-api-cfn:
@@ -43,7 +44,8 @@ heat_services:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
-        port: "{{ heat_api_cfn_port }}"
+        external_fqdn: "{{ heat_cfn_external_fqdn }}"
+        port: "{{ heat_api_cfn_public_port }}"
         listen_port: "{{ heat_api_cfn_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
   heat-engine:
@@ -170,12 +172,12 @@ heat_engine_extra_volumes: "{{ heat_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-heat_internal_endpoint: "{{ internal_protocol }}://{{ heat_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_public_endpoint: "{{ public_protocol }}://{{ heat_external_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_internal_endpoint: "{{ heat_internal_fqdn | kolla_url(internal_protocol, heat_api_port, '/v1/%(tenant_id)s') }}"
+heat_public_endpoint: "{{ heat_external_fqdn | kolla_url(public_protocol, heat_api_public_port, '/v1/%(tenant_id)s') }}"
 
-heat_cfn_public_base_endpoint: "{{ public_protocol }}://{{ heat_cfn_external_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}"
+heat_cfn_public_base_endpoint: "{{ heat_cfn_external_fqdn | kolla_url(public_protocol, heat_api_cfn_public_port) }}"
 
-heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ heat_cfn_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_internal_endpoint: "{{ heat_cfn_internal_fqdn | kolla_url(internal_protocol, heat_api_cfn_port, '/v1') }}"
 heat_cfn_public_endpoint: "{{ heat_cfn_public_base_endpoint }}/v1"
 
 heat_logging_debug: "{{ openstack_logging_debug }}"

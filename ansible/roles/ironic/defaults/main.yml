@@ -20,7 +20,8 @@ ironic_services:
         enabled: "{{ enable_ironic }}"
         mode: "http"
         external: true
-        port: "{{ ironic_api_port }}"
+        external_fqdn: "{{ ironic_external_fqdn }}"
+        port: "{{ ironic_api_public_port }}"
         listen_port: "{{ ironic_api_listen_port }}"
         tls_backend: "{{ ironic_enable_tls_backend }}"
   ironic-conductor:
@@ -52,7 +53,8 @@ ironic_services:
         enabled: "{{ enable_ironic }}"
         mode: "http"
         external: true
-        port: "{{ ironic_inspector_port }}"
+        external_fqdn: "{{ ironic_inspector_external_fqdn }}"
+        port: "{{ ironic_inspector_public_port }}"
         listen_port: "{{ ironic_inspector_listen_port }}"
   ironic-tftp:
     container_name: ironic_tftp
@@ -259,8 +261,8 @@ ironic_dnsmasq_extra_volumes: "{{ ironic_extra_volumes }}"
 ####################
 ironic_inspector_keystone_user: "ironic-inspector"
 
-ironic_inspector_internal_endpoint: "{{ internal_protocol }}://{{ ironic_inspector_internal_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
-ironic_inspector_public_endpoint: "{{ public_protocol }}://{{ ironic_inspector_external_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
+ironic_inspector_internal_endpoint: "{{ ironic_inspector_internal_fqdn | kolla_url(internal_protocol, ironic_inspector_port) }}"
+ironic_inspector_public_endpoint: "{{ ironic_inspector_external_fqdn | kolla_url(public_protocol, ironic_inspector_public_port) }}"
 
 ironic_logging_debug: "{{ openstack_logging_debug }}"
 

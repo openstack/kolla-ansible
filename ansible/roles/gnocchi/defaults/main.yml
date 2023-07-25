@@ -13,12 +13,15 @@ gnocchi_services:
         enabled: "{{ enable_gnocchi }}"
         mode: "http"
         external: false
-        port: "{{ gnocchi_api_listen_port }}"
+        port: "{{ gnocchi_api_port }}"
+        listen_port: "{{ gnocchi_api_listen_port }}"
       gnocchi_api_external:
         enabled: "{{ enable_gnocchi }}"
         mode: "http"
         external: true
-        port: "{{ gnocchi_api_listen_port }}"
+        external_fqdn: "{{ gnocchi_external_fqdn }}"
+        port: "{{ gnocchi_api_public_port }}"
+        listen_port: "{{ gnocchi_api_listen_port }}"
   gnocchi-metricd:
     container_name: gnocchi_metricd
     group: gnocchi-metricd
@@ -160,8 +163,8 @@ gnocchi_statsd_extra_volumes: "{{ gnocchi_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-gnocchi_internal_endpoint: "{{ internal_protocol }}://{{ gnocchi_internal_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
-gnocchi_public_endpoint: "{{ public_protocol }}://{{ gnocchi_external_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
+gnocchi_internal_endpoint: "{{ gnocchi_internal_fqdn | kolla_url(internal_protocol, gnocchi_api_port) }}"
+gnocchi_public_endpoint: "{{ gnocchi_external_fqdn | kolla_url(public_protocol, gnocchi_api_public_port) }}"
 
 gnocchi_logging_debug: "{{ openstack_logging_debug }}"
 

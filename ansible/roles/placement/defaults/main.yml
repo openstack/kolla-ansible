@@ -20,7 +20,8 @@ placement_services:
         enabled: "{{ enable_placement }}"
         mode: "http"
         external: true
-        port: "{{ placement_api_port }}"
+        external_fqdn: "{{ placement_external_fqdn }}"
+        port: "{{ placement_api_public_port }}"
         listen_port: "{{ placement_api_listen_port }}"
         tls_backend: "{{ placement_enable_tls_backend }}"
 
@@ -88,8 +89,8 @@ placement_api_extra_volumes: "{{ default_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-placement_internal_endpoint: "{{ internal_protocol }}://{{ placement_internal_fqdn | put_address_in_context('url') }}:{{ placement_api_port }}"
-placement_public_endpoint: "{{ public_protocol }}://{{ placement_external_fqdn | put_address_in_context('url') }}:{{ placement_api_port }}"
+placement_internal_endpoint: "{{ placement_internal_fqdn | kolla_url(internal_protocol, placement_api_port) }}"
+placement_public_endpoint: "{{ placement_external_fqdn | kolla_url(public_protocol, placement_api_public_port) }}"
 
 placement_logging_debug: "{{ openstack_logging_debug }}"
 

@@ -14,11 +14,14 @@ zun_services:
         mode: "http"
         external: false
         port: "{{ zun_api_port }}"
+        listen_port: "{{ zun_api_listen_port }}"
       zun_api_external:
         enabled: "{{ enable_zun }}"
         mode: "http"
         external: true
-        port: "{{ zun_api_port }}"
+        external_fqdn: "{{ zun_external_fqdn }}"
+        port: "{{ zun_api_public_port }}"
+        listen_port: "{{ zun_api_listen_port }}"
   zun-wsproxy:
     container_name: zun_wsproxy
     group: zun-wsproxy
@@ -206,8 +209,8 @@ zun_cni_daemon_extra_volumes: "{{ zun_extra_volumes }}"
 ####################
 ## OpenStack
 ####################
-zun_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ zun_api_port }}/v1/"
-zun_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ zun_api_port }}/v1/"
+zun_internal_endpoint: "{{ zun_internal_fqdn | kolla_url(internal_protocol, zun_api_port, '/v1/') }}"
+zun_public_endpoint: "{{ zun_external_fqdn | kolla_url(public_protocol, zun_api_public_port, '/v1/') }}"
 
 zun_logging_debug: "{{ openstack_logging_debug }}"
 
