@@ -131,7 +131,7 @@ network outages caused by all agents restarting at the same time. The exact
 length of time it takes to restart is dependent on hardware and the number of
 routers present. A general rule of thumb is to set the value to ``40 + 3n``
 where ``n`` is the number of routers. For example, with 5 routers,
-``40 + (3 * 5) = 65`` so the value could be set to 65. A much better approach
+``40 + (3 * 5) = 55`` so the value could be set to 55. A much better approach
 however would be to first time how long an outage lasts, then set the value
 accordingly.
 
