@@ -125,22 +125,32 @@ needed to migrate from transient to durable queues.
 1. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
 
-2. Reconfigure RabbitMQ to enable classic queue mirroring.
+   .. code-block:: console
+
+      kolla-ansible stop --tags <service-tags>
+
+2. Generate the new config for all services.
 
    .. code-block:: console
 
-      kolla-ansible reconfigure --tags rabbitmq --skip-tags rabbitmq-ha-precheck
+      kolla-ansible genconfig
 
-3. Reset the state on each RabbitMQ node with the following commands. Each
-   command must be run on all RabbitMQ nodes before moving on to the next
-   command. This will remove all queues.
+3. Reconfigure RabbitMQ.
 
    .. code-block:: console
 
-      rabbitmqctl stop_app
-      rabbitmqctl force_reset
-      rabbitmqctl start_app
+      kolla-ansible reconfigure --tags rabbitmq
 
-4. Reconfigure the OpenStack services using ``kolla-ansible reconfigure``, at
-   which point they will start again and recreate the appropriate queues as
-   durable.
+4. Reset the state on each RabbitMQ, to remove the old transient queues and
+   exchanges.
+
+   .. code-block:: console
+
+      kolla-ansible rabbitmq-reset-state
+
+5. Start the OpenStack services again, at which point they will recreate the
+   appropriate queues as durable.
+
+   .. code-block:: console
+
+      kolla-ansible deploy --tags <service-tags>
