@@ -247,6 +247,10 @@ necessary update containers, without generating configuration.
 ``kolla-ansible -i INVENTORY prune-images`` is used to prune orphaned Docker
 images on hosts.
 
+``kolla-ansible -i INVENTORY genconfig`` is used to generate configuration
+files for enabled OpenStack services, without then restarting the containers so
+it is not applied right away.
+
 ``kolla-ansible -i INVENTORY1 -i INVENTORY2 ...`` Multiple inventories can be
 specified by passing the ``--inventory`` or ``-i`` command line option multiple
 times. This can be useful to share configuration between multiple environments.
