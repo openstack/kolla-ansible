@@ -106,11 +106,16 @@ class SystemdWorker(object):
         return False
 
     def stop(self):
-        return self.perform_action(
+        if self.perform_action(
             'StopUnit',
             self.container_dict['service_name'],
             self.job_mode
-        )
+        ):
+            return self.wait_for_unit(
+                self.container_dict['restart_timeout'],
+                state='dead'
+            )
+        return False
 
     def reload(self):
         return self.perform_action(
@@ -190,12 +195,12 @@ class SystemdWorker(object):
 
         return None
 
-    def wait_for_unit(self, timeout):
+    def wait_for_unit(self, timeout, state='running'):
         delay = 5
         elapsed = 0
 
         while True:
-            if self.get_unit_state() == 'running':
+            if self.get_unit_state() == state:
                 return True
             elif elapsed > timeout:
                 return False

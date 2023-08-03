@@ -446,11 +446,10 @@ class DockerWorker(ContainerWorker):
                     msg="No such container: {} to stop".format(name))
         elif not container['Status'].startswith('Exited '):
             self.changed = True
-            if self.params.get('restart_policy') != 'no':
-                self.systemd.create_unit_file()
-                self.systemd.stop()
-            else:
+            if not self.systemd.check_unit_file():
                 self.dc.stop(name, timeout=graceful_timeout)
+            else:
+                self.systemd.stop()
 
     def stop_and_remove_container(self):
         container = self.check_container()
