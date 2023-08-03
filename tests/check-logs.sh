@@ -22,6 +22,10 @@ function check_fluentd_log_file_for_level {
     sudo egrep "\[$2\]:" $1
 }
 
+function check_docker_log_file_for_sigkill {
+    sudo journalctl --no-pager -u ${CONTAINER_ENGINE}.service | grep "signal 9"
+}
+
 function filter_out_expected_critical {
     # $1: file
     # Filter out expected critical log messages that we do not want to fail the
@@ -79,6 +83,10 @@ if check_fluentd_log_file_for_level $fluentd_log_file error >/dev/null; then
     echo >> $fluentd_error_summary_file
 fi
 
+if check_docker_log_file_for_sigkill >/dev/null; then
+    any_critical=1
+    echo "(critical) Found containers killed using signal 9 (SIGKILL) in docker logs."
+fi
 
 if [[ $any_critical -eq 1 ]]; then
     echo "Found critical log messages - failing job."

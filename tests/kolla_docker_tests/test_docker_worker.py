@@ -536,6 +536,7 @@ class TestContainer(base.BaseTestCase):
                                     'action': 'stop_container',
                                     'restart_policy': 'no'})
         self.dw.dc.containers.return_value = self.fake_data['containers']
+        self.dw.systemd.check_unit_file.return_value = False
         self.dw.stop_container()
 
         self.assertTrue(self.dw.changed)
