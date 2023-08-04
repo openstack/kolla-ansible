@@ -128,7 +128,7 @@ for multistore:
   .. path /etc/kolla/config/glance.conf
   .. code-block:: ini
 
-     [GLOBAL]
+     [DEFAULT]
      show_image_direct_url = True
 
 .. warning::
