@@ -99,7 +99,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "venus" ]]; then
-        GATE_IMAGES="^cron,^elasticsearch,^fluentd,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
+        GATE_IMAGES="^cron,^opensearch,^fluentd,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
     fi
 
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
