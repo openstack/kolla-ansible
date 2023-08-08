@@ -16,6 +16,9 @@ frontend {{ service_name }}_front
     mode {{ service_mode }}
     {% endif %}
     {% if service_mode == 'http' %}
+    {% if external|bool %}
+    http-request deny if { path -i -m beg /server-status }
+    {% endif %}
     {# Delete any pre-populated XFP header #}
     http-request del-header X-Forwarded-Proto
         {% for http_option in frontend_http_extra %}
