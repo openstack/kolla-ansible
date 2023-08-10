@@ -52,25 +52,52 @@
 
 - hosts: primary
   environment:
-    PATH: "{{ ansible_env.HOME + '/.local/bin:' + ansible_env.PATH }}"
+    PATH: >-
+      {{ ansible_env.HOME + '/kolla-ansible-venv/bin:'
+      + ansible_env.PATH }}
+  vars:
+    ara_report_local_dir: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
+    kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
   tasks:
     - name: check for existence of ara sqlite
       stat:
-        path: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
+        path: "{{ ansible_env.HOME }}/.ara/server/ansible.sqlite"
       register: ara_stat_result
 
     - block:
         - name: ensure ara-report folder existence
           file:
-            path: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
+            path: "{{ ara_report_local_dir }}"
             state: directory
           delegate_to: localhost
-          run_once: true
 
         - name: download ara sqlite
           synchronize:
-            src: "{{ ansible_env.HOME }}/.ara/ansible.sqlite"
-            dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report/"
+            src: "{{ ansible_env.HOME }}/.ara/server/ansible.sqlite"
+            dest: "{{ ara_report_local_dir }}/"
             mode: pull
 
+        - name: get ara version
+          command: "ara --version"
+          register: ara_version
+
+        - name: template ara readme
+          template:
+            src: "{{ kolla_ansible_local_src_dir }}/tests/ara-readme.md.j2"
+            dest: "{{ ara_report_local_dir }}/README.md"
+            mode: '0644'
+          delegate_to: localhost
+
+        - name: Generate HTML from ARA database
+          command: "ara-manage generate {{ ansible_env.HOME }}/ara-html"
+          when: (zuul.change_message | default('')) is search('#ara_verbose')
+
+        - name: Download ARA HTML
+          synchronize:
+            src: "{{ ansible_env.HOME }}/ara-html"
+            dest: "{{ ara_report_local_dir }}/"
+            mode: pull
+            rsync_opts:
+              - "--quiet"
+          when: (zuul.change_message | default('')) is search('#ara_verbose')
       when: ara_stat_result.stat.exists
