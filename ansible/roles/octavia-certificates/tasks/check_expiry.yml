@@ -1,0 +1,24 @@
+---
+- name: Gather information on certificates
+  community.crypto.x509_certificate_info:
+    path: "{{ node_custom_config }}/octavia/{{ item }}"
+    valid_at:
+      point_1: "+{{ octavia_certs_expiry_limit | int }}d"
+  register: cert_info
+  delegate_to: localhost
+  with_items:
+    - "server_ca.cert.pem"
+    - "client_ca.cert.pem"
+    - "client.cert-and-key.pem"
+
+- name: Check whether certificates are valid within {{ octavia_certs_expiry_limit }} days
+  assert:
+    that:
+      - item.valid_at.point_1
+    fail_msg: "{{ item.item }} will expire within {{ octavia_certs_expiry_limit }} days, on {{ item.not_after }}"
+    success_msg: "{{ item.item }} will not expire within {{ octavia_certs_expiry_limit }} days. It expires on {{ item.not_after }}"
+    quiet: True
+  loop: "{{ cert_info.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  delegate_to: localhost

@@ -8,6 +8,12 @@ set -o errexit
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
+function check_certificate_expiry {
+    RAW_INVENTORY=/etc/kolla/inventory
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+    kolla-ansible octavia-certificates --check-expiry 7
+    deactivate
+}
 
 function register_amphora_image {
     amphora_url=https://tarballs.opendev.org/openstack/octavia/test-images/test-only-amphora-x64-haproxy-ubuntu-focal.qcow2
@@ -79,6 +85,9 @@ function test_octavia {
 }
 
 function test_octavia_logged {
+    # Check if any certs expire within a week.
+    check_certificate_expiry
+
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
     test_octavia

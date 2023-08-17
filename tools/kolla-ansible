@@ -197,6 +197,7 @@ Commands:
     stop                 Stop Kolla containers
     certificates         Generate self-signed certificate for TLS *For Development Only*
     octavia-certificates Generate certificates for octavia deployment
+                             --check-expiry <days> to check if certificates expire within that many days
     upgrade              Upgrades existing OpenStack Environment
     upgrade-bifrost      Upgrades an existing bifrost container
     genconfig            Generate configuration files for enabled OpenStack services
@@ -263,7 +264,7 @@ function version {
 check_environment_coherence
 
 SHORT_OPTS="hi:p:t:k:e:CD:v"
-LONG_OPTS="help,version,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
+LONG_OPTS="help,version,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental,check-expiry:"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
@@ -281,6 +282,7 @@ DANGER_CONFIRM=
 INCLUDE_IMAGES=
 INCLUDE_DEV=
 BACKUP_TYPE="full"
+OCTAVIA_CERTS_EXPIRY=
 # Serial is not recommended and disabled by default. Users can enable it by
 # configuring ANSIBLE_SERIAL variable.
 ANSIBLE_SERIAL=${ANSIBLE_SERIAL:-0}
@@ -396,6 +398,11 @@ while [ "$#" -gt 0 ]; do
     (--incremental)
             BACKUP_TYPE="incremental"
             shift 1
+            ;;
+
+    (--check-expiry)
+            OCTAVIA_CERTS_EXPIRY="$2"
+            shift 2
             ;;
 
     (--version)
@@ -532,6 +539,9 @@ EOF
 (octavia-certificates)
         ACTION="Generate octavia Certificates"
         PLAYBOOK="${BASEDIR}/ansible/octavia-certificates.yml"
+        if [[ ! -z "${OCTAVIA_CERTS_EXPIRY}" ]]; then
+            EXTRA_OPTS="$EXTRA_OPTS -e octavia_certs_check_expiry=yes -e octavia_certs_expiry_limit=${OCTAVIA_CERTS_EXPIRY}"
+        fi
         ;;
 (genconfig)
         ACTION="Generate configuration files for enabled OpenStack services"
