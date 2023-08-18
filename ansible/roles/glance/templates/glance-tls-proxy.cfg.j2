@@ -6,11 +6,9 @@ global
     daemon
     log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_glance_tls_proxy_facility }}
     maxconn {{ glance_tls_proxy_max_connections }}
-    nbproc {{ glance_tls_proxy_processes }}
-    {% if (glance_tls_proxy_processes | int > 1) and (glance_tls_proxy_process_cpu_map | bool) %}
-        {% for cpu_idx in range(0, glance_tls_proxy_processes) %}
-    cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
-        {% endfor %}
+    nbthread {{ glance_tls_proxy_threads }}
+    {% if (glance_tls_proxy_threads | int > 1) and (glance_tls_proxy_thread_cpu_map | bool) %}
+    cpu-map auto:1/all 0-63
     {% endif %}
     ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
     ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
