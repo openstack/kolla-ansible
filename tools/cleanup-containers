@@ -42,7 +42,10 @@ fi
 
 echo "Stopping containers..."
 for container in ${containers_to_kill}; do
+sudo systemctl disable kolla-${container}-container.service
 sudo systemctl stop kolla-${container}-container.service
+sudo systemctl is-failed kolla-${container}-container.service && \
+sudo systemctl reset-failed kolla-${container}-container.service
 done
 
 echo "Removing containers..."
