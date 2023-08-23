@@ -13,6 +13,11 @@ check_podman_failures() {
         --filter status=paused \
         --filter status=exited \
         --filter status=unknown)
+
+    for container in $failed_containers; do
+        podman inspect $container
+        podman logs $container
+    done
 }
 
 
@@ -34,6 +39,11 @@ check_docker_failures() {
         --filter status=paused \
         --filter status=exited \
         --filter status=dead)
+
+    for container in $failed_containers; do
+        docker inspect $container
+        docker logs $container
+    done
 }
 
 
