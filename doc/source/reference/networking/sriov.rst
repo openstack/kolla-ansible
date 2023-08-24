@@ -204,7 +204,7 @@ Compute service on the compute node also require the ``alias`` option under the
 
    [pci]
    passthrough_whitelist = [{"vendor_id": "8086", "product_id": "10fb"}]
-   alias = [{"vendor_id":"8086", "product_id":"10ed", "device_type":"type-VF", "name":"vf1"}]
+   alias = {"vendor_id":"8086", "product_id":"10ed", "device_type":"type-VF", "name":"vf1"}
 
 Run deployment.
 
