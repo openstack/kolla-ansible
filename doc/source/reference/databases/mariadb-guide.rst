@@ -29,8 +29,9 @@ Deployment
 ----------
 
 Each shard is identified by an integer ID, defined by ``mariadb_shard_id``.
-The default shard, defined by ``mariadb_default_database_shard_id`` (default 0),
-identifies the shard that will be accessible via HAProxy and available for backing up.
+The default shard, defined by ``mariadb_default_database_shard_id``
+(default 0), identifies the shard that will be accessible via HAProxy and
+available for backing up.
 
 In order to deploy several MariaDB cluster, you will need to edit
 inventory file in the way described below:
