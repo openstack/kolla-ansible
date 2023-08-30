@@ -3,6 +3,33 @@
 # OpenSearch as were for ElasticSearch / Kibana, and that the
 # OpenSearch endpoint remains the same as ElasticSearch.
 
+- name: Retrieve settings for all indices
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_all/_settings"
+      method: GET
+      return_content: yes
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  register: all_index_settings
+
+- name: Identify indices created with Elasticsearch version < 7
+  set_fact:
+    indices_requiring_reindex: "{{ indices_requiring_reindex | default([]) + [item.key] }}"
+  loop: "{{ all_index_settings.json | dict2items }}"
+  when:
+    - item.value.settings.index.version.created is defined
+    - item.value.settings.index.version.created | string | int < 7000000
+
+- name: Display reindexing message if necessary
+  fail:
+    msg: |
+      The following indices were created with Elasticsearch version 6.x or earlier and need to be reindexed: {{ indices_requiring_reindex | join(', ') }}.
+      Please reindex them in the current version of Elasticsearch before attempting migration.
+  when: (indices_requiring_reindex | default([]) | length) > 0
+
 - name: Disable shard allocation
   become: true
   vars:

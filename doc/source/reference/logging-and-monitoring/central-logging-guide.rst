@@ -4,6 +4,12 @@
 Central Logging
 ===============
 
+  .. warning::
+
+   Elasticsearch indexes created in version 6 or below are not supported by
+   OpenSearch 2.x. Please reindex those before upgrading to Zed.
+   `Official Elasticsearch reindex documentation. <https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html>`__
+
 An OpenStack deployment generates vast amounts of log data. In order to
 successfully monitor this and use it to diagnose problems, the standard "ssh
 and grep" solution quickly becomes unmanageable.
