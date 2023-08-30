@@ -7,8 +7,10 @@ copy_logs() {
 
     if [ "$CONTAINER_ENGINE" = "docker" ]; then
         VOLUMES_DIR="/var/lib/docker/volumes"
+        LOGS_TAIL_PARAMETER="all"
     elif [ "$CONTAINER_ENGINE" = "podman" ]; then
         VOLUMES_DIR="/var/lib/containers/storage/volumes"
+        LOGS_TAIL_PARAMETER="-1"
     else
         echo "Invalid container engine: ${CONTAINER_ENGINE}"
         exit 1
@@ -140,7 +142,7 @@ copy_logs() {
     fi
 
     for container in $(${CONTAINER_ENGINE} ps -a --format "{{.Names}}"); do
-        ${CONTAINER_ENGINE} logs --timestamps --tail all ${container} &> ${LOG_DIR}/container_logs/${container}.txt
+        ${CONTAINER_ENGINE} logs --timestamps --tail=${LOGS_TAIL_PARAMETER} ${container} &> ${LOG_DIR}/container_logs/${container}.txt
     done
 
     # Rename files to .txt; this is so that when displayed via
