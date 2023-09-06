@@ -12,6 +12,7 @@ User Guides
    multi-regions
    operating-kolla
    adding-and-removing-hosts
+   rocky-linux-9
    security
    ansible-tuning
    troubleshooting
