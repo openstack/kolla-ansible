@@ -24,6 +24,12 @@ Migration
 
 .. warning::
 
+   Elasticsearch indexes created in version 6 or below are not supported by
+   OpenSearch 2.x. Please reindex those before migration to OpenSearch.
+   `Official Elasticsearch reindex documentation. <https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html>`__
+
+.. warning::
+
    Please backup Elasticsearch data before migration.
    `Official Elasticsearch backup/restore procedure. <https://www.elastic.co/guide/en/elasticsearch/reference/7.17/snapshot-restore.html>`__
 
