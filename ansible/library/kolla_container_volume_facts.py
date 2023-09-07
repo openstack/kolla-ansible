@@ -25,11 +25,6 @@ description:
   - A module targeted at collecting Docker container volume facts. It is used
     for detecting whether the container volume exists on a host.
 options:
-  container_engine:
-    description:
-      - Name of container engine to use
-    required: True
-    type: str
   api_version:
     description:
       - The version of the api for docker-py to use when contacting docker
@@ -52,7 +47,6 @@ EXAMPLES = '''
 
     - name: Gather glance container facts
       kolla_container_volume_facts:
-        container_engine: docker
         name:
           - glance_api
           - glance_registry
@@ -67,7 +61,6 @@ def main():
     argument_spec = dict(
         name=dict(required=False, type='list', default=[]),
         api_version=dict(required=False, type='str', default='auto'),
-        container_engine=dict(required=True, type='str')
     )
 
     module = AnsibleModule(argument_spec=argument_spec)

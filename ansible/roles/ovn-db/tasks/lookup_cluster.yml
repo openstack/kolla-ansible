@@ -2,7 +2,6 @@
 - name: Checking for any existing OVN DB container volumes
   become: true
   kolla_container_volume_facts:
-    container_engine: "{{ kolla_container_engine }}"
     name:
       - ovn_nb_db
       - ovn_sb_db
@@ -56,7 +55,7 @@
 
     - name: Get OVN NB database information
       command: >
-        {{ kolla_container_engine }} exec ovn_nb_db ovsdb-client query unix:/run/ovn/ovnnb_db.sock
+        docker exec ovn_nb_db ovsdb-client query unix:/run/ovn/ovnnb_db.sock
         "[\"_Server\",{\"table\":\"Database\",\"where\":[[\"name\",\"==\", \"OVN_Northbound\"]],\"op\":\"select\"}]"
       become: true
       when: check_ovn_nb_db_port_liveness is success
@@ -108,7 +107,7 @@
 
     - name: Get OVN SB database information
       command: >
-        {{ kolla_container_engine }} exec ovn_sb_db ovsdb-client query unix:/run/ovn/ovnsb_db.sock
+        docker exec ovn_sb_db ovsdb-client query unix:/run/ovn/ovnsb_db.sock
         "[\"_Server\",{\"table\":\"Database\",\"where\":[[\"name\",\"==\", \"OVN_Southbound\"]],\"op\":\"select\"}]"
       become: true
       when: check_ovn_sb_db_port_liveness is success
