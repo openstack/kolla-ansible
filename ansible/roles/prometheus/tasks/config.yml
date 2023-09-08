@@ -97,6 +97,24 @@
   notify:
     - Restart prometheus-server container
 
+- name: Copying over prometheus web config file
+  become: true
+  vars:
+    service: "{{ prometheus_services['prometheus-server'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-server/web.yml"
+    mode: "0600"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/web.yml"
+    - "{{ node_custom_config }}/prometheus/web.yml"
+    - "{{ role_path }}/templates/prometheus-web.yml.j2"
+  notify:
+    - Restart prometheus-server container
+
 - name: Copying over prometheus alertmanager config file
   become: true
   vars:

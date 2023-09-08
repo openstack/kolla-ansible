@@ -570,7 +570,10 @@ placement_api_port: "8780"
 placement_api_listen_port: "{{ placement_api_port }}"
 placement_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else placement_api_port }}"
 
+prometheus_external_fqdn: "{{ kolla_external_fqdn }}"
+prometheus_internal_fqdn: "{{ kolla_internal_fqdn }}"
 prometheus_port: "9091"
+prometheus_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else prometheus_port }}"
 prometheus_node_exporter_port: "9100"
 prometheus_mysqld_exporter_port: "9104"
 prometheus_haproxy_exporter_port: "9101"
@@ -1281,6 +1284,7 @@ enable_prometheus_etcd_integration: "{{ enable_prometheus | bool and enable_etcd
 enable_prometheus_msteams: "no"
 
 prometheus_alertmanager_user: "admin"
+prometheus_grafana_user: "grafana"
 prometheus_scrape_interval: "60s"
 prometheus_openstack_exporter_interval: "{{ prometheus_scrape_interval }}"
 prometheus_openstack_exporter_timeout: "45s"
@@ -1291,6 +1295,9 @@ prometheus_openstack_exporter_endpoint_type: "internal"
 prometheus_openstack_exporter_compute_api_version: "latest"
 prometheus_libvirt_exporter_interval: "60s"
 prometheus_msteams_webhook_url:
+
+prometheus_public_endpoint: "{{ prometheus_external_fqdn | kolla_url(public_protocol, prometheus_public_port) }}"
+prometheus_internal_endpoint: "{{ prometheus_internal_fqdn | kolla_url(internal_protocol, prometheus_port) }}"
 
 ############
 # Vitrage

@@ -79,11 +79,14 @@ function check_prometheus {
     # Query prometheus graph, and check that the returned page looks like a
     # prometheus page.
     PROMETHEUS_URL=${OS_AUTH_URL%:*}:9091/graph
+    prometheus_password=$(awk '$1 == "prometheus_password:" { print $2 }' /etc/kolla/passwords.yml)
     output_path=$1
     args=(
         --include
         --location
         --fail
+        --user
+        admin:$prometheus_password
     )
     if [[ "$TLS_ENABLED" = "True" ]]; then
         args+=(--cacert $OS_CACERT)

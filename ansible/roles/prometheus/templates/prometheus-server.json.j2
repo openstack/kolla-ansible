@@ -1,9 +1,15 @@
 {
-    "command": "/opt/prometheus/prometheus --config.file /etc/prometheus/prometheus.yml --web.listen-address {{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_port }} --web.external-url={{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_port }} --storage.tsdb.path /var/lib/prometheus{% if prometheus_cmdline_extras %} {{ prometheus_cmdline_extras }}{% endif %}",
+    "command": "{{ prometheus_server_command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/prometheus.yml",
             "dest": "/etc/prometheus/prometheus.yml",
+            "owner": "prometheus",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/web.yml",
+            "dest": "/etc/prometheus/web.yml",
             "owner": "prometheus",
             "perm": "0600"
         },

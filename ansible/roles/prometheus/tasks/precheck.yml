@@ -25,6 +25,28 @@
   check_mode: false
   register: container_facts
 
+- name: Check that prometheus_bcrypt_salt is correctly set
+  assert:
+    that:
+      - prometheus_bcrypt_salt is defined
+      - prometheus_bcrypt_salt is string
+      - prometheus_bcrypt_salt | length == 22
+
+- name: Check that prometheus_password is correctly set
+  assert:
+    that:
+      - prometheus_password is defined
+      - prometheus_password is string
+      - prometheus_password | length > 0
+
+- name: Check that prometheus_grafana_password is correctly set
+  assert:
+    that:
+      - prometheus_grafana_password is defined
+      - prometheus_grafana_password is string
+      - prometheus_grafana_password | length > 0
+  when: enable_grafana | bool
+
 - name: Checking free port for Prometheus server
   wait_for:
     host: "{{ 'api' | kolla_address }}"

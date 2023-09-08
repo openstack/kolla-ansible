@@ -34,6 +34,26 @@ In order to remove leftover volume containing Prometheus 1.x data, execute:
 
 on all hosts wherever Prometheus was previously deployed.
 
+Basic Auth
+~~~~~~~~~~
+
+Prometheus is protected with basic HTTP authentication. Kolla-ansible will
+create the following users: ``admin`` and ``grafana`` (if grafana is
+enabled). The grafana username can be overidden using the variable
+``prometheus_grafana_user``. The passwords are defined by the
+``prometheus_password`` and ``prometheus_grafana_password`` variables in
+``passwords.yml``. The list of basic auth users can be extended using the
+``prometheus_basic_auth_users_extra`` variable:
+
+.. code-block:: yaml
+
+   prometheus_basic_auth_users_extra:
+      - username: user
+        password: hello
+        enabled: true
+
+or completely overriden with the ``prometheus_basic_auth_users`` variable.
+
 Extending the default command line options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

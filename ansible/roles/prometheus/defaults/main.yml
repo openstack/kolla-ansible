@@ -14,6 +14,12 @@ prometheus_services:
         external: false
         port: "{{ prometheus_port }}"
         active_passive: "{{ prometheus_active_passive | bool }}"
+      prometheus_server_external:
+        enabled: "{{ enable_prometheus_server_external | bool }}"
+        mode: "http"
+        external: true
+        port: "{{ prometheus_public_port }}"
+        active_passive: "{{ prometheus_active_passive | bool }}"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -131,6 +137,26 @@ prometheus_services:
 ####################
 prometheus_external_labels:
 #  <labelname>: <labelvalue>
+
+####################
+# Server
+####################
+enable_prometheus_server_external: false
+
+####################
+# Basic Auth
+####################
+prometheus_basic_auth_users: "{{ prometheus_basic_auth_users_default + prometheus_basic_auth_users_extra }}"
+
+prometheus_basic_auth_users_default:
+  - username: admin
+    password: "{{ prometheus_password }}"
+    enabled: true
+  - username: "{{ prometheus_grafana_user }}"
+    password: "{{ prometheus_grafana_password }}"
+    enabled: "{{ enable_grafana }}"
+
+prometheus_basic_auth_users_extra: []
 
 ####################
 # Database
@@ -314,6 +340,12 @@ prometheus_openstack_exporter_disabled_dns: "{{ '--disable-service.dns' if not e
 prometheus_openstack_exporter_disabled_object: "{{ '--disable-service.object-store' if not enable_swift | bool else '' }}"
 prometheus_openstack_exporter_disabled_lb: "{{ '--disable-service.load-balancer --disable-metric=neutron-loadbalancers --disable-metric=neutron-loadbalancers_not_active' if not enable_octavia | bool else '' }}"
 prometheus_openstack_exporter_disabled_items: "{{ [prometheus_openstack_exporter_disabled_volume, prometheus_openstack_exporter_disabled_dns, prometheus_openstack_exporter_disabled_object, prometheus_openstack_exporter_disabled_lb | trim] | join(' ') | trim }}"
+
+prometheus_server_command: >-
+  /opt/prometheus/prometheus --web.config.file=/etc/prometheus/web.yml --config.file /etc/prometheus/prometheus.yml
+  --web.listen-address {{ api_interface_address | put_address_in_context('url') }}:{{ prometheus_port }}
+  --web.external-url={{ prometheus_public_endpoint if enable_prometheus_server_external else prometheus_internal_endpoint }}
+  --storage.tsdb.path /var/lib/prometheus{% if prometheus_cmdline_extras %} {{ prometheus_cmdline_extras }}{% endif %}
 
 prometheus_blackbox_exporter_cmdline_extras: ""
 prometheus_cadvisor_cmdline_extras: "--docker_only --store_container_labels=false --disable_metrics=percpu,referenced_memory,cpu_topology,resctrl,udp,advtcp,sched,hugetlb,memory_numa,tcp,process"
