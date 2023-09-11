@@ -33,6 +33,10 @@ to cap docker by setting the following variables in globals.yml.
    docker_apt_package_pin: "5:20.*"
    docker_yum_package_pin: "20.*"
 
+Debian Bookworm is not recommended as a host OS for Zun.
+It does not support a version of Docker with the deprecated option.
+Compatibility with Zun is not tested in CI.
+
 Docker reconfiguration requires rebootstrapping before deploy.
 Make sure you understand the consequences of restarting Docker.
 Please see :ref:`rebootstrapping` for details.
