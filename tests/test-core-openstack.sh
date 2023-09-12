@@ -262,6 +262,25 @@ function unset_cirros_image_q35_machine_type {
     openstack image unset --property hw_machine_type cirros
 }
 
+function test_neutron_modules {
+    # Exit the function if scenario is "ovn" or if there's an upgrade
+    # as inly concerns ml2/ovs
+    if [[ $SCENARIO == "ovn" ]] || [[ $HAS_UPGRADE == "yes" ]]; then
+        return
+    fi
+
+    local modules
+    modules=( $(sed -n '/neutron_modules_extra:/,/^[^ ]/p' /etc/kolla/globals.yml | grep -oP '^  - name: \K[^ ]+' | tr -d "'") )
+    for module in "${modules[@]}"; do
+        if ! grep -q "^${module} " /proc/modules; then
+            echo "Error: Module $module is not loaded."
+            exit 1
+        else
+            echo "Module $module is loaded."
+        fi
+    done
+}
+
 function test_ssh {
     local instance_name=$1
     local fip_addr=$2
@@ -407,6 +426,7 @@ function test_openstack_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
     test_smoke
+    test_neutron_modules
     test_instance_boot
 
     # Check for x86_64 architecture to run q35 tests

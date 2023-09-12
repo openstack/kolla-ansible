@@ -214,3 +214,25 @@ authentication in external systems (e.g. in ``networking-generic-switch`` or
 
 You can set ``neutron_ssh_key`` variable in ``passwords.yml`` to control the
 used key.
+
+Custom Kernel Module Configuration for Neutron
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Neutron may require specific kernel modules for certain functionalities.
+While there are predefined default modules in the Ansible role, users have
+the flexibility to add custom modules as needed.
+
+To add custom kernel modules for Neutron, modify the configuration in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   neutron_modules_extra:
+     - name: 'nf_conntrack_tftp'
+       params: 'hashsize=4096'
+
+In this example:
+
+- `neutron_modules_extra`: Allows users to specify additional modules and
+  their associated parameters. The given configuration adjusts the
+  `hashsize` parameter for the `nf_conntrack_tftp` module.
