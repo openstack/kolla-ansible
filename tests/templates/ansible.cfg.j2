@@ -1,5 +1,8 @@
 [defaults]
+{% if (zuul.change_message | default('')) is search('#ara') %}
 callback_plugins = {{ ara_callback_plugins.stdout }}
+{% endif %}
+callbacks_enabled = default,profile_tasks,timer{{ ',ara_default' if (zuul.change_message | default('')) is search('#ara') else '' }}
 host_key_checking = False
 # Ensure that facts are referenced via ansible_facts.<fact>.
 inject_facts_as_vars = False

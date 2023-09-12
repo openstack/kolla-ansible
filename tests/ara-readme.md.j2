@@ -1,0 +1,39 @@
+Viewing ARA logs
+================
+
+What is ARA?
+------------
+
+[ARA](https://ara.recordsansible.org/) is an ansible plugin that collects a
+large amount of execution information and can render it into a browser
+friendly format.
+
+kolla-Ansible CI enabled the plugin and logged the sqlite output into the log
+directory next to this file.
+
+How do I view the output?
+-------------------------
+
+You need a local installation of ARA: following the
+[getting started guide](https://ara.readthedocs.io/en/latest/getting-started.html)
+should help you with installing the `ara-manage` command.
+
+For small scale operations, you have a choice between using:
+* [a small embedded server](https://ara.readthedocs.io/en/latest/cli.html#ara-manage-runserver), or
+* [rendering the html to static files](https://ara.readthedocs.io/en/latest/cli.html#ara-manage-generate)
+
+For example, rendering a particular log to static html pages:
+```
+# (Use the "Download all logs" script from the Artifacts tab with DOWNLOAD_DIR=~/zuul-logs)
+python3 -m pip install --user "ara[server]=={{ ara_version.stdout.split(' ') | last }}"
+export ARA_DATABASE_NAME=~/zuul-logs/{{ inventory_hostname }}/ara-report/ansible.sqlite
+ara-manage generate ~/zuul-logs/{{ inventory_hostname }}/ara-report/ara-html
+```
+
+Can I get the CI to generate the HTML for me?
+---------------------------------------------
+
+Yes! If the commit message contains the string `#ara_verbose` then Zuul will
+render the html file and collect it in the logs. Beware: this adds hundreds of
+MiB to the log files. (Tip: the `#` shouldn't be the first character in the
+line)
