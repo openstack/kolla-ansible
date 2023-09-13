@@ -230,10 +230,6 @@ function test_instance_boot {
     local upgrade_instance_name="kolla_upgrade_test${machine_type:+_$machine_type}"
     local volume_name="durable_volume${machine_type:+_$machine_type}"
 
-    if [[ $machine_type == "q35" ]]; then
-        set_cirros_image_q35_machine_type
-    fi
-
     echo "TESTING: Server creation"
     create_instance kolla_boot_test
     echo "SUCCESS: Server creation"
@@ -336,10 +332,6 @@ function test_instance_boot {
         fi
 
         echo "SUCCESS: Instance (Nova and Neutron) upgrade stability (PHASE: $PHASE)"
-    fi
-
-    if [[ $machine_type == "q35" ]]; then
-        unset_cirros_image_q35_machine_type
     fi
 }
 
