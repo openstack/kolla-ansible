@@ -14,7 +14,7 @@
 
     - name: Check NB cluster status
       command: >
-        docker exec ovn_nb_db ovs-appctl -t {{ ovn_db_path }}/ovnnb_db.ctl
+        docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl
         cluster/status OVN_Northbound
       become: true
       changed_when: false
@@ -24,7 +24,7 @@
 
     - name: Check SB cluster status
       command: >
-        docker exec ovn_sb_db ovs-appctl -t {{ ovn_db_path }}/ovnsb_db.ctl
+        docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl
         cluster/status OVN_Southbound
       become: true
       changed_when: false
@@ -37,7 +37,7 @@
         ovn_nb_old_node: "{{ ovn_nb_db_cluster_status | regex_search('\\((\\w{4}) at tcp:' + api_interface_address + ':6643\\)', '\\1') | first }}"
       become: true
       command: >
-        docker exec ovn_nb_db ovs-appctl -t {{ ovn_db_path }}/ovnnb_db.ctl
+        docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl
         cluster/kick OVN_Northbound {{ ovn_nb_old_node }}
       when:
         - ovn_nb_db_cluster_status.stdout is defined
@@ -49,7 +49,7 @@
         ovn_sb_old_node: "{{ ovn_sb_db_cluster_status | regex_search('\\((\\w{4}) at tcp:' + api_interface_address + ':6644\\)', '\\1') | first }}"
       become: true
       command: >
-        docker exec ovn_sb_db ovs-appctl -t {{ ovn_db_path }}/ovnsb_db.ctl
+        docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl
         cluster/kick OVN_Southbound {{ ovn_sb_old_node }}
       when:
         - ovn_sb_db_cluster_status.stdout is defined

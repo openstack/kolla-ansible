@@ -21,13 +21,8 @@ function test_ovn {
     sudo docker exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
 
     # Test OVSDB cluster state
-    if [[ $BASE_DISTRO =~ ^(debian|ubuntu)$ ]]; then
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/openvswitch/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/openvswitch/ovnsb_db.ctl cluster/status OVN_Southbound)
-    else
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
-    fi
+    OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
+    OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
 
     if [[ $(grep -o "at tcp:" <<< ${OVNNB_STATUS} | wc -l) != "3" ]]; then
         echo "ERR: NB Cluster does not have 3 nodes"
