@@ -252,41 +252,20 @@
   notify:
     - Restart ceilometer-notification container
 
-- name: Check custom event_pipeline.yaml exists
-  stat:
-    path: "{{ node_custom_config }}/ceilometer/event_pipeline.yaml"
-  delegate_to: localhost
-  register: ceilometer_event_pipeline_file
-
 - name: Copying over event_pipeline.yaml
   vars:
     service: "{{ ceilometer_services['ceilometer-notification'] }}"
-  copy:
-    src: "{{ node_custom_config }}/ceilometer/event_pipeline.yaml"
-    dest: "{{ node_config_directory }}/ceilometer-notification/event_pipeline.yaml"
-    force: True
-    mode: "0660"
-  become: true
-  register: ceilometer_event_pipeline_overwriting
-  when:
-    - ceilometer_event_pipeline_file.stat.exists
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart ceilometer-notification container
-
-- name: Copying over event_pipeline.yaml for notification service
-  vars:
-    service: "{{ ceilometer_services['ceilometer-notification'] }}"
-  template:
-    src: "event_pipeline.yaml.j2"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/event_pipeline.yaml.j2"
+      - "{{ node_custom_config }}/ceilometer/event_pipeline.yaml"
+      - "{{ node_custom_config }}/ceilometer/{{ inventory_hostname }}/event_pipeline.yaml"
     dest: "{{ node_config_directory }}/ceilometer-notification/event_pipeline.yaml"
     mode: "0660"
   become: true
   when:
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-    - not ceilometer_event_pipeline_file.stat.exists
   notify:
     - Restart ceilometer-notification container
 
