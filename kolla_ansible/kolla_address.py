@@ -48,7 +48,7 @@ def kolla_address(context, network_name, hostname=None):
             raise FilterError("'inventory_hostname' variable is unavailable")
 
     hostvars = context.get('hostvars')
-    if isinstance(hostvars, Undefined):
+    if hostvars is None or isinstance(hostvars, Undefined):
         raise FilterError("'hostvars' variable is unavailable")
 
     host = hostvars.get(hostname)
