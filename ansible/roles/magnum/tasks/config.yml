@@ -31,6 +31,33 @@
   when:
     - magnum_policy.results
 
+- name: Check if kubeconfig file is supplied
+  stat:
+    path: "{{ node_custom_config }}/magnum/kubeconfig"
+  delegate_to: localhost
+  run_once: True
+  register: magnum_kubeconfig_file
+
+- name: Copying over kubeconfig file
+  template:
+    src: "{{ node_custom_config }}/magnum/kubeconfig"
+    dest: "{{ node_config_directory }}/{{ item.key }}/kubeconfig"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+    - magnum_kubeconfig_file.stat.exists
+  with_dict: "{{ magnum_services }}"
+  notify:
+    - Restart {{ item.key }} container
+
+- name: Set magnum kubeconfig file's path
+  set_fact:
+    magnum_kubeconfig_file_path: "{{ magnum_kubeconfig_file.stat.path }}"
+  when:
+    - magnum_kubeconfig_file.stat.exists
+
 - include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool
