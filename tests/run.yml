@@ -256,14 +256,33 @@
         virtualenv: "{{ kolla_ansible_venv_path }}"
 
     - name: install kolla-ansible and dependencies
+      vars:
+        ansible_core_version_min: "==2.14.*"
+        ansible_core_version_max: "==2.15.*"
+        # Test latest ansible version on Ubuntu, minimum supported on others.
+        ansible_core_version_constraint: >-
+          {{ ansible_core_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_core_version_max }}
       pip:
         extra_args: "-c {{ upper_constraints_file }}"
         name:
           - "{{ kolla_ansible_src_dir }}"
           - "ansible-core{{ ansible_core_version_constraint }}"
-          - "ansible{{ ansible_version_constraint }}"
           - "ara[server]<1.7"
         virtualenv: "{{ kolla_ansible_venv_path }}"
+
+    # TODO(mnasiadka): Remove in Caracal
+    - name: install Ansible on upgrade only
+      vars:
+        ansible_version_min: "==7.*"
+        ansible_version_max: "==8.*"
+        # Test latest ansible version on Ubuntu, minimum supported on others.
+        ansible_version_constraint: >-
+          {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
+      pip:
+        extra_args: "-c {{ upper_constraints_file }}"
+        name: "ansible{{ ansible_version_constraint }}"
+        virtualenv: "{{ kolla_ansible_venv_path }}"
+      when: is_upgrade
 
     - name: install Ansible collections
       shell: |
