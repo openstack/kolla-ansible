@@ -1,19 +1,48 @@
 ---
-- name: Check nova upgrade status
+- name: Gather Nova API image info
   become: true
-  command: "{{ kolla_container_engine }} exec -t nova_api nova-status upgrade check"
-  register: nova_upgrade_check_stdout
-  when: inventory_hostname == groups['nova-api'][0]
-  failed_when: false
-
-- name: Upgrade status check result
-  fail:
-    msg:
-      - "There was an upgrade status check failure!"
-      - "See the detail at https://docs.openstack.org/nova/latest/cli/nova-status.html#nova-status-checks"
   vars:
-    first_nova_api_host: "{{ groups['nova-api'][0] }}"
-  when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] not in [0, 1]
+    nova_api: "{{ nova_services['nova-api'] }}"
+  community.docker.docker_image_info:
+    name: "{{ nova_api.image }}"
+  register: nova_api_image_info
+
+- name: Check if Nova API image supports KOLLA_UPGRADE_CHECK
+  set_fact:
+    image_supports_upgrade_check: "{{ 'upgrade_check' in nova_api_image_info.images[0]['Config']['Labels'] }}"
+
+- block:
+    - name: Run Nova upgrade checks
+      become: true
+      vars:
+        nova_api: "{{ nova_services['nova-api'] }}"
+      kolla_docker:
+        action: "start_container"
+        common_options: "{{ docker_common_options }}"
+        detach: False
+        environment:
+          KOLLA_UPGRADE_CHECK:
+          KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+        image: "{{ nova_api.image }}"
+        labels:
+          UPGRADE:
+        name: "nova_upgrade_checks"
+        restart_policy: no
+        volumes: "{{ nova_api_default_volumes + nova_api_extra_volumes }}"
+      run_once: True
+      register: nova_upgrade_check_stdout
+      delegate_to: "{{ groups['nova-api'][0] }}"
+      failed_when: false
+
+    - name: Upgrade status check result
+      fail:
+        msg:
+          - "There was an upgrade status check failure!"
+          - "See the detail at https://docs.openstack.org/nova/latest/cli/nova-status.html#nova-status-checks"
+      vars:
+        first_nova_api_host: "{{ groups['nova-api'][0] }}"
+      when: hostvars[first_nova_api_host]['nova_upgrade_check_stdout']['rc'] not in [0, 1]
+  when: image_supports_upgrade_check
 
 - name: Stopping top level nova services
   become: true
