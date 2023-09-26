@@ -8,6 +8,18 @@ workload on OpenStack."
 For more details about Zun, see `OpenStack Zun Documentation
 <https://docs.openstack.org/zun/latest/>`__.
 
+.. warning::
+
+   Zun is currently NOT SUPPORTED for this version of Kolla-Ansible.
+
+   Since work on repairing compatibility is expected to start development
+   during the 2024.1 release cycle, backports will be considered to the
+   stable series to bridge the migration path.
+
+   While the service containers and ansible roles still remain, a working
+   installation is currently not possible in CI, and therefore is not
+   supported.
+
 Preparation and Deployment
 --------------------------
 
