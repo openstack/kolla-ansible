@@ -93,7 +93,7 @@ EXAMPLES = '''
         container_engine: docker
         module_name: os_keystone_role
         module_args:
-          name: _member_
+          name: member
           auth: "{{ '{{ openstack_keystone_auth }}' }}"
         module_extra_vars:
           openstack_keystone_auth:
