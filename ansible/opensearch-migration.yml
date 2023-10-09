@@ -32,6 +32,7 @@
           method: GET
           return_content: yes
       register: all_index_settings
+
     - name: Identify indices created with Elasticsearch version < 7
       set_fact:
         indices_requiring_reindex: "{{ indices_requiring_reindex | default([]) + [item.key] }}"
@@ -39,12 +40,61 @@
       when:
         - item.value.settings.index.version.created is defined
         - item.value.settings.index.version.created | string | int < 7000000
-    - name: Display reindexing message if necessary
-      fail:
-        msg: |
-          The following indices were created with Elasticsearch version 6.x or earlier and need to be reindexed: {{ indices_requiring_reindex | join(', ') }}.
-          Please reindex them in the current version of Elasticsearch before attempting migration.
-      when: (indices_requiring_reindex | default([]) | length) > 0
+
+    - name: Act on identified indices created with Elasticsearch version < 7
+      block:
+        - name: Retrieve aliases
+          become: true
+          kolla_toolbox:
+            module_name: uri
+            module_args:
+              url: "{{ elasticsearch_internal_endpoint }}/_alias"
+              method: GET
+              return_content: yes
+          register: all_aliases
+
+        - name: Identify no longer used Kibana indices
+          set_fact:
+            old_kibana_indices: "{{ old_kibana_indices | default([]) + [item] }}"
+          loop: "{{ indices_requiring_reindex }}"
+          when:
+            - item is match('.kibana_*')
+            - all_aliases.json[item].aliases['.kibana'] is not defined
+
+        - name: Display Kibana indice prune message if necessary
+          fail:
+            msg: |
+              The following indices created with Elasticsearch version 6.x or earlier are no longer active Kibana indices
+              and have to be removed or reindexed in Elasticsearch if you want to keep them. You can do that either manually
+              or by running this command again with --prune-kibana-indices parameter:
+              {{ old_kibana_indices | join(', ') }}
+          when:
+            - ( old_kibana_indices | default([]) | length ) > 0
+            - not ( prune_kibana_indices | default(false) | bool )
+
+        - name: Prune unused and outdated Kibana indices
+          become: true
+          kolla_toolbox:
+            module_name: uri
+            module_args:
+              url: "{{ elasticsearch_internal_endpoint }}/{{ item }}"
+              method: DELETE
+              return_content: yes
+          register: pruned_indices
+          loop: "{{ old_kibana_indices }}"
+          when:
+            - ( old_kibana_indices | default([]) | length ) > 0
+            - ( prune_kibana_indices | default(false) | bool )
+
+        - name: Display reindexing message if necessary
+          fail:
+            msg: |
+              The following indices were created with Elasticsearch version 6.x or earlier and need to be reindexed:
+              {{ indices_requiring_reindex | difference(old_kibana_indices| default([]) ) | join(', ') }}
+              Please reindex them in the current version of Elasticsearch before attempting migration.
+          when:
+            - ( indices_requiring_reindex | difference(old_kibana_indices | default([])) | length ) > 0
+      when: indices_requiring_reindex is defined
 
 - name: Stop and remove Elasticsearch services containers
   gather_facts: false
