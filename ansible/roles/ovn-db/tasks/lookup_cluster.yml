@@ -32,9 +32,10 @@
     - name: Check if running on all OVN NB DB hosts
       fail:
         msg: >
-          Some hosts ({{ groups['ovn-nb-db'] | join(', ') }}) need database
-          bootstrapping, but not all OVN NB DB hosts are in the target
-          list. Stopping as it may be unsafe to proceed. Please run without --limit
+          Some hosts need database bootstrapping, but not all OVN NB DB hosts
+          ({{ groups['ovn-nb-db'] | join(', ') }}) are in the target list
+          ({{ groups['ovn-nb-db'] | difference(ansible_play_batch) | list | join(', ') }}).
+          Stopping as it may be unsafe to proceed. Please run without --limit
           or --serial to bootstrap these hosts.
       when:
         - ovn_nb_db_cluster_exists
@@ -84,9 +85,10 @@
     - name: Check if running on all OVN SB DB hosts
       fail:
         msg: >
-          Some hosts ({{ groups['ovn-sb-db'] | join(', ') }}) need database
-          bootstrapping, but not all OVN SB DB hosts are in the target
-          list. Stopping as it may be unsafe to proceed. Please run without --limit
+          Some hosts need database bootstrapping, but not all OVN SB DB hosts
+          ({{ groups['ovn-sb-db'] | join(', ') }}) are in the target list
+          ({{ groups['ovn-sb-db'] | difference(ansible_play_batch) | list | join(', ') }}).
+          Stopping as it may be unsafe to proceed. Please run without --limit
           or --serial to bootstrap these hosts.
       when:
         - ovn_sb_db_cluster_exists
