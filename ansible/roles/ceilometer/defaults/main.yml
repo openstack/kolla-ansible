@@ -22,7 +22,7 @@ ceilometer_services:
     enabled: True
     privileged: True
     image: "{{ ceilometer_compute_image_full }}"
-    volumes: "{{ ceilometer_compute_default_volumes + ceilometer_compute_extra_volumes }}"
+    volumes: "{{ ceilometer_compute_default_volumes + ceilometer_compute_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ ceilometer_compute_dimensions }}"
     healthcheck: "{{ ceilometer_compute_healthcheck }}"
   ceilometer-ipmi:
@@ -136,7 +136,7 @@ ceilometer_compute_default_volumes:
   - "{{ node_config_directory }}/ceilometer-compute/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
   - "{{ ceilometer_libvirt_volume }}:/var/lib/libvirt"

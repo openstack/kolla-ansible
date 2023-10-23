@@ -28,7 +28,7 @@ sahara_services:
     enabled: true
     image: "{{ sahara_engine_image_full }}"
     privileged: True
-    volumes: "{{ sahara_engine_default_volumes + sahara_engine_extra_volumes }}"
+    volumes: "{{ sahara_engine_default_volumes + sahara_engine_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ sahara_engine_dimensions }}"
     healthcheck: "{{ sahara_engine_healthcheck }}"
 
@@ -115,7 +115,7 @@ sahara_engine_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "sahara:/var/lib/sahara/"
   - "kolla_logs:/var/log/kolla/"
-  - "/run:/run:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/sahara/sahara:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/sahara' if sahara_dev_mode | bool else '' }}"
 
 sahara_extra_volumes: "{{ default_extra_volumes }}"

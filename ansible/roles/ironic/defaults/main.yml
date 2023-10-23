@@ -30,7 +30,7 @@ ironic_services:
     enabled: true
     image: "{{ ironic_conductor_image_full }}"
     privileged: True
-    volumes: "{{ ironic_conductor_default_volumes + ironic_conductor_extra_volumes }}"
+    volumes: "{{ ironic_conductor_default_volumes + ironic_conductor_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ ironic_conductor_dimensions }}"
     healthcheck: "{{ ironic_conductor_healthcheck }}"
   ironic-inspector:
@@ -230,7 +230,7 @@ ironic_conductor_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "/sys:/sys"
   - "/dev:/dev"
-  - "/run:/run:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "ironic:/var/lib/ironic"
   - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic' if ironic_dev_mode | bool else '' }}"

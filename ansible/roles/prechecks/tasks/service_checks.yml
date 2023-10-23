@@ -12,7 +12,9 @@
   register: result
   changed_when: false
   check_mode: false
-  when: inventory_hostname in groups['baremetal']
+  when:
+    - kolla_container_engine == 'docker'
+    - inventory_hostname in groups['baremetal']
   failed_when: result is failed
                or result.stdout | regex_replace('.*\\b(\\d+\\.\\d+\\.\\d+)\\b.*', '\\1') is version(docker_version_min, '<')
 

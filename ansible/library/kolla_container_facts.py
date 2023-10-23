@@ -13,9 +13,8 @@
 # limitations under the License.
 
 
-import docker
-
 from ansible.module_utils.basic import AnsibleModule
+
 
 DOCUMENTATION = '''
 ---
@@ -41,6 +40,11 @@ options:
       - Name or names of the containers
     required: False
     type: str or list
+  container_engine:
+    description:
+      - Name of container engine to use
+    required: True
+    type: str
 author: Jeffrey Zhang
 '''
 
@@ -49,6 +53,7 @@ EXAMPLES = '''
   tasks:
     - name: Gather docker facts
       kolla_container_facts:
+        container_engine: docker
 
     - name: Gather glance container facts
       kolla_container_facts:
@@ -56,24 +61,18 @@ EXAMPLES = '''
         name:
           - glance_api
           - glance_registry
+        container_engine: podman
 '''
 
 
 def get_docker_client():
+    import docker
     return docker.APIClient
 
 
-def main():
-    argument_spec = dict(
-        name=dict(required=False, type='list', default=[]),
-        api_version=dict(required=False, type='str', default='auto'),
-        container_engine=dict(required=True, type='str')
-    )
-
-    module = AnsibleModule(argument_spec=argument_spec)
-
-    results = dict(changed=False, _containers=[])
+def use_docker(module, results):
     client = get_docker_client()(version=module.params.get('api_version'))
+
     containers = client.containers()
     names = module.params.get('name')
     if names and not isinstance(names, list):
@@ -86,6 +85,46 @@ def main():
                 continue
             results['_containers'].append(container)
             results[container_name] = container
+
+
+def use_podman(module, results):
+    import podman.errors as pe
+    from podman import PodmanClient
+
+    client = PodmanClient(base_url="http+unix:/run/podman/podman.sock")
+
+    try:
+        containers = client.containers.list(all=True, ignore_removed=True)
+    except pe.APIError as e:
+        module.fail_json(failed=True, msg=f"Internal error: {e.explanation}")
+    names = module.params.get('name')
+    if names and not isinstance(names, list):
+        names = [names]
+
+    for container in containers:
+        container.reload()
+        container_name = container.attrs['Name']
+        if container_name not in names:
+            continue
+        results['_containers'].append(container.attrs)
+        results[container_name] = container.attrs
+
+
+def main():
+    argument_spec = dict(
+        name=dict(required=False, type='list', default=[]),
+        api_version=dict(required=False, type='str', default='auto'),
+        container_engine=dict(required=True, type='str')
+    )
+
+    module = AnsibleModule(argument_spec=argument_spec)
+
+    results = dict(changed=False, _containers=[])
+    if module.params['container_engine'] == 'podman':
+        use_podman(module, results)
+    else:
+        use_docker(module, results)
+
     module.exit_json(**results)
 
 

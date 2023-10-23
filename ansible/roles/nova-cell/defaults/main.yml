@@ -8,7 +8,7 @@ nova_cell_services:
     pid_mode: "host"
     cgroupns_mode: "host"
     privileged: True
-    volumes: "{{ nova_libvirt_default_volumes + nova_libvirt_extra_volumes }}"
+    volumes: "{{ nova_libvirt_default_volumes + nova_libvirt_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ nova_libvirt_dimensions }}"
     healthcheck: "{{ nova_libvirt_healthcheck }}"
   nova-ssh:
@@ -59,7 +59,7 @@ nova_cell_services:
     privileged: True
     enabled: "{{ not enable_nova_fake | bool }}"
     ipc_mode: "host"
-    volumes: "{{ nova_compute_default_volumes + nova_compute_extra_volumes }}"
+    volumes: "{{ nova_compute_default_volumes + nova_compute_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ nova_compute_dimensions }}"
     healthcheck: "{{ nova_compute_healthcheck }}"
   nova-compute-ironic:
@@ -371,8 +371,9 @@ nova_libvirt_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "/dev:/dev"
+  - "{{ 'devpts:/dev/pts' if kolla_container_engine == 'podman' else '' }}"
   - "/sys/fs/cgroup:/sys/fs/cgroup"
   - "kolla_logs:/var/log/kolla/"
   - "libvirtd:/var/lib/libvirt"
@@ -418,7 +419,7 @@ nova_compute_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run:/run:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "/dev:/dev"
   - "kolla_logs:/var/log/kolla/"
   - "{% if enable_iscsid | bool %}iscsi_info:/etc/iscsi{% endif %}"
@@ -439,6 +440,7 @@ nova_cell_bootstrap_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova/nova:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/nova' if nova_dev_mode | bool else '' }}"
+  - "{{ 'nova-cell:/var/lib/script/' if kolla_container_engine == 'podman' else '' }}"
 
 nova_extra_volumes: "{{ default_extra_volumes }}"
 nova_libvirt_extra_volumes: "{{ nova_extra_volumes }}"

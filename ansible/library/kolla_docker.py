@@ -16,22 +16,25 @@
 # a hacky way to seed most usages of kolla_docker in kolla-ansible ansible
 # playbooks - caution has to be exerted when setting "common_options"
 
-import traceback
+# FIXME(yoctozepto): restart_policy is *not* checked in the container
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.kolla_docker_worker import DockerWorker
+import traceback
+
+from ansible.module_utils.kolla_container_worker import ContainerWorker
+
 
 DOCUMENTATION = '''
 ---
 module: kolla_docker
-short_description: Module for controlling Docker
+short_description: Module for controlling containers
 description:
-     - A module targeting at controlling Docker as used by Kolla.
+     - A module targeting at controlling container engine as used by Kolla.
 options:
   common_options:
     description:
       - A dict containing common params such as login info
-    required: False
+    required: True
     type: dict
     default: dict()
   action:
@@ -397,17 +400,23 @@ def generate_module():
 def main():
     module = generate_module()
 
-    dw = None
+    cw: ContainerWorker = None
     try:
-        dw = DockerWorker(module)
+        if module.params.get('container_engine') == 'docker':
+            from ansible.module_utils.kolla_docker_worker import DockerWorker
+            cw = DockerWorker(module)
+        else:
+            from ansible.module_utils.kolla_podman_worker import PodmanWorker
+            cw = PodmanWorker(module)
+
         # TODO(inc0): We keep it bool to have ansible deal with consistent
         # types. If we ever add method that will have to return some
         # meaningful data, we need to refactor all methods to return dicts.
-        result = bool(getattr(dw, module.params.get('action'))())
-        module.exit_json(changed=dw.changed, result=result, **dw.result)
+        result = bool(getattr(cw, module.params.get('action'))())
+        module.exit_json(changed=cw.changed, result=result, **cw.result)
     except Exception:
         module.fail_json(changed=True, msg=repr(traceback.format_exc()),
-                         **getattr(dw, 'result', {}))
+                         **getattr(cw, 'result', {}))
 
 
 if __name__ == '__main__':

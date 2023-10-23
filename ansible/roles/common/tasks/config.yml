@@ -27,6 +27,18 @@
   when:
     - kolla_copy_ca_into_containers | bool
 
+- name: Copying over /run subdirectories conf
+  become: true
+  template:
+    src: kolla-directories.conf.j2
+    dest: /etc/tmpfiles.d/kolla.conf
+  when: kolla_container_engine == 'podman'
+
+- name: Restart systemd-tmpfiles
+  become: true
+  command: systemd-tmpfiles --create
+  when: kolla_container_engine == 'podman'
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
