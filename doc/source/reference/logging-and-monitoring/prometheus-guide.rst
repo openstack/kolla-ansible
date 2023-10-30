@@ -243,3 +243,16 @@ For example:
       labels:
         instance: host1
 
+Target address
+~~~~~~~~~~~~~~
+
+By default, Prometheus server uses the IP of the API interface of scrape
+targets when collecting metrics. This may be overridden by setting
+``prometheus_target_address`` as a host variable. The value of this host
+variable must be a valid IPv4 or IPv6 address.
+
+Prometheus server is one of the few instances where we need to know IP
+addresses of all other hosts in the cloud. Being able to specify these via
+``prometheus_target_address`` allows us to operate when facts are not available
+for all hosts. This could be due to some hosts being unreachable or having
+previously failed.
