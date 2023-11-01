@@ -1,0 +1,15 @@
+<source>
+  @type tail
+  @log_level debug
+  path /var/log/kolla/letsencrypt/letsencrypt-lego.log
+  pos_file /var/run/td-agent/letsencrypt.pos
+  tag infra.letsencrypt.lego
+  enable_watch_timer false
+  <parse>
+    @type multiline
+    format_firstline /^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}/
+    format1 /^(?<Timestamp>\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\S+)\] (?<Payload>.*)/
+    time_key Timestamp
+    time_format %Y/%m/%d %H:%M:%S
+  </parse>
+</source>
