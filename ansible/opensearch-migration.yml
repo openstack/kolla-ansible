@@ -187,6 +187,19 @@
         name: opensearch
         tasks_from: loadbalancer
 
+- name: Run common role to reconfigure fluentd log shipping
+  gather_facts: false
+  hosts:
+    - cron
+    - fluentd
+    - kolla-logs
+    - kolla-toolbox
+  serial: '{{ kolla_serial|default("0") }}'
+  tags:
+    - common
+  roles:
+    - role: common
+
 - name: Run grafana role to register OpenSearch datasource
   gather_facts: false
   hosts: grafana
