@@ -199,6 +199,8 @@ Commands:
     genconfig            Generate configuration files for enabled OpenStack services
     prune-images         Prune orphaned Kolla images
     nova-libvirt-cleanup Clean up disabled nova_libvirt containers
+    opensearch-migration Migrate from Elasticsearch to Opensearch
+                             --prune-kibana-indices to delete old unused Kibana indices
 EOF
 }
 
@@ -260,7 +262,7 @@ function version {
 check_environment_coherence
 
 SHORT_OPTS="hi:p:t:k:e:CD:v"
-LONG_OPTS="help,version,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental"
+LONG_OPTS="help,version,inventory:,playbook:,skip-tags:,tags:,key:,extra:,check,diff,verbose,configdir:,passwords:,limit:,forks:,vault-id:,ask-vault-pass,vault-password-file:,yes-i-really-really-mean-it,include-images,include-dev:,full,incremental,prune-kibana-indices"
 
 RAW_ARGS="$*"
 ARGS=$(getopt -o "${SHORT_OPTS}" -l "${LONG_OPTS}" --name "$0" -- "$@") || { usage >&2; exit 2; }
@@ -392,6 +394,11 @@ while [ "$#" -gt 0 ]; do
 
     (--incremental)
             BACKUP_TYPE="incremental"
+            shift 1
+            ;;
+
+    (--prune-kibana-indices)
+            EXTRA_OPTS="$EXTRA_OPTS -e prune_kibana_indices=true"
             shift 1
             ;;
 

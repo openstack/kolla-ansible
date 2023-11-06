@@ -25,8 +25,10 @@ Migration
 .. warning::
 
    Elasticsearch indexes created in version 6 or below are not supported by
-   OpenSearch 2.x. Please reindex those before migration to OpenSearch.
-   `Official Elasticsearch reindex documentation. <https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html>`__
+   OpenSearch 2.x. Please reindex those before migration to OpenSearch - this
+   can be done automatically during the migration (in case of no longer active
+   Kibana indices) or manually following
+   `official Elasticsearch reindex documentation. <https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html>`__
 
 .. warning::
 
@@ -47,6 +49,11 @@ The migration itself is performed by running following command:
 .. code-block:: console
 
    kolla-ansible opensearch-migration
+
+Indices created in version 6 or below that need reindexing will be identified,
+and will stop migration with a warning. No longer active Kibana indices
+(if detected) can be removed by running the migration again with
+``--prune-kibana-indices`` parameter.
 
 OpenSearch
 ~~~~~~~~~~
