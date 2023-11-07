@@ -153,6 +153,7 @@ def get_DockerWorker(mod_param, docker_api_version='1.40'):
         'api_version': 'auto',
         'graceful_timeout': 10,
         'client_timeout': 120,
+        'container_engine': 'docker',
     }
 
     new_args = module.params.pop('common_options', dict()) or dict()

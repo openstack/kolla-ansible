@@ -89,6 +89,12 @@ options:
       - The command to execute in the container
     required: False
     type: str
+  container_engine:
+    description:
+      - Name of container engine to use
+    required: False
+    type: str
+    default: docker
   detach:
     description:
       - Detach from the container after it is created
@@ -284,6 +290,7 @@ def generate_module():
         auth_registry=dict(required=False, type='str'),
         auth_username=dict(required=False, type='str'),
         command=dict(required=False, type='str'),
+        container_engine=dict(required=False, type='str'),
         detach=dict(required=False, type='bool', default=True),
         labels=dict(required=False, type='dict', default=dict()),
         name=dict(required=False, type='str'),
@@ -360,6 +367,7 @@ def generate_module():
         'api_version': 'auto',
         'graceful_timeout': 10,
         'client_timeout': 120,
+        'container_engine': 'docker',
     }
 
     new_args = module.params.pop('common_options', dict()) or dict()

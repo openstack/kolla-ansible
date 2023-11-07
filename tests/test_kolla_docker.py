@@ -60,6 +60,7 @@ class ModuleArgsTest(base.BaseTestCase):
             auth_registry=dict(required=False, type='str'),
             auth_username=dict(required=False, type='str'),
             command=dict(required=False, type='str'),
+            container_engine=dict(required=False, type='str'),
             detach=dict(required=False, type='bool', default=True),
             labels=dict(required=False, type='dict', default=dict()),
             name=dict(required=False, type='str'),
