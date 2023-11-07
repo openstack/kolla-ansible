@@ -1,9 +1,40 @@
 #!/bin/bash -x
 
-# We need to run haproxy with one `-f` for each service, because including an
-# entire config directory was not a feature until version 1.7 of HAProxy.
-# So, append "-f $cfg" to the haproxy command for each service file.
-# This will run haproxy_cmd *exactly once*.
+{% if kolla_enable_tls_internal | bool or kolla_enable_tls_external | bool %}
+{% if kolla_enable_tls_external | bool %}
+if [ ! -e "/etc/haproxy/certificates/haproxy.pem" ]; then
+    # Generate temporary self-signed cert
+    # This means external tls is enabled but the certificate was not copied
+    # to the container - so letsencrypt is enabled
+    #
+    # Let's generate certificate to make haproxy happy, lego will
+    # replace it in a while
+    ssl_tmp_dir=$(mktemp -d)
+    openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes -keyout ${ssl_tmp_dir}/haproxy$$.key -out ${ssl_tmp_dir}/haproxy$$.crt -subj "/CN={{ kolla_external_fqdn }}"
+    cat ${ssl_tmp_dir}/haproxy$$.crt ${ssl_tmp_dir}/haproxy$$.key> /etc/haproxy/certificates/haproxy.pem
+    rm -rf ${ssl_tmp_dir}
+    chown haproxy:haproxy /etc/haproxy/certificates/haproxy.pem
+    chmod 0660 /etc/haproxy/certificates/haproxy.pem
+fi
+{% endif %}
+{% if kolla_enable_tls_internal | bool %}
+if [ ! -e "/etc/haproxy/certificates/haproxy-internal.pem" ]; then
+    # Generate temporary self-signed cert
+    # This means external tls is enabled but the certificate was not copied
+    # to the container - so letsencrypt is enabled
+    #
+    # Let's generate certificate to make haproxy happy, lego will
+    # replace it in a while
+    ssl_tmp_dir=$(mktemp -d)
+    openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes -keyout ${ssl_tmp_dir}/haproxy-internal$$.key -out ${ssl_tmp_dir}/haproxy-internal$$.crt -subj "/CN={{ kolla_internal_fqdn }}"
+    cat ${ssl_tmp_dir}/haproxy-internal$$.crt ${ssl_tmp_dir}/haproxy-internal$$.key> /etc/haproxy/certificates/haproxy-internal.pem
+    rm -rf ${ssl_tmp_dir}
+    chown haproxy:haproxy /etc/haproxy/certificates/haproxy-internal.pem
+    chmod 0660 /etc/haproxy/certificates/haproxy-internal.pem
+fi
+{% endif %}
+{% endif %}
+
 find /etc/haproxy/services.d/ -mindepth 1 -print0 | \
     xargs -0 -Icfg echo -f cfg | \
     xargs /usr/sbin/haproxy -W -db -p /run/haproxy.pid -f /etc/haproxy/haproxy.cfg

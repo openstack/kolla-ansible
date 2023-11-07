@@ -21,11 +21,12 @@
         need_build_image: "{{ kolla_build_images | default(false) }}"
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'swift', 'ovn'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'swift', 'ovn', 'lets-encrypt'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
         kolla_ansible_venv_path: "{{ ansible_env.HOME }}/kolla-ansible-venv"
+        kolla_internal_fqdn: "kolla.example.com"
 
     - name: Install dig for Designate testing
       become: true
@@ -45,6 +46,18 @@
       become: true
       vars:
         disk_type: "{{ 'ceph-lvm' if scenario in ['cephadm'] else scenario }}"
+
+    - name: Update /etc/hosts with internal API FQDN
+      blockinfile:
+        dest: /etc/hosts
+        marker: "# {mark} ANSIBLE GENERATED INTERNAL API FQDN"
+        block: |
+          {{ kolla_internal_vip_address }} {{ kolla_internal_fqdn }}
+          192.0.2.1 pebble
+      become: True
+      when:
+        - scenario == "lets-encrypt"
+
 
 - hosts: primary
   any_errors_fatal: true
@@ -397,6 +410,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             TLS_ENABLED: "{{ tls_enabled }}"
+            LE_ENABLED: "{{ le_enabled }}"
             KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
             HAS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
 
@@ -410,6 +424,7 @@
             chdir: "{{ kolla_ansible_src_dir }}"
           environment:
             TLS_ENABLED: "{{ tls_enabled }}"
+            LE_ENABLED: "{{ le_enabled }}"
           when: dashboard_enabled
 
         - name: Run init-core-openstack.sh script

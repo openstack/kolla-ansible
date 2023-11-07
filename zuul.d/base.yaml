@@ -47,6 +47,7 @@
       neutron_tenant_network_prefix_length: "24"
       neutron_tenant_network_dns_server: "8.8.8.8"
       tls_enabled: false
+      le_enabled: false
       configure_swap_size: 0
     roles:
       - zuul: zuul/zuul-jobs
@@ -245,3 +246,18 @@
       - ^kolla_ansible/
       - ^tests/run-hashi-vault.yml
       - ^tests/test-hashicorp-vault-passwords.sh
+
+- job:
+    name: kolla-ansible-lets-encrypt-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/roles/letsencrypt/
+      - ^ansible/roles/loadbalancer/
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-dashboard.sh
+      - ^tests/deploy.sh
+    vars:
+      scenario: lets-encrypt
+      tls_enabled: true
+      le_enabled: true

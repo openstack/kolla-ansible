@@ -288,6 +288,35 @@ disable verification of the backend certificate:
 
 .. _admin-tls-generating-a-private-ca:
 
+Generating TLS certificates with Let's Encrypt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's Encrypt is a free, automated, and open certificate authority.
+
+To enable OpenStack to deploy the Let's Encrypt container to fetch
+certificates from the Let's Encrypt certificate authority, the following
+must be configured in ``globals.yml``:
+
+.. code-block:: yaml
+
+  enable_letsencrypt: "yes"
+  letsencrypt_email: "<The email used for registration and recovery contact>"
+
+The Let's Encrypt container will attempt to renew your certificates every 12
+hours. If the certificates are renewed, they will automatically be deployed
+to the HAProxy containers using SSH.
+
+.. note::
+
+  If ``letsencrypt_email`` is not valid email, letsencrypt role will
+  not work correctly.
+
+.. note::
+
+  If ``enable_letsencrypt`` is set to true, haproxy's socket will run with
+  admin access level. This is needed so Let's Encrypt can interact
+  with HAProxy.
+
 Generating a Private Certificate Authority
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -94,6 +94,10 @@ function prepare_images {
         GATE_IMAGES="^cron,^fluentd,^haproxy,^keepalived,^kolla-toolbox,^mariadb"
     fi
 
+    if [[ $SCENARIO == "lets-encrypt" ]]; then
+        GATE_IMAGES+=",^letsencrypt,^haproxy"
+    fi
+
     if [[ $SCENARIO == "prometheus-opensearch" ]]; then
         GATE_IMAGES="^cron,^fluentd,^grafana,^haproxy,^keepalived,^kolla-toolbox,^mariadb,^memcached,^opensearch,^prometheus,^rabbitmq"
     fi
