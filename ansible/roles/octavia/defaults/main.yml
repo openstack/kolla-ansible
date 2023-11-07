@@ -77,6 +77,10 @@ octavia_database_name: "octavia"
 octavia_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia{% endif %}"
 octavia_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+octavia_persistence_database_name: "octavia_persistence"
+octavia_persistence_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia_persistence{% endif %}"
+octavia_persistence_database_address: "{{ octavia_database_address }}"
+
 ####################
 # Database sharding
 ####################
@@ -89,6 +93,16 @@ octavia_database_shard:
   rules:
     - schema: "{{ octavia_database_name }}"
       shard_id: "{{ octavia_database_shard_id }}"
+
+octavia_persistence_database_shard_root_user: "{{ octavia_database_shard_root_user }}"
+octavia_persistence_database_shard_id: "{{ octavia_database_shard_id }}"
+octavia_persistence_database_shard:
+  users:
+    - user: "{{ octavia_persistence_database_user }}"
+      password: "{{ octavia_persistence_database_password }}"
+  rules:
+    - schema: "{{ octavia_persistence_database_name }}"
+      shard_id: "{{ octavia_persistence_database_shard_id }}"
 
 
 ####################
