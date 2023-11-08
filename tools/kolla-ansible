@@ -130,7 +130,13 @@ function find_base_dir {
 
 function install_deps {
     echo "Installing Ansible Galaxy dependencies"
-    ansible-galaxy collection install -r ${BASEDIR}/requirements.yml --force
+    if pip show ansible 2>/dev/null; then
+        ansible-galaxy collection install -r ${BASEDIR}/requirements.yml --force
+    else
+        ansible-galaxy collection install -r ${BASEDIR}/requirements.yml --force
+        ansible-galaxy collection install -r ${BASEDIR}/requirements-core.yml --force
+    fi
+
     if [[ $? -ne 0 ]]; then
         echo "ERROR: Failed to install Ansible Galaxy dependencies" >&2
         exit 1

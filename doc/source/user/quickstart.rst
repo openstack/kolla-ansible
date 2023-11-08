@@ -90,11 +90,12 @@ Install dependencies for the virtual environment
       pip install -U pip
 
 #. Install `Ansible <http://www.ansible.com>`__. Kolla Ansible requires at least
-   Ansible ``6`` and supports up to ``7``.
+   Ansible ``6`` (or ansible-core ``2.14``) and supports up to ``7`` (or
+   ansible-core ``2.15``).
 
    .. code-block:: console
 
-      pip install 'ansible>=6,<8'
+      pip install 'ansible-core>=2.14,<2.16'
 
 
 Install Kolla-ansible
