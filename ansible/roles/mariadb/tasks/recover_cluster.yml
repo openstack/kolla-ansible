@@ -17,7 +17,7 @@
 - block:
     - name: Stop MariaDB containers
       become: true
-      kolla_docker:
+      kolla_container:
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
         common_options: "{{ docker_common_options }}"
@@ -27,7 +27,7 @@
     # different container name to avoid the mariadb container being removed.
     - name: Run MariaDB wsrep recovery
       become: true
-      kolla_docker:
+      kolla_container:
         action: "start_container"
         common_options: "{{ docker_common_options }}"
         detach: false
@@ -110,7 +110,7 @@
 
 - name: Starting first MariaDB container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -168,7 +168,7 @@
 
 - name: Restart slave MariaDB container(s)
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
@@ -199,7 +199,7 @@
 
 - name: Restart master MariaDB container(s)
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"

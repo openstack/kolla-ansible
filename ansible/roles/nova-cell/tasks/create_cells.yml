@@ -7,7 +7,7 @@
   vars:
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 create_cell{% if nova_cell_name %} --name {{ nova_cell_name }}{% endif %}'
     common_options: "{{ docker_common_options }}"
@@ -33,7 +33,7 @@
     nova_cell_database_url: "mysql+pymysql://{{ nova_cell_database_user }}:{{ nova_cell_database_password }}@{{ nova_cell_database_address | put_address_in_context('url') }}:{{ nova_cell_database_port }}/{{ nova_cell_database_name }}"  # noqa 204
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     command: "bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 update_cell --cell_uuid {{ nova_cell_settings.cell_uuid }}'"
     common_options: "{{ docker_common_options }}"

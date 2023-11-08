@@ -68,25 +68,25 @@ directory use:
    tox -e py38 kolla-ansible.tests
 
 To run the tests of a specific file
-``kolla-ansible/tests/test_kolla_docker.py``:
+``kolla-ansible/tests/test_kolla_container.py``:
 
 .. code-block:: console
 
-   tox -e py38 test_kolla_docker
+   tox -e py38 test_kolla_container
 
 To run the tests in the ``ModuleArgsTest`` class in
-the ``kolla-ansible/tests/test_kolla_docker.py`` file:
+the ``kolla-ansible/tests/test_kolla_container.py`` file:
 
 .. code-block:: console
 
-   tox -e py38 test_kolla_docker.ModuleArgsTest
+   tox -e py38 test_kolla_container.ModuleArgsTest
 
 To run the ``ModuleArgsTest.test_module_args`` test method in
-the ``kolla-ansible/tests/test_kolla_docker.py`` file:
+the ``kolla-ansible/tests/test_kolla_container.py`` file:
 
 .. code-block:: console
 
-   tox -e py38 test_kolla_docker.ModuleArgsTest.test_module_args
+   tox -e py38 test_kolla_container.ModuleArgsTest.test_module_args
 
 Debugging unit tests
 --------------------

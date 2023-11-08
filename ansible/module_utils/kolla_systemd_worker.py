@@ -59,7 +59,7 @@ class SystemdWorker(object):
         # NOTE(hinermar): duration * retries should be less than timeout
         # otherwise service will indefinitely try to restart.
         # Also, correct timeout and retries values should probably be
-        # checked at the module level inside kolla_docker.py
+        # checked at the module level inside kolla_container.py
         restart_timeout = params.get('client_timeout', 120)
         restart_retries = params.get('restart_retries', 10)
         restart_duration = (restart_timeout // restart_retries) - 1

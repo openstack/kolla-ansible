@@ -24,11 +24,11 @@ from oslotest import base
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
 ansible_dir = os.path.join(this_dir, '..', 'ansible')
-kolla_docker_file = os.path.join(ansible_dir,
-                                 'library', 'kolla_docker.py')
+kolla_container_file = os.path.join(ansible_dir,
+                                    'library', 'kolla_container.py')
 docker_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_docker_worker.py')
-kd = imp.load_source('kolla_docker', kolla_docker_file)
+kc = imp.load_source('kolla_container', kolla_container_file)
 dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
 
 
@@ -122,9 +122,9 @@ class ModuleArgsTest(base.BaseTestCase):
             ['action', 'stop_and_remove_container', ['name']],
         ]
 
-        kd.AnsibleModule = mock.MagicMock()
-        kd.generate_module()
-        kd.AnsibleModule.assert_called_with(
+        kc.AnsibleModule = mock.MagicMock()
+        kc.generate_module()
+        kc.AnsibleModule.assert_called_with(
             argument_spec=argument_spec,
             required_if=required_if,
             bypass_checks=False

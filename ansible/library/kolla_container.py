@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # FIXME(yoctozepto): this module does *not* validate "common_options" which are
-# a hacky way to seed most usages of kolla_docker in kolla-ansible ansible
+# a hacky way to seed most usages of kolla_container in kolla-ansible ansible
 # playbooks - caution has to be exerted when setting "common_options"
 
 # FIXME(yoctozepto): restart_policy is *not* checked in the container
@@ -26,7 +26,7 @@ from ansible.module_utils.kolla_container_worker import ContainerWorker
 
 DOCUMENTATION = '''
 ---
-module: kolla_docker
+module: kolla_container
 short_description: Module for controlling containers
 description:
      - A module targeting at controlling container engine as used by Kolla.
@@ -234,31 +234,31 @@ author: Sam Yaple
 '''
 
 EXAMPLES = '''
-- hosts: kolla_docker
+- hosts: kolla_container
   tasks:
     - name: Start container
-      kolla_docker:
+      kolla_container:
         image: ubuntu
         name: test_container
         action: start_container
     - name: Remove container
-      kolla_docker:
+      kolla_container:
         name: test_container
         action: remove_container
     - name: Pull image without starting container
-      kolla_docker:
+      kolla_container:
         action: pull_image
         image: private-registry.example.com:5000/ubuntu
     - name: Create named volume
-      kolla_docker:
+      kolla_container:
         action: create_volume
         name: name_of_volume
     - name: Remove named volume
-      kolla_docker:
+      kolla_container:
         action: remove_volume
         name: name_of_volume
     - name: Remove image
-      kolla_docker:
+      kolla_container:
         action: remove_image
         image: name_of_image
 '''
