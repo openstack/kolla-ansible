@@ -76,7 +76,7 @@ function prepare_images {
         GATE_IMAGES+=",^designate,^magnum,^trove"
     fi
     if [[ $SCENARIO == "octavia" ]]; then
-        GATE_IMAGES+=",^octavia"
+        GATE_IMAGES+=",^redis,^octavia"
     fi
     if [[ $SCENARIO == "masakari" ]]; then
         GATE_IMAGES+=",^masakari-,^hacluster-"
@@ -87,7 +87,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "ovn" ]]; then
-        GATE_IMAGES+=",^octavia,^ovn"
+        GATE_IMAGES+=",^redis,^octavia,^ovn"
     fi
 
     if [[ $SCENARIO == "mariadb" ]]; then
