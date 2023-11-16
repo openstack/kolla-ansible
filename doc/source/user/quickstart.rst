@@ -6,7 +6,7 @@ Quick Start for deployment/evaluation
 
 This guide provides step by step instructions to deploy OpenStack using Kolla
 Ansible on bare metal servers or virtual machines. For developers we have the
-:kolla-ansible-doc:`developer quickstart <user/quickstart-development.rst>`.
+:kolla-ansible-doc:`developer quickstart <user/quickstart-development.html>`.
 
 Recommended reading
 ~~~~~~~~~~~~~~~~~~~
