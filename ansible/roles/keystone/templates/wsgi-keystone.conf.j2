@@ -75,6 +75,9 @@ LogLevel info
     OIDCCacheType memcache
     OIDCMemCacheServers "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %} {% endif %}{% endfor %}"
 {% endif %}
+{% for key, value in keystone_federation_oidc_additional_options.items() %}
+    {{ key }} {{ value }}
+{% endfor %}
 
     <Location ~ "/redirect_uri">
       Require valid-user

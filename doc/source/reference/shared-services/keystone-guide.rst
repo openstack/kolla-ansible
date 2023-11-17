@@ -96,6 +96,14 @@ used by OpenStack command line client. Example config shown below:
 
     keystone_federation_oidc_jwks_uri: "https://<AUTH PROVIDER>/<ID>/discovery/v2.0/keys"
 
+Some identity providers need additional mod_auth_openidc config.
+Example for Keycloak shown below:
+
+.. code-block:: yaml
+
+    keystone_federation_oidc_additional_options:
+      OIDCTokenBindingPolicy: disabled
+
 Identity providers configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
