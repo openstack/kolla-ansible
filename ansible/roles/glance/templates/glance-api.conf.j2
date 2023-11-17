@@ -56,15 +56,7 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 flavor = {% if enable_glance_image_cache | bool %}keystone+cachemanagement{% else %}keystone{% endif %}
 
 [glance_store]
-{% if glance_backend_vmware | bool %}
-default_backend = vmware
-{% elif glance_backend_ceph | bool %}
-default_backend = "{{ glance_ceph_backends[0].name }}"
-{% elif glance_backend_swift | bool %}
-default_backend = swift
-{% else %}
-default_backend = file
-{% endif %}
+default_backend = "{{ glance_default_backend }}"
 
 {% if glance_backend_file | bool %}
 [file]
@@ -90,6 +82,14 @@ swift_store_region = {{ openstack_region_name }}
 default_swift_reference = swift
 swift_store_config_file = /etc/glance/glance-swift.conf
 swift_store_auth_insecure = True
+{% endif %}
+
+{% if glance_backend_s3 | bool %}
+[s3]
+s3_store_host = {{ glance_backend_s3_url }}
+s3_store_access_key = {{ glance_backend_s3_access_key }}
+s3_store_secret_key = {{ glance_backend_s3_secret_key }}
+s3_store_bucket = {{ glance_backend_s3_bucket }}
 {% endif %}
 
 {% if glance_backend_vmware | bool %}

@@ -63,6 +63,34 @@ To enable the vmware backend manually:
 
    glance_backend_vmware: "yes"
 
+Glance with S3 Backend
+~~~~~~~~~~~~~~~~~~~~~~
+
+Configuring Glance for S3 includes the following steps:
+
+#. Enable Glance S3 backend in ``globals.yml``:
+
+.. code-block:: yaml
+
+   glance_backend_s3: "yes"
+
+#. Configure S3 connection details in ``/etc/kolla/globals.yml``:
+
+   * ``glance_backend_s3_url`` (example: ``http://127.0.0.1:9000``)
+   * ``glance_backend_s3_access_key`` (example: ``minio``)
+   * ``glance_backend_s3_bucket`` (example: ``glance``)
+   * ``glance_backend_s3_secret_key`` (example: ``admin``)
+
+#. If you wish to use a single S3 backend for all supported services,
+use the following variables:
+
+   * ``s3_url``
+   * ``s3_access_key``
+   * ``s3_glance_bucket``
+   * ``s3_secret_key``
+
+   All Glance S3 configurations use these options as default values.
+
 Swift backend
 ~~~~~~~~~~~~~
 

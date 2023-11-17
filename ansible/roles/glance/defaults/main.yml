@@ -139,6 +139,13 @@ glance_database_shard:
 haproxy_glance_api_client_timeout: "6h"
 haproxy_glance_api_server_timeout: "6h"
 
+####################
+# Glance S3 Backend
+####################
+glance_backend_s3_url: "{{ s3_url }}"
+glance_backend_s3_bucket: "{{ s3_bucket }}"
+glance_backend_s3_access_key: "{{ s3_access_key }}"
+glance_backend_s3_secret_key: "{{ s3_secret_key }}"
 
 ####################
 # Docker
@@ -209,6 +216,9 @@ glance_api_container_proxy: "{{ container_proxy }}"
 # Glance
 ####################
 glance_backends:
+  - name: s3
+    type: s3
+    enabled: "{{ glance_backend_s3 | bool }}"
   - name: file
     type: file
     enabled: "{{ glance_backend_file | bool }}"
@@ -232,6 +242,7 @@ glance_ceph_backends:
     enabled: "{{ glance_backend_ceph | bool }}"
 
 glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
+glance_default_backend: "{% if glance_backend_vmware | bool %}vmware{% elif glance_backend_ceph | bool %}{{ glance_ceph_backends[0].name }}{% elif glance_backend_swift | bool %}swift{% elif glance_backend_s3 | bool %}s3{% else %}file{% endif %}"
 
 ####################
 # OpenStack

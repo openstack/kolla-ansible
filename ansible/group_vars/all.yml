@@ -1047,9 +1047,10 @@ openstack_auth:
 #######################
 # Glance options
 #######################
-glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_swift | bool or glance_backend_vmware | bool) }}"
+glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool or glance_backend_swift | bool or glance_backend_vmware | bool) }}"
 glance_backend_ceph: "no"
 glance_backend_vmware: "no"
+glance_backend_s3: "no"
 enable_glance_image_cache: "no"
 glance_backend_swift: "{{ enable_swift | bool }}"
 glance_file_datadir_volume: "glance"
@@ -1094,7 +1095,7 @@ cinder_target_helper: "{{ 'lioadm' if ansible_facts.os_family == 'RedHat' else '
 # Valid options are [ '', redis, etcd ]
 cinder_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
 
-# Valid options are [ nfs, swift, ceph ]
+# Valid options are [ nfs, swift, ceph, s3 ]
 cinder_backup_driver: "ceph"
 cinder_backup_share: ""
 cinder_backup_mount_options_nfs: ""
@@ -1333,6 +1334,15 @@ kolla_base_distro_version_default_map: {
 distro_python_version: "{{ distro_python_version_map[kolla_base_distro] }}"
 
 kolla_base_distro_version: "{{ kolla_base_distro_version_default_map[kolla_base_distro] }}"
+
+#############
+# S3 options
+#############
+# Common options for S3 Cinder Backup and Glance S3 backend.
+s3_url:
+s3_bucket:
+s3_access_key:
+s3_secret_key:
 
 ##########
 # Telegraf
