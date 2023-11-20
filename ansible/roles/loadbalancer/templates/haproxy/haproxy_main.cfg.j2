@@ -42,6 +42,13 @@ listen stats
    stats realm Haproxy\ Stats
    stats auth {{ haproxy_user }}:{{ haproxy_password }}
 
+{% if enable_prometheus_haproxy_exporter | bool %}
+listen metrics
+   bind {{ api_interface_address }}:{{ prometheus_haproxy_exporter_port }}
+   mode http
+   http-request use-service prometheus-exporter if { path /metrics }
+{% endif %}
+
 frontend status
     bind {{ api_interface_address }}:{{ haproxy_monitor_port }}
     {% if api_interface_address != kolla_internal_vip_address %}
