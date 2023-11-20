@@ -39,6 +39,57 @@
   command: systemd-tmpfiles --create
   when: kolla_container_engine == 'podman'
 
+- name: Ensure fluentd image is present for label check
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "ensure_image"
+    common_options: "{{ docker_common_options }}"
+    image: "{{ service.image }}"
+  when: enable_fluentd | bool
+
+- name: Fetch fluentd Docker image labels
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+  become: true
+  docker_image_info:
+    name: "{{ service.image }}"
+  register: fluentd_labels_docker
+  when:
+    - kolla_container_engine == "docker"
+    - enable_fluentd | bool
+
+- name: Set fluentd facts
+  set_fact:
+    fluentd_cmd: "{{ fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_binary | default('td-agent') }}"
+    fluentd_user: "{{ fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_user | default('td-agent') }}"
+  when:
+    - kolla_container_engine == "docker"
+    - enable_fluentd | bool
+
+- name: Fetch fluentd Podman image labels
+  vars:
+    service_name: "fluentd"
+    service: "{{ common_services[service_name] }}"
+  become: true
+  podman_image_info:
+    name: "{{ service.image }}"
+  register: fluentd_labels_podman
+  when:
+    - kolla_container_engine == "podman"
+    - enable_fluentd | bool
+
+- name: Set fluentd facts
+  set_fact:
+    fluentd_cmd: "{{ fluentd_labels_podman.images[0].ContainerConfig.Labels.fluentd_binary | default('td-agent') }}"
+    fluentd_user: "{{ fluentd_labels_podman.images[0].ContainerConfig.Labels.fluentd_user | default('td-agent') }}"
+  when:
+    - kolla_container_engine == "podman"
+    - enable_fluentd | bool
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
