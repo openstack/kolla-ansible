@@ -1,0 +1,16 @@
+---
+- name: Stop the RabbitMQ application
+  become: true
+  command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl stop_app"
+
+- name: Reset the state of RabbitMQ
+  become: true
+  command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl force_reset"
+
+- name: Start the RabbitMQ application
+  become: true
+  command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl start_app"
+
+- name: Wait for all RabbitMQ nodes to join the cluster
+  become: true
+  command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl await_online_nodes {{ groups['rabbitmq'] | length }}"
