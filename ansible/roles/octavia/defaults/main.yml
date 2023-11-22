@@ -86,21 +86,17 @@ octavia_persistence_database_address: "{{ octavia_database_address }}"
 ####################
 octavia_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
 octavia_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+octavia_persistence_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_persistence_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+octavia_persistence_database_shard_id: "{{ octavia_database_shard_id | int }}"
 octavia_database_shard:
   users:
     - user: "{{ octavia_database_user }}"
       password: "{{ octavia_database_password }}"
-  rules:
-    - schema: "{{ octavia_database_name }}"
-      shard_id: "{{ octavia_database_shard_id }}"
-
-octavia_persistence_database_shard_root_user: "{{ octavia_database_shard_root_user }}"
-octavia_persistence_database_shard_id: "{{ octavia_database_shard_id }}"
-octavia_persistence_database_shard:
-  users:
     - user: "{{ octavia_persistence_database_user }}"
       password: "{{ octavia_persistence_database_password }}"
   rules:
+    - schema: "{{ octavia_database_name }}"
+      shard_id: "{{ octavia_database_shard_id }}"
     - schema: "{{ octavia_persistence_database_name }}"
       shard_id: "{{ octavia_persistence_database_shard_id }}"
 
