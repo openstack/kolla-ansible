@@ -32,7 +32,7 @@ check_docker_failures() {
     # paused, exited and dead. Containers without running status are treated as
     # failure. removing is added in docker 1.13, just ignore it now.
     # In addition to that, containers in unhealthy state (from healthchecks)
-    # are trated as failure.
+    # are treated as failure.
     failed_containers=$(sudo docker ps -a --format "{{.Names}}" \
         --filter status=created \
         --filter status=restarting \
