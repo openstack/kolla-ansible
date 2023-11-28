@@ -28,11 +28,11 @@ sys.modules['dbus'] = mock.MagicMock()
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
 ansible_dir = os.path.join(this_dir, '..', '..', 'ansible')
-kolla_docker_file = os.path.join(ansible_dir,
-                                 'library', 'kolla_docker.py')
+kolla_container_file = os.path.join(ansible_dir,
+                                    'library', 'kolla_container.py')
 docker_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_docker_worker.py')
-kd = imp.load_source('kolla_docker', kolla_docker_file)
+kc = imp.load_source('kolla_container', kolla_container_file)
 dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
 
 
@@ -212,20 +212,20 @@ class TestMainModule(base.BaseTestCase):
         self.fake_data_common_opts['params']['common_options'] = \
             FAKE_DATA_COMMON_OPTS
 
-    @mock.patch("kolla_docker.traceback.format_exc")
+    @mock.patch("kolla_container.traceback.format_exc")
     @mock.patch("kolla_docker_worker.get_docker_client")
-    @mock.patch("kolla_docker.generate_module")
+    @mock.patch("kolla_container.generate_module")
     def test_docker_client_exception(self, mock_generate_module, mock_dclient,
                                      mock_traceback):
         module_mock = mock.MagicMock()
         mock_generate_module.return_value = module_mock
         mock_dclient.side_effect = AttributeError()
         mock_traceback.return_value = "Some very ugly traceback"
-        kd.main()
+        kc.main()
         module_mock.fail_json.assert_called_once_with(
             changed=True, msg=repr("Some very ugly traceback"))
 
-    @mock.patch("kolla_docker.generate_module")
+    @mock.patch("kolla_container.generate_module")
     def test_execute_module(self, mock_generate_module):
         module_mock = mock.MagicMock()
         module_mock.params = self.fake_data['params']
@@ -237,7 +237,7 @@ class TestMainModule(base.BaseTestCase):
             mock_dw.return_value.check_image.return_value = False
             mock_dw.return_value.changed = False
             mock_dw.return_value.result = {"some_key": "some_value"}
-            kd.main()
+            kc.main()
             mock_dw.assert_called_once_with(module_mock)
             mock_dw.return_value.check_image.assert_called_once_with()
         module_mock.exit_json.assert_called_once_with(changed=False,

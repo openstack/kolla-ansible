@@ -27,11 +27,11 @@ sys.modules['dbus'] = mock.MagicMock()
 
 this_dir = os.path.dirname(sys.modules[__name__].__file__)
 ansible_dir = os.path.join(this_dir, '..', '..', 'ansible')
-kolla_docker_file = os.path.join(ansible_dir,
-                                 'library', 'kolla_docker.py')
+kolla_container_file = os.path.join(ansible_dir,
+                                    'library', 'kolla_container.py')
 podman_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_podman_worker.py')
-kd = imp.load_source('kolla_docker', kolla_docker_file)
+kc = imp.load_source('kolla_container', kolla_container_file)
 pwm = imp.load_source('kolla_podman_worker', podman_worker_file)
 
 FAKE_DATA = {
@@ -165,7 +165,7 @@ class TestMainModule(base.BaseTestCase):
         super(TestMainModule, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
 
-    @mock.patch("kolla_docker.generate_module")
+    @mock.patch("kolla_container.generate_module")
     def test_execute_module(self, mock_generate_module):
         module_mock = mock.MagicMock()
         module_mock.params = self.fake_data['params']
@@ -177,7 +177,7 @@ class TestMainModule(base.BaseTestCase):
             mock_pw.return_value.check_image.return_value = False
             mock_pw.return_value.changed = False
             mock_pw.return_value.result = {"some_key": "some_value"}
-            kd.main()
+            kc.main()
             mock_pw.assert_called_once_with(module_mock)
             mock_pw.return_value.check_image.assert_called_once_with()
         module_mock.exit_json.assert_called_once_with(changed=False,

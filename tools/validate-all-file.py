@@ -169,18 +169,18 @@ def check_task_contents():
                     if task.get('block'):
                         block = task
                         for task in task['block']:
-                            if check_docker_become(fullpath, task, block):
+                            if check_container_become(fullpath, task, block):
                                 return_code = 1
                     else:
-                        if check_docker_become(fullpath, task):
+                        if check_container_become(fullpath, task):
                             return_code = 1
 
     return return_code
 
 
-def check_docker_become(fullpath, task, block=''):
+def check_container_become(fullpath, task, block=''):
 
-    ce_modules = ('kolla_docker', 'kolla_container_facts', 'kolla_toolbox')
+    ce_modules = ('kolla_container', 'kolla_container_facts', 'kolla_toolbox')
     cmd_modules = ('command', 'shell')
     return_code = 0
 
