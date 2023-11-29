@@ -9,5 +9,6 @@ Admin Guides
    tls
    acme
    mariadb-backup-and-restore
+   etcd
    production-architecture-guide
    deployment-philosophy
