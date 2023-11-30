@@ -1,10 +1,8 @@
-{% set fluentd_user = 'td-agent' %}
-{% set fluentd_dir = '/etc/td-agent' %}
-{% set fluentd_conf = 'td-agent.conf' %}
-{% set fluentd_cmd = '/usr/sbin/td-agent' %}
+{% set fluentd_dir = '/etc/' + (fluentd_cmd | default('td-agent')) %}
+{% set fluentd_conf = (fluentd_cmd | default('td-agent')) + '.conf' %}
 
 {
-    "command": "{{ fluentd_cmd }} -o /var/log/kolla/fluentd/fluentd.log",
+    "command": "{{ fluentd_cmd }} -c {{ fluentd_dir }}/{{ fluentd_conf }} -o /var/log/kolla/fluentd/fluentd.log",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/td-agent.conf",
