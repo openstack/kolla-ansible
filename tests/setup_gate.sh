@@ -126,7 +126,7 @@ EOF
     python3 -m venv ~/kolla-venv
     . ~/kolla-venv/bin/activate
 
-    pip install "${KOLLA_SRC_DIR}" ${CONTAINER_ENGINE}
+    pip install "${KOLLA_SRC_DIR}" ${CONTAINER_ENGINE} rich
 
     sudo ~/kolla-venv/bin/kolla-build
 
