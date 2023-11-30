@@ -259,5 +259,7 @@ backend_url = {{ redis_connection_string }}
 # NOTE(yoctozepto): we must use etcd3gw (aka etcd3+http) due to issues with alternative (etcd3) and eventlet (as used by cinder)
 # see https://bugs.launchpad.net/kolla-ansible/+bug/1854932
 # and https://review.opendev.org/466098 for details
-backend_url = etcd3+{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ etcd_client_port }}{% if openstack_cacert %}?ca_cert={{ openstack_cacert }}{% endif %}
+# NOTE(jan.gutter): etcd v3.4 removed the default `v3alpha` api_version. Until
+# tooz defaults to a newer version, we should explicitly specify `v3`
+backend_url = etcd3+{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ etcd_client_port }}?api_version=v3{% if openstack_cacert %}?ca_cert={{ openstack_cacert }}{% endif %}
 {% endif %}

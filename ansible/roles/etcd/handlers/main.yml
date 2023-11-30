@@ -25,12 +25,25 @@
   listen:
     - Bootstrap etcd services
 
+# When upgrading an etcd cluster we have to do it one by one
+- name: Upgrade etcd non-leaders
+  include_tasks: 'restart_services.yml'
+  when:
+    - inventory_hostname not in (groups.etcd_is_leader_True | default([]))
+    - kolla_action == "upgrade"
+  listen:
+    - Restart etcd container
+  loop: "{{ groups.etcd }}"
+
+# When there is no upgrade we can restart 25% of the services without
+# losing quorum.
 - name: Rolling restart of etcd non-leaders
   include_tasks: 'restart_services.yml'
   when:
     - inventory_hostname not in (groups.etcd_is_leader_True | default([]))
     - groups.etcd.index(inventory_hostname) % 4 == item
     - kolla_action != "config"
+    - kolla_action != "upgrade"
   listen:
     - Restart etcd container
     - Bootstrap etcd services
