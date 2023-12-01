@@ -8,6 +8,7 @@ Contents
    :maxdepth: 2
 
    unreleased
+   2023.2
    2023.1
    zed
    yoga
