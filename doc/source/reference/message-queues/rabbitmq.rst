@@ -122,8 +122,8 @@ RabbitMQ offers two options to configure HA:
 There are some queue types which are intentionally not mirrored
 using the exclusionary pattern ``^(?!(amq\\.)|(.*_fanout_)|(reply_)).*``.
 
-After enabling this value on a running system, there are some additional steps
-needed to migrate from transient to durable queues.
+After enabling one of these values on a running system, there are some
+additional steps needed to migrate from transient to durable queues.
 
 .. warning::
 
@@ -143,7 +143,8 @@ needed to migrate from transient to durable queues.
 
       kolla-ansible genconfig
 
-3. Reconfigure RabbitMQ.
+3. Reconfigure RabbitMQ if you are using
+   ``om_enable_rabbitmq_high_availability``.
 
    .. code-block:: console
 
