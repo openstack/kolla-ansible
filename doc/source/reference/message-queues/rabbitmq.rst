@@ -122,15 +122,17 @@ RabbitMQ offers two options to configure HA:
 There are some queue types which are intentionally not mirrored
 using the exclusionary pattern ``^(?!(amq\\.)|(.*_fanout_)|(reply_)).*``.
 
-After enabling this value on a running system, there are some additional steps
-needed to migrate from transient to durable queues.
+After enabling one of these values on a running system, there are some
+additional steps needed to migrate from transient to durable queues.
 
 .. warning::
 
    If you choose to enable quorum queues on an existing RabbitMQ cluster,
    the following procedure is required to be carried out before an upgrade.
 
-   Notice, that the default will be changed from non-HA to Quorum queues in the Bobcat release.
+   Notice, that the default will be changed from non-HA to Quorum queues in the
+   Bobcat release. This means that you will also need to perform this migration
+   before a SLURP upgrade to Caracal.
 
 1. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
@@ -145,7 +147,8 @@ needed to migrate from transient to durable queues.
 
       kolla-ansible genconfig
 
-3. Reconfigure RabbitMQ.
+3. Reconfigure RabbitMQ if you are using
+   ``om_enable_rabbitmq_high_availability``.
 
    .. code-block:: console
 
