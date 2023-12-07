@@ -452,6 +452,15 @@
             SCENARIO: "{{ scenario }}"
           when: openstack_core_tested or scenario in ['ironic', 'magnum', 'scenario_nfv', 'zun', 'octavia']
 
+        - name: Run test-ovn.sh script
+          script:
+            cmd: test-ovn.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "ovn"
+          environment:
+            CONTAINER_ENGINE: "{{ container_engine }}"
+
         - name: Run test-core-openstack.sh script
           script:
             cmd: test-core-openstack.sh
@@ -535,15 +544,6 @@
             executable: /bin/bash
             chdir: "{{ kolla_ansible_src_dir }}"
           when: scenario == "masakari"
-          environment:
-            CONTAINER_ENGINE: "{{ container_engine }}"
-
-        - name: Run test-ovn.sh script
-          script:
-            cmd: test-ovn.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "ovn"
           environment:
             CONTAINER_ENGINE: "{{ container_engine }}"
 
