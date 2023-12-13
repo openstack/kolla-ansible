@@ -499,3 +499,26 @@
     - neutron_tls_proxy.host_in_groups | bool
   notify:
     - Restart neutron-tls-proxy container
+
+- name: Copying over neutron_taas.conf
+  become: true
+  vars:
+    service_name: "{{ item.key }}"
+    services_need_neutron_taas_conf:
+      - "neutron-server"
+      - "neutron-openvswitch-agent"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/neutron_taas.conf.j2"
+      - "{{ node_custom_config }}/neutron/neutron_taas.conf"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron_taas.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/neutron_taas.conf"
+    mode: "0660"
+  when:
+    - enable_neutron_taas | bool
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+    - item.key in services_need_neutron_taas_conf
+  with_dict: "{{ neutron_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
