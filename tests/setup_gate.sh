@@ -7,39 +7,6 @@ set -o pipefail
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-
-function setup_openstack_clients {
-    # Prepare virtualenv for openstack deployment tests
-    local packages=(python-openstackclient python-heatclient)
-    if [[ $SCENARIO == zun ]]; then
-        packages+=(python-zunclient)
-    fi
-    if [[ $SCENARIO == ironic ]]; then
-        packages+=(python-ironicclient python-ironic-inspector-client)
-    fi
-    if [[ $SCENARIO == magnum ]]; then
-        packages+=(python-designateclient python-magnumclient python-troveclient)
-    fi
-    if [[ $SCENARIO == octavia ]]; then
-        packages+=(python-octaviaclient)
-    fi
-    if [[ $SCENARIO == masakari ]]; then
-        packages+=(python-masakariclient)
-    fi
-    if [[ $SCENARIO == scenario_nfv ]]; then
-        packages+=(python-tackerclient python-barbicanclient python-mistralclient)
-    fi
-    if [[ $SCENARIO == ovn ]]; then
-        packages+=(python-octaviaclient)
-    fi
-    if [[ "debian" == $BASE_DISTRO ]]; then
-        sudo apt -y install python3-venv
-    fi
-    python3 -m venv ~/openstackclient-venv
-    ~/openstackclient-venv/bin/pip install -U pip
-    ~/openstackclient-venv/bin/pip install -c $UPPER_CONSTRAINTS ${packages[@]}
-}
-
 function prepare_images {
     if [[ "${BUILD_IMAGE}" == "False" ]]; then
         return
@@ -145,8 +112,6 @@ EOF
     deactivate
 }
 
-
-setup_openstack_clients
 
 RAW_INVENTORY=/etc/kolla/inventory
 
