@@ -30,6 +30,24 @@
       neutron_tenant_network_prefix_length: "24"
       previous_release: "2025.1"
       scenario: core
+      scenario_images_core:
+        - ^cron
+        - ^fluentd
+        - ^glance
+        - ^haproxy
+        - ^heat
+        - ^horizon
+        - ^keepalived
+        - ^keystone
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^memcached
+        - ^neutron
+        - ^nova-
+        - ^openvswitch
+        - ^placement
+        - ^proxysql
+        - ^rabbitmq
       tls_enabled: false
       virt_type: qemu
 
@@ -113,6 +131,8 @@
       - ^tests/test-bifrost.sh
     vars:
       scenario: bifrost
+      scenario_images_core:
+        - ^bifrost
 
 - job:
     name: kolla-ansible-ironic-base
@@ -129,6 +149,11 @@
       - openstack/tenks
     vars:
       scenario: ironic
+      scenario_images_extra:
+        - ^dnsmasq
+        - ^ironic
+        - ^iscsid
+        - ^prometheus
 
 - job:
     name: kolla-ansible-zun-base
@@ -142,6 +167,29 @@
       - ^tests/test-dashboard.sh
     vars:
       scenario: zun
+      scenario_images_extra:
+        - ^zun
+        - ^kuryr
+        - ^etcd
+        - ^cinder
+        - ^iscsid
+        - ^tgtd
+
+- job:
+    name: kolla-ansible-swift-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(glance|swift)/
+      - ^tests/setup_disks.sh
+      - ^tests/init-swift.sh
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-dashboard.sh
+      - ^tests/test-swift.sh
+    vars:
+      scenario: swift
+      scenario_images_extra:
+        - ^swift
 
 - job:
     name: kolla-ansible-cephadm-base
@@ -149,6 +197,9 @@
     voting: false
     vars:
       scenario: cephadm
+      scenario_images_extra:
+        - ^cinder
+        - ^redis
 
 - job:
     name: kolla-ansible-magnum-base
@@ -160,6 +211,10 @@
       - ^tests/test-magnum.sh
     vars:
       scenario: magnum
+      scenario_images_extra:
+        - ^designate
+        - ^magnum
+        - ^trove
 
 - job:
     name: kolla-ansible-octavia-base
@@ -171,6 +226,9 @@
       - ^tests/test-octavia.sh
     vars:
       scenario: octavia
+      scenario_images_extra:
+        - ^redis
+        - ^octavia
 
 - job:
     name: kolla-ansible-masakari-base
@@ -183,6 +241,9 @@
       - ^tests/test-dashboard.sh
     vars:
       scenario: masakari
+      scenario_images_extra:
+        - ^masakari
+        - ^hacluster
 
 - job:
     name: kolla-ansible-mariadb-base
@@ -193,6 +254,14 @@
       - ^tests/test-mariadb.sh
     vars:
       scenario: mariadb
+      scenario_images_core:
+        - ^cron
+        - ^fluentd
+        - ^haproxy
+        - ^keepalived
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^proxysql
 
 - job:
     name: kolla-ansible-scenario-nfv-base
@@ -204,6 +273,12 @@
       - ^tests/test-dashboard.sh
     vars:
       scenario: scenario_nfv
+      scenario_images_extra:
+        - ^aodh
+        - ^tacker
+        - ^mistral
+        - ^redis
+        - ^barbican
 
 - job:
     name: kolla-ansible-cells-base
@@ -217,6 +292,8 @@
       - ^tests/test-proxysql.sh
     vars:
       scenario: cells
+      scenario_images_extra:
+        - ^proxysql
 
 - job:
     name: kolla-ansible-ovn-base
@@ -229,6 +306,10 @@
       - ^tests/reconfigure.sh
     vars:
       scenario: ovn
+      scenario_images_extra:
+        - ^redis
+        - ^octavia
+        - ^ovn
 
 - job:
     name: kolla-ansible-prometheus-opensearch-base
@@ -239,6 +320,19 @@
       - ^tests/test-prometheus-opensearch.sh
     vars:
       scenario: prometheus-opensearch
+      scenario_images_core:
+        - ^cron
+        - ^fluentd
+        - ^grafana
+        - ^haproxy
+        - ^keepalived
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^memcached
+        - ^opensearch
+        - ^prometheus
+        - ^proxysql
+        - ^rabbitmq
 
 - job:
     name: kolla-ansible-venus-base
@@ -249,6 +343,18 @@
       - ^tests/test-venus.sh
     vars:
       scenario: venus
+      scenario_images_core:
+        - ^cron
+        - ^opensearch
+        - ^fluentd
+        - ^haproxy
+        - ^keepalived
+        - ^keystone
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^memcached
+        - ^rabbitmq
+        - ^venus
 
 - job:
     name: kolla-ansible-hashi-vault-base
@@ -293,6 +399,9 @@
       - ^tests/deploy.sh
     vars:
       scenario: lets-encrypt
+      scenario_images_extra:
+        - ^letsencrypt
+        - ^haproxy
       tls_enabled: true
       le_enabled: true
 
@@ -305,6 +414,8 @@
       - ^tests/test-skyline.sh
     vars:
       scenario: skyline
+      scenario_images_extra:
+        - ^skyline
 
 - job:
     name: kolla-ansible-skyline-sso-base
@@ -315,6 +426,8 @@
       - ^tests/test-skyline-sso.sh
     vars:
       scenario: skyline-sso
+      scenario_images_extra:
+        - ^skyline
 
 - job:
     name: kolla-ansible-container-engine-migration-base
