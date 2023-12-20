@@ -70,3 +70,12 @@ policy_file = {{ masakari_policy_file }}
 
 [taskflow]
 connection = mysql+pymysql://{{ masakari_database_user }}:{{ masakari_database_password }}@{{ masakari_database_address }}/{{ masakari_database_name }}
+
+{% if service_name == 'masakari-api' %}
+[coordination]
+{% if masakari_coordination_backend == 'redis' %}
+backend_url = {{ redis_connection_string }}
+{% elif masakari_coordination_backend == 'etcd' %}
+backend_url = etcd3+{{ internal_protocol }}://{{ kolla_internal_fqdn }}:{{ etcd_client_port }}{% if openstack_cacert %}?ca_cert={{ openstack_cacert }}{% endif %}
+{% endif %}
+{% endif %}
