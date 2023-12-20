@@ -61,3 +61,11 @@
     msg: "We are sorry but enable_ceph is no longer supported. Please use external ceph support."
   when:
     - (enable_ceph | default()) | bool
+
+- name: Validate rabbitmq variables
+  run_once: True
+  fail:
+    msg: |
+      Please set only one of om_enable_rabbitmq_high_availability or om_enable_rabbitmq_quorum_queues or none of them.
+  when:
+    - (om_enable_rabbitmq_high_availability | bool) == (om_enable_rabbitmq_quorum_queues | bool) and (om_enable_rabbitmq_high_availability | bool)

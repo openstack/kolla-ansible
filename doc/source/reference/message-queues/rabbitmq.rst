@@ -113,14 +113,24 @@ https://www.rabbitmq.com/runtime.html#busy-waiting.
 High Availability
 ~~~~~~~~~~~~~~~~~
 
-RabbitMQ offers two features that, when used together, allow for high
-availability. These are durable queues and classic queue mirroring. Setting the
-flag ``om_enable_rabbitmq_high_availability`` to ``true`` will enable both of
-these features. There are some queue types which are intentionally not mirrored
+RabbitMQ offers two options to configure HA:
+  * Quorum queues (enabled by default and controlled by
+    ``om_enable_rabbitmq_quorum_queues`` variable)
+  * Classic queue mirroring and durable queues (deprecated in RabbitMQ and to
+    be dropped in 4.0, controlled by ``om_enable_rabbitmq_high_availability``)
+
+There are some queue types which are intentionally not mirrored
 using the exclusionary pattern ``^(?!(amq\\.)|(.*_fanout_)|(reply_)).*``.
 
 After enabling this value on a running system, there are some additional steps
 needed to migrate from transient to durable queues.
+
+.. warning::
+
+   If you choose to enable quorum queues on an existing RabbitMQ cluster,
+   the following procedure is required to be carried out before an upgrade.
+
+   Notice, that the default will be changed from non-HA to Quorum queues in the Bobcat release.
 
 1. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
