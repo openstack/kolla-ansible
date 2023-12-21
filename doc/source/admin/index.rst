@@ -11,3 +11,4 @@ Admin Guides
    mariadb-backup-and-restore
    production-architecture-guide
    deployment-philosophy
+   password-rotation
