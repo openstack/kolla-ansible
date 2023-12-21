@@ -12,3 +12,4 @@ Admin Guides
    etcd
    production-architecture-guide
    deployment-philosophy
+   password-rotation
