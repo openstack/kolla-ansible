@@ -123,10 +123,14 @@ EOF
 
     sudo $CONTAINER_ENGINE run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry registry:2
 
-    python3 -m venv ~/kolla-venv
-    . ~/kolla-venv/bin/activate
 
-    pip install "${KOLLA_SRC_DIR}" ${CONTAINER_ENGINE} rich
+    python3 -m venv ~/kolla-venv
+    source ~/kolla-venv/bin/activate
+    if [[ "$CONTAINER_ENGINE" == "docker" ]]; then
+        pip install "${KOLLA_SRC_DIR}" "docker<7"
+    else
+        pip install "${KOLLA_SRC_DIR}" "podman"
+    fi
 
     sudo ~/kolla-venv/bin/kolla-build
 
