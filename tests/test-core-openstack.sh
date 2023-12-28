@@ -407,12 +407,22 @@ function test_instance_boot {
     fi
 }
 
+function test_keystone_admin_endpoint {
+    echo "TESTING: Keystone admin endpoint removal"
+    if [[ $(openstack endpoint list --service keystone --interface admin -f value | wc -l) -ne 0 ]]; then
+        echo "ERROR: Found Keystone admin endpoint"
+        exit 1
+    fi
+    echo "SUCCESS: Keystone admin endpoint removal"
+}
+
 function test_openstack_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
     test_smoke
     test_neutron_modules
     test_instance_boot
+    test_keystone_admin_endpoint
 
     # Check for x86_64 architecture to run q35 tests
     if [[ $(uname -m) == "x86_64" ]]; then
