@@ -121,6 +121,7 @@ def database_shards_info(context, hostnames):
                     raise FilterError("'mariadb_shard_backup_user_prefix' "
                                       "variable is unavailable")
                 db_user = f"{db_backup_prefix}{host_shard_id}"
+                db_password = host.get('mariadb_backup_database_password')
                 user_dict = {'password': db_password, 'user': db_user,
                              'shard_id': host_shard_id}
                 shards_info['users'].append(user_dict)
