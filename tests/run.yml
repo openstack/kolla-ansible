@@ -257,11 +257,12 @@
 
     - name: Install kolla-ansible and dependencies
       vars:
+        ansible_core_version_slurp: "==2.13.*"
         ansible_core_version_min: "==2.14.*"
         ansible_core_version_max: "==2.15.*"
         # Test latest ansible version on Ubuntu, minimum supported on others.
         ansible_core_version_constraint: >-
-          {{ ansible_core_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_core_version_max }}
+          {{ ansible_core_version_slurp if is_slurp else ansible_core_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_core_version_max }}
       pip:
         extra_args: "-c {{ upper_constraints_file }}"
         name:
@@ -270,19 +271,20 @@
           - "ara[server]<1.7"
         virtualenv: "{{ kolla_ansible_venv_path }}"
 
-    # TODO(mnasiadka): Remove in Caracal
-    - name: Install Ansible on upgrade only
+    # TODO(mnasiadka): Remove in D
+    - name: Install Ansible on SLURP upgrade only
       vars:
+        ansible_version_slurp: "==6.*"
         ansible_version_min: "==7.*"
         ansible_version_max: "==8.*"
         # Test latest ansible version on Ubuntu, minimum supported on others.
         ansible_version_constraint: >-
-          {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
+          {{ ansible_version_slurp if is_slurp else ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
       pip:
         extra_args: "-c {{ upper_constraints_file }}"
         name: "ansible{{ ansible_version_constraint }}"
         virtualenv: "{{ kolla_ansible_venv_path }}"
-      when: is_upgrade
+      when: is_slurp
 
     - name: Install Ansible collections
       shell: |
@@ -684,6 +686,28 @@
               type: dir
             new_requirements:
               collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
+
+        - name: Upgrade ansible
+          vars:
+            ansible_core_version_min: "==2.14.*"
+            ansible_core_version_max: "==2.15.*"
+            # Test latest ansible version on Ubuntu, minimum supported on others.
+            ansible_core_version_constraint: >-
+              {{ ansible_core_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_core_version_max }}
+            ansible_version_min: "==7.*"
+            ansible_version_max: "==8.*"
+            # Test latest ansible version on Ubuntu, minimum supported on others.
+            ansible_version_constraint: >-
+              {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
+          pip:
+            extra_args: "-c {{ upper_constraints_file }}"
+            name:
+              - "{{ kolla_ansible_src_dir }}"
+              - "ansible-core{{ ansible_core_version_constraint }}"
+              - "ansible{{ ansible_version_constraint }}"
+              - "ara<1.0.0"
+            virtualenv: "{{ kolla_ansible_venv_path }}"
+          when: is_slurp
 
         - name: Upgrade kolla-ansible
           pip:
