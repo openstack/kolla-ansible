@@ -13,13 +13,15 @@
                 "/var/log/kolla/*/*_error.log"]
   pos_file /var/run/td-agent/kolla-openstack.pos
   tag kolla.*
-  format multiline
-  format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \d+ \S+ \S+ \[(req-\S+ \S+ \S+ \S+ \S+ \S+|-)\]/
-  format1 /^(?<Timestamp>\S+ \S+) (?<Pid>\d+) (?<log_level>\S+) (?<python_module>\S+) (\[(req-(?<request_id>\S+) (?<user_id>\S+) (?<tenant_id>\S+) (?<domain_id>\S+) (?<user_domain>\S+) (?<project_domain>\S+)|-)\])? (?<Payload>.*)?$/
-  time_key Timestamp
-  keep_time_key true
-  time_format %F %T.%L
   ignore_repeated_permission_error true
   enable_watch_timer false
+  <parse>
+    @type multiline
+    format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \d+ \S+ \S+ \[(req-\S+ \S+ \S+ \S+ \S+ \S+|-)\]/
+    format1 /^(?<Timestamp>\S+ \S+) (?<Pid>\d+) (?<log_level>\S+) (?<python_module>\S+) (\[(req-(?<request_id>\S+) (?<user_id>\S+) (?<tenant_id>\S+) (?<domain_id>\S+) (?<user_domain>\S+) (?<project_domain>\S+)|-)\])? (?<Payload>.*)?$/
+    time_key Timestamp
+    keep_time_key true
+    time_format %F %T.%L
+  </parse>
 </source>
 {%- endif %}

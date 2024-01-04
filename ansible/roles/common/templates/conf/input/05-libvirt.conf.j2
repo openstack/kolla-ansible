@@ -3,8 +3,11 @@
   path /var/log/kolla/libvirt/libvirtd.log
   pos_file /var/run/td-agent/libvirt.pos
   tag infra.libvirt
-  format /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}\+\d{4}): (?<Pid>\d+): (?<log_level>\S+) : (?<Payload>.*)?$/
-  time_key Timestamp
-  time_format %F %T.%L%z
   enable_watch_timer false
+  <parse>
+    @type regexp
+    expression /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}\+\d{4}): (?<Pid>\d+): (?<log_level>\S+) : (?<Payload>.*)?$/
+    time_key Timestamp
+    time_format %F %T.%L%z
+  </parse>
 </source>
