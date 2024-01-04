@@ -32,6 +32,7 @@ ExecStart=/usr/bin/docker start -a ${name}
 ExecStop=/usr/bin/docker stop ${name} -t ${graceful_timeout}
 Restart=${restart_policy}
 RestartSec=${restart_duration}
+SuccessExitStatus=143
 
 [Install]
 WantedBy=multi-user.target
