@@ -142,27 +142,7 @@
     - groups['ironic-inspector'] | length > 0
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-    - not enable_ironic_pxe_uefi | bool
     - not ironic_dnsmasq_serve_ipxe | bool
-  notify:
-    - Restart ironic-tftp container
-
-- name: Copying ironic_pxe_uefi.cfg default
-  vars:
-    service: "{{ ironic_services['ironic-tftp'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-tftp/default"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_custom_config }}/ironic/ironic_pxe_uefi.default"
-    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ironic_pxe_uefi.default"
-    - "ironic_pxe_uefi.default.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-    - enable_ironic_pxe_uefi | bool
   notify:
     - Restart ironic-tftp container
 
@@ -182,7 +162,6 @@
     - groups['ironic-inspector'] | length > 0
     - inventory_hostname in groups[service.group]
     - service.enabled | bool
-    - not enable_ironic_pxe_uefi | bool
     - not ironic_dnsmasq_serve_ipxe | bool
   notify:
     - Restart ironic-tftp container
