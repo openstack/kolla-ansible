@@ -94,6 +94,7 @@ for string in "${fluentchecks[@]}"; do
     fluentd_file=/tmp/logs/kolla/fluentd-errors.log
     if check_fluentd_log_file_for_content $fluentd_log_file "$string" >/dev/null; then
         any_critical=1
+        echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_file"
         echo "$string" >> $fluentd_file
         check_fluentd_log_file_for_content $fluentd_log_file "$string" >> $fluentd_file
         echo >> $fluentd_file
