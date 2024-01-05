@@ -228,6 +228,40 @@ function create_instance {
     done
 }
 
+function resize_instance {
+    local name=$1
+
+    # TODO(priteau): Remove once previous_release includes m2.tiny in
+    # init-runonce
+    if ! openstack flavor list -f value | grep m2.tiny; then
+        openstack flavor create --id 6 --ram 512 --disk 1 --vcpus 2 m2.tiny
+    fi
+
+    openstack server resize --flavor m2.tiny --wait ${name}
+    # If the status is not VERIFY_RESIZE, print info and exit 1
+    if [[ $(openstack server show ${name} -f value -c status) != "VERIFY_RESIZE" ]]; then
+        echo "FAILED: Instance is not resized"
+        openstack --debug server show ${name}
+        return 1
+    fi
+
+    openstack server resize confirm ${name}
+
+    # Confirming the resize operation is not instantaneous. Wait for change to
+    # be reflected in server status.
+    attempt=1
+    while [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; do
+        echo "Instance is not active yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 5 ]]; then
+            echo "FAILED: Instance failed to become active after resize confirm"
+            openstack --debug server show ${name}
+            return 1
+        fi
+        sleep 1
+    done
+}
+
 function delete_instance {
     local name=$1
     openstack server delete --wait ${name}
@@ -396,6 +430,10 @@ function test_instance_boot {
         delete_fip ${fip_addr}
         echo "SUCCESS: Floating ip deallocation"
     fi
+
+    echo "TESTING: Server resize"
+    resize_instance kolla_boot_test
+    echo "SUCCESS: Server resize"
 
     echo "TESTING: Server deletion"
     delete_instance kolla_boot_test
