@@ -276,3 +276,13 @@ network equipment. This can be done by configuring custom fluentd inputs.
 Configuration of custom fluentd inputs is possible by placing input
 configuration files in ``/etc/kolla/config/fluentd/input/*.conf`` on the
 control host.
+
+Systemd Logs
+------------
+
+By default, when enabling central logging, we also enable reading ``systemd``
+logs from the ``/var/log/journal`` file.
+
+To disable this behavior when central logging is enabled, set the value of
+the variable ``enable_fluentd_systemd`` to ``false`` in the configuration
+file ``/etc/kolla/globals.yml``.
