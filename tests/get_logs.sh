@@ -25,6 +25,8 @@ copy_logs() {
     # copy docker configs if used
     if [ "$CONTAINER_ENGINE" = "docker" ]; then
         cp -rL /etc/docker/ ${LOG_DIR}/system_configs/
+    elif [ "$CONTAINER_ENGINE" = "podman" ]; then
+        cp -rL /etc/containers/ ${LOG_DIR}/system_configs/
     fi
     # Remove /var/log/kolla link to not double the data uploaded
     unlink /var/log/kolla

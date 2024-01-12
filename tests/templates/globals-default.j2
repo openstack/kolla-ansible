@@ -13,24 +13,31 @@ kolla_base_distro: "{{ base_distro }}"
 network_interface: "{{ api_interface_name }}"
 network_address_family: "{{ address_family }}"
 kolla_container_engine: "{{ container_engine }}"
+docker_restart_policy: "no"
+
 {% if container_engine == 'podman' %}
-podman_registry: "primary:4000"
-podman_registry_insecure: "yes"
+podman_debug: true
+podman_registry_mirrors:
+  - {{ infra_dockerhub_mirror }}
 podman_sdk_pip_packages:
   - "podman>=4.7.0"
   - rich
-{% endif %}
-docker_restart_policy: "no"
-docker_custom_config:
-  debug: true
-  registry-mirrors:
-    - {{ infra_dockerhub_mirror }}
 {% if need_build_image and is_previous_release %}
-  insecure-registries:
-    - primary:4000
+podman_registry: "primary:4000"
+podman_registry_insecure: true
+{% endif %}
+{% else %}
+docker_debug: true
+docker_registry_mirrors:
+  - {{ infra_dockerhub_mirror }}
+{% if need_build_image and is_previous_release %}
+docker_registry: "primary:4000"
+docker_registry_insecure: true
 {% endif %}
 {% if ansible_facts.distribution == "openEuler" %}
+docker_custom_config:
   exec-opts: ["native.umask=normal"]
+{% endif %}
 {% endif %}
 
 {% if kolla_python_version is defined and not is_previous_release %}
