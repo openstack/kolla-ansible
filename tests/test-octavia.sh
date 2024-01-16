@@ -84,6 +84,75 @@ function test_octavia {
     openstack server delete --wait lb_member
 }
 
+function test_internal_dns_integration {
+
+    # As per test globals - neutron integration is turned on
+    if openstack extension list --network -f value -c Alias | grep -q dns-integration; then
+        DNS_NAME="my-port"
+        PORT_NAME="${DNS_NAME}"
+        DNS_DOMAIN=$(grep 'neutron_dns_domain:' /etc/kolla/globals.yml \
+                            | awk -F ':' '{print $2}' \
+                            | sed -e 's/"//g' -e "s/'//g" -e "s/\ *//g")
+
+        openstack network create dns-test-network
+        openstack subnet create --network dns-test-network --subnet-range 192.168.88.0/24 dns-test-subnet
+        openstack port create --network dns-test-network --dns-name ${DNS_NAME} ${PORT_NAME}
+
+        DNS_ASSIGNMENT=$(openstack port show ${DNS_NAME} -f json -c dns_assignment)
+        FQDN=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["fqdn"]);')
+        HOSTNAME=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["hostname"]);')
+
+        if [ "${DNS_NAME}.${DNS_DOMAIN}" == "${FQDN}" ]; then
+            echo "[i] Test neutron internal DNS integration FQDN check port - PASS"
+        else
+            echo "[e] Test neutron internal DNS integration FQDN check port - FAIL"
+            exit 1
+        fi
+
+        if [ "${DNS_NAME}" == "${HOSTNAME}" ]; then
+            echo "[i] Test neutron internal DNS integration HOSTNAME check port - PASS"
+        else
+            echo "[e] Test neutron internal DNS integration HOSTNAME check port - FAIL"
+            exit 1
+        fi
+
+        openstack port delete ${PORT_NAME}
+
+        SERVER_NAME="my_vm"
+        SERVER_NAME_SANITIZED=$(echo ${SERVER_NAME} | sed -e 's/_/-/g')
+
+        openstack server create --image cirros --flavor m1.tiny --network dns-test-network ${SERVER_NAME}
+
+        SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
+        PORT_ID=$(openstack port list --device-id ${SERVER_ID} -f value -c ID)
+
+        DNS_ASSIGNMENT=$(openstack port show ${PORT_ID} -f json -c dns_assignment)
+        FQDN=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["fqdn"]);')
+        HOSTNAME=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["hostname"]);')
+
+        if [ "${SERVER_NAME_SANITIZED}.${DNS_DOMAIN}" == "${FQDN}" ]; then
+            echo "[i] Test neutron internal DNS integration FQDN check instance create - PASS"
+        else
+            echo "[e] Test neutron internal DNS integration FQDN check instance create - FAIL"
+            exit 1
+        fi
+
+        if [ "${SERVER_NAME_SANITIZED}" == "${HOSTNAME}" ]; then
+            echo "[i] Test neutron internal DNS integration HOSTNAME check instance create - PASS"
+        else
+            echo "[e] Test neutron internal DNS integration HOSTNAME check instance create - FAIL"
+            exit 1
+        fi
+
+        openstack server delete --wait ${SERVER_NAME}
+        openstack subnet delete dns-test-subnet
+        openstack network delete dns-test-network
+
+    else
+        echo "[i] DNS Integration is not enabled."
+    fi
+}
+
 function test_octavia_logged {
     # Check if any certs expire within a week.
     check_certificate_expiry
@@ -91,6 +160,7 @@ function test_octavia_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
     test_octavia
+    test_internal_dns_integration
 }
 
 function test_octavia_setup {
@@ -106,4 +176,3 @@ function test_octavia_setup {
 }
 
 test_octavia_setup
-

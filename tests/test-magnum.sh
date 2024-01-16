@@ -20,46 +20,127 @@ function test_trove {
     openstack database cluster list
 }
 
-function test_designate {
-    # Smoke test.
-    openstack zone list --all
+function check_if_resolvable {
+    local dns_domain="${1}"
+    local dns_record="${2}"
+    local record_type="${3}"
 
-    # Create a default zone for fixed and floating IPs, then reconfigure nova
-    # and neutron to use it.
-    openstack zone create --email admin@example.org example.org.
-    ZONE_ID=$(openstack zone show example.org. -f value -c id)
-
-    mkdir -p /etc/kolla/config/designate/
-    cat << EOF > /etc/kolla/config/designate/designate-sink.conf
-[handler:nova_fixed]
-zone_id = ${ZONE_ID}
-[handler:neutron_floatingip]
-zone_id = ${ZONE_ID}
-EOF
-
-    RAW_INVENTORY=/etc/kolla/inventory
-    deactivate
-    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
-    kolla-ansible -i ${RAW_INVENTORY} --tags designate -vvv reconfigure &> /tmp/logs/ansible/reconfigure-designate
-    deactivate
-    source ~/openstackclient-venv/bin/activate
-
-    # Create an instance, and check that its name resolves.
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net dns-test --wait
     attempt=1
     while true; do
-        IP=$(dig +short @192.0.2.1 dns-test.example.org. A)
+        IP=$(dig +short @192.0.2.1 ${dns_record} ${record_type})
         if [[ -n $IP ]]; then
             break
         fi
         attempt=$((attempt+1))
         if [[ $attempt -eq 10 ]]; then
-            echo "Failed to resolve dns-test.example.org."
-            openstack recordset list ${ZONE_ID}
+            echo "[e] Failed to resolve ${dns_record}"
+            openstack recordset list ${dns_domain}
             exit 1
         fi
         sleep 10
     done
+}
+
+function test_designate {
+    # Smoke test.
+    openstack zone list --all
+
+    SERVER_NAME="my_vm"
+    SERVER_NAME_SANITIZED=$(echo ${SERVER_NAME} | sed -e 's/_/-/g')
+    DNS_DOMAIN="floating.example.org."
+
+    openstack zone create --email admin@example.org ${DNS_DOMAIN}
+
+    openstack network create --dns-domain ${DNS_DOMAIN} tenant-dns-test
+    openstack subnet create --subnet-range 192.168.99.0/24 --network tenant-dns-test tenant-dns-test
+
+    openstack router create router-dns-test
+    openstack router set --external-gateway public1 router-dns-test
+    openstack router add subnet router-dns-test tenant-dns-test
+
+    openstack server create --image cirros --flavor m1.tiny --network tenant-dns-test  ${SERVER_NAME}
+
+    SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
+    PORT_ID=$(openstack port list --device-id ${SERVER_ID} -f value -c ID)
+
+    openstack floating ip create public1 --port ${PORT_ID}
+
+    check_if_resolvable "${DNS_DOMAIN}" "${SERVER_NAME_SANITIZED}.${DNS_DOMAIN}" "A"
+
+    FLOATING_IP_ID=$(openstack floating ip list --port ${PORT_ID} -f value -c ID)
+
+    openstack server remove floating ip ${SERVER_ID} ${FLOATING_IP_ID}
+    openstack floating ip delete ${FLOATING_IP_ID}
+    openstack server delete --wait ${SERVER_ID}
+
+    DNS_DOMAIN="floating-2.example.org."
+    DNS_NAME="my-floatingip"
+    ZONE_ID=$(openstack zone create --email admin@example.org ${DNS_DOMAIN} -f value -c id)
+    FLOATING_IP_ID=$(openstack floating ip create --dns-domain ${DNS_DOMAIN} --dns-name ${DNS_NAME} public1 -f value -c id)
+
+    check_if_resolvable "${DNS_DOMAIN}" "${DNS_NAME}.${DNS_DOMAIN}" "A"
+
+    openstack floating ip delete ${FLOATING_IP_ID}
+    openstack zone delete ${ZONE_ID}
+
+    DNS_DOMAIN="fixed.example.org."
+    DNS_NAME="port"
+    ZONE_ID=$(openstack zone create --email admin@example.org ${DNS_DOMAIN} -f value -c id)
+
+    SUBNET_ID=$(openstack subnet create --network public1 public1-subnet-ipv6 --ip-version 6 --subnet-range 2001:db8:42:42::/64 --dns-publish-fixed-ip -f value -c id)
+    PORT_ID=$(openstack port create ${DNS_NAME} --dns-domain ${DNS_DOMAIN} --dns-name ${DNS_NAME} --network public1 -f value -c id)
+
+    check_if_resolvable "${DNS_DOMAIN}" "${DNS_NAME}.${DNS_DOMAIN}" "AAAA"
+
+    openstack port delete ${PORT_ID}
+
+    DNS_DOMAIN="fixed.sink.example.org."
+    openstack zone create --email admin@example.org ${DNS_DOMAIN}
+    ZONE_ID_FIXED=$(openstack zone show ${DNS_DOMAIN} -f value -c id)
+
+    DNS_DOMAIN="floating.sink.example.org."
+    openstack zone create --email admin@example.org ${DNS_DOMAIN}
+    ZONE_ID_FLOATING=$(openstack zone show ${DNS_DOMAIN} -f value -c id)
+
+    mkdir -p /etc/kolla/config/designate/
+    cat << EOF > /etc/kolla/config/designate/designate-sink.conf
+[handler:nova_fixed]
+zone_id = ${ZONE_ID_FIXED}
+[handler:neutron_floatingip]
+zone_id = ${ZONE_ID_FLOATING}
+EOF
+
+    RAW_INVENTORY=/etc/kolla/inventory
+    deactivate
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+    echo 'designate_enable_notifications_sink: "yes"' >> /etc/kolla/globals.yml
+    kolla-ansible -i ${RAW_INVENTORY} --tags designate,nova,nova-cell,neutron -vvv reconfigure &> /tmp/logs/ansible/reconfigure-designate
+    deactivate
+    source ~/openstackclient-venv/bin/activate
+
+    DNS_DOMAIN="fixed.sink.example.org."
+    SERVER_NAME="sink-server"
+    openstack server create --image cirros --flavor m1.tiny --network tenant-dns-test ${SERVER_NAME}
+
+    check_if_resolvable "${DNS_DOMAIN}" "${SERVER_NAME}.${DNS_DOMAIN}" "A"
+
+    SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
+
+    FLOATING_IP_ID=$(openstack floating ip create public1 -f value -c id)
+
+    DNS_DOMAIN="floating.sink.example.org."
+    openstack server add floating ip ${SERVER_ID} ${FLOATING_IP_ID}
+    FLOATING_IP_IP=$(openstack floating ip show ${FLOATING_IP_ID} -f value -c floating_ip_address)
+    DNS_NAME_ASSIGNMENT=$(echo "${FLOATING_IP_IP}" | sed -e 's/\./-/g')
+
+    check_if_resolvable "${DNS_DOMAIN}" "${DNS_NAME_ASSIGNMENT}.${DNS_DOMAIN}" "A"
+
+    openstack server remove floating ip ${SERVER_ID} ${FLOATING_IP_ID}
+    openstack server delete --wait ${SERVER_ID}
+    openstack zone delete ${ZONE_ID_FIXED}
+    openstack zone delete ${ZONE_ID_FLOATING}
+
+    openstack zone delete floating.example.org.
 }
 
 function test_magnum_logged {
