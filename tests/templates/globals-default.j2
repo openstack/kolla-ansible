@@ -30,9 +30,15 @@ podman_registry_insecure: true
 docker_debug: true
 docker_registry_mirrors:
   - {{ infra_dockerhub_mirror }}
+
+# NOTE(bbezak): In Kolla CI K-A upgrade job needs following override
+# as docker_registry var is being used both for docker daemon config
+# - for kolla images build, and kolla-ansible container images sources.
+# docker_custom_config gets precedence in docker daemon configuration.
 {% if need_build_image and is_previous_release %}
-docker_registry: "primary:4000"
-docker_registry_insecure: true
+docker_custom_config:
+  insecure-registries:
+    - primary:4000
 {% endif %}
 {% if ansible_facts.distribution == "openEuler" %}
 docker_custom_config:
