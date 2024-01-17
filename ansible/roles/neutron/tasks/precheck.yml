@@ -54,4 +54,17 @@
   when:
     - enable_ironic_neutron_agent | bool
 
+- name: Checking if neutron's dns domain has proper value
+  assert:
+    that:
+      - neutron_dns_domain != None
+      - neutron_dns_domain | length != 0
+      - neutron_dns_domain[-1] == '.'
+      - neutron_dns_domain != "openstacklocal"
+    fail_msg: "The neutron_dns_domain value has to be non-empty and must end with a period '.'"
+  changed_when: false
+  run_once: True
+  when:
+    - neutron_dns_integration | bool
+
 - import_tasks: neutron_plugin_agent_check.yml
