@@ -642,6 +642,8 @@ skyline_apiserver_public_port: "{{ haproxy_single_external_frontend_public_port 
 skyline_console_port: "9999"
 skyline_console_listen_port: "{{ skyline_console_port }}"
 skyline_console_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_console_port }}"
+skyline_console_public_endpoint: "{{ skyline_console_external_fqdn | kolla_url(public_protocol, skyline_console_public_port) }}"
+skyline_enable_sso: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 
 solum_application_deployment_internal_fqdn: "{{ kolla_internal_fqdn }}"
 solum_application_deployment_external_fqdn: "{{ kolla_external_fqdn }}"

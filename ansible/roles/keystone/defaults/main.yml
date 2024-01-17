@@ -225,7 +225,9 @@ keystone_federation_oidc_additional_options: {}
 
 # These variables are used to define multiple trusted Horizon dashboards.
 # keystone_trusted_dashboards: ['<https://dashboardServerOne/auth/websso/>', '<https://dashboardServerTwo/auth/websso/>', '<https://dashboardServerN/auth/websso/>']
-keystone_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
+horizon_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
+skyline_trusted_dashboards: "{{ ['%s/api/openstack/skyline/api/v1/websso' % (skyline_console_public_endpoint)] if enable_skyline | bool else [] }}"
+keystone_trusted_dashboards: "{{ horizon_trusted_dashboards + skyline_trusted_dashboards }}"
 keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 keystone_should_remove_attribute_mappings: False
 keystone_should_remove_identity_providers: False
