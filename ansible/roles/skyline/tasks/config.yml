@@ -17,8 +17,10 @@
     - kolla_copy_ca_into_containers | bool or skyline_enable_tls_backend | bool
 
 - name: Copying over skyline.yaml files for services
-  template:
-    src: "skyline.yaml.j2"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/skyline.yaml.j2"
+      - "{{ node_custom_config }}/skyline/skyline.yaml"
     dest: "{{ node_config_directory }}/{{ item.key }}/skyline.yaml"
     mode: "0660"
   become: true
@@ -30,30 +32,38 @@
     - "Restart {{ item.key }} container"
 
 - name: Copying over gunicorn.py files for services
+  vars:
+    skyline_apiserver: "{{ skyline_services['skyline-apiserver'] }}"
   template:
-    src: "gunicorn.py.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/gunicorn.py"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/skyline-apiserver/gunicorn.py"
     mode: "0660"
   become: true
   when:
     - inventory_hostname in groups['skyline-apiserver']
-    - item.value.enabled | bool
-  with_dict: "{{ skyline_services }}"
+    - skyline_apiserver.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/skyline/gunicorn.py"
+    - "gunicorn.py.j2"
   notify:
-    - "Restart {{ item.key }} container"
+    - "Restart skyline-apiserver container"
 
 - name: Copying over nginx.conf files for services
+  vars:
+    skyline_console: "{{ skyline_services['skyline-console'] }}"
   template:
-    src: "nginx.conf.j2"
-    dest: "{{ node_config_directory }}/{{ item.key }}/nginx.conf"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/skyline-console/nginx.conf"
     mode: "0660"
   become: true
   when:
     - inventory_hostname in groups['skyline-console']
-    - item.value.enabled | bool
-  with_dict: "{{ skyline_services }}"
+    - skyline_console.enabled | bool
+  with_first_found:
+    - "{{ node_custom_config }}/skyline/nginx.conf"
+    - "nginx.conf.j2"
   notify:
-    - "Restart {{ item.key }} container"
+    - "Restart skyline-console container"
 
 - name: Copying over config.json files for services
   template:
