@@ -36,7 +36,7 @@
         mode: pull
       ignore_errors: yes
 
-    - name: dump all iptables rules
+    - name: Dump all iptables rules
       shell: "iptables-save > /tmp/logs/iptables"
       args:
         creates: /tmp/logs/iptables
@@ -59,29 +59,29 @@
     ara_report_local_dir: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}/ara-report"
     kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
   tasks:
-    - name: check for existence of ara sqlite
+    - name: Check for existence of ara sqlite
       stat:
         path: "{{ ansible_env.HOME }}/.ara/server/ansible.sqlite"
       register: ara_stat_result
 
     - block:
-        - name: ensure ara-report folder existence
+        - name: Ensure ara-report folder existence
           file:
             path: "{{ ara_report_local_dir }}"
             state: directory
           delegate_to: localhost
 
-        - name: download ara sqlite
+        - name: Download ara sqlite
           synchronize:
             src: "{{ ansible_env.HOME }}/.ara/server/ansible.sqlite"
             dest: "{{ ara_report_local_dir }}/"
             mode: pull
 
-        - name: get ara version
+        - name: Get ara version
           command: "ara --version"
           register: ara_version
 
-        - name: template ara readme
+        - name: Template ara readme
           template:
             src: "{{ kolla_ansible_local_src_dir }}/tests/ara-readme.md.j2"
             dest: "{{ ara_report_local_dir }}/README.md"

@@ -3,7 +3,7 @@
   any_errors_fatal: true
   tasks:
     # NOTE(yoctozepto): setting vars as facts for all to have them around in all the plays
-    - name: set facts for commonly used variables
+    - name: Set facts for commonly used variables
       set_fact:
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
@@ -14,27 +14,27 @@
   any_errors_fatal: true
   environment: "{{ pip_user_path_env }}"
   tasks:
-    - name: ensure /etc/kolla exists
+    - name: Ensure /etc/kolla exists
       file:
         path: "/etc/kolla"
         state: "directory"
         mode: 0777
       become: true
 
-    - name: ensure python3-pip exists
+    - name: Ensure python3-pip exists
       package:
         name: python3-pip
       become: true
 
     # NOTE(mgoddard): We need a recent pip to install the latest cryptography
     # library. See https://github.com/pyca/cryptography/issues/5753
-    - name: install pip 19.1.1+
+    - name: Install pip 19.1.1+
       pip:
         name: "pip>=19.1.1"
         executable: "pip3"
         extra_args: "--user"
 
-    - name: install kolla-ansible and dependencies
+    - name: Install kolla-ansible and dependencies
       pip:
         executable: "pip3"
         extra_args: "-c {{ upper_constraints_file }} --user"
@@ -43,14 +43,14 @@
           - "ansible-core{{ ansible_core_version_constraint }}"
           - "ansible{{ ansible_version_constraint }}"
 
-    - name: copy passwords.yml file
+    - name: Copy passwords.yml file
       copy:
         src: "{{ kolla_ansible_src_dir }}/etc/kolla/passwords.yml"
         dest: /etc/kolla/passwords.yml
         mode: "0640"
         remote_src: true
 
-    - name: generate passwords
+    - name: Generate passwords
       command: kolla-genpwd
 
     # At this point we have generated all necessary configuration, and are

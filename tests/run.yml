@@ -7,7 +7,7 @@
       setup:
 
     # NOTE(yoctozepto): setting vars as facts for all to have them around in all the plays
-    - name: set facts for commonly used variables
+    - name: Set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
         openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-opensearch', 'venus'] }}"
@@ -22,7 +22,7 @@
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
         openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'swift', 'ovn', 'lets-encrypt'] }}"
-        dashboard_enabled: "{{ openstack_core_enabled }}"
+        dashboard_enabled: "false"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
         kolla_ansible_venv_path: "{{ ansible_env.HOME }}/kolla-ansible-venv"
@@ -79,7 +79,7 @@
         # and since we don't need isolated networks here, use host networking
         network_mode: host
   tasks:
-    - name: detect whether need build images
+    - name: Detect whether need build images
       set_fact:
         need_build_image: true
       when:
@@ -97,7 +97,7 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
-        - name: checkout the previous ansible-collection-kolla branch
+        - name: Checkout the previous ansible-collection-kolla branch
           shell:
             cmd: |
               git checkout stable/{{ previous_release | lower }}
@@ -105,7 +105,7 @@
               git log --pretty=oneline  -1
             chdir: "{{ ansible_collection_kolla_src_dir }}"
 
-        - name: checkout the previous kolla-ansible branch
+        - name: Checkout the previous kolla-ansible branch
           shell:
             cmd: |
               git checkout stable/{{ previous_release | lower }}
@@ -113,7 +113,7 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
-        - name: checkout the previous requirements branch
+        - name: Checkout the previous requirements branch
           shell:
             cmd: |
               git checkout stable/{{ previous_release | lower }}
@@ -122,7 +122,7 @@
             chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
       when: is_upgrade
 
-    - name: ensure /etc/kolla exists
+    - name: Ensure /etc/kolla exists
       file:
         path: "/etc/kolla"
         state: "directory"
@@ -157,7 +157,7 @@
         - bifrost
         - swift
 
-    - name: generate configuration files
+    - name: Generate configuration files
       template:
         src: "{{ kolla_ansible_local_src_dir }}/{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -197,13 +197,13 @@
       when: item.when | default(true)
 
     - block:
-        - name: ensure ironic config directory exists
+        - name: Ensure ironic config directory exists
           file:
             path: /etc/kolla/config/ironic
             state: directory
             mode: 0777
 
-        - name: download Ironic Python Agent (IPA) images
+        - name: Download Ironic Python Agent (IPA) images
           get_url:
             url: "https://tarballs.opendev.org/openstack/ironic-python-agent/tinyipa/files/{{ item.src }}"
             dest: "/etc/kolla/config/ironic/{{ item.dest }}"
@@ -215,12 +215,12 @@
       when: scenario == "ironic"
 
     - block:
-        - name: slurp requirements.yml
+        - name: Slurp requirements.yml
           slurp:
             src: "{{ kolla_ansible_src_dir }}/requirements.yml"
           register: requirements_yml
 
-        - name: write requirements.yml
+        - name: Write requirements.yml
           copy:
             content: "{{ new_requirements | to_nice_yaml }}"
             dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
@@ -232,7 +232,7 @@
             new_requirements:
               collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
 
-    - name: ensure /etc/ansible exists
+    - name: Ensure /etc/ansible exists
       file:
         path: /etc/ansible
         state: directory
@@ -255,7 +255,7 @@
         state: latest
         virtualenv: "{{ kolla_ansible_venv_path }}"
 
-    - name: install kolla-ansible and dependencies
+    - name: Install kolla-ansible and dependencies
       vars:
         ansible_core_version_min: "==2.14.*"
         ansible_core_version_max: "==2.15.*"
@@ -271,7 +271,7 @@
         virtualenv: "{{ kolla_ansible_venv_path }}"
 
     # TODO(mnasiadka): Remove in Caracal
-    - name: install Ansible on upgrade only
+    - name: Install Ansible on upgrade only
       vars:
         ansible_version_min: "==7.*"
         ansible_version_max: "==8.*"
@@ -284,32 +284,32 @@
         virtualenv: "{{ kolla_ansible_venv_path }}"
       when: is_upgrade
 
-    - name: install Ansible collections
+    - name: Install Ansible collections
       shell: |
         source {{ kolla_ansible_venv_path }}/bin/activate
         kolla-ansible install-deps
       args:
         executable: /bin/bash
 
-    - name: get ARA callback plugin path
+    - name: Get ARA callback plugin path
       command: "{{ kolla_ansible_venv_path }}/bin/python3 -m ara.setup.callback_plugins"
       changed_when: false
       register: ara_callback_plugins
 
-    - name: template ansible.cfg
+    - name: Template ansible.cfg
       template:
         src: "{{ kolla_ansible_local_src_dir }}/tests/templates/ansible.cfg.j2"
         dest: /etc/ansible/ansible.cfg
       become: true
 
-    - name: copy passwords.yml file
+    - name: Copy passwords.yml file
       copy:
         src: "{{ kolla_ansible_src_dir }}/etc/kolla/passwords.yml"
         dest: /etc/kolla/passwords.yml
         mode: "0640"
         remote_src: true
 
-    - name: generate passwords
+    - name: Generate passwords
       command: "{{ kolla_ansible_venv_path }}/bin/kolla-genpwd"
 
     - name: Record the running state of the environment as seen by the setup module
@@ -326,7 +326,7 @@
     # NOTE(yoctozepto): k-a octavia-certificates should run before k-a bootstrap-servers
     # because the latter hijacks /etc/kolla permissions (due to same directory on the
     # same host being used by both)
-    - name: create TLS certificates for octavia
+    - name: Create TLS certificates for octavia
       shell: |
         source {{ kolla_ansible_venv_path }}/bin/activate
         kolla-ansible octavia-certificates
@@ -390,14 +390,14 @@
             mode: 0755
           with_items: "{{ cephadm_kolla_ceph_services }}"
 
-        - name: copy ceph.conf to enabled services
+        - name: Copy ceph.conf to enabled services
           copy:
             remote_src: True
             src: "/etc/ceph/ceph.conf.fixed"
             dest: "/etc/kolla/config/{{ item.name }}/ceph.conf"
           with_items: "{{ cephadm_kolla_ceph_services }}"
 
-        - name: copy keyrings to enabled services
+        - name: Copy keyrings to enabled services
           copy:
             remote_src: True
             src: "/var/run/ceph/{{ ceph_fsid }}/{{ item.keyring }}"
@@ -623,7 +623,7 @@
     - block:
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
-        - name: checkout the current ansible-collection-kolla branch
+        - name: Checkout the current ansible-collection-kolla branch
           shell:
             cmd: |
               git checkout {{ zuul.branch }}
@@ -633,7 +633,7 @@
 
         # NOTE(frickler): We modified requirements.yml, need to revert the
         # changes in order for the branch checkout to succeed
-        - name: checkout the current kolla-ansible branch
+        - name: Checkout the current kolla-ansible branch
           shell:
             cmd: |
               git checkout requirements.yml
@@ -642,7 +642,7 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
-        - name: checkout the current requirements branch
+        - name: Checkout the current requirements branch
           shell:
             cmd: |
               git checkout {{ zuul.projects["opendev.org/openstack/requirements"].checkout }}
@@ -668,12 +668,12 @@
               dest: /etc/kolla/config/nova/nova-compute.conf
           when: item.when | default(true)
 
-        - name: slurp requirements.yml
+        - name: Slurp requirements.yml
           slurp:
             src: "{{ kolla_ansible_src_dir }}/requirements.yml"
           register: requirements_yml
 
-        - name: write requirements.yml
+        - name: Write requirements.yml
           copy:
             content: "{{ new_requirements | to_nice_yaml }}"
             dest: "{{ kolla_ansible_src_dir }}/requirements.yml"
@@ -685,14 +685,14 @@
             new_requirements:
               collections: "{{ (old_requirements.collections | rejectattr('name', 'search', 'ansible-collection-kolla') | list) + [new_requirement] }}"
 
-        - name: upgrade kolla-ansible
+        - name: Upgrade kolla-ansible
           pip:
             extra_args: "-c {{ upper_constraints_file }}"
             name:
               - "{{ kolla_ansible_src_dir }}"
             virtualenv: "{{ kolla_ansible_venv_path }}"
 
-        - name: install Ansible collections
+        - name: Install Ansible collections
           shell: |
             source {{ kolla_ansible_venv_path }}/bin/activate
             kolla-ansible install-deps
@@ -701,20 +701,20 @@
 
         # Update passwords.yml to include any new passwords added in this
         # release.
-        - name: move passwords.yml to passwords.yml.old
+        - name: Move passwords.yml to passwords.yml.old
           command: mv /etc/kolla/passwords.yml /etc/kolla/passwords.yml.old
 
-        - name: copy passwords.yml file
+        - name: Copy passwords.yml file
           copy:
             src: "{{ kolla_ansible_src_dir }}/etc/kolla/passwords.yml"
             dest: /etc/kolla/passwords.yml
             mode: "0640"
             remote_src: true
 
-        - name: generate new passwords
+        - name: Generate new passwords
           command: "{{ kolla_ansible_venv_path }}/bin/kolla-genpwd"
 
-        - name: merge old and new passwords
+        - name: Merge old and new passwords
           command: >-
             {{ kolla_ansible_venv_path }}/bin/kolla-mergepwd
             --old /etc/kolla/passwords.yml.old

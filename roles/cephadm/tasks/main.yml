@@ -33,7 +33,7 @@
 
 - name: Bootstrap cephadm
   vars:
-    mon_ip: "{{ hostvars[inventory_hostname]['ansible_'+api_interface_name].ipv4.address }}"
+    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name].ipv4.address }}"
   command:
     cmd: >
          cephadm
@@ -53,7 +53,7 @@
   vars:
     regexp: 'Cluster fsid: (.*)'
   set_fact:
-    ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp,'\\1') | first }}"
+    ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp, '\\1') | first }}"
 
 - name: Template out cluster spec
   template:
@@ -80,7 +80,7 @@
     ceph_conf_fixed: |
       [global]
       fsid = {{ ceph_fsid }}
-      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_'+api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
   copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"
