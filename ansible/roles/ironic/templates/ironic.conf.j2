@@ -48,8 +48,14 @@ amqp_durable_queues = true
 rabbit_quorum_queue = true
 {% endif %}
 
-{% if ironic_policy_file is defined %}
 [oslo_policy]
+{% if openstack_release == 'master' %}
+# TODO(bbezak): Remove enforce_* once secure RBAC is supported
+# https://bugs.launchpad.net/kolla-ansible/+bug/2051837
+enforce_scope=False
+enforce_new_defaults=False
+{% endif %}
+{% if ironic_policy_file is defined %}
 policy_file = {{ ironic_policy_file }}
 {% endif %}
 
