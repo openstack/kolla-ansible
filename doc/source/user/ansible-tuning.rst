@@ -160,3 +160,44 @@ A max fail percentage may be set for specific services using
 
    kolla_max_fail_percentage: 50
    nova_max_fail_percentage: 25
+
+Delegated fact gathering
+------------------------
+
+When Kolla Ansible is executed with a ``--limit`` argument, the scope of an
+operation is limited to the hosts in the limit. For example:
+
+.. code-block:: console
+
+   kolla-ansible deploy --limit control
+
+Due to the nature of configuring clustered software services, there are cases
+where we need to know information about other hosts. Most often this is related
+to their hostname or network addresses. To make this work, Kolla Ansible
+gathers facts for hosts outside of the limit using `delegated fact gathering
+<https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-facts>`__.
+
+By default, Kolla Ansible gathers facts for all hosts. Because delegated facts
+are gathered serially in batches by the active hosts, this can take a long time
+when there are not many hosts in the limit. If you know that facts are not
+required for all hosts, it is possible to reduce the set of hosts eligible for
+delegated fact gathering by setting ``kolla_ansible_delegate_facts_hosts`` to a
+list of hosts. This may be done permanently in ``globals.yml`` or temporarily
+for the duration of a command using the ``-e`` argument.
+
+The exact requirements will depend upon configuration and inventory, but here
+are some rules of thumb:
+
+* Facts are typically required for all controllers, regardless of which hosts
+  are in the limit. This is due to references to RabbitMQ and Memcache
+  connection strings etc.
+* Prometheus server requires facts for all other hosts to generate scrape
+  configs for node exporter, cAdvisor, etc. Specifically it uses the IP address
+  of the API interface. This may be avoided by hard-coding
+  ``prometheus_target_address`` in the inventory for each host.
+* Configuration of ``/etc/hosts`` during the ``bootstrap-servers`` command
+  requires facts for all other hosts. Specifically it uses the IP address of
+  the API interface, and the ``hostname`` and ``nodename`` facts.
+* Noting the above exceptions, compute nodes are fairly independent. Other
+  hosts do not need to know their facts, and they do not need to know other
+  hosts' facts.
