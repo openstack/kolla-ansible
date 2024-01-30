@@ -70,6 +70,9 @@ policy_file = {{ gnocchi_policy_file }}
 driver = redis
 redis_url = {{ redis_connection_string }}
 {% endif %}
+{% if gnocchi_backend_storage == 'swift' %}
+swift_cacert = {{ openstack_cacert }}
+{% endif %}
 
 [storage]
 {% if gnocchi_backend_storage == 'file' %}
@@ -84,6 +87,7 @@ ceph_conffile = /etc/ceph/ceph.conf
 {% elif gnocchi_backend_storage == 'swift' %}
 driver = swift
 swift_authurl = {{ keystone_internal_url }}/v3
+swift_cacert = {{ openstack_cacert }}
 swift_auth_version = 3
 swift_user = service:{{ swift_keystone_user }}
 swift_key = {{ swift_keystone_password }}
