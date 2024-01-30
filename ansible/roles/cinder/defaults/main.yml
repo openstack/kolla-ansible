@@ -267,11 +267,13 @@ cinder_backend_pure_roce_name: "Pure-FlashArray-roce"
 
 cinder_ceph_backends:
   - name: "{{ cinder_backend_ceph_name }}"
-    cluster: "ceph"
+    cluster: "{{ ceph_cluster }}"
+    user: "{{ ceph_cinder_user }}"
+    pool: "{{ ceph_cinder_pool_name }}"
     enabled: "{{ cinder_backend_ceph | bool }}"
 
 cinder_backup_backend_ceph_name: "rbd-1"
-cinder_backup_ceph_backend: "{{ cinder_ceph_backends | selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first }}"
+cinder_backup_ceph_backend: "{{ cinder_ceph_backends | selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first | combine({'pool': ceph_cinder_backup_pool_name, 'user': ceph_cinder_backup_user }) }}"
 
 skip_cinder_backend_check: False
 

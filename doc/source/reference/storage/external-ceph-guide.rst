@@ -37,6 +37,36 @@ Ceph integration is configured for different OpenStack services independently.
     Be sure to remove the leading tabs from your ``ceph.conf`` files when
     copying them in the following sections.
 
+When openstack services access Ceph via a Ceph client, the Ceph client will
+look for a local keyring. Ceph presets the keyring setting with four keyring
+names by default.
+
+* The four default keyring names are as follows:
+
+  * ``/etc/ceph/$cluster.$name.keyring``
+  * ``/etc/ceph/$cluster.keyring``
+  * ``/etc/ceph/keyring``
+  * ``/etc/ceph/keyring.bin``
+
+The ``$cluster`` metavariable found in the first two default keyring names
+above is your Ceph cluster name as defined by the name of the Ceph
+configuration file: for example, if the Ceph configuration file is named
+``ceph.conf``, then your Ceph cluster name is ceph and the second name above
+would be ``ceph.keyring``. The ``$name`` metavariable is the user type and
+user ID: for example, given the user ``client.admin``, the first name above
+would be ``ceph.client.admin.keyring``. This principle is applied in the
+services documentation below.
+
+.. note::
+
+    More information about user configuration and related keyrings can be found in the
+    official Ceph documentation at https://docs.ceph.com/en/latest/rados/operations/user-management/#keyring-management
+
+.. note::
+
+    Below examples uses default ``$cluster`` and ``$user`` which can be configured
+    via kolla-ansible by setting ``ceph_cluster``,``$user`` per project or on the
+    host level (nova) in inventory file.
 
 Glance
 ------
@@ -52,7 +82,6 @@ for Ceph includes the following steps:
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-  * ``ceph_glance_keyring`` (default: ``client.glance.keyring``)
   * ``ceph_glance_user`` (default: ``glance``)
   * ``ceph_glance_pool_name`` (default: ``images``)
 
@@ -70,7 +99,7 @@ for Ceph includes the following steps:
      auth_service_required = cephx
      auth_client_required = cephx
 
-* Copy Ceph keyring to ``/etc/kolla/config/glance/ceph.<ceph_glance_keyring>``
+* Copy Ceph keyring to ``/etc/kolla/config/glance/ceph.client.glance.keyring``
 
 To configure multiple Ceph backends with Glance, which is useful
 for multistore:
@@ -78,28 +107,28 @@ for multistore:
 * Copy the Ceph configuration files into ``/etc/kolla/config/glance/`` using
   different names for each
 
-  ``/etc/kolla/config/glance/ceph.conf``
+  ``/etc/kolla/config/glance/ceph1.conf``
 
-  .. path /etc/kolla/config/glance/ceph.conf
+  .. path /etc/kolla/config/glance/ceph1.conf
   .. code-block:: ini
 
      [global]
      fsid = 1d89fec3-325a-4963-a950-c4afedd37fe3
-     keyring = /etc/ceph/ceph.client.glance.keyring
+     keyring = /etc/ceph/ceph1.client.glance.keyring
      mon_initial_members = ceph-0
      mon_host = 192.168.0.56
      auth_cluster_required = cephx
      auth_service_required = cephx
      auth_client_required = cephx
 
-  ``/etc/kolla/config/glance/rbd1.conf``
+  ``/etc/kolla/config/glance/ceph2.conf``
 
-  .. path /etc/kolla/config/glance/rbd1.conf
+  .. path /etc/kolla/config/glance/ceph2.conf
   .. code-block:: ini
 
      [global]
      fsid = dbfea068-89ca-4d04-bba0-1b8a56c3abc8
-     keyring = /etc/ceph/rbd1.client.glance.keyring
+     keyring = /etc/ceph/ceph2.client.glance.keyring
      mon_initial_members = ceph-0
      mon_host = 192.10.0.100
      auth_cluster_required = cephx
@@ -111,17 +140,21 @@ for multistore:
   .. code-block:: yaml
 
      glance_ceph_backends:
-       - name: "rbd"
+       - name: "ceph1-rbd"
          type: "rbd"
-         cluster: "ceph"
+         cluster: "ceph1"
+         user: "glance"
+         pool: "images"
          enabled: "{{ glance_backend_ceph | bool }}"
-       - name: "another-rbd"
+       - name: "ceph2-rbd"
          type: "rbd"
-         cluster: "rbd1"
+         cluster: "ceph2"
+         user: "glance"
+         pool: "images"
          enabled: "{{ glance_backend_ceph | bool }}"
 
-* Copy Ceph keyring to ``/etc/kolla/config/glance/ceph.<ceph_glance_keyring>``
-  and analogously to ``/etc/kolla/config/glance/rbd1.<ceph_glance_keyring>``
+* Copy Ceph keyring to ``/etc/kolla/config/glance/ceph1.client.glance.keyring``
+  and analogously to ``/etc/kolla/config/glance/ceph2.client.glance.keyring``
 
 * For copy-on-write set following in ``/etc/kolla/config/glance.conf``:
 
@@ -161,11 +194,8 @@ Cinder for Ceph includes following steps:
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-  * ``ceph_cinder_keyring`` (default: ``client.cinder.keyring``)
   * ``ceph_cinder_user`` (default: ``cinder``)
   * ``ceph_cinder_pool_name`` (default: ``volumes``)
-  * ``ceph_cinder_backup_keyring``
-    (default: ``client.cinder-backup.keyring``)
   * ``ceph_cinder_backup_user`` (default: ``cinder-backup``)
   * ``ceph_cinder_backup_pool_name`` (default: ``backups``)
 
@@ -179,15 +209,15 @@ Cinder for Ceph includes following steps:
 
 * Copy Ceph keyring files to:
 
-  * ``/etc/kolla/config/cinder/cinder-volume/ceph.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/ceph.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/ceph.
-    <ceph_cinder_backup_keyring>``
+  * ``/etc/kolla/config/cinder/cinder-volume/ceph.client.cinder.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/
+    ceph.client.cinder-backup.keyring``
 
 .. note::
 
-   ``cinder-backup`` requires two keyrings for accessing volumes
-   and backup pool.
+   ``cinder-backup`` requires keyrings for accessing volumes
+   and backups pools.
 
 To configure ``multiple Ceph backends`` with Cinder, which is useful for
 the use with availability zones:
@@ -195,9 +225,9 @@ the use with availability zones:
 * Copy their Ceph configuration files into ``/etc/kolla/config/cinder/`` using
   different names for each
 
-  ``/etc/kolla/config/cinder/ceph.conf``
+  ``/etc/kolla/config/cinder/ceph1.conf``
 
-  .. path /etc/kolla/config/cinder/ceph.conf
+  .. path /etc/kolla/config/cinder/ceph1.conf
   .. code-block:: ini
 
      [global]
@@ -208,9 +238,9 @@ the use with availability zones:
      auth_service_required = cephx
      auth_client_required = cephx
 
-  ``/etc/kolla/config/cinder/rbd2.conf``
+  ``/etc/kolla/config/cinder/ceph2.conf``
 
-  .. path /etc/kolla/config/cinder/rbd2.conf
+  .. path /etc/kolla/config/cinder/ceph2.conf
   .. code-block:: ini
 
      [global]
@@ -226,46 +256,63 @@ the use with availability zones:
   .. code-block:: yaml
 
      cinder_ceph_backends:
-       - name: "rbd-1"
-         cluster: "ceph"
+       - name: "ceph1-rbd"
+         cluster: "ceph1"
+         user: "cinder"
+         pool: "volumes"
          enabled: "{{ cinder_backend_ceph | bool }}"
-       - name: "rbd-2"
-         cluster: "rbd2"
+       - name: "ceph2-rbd"
+         cluster: "ceph2"
+         user: "cinder"
+         pool: "volumes"
          availability_zone: "az2"
          enabled: "{{ cinder_backend_ceph | bool }}"
 
+       cinder_backup_ceph_backend:
+         name: "ceph2-backup-rbd"
+         cluster: "ceph2"
+         user: "cinder-backup"
+         pool: "backups"
+         type: rbd
+         enabled: "{{ enable_cinder_backup | bool }}"
+
 * Copy Ceph keyring files for all Ceph backends:
 
-  * ``/etc/kolla/config/cinder/cinder-volume/ceph.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/ceph.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/ceph.
-    <ceph_cinder_backup_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-volume/rbd2.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/rbd2.<ceph_cinder_keyring>``
-  * ``/etc/kolla/config/cinder/cinder-backup/rbd2.
-    <ceph_cinder_backup_keyring>``
+  * ``/etc/kolla/config/cinder/cinder-volume/ceph1.client.cinder.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/ceph1.client.cinder.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/ceph2.client.cinder.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/
+    ceph2.client.cinder-backup.keyring``
 
 .. note::
 
-   ``cinder-backup`` requires two keyrings for accessing volumes
-   and backup pool.
+   ``cinder-backup`` requires keyrings for accessing volumes
+   and backups pool.
 
 Nova must also be configured to allow access to Cinder volumes:
 
-* Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
+* Copy Ceph config and keyring file(s) to:
 
-  * ``ceph_cinder_keyring`` (default: ``client.cinder.keyring``)
-
-* Copy Ceph keyring file(s) to:
-
-  * ``/etc/kolla/config/nova/ceph.<ceph_cinder_keyring>``
+  * ``/etc/kolla/config/nova/ceph.conf``
+  * ``/etc/kolla/config/nova/ceph.client.cinder.keyring``
 
 To configure ``different Ceph backend`` for nova-compute host, which
 is useful for the use with availability zones:
 
-* Copy Ceph keyring file to:
+* Edit inventory file in the way described below:
 
-  * ``/etc/kolla/config/nova/<hostname>/ceph.<ceph_cinder_keyring>``
+   .. code-block:: ini
+
+      [compute]
+      hostname1 ceph_cluster=ceph1
+      hostname2 ceph_cluster=ceph2
+
+* Copy Ceph config and keyring file(s):
+
+  * ``/etc/kolla/config/nova/<hostname1>/ceph1.conf``
+  * ``/etc/kolla/config/nova/<hostname1>/ceph1.client.cinder.keyring``
+  * ``/etc/kolla/config/nova/<hostname2>/ceph2.conf``
+  * ``/etc/kolla/config/nova/<hostname2>/ceph2.client.cinder.keyring``
 
 If ``zun`` is enabled, and you wish to use cinder volumes with zun,
 it must also be configured to allow access to Cinder volumes:
@@ -282,7 +329,7 @@ it must also be configured to allow access to Cinder volumes:
 
 * Copy Ceph keyring file(s) to:
 
-  * ``/etc/kolla/config/zun/zun-compute/ceph.<ceph_cinder_keyring>``
+  * ``/etc/kolla/config/zun/zun-compute/ceph.client.cinder.keyring``
 
 
 Nova
@@ -303,30 +350,37 @@ Configuring Nova for Ceph includes following steps:
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-  * ``ceph_nova_keyring`` (by default it's the same as
-    ``ceph_cinder_keyring``)
   * ``ceph_nova_user`` (by default it's the same as ``ceph_cinder_user``)
   * ``ceph_nova_pool_name`` (default: ``vms``)
 
 * Copy Ceph configuration file to ``/etc/kolla/config/nova/ceph.conf``
 * Copy Ceph keyring file(s) to:
 
-  * ``/etc/kolla/config/nova/ceph.<ceph_nova_keyring>``
+  * ``/etc/kolla/config/nova/ceph.client.nova.keyring``
 
   .. note::
 
      If you are using a Ceph deployment tool that generates separate Ceph
      keys for Cinder and Nova, you will need to override
-     ``ceph_nova_keyring`` and ``ceph_nova_user`` to match.
+     ``ceph_nova_user`` to match.
 
 To configure ``different Ceph backend`` for nova-compute host, which
 is useful for the use with availability zones:
 
-* Copy Ceph configuration file to ``/etc/kolla/config/nova/
-  <hostname>/ceph.conf``
-* Copy Ceph keyring file(s) to:
+Edit inventory file in the way described below:
 
-  * ``/etc/kolla/config/nova/<hostname>/ceph.<ceph_nova_keyring>``
+   .. code-block:: ini
+
+      [compute]
+      hostname1 ceph_cluster=ceph1
+      hostname2 ceph_cluster=ceph2
+
+* Copy Ceph config and keyring file(s):
+
+  * ``/etc/kolla/config/nova/<hostname1>/ceph1.conf``
+  * ``/etc/kolla/config/nova/<hostname1>/ceph1.client.nova.keyring``
+  * ``/etc/kolla/config/nova/<hostname2>/ceph2.conf``
+  * ``/etc/kolla/config/nova/<hostname2>/ceph2.client.nova.keyring``
 
 Gnocchi
 -------
@@ -342,17 +396,13 @@ Configuring Gnocchi for Ceph includes following steps:
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-  * ``ceph_gnocchi_keyring``
-    (default: ``client.gnocchi.keyring``)
   * ``ceph_gnocchi_user`` (default: ``gnocchi``)
   * ``ceph_gnocchi_pool_name`` (default: ``gnocchi``)
-  * ``ceph_gnocchi_conf``
-    (default: ``ceph.conf``)
 
 * Copy Ceph configuration file to
-  ``/etc/kolla/config/gnocchi/<ceph_gnocchi_conf>``
+  ``/etc/kolla/config/gnocchi/ceph.conf``
 * Copy Ceph keyring to
-  ``/etc/kolla/config/gnocchi/ceph.<ceph_gnocchi_keyring>``
+  ``/etc/kolla/config/gnocchi/ceph.client.gnocchi.keyring``
 
 Manila
 ------
@@ -368,7 +418,6 @@ for Ceph includes following steps:
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 
-  * ``ceph_manila_keyring`` (default: ``client.manila.keyring``)
   * ``ceph_manila_user`` (default: ``manila``)
 
   .. note::
@@ -377,7 +426,7 @@ for Ceph includes following steps:
      :manila-doc:`CephFS Native driver <admin/cephfs_driver.html#authorizing-the-driver-to-communicate-with-ceph>`.
 
 * Copy Ceph configuration file to ``/etc/kolla/config/manila/ceph.conf``
-* Copy Ceph keyring to ``/etc/kolla/config/manila/ceph.<ceph_manila_keyring>``
+* Copy Ceph keyring to ``/etc/kolla/config/manila/ceph.client.manila.keyring``
 
 To configure ``multiple Ceph backends`` with Manila, which is useful for
 the use with availability zones:
@@ -385,9 +434,9 @@ the use with availability zones:
 * Copy their Ceph configuration files into ``/etc/kolla/config/manila/`` using
   different names for each
 
-  ``/etc/kolla/config/manila/ceph.conf``
+  ``/etc/kolla/config/manila/ceph1.conf``
 
-  .. path /etc/kolla/config/manila/ceph.conf
+  .. path /etc/kolla/config/manila/ceph1.conf
   .. code-block:: ini
 
      [global]
@@ -398,9 +447,9 @@ the use with availability zones:
      auth_service_required = cephx
      auth_client_required = cephx
 
-  ``/etc/kolla/config/manila/rbd2.conf``
+  ``/etc/kolla/config/manila/ceph2.conf``
 
-  .. path /etc/kolla/config/manila/rbd2.conf
+  .. path /etc/kolla/config/manila/ceph2.conf
   .. code-block:: ini
 
      [global]
@@ -419,14 +468,14 @@ the use with availability zones:
        - name: "cephfsnative1"
          share_name: "CEPHFS1"
          driver: "cephfsnative"
-         cluster: "ceph"
+         cluster: "ceph1"
          enabled: "{{ enable_manila_backend_cephfs_native | bool }}"
          protocols:
            - "CEPHFS"
        - name: "cephfsnative2"
          share_name: "CEPHFS2"
          driver: "cephfsnative"
-         cluster: "rbd2"
+         cluster: "ceph2"
          enabled: "{{ enable_manila_backend_cephfs_native | bool }}"
          protocols:
            - "CEPHFS"
@@ -441,7 +490,7 @@ the use with availability zones:
        - name: "cephfsnfs2"
          share_name: "CEPHFSNFS2"
          driver: "cephfsnfs"
-         cluster: "rbd2"
+         cluster: "ceph2"
          enabled: "{{ enable_manila_backend_cephfs_nfs | bool }}"
          protocols:
            - "NFS"
@@ -449,8 +498,8 @@ the use with availability zones:
 
 * Copy Ceph keyring files for all Ceph backends:
 
-  * ``/etc/kolla/config/manila/manila-share/ceph.<ceph_manila_keyring>``
-  * ``/etc/kolla/config/manila/manila-share/rbd2.<ceph_manila_keyring>``
+  * ``/etc/kolla/config/manila/manila-share/ceph1.client.manila.keyring``
+  * ``/etc/kolla/config/manila/manila-share/ceph2.client.manila.keyring``
 
 * If using multiple filesystems (Ceph Pacific+), set
   ``manila_cephfs_filesystem_name`` in ``/etc/kolla/globals.yml`` to the

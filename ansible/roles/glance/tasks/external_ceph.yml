@@ -27,9 +27,11 @@
     - Restart glance-api container
 
 - name: Copy over ceph Glance keyrings
+  vars:
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
   template:
-    src: "{{ node_custom_config }}/glance/{{ item.cluster }}.{{ ceph_glance_keyring }}"
-    dest: "{{ node_config_directory }}/glance-api/ceph/{{ item.cluster }}.{{ ceph_glance_keyring }}"
+    src: "{{ node_custom_config }}/glance/{{ keyring }}"
+    dest: "{{ node_config_directory }}/glance-api/ceph/{{ keyring }}"
     mode: "0660"
   become: true
   with_items: "{{ glance_ceph_backends }}"

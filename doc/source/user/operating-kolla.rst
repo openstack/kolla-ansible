@@ -75,8 +75,7 @@ Limitations and Recommendations
 .. note::
 
    If you have separate keys for nova and cinder, please be sure to set
-   ``ceph_nova_keyring: ceph.client.nova.keyring`` and ``ceph_nova_user: nova``
-   in ``/etc/kolla/globals.yml``
+   ``ceph_nova_user: nova`` in ``/etc/kolla/globals.yml``
 
 Ubuntu Jammy 22.04
 ------------------
