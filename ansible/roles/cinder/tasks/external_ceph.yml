@@ -34,13 +34,13 @@
     - service_name in services_need_config
   with_nested:
     - "{{ cinder_services | dict2items }}"
-    - "{{ cinder_ceph_backends }}"
+    - "{{ cinder_ceph_backends + [cinder_backup_ceph_backend] }}"
   notify:
     - "Restart {{ service_name }} container"
 
 - name: Copy over Ceph keyring files for cinder-volume
   vars:
-    keyring: "{{ item.cluster }}.{{ ceph_cinder_keyring }}"
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
     service: "{{ cinder_services['cinder-volume'] }}"
   template:
     src: "{{ node_custom_config }}/cinder/cinder-volume/{{ keyring }}"
@@ -57,15 +57,15 @@
 - name: Copy over Ceph keyring files for cinder-backup
   vars:
     service: "{{ cinder_services['cinder-backup'] }}"
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
   template:
-    src: "{{ node_custom_config }}/cinder/cinder-backup/{{ item }}"
-    dest: "{{ node_config_directory }}/cinder-backup/ceph/{{ item }}"
+    src: "{{ node_custom_config }}/cinder/cinder-backup/{{ keyring }}"
+    dest: "{{ node_config_directory }}/cinder-backup/ceph/{{ keyring }}"
     mode: "0660"
   become: true
-  register: cinder_backup_ceph_keyring
   with_items:
-    - "{{ cinder_backup_ceph_backend.cluster }}.{{ ceph_cinder_keyring }}"
-    - "{{ cinder_backup_ceph_backend.cluster }}.{{ ceph_cinder_backup_keyring }}"
+    - "{{ cinder_ceph_backends }}"
+    - "{{ cinder_backup_ceph_backend }}"
   when:
     - external_ceph_cephx_enabled | bool
     - service | service_enabled_and_mapped_to_host
