@@ -48,24 +48,24 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS, RHEL or openEuler, run:
+   For CentOS, Rocky or openEuler, run:
 
    .. code-block:: console
 
-      sudo dnf install python3-devel libffi-devel gcc openssl-devel python3-libselinux
+      sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux
 
    For Debian or Ubuntu, run:
 
    .. code-block:: console
 
-      sudo apt install python3-dev libffi-dev gcc libssl-dev
+      sudo apt install git python3-dev libffi-dev gcc libssl-dev
 
 Install dependencies for the virtual environment
 ------------------------------------------------
 
 #. Install the virtual environment dependencies.
 
-   For CentOS, RHEL or openEuler, you don't need to do anything.
+   For CentOS, Rocky or openEuler, you don't need to do anything.
 
    For Debian or Ubuntu, run:
 
@@ -90,11 +90,12 @@ Install dependencies for the virtual environment
       pip install -U pip
 
 #. Install `Ansible <http://www.ansible.com>`__. Kolla Ansible requires at least
-   Ansible ``4`` and supports up to ``5``.
+   Ansible ``6`` (or ansible-core ``2.14``) and supports up to ``7`` (or
+   ansible-core ``2.15``).
 
    .. code-block:: console
 
-      pip install 'ansible>=4,<6'
+      pip install 'ansible-core>=2.14,<2.16'
 
 Install Kolla-ansible
 ~~~~~~~~~~~~~~~~~~~~~
@@ -198,6 +199,19 @@ There are a few options that are required to deploy Kolla Ansible:
   .. code-block:: console
 
      kolla_base_distro: "rocky"
+
+* AArch64 options
+
+  Kolla provides images for both x86-64 and aarch64 architectures. They are not
+  "multiarch" so users of aarch64 need to define "openstack_tag_suffix"
+  setting:
+
+  .. code-block:: console
+
+     openstack_tag_suffix: "-aarch64"
+
+  This way images built for aarch64 architecture will be used.
+
 
 * Networking
 
