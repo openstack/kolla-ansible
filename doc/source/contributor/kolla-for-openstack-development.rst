@@ -5,14 +5,8 @@ Using Kolla For OpenStack Development
 Kolla-ansible can be used to deploy containers in a way suitable for doing
 development on OpenStack services.
 
-.. note::
-
-   This functionality is new in the Pike release.
-
 Heat was the first service to be supported, and so the following will use
 submitting a patch to Heat using Kolla as an example.
-
-Only source containers are supported.
 
 .. warning::
 
