@@ -92,6 +92,21 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Generating 'hostnqn' file for cinder_volume
+  vars:
+    service: "{{ cinder_services['cinder-volume'] }}"
+    hostnqn: "nqn.2014-08.org.nvmexpress:uuid:{{ ansible_facts.hostname | to_uuid }}"
+  template:
+    src: "templates/hostnqn.j2"
+    dest: "{{ node_config_directory }}/cinder-volume/hostnqn"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart cinder-volume container
+
 - name: Copying over existing policy file
   become: true
   template:
