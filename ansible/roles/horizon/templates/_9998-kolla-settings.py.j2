@@ -16,6 +16,9 @@ DATABASES = {
     'PORT': '{{ database_port }}'
     }
 }
+{% elif groups['memcached'] | length > 0 and not horizon_backend_database | bool %}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+CACHES['default']['LOCATION'] = [{% for host in groups['memcached'] %}'{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}{% endfor %}]
 {% endif %}
 
 {% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
@@ -38,16 +41,6 @@ OPENSTACK_KEYSTONE_DOMAIN_CHOICES = (
 
 LOCAL_PATH = '/tmp'
 SECRET_KEY='{{ horizon_secret_key }}'
-
-{% if groups['memcached'] | length > 0 and horizon_backend_database | bool == False %}
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': [{% for host in groups['memcached'] %}'{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}{% endfor %}]
-    }
-}
-{% endif %}
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
