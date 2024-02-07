@@ -261,9 +261,9 @@ As with all optional services in Kolla Ansible, Prometheus deployment should be
 controlled by Kolla Ansible variables.  A high level enable_prometheus variable
 should control whether Prometheus is used at all.  Additionally, additional
 variables can be used to control individual exporters.  For example,
-enable_prometheus_haproxy could be used to enable/disable the HAProxy exporter
-to Prometheus.  By default Prometheus should be enabled and exporters should be
-enabled if both Prometheus and the associated service are enabled.
+enable_prometheus_haproxy_exporter could be used to enable/disable the HAProxy
+exporter to Prometheus.  By default Prometheus should be enabled and exporters
+should be enabled if both Prometheus and the associated service are enabled.
 
 Limitations
 -----------

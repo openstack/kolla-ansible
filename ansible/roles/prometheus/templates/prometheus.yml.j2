@@ -60,9 +60,9 @@ scrape_configs:
 {% if enable_prometheus_haproxy_exporter | bool %}
   - job_name: haproxy
     static_configs:
-{% for host in groups['prometheus-haproxy-exporter'] %}
+{% for host in groups['loadbalancer'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_haproxy_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ prometheus_haproxy_exporter_port }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
