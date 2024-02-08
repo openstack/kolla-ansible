@@ -18,7 +18,7 @@ Horizon by using a custom python settings file that will override
 the default options set on the local_settings file.
 
 As an example, for setting a different (material) theme as the default one,
-a file named custom_local_settings should be created under the directory
+a file named _9999-custom-settings.py should be created under the directory
 ``{{ node_custom_config }}/horizon/`` with the following contents:
 
 .. code-block:: python
@@ -45,7 +45,7 @@ This entry updates AVAILABLE_THEMES adding the new theme at the list end.
 
 Theme files have to be copied into:
 ``{{ node_custom_config }}/horizon/themes/my_custom_theme``.
-The new theme can be set as default in custom_local_settings:
+The new theme can be set as default in _9999-custom-settings.py:
 
 .. code-block:: python
 
