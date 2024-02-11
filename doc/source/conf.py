@@ -125,7 +125,7 @@ if KOLLA_OPENSTACK_RELEASE == 'latest':
     KOLLA_BRANCH_NAME = 'master'
     TESTED_RUNTIMES_GOVERNANCE_URL = 'https://governance.openstack.org/tc/reference/runtimes/'
 else:
-    KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
+    KOLLA_BRANCH_NAME = 'unmaintained/{}'.format(KOLLA_OPENSTACK_RELEASE)
     TESTED_RUNTIMES_GOVERNANCE_URL =\
         'https://governance.openstack.org/tc/reference/runtimes/{}.html'.format(KOLLA_OPENSTACK_RELEASE)
 
@@ -147,5 +147,5 @@ def replace_global_vars(app, docname, source):
 
 
 def setup(app):
-   app.add_config_value('GLOBAL_VARIABLE_MAP', {}, True)
-   app.connect('source-read', replace_global_vars)
+    app.add_config_value('GLOBAL_VARIABLE_MAP', {}, True)
+    app.connect('source-read', replace_global_vars)
