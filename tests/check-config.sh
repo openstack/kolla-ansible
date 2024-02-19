@@ -23,6 +23,7 @@ function check_config {
                 -not -path /etc/kolla \
                 -not -path /etc/kolla/clouds.yaml \
                 -not -regex .*-openrc.sh \
+                -not -regex .*-openrc-system.sh \
                 -not -name globals.yml \
                 -not -name header \
                 -not -name inventory \
