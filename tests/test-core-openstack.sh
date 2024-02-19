@@ -8,52 +8,11 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_smoke {
-    attempts=10
-
-    for i in $(seq 1 ${attempts}); do
-        if openstack --debug compute service list; then
-            break
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to list compute services after ${attempts} attempts"
-        else
-            echo "Cannot list compute services, retrying"
-        fi
-        sleep 10
-    done
-
-    for i in $(seq 1 ${attempts}); do
-        if openstack --debug network agent list; then
-            break
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to list network services after ${attempts} attempts"
-        else
-            echo "Cannot list network services, retrying"
-        fi
-        sleep 10
-    done
-
-    for i in $(seq 1 ${attempts}); do
-        if openstack --debug orchestration service list; then
-            break
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to list orchestration services after ${attempts} attempts"
-        else
-            echo "Cannot list orchestration services, retrying"
-        fi
-        sleep 10
-    done
-
+    openstack --debug compute service list
+    openstack --debug network agent list
+    openstack --debug orchestration service list
     if [[ $SCENARIO == "cephadm" ]] || [[ $SCENARIO == "zun" ]]; then
-        for i in $(seq 1 ${attempts}); do
-            if openstack --debug volume service list; then
-                break
-            elif [[ $i -eq ${attempts} ]]; then
-                echo "Failed to list volume services after ${attempts} attempts"
-            else
-                echo "Cannot list volume services, retrying"
-            fi
-            sleep 10
-        done
+        openstack --debug volume service list
     fi
 }
 
@@ -207,25 +166,13 @@ function create_instance {
         server_create_extra="${server_create_extra} --config-drive True"
     fi
 
-    attempts=10
-    for i in $(seq 1 ${attempts}); do
-        if openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}; then
-            # If the status is not ACTIVE, print info and exit 1
-            if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
-                echo "FAILED: Instance is not active"
-                openstack --debug server show ${name}
-                openstack server delete ${name}
-            else
-                break
-            fi
-        elif [[ $i -eq ${attempts} ]]; then
-            echo "Failed to create instance after ${attempts} attempts"
-        else
-            echo "Cannot create instance, retrying"
-            openstack server delete ${name}
-        fi
-        sleep 10
-    done
+    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
+    # If the status is not ACTIVE, print info and exit 1
+    if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
+        echo "FAILED: Instance is not active"
+        openstack --debug server show ${name}
+        return 1
+    fi
 }
 
 function resize_instance {
