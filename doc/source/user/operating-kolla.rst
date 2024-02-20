@@ -113,6 +113,13 @@ First, upgrade the ``kolla-ansible`` package:
    If you are running from Git repository, then just checkout the desired
    branch and run ``pip3 install --upgrade`` with the repository directory.
 
+If performing a skip-level (SLURP) upgrade, update ``ansible`` or
+``ansible-core`` to a version supported by the release you're upgrading to.
+
+.. code-block:: console
+
+   pip3 install --upgrade 'ansible-core>=|ANSIBLE_CORE_VERSION_MIN|,<|ANSIBLE_CORE_VERSION_MAX|.99'
+
 If upgrading to a Yoga release or later, install or upgrade Ansible Galaxy
 dependencies:
 
