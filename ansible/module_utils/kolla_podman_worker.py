@@ -177,7 +177,11 @@ class PodmanWorker(ContainerWorker):
                 mounts.append(mount_item)
             else:
                 try:
-                    src, dest = item.split(':')
+                    mode = 'rw'
+                    if item.count(':') == 2:
+                        src, dest, mode = item.split(':')
+                    else:
+                        src, dest = item.split(':')
                 except ValueError:
                     self.module.fail_json(
                         msg="Wrong format of volume: {}".format(item),
@@ -192,7 +196,7 @@ class PodmanWorker(ContainerWorker):
                 else:
                     filtered_volumes[src] = dict(
                         bind=dest,
-                        mode='rw'
+                        mode=mode
                     )
 
     def parse_dimensions(self, dimensions):
