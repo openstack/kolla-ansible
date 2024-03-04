@@ -1,24 +1,65 @@
 ---
-- name: Create cell0 mappings
-  vars:
-    nova_api: "{{ nova_services['nova-api'] }}"
-    nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}"  # noqa 204
-  become: true
-  kolla_docker:
-    action: "start_container"
-    command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 map_cell0 --database_connection {{ nova_cell0_connection }}'
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    image: "{{ nova_api.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "nova_api_map_cell0"
-    restart_policy: oneshot
-    volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
-  register: map_cell0
-  changed_when:
-    - map_cell0 is success
-    - '"Cell0 is already setup" not in map_cell0.stdout'
+- block:
+    - name: Create cell0 mappings
+      vars:
+        nova_api: "{{ nova_services['nova-api'] }}"
+        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}"  # noqa 204
+      become: true
+      kolla_docker:
+        action: "start_container"
+        command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 map_cell0 --database_connection {{ nova_cell0_connection }}'
+        common_options: "{{ docker_common_options }}"
+        detach: False
+        image: "{{ nova_api.image }}"
+        labels:
+          BOOTSTRAP:
+        name: "nova_api_map_cell0"
+        restart_policy: oneshot
+        volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
+      register: map_cell0
+      changed_when:
+        - map_cell0 is success
+        - '"Cell0 is already setup" not in map_cell0.stdout'
+
+    - import_role:
+        name: nova-cell
+        tasks_from: get_cell_settings.yml
+      vars:
+        nova_cell_name: "cell0"
+        nova_api: "{{ nova_services['nova-api'] }}"
+        nova_cell_get_settings_volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
+
+    - name: Update cell0 mappings
+      vars:
+        nova_cell0_uuid: "00000000-0000-0000-0000-000000000000"
+        nova_cell0_transport_url: "none:/"
+        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}"  # noqa 204
+        nova_api: "{{ nova_services['nova-api'] }}"
+      become: true
+      kolla_docker:
+        action: "start_container"
+        command: >
+          bash -c 'sudo -E kolla_set_configs &&
+          nova-manage cell_v2 update_cell
+          --cell_uuid {{ nova_cell0_uuid }}
+          --database_connection {{ nova_cell0_connection }}
+          --transport-url {{ nova_cell0_transport_url }}'
+        common_options: "{{ docker_common_options }}"
+        detach: False
+        image: "{{ nova_api.image }}"
+        labels:
+          BOOTSTRAP:
+        name: "nova_api_map_cell0"
+        restart_policy: oneshot
+        volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
+      register: nova_cell0_updated
+      changed_when:
+        - nova_cell0_updated is success
+      failed_when:
+        - nova_cell0_updated.rc != 0
+      when:
+        - nova_cell_settings | length > 0
+        - nova_cell_settings.cell_database != nova_cell0_connection
   run_once: True
   delegate_to: "{{ groups[nova_api.group][0] }}"
 
