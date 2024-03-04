@@ -36,8 +36,7 @@ def extract_cell(list_cells_cli_output, cell_name):
     # NOTE(priteau): regexp doesn't support passwords containing spaces
     p = re.compile(
         r'\| +(?P<cell_name>[^ ]+)? +'
-        r'\| +(?!00000000-0000-0000-0000-000000000000)'
-        r'(?P<cell_uuid>[0-9a-f\-]+) +'
+        r'\| +(?P<cell_uuid>[0-9a-f\-]+) +'
         r'\| +(?P<cell_message_queue>[^ ]+) +'
         r'\| +(?P<cell_database>[^ ]+) +'
         r'\| +(?P<cell_disabled>[^ ]+) +'
