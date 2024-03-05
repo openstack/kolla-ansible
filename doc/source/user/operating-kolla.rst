@@ -56,6 +56,16 @@ deployment.
 Limitations and Recommendations
 -------------------------------
 
+.. warning::
+
+   Please notice that using the ansible ``--limit`` option is not recommended.
+   The reason is, that there are known bugs with it, e.g. when `upgrading parts of nova.
+   <https://bugs.launchpad.net/kolla-ansible/+bug/2054348>`__
+   We accept bug reports for this and try to fix issues when they are known.
+   The core problem is how the ``register:`` keyword works and how it
+   interacts with the ``--limit`` option. You can find more information in the above
+   bug report.
+
 .. note::
 
    Please note that when the ``use_preconfigured_databases`` flag is set to
