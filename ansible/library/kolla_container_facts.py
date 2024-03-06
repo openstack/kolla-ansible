@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
-from abc import abstractmethod
 from ansible.module_utils.basic import AnsibleModule
 from traceback import format_exc
 
@@ -63,47 +61,106 @@ EXAMPLES = '''
         container_engine: docker
         name:
           - glance_api
-          - glance_registry
         container_engine: podman
         action: get_containers
+
+    - name: Get Horizon container state
+      kolla_container_facts:
+        container_engine: podman
+        name: horizon
+        action: get_containers_state
+
+    - name: Get Glance container environment
+      kolla_container_facts:
+        container_engine: docker
+        name:
+          - glance_api
+        action: get_containers_env
 '''
 
 
-class ContainerFactsWorker(ABC):
+class ContainerFactsWorker():
     def __init__(self, module):
         self.module = module
-        self.results = dict(changed=False, _containers=[])
         self.params = module.params
+        self.result = dict(changed=False)
 
-    @abstractmethod
+    def _get_container_info(self, name: str) -> dict:
+        """Return info about container if it exists."""
+        try:
+            cont = self.client.containers.get(name)
+            return cont.attrs
+        except self.containerError.NotFound:
+            self.module.fail_json(msg="No such container: {}".format(name))
+            return None
+
+    def _remap_envs(self, envs_raw: list) -> dict:
+        """Split list of environment variables separated by '=' to dict.
+
+        Example item in list could be KOLLA_BASE_DISTRO=ubuntu, which
+        would breakdown to {'KOLLA_BASE_DISTRO':'ubuntu'}
+        """
+        envs = dict()
+        for env in envs_raw:
+            if '=' in env:
+                key, value = env.split('=', 1)
+            else:
+                key, value = env, ''
+            envs[key] = value
+        return envs
+
     def get_containers(self):
-        pass
+        """Handle when module is called with action get_containers"""
+        names = self.params.get('name')
+        self.result['containers'] = dict()
+
+        containers = self.client.containers.list()
+        for container in containers:
+            container.reload()
+            container_name = container.name
+            if names and container_name not in names:
+                continue
+            self.result['containers'][container_name] = container.attrs
+
+    def get_containers_state(self):
+        """Handle when module is called with action get_containers_state"""
+        # NOTE(r-krcek): This function can be removed when bifrost and swift
+        # roles switch to modern format
+        names = self.params.get('name')
+        self.result['states'] = dict()
+
+        for name in names:
+            cont = self._get_container_info(name)
+            if cont:
+                self.result['states'][name] = cont["State"]["Status"]
+
+    def get_containers_env(self):
+        """Handle when module is called with action get_containers_state"""
+        # NOTE(r-krcek): This function can be removed when bifrost and swift
+        # roles switch to modern format
+        names = self.params.get('name')
+        self.result['envs'] = dict()
+
+        for name in names:
+            cont = self._get_container_info(name)
+            if cont:
+                envs = self._remap_envs(cont['Config']['Env'])
+                self.result['envs'][name] = envs
 
 
 class DockerFactsWorker(ContainerFactsWorker):
     def __init__(self, module):
-        super().__init__(module)
         try:
             import docker
+            import docker.errors as dockerError
         except ImportError:
             self.module.fail_json(
                 msg="The docker library could not be imported")
-        self.client = docker.APIClient(version=module.params.get(
-                                       'api_version'))
-
-    def get_containers(self):
-        containers = self.client.containers()
-        names = self.params.get('name')
-        if names and not isinstance(names, list):
-            names = [names]
-        for container in containers:
-            for container_name in container['Names']:
-                # remove '/' prefix character
-                container_name = container_name[1:]
-                if names and container_name not in names:
-                    continue
-                self.results['_containers'].append(container)
-                self.results[container_name] = container
+        super().__init__(module)
+        self.client = docker.DockerClient(
+            base_url='http+unix:/var/run/docker.sock',
+            version=module.params.get('api_version'))
+        self.containerError = dockerError
 
 
 class PodmanFactsWorker(ContainerFactsWorker):
@@ -114,29 +171,10 @@ class PodmanFactsWorker(ContainerFactsWorker):
         except ImportError:
             self.module.fail_json(
                 msg="The podman library could not be imported")
-        self.podmanError = podmanError
         super().__init__(module)
         self.client = PodmanClient(
             base_url="http+unix:/run/podman/podman.sock")
-
-    def get_containers(self):
-        try:
-            containers = self.client.containers.list(
-                all=True, ignore_removed=True)
-        except self.podmanError.APIError as e:
-            self.module.fail_json(failed=True,
-                                  msg=f"Internal error: {e.explanation}")
-        names = self.params.get('name')
-        if names and not isinstance(names, list):
-            names = [names]
-
-        for container in containers:
-            container.reload()
-            container_name = container.attrs['Name']
-            if container_name not in names:
-                continue
-            self.results['_containers'].append(container.attrs)
-            self.results[container_name] = container.attrs
+        self.containerError = podmanError
 
 
 def main():
@@ -145,23 +183,33 @@ def main():
         api_version=dict(required=False, type='str', default='auto'),
         container_engine=dict(required=True, type='str'),
         action=dict(required=True, type='str',
-                    choices=['get_containers']),
+                    choices=['get_containers',
+                             'get_containers_env',
+                             'get_containers_state']),
     )
 
-    module = AnsibleModule(argument_spec=argument_spec)
+    required_if = [
+        ['action', 'get_containers_env', ['name']],
+        ['action', 'get_containers_state', ['name']],
+    ]
+    module = AnsibleModule(
+        argument_spec=argument_spec,
+        required_if=required_if,
+        bypass_checks=False
+    )
 
-    cw: ContainerFactsWorker = None
+    cfw: ContainerFactsWorker = None
     try:
         if module.params.get('container_engine') == 'docker':
-            cw = DockerFactsWorker(module)
+            cfw = DockerFactsWorker(module)
         else:
-            cw = PodmanFactsWorker(module)
+            cfw = PodmanFactsWorker(module)
 
-        result = bool(getattr(cw, module.params.get('action'))())
-        module.exit_json(result=result, **cw.results)
+        result = bool(getattr(cfw, module.params.get('action'))())
+        module.exit_json(result=result, **cfw.result)
     except Exception:
         module.fail_json(changed=True, msg=repr(format_exc()),
-                         **getattr(cw, 'result', {}))
+                         **getattr(cfw, 'result', {}))
 
 
 if __name__ == "__main__":

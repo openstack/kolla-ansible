@@ -14,7 +14,7 @@
     {{ kolla_container_engine }} exec {{ service.container_name }}
     bash -c "[[ -f {{ inner_item['config'] }} ]] && oslo-config-validator --config-file {{ inner_item['generator'] }} --input-file {{ inner_item['config'] }}"
   when:
-    - container_info._containers | length > 0
+    - container_info.containers | length > 0
   register: result
   failed_when: result.rc not in [0, 1]  # rc 1 is expected when errors are found in the config file, or when the config file doesn't exist
   with_items: "{{ service_config_validation }}"
@@ -39,7 +39,7 @@
     content: "{{ inner_item.stderr }}"
     dest: "{{ output_dir }}/{{ inner_item.inner_item.config | basename }}.err"
   when:
-    - container_info._containers | length > 0
+    - container_info.containers | length > 0
     - inner_item.rc is defined
     - inner_item.rc == 1
     - inner_item.stderr != ""

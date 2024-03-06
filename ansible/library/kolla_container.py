@@ -47,8 +47,6 @@ options:
       - compare_image
       - create_volume
       - ensure_image
-      - get_container_env
-      - get_container_state
       - pull_image
       - remove_container
       - remove_image
@@ -276,8 +274,6 @@ def generate_module():
                              'compare_image',
                              'create_volume',
                              'ensure_image',
-                             'get_container_env',
-                             'get_container_state',
                              'pull_image',
                              'recreate_or_restart_container',
                              'remove_container',
@@ -344,8 +340,6 @@ def generate_module():
         ['action', 'compare_image', ['name']],
         ['action', 'create_volume', ['name']],
         ['action', 'ensure_image', ['image']],
-        ['action', 'get_container_env', ['name']],
-        ['action', 'get_container_state', ['name']],
         ['action', 'recreate_or_restart_container', ['name']],
         ['action', 'remove_container', ['name']],
         ['action', 'remove_image', ['image']],

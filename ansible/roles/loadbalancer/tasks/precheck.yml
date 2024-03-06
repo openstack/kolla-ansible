@@ -19,7 +19,7 @@
 
 - name: Group hosts by whether they are running keepalived
   group_by:
-    key: "keepalived_running_{{ container_facts['keepalived'] is defined }}"
+    key: "keepalived_running_{{ container_facts.containers['keepalived'] is defined }}"
   changed_when: false
   check_mode: false
   when:
@@ -28,7 +28,7 @@
 
 - name: Group hosts by whether they are running HAProxy
   group_by:
-    key: "haproxy_running_{{ container_facts['haproxy'] is defined }}"
+    key: "haproxy_running_{{ container_facts.containers['haproxy'] is defined }}"
   changed_when: false
   check_mode: false
   when:
@@ -37,7 +37,7 @@
 
 - name: Group hosts by whether they are running ProxySQL
   group_by:
-    key: "proxysql_running_{{ container_facts['proxysql'] is defined }}"
+    key: "proxysql_running_{{ container_facts.containers['proxysql'] is defined }}"
   changed_when: false
   check_mode: false
   when:
@@ -131,7 +131,7 @@
     state: stopped
   when:
     - enable_haproxy | bool
-    - container_facts['haproxy'] is not defined
+    - container_facts.containers['haproxy'] is not defined
     - inventory_hostname in groups['loadbalancer']
 
 - name: Checking free port for HAProxy monitor (api interface)
@@ -143,7 +143,7 @@
     state: stopped
   when:
     - enable_haproxy | bool
-    - container_facts['haproxy'] is not defined
+    - container_facts.containers['haproxy'] is not defined
     - inventory_hostname in groups['loadbalancer']
 
 - name: Checking free port for HAProxy monitor (vip interface)
@@ -168,7 +168,7 @@
     state: stopped
   when:
     - enable_proxysql | bool
-    - container_facts['proxysql'] is not defined
+    - container_facts.containers['proxysql'] is not defined
     - inventory_hostname in groups['loadbalancer']
 
 - name: Checking free port for ProxySQL admin (vip interface)
@@ -194,7 +194,7 @@
   when:
     - enable_proxysql | bool
     - enable_prometheus_proxysql_exporter | bool
-    - container_facts['proxysql'] is not defined
+    - container_facts.containers['proxysql'] is not defined
     - inventory_hostname in groups['loadbalancer']
 
 - name: Checking free port for ProxySQL prometheus exporter (vip interface)
@@ -224,7 +224,7 @@
   when:
     - enable_haproxy | bool
     - enable_keepalived | bool
-    - container_facts['keepalived'] is not defined
+    - container_facts.containers['keepalived'] is not defined
     - inventory_hostname in groups['loadbalancer']
 
 - name: Getting haproxy stat
@@ -233,7 +233,7 @@
   register: haproxy_stat_shell
   changed_when: false
   check_mode: false
-  when: container_facts['haproxy'] is defined
+  when: container_facts.containers['haproxy'] is defined
 
 - name: Setting haproxy stat fact
   set_fact:

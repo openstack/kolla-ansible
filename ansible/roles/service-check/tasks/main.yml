@@ -12,19 +12,21 @@
 - name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are missing or not running"
   vars:
     missing_containers: >-
-      {{ service_check_enabled_container_names | difference(container_facts) | list }}
+      {{ service_check_enabled_container_names |
+      difference(container_facts.containers) |
+      list }}
   fail:
     msg: >
       The following {{ kolla_role_name | default(project_name) }} containers are missing or not running:
       {{ missing_containers | join(', ') }}
   when:
-    - container_facts is defined
+    - container_facts.containers is defined
     - missing_containers | length > 0
 
 - name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are unhealthy"
   vars:
     unhealthy_containers: >-
-      {{ container_facts |
+      {{ container_facts.containers |
       dict2items |
       selectattr("value.Status", "defined") |
       selectattr("value.Status", "search", "unhealthy") |
@@ -34,5 +36,5 @@
       The following {{ kolla_role_name | default(project_name) }} containers are unhealthy:
       {{ unhealthy_containers | join(', ') }}
   when:
-    - container_facts is defined
+    - container_facts.containers is defined
     - unhealthy_containers | length > 0
