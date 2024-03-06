@@ -19,7 +19,7 @@ function prepare_images {
     fi
 
     if [[ $SCENARIO == "cephadm" ]]; then
-        GATE_IMAGES+=",^cinder,^etcd"
+        GATE_IMAGES+=",^cinder,^redis"
     fi
 
     if [[ $SCENARIO == "cells" ]]; then
