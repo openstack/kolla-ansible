@@ -226,6 +226,10 @@ scrape_configs:
     static_configs:
 {% for host in groups['ironic-conductor'] %}
       - targets: ["{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['ironic_prometheus_exporter_port'] }}"]
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -247,5 +251,9 @@ alerting:
     - targets:
 {% for host in groups["prometheus-alertmanager"] %}
         - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
 {% endfor %}
 {% endif %}
