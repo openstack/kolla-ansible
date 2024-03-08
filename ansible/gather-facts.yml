@@ -17,6 +17,7 @@
         filter: "{{ kolla_ansible_setup_filter }}"
         gather_subset: "{{ kolla_ansible_setup_gather_subset }}"
       when:
+        # Don't gather if fact caching is in use
         - not ansible_facts
 
     - name: Gather package facts
@@ -61,8 +62,11 @@
       delegate_facts: True
       delegate_to: "{{ item }}"
       with_items: "{{ delegate_hosts }}"
-      # We gathered facts for all hosts in the batch during the first play.
       when:
+        # We gathered facts for all hosts in the batch during the first play.
+        # Ensure that we don't try again if they failed.
+        - item not in groups["all_using_limit_True"]
+        # Don't gather if fact caching is in use
         - not hostvars[item].ansible_facts
 
     - name: Gather package facts
