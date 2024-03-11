@@ -1,8 +1,9 @@
 ---
 - name: Checking for any existing OVN DB container volumes
   become: true
-  kolla_container_volume_facts:
+  kolla_container_facts:
     container_engine: "{{ kolla_container_engine }}"
+    action: get_volumes
     name:
       - ovn_nb_db
       - ovn_sb_db
@@ -10,12 +11,12 @@
 
 - name: Divide hosts by their OVN NB volume availability
   group_by:
-    key: "ovn-nb-db_had_volume_{{ ovn_db_container_volume_facts['ovn_nb_db'] is defined }}"
+    key: "ovn-nb-db_had_volume_{{ ovn_db_container_volume_facts.volumes['ovn_nb_db'] is defined }}"
   changed_when: false
 
 - name: Divide hosts by their OVN SB volume availability
   group_by:
-    key: "ovn-sb-db_had_volume_{{ ovn_db_container_volume_facts['ovn_sb_db'] is defined }}"
+    key: "ovn-sb-db_had_volume_{{ ovn_db_container_volume_facts.volumes['ovn_sb_db'] is defined }}"
   changed_when: false
 
 - name: Establish whether the OVN NB cluster has already existed

@@ -65,7 +65,23 @@ FAKE_DATA = {
             'Volumes': {'/var/lib/kolla/config_files/': {}}},
         'Mounts': {},
         'NetworkSettings': {}
-    }
+    },
+    'volumes': [
+        {'CreatedAt': '2024-10-10T12:05:46+02:00',
+         'Driver': 'local',
+         'Labels': None,
+         'Mountpoint': '/var/lib/docker/volumes/my_volume/_data',
+         'Name': 'my_volume',
+         'Options': None,
+         'Scope': 'local'},
+        {'CreatedAt': '2023-05-01T14:55:36+02:00',
+         'Driver': 'local',
+         'Labels': None,
+         'Mountpoint': '/var/lib/docker/volumes/another_volume/_data',
+         'Name': 'another_volume',
+         'Options': None,
+         'Scope': 'local'}
+    ]
 }
 
 
@@ -77,12 +93,20 @@ def get_DockerFactsWorker(mod_param, mock_client):
     return dfw
 
 
-def construct_container(cont_dict):
+def construct_container(cont_dict) -> mock.Mock:
     container = mock.Mock()
     container.name = cont_dict['Name']
     container.attrs = copy.deepcopy(cont_dict)
     container.status = cont_dict['State']['Status']
     return container
+
+
+def contruct_volume(vol_dict: dict) -> mock.Mock:
+    """Creates volume object that mimics the output of a container client."""
+    volume = mock.Mock()
+    volume.name = vol_dict['Name']
+    volume.attrs = copy.deepcopy(vol_dict)
+    return volume
 
 
 def get_containers(override=None):
@@ -98,6 +122,15 @@ def get_containers(override=None):
             containers.append(construct_container(c))
 
     return containers
+
+
+def get_volumes(override=None):
+    if override:
+        vol_dicts = override
+    else:
+        vol_dicts = copy.deepcopy(FAKE_DATA['volumes'])
+
+    return [contruct_volume(v) for v in vol_dicts]
 
 
 class TestContainerFacts(base.BaseTestCase):
@@ -202,3 +235,78 @@ class TestContainerFacts(base.BaseTestCase):
             'fake_container')
         self.dfw.module.fail_json.assert_called_once_with(
             msg="No such container: fake_container")
+
+    def test_get_volumes_single(self):
+        """Test fetching a single volume"""
+        self.dfw = get_DockerFactsWorker(
+            {'name': ['my_volume'], 'action': 'get_volumes'})
+        full_vol_list = get_volumes(self.fake_data['volumes'])
+        self.dfw.client.volumes.list.return_value = full_vol_list
+
+        self.dfw.get_volumes()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.dfw.client.volumes.list.assert_called_once_with()
+        self.assertIn('my_volume', self.dfw.result['volumes'])
+        self.assertNotIn('another_volume', self.dfw.result['volumes'])
+        self.assertEqual(len(self.dfw.result['volumes']), 1)
+        self.assertDictEqual(
+            self.dfw.result['volumes']['my_volume'],
+            self.fake_data['volumes'][0])
+
+    def test_get_volumes_multiple(self):
+        """Test fetching multiple volumes"""
+        self.dfw = get_DockerFactsWorker({
+            'name': ['my_volume', 'another_volume'],
+            'action': 'get_volumes'})
+        full_vol_list = get_volumes(self.fake_data['volumes'])
+        self.dfw.client.volumes.list.return_value = full_vol_list
+
+        self.dfw.get_volumes()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.dfw.client.volumes.list.assert_called_once_with()
+        self.assertIn('my_volume', self.dfw.result['volumes'])
+        self.assertIn('another_volume', self.dfw.result['volumes'])
+        self.assertEqual(len(self.dfw.result['volumes']), 2)
+        self.assertDictEqual(
+            self.dfw.result['volumes']['my_volume'],
+            self.fake_data['volumes'][0])
+        self.assertDictEqual(
+            self.dfw.result['volumes']['another_volume'],
+            self.fake_data['volumes'][1])
+
+    def test_get_volumes_all(self):
+        """Test fetching all volumes when no specific names are provided"""
+        self.dfw = get_DockerFactsWorker({'name': [],
+                                          'action': 'get_volumes'})
+        full_vol_list = get_volumes(self.fake_data['volumes'])
+        self.dfw.client.volumes.list.return_value = full_vol_list
+
+        self.dfw.get_volumes()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.dfw.client.volumes.list.assert_called_once_with()
+        self.assertIn('my_volume', self.dfw.result['volumes'])
+        self.assertIn('another_volume', self.dfw.result['volumes'])
+        self.assertDictEqual(
+            self.dfw.result['volumes']['my_volume'],
+            self.fake_data['volumes'][0])
+        self.assertDictEqual(
+            self.dfw.result['volumes']['another_volume'],
+            self.fake_data['volumes'][1])
+
+    def test_get_volumes_negative(self):
+        """Test fetching a volume that doesn't exist"""
+        self.dfw = get_DockerFactsWorker({'name': ['nonexistent_volume'],
+                                          'action': 'get_volumes'})
+        full_vol_list = get_volumes(self.fake_data['volumes'])
+        self.dfw.client.volumes.list.return_value = full_vol_list
+
+        self.dfw.get_volumes()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.dfw.client.volumes.list.assert_called_once_with()
+        self.assertIn('volumes', self.dfw.result)
+        self.assertEqual(len(self.dfw.result['volumes']), 0)
+        self.assertNotIn('nonexistent_volume', self.dfw.result['volumes'])
