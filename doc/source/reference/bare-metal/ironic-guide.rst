@@ -148,6 +148,49 @@ variable ``ironic_enable_keystone_integration`` to ``"yes"``
 
     ironic_enable_keystone_integration: "yes"
 
+Avoiding problems with high availability
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+    This section assumes that you have not yet deployed the Nova Compute
+    Ironic service. If you have already deployed multiple instances of the
+    service and have one or more baremetal nodes registered, the following
+    operations are non-trivial. You will likely have to use the `nova-manage`
+    command (or pre-Caracal edit the DB) to ensure that all Ironic nodes
+    are registered with a single Nova Compute Ironic instance. This is
+    an advanced subject and is not covered here. Stop now if you don't
+    know what you are doing.
+
+Nova Compute Ironic HA is known to be unstable. Pending a better solution,
+a workaround is to avoid the feature by running a single Nova Compute Ironic
+instance. For example:
+
+.. code-block:: diff
+
+  - [nova-compute-ironic:children]
+  - nova
+  + [nova-compute-ironic]
+  + controller1
+
+If you choose to do this, it is helpful to pin the service host name
+to a 'synthetic' constant. This means that if you need to re-deploy the
+service to another host, the Ironic nodes will automatically use the new
+service instance. Otherwise you will need to manually move active Ironic nodes
+to the new service, with either the `nova-manage` CLI, or pre-Caracal, by
+editing the Nova database.
+
+The config option to pin the host name is `nova_compute_ironic_custom_host`
+and must be set as a group or host var. Note that, unless you know what you
+are doing, you must not change or set this option if you have already deployed
+Ironic nodes.
+
+This config option is also useful for Ironic Shards. Whilst these are not
+explicitly supported by Kolla Ansible, some further information can be found
+`here <https://specs.openstack.org/openstack/nova-specs/specs/2024.1/approved/ironic-shards.html>`__.
+
+Note that Ironic HA is not affected, and continues to work as normal.
+
 Deployment
 ~~~~~~~~~~
 Run the deploy as usual:
