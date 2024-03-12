@@ -104,7 +104,7 @@ def use_podman(module, results):
     for container in containers:
         container.reload()
         container_name = container.attrs['Name']
-        if container_name not in names:
+        if names and container_name not in names:
             continue
         results['_containers'].append(container.attrs)
         results[container_name] = container.attrs
