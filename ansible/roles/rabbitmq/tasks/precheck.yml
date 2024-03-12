@@ -227,26 +227,25 @@
 - block:
     - name: List RabbitMQ queues
       become: true
-      shell:
-        # TODO(mattcrees): remove ``| egrep -v '(fanout|reply)'`` once https://review.opendev.org/c/openstack/oslo.messaging/+/888479 is merged.
-        cmd: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type | egrep -v '(fanout|reply)' | awk '{ print $NF }'"
+      command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
       register: rabbitmq_queues
       changed_when: false
       check_mode: false
 
-    - name: Filter RabbitMQ queue types
-      set_fact:
-        rabbitmq_queue_types: "{{ rabbitmq_queues.stdout | split | unique }}"
-
     - name: Check if RabbitMQ quorum queues need to be configured
       assert:
-        that: "{{ (rabbitmq_queue_types | length == 1) and (rabbitmq_queue_types | first == 'quorum') }}"
+        that: "{{ item.type == 'quorum' }}"
         fail_msg: >
-          om_enable_rabbitmq_quorum_queues is True but non-quorum queues have been found.
+          om_enable_rabbitmq_quorum_queues is True but {{ item.name }} is a non-quorum queue.
           Currently the procedure to migrate to quorum queues is manual.
           Please follow the process described here: https://docs.openstack.org/kolla-ansible/2023.1/reference/message-queues/rabbitmq.html#high-availability.
           Note that this process may take several hours on larger systems, and may cause a degredation in performance at large scale.
           If you do not wish to enable this feature, set om_enable_rabbitmq_quorum_queues to False.
+      loop: "{{ (rabbitmq_queues.stdout | from_json) if rabbitmq_queues is not skipped else [] }}"
+      loop_control:
+        label: "{{ item.name }}"
+      # TODO(mattcress): remove skipping reply and fanout once https://review.opendev.org/c/openstack/oslo.messaging/+/888479 is merged.
+      when: not (item.name is search('reply_') or item.name is search('_fanout_'))
 
   run_once: true
   when:
