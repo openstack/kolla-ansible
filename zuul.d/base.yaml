@@ -3,16 +3,21 @@
     name: kolla-ansible-variables
     vars:
       address_family: 'ipv4'
-      # Test latest ansible version on Ubuntu, minimum supported on others.
+      # Test latest ansible-core version on Ubuntu, minimum supported on others.
+      # Use SLURP version (two releases back) on SLURP upgrades.
       ansible_core_version_constraint: >-
-        {{ ansible_core_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_core_version_max }}
-      ansible_core_version_max: "==2.15.*"
-      ansible_core_version_min: "==2.14.*"
-      # Test latest ansible version on Ubuntu, minimum supported on others.
+        {{ ansible_core_version_slurp if is_slurp else ansible_core_version_min if is_upgrade or ansible_facts.distribution != "Ubuntu" else ansible_core_version_max }}
+      ansible_core_version_slurp: "==2.14.*"
+      ansible_core_version_max: "==2.16.*"
+      ansible_core_version_min: "==2.15.*"
+      # Test latest ansible-core version on Ubuntu, minimum supported on others.
+      # Use SLURP version (two releases back) on SLURP upgrades.
+      # TODO(mnasiadka): Remove in D.
       ansible_version_constraint: >-
-        {{ ansible_version_min if is_upgrade or base_distro != 'ubuntu' else ansible_version_max }}
-      ansible_version_max: "==8.*"
-      ansible_version_min: "==7.*"
+          {{ ansible_version_slurp if is_slurp else ansible_version_min if is_upgrade or ansible_facts.distribution != "Ubuntu" else ansible_version_max }}
+      ansible_version_slurp: "==7.*"
+      ansible_version_min: "==8.*"
+      ansible_version_max: "==9.*"
       api_interface_name: vxlan0
       api_network_prefix: "192.0.2."
       api_network_prefix_length: "24"
