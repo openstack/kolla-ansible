@@ -72,10 +72,10 @@ Ubuntu Jammy 22.04
 ------------------
 
 The Zed release adds support for Ubuntu Jammy 22.04 as a host operating
-system. Ubuntu Jammy 22.04 support will also be addeed to a Yoga stable
-release. Ubuntu Focal 20.04 users upgrading from Yoga should first upgrade
-OpenStack containers to Zed, which uses the Ubuntu Jammy 22.04 base container
-image. Hosts should then be upgraded to Ubuntu Jammy 22.04.
+system. Ubuntu Jammy 22.04 support was also added to the Yoga stable
+release. Ubuntu Focal 20.04 users upgrading from Yoga can thus directly
+upgrade to Ubuntu Jammy 22.04 on the host and then upgrade to the Zed release.
+
 
 CentOS Stream 8
 ---------------
