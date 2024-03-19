@@ -60,7 +60,7 @@ controls how ansible interacts with remote hosts.
 
    Ansible uses SSH to connect the deployment host and target hosts. For more
    information about SSH authentication please reference
-   `Ansible documentation <http://docs.ansible.com/ansible/intro_inventory.html>`__.
+   `Ansible documentation <http://docs.ansible.com/ansible/latest/intro_inventory.html>`__.
 
 .. code-block:: ini
 
@@ -75,7 +75,7 @@ controls how ansible interacts with remote hosts.
 
    Additional inventory parameters might be required according to your
    environment setup. Reference `Ansible Documentation
-   <http://docs.ansible.com/ansible/intro_inventory.html>`__ for more
+   <http://docs.ansible.com/ansible/latest/intro_inventory.html>`__ for more
    information.
 
 
