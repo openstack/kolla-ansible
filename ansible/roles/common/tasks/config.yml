@@ -64,8 +64,8 @@
 
 - name: Set fluentd facts
   set_fact:
-    fluentd_cmd: "{{ fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_binary | default('td-agent') }}"
-    fluentd_user: "{{ fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_user | default('td-agent') }}"
+    fluentd_cmd: "{{ fluentd_labels_docker.images[0].Config.Labels.fluentd_binary | default(fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_binary) | default('td-agent') }}"
+    fluentd_user: "{{ fluentd_labels_docker.images[0].Config.Labels.fluentd_user | default(fluentd_labels_docker.images[0].ContainerConfig.Labels.fluentd_user) | default('td-agent') }}"
   when:
     - kolla_container_engine == "docker"
     - enable_fluentd | bool
