@@ -15,8 +15,8 @@ check_podman_failures() {
         --filter status=unknown)
 
     for container in $failed_containers; do
-        podman inspect $container
-        podman logs $container
+        sudo podman inspect $container
+        sudo podman logs $container
     done
 }
 
@@ -41,8 +41,8 @@ check_docker_failures() {
         --filter status=dead)
 
     for container in $failed_containers; do
-        docker inspect $container
-        docker logs $container
+        sudo docker inspect $container
+        sudo docker logs $container
     done
 }
 
