@@ -1,39 +1,36 @@
-{% set fluentd_dir = '/etc/' + (fluentd_cmd | default('td-agent')) %}
-{% set fluentd_conf = (fluentd_cmd | default('td-agent')) + '.conf' %}
-
 {
-    "command": "{{ fluentd_cmd }} -c {{ fluentd_dir }}/{{ fluentd_conf }} -o /var/log/kolla/fluentd/fluentd.log",
+    "command": "fluentd -c /etc/fluentd/fluentd.conf -o /var/log/kolla/fluentd/fluentd.log",
     "config_files": [
         {
-            "source": "{{ container_config_directory }}/td-agent.conf",
-            "dest": "{{ fluentd_dir }}/{{ fluentd_conf }}",
-            "owner": "{{ fluentd_user }}",
+            "source": "{{ container_config_directory }}/fluentd.conf",
+            "dest": "/etc/fluentd/fluentd.conf",
+            "owner": "fluentd",
             "perm": "0600"
         }
     ],
     "permissions": [
         {
             "path": "/var/log/kolla/fluentd",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "owner": "fluentd:fluentd",
             "recurse": true
         },
 {% for facility in syslog_facilities | selectattr('enabled') %}
         {
             "path": "/var/log/kolla/{{ facility.logdir }}",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "owner": "fluentd:fluentd",
             "recurse": true
         },
 {% endfor %}
 {% if enable_fluentd_systemd | bool %}
         {
             "path": "/var/log/journal",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "owner": "fluentd:fluentd",
             "recurse": true
         },
 {% endif %}
         {
             "path": "/var/lib/fluentd/data",
-            "owner": "{{ fluentd_user }}:{{ fluentd_user }}",
+            "owner": "fluentd:fluentd",
             "recurse": true
         }
     ]
