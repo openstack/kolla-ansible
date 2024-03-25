@@ -47,9 +47,9 @@ function generate_pciwhitelist {
     for nic in $(list_dpdk_nics); do
         address="$(get_value $nic address)"
         if [ "$_Whitelist" == '' ]; then
-            _Whitelist="-w $address"
+            _Whitelist="-a $address"
         else
-            _Whitelist="$_Whitelist -w $address"
+            _Whitelist="$_Whitelist -a $address"
         fi
     done
     echo $_Whitelist
@@ -482,7 +482,7 @@ options:
       - The pci_whitelist allows multiple dpdk primary process to
         utilise different pci devices without resulting in a conflict
         of ownership.
-      - Example: pci_whitelist="-w <pci address 1> -w <pci address 2>"
+      - Example: pci_whitelist="-a <pci address 1> -a <pci address 2>"
       - Default: auto generated form port_mappings.
 EOF
 
