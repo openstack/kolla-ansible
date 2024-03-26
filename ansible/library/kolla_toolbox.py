@@ -89,7 +89,7 @@ EXAMPLES = '''
     - name: Creating default user role
       kolla_toolbox:
         container_engine: docker
-        module_name: os_keystone_role
+        module_name: openstack.cloud.identity_role
         module_args:
           name: member
           auth: "{{ '{{ openstack_keystone_auth }}' }}"

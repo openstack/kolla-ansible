@@ -3,7 +3,7 @@
     - name: "{{ project_name }} | Creating services"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_keystone_service"
+        module_name: openstack.cloud.catalog_service
         module_args:
           name: "{{ item.name }}"
           service_type: "{{ item.type }}"
@@ -24,7 +24,7 @@
     - name: "{{ project_name }} | Creating endpoints"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_keystone_endpoint"
+        module_name: openstack.cloud.endpoint
         module_args:
           service: "{{ item.0.name }}"
           url: "{{ item.1.url }}"
@@ -48,7 +48,7 @@
     - name: "{{ project_name }} | Creating projects"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_project"
+        module_name: openstack.cloud.project
         module_args:
           name: "{{ item }}"
           domain: "{{ service_ks_register_domain }}"
@@ -65,7 +65,7 @@
     - name: "{{ project_name }} | Creating users"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_user"
+        module_name: openstack.cloud.identity_user
         module_args:
           default_project: "{{ item.project }}"
           name: "{{ item.user }}"
@@ -87,7 +87,7 @@
     - name: "{{ project_name }} | Creating roles"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_keystone_role"
+        module_name: openstack.cloud.identity_role
         module_args:
           name: "{{ item }}"
           region_name: "{{ service_ks_register_region_name }}"
@@ -103,7 +103,7 @@
     - name: "{{ project_name }} | Granting user roles"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
-        module_name: "os_user_role"
+        module_name: openstack.cloud.role_assignment
         module_args:
           user: "{{ item.user }}"
           role: "{{ item.role }}"
