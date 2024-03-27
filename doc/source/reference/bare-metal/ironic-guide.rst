@@ -69,7 +69,7 @@ The default lease time for each range can be configured globally via
 In the same file, specify the PXE bootloader file for Ironic Inspector. The
 file is relative to the ``/var/lib/ironic/tftpboot`` directory. The default is
 ``pxelinux.0``, and should be correct for x86 systems. Other platforms may
-require a differentvalue, for example aarch64 on Debian requires
+require a different value, for example aarch64 on Debian requires
 ``debian-installer/arm64/bootnetaa64.efi``.
 
 .. code-block:: yaml
