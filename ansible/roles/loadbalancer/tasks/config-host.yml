@@ -1,4 +1,10 @@
 ---
+
+- name: Check IPv6 support
+  command: /usr/sbin/sysctl -n net.ipv6.conf.all.disable_ipv6
+  register: ipv6_disabled
+  changed_when: false
+
 - name: Setting sysctl values
   vars:
     should_set: "{{ item.value != 'KOLLA_UNSET' }}"
@@ -17,6 +23,7 @@
   when:
     - set_sysctl | bool
     - item.value != 'KOLLA_SKIP'
+    - not ('ipv6' in item.name and ipv6_disabled.stdout | bool)
 
 - name: Load and persist keepalived module
   import_role:
