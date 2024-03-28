@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 import sys
 from unittest import mock
@@ -26,7 +26,8 @@ this_dir = os.path.dirname(sys.modules[__name__].__file__)
 ansible_dir = os.path.join(this_dir, '..', '..', 'ansible')
 systemd_worker_file = os.path.join(ansible_dir,
                                    'module_utils', 'kolla_systemd_worker.py')
-swm = imp.load_source('kolla_systemd_worker', systemd_worker_file)
+swm = SourceFileLoader('kolla_systemd_worker',
+                       systemd_worker_file).load_module()
 
 
 class TestSystemd(base.BaseTestCase):

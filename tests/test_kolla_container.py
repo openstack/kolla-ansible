@@ -15,7 +15,7 @@
 
 # FIXME(yoctozepto): tests do not imitate how ansible would handle module args
 
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 import sys
 from unittest import mock
@@ -28,8 +28,8 @@ kolla_container_file = os.path.join(ansible_dir,
                                     'library', 'kolla_container.py')
 docker_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_docker_worker.py')
-kc = imp.load_source('kolla_container', kolla_container_file)
-dwm = imp.load_source('kolla_docker_worker', docker_worker_file)
+kc = SourceFileLoader('kolla_container', kolla_container_file).load_module()
+dwm = SourceFileLoader('kolla_docker_worker', docker_worker_file).load_module()
 
 
 class ModuleArgsTest(base.BaseTestCase):

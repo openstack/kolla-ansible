@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 
 from io import StringIO
@@ -25,7 +25,8 @@ MERGE_CONFIG_FILE = os.path.join(PROJECT_DIR,
                                  'ansible/action_plugins/merge_configs.py')
 
 
-merge_configs = imp.load_source('merge_configs', MERGE_CONFIG_FILE)
+merge_configs = SourceFileLoader('merge_configs',
+                                 MERGE_CONFIG_FILE).load_module()
 
 TESTA = '''[DEFAULT]
 key1 = b

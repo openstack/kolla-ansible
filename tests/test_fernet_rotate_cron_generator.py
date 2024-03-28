@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 import sys
 
@@ -22,7 +22,7 @@ this_dir = os.path.dirname(sys.modules[__name__].__file__)
 file_under_test = os.path.join(this_dir, '..', 'ansible',
                                'roles', 'keystone', 'files',
                                'fernet_rotate_cron_generator.py')
-generator = imp.load_source('generator', file_under_test)
+generator = SourceFileLoader('generator', file_under_test).load_module()
 
 
 class FernetRotateCronGeneratorTest(base.BaseTestCase):

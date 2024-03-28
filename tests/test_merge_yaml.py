@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 
 from ansible.errors import AnsibleModuleError
@@ -22,7 +22,7 @@ from oslotest import base
 PROJECT_DIR = os.path.abspath(os.path.join(os. path.dirname(__file__), '../'))
 MERGE_YAML_FILE = os.path.join(PROJECT_DIR,
                                'ansible/action_plugins/merge_yaml.py')
-merge_yaml = imp.load_source('merge_yaml', MERGE_YAML_FILE)
+merge_yaml = SourceFileLoader('merge_yaml', MERGE_YAML_FILE).load_module()
 
 
 class MergeYamlConfigTest(base.BaseTestCase):

@@ -14,7 +14,7 @@
 
 
 import copy
-import imp
+from importlib.machinery import SourceFileLoader
 import os
 import sys
 import unittest
@@ -31,8 +31,8 @@ kolla_container_file = os.path.join(ansible_dir,
                                     'library', 'kolla_container.py')
 podman_worker_file = os.path.join(ansible_dir,
                                   'module_utils', 'kolla_podman_worker.py')
-kc = imp.load_source('kolla_container', kolla_container_file)
-pwm = imp.load_source('kolla_podman_worker', podman_worker_file)
+kc = SourceFileLoader('kolla_container', kolla_container_file).load_module()
+pwm = SourceFileLoader('kolla_podman_worker', podman_worker_file).load_module()
 
 FAKE_DATA = {
     'params': {

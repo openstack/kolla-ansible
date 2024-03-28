@@ -78,7 +78,8 @@ class PodmanWorker(ContainerWorker):
         )
 
         command = self.params.pop('command', '')
-        self.params['command'] = shlex.split(command)
+        if command:
+            self.params['command'] = shlex.split(command)
 
         #  we have to transform volumes into mounts because podman-py
         #  functionality is broken
