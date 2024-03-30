@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
-  with_dict: "{{ glance_services }}"
+  with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: external_ceph.yml
   when:
@@ -41,7 +38,7 @@
 
 - name: Creating TLS backend PEM File
   vars:
-    glance_tls_proxy: "{{ glance_services['glance-tls-proxy'] }}"
+    service: "{{ glance_services['glance-tls-proxy'] }}"
   assemble:
     src: "{{ node_config_directory }}/glance-tls-proxy/"
     dest: "{{ node_config_directory }}/glance-tls-proxy/glance-cert-and-key.pem"
@@ -49,9 +46,7 @@
     regexp: "^glance-(cert|key)\\.pem$"
     remote_src: true
   become: true
-  when:
-    - glance_tls_proxy.enabled | bool
-    - glance_tls_proxy.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over config.json files for services
   template:
@@ -59,16 +54,13 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ glance_services }}"
+  with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
 - name: Copying over glance-api.conf
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/glance-api.conf.j2"
@@ -79,15 +71,13 @@
     dest: "{{ node_config_directory }}/glance-api/glance-api.conf"
     mode: "0660"
   become: true
-  when:
-    - glance_api.enabled | bool
-    - glance_api.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart glance-api container
 
 - name: Copying over glance-cache.conf for glance_api
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/glance-cache.conf.j2"
@@ -98,15 +88,14 @@
     mode: "0660"
   become: true
   when:
-    - glance_api.enabled | bool
-    - glance_api.host_in_groups | bool
+    - service | service_enabled_and_mapped_to_host
     - enable_glance_image_cache | bool
   notify:
     - Restart glance-api container
 
 - name: Copying over glance-swift.conf for glance_api
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/glance-swift.conf.j2"
@@ -117,45 +106,42 @@
     mode: "0660"
   become: true
   when:
-    - glance_api.enabled | bool
-    - glance_api.host_in_groups | bool
+    - service | service_enabled_and_mapped_to_host
     - glance_backend_swift | bool
   notify:
     - Restart glance-api container
 
 - name: Copying over glance-image-import.conf
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   copy:
     src: "{{ node_custom_config }}/glance/glance-image-import.conf"
     dest: "{{ node_config_directory }}/glance-api/glance-image-import.conf"
     mode: "0660"
   become: true
   when:
-    - glance_api.enabled | bool
-    - inventory_hostname in groups[glance_api.group]
+    - service | service_enabled_and_mapped_to_host
     - glance_enable_interoperable_image_import | bool
   notify:
     - Restart glance-api container
 
 - name: Copying over property-protections-rules.conf
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   copy:
     src: "{{ node_custom_config }}/glance/property-protections-rules.conf"
     dest: "{{ node_config_directory }}/glance-api/property-protections-rules.conf"
     mode: "0660"
   become: true
   when:
-    - glance_api.enabled | bool
-    - inventory_hostname in groups[glance_api.group]
+    - service | service_enabled_and_mapped_to_host
     - glance_enable_property_protection | bool
   notify:
     - Restart glance-api container
 
 - name: Copying over existing policy file
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   template:
     src: "{{ glance_policy_file_path }}"
     dest: "{{ node_config_directory }}/glance-api/{{ glance_policy_file }}"
@@ -163,14 +149,13 @@
   become: true
   when:
     - glance_policy_file is defined
-    - glance_api.host_in_groups | bool
-    - glance_api.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart glance-api container
 
 - name: Copying over glance-haproxy-tls.cfg
   vars:
-    glance_tls_proxy: "{{ glance_services['glance-tls-proxy'] }}"
+    service: "{{ glance_services['glance-tls-proxy'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/glance-tls-proxy/glance-tls-proxy.cfg"
@@ -180,8 +165,6 @@
     - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/glance-tls-proxy.cfg"
     - "{{ node_custom_config }}/glance/glance-tls-proxy.cfg"
     - "glance-tls-proxy.cfg.j2"
-  when:
-    - glance_tls_proxy.enabled | bool
-    - glance_tls_proxy.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart glance-tls-proxy container

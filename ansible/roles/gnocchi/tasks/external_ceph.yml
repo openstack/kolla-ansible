@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  with_dict: "{{ gnocchi_services }}"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copy over ceph config for Gnocchi
   merge_configs:
@@ -20,10 +17,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph/{{ gnocchi_ceph_cluster }}.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ gnocchi_services }}"
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -33,10 +27,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph/{{ gnocchi_ceph_cluster }}.{{ ceph_gnocchi_keyring }}"
     mode: "0660"
   become: true
-  with_dict: "{{ gnocchi_services }}"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -47,7 +38,4 @@
     recurse: yes
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ gnocchi_services }}"
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"

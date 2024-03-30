@@ -16,7 +16,7 @@
 
 - name: Checking free port for Placement API
   vars:
-    placement_api: "{{ placement_services['placement-api'] }}"
+    service: "{{ placement_services['placement-api'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ placement_api_listen_port }}"
@@ -25,5 +25,4 @@
     state: stopped
   when:
     - container_facts['placement_api'] is not defined
-    - inventory_hostname in groups[placement_api.group]
-    - placement_api.enabled | bool
+    - service | service_enabled_and_mapped_to_host

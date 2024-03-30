@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ keystone_services }}"
+  with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -48,10 +45,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  with_dict: "{{ keystone_services }}"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
+  with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -68,39 +62,34 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/keystone.conf"
     mode: "0660"
   become: true
-  with_dict: "{{ keystone_services }}"
+  with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
   when:
-    - inventory_hostname in groups[item.value.group]
     - item.key in [ "keystone", "keystone-fernet" ]
-    - item.value.enabled | bool
   notify:
     - Restart {{ item.key }} container
 
 - name: Copying keystone-startup script for keystone
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone'] }}"
   template:
     src: "keystone-startup.sh.j2"
     dest: "{{ node_config_directory }}/keystone/keystone-startup.sh"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart keystone container
 
 - name: Create Keystone domain-specific config directory
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    service: "{{ keystone_services['keystone'] }}"
   file:
     dest: "{{ node_config_directory }}/keystone/domains/"
     state: "directory"
     mode: "0770"
   become: true
   when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - keystone_domain_directory.stat.exists
 
 - name: Get file list in custom domains folder
@@ -114,7 +103,7 @@
 
 - name: Copying Keystone Domain specific settings
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    service: "{{ keystone_services['keystone'] }}"
   template:
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/keystone/domains/"
@@ -122,8 +111,7 @@
   become: true
   register: keystone_domains
   when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - keystone_domain_directory.stat.exists
   with_items: "{{ keystone_domains.files | default([]) }}"
   notify:
@@ -136,11 +124,9 @@
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
     - item.key in [ "keystone", "keystone-fernet" ]
-    - item.value.enabled | bool
     - keystone_policy_file is defined
-  with_dict: "{{ keystone_services }}"
+  with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -150,15 +136,13 @@
 
 - name: Copying over wsgi-keystone.conf
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    service: "{{ keystone_services['keystone'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/keystone/wsgi-keystone.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/keystone/{{ inventory_hostname }}/wsgi-keystone.conf"
     - "{{ node_custom_config }}/keystone/wsgi-keystone.conf"
@@ -168,26 +152,24 @@
 
 - name: Checking whether keystone-paste.ini file exists
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    service: "{{ keystone_services['keystone'] }}"
   stat:
     path: "{{ node_custom_config }}/keystone/keystone-paste.ini"
   delegate_to: localhost
   run_once: True
   register: check_keystone_paste_ini
-  when:
-    - keystone.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over keystone-paste.ini
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    service: "{{ keystone_services['keystone'] }}"
   template:
     src: "{{ node_custom_config }}/keystone/keystone-paste.ini"
     dest: "{{ node_config_directory }}/keystone/keystone-paste.ini"
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[keystone.group]
-    - keystone.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - check_keystone_paste_ini.stat.exists
   notify:
     - Restart keystone container
@@ -211,7 +193,7 @@
 
 - name: Copying files for keystone-fernet
   vars:
-    keystone_fernet: "{{ keystone_services['keystone-fernet'] }}"
+    service: "{{ keystone_services['keystone-fernet'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/keystone-fernet/{{ item.dest }}"
@@ -226,15 +208,13 @@
     - { src: "fernet-healthcheck.sh.j2", dest: "fernet-healthcheck.sh" }
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "ssh_config.j2", dest: "ssh_config" }
-  when:
-    - inventory_hostname in groups[keystone_fernet.group]
-    - keystone_fernet.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart keystone-fernet container
 
 - name: Copying files for keystone-ssh
   vars:
-    keystone_ssh: "{{ keystone_services['keystone-ssh'] }}"
+    service: "{{ keystone_services['keystone-ssh'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/keystone-ssh/{{ item.dest }}"
@@ -243,8 +223,6 @@
   with_items:
     - { src: "sshd_config.j2", dest: "sshd_config" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
-  when:
-    - inventory_hostname in groups[keystone_ssh.group]
-    - keystone_ssh.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart keystone-ssh container

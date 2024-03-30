@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ironic_services }}"
+  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if Ironic policies shall be overwritten
   stat:
@@ -60,10 +57,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ironic_services }}"
+  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -82,9 +76,7 @@
   become: true
   when:
     - item.key in [ "ironic-api", "ironic-conductor", "ironic-prometheus-exporter" ]
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ironic_services }}"
+  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -101,9 +93,7 @@
     dest: "{{ node_config_directory }}/ironic-inspector/inspector.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart ironic-inspector container
 
@@ -115,9 +105,7 @@
     dest: "{{ node_config_directory }}/ironic-dnsmasq/dnsmasq.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/ironic/ironic-dnsmasq.conf"
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ironic-dnsmasq.conf"
@@ -140,8 +128,7 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - not ironic_dnsmasq_serve_ipxe | bool
   notify:
     - Restart ironic-tftp container
@@ -160,8 +147,7 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - not ironic_dnsmasq_serve_ipxe | bool
   notify:
     - Restart ironic-tftp container
@@ -180,8 +166,7 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart ironic-http container
 
@@ -200,8 +185,7 @@
   when:
     # Only required when Ironic inspector is in use.
     - groups['ironic-inspector'] | length > 0
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart ironic-http container
 
@@ -216,9 +200,7 @@
   with_first_found:
     - "{{ node_custom_config }}/ironic/ironic-http-httpd.conf"
     - "ironic-http-httpd.conf.j2"
-  when:
-    - service.enabled | bool
-    - inventory_hostname in groups[service.group]
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart ironic-http container
 
@@ -234,9 +216,7 @@
     - "{{ node_config_directory }}/ironic/{{ inventory_hostname }}/ironic-prometheus-exporter-wsgi.conf"
     - "{{ node_config_directory }}/ironic/ironic-prometheus-exporter-wsgi.conf"
     - "ironic-prometheus-exporter-wsgi.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart ironic-prometheus-exporter container"
 
@@ -253,9 +233,7 @@
   when:
     - ironic_policy_file is defined
     - item.key in services_require_policy_json
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ironic_services }}"
+  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -271,20 +249,18 @@
   when:
     - ironic_inspector_policy_file is defined
     - item.key in services_require_inspector_policy_json
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ironic_services }}"
+  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
 - name: Copying over ironic-api-wsgi.conf
+  vars:
+    service: "{{ ironic_services['ironic-api'] }}"
   template:
     src: "ironic-api-wsgi.conf.j2"
     dest: "{{ node_config_directory }}/ironic-api/ironic-api-wsgi.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups["ironic-api"]
-    - ironic_services["ironic-api"].enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart ironic-api container"

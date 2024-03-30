@@ -5,12 +5,10 @@
     action: "stop_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
-  with_dict: "{{ nova_cell_services }}"
+  with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
   when:
     - "'nova-compute' not in item.key"
     - item.key in nova_cell_services_require_nova_conf
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - nova_safety_upgrade | bool
 
 - import_tasks: rolling_upgrade.yml

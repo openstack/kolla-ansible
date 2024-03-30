@@ -1,46 +1,29 @@
 ---
-- name: Copying over libvirt TLS keys (nova-libvirt)
+- name: Copying over libvirt TLS keys to services
   become: true
   vars:
-    service: "{{ nova_cell_services['nova-libvirt'] }}"
-    service_name: nova-libvirt
+    services:
+      - "nova-compute"
+      - "nova-libvirt"
+    key_files:
+      - cacert.pem
+      - clientcert.pem
+      - clientkey.pem
+      - servercert.pem
+      - serverkey.pem
+    service_name: "{{ item[0] }}"
+    filename: "{{ item[1] }}"
     paths:
-      - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ item }}"
-      - "{{ node_custom_config }}/nova/nova-libvirt/{{ item }}"
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ filename }}"
+      - "{{ node_custom_config }}/nova/nova-libvirt/{{ filename }}"
+    service: "{{ nova_cell_services[service_name] }}"
   copy:
     src: "{{ lookup('first_found', paths) }}"
-    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}/{{ filename }}"
     mode: "0600"
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - cacert.pem
-    - servercert.pem
-    - serverkey.pem
-    - clientcert.pem
-    - clientkey.pem
+    - service | service_enabled_and_mapped_to_host
+    - not (service_name == 'nova-compute' and (filename == 'servercert.pem' or filename == 'serverkey.pem'))
+  loop: "{{ services | product(key_files) | list }}"
   notify:
-    - Restart {{ service_name }} container
-
-- name: Copying over libvirt TLS keys (nova-compute)
-  become: true
-  vars:
-    service: "{{ nova_cell_services['nova-compute'] }}"
-    service_name: nova-compute
-    paths:
-      - "{{ node_custom_config }}/nova/nova-libvirt/{{ inventory_hostname }}/{{ item }}"
-      - "{{ node_custom_config }}/nova/nova-libvirt/{{ item }}"
-  copy:
-    src: "{{ lookup('first_found', paths) }}"
-    dest: "{{ node_config_directory }}/{{ service_name }}/{{ item }}"
-    mode: "0600"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  with_items:
-    - cacert.pem
-    - clientcert.pem
-    - clientkey.pem
-  notify:
-    - Restart {{ service_name }} container
+    - Restart {{service_name }} container

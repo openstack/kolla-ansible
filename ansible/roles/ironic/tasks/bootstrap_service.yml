@@ -47,7 +47,7 @@
 
 - name: Running ironic-tftp bootstrap container
   vars:
-    ironic_tftp: "{{ ironic_services['ironic-tftp'] }}"
+    service: "{{ ironic_services['ironic-tftp'] }}"
   become: true
   kolla_container:
     action: "start_container"
@@ -58,12 +58,10 @@
       HTTPBOOT_PATH: /var/lib/ironic/httpboot
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ ironic_tftp.image }}"
+    image: "{{ service.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic_tftp"
     restart_policy: oneshot
-    volumes: "{{ ironic_tftp.volumes }}"
-  when:
-    - inventory_hostname in groups[ironic_tftp.group]
-    - ironic_tftp.enabled | bool
+    volumes: "{{ service.volumes }}"
+  when: service | service_enabled_and_mapped_to_host

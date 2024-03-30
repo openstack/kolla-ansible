@@ -10,7 +10,7 @@
 - name: Ensure remote node is added
   vars:
     pacemaker_service: "{{ hacluster_services['hacluster-pacemaker'] }}"
-    pacemaker_remote_service: "{{ hacluster_services['hacluster-pacemaker-remote'] }}"
+    service: "{{ hacluster_services['hacluster-pacemaker-remote'] }}"
   shell: >
     {{ kolla_container_engine }} exec {{ pacemaker_service.container_name }}
     cibadmin --modify --scope resources -X '
@@ -27,6 +27,4 @@
     '
   become: true
   delegate_to: "{{ groups[pacemaker_service.group][0] }}"
-  when:
-    - inventory_hostname in groups[pacemaker_remote_service.group]
-    - pacemaker_remote_service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host

@@ -96,8 +96,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when: item.value | service_enabled_and_mapped_to_host
-  with_dict: "{{ common_services }}"
+  with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -289,9 +288,8 @@
     mode: "0770"
   ignore_errors: "{{ ansible_check_mode }}"
   when:
-    - item.value | service_enabled_and_mapped_to_host
     - item.key != "kolla-toolbox"
-  with_dict: "{{ common_services }}"
+  with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copy rabbitmq-env.conf to kolla toolbox
   template:

@@ -7,10 +7,7 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ horizon_services }}"
+  with_dict: "{{ horizon_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Set empty custom policy
   set_fact:
@@ -43,21 +40,19 @@
 - name: Copying over config.json files for services
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   template:
     src: "horizon.json.j2"
     dest: "{{ node_config_directory }}/horizon/config.json"
     mode: "0660"
-  when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart horizon container
 
 - name: Copying over horizon.conf
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/horizon.conf"
@@ -66,16 +61,14 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/horizon.conf"
     - "{{ node_custom_config }}/horizon/horizon.conf"
     - "horizon.conf.j2"
-  when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart horizon container
 
 - name: Copying over kolla-settings.py
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/_9998-kolla-settings.py"
@@ -84,16 +77,14 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/_9998-kolla-settings.py"
     - "{{ node_custom_config }}/horizon/_9998-kolla-settings.py"
     - "_9998-kolla-settings.py.j2"
-  when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart horizon container
 
 - name: Copying over custom-settings.py
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/_9999-custom-settings.py"
@@ -102,23 +93,19 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/_9999-custom-settings.py"
     - "{{ node_custom_config }}/horizon/_9999-custom-settings.py"
     - "_9999-custom-settings.py.j2"
-  when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart horizon container
 
 - name: Copying over existing policy file
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/horizon/{{ item | basename }}"
     mode: "0660"
-  when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+  when: service | service_enabled_and_mapped_to_host
   with_items: "{{ custom_policy }}"
   notify:
     - Restart horizon container
@@ -126,14 +113,13 @@
 - name: Copying over custom themes
   become: true
   vars:
-    horizon: "{{ horizon_services['horizon'] }}"
+    service: "{{ horizon_services['horizon'] }}"
   copy:
     src: "{{ node_custom_config }}/horizon/themes/{{ item.name }}"
     dest: "{{ node_config_directory }}/horizon/themes/"
     mode: 0660
   when:
-    - horizon.enabled | bool
-    - inventory_hostname in groups[horizon.group]
+    - service | service_enabled_and_mapped_to_host
     - horizon_custom_themes | length > 0
   with_items: "{{ horizon_custom_themes }}"
   notify:

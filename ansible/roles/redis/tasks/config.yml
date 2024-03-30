@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ redis_services }}"
+  with_dict: "{{ redis_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over default config.json files
   template:
@@ -18,10 +15,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ redis_services }}"
+  with_dict: "{{ redis_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -31,9 +25,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/redis.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ redis_services }}"
+  with_dict: "{{ redis_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container

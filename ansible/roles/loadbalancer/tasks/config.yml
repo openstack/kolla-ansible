@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ loadbalancer_services }}"
+  with_dict: "{{ loadbalancer_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Ensuring haproxy service config subdir exists
   vars:
@@ -22,9 +19,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Ensuring proxysql service config subdirectories exist
   vars:
@@ -39,9 +34,7 @@
   with_items:
     - "users"
     - "rules"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Ensuring keepalived checks subdir exists
   vars:
@@ -53,9 +46,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Remove mariadb.cfg if proxysql enabled
   vars:
@@ -65,8 +56,7 @@
     state: absent
   become: true
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - loadbalancer_services.proxysql.enabled | bool
   notify:
     - Restart haproxy container
@@ -81,12 +71,11 @@
   with_dict: "{{ loadbalancer_services }}"
   when:
     - keepalived_track_script_enabled | bool
-    - inventory_hostname in groups[service.group]
     - item.key != 'keepalived'
     - item.key != 'haproxy-ssh'
     - not item.value.enabled | bool
       or not inventory_hostname in groups[item.value.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart keepalived container
 
@@ -101,12 +90,11 @@
   with_dict: "{{ loadbalancer_services }}"
   when:
     - keepalived_track_script_enabled | bool
-    - inventory_hostname in groups[service.group]
     - inventory_hostname in groups[item.value.group]
     - item.key != 'keepalived'
     - item.key != 'haproxy-ssh'
     - item.value.enabled | bool
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart keepalived container
 
@@ -116,10 +104,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ loadbalancer_services }}"
+  with_dict: "{{ loadbalancer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -131,9 +116,7 @@
     dest: "{{ node_config_directory }}/haproxy/haproxy.cfg"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/haproxy/{{ inventory_hostname }}/haproxy_main.cfg"
     - "{{ node_custom_config }}/haproxy/haproxy_main.cfg"
@@ -149,9 +132,7 @@
     dest: "{{ node_config_directory }}/proxysql/proxysql.yaml"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/proxysql/{{ inventory_hostname }}/proxysql.yaml"
     - "{{ node_custom_config }}/proxysql/proxysql.yaml"
@@ -168,8 +149,7 @@
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - haproxy_single_external_frontend | bool
   notify:
     - Restart haproxy container
@@ -182,9 +162,7 @@
     dest: "{{ node_config_directory }}/haproxy/services.d/"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_fileglob:
     - "{{ node_custom_config }}/haproxy/services.d/*.cfg"
   notify:
@@ -198,9 +176,7 @@
     dest: "{{ node_config_directory }}/keepalived/keepalived.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/keepalived/{{ inventory_hostname }}/keepalived.conf"
     - "{{ node_custom_config }}/keepalived/keepalived.conf"
@@ -220,8 +196,7 @@
     - not enable_letsencrypt | bool
     - kolla_enable_tls_external | bool
     - not kolla_externally_managed_cert | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   with_items:
     - "haproxy.pem"
   notify:
@@ -239,8 +214,7 @@
     - not enable_letsencrypt | bool
     - kolla_enable_tls_internal | bool
     - not kolla_externally_managed_cert | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   with_items:
     - "haproxy-internal.pem"
   notify:
@@ -258,9 +232,7 @@
     dest: "{{ node_config_directory }}/haproxy/haproxy_run.sh"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/haproxy/{{ inventory_hostname }}/haproxy_run.sh"
     - "{{ node_custom_config }}/haproxy/haproxy_run.sh"
@@ -276,9 +248,7 @@
     dest: "{{ node_config_directory }}/proxysql/proxysql_run.sh"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/proxysql/{{ inventory_hostname }}/proxysql_run.sh"
     - "{{ node_custom_config }}/proxysql/proxysql_run.sh"
@@ -288,7 +258,7 @@
 
 - name: Copying files for haproxy-ssh
   vars:
-    haproxy_ssh: "{{ loadbalancer_services['haproxy-ssh'] }}"
+    service: "{{ loadbalancer_services['haproxy-ssh'] }}"
   template:
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/haproxy-ssh/{{ item.dest }}"
@@ -297,8 +267,6 @@
   with_items:
     - { src: "haproxy-ssh/sshd_config.j2", dest: "sshd_config" }
     - { src: "haproxy-ssh/id_rsa.pub", dest: "id_rsa.pub" }
-  when:
-    - inventory_hostname in groups[haproxy_ssh.group]
-    - haproxy_ssh.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart haproxy-ssh container

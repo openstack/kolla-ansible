@@ -11,9 +11,6 @@
     volumes: "{{ item.value.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ item.value.dimensions }}"
     healthcheck: "{{ item.value.healthcheck | default(omit) }}"
-  when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
-  with_dict: "{{ glance_services }}"
+  with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"

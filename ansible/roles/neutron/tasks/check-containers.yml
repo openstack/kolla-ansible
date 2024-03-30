@@ -11,9 +11,6 @@
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment | default(omit) }}"
     healthcheck: "{{ item.value.healthcheck | default(omit) }}"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"

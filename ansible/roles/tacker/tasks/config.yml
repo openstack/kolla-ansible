@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
-  with_dict: "{{ tacker_services }}"
+  with_dict: "{{ tacker_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -41,10 +38,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  with_dict: "{{ tacker_services }}"
-  when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled
+  with_dict: "{{ tacker_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -61,10 +55,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/tacker.conf"
     mode: "0660"
   become: true
-  with_dict: "{{ tacker_services }}"
-  when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
+  with_dict: "{{ tacker_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -75,9 +66,7 @@
     mode: "0660"
   become: true
   when:
-    - item.value.host_in_groups | bool
-    - item.value.enabled | bool
     - tacker_policy_file is defined
-  with_dict: "{{ tacker_services }}"
+  with_dict: "{{ tacker_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container

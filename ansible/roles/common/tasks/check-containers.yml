@@ -10,8 +10,6 @@
     dimensions: "{{ item.value.dimensions }}"
     privileged: "{{ item.value.privileged | default(False) }}"
     environment: "{{ item.value.environment }}"
-  when:
-    - item.value | service_enabled_and_mapped_to_host
-  with_dict: "{{ common_services }}"
+  with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"

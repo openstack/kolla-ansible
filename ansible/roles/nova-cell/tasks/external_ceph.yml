@@ -98,8 +98,7 @@
     - nova-compute
     - nova-libvirt
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - nova_backend == "rbd"
   notify:
     - Restart {{ item }} container
@@ -146,8 +145,7 @@
         group: "{{ config_owner_group }}"
         mode: "0770"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
+      when: service | service_enabled_and_mapped_to_host
 
     - name: Pushing nova secret xml for libvirt
       vars:
@@ -159,9 +157,7 @@
         group: "{{ config_owner_group }}"
         mode: "0600"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - item.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items:
         - uuid: "{{ rbd_secret_uuid }}"
           name: "client.nova secret"
@@ -182,7 +178,7 @@
         mode: "0600"
       become: true
       when:
-        - inventory_hostname in groups[service.group]
+        - service | service_enabled_and_mapped_to_host
         - item.enabled | bool
         - external_ceph_cephx_enabled | bool
       with_items:
