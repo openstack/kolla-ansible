@@ -7,10 +7,14 @@ set -o errexit
 neutron-netns-cleanup \
         --config-file /etc/neutron/neutron.conf \
         --config-file /etc/neutron/l3_agent.ini \
+{% if enable_neutron_fwaas | bool %}
+        --config-file /etc/neutron/fwaas_driver.ini \
+{% endif %}
         --force --agent-type l3
 {% endif %}
 
 neutron-l3-agent \
         --config-file /etc/neutron/neutron.conf \
         --config-file /etc/neutron/neutron_vpnaas.conf \
-        --config-file /etc/neutron/l3_agent.ini \
+        --config-file /etc/neutron/l3_agent.ini{% if enable_neutron_fwaas | bool %} \
+        --config-file /etc/neutron/fwaas_driver.ini{% endif %}

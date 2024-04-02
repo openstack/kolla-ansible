@@ -323,6 +323,28 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over fwaas_driver.ini
+  become: true
+  vars:
+    service_name: "{{ item.key }}"
+    services_need_fwaas_driver_ini:
+      - "neutron-server"
+      - "neutron-l3-agent"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/fwaas_driver.ini.j2"
+      - "{{ node_custom_config }}/neutron/fwaas_driver.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/fwaas_driver.ini"
+    mode: "0660"
+  when:
+    - enable_neutron_fwaas | bool
+    - item.key in services_need_fwaas_driver_ini
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ neutron_services }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
 - name: Copying over metadata_agent.ini
   become: true
   vars:
