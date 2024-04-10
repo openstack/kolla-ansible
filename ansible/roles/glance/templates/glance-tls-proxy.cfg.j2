@@ -10,9 +10,11 @@ global
     {% if (glance_tls_proxy_threads | int > 1) and (glance_tls_proxy_thread_cpu_map | bool) %}
     cpu-map auto:1/all 0-63
     {% endif %}
-    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
-    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    {% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
+    {{ haproxy_ssl_settings }}
     tune.ssl.default-dh-param 4096
+    ca-base {{ haproxy_backend_cacert_dir }}
+    {% endif %}
 
 defaults
     log global

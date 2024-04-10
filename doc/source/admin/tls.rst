@@ -363,3 +363,29 @@ options for TLS as is.
 
 If using this option, make sure that all certificates are present on the
 appropriate hosts in the appropriate location.
+
+.. _haproxy-tls-settings:
+
+HAProxy TLS related settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can select between different SSL/TLS ciphers by setting the following
+in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   kolla_haproxy_ssl_settings: "modern" # or "intermediate" or "legacy"
+
+The default value is "modern". These settings are adapted from the
+`Mozilla SSL Configuration Generator <https://ssl-config.mozilla.org/>`__.
+
+The setting "modern" is recommended for most deployments. The setting
+"intermediate" is recommended for deployments that need to support older
+clients. The setting "legacy" is not recommended, but is left as a
+compatibility option for older deployments.
+
+See the `Mozilla SSL Configuration Generator <https://ssl-config.mozilla.org/>`__
+for more information on exact supported client versions.
+
+The ``kolla_haproxy_ssl_settings`` setting also affects the glance and
+neutron haproxy TLS settings, if these proxy services are enabled.

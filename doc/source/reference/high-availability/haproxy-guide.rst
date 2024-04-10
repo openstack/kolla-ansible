@@ -92,3 +92,8 @@ disabled by setting the following in ``/etc/kolla/globals.yml``:
 .. code-block:: yaml
 
    haproxy_enable_http2: "no"
+
+SSL/TLS Settings
+----------------
+
+For SSL/TLS related settings refer to the :ref:`haproxy-tls-settings` section.
