@@ -30,7 +30,7 @@ class ContainerWorker(ABC):
 
         self.systemd = SystemdWorker(self.params)
 
-        # NOTE(mgoddard): The names used by Docker are inconsisent between
+        # NOTE(mgoddard): The names used by Docker are inconsistent between
         # configuration of a container's resources and the resources in
         # container_info['HostConfig']. This provides a mapping between the
         # two.

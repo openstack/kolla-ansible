@@ -36,7 +36,7 @@ more granular control, without the need to add the ``-e @/path/to/file`` flag.
 
 Use cases
 ---------
-1. Allow a more granular controler over individual service's options
+1. Allow a more granular controller over individual service's options
 2. Better file and directory structure
 
 Proposed change

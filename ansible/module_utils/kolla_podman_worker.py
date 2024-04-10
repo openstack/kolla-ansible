@@ -24,7 +24,7 @@ CONTAINER_PARAMS = [
     'name',             # string
     'cap_add',          # list
     'cgroupns',         # 'str',choices=['private', 'host']
-    'command',          # arrray of strings  -- docker string
+    'command',          # array of strings  -- docker string
 
     # this part is hidden inside dimensions
     'cpu_period',       # int
@@ -56,7 +56,7 @@ CONTAINER_PARAMS = [
     'privileged',       # bool
     'restart_policy',   # set to none, handled by systemd
     'remove',           # bool
-    'restart_tries',    # int doesnt matter done by systemd
+    'restart_tries',    # int doesn't matter done by systemd
     'stop_timeout',     # int
     'tty'               # bool
     # VOLUMES NOT WORKING HAS TO BE DONE WITH MOUNTS
@@ -390,7 +390,7 @@ class PodmanWorker(ContainerWorker):
     def compare_dimensions(self, container_info):
         new_dimensions = self.params.get('dimensions')
 
-        # NOTE(mgoddard): The names used by Docker are inconsisent between
+        # NOTE(mgoddard): The names used by Docker are inconsistent between
         # configuration of a container's resources and the resources in
         # container_info['HostConfig']. This provides a mapping between the
         # two.

@@ -113,7 +113,7 @@ Work Items
      disables certificate verification.
    - Ensure that all tasks that interact with OpenStack APIs support disabling
      certificate verification.
-   - Fix heat-api bootstrap process, which currently requires valid certficate,
+   - Fix heat-api bootstrap process, which currently requires valid certificate,
      probably by moving domain/user creation out of the container, and into the
      ansible itself.
    - Allow for providing a CA used to verify connections to the service backends.
