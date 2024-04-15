@@ -24,11 +24,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ project_name }}-cert.pem"
     mode: "0644"
   become: true
-  when:
-    - item.value.haproxy is defined
-    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
-    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
-    - not kolla_externally_managed_cert | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
@@ -46,11 +41,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ project_name }}-key.pem"
     mode: "0600"
   become: true
-  when:
-    - item.value.haproxy is defined
-    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
-    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
-    - not kolla_externally_managed_cert | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
