@@ -555,6 +555,16 @@
             KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
             CONTAINER_ENGINE: "{{ container_engine }}"
 
+        - name: Run test-proxysql.sh script
+          script:
+            cmd: test-proxysql.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          when: scenario == "cells"
+          environment:
+            VIP: "{{ kolla_internal_vip_address }}"
+            TLS_ENABLED: "{{ tls_enabled }}"
+
         - name: Run test-prometheus-opensearch.sh script
           script:
             cmd: test-prometheus-opensearch.sh
