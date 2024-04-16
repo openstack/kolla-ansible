@@ -42,6 +42,13 @@ scrape_configs:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
 {% endif %}
 {% endfor %}
+{% for target in prometheus_node_exporter_targets_extra %}
+      - targets:
+        - '{{ target.target }}'
+{% if target.labels | default({}, true) %}
+        labels: {{ target.labels | to_json }}
+{% endif %}
+{% endfor %}
 {% endif %}
 
 {% if enable_prometheus_mysqld_exporter | bool %}
