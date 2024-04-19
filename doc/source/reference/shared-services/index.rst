@@ -11,3 +11,4 @@ like backends, dashboards and so on.
    glance-guide
    horizon-guide
    keystone-guide
+   skyline-guide
