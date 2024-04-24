@@ -66,7 +66,6 @@
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
         - enable_redis_{{ enable_redis | bool }}
-        - enable_sahara_{{ enable_sahara | bool }}
         - enable_senlin_{{ enable_senlin | bool }}
         - enable_skyline_{{ enable_skyline | bool }}
         - enable_swift_{{ enable_swift | bool }}
@@ -296,11 +295,6 @@
             role_rabbitmq_cluster_cookie:
             role_rabbitmq_groups:
           when: enable_rabbitmq | bool or enable_outward_rabbitmq | bool
-        - include_role:
-            name: sahara
-            tasks_from: loadbalancer
-          tags: sahara
-          when: enable_sahara | bool
         - include_role:
             name: senlin
             tasks_from: loadbalancer
@@ -818,21 +812,6 @@
   roles:
     - { role: mistral,
         tags: mistral }
-
-- name: Apply role sahara
-  gather_facts: false
-  hosts:
-    - sahara-api
-    - sahara-engine
-    - '&enable_sahara_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ sahara_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: sahara,
-        tags: sahara }
 
 - name: Apply role manila
   gather_facts: false
