@@ -33,7 +33,6 @@
         - enable_cyborg_{{ enable_cyborg | bool }}
         - enable_designate_{{ enable_designate | bool }}
         - enable_etcd_{{ enable_etcd | bool }}
-        - enable_freezer_{{ enable_freezer | bool }}
         - enable_glance_{{ enable_glance | bool }}
         - enable_gnocchi_{{ enable_gnocchi | bool }}
         - enable_grafana_{{ enable_grafana | bool }}
@@ -172,11 +171,6 @@
             tasks_from: loadbalancer
           tags: etcd
           when: enable_etcd | bool
-        - include_role:
-            name: freezer
-            tasks_from: loadbalancer
-          tags: freezer
-          when: enable_freezer | bool
         - include_role:
             name: glance
             tasks_from: loadbalancer
@@ -1044,21 +1038,6 @@
   roles:
     - { role: cloudkitty,
         tags: cloudkitty }
-
-- name: Apply role freezer
-  gather_facts: false
-  hosts:
-    - freezer-api
-    - freezer-scheduler
-    - '&enable_freezer_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ freezer_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: freezer,
-        tags: freezer }
 
 - name: Apply role senlin
   gather_facts: false
