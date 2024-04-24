@@ -65,7 +65,6 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `Sahara <https://docs.openstack.org/sahara/latest/>`__ (deprecated)
 - `Senlin <https://docs.openstack.org/senlin/latest/>`__
 - Skyline (`APIServer <https://docs.openstack.org/skyline-apiserver/latest/>`__ and `Console <https://docs.openstack.org/skyline-console/latest/>`__)
-- `Solum <https://docs.openstack.org/solum/latest/>`__
 - `Swift <https://docs.openstack.org/swift/latest/>`__
 - `Tacker <https://docs.openstack.org/tacker/latest/>`__
 - `Trove <https://docs.openstack.org/trove/latest/>`__
