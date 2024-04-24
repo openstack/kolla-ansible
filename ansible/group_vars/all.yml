@@ -494,12 +494,6 @@ mistral_api_port: "8989"
 mistral_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else mistral_api_port }}"
 mistral_api_listen_port: "{{ mistral_api_port }}"
 
-murano_internal_fqdn: "{{ kolla_internal_fqdn }}"
-murano_external_fqdn: "{{ kolla_external_fqdn }}"
-murano_api_port: "8082"
-murano_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else murano_api_port }}"
-murano_api_listen_port: "{{ murano_api_listen_port }}"
-
 neutron_internal_fqdn: "{{ kolla_internal_fqdn }}"
 neutron_external_fqdn: "{{ kolla_external_fqdn }}"
 neutron_server_port: "9696"
@@ -549,12 +543,6 @@ ovn_nb_db_port: "6641"
 ovn_sb_db_port: "6642"
 ovn_nb_connection: "{% for host in groups['ovn-nb-db'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_nb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 ovn_sb_connection: "{% for host in groups['ovn-sb-db'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_sb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-
-outward_rabbitmq_port: "5674"
-outward_rabbitmq_management_port: "15674"
-outward_rabbitmq_cluster_port: "25674"
-outward_rabbitmq_epmd_port: "4371"
-outward_rabbitmq_prometheus_port: "15694"
 
 ovsdb_port: "6640"
 
@@ -744,7 +732,6 @@ enable_memcached: "yes"
 enable_neutron: "{{ enable_openstack_core | bool }}"
 enable_nova: "{{ enable_openstack_core | bool }}"
 enable_rabbitmq: "{{ 'yes' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'no' }}"
-enable_outward_rabbitmq: "{{ enable_murano | bool }}"
 
 # NOTE: Most memcached clients handle load-balancing via client side
 # hashing (consistent or not) logic, so going under the covers and messing
@@ -795,7 +782,6 @@ enable_horizon_magnum: "{{ enable_magnum | bool }}"
 enable_horizon_manila: "{{ enable_manila | bool }}"
 enable_horizon_masakari: "{{ enable_masakari | bool }}"
 enable_horizon_mistral: "{{ enable_mistral | bool }}"
-enable_horizon_murano: "{{ enable_murano | bool }}"
 enable_horizon_neutron_vpnaas: "{{ enable_neutron_vpnaas | bool }}"
 enable_horizon_octavia: "{{ enable_octavia | bool }}"
 enable_horizon_tacker: "{{ enable_tacker | bool }}"
@@ -823,7 +809,6 @@ enable_masakari_instancemonitor: "{{ enable_masakari | bool }}"
 enable_masakari_hostmonitor: "{{ enable_masakari | bool }}"
 enable_mistral: "no"
 enable_multipathd: "no"
-enable_murano: "no"
 enable_neutron_vpnaas: "no"
 enable_neutron_sriov: "no"
 enable_neutron_mlnx: "no"
@@ -873,7 +858,6 @@ ironic_keystone_user: "ironic"
 neutron_keystone_user: "neutron"
 nova_keystone_user: "nova"
 placement_keystone_user: "placement"
-murano_keystone_user: "murano"
 cinder_keystone_user: "cinder"
 glance_keystone_user: "glance"
 
@@ -924,8 +908,6 @@ osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_
 ####################
 rabbitmq_user: "openstack"
 rabbitmq_monitoring_user: ""
-outward_rabbitmq_user: "openstack"
-outward_rabbitmq_external_fqdn: "{{ kolla_external_fqdn }}"
 # Whether to enable TLS encryption for RabbitMQ client-server communication.
 rabbitmq_enable_tls: "no"
 # CA certificate bundle in RabbitMQ container.
@@ -1156,16 +1138,9 @@ nova_console: "novnc"
 nova_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
 
 #######################
-# Murano options
-#######################
-murano_agent_rabbitmq_vhost: "muranoagent"
-murano_agent_rabbitmq_user: "muranoagent"
-
-
-#######################
 # Horizon options
 #######################
-horizon_backend_database: "{{ enable_murano | bool }}"
+horizon_backend_database: false
 horizon_keystone_multidomain: False
 
 # Enable deploying custom horizon policy files for services that don't have a
