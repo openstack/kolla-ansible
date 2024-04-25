@@ -28,6 +28,7 @@ def kolla_url(fqdn, protocol, port, path='', context='url'):
     """
 
     fqdn = put_address_in_context(fqdn, context)
+    port = int(port)
 
     if ((protocol == 'http' and port == 80) or
        (protocol == 'https' and port == 443) or
