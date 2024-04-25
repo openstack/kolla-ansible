@@ -69,7 +69,6 @@
         - enable_sahara_{{ enable_sahara | bool }}
         - enable_senlin_{{ enable_senlin | bool }}
         - enable_skyline_{{ enable_skyline | bool }}
-        - enable_solum_{{ enable_solum | bool }}
         - enable_swift_{{ enable_swift | bool }}
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
@@ -312,11 +311,6 @@
             tasks_from: loadbalancer
           tags: skyline
           when: enable_skyline | bool
-        - include_role:
-            name: solum
-            tasks_from: loadbalancer
-          tags: solum
-          when: enable_solum | bool
         - include_role:
             name: swift
             tasks_from: loadbalancer
@@ -792,25 +786,6 @@
   roles:
     - { role: murano,
         tags: murano }
-
-- name: Apply role solum
-  gather_facts: false
-  hosts:
-    - solum-api
-    - solum-worker
-    - solum-deployer
-    - solum-conductor
-    - solum-application-deployment
-    - solum-image-builder
-    - '&enable_solum_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ solum_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: solum,
-        tags: solum }
 
 - name: Apply role magnum
   gather_facts: false
