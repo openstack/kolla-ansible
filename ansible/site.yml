@@ -66,7 +66,6 @@
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
         - enable_redis_{{ enable_redis | bool }}
-        - enable_senlin_{{ enable_senlin | bool }}
         - enable_skyline_{{ enable_skyline | bool }}
         - enable_swift_{{ enable_swift | bool }}
         - enable_tacker_{{ enable_tacker | bool }}
@@ -295,11 +294,6 @@
             role_rabbitmq_cluster_cookie:
             role_rabbitmq_groups:
           when: enable_rabbitmq | bool or enable_outward_rabbitmq | bool
-        - include_role:
-            name: senlin
-            tasks_from: loadbalancer
-          tags: senlin
-          when: enable_senlin | bool
         - include_role:
             name: skyline
             tasks_from: loadbalancer
@@ -992,23 +986,6 @@
   roles:
     - { role: cloudkitty,
         tags: cloudkitty }
-
-- name: Apply role senlin
-  gather_facts: false
-  hosts:
-    - senlin-api
-    - senlin-conductor
-    - senlin-engine
-    - senlin-health-manager
-    - '&enable_senlin_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ senlin_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: senlin,
-        tags: senlin }
 
 - name: Apply role tacker
   gather_facts: false
