@@ -518,19 +518,6 @@
     - haproxy_stat.find('mistral_api') == -1
     - haproxy_vip_prechecks
 
-- name: Checking free port for Murano API HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ murano_api_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - enable_murano | bool
-    - inventory_hostname in groups['loadbalancer']
-    - haproxy_stat.find('murano_api') == -1
-    - haproxy_vip_prechecks
-
 - name: Checking free port for Neutron Server HAProxy
   wait_for:
     host: "{{ kolla_internal_vip_address }}"
@@ -675,18 +662,6 @@
     - enable_rabbitmq | bool
     - inventory_hostname in groups['loadbalancer']
     - haproxy_stat.find('rabbitmq_management') == -1
-    - haproxy_vip_prechecks
-
-- name: Checking free port for outward RabbitMQ Management HAProxy
-  wait_for:
-    host: "{{ kolla_internal_vip_address }}"
-    port: "{{ outward_rabbitmq_management_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_outward_rabbitmq | bool
-    - inventory_hostname in groups['loadbalancer']
-    - haproxy_stat.find('outward_rabbitmq_management') == -1
     - haproxy_vip_prechecks
 
 - name: Checking free port for Swift Proxy Server HAProxy

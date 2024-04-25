@@ -15,7 +15,6 @@ horizon_services:
       ENABLE_MANILA: "{{ 'yes' if enable_horizon_manila | bool else 'no' }}"
       ENABLE_MASAKARI: "{{ 'yes' if enable_horizon_masakari | bool else 'no' }}"
       ENABLE_MISTRAL: "{{ 'yes' if enable_horizon_mistral | bool else 'no' }}"
-      ENABLE_MURANO: "{{ 'yes' if enable_horizon_murano | bool else 'no' }}"
       ENABLE_NEUTRON_VPNAAS: "{{ 'yes' if enable_horizon_neutron_vpnaas | bool else 'no' }}"
       ENABLE_OCTAVIA: "{{ 'yes' if enable_horizon_octavia | bool else 'no' }}"
       ENABLE_TACKER: "{{ 'yes' if enable_horizon_tacker | bool else 'no' }}"
@@ -125,7 +124,6 @@ horizon_default_volumes:
   - "{{ node_config_directory }}/horizon/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/horizon/horizon:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/horizon' if horizon_dev_mode | bool else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/horizon/openstack_dashboard:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/openstack_dashboard' if horizon_dev_mode | bool else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/murano-dashboard/muranodashboard:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/muranodashboard' if horizon_murano_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
@@ -151,13 +149,10 @@ horizon_wsgi_threads: 1
 # Kolla
 ####################
 horizon_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
-murano_dashboard_git_repository: "{{ kolla_dev_repos_git }}/murano-dashboard"
 
 horizon_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 horizon_dev_mode: "{{ kolla_dev_mode }}"
-horizon_murano_dev_mode: "{{ kolla_dev_mode }}"
 horizon_source_version: "{{ kolla_source_version }}"
-horizon_murano_source_version: "{{ kolla_source_version }}"
 
 # This variable was created for administrators to define which one of the Keystone's URLs should be configured in Horizon.
 # In some cases, such as when using OIDC, horizon will need to be configured with Keystone's public URL.

@@ -1,26 +1,18 @@
 {
   "vhosts": [
-    {"name": "/"}{% if project_name == 'outward_rabbitmq' %},
-    {"name": "{{ murano_agent_rabbitmq_vhost }}"}
-    {% endif %}
+    {"name": "/"}
   ],
   "users": [
     {"name": "{{ role_rabbitmq_user }}", "password": "{{ role_rabbitmq_password }}", "tags": "administrator"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
-    {"name": "{{ role_rabbitmq_monitoring_user }}", "password": "{{ role_rabbitmq_monitoring_password }}", "tags": "monitoring"}{% endif %}{% if project_name == 'outward_rabbitmq' %},
-    {"name": "{{ murano_agent_rabbitmq_user }}", "password": "{{ murano_agent_rabbitmq_password }}", "tags": "management"}
-    {% endif %}
+    {"name": "{{ role_rabbitmq_monitoring_user }}", "password": "{{ role_rabbitmq_monitoring_password }}", "tags": "monitoring"}{% endif %}
   ],
   "permissions": [
     {"user": "{{ role_rabbitmq_user }}", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
-    {"user": "{{ role_rabbitmq_monitoring_user }}", "vhost": "/", "configure": "^$", "write": "^$", "read": ".*"}{% endif %}{% if project_name == 'outward_rabbitmq' %},
-    {"user": "{{ murano_agent_rabbitmq_user }}", "vhost": "{{ murano_agent_rabbitmq_vhost }}", "configure": ".*", "write": ".*", "read": ".*"}
-    {% endif %}
+    {"user": "{{ role_rabbitmq_monitoring_user }}", "vhost": "/", "configure": "^$", "write": "^$", "read": ".*"}{% endif %}
   ],
 {% if om_enable_rabbitmq_high_availability | bool %}
   "policies":[
-    {"vhost": "/", "name": "ha-all", "pattern": "^(?!(amq\\.)|(.*_fanout_)|(reply_)).*", "apply-to": "all", "definition": {"ha-mode":{% if rabbitmq_ha_replica_count is not none %}"exactly","ha-params":{{ rabbitmq_ha_replica_count | int }}{% else %}"all"{% endif %}{% if rabbitmq_ha_promote_on_shutdown is not none %},"ha-promote-on-shutdown":"{{ rabbitmq_ha_promote_on_shutdown }}"{% endif %}{% if rabbitmq_message_ttl_ms is not none %},"message-ttl":{{ rabbitmq_message_ttl_ms | int }}{% endif %}{% if rabbitmq_queue_expiry_ms is not none %},"expires":{{ rabbitmq_queue_expiry_ms | int }}{% endif %}}, "priority":0}{% if project_name == 'outward_rabbitmq' %},
-    {"vhost": "{{ murano_agent_rabbitmq_vhost }}", "name": "ha-all", "pattern": "^(?!(amq\\.)|(.*_fanout_)|(reply_)).*", "apply-to": "all", "definition": {"ha-mode":{% if rabbitmq_ha_replica_count is not none %}"exactly","ha-params":{{ rabbitmq_ha_replica_count | int }}{% else %}"all"{% endif %}{% if rabbitmq_ha_promote_on_shutdown is not none %},"ha-promote-on-shutdown":"{{ rabbitmq_ha_promote_on_shutdown }}"{% endif %}{% if rabbitmq_message_ttl_ms is not none %},"message-ttl":{{ rabbitmq_message_ttl_ms | int }}{% endif %}{% if rabbitmq_queue_expiry_ms is not none %},"expires":{{ rabbitmq_queue_expiry_ms | int }}{% endif %}}, "priority":0}
-    {% endif %}
+    {"vhost": "/", "name": "ha-all", "pattern": "^(?!(amq\\.)|(.*_fanout_)|(reply_)).*", "apply-to": "all", "definition": {"ha-mode":{% if rabbitmq_ha_replica_count is not none %}"exactly","ha-params":{{ rabbitmq_ha_replica_count | int }}{% else %}"all"{% endif %}{% if rabbitmq_ha_promote_on_shutdown is not none %},"ha-promote-on-shutdown":"{{ rabbitmq_ha_promote_on_shutdown }}"{% endif %}{% if rabbitmq_message_ttl_ms is not none %},"message-ttl":{{ rabbitmq_message_ttl_ms | int }}{% endif %}{% if rabbitmq_queue_expiry_ms is not none %},"expires":{{ rabbitmq_queue_expiry_ms | int }}{% endif %}}, "priority":0}
   ]
 {% else %}
   "policies":[]

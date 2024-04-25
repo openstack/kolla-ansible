@@ -53,14 +53,12 @@
         - enable_memcached_{{ enable_memcached | bool }}
         - enable_mistral_{{ enable_mistral | bool }}
         - enable_multipathd_{{ enable_multipathd | bool }}
-        - enable_murano_{{ enable_murano | bool }}
         - enable_neutron_{{ enable_neutron | bool }}
         - enable_nova_{{ enable_nova | bool }}
         - enable_octavia_{{ enable_octavia | bool }}
         - enable_opensearch_{{ enable_opensearch | bool }}
         - enable_opensearch_dashboards_{{ enable_opensearch_dashboards | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
-        - enable_outward_rabbitmq_{{ enable_outward_rabbitmq | bool }}
         - enable_ovn_{{ enable_ovn | bool }}
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
@@ -244,11 +242,6 @@
           tags: mistral
           when: enable_mistral | bool
         - include_role:
-            name: murano
-            tasks_from: loadbalancer
-          tags: murano
-          when: enable_murano | bool
-        - include_role:
             name: neutron
             tasks_from: loadbalancer
           tags: neutron
@@ -293,7 +286,7 @@
           vars:
             role_rabbitmq_cluster_cookie:
             role_rabbitmq_groups:
-          when: enable_rabbitmq | bool or enable_outward_rabbitmq | bool
+          when: enable_rabbitmq | bool
         - include_role:
             name: skyline
             tasks_from: loadbalancer
@@ -759,21 +752,6 @@
   roles:
     - { role: horizon,
         tags: horizon }
-
-- name: Apply role murano
-  gather_facts: false
-  hosts:
-    - murano-api
-    - murano-engine
-    - '&enable_murano_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ murano_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: murano,
-        tags: murano }
 
 - name: Apply role magnum
   gather_facts: false
