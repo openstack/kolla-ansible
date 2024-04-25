@@ -246,7 +246,7 @@ function unset_cirros_image_q35_machine_type {
 
 function test_neutron_modules {
     # Exit the function if scenario is "ovn" or if there's an upgrade
-    # as inly concerns ml2/ovs
+    # as it only concerns ml2/ovs
     if [[ $SCENARIO == "ovn" ]] || [[ $HAS_UPGRADE == "yes" ]]; then
         return
     fi

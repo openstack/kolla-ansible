@@ -74,7 +74,7 @@ Infoblox Backend
 .. important::
 
    When using Infoblox as the Designate backend the MDNS node
-   requires the container to listen on port 53. As this is a privilaged
+   requires the container to listen on port 53. As this is a privileged
    port you will need to build your designate-mdns container to run
    as the user root rather than designate.
 

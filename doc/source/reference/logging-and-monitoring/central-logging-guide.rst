@@ -39,8 +39,8 @@ Applying log retention policies
 
 To stop your disks filling up, the Index State Management plugin for
 OpenSearch can be used to define log retention policies. A default
-retention policy is applied to all indicies which match the
-``opensearch_log_index_prefix``. This policy first closes old indicies,
+retention policy is applied to all indices which match the
+``opensearch_log_index_prefix``. This policy first closes old indices,
 and then eventually deletes them. It can be customised via the following
 variables:
 

@@ -6,7 +6,7 @@ HAProxy Guide
 
 Kolla Ansible supports a Highly Available (HA) deployment of
 Openstack and other services. High-availability in Kolla
-is implented as via Keepalived and HAProxy. Keepalived manages virtual IP
+is implemented as via Keepalived and HAProxy. Keepalived manages virtual IP
 addresses, while HAProxy load-balances traffic to service backends.
 These two components must be installed on the same hosts
 and they are deployed to hosts in the ``loadbalancer`` group.
@@ -71,7 +71,7 @@ Backend weights
 
 When different baremetal are used in infrastructure as haproxy backends
 or they are overloaded for some reason, kolla-ansible is able to change
-weight of backend per sevice. Weight can be any integer value from 1 to
+weight of backend per service. Weight can be any integer value from 1 to
 256.
 
 To set weight of backend per service, modify inventory file as below:

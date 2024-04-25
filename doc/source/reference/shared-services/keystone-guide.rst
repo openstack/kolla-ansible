@@ -32,8 +32,8 @@ a buffer key - three in total. If the rotation interval is set lower than the
 sum of the token expiry and token allow expired window, more active keys will
 be configured in Keystone as necessary.
 
-Further infomation on Fernet tokens is available in the :keystone-doc:`Keystone
-documentation <admin/fernet-token-faq.html>`.
+Further information on Fernet tokens is available in the
+:keystone-doc:`Keystone documentation <admin/fernet-token-faq.html>`.
 
 Federated identity
 ------------------
