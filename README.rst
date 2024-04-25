@@ -62,7 +62,6 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `Neutron <https://docs.openstack.org/neutron/latest/>`__
 - `Nova <https://docs.openstack.org/nova/latest/>`__
 - `Octavia <https://docs.openstack.org/octavia/latest/>`__
-- `Sahara <https://docs.openstack.org/sahara/latest/>`__ (deprecated)
 - `Senlin <https://docs.openstack.org/senlin/latest/>`__
 - Skyline (`APIServer <https://docs.openstack.org/skyline-apiserver/latest/>`__ and `Console <https://docs.openstack.org/skyline-console/latest/>`__)
 - `Swift <https://docs.openstack.org/swift/latest/>`__
