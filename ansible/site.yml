@@ -70,7 +70,6 @@
         - enable_telegraf_{{ enable_telegraf | bool }}
         - enable_trove_{{ enable_trove | bool }}
         - enable_venus_{{ enable_venus | bool }}
-        - enable_vitrage_{{ enable_vitrage | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
         - enable_zun_{{ enable_zun | bool }}
   tags: always
@@ -312,11 +311,6 @@
             tasks_from: loadbalancer
           tags: venus
           when: enable_venus | bool
-        - include_role:
-            name: vitrage
-            tasks_from: loadbalancer
-          tags: vitrage
-          when: enable_vitrage | bool
         - include_role:
             name: watcher
             tasks_from: loadbalancer
@@ -1013,24 +1007,6 @@
   roles:
     - { role: zun,
         tags: zun }
-
-- name: Apply role vitrage
-  gather_facts: false
-  hosts:
-    - vitrage-api
-    - vitrage-graph
-    - vitrage-notifier
-    - vitrage-ml
-    - vitrage-persistor
-    - '&enable_vitrage_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ vitrage_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: vitrage,
-        tags: vitrage }
 
 - name: Apply role blazar
   gather_facts: false
