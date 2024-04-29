@@ -12,6 +12,11 @@
     list |
     length > 0
 
+- name: Check IPv6 support
+  command: /usr/sbin/sysctl -n net.ipv6.conf.all.disable_ipv6
+  register: ipv6_disabled
+  changed_when: false
+
 - name: Setting sysctl values
   become: true
   vars:
@@ -38,3 +43,4 @@
     - set_sysctl | bool
     - item.value != 'KOLLA_SKIP'
     - (neutron_l3_agent.enabled | bool and neutron_l3_agent.host_in_groups | bool)
+    - not ('ipv6' in item.name and ipv6_disabled.stdout | bool)
