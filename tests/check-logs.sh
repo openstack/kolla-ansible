@@ -8,7 +8,7 @@ set -o pipefail
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-declare -a fluentchecks=("got incomplete line before first line" "pattern not matched")
+declare -a fluentchecks=("got incomplete line before first line" "pattern not matched:" "Could not communicate to OpenSearch")
 
 function check_openstack_log_file_for_level {
     # $1: file
