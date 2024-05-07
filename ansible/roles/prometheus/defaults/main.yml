@@ -14,6 +14,8 @@ prometheus_services:
         external: false
         port: "{{ prometheus_port }}"
         active_passive: "{{ prometheus_active_passive | bool }}"
+        backend_http_extra:
+          - "option httpchk"
       prometheus_server_external:
         enabled: "{{ enable_prometheus_server_external | bool }}"
         mode: "http"
@@ -22,6 +24,8 @@ prometheus_services:
         port: "{{ prometheus_public_port }}"
         listen_port: "{{ prometheus_listen_port }}"
         active_passive: "{{ prometheus_active_passive | bool }}"
+        backend_http_extra:
+          - "option httpchk"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -67,6 +71,8 @@ prometheus_services:
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
         active_passive: "{{ prometheus_alertmanager_active_passive | bool }}"
+        backend_http_extra:
+          - "option httpchk"
       prometheus_alertmanager_external:
         enabled: "{{ enable_prometheus_alertmanager_external | bool }}"
         mode: "http"
@@ -77,6 +83,8 @@ prometheus_services:
         auth_user: "{{ prometheus_alertmanager_user }}"
         auth_pass: "{{ prometheus_alertmanager_password }}"
         active_passive: "{{ prometheus_alertmanager_active_passive | bool }}"
+        backend_http_extra:
+          - "option httpchk"
   prometheus-openstack-exporter:
     container_name: "prometheus_openstack_exporter"
     group: "prometheus-openstack-exporter"
@@ -93,6 +101,7 @@ prometheus_services:
         external: false
         port: "{{ prometheus_openstack_exporter_port }}"
         backend_http_extra:
+          - "option httpchk"
           - "timeout server {{ prometheus_openstack_exporter_timeout }}"
       prometheus_openstack_exporter_external:
         enabled: "{{ enable_prometheus_openstack_exporter_external | bool }}"
@@ -100,6 +109,7 @@ prometheus_services:
         external: true
         port: "{{ prometheus_openstack_exporter_port }}"
         backend_http_extra:
+          - "option httpchk"
           - "timeout server {{ prometheus_openstack_exporter_timeout }}"
   prometheus-elasticsearch-exporter:
     container_name: prometheus_elasticsearch_exporter

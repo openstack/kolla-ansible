@@ -15,6 +15,11 @@ blazar_services:
         external: false
         port: "{{ blazar_api_port }}"
         listen_port: "{{ blazar_api_listen_port }}"
+        backend_http_extra:
+          ## All of Blazar's API endpoints are private.
+          ## So we should accept 401 as valid healthy response.
+          - "option httpchk"
+          - "http-check expect status 401"
       blazar_api_external:
         enabled: "{{ enable_blazar }}"
         mode: "http"
@@ -22,6 +27,11 @@ blazar_services:
         external_fqdn: "{{ blazar_external_fqdn }}"
         port: "{{ blazar_api_public_port }}"
         listen_port: "{{ blazar_api_listen_port }}"
+        backend_http_extra:
+          ## All of Blazar's API endpoints are private.
+          ## So we should accept 401 as valid healthy response.
+          - "option httpchk"
+          - "http-check expect status 401"
   blazar-manager:
     container_name: blazar_manager
     group: blazar-manager

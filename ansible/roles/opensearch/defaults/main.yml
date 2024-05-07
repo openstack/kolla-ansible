@@ -18,6 +18,8 @@ opensearch_services:
         port: "{{ opensearch_port }}"
         frontend_http_extra:
           - "option dontlog-normal"
+        backend_http_extra:
+          - "option httpchk"
   opensearch-dashboards:
     container_name: opensearch_dashboards
     group: opensearch-dashboards
@@ -36,6 +38,9 @@ opensearch_services:
         port: "{{ opensearch_dashboards_port }}"
         auth_user: "{{ opensearch_dashboards_user }}"
         auth_pass: "{{ opensearch_dashboards_password }}"
+        backend_http_extra:
+          - "option httpchk"
+          - "http-check expect status 401"
       opensearch_dashboards_external:
         enabled: "{{ enable_opensearch_dashboards_external | bool }}"
         mode: "http"
@@ -45,6 +50,9 @@ opensearch_services:
         listen_port: "{{ opensearch_dashboards_listen_port }}"
         auth_user: "{{ opensearch_dashboards_user }}"
         auth_pass: "{{ opensearch_dashboards_password }}"
+        backend_http_extra:
+          - "option httpchk"
+          - "http-check expect status 401"
 
 
 ####################
