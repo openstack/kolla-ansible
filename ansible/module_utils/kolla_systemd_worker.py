@@ -23,8 +23,8 @@ TEMPLATE = '''# ${service_name}
 [Unit]
 Description=docker ${service_name}
 After=docker.service
-Requires=docker.service
 StartLimitIntervalSec=${restart_timeout}
+
 StartLimitBurst=${restart_retries}
 
 [Service]
