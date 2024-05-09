@@ -1,0 +1,59 @@
+---
+- block:
+    - name: Get current RabbitMQ version
+      vars:
+        service_name: "rabbitmq"
+        service: "{{ rabbitmq_services[service_name] }}"
+      become: true
+      command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl --version"
+      register: rabbitmq_version_current
+      changed_when: false
+
+    - name: Get new RabbitMQ version
+      become: true
+      vars:
+        rabbitmq_container: "{{ rabbitmq_services['rabbitmq'] }}"
+      kolla_container:
+        action: "start_container"
+        command: "rabbitmqctl --version"
+        detach: false
+        environment:
+          KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+        image: "{{ rabbitmq_container.image }}"
+        name: "rabbitmq_version_check"
+        restart_policy: oneshot
+        volumes: "{{ rabbitmq_default_volumes + rabbitmq_extra_volumes }}"
+      register: rabbitmq_version_new
+      failed_when: false
+      check_mode: false
+
+    # As an example, when the new RabbitMQ version is 3.13.6:
+    # new_major_version = 3
+    # new_minor_version = 13
+    # new_version = 3.13
+    # And if the current RabbitMQ version is 3.11.28:
+    # upgrade_version = 3.12
+    - name: Check if running RabbitMQ is at most one version behind
+      vars:
+        current_version_major: "{{ rabbitmq_version_current.stdout | regex_search('^[0-9]+') }}"
+        current_version_minor: "{{ rabbitmq_version_current.stdout | regex_search('(?<=.)[^.].') }}"
+        current_version: "{{ rabbitmq_version_current.stdout | regex_replace('.[^.]+$', '') }}"
+        new_version_major: "{{ rabbitmq_version_new.stdout | regex_search('^[0-9]+') }}"
+        new_version_minor: "{{ rabbitmq_version_new.stdout | regex_search('(?<=.)[^.].') }}"
+        new_version: "{{ rabbitmq_version_new.stdout | regex_replace('.[^.]+$', '') }}"
+        # Note: this assumes 3.13 will be the last release before 4.0.
+        upgrade_version: "{{ '4.0' if current_version == '3.13' else current_version_major + '.' + (current_version_minor | int + 1) | string }}"
+      assert:
+        that: (current_version_major == new_version_major and
+              new_version_minor | int - current_version_minor | int <= 1) or
+              (new_version | float == 4.0 and current_version | float == 3.13)
+        fail_msg: >
+          Looks like you're trying to run a skip-release upgrade!
+          RabbitMQ must be at most one version behind the target release version ({{ rabbitmq_version_new.stdout | trim }}) to run this upgrade.
+          You are running {{ rabbitmq_version_current.stdout }}.
+          Please first upgrade to {{ upgrade_version }} with the command ``kolla-ansible rabbitmq-upgrade {{ upgrade_version }}``.
+          See these docs for more details: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#slurp
+
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
+  run_once: true
+  tags: rabbitmq-version-check

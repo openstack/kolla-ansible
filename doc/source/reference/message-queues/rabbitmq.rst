@@ -128,7 +128,8 @@ additional steps needed to migrate from transient to durable queues.
 .. warning::
 
    Since the default changed from non-HA to Quorum queues in Bobcat release,
-   following procedure is required to be carried out before an upgrade.
+   following procedure is required to be carried out before a SLURP upgrade to
+   Caracal.
 
 1. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
