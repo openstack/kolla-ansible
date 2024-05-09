@@ -163,3 +163,47 @@ additional steps needed to migrate from transient to durable queues.
    .. code-block:: console
 
       kolla-ansible deploy --tags <service-tags>
+
+SLURP
+~~~~~
+
+RabbitMQ has two major version releases per year but does not support jumping
+two versions in one upgrade. So if you want to perform a skip-level upgrade,
+you must first upgrade RabbitMQ to an intermediary version. To do this, Kolla
+provides multiple RabbitMQ versions in the odd OpenStack releases. To use the
+upgrade from Antelope to Caracal as an example, we start on RabbitMQ version
+3.11. In Antelope, you should upgrade to RabbitMQ version 3.12 with the command
+below. You can then proceed with the usual SLURP upgrade to Caracal (and
+therefore RabbitMQ version 3.13).
+
+.. warning::
+
+   This command should be run from the Antelope release.
+
+.. code-block:: console
+
+   kolla-ansible rabbitmq-upgrade 3.12
+
+RabbitMQ versions
+~~~~~~~~~~~~~~~~~
+
+Alternatively, you can set ``rabbitmq_image`` in your configuration
+``globals.yml`` for idempotence in deployments. As an example, Kolla ships
+versions 3.11, 3.12 and 3.13 of RabbitMQ in Antelope. By default, Antelope
+Kolla-Ansible will deploy version 3.11. If you wish to deploy a later version,
+you must override the image. if you want to use version 3.12 change
+``rabbitmq_image`` in ``globals.yml`` as follows:
+
+.. code-block:: yaml
+
+   rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-3.12"
+
+You can then upgrade RabbitMQ with the usual command:
+
+.. code-block:: console
+
+   kolla-ansible upgrade --tags rabbitmq
+
+Note again that RabbitMQ does not support upgrades between more than one major
+version, so if you wish to upgrade to version 3.13 you must first upgrade to
+3.12.
