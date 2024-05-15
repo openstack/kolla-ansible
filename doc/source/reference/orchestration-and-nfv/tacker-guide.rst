@@ -17,7 +17,6 @@ to be enabled to operate correctly.
 
 * Core compute stack (nova, neutron, glance, etc)
 * Heat
-* Mistral + Redis
 * Barbican (Required only for multinode)
 
 Optionally tacker supports the following services and features.
@@ -43,8 +42,6 @@ In order to enable them, you need to edit the file
 
    enable_tacker: "yes"
    enable_barbican: "yes"
-   enable_mistral: "yes"
-   enable_redis: "yes"
 
 .. warning::
 
@@ -86,11 +83,6 @@ is present in ``kolla-ansible/contrib/demos/tacker/`` that will
 create a very basic VNF from a cirros image in ``demo-net`` network.
 
 Install python-tackerclient.
-
-.. note::
-
-   Barbican, heat and mistral python clients are in tacker's
-   requirements and will be installed as dependency.
 
 .. code-block:: console
 
