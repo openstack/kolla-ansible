@@ -7,21 +7,22 @@
             "owner": "grafana",
             "perm": "0600"
         },
-{% if check_extra_conf_grafana is defined %}{% if check_extra_conf_grafana.matched > 0 %}{% for plugin in check_extra_conf_grafana.files %}
+{% if check_extra_conf_grafana is defined %}
+{%   for extra_conf in check_extra_conf_grafana.files | map(attribute='path') | map('basename') %}
         {
-            "source": "{{ container_config_directory }}/{{ plugin.path | basename }}",
-            "dest": "/etc/grafana/{{ plugin.path | basename }}",
-            "owner": "grafana",
-            "perm": "0600"
-        },
-{% endfor %}{% endif %}{% endif %}
-        {
-            "source": "{{ container_config_directory }}/grafana_home_dashboard.json",
+            "source": "{{ container_config_directory }}/{{ extra_conf }}",
+{%     if extra_conf  == 'grafana_home_dashboard.json' %}
             "dest": "/usr/share/grafana/public/dashboards/home.json",
             "owner": "root",
-            "perm": "0644",
-            "optional": true
+            "perm": "0644"
+{%     else %}
+            "dest": "/etc/grafana/{{ extra_conf }}",
+            "owner": "grafana",
+            "perm": "0600"
+{%     endif %}
         },
+{%   endfor %}
+{% endif %}
         {
             "source": "{{ container_config_directory }}/prometheus.yaml",
             "dest": "/etc/grafana/provisioning/datasources/prometheus.yaml",
