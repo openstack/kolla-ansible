@@ -62,14 +62,22 @@ Cloudkitty Storage Backend
 As for collectors, CloudKitty supports multiple backend to store ratings.
 By default, Kolla Ansible uses the InfluxDB based backend.
 
-Another famous alternative is Elasticsearch and can be activated in Kolla
-Ansible using the ``cloudkitty_storage_backend``  configuration option in
+Another famous alternative is OpenSearch and can be activated in Kolla
+Ansible using the ``cloudkitty_storage_backend`` configuration option in
 your ``globals.yml`` configuration file:
 
 .. code-block:: yaml
 
-   cloudkitty_storage_backend: elasticsearch
+   cloudkitty_storage_backend: opensearch
 
-You can only use one backend type at a time, selecting elasticsearch
-will automatically enable Elasticsearch deployment and creation of the
+Using an external Elasticsearch backend is still possible with the following
+configuration:
+
+.. code-block:: yaml
+
+   cloudkitty_storage_backend: elasticsearch
+   cloudkitty_elasticsearch_url: http://HOST:PORT
+
+You can only use one backend type at a time, selecting ``opensearch``
+will automatically enable OpenSearch deployment and creation of the
 required CloudKitty index.
