@@ -94,7 +94,7 @@ EOF
     python3 -m venv ~/kolla-venv
     source ~/kolla-venv/bin/activate
     if [[ "$CONTAINER_ENGINE" == "docker" ]]; then
-        pip install "${KOLLA_SRC_DIR}" "docker<7"
+        pip install "${KOLLA_SRC_DIR}" "docker<7" "requests<2.32"
     else
         pip install "${KOLLA_SRC_DIR}" "podman"
     fi
