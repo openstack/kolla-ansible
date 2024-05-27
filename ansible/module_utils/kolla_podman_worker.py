@@ -30,12 +30,12 @@ CONTAINER_PARAMS = [
     'cpu_period',       # int
     'cpu_quota',        # int
     'cpuset_cpus',      # str
-    'cpu_shares'        # int
+    'cpu_shares',       # int
     'cpuset_mems',      # str
     'kernel_memory',    # int or string
     'mem_limit',        # (Union[int, str])
     'mem_reservation',  # (Union[int, str]): Memory soft limit.
-    'memswap_limit'     # (Union[int, str]): Maximum amount of memory
+    'memswap_limit',    # (Union[int, str]): Maximum amount of memory
                         # + swap a container is allowed to consume.
     'ulimits',          # List[Ulimit]
     'blkio_weight',     # int between 10 and 1000
@@ -58,7 +58,7 @@ CONTAINER_PARAMS = [
     'remove',           # bool
     'restart_tries',    # int doesn't matter done by systemd
     'stop_timeout',     # int
-    'tty'               # bool
+    'tty',              # bool
     # VOLUMES NOT WORKING HAS TO BE DONE WITH MOUNTS
     'volumes',          # array of dict
     'volumes_from',     # array of strings
