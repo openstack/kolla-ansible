@@ -243,9 +243,18 @@
         state: directory
       become: true
 
+    - name: Install Python3.12 on RHEL derivatives
+      dnf:
+        name:
+          - python3.12
+          - python3.12-devel
+        state: latest
+      when: ansible_facts.os_family == 'RedHat'
+      become: true
+
     - name: Create Kolla Ansible venv
       command:
-        cmd: "python3 -m venv {{ kolla_ansible_venv_path }}"
+        cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_ansible_venv_path }}"
         creates: "{{ kolla_ansible_venv_path }}"
 
     - name: Ensure the latest tested pip
