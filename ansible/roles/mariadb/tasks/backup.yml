@@ -1,4 +1,13 @@
 ---
+- name: Get MariaDB container facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - "{{ mariadb_services.mariadb.container_name }}"
+  check_mode: false
+  register: container_facts
+
 - name: Taking {{ mariadb_backup_type }} database backup via Mariabackup
   become: true
   kolla_container:
@@ -6,7 +15,10 @@
     command: "bash -c 'sudo -E kolla_set_configs && /usr/local/bin/kolla_mariadb_backup.sh'"
     common_options: "{{ docker_common_options }}"
     detach: False
-    image: "{{ mariabackup_image_full }}"
+    # NOTE(mgoddard): Try to use the same image as the MariaDB server container
+    # to avoid compatibility issues. See
+    # https://bugs.launchpad.net/kolla-ansible/+bug/2058644.
+    image: "{{ container_facts.mariadb.Image | default(mariadb_services.mariadb.image) }}"
     name: "mariabackup"
     restart_policy: oneshot
     remove_on_exit: True
