@@ -20,13 +20,20 @@ Neutron external interface is used for communication with the external world,
 for example provider networks, routers and floating IPs.
 For setting up the neutron external interface modify
 ``/etc/kolla/globals.yml`` setting ``neutron_external_interface`` to the
-desired interface name. This interface is used by hosts in the ``network``
-group. It is also used by hosts in the ``compute`` group if
+desired interface name or comma-separated list of interface names. Its default
+value is ``eth1``. These external interfaces are used by hosts in the
+``network`` group.  They are also used by hosts in the ``compute`` group if
 ``enable_neutron_provider_networks`` is set or DVR is enabled.
 
-The interface is plugged into a bridge (Open vSwitch or Linux Bridge, depending
-on the driver) defined by ``neutron_bridge_name``, which defaults to ``br-ex``.
-The default Neutron physical network is ``physnet1``.
+The external interfaces are each plugged into a bridge (Open vSwitch or Linux
+Bridge, depending on the driver) defined by ``neutron_bridge_name``, which
+defaults to ``br-ex``. When there are multiple external interfaces,
+``neutron_bridge_name`` should be a comma-separated list of the same length.
+
+The default Neutron physical network is ``physnet1``, or ``physnet1`` to
+``physnetN`` when there are multiple external network interfaces. This may be
+changed by setting ``neutron_physical_networks`` to a comma-separated list of
+networks of the same length.
 
 Example: single interface
 -------------------------
@@ -53,6 +60,30 @@ These two lists are "zipped" together, such that ``eth1`` is plugged into the
 ``br-ex1`` bridge, and ``eth2`` is plugged into the ``br-ex2`` bridge.  Kolla
 Ansible maps these interfaces to Neutron physical networks ``physnet1`` and
 ``physnet2`` respectively.
+
+Example: custom physical networks
+---------------------------------
+
+Sometimes we may want to customise the physical network names used. This may be
+to allow for not all hosts having access to all physical networks, or to use
+more descriptive names.
+
+For example, in an environment with a separate physical network for Ironic
+provisioning, controllers might have access to two physical networks:
+
+.. code-block:: yaml
+
+   neutron_external_interface: "eth1,eth2"
+   neutron_bridge_name: "br-ex1,br-ex2"
+   neutron_physical_network: "physnet1,physnet2"
+
+While compute nodes have access only to ``physnet2``.
+
+.. code-block:: yaml
+
+   neutron_external_interface: "eth1"
+   neutron_bridge_name: "br-ex1"
+   neutron_physical_network: "physnet2"
 
 Example: shared interface
 -------------------------
