@@ -24,6 +24,7 @@ TEMPLATE = '''# ${service_name}
 Description=${engine} ${service_name}
 After=${deps}
 Wants=${deps}
+PartOf=kolla.target
 StartLimitInterval=${restart_timeout}
 StartLimitBurst=${restart_retries}
 
