@@ -206,7 +206,7 @@ function resize_instance {
             openstack --debug server show ${name}
             return 1
         fi
-        sleep 1
+        sleep 2
     done
 }
 
