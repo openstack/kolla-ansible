@@ -19,8 +19,3 @@ which are the main Masakari components only if ``enable_masakari`` is set in
 Masakari Instance Monitor containers are enabled. The deployment of each type
 of monitors can be controlled individually via
 ``enable_masakari_instancemonitor`` and ``enable_masakari_hostmonitor``.
-
-.. note::
-   Support for deploying Masakari has been deprecated in the 2023.2 (Bobcat)
-   release due to failures in the CI and lack of contributors working on
-   fixing this.
