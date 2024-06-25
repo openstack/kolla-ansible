@@ -49,7 +49,7 @@ CONTAINER_PARAMS = [
     'ipc_mode',         # string only option is host
 
     'labels',           # dict
-    'netns',            # dict # TODO(i.halomi) - not sure how it works
+    'netns',            # dict
     'network_options',  # string - none,bridge,host,container:id,
                         # missing in docker but needs to be host
     'pid_mode',         # "string"  host, private or ''
@@ -59,7 +59,7 @@ CONTAINER_PARAMS = [
     'restart_tries',    # int doesn't matter done by systemd
     'stop_timeout',     # int
     'tty',              # bool
-    # VOLUMES NOT WORKING HAS TO BE DONE WITH MOUNTS
+    # volumes need to be parsed, see parse_volumes() for more info
     'volumes',          # array of dict
     'volumes_from',     # array of strings
 ]
@@ -145,6 +145,10 @@ class PodmanWorker(ContainerWorker):
 
         return args
 
+    # NOTE(i.halomi): Podman encounters issues parsing and setting
+    # permissions for a mix of volumes and binds when sent together.
+    # Therefore, we must parse them and set the permissions ourselves
+    # and send them to API separately.
     def parse_volumes(self, volumes, mounts, filtered_volumes):
         # we can ignore empty strings
         volumes = [item for item in volumes if item.strip()]
@@ -390,10 +394,10 @@ class PodmanWorker(ContainerWorker):
     def compare_dimensions(self, container_info):
         new_dimensions = self.params.get('dimensions')
 
-        # NOTE(mgoddard): The names used by Docker are inconsistent between
-        # configuration of a container's resources and the resources in
-        # container_info['HostConfig']. This provides a mapping between the
-        # two.
+        # NOTE(mgoddard): The names used by Docker/Podman are inconsistent
+        # between configuration of a container's resources and
+        # the resources in container_info['HostConfig'].
+        # This provides a mapping between the two.
         dimension_map = {
             'mem_limit': 'Memory', 'mem_reservation': 'MemoryReservation',
             'memswap_limit': 'MemorySwap', 'cpu_period': 'CpuPeriod',
@@ -432,6 +436,9 @@ class PodmanWorker(ContainerWorker):
 
             rc, raw_output = container.exec_run(COMPARE_CONFIG_CMD,
                                                 user='root')
+        # APIError means either container doesn't exist or exec command
+        # failed, which means that container is in bad state and we can
+        # expect that config is stale so we return True and recreate container
         except APIError as e:
             if e.is_client_error():
                 return True
