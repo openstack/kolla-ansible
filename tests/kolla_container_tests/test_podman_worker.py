@@ -246,6 +246,18 @@ class TestContainer(base.BaseTestCase):
         self.assertIsNotNone(hc_call)
         self.assertEqual(hc, hc_call)
 
+    def test_create_container_with_None_healthcheck(self):
+        hc = {'test': ['NONE']}
+        self.fake_data['params']['healthcheck'] = hc
+        self.pw = get_PodmanWorker(self.fake_data['params'].copy())
+
+        self.pw.create_container()
+        self.assertTrue(self.pw.changed)
+        podman_create_kwargs = self.pw.pc.containers.create.call_args.kwargs
+        hc_call = podman_create_kwargs.get('healthcheck', None)
+        self.pw.pc.containers.create.assert_called_once()
+        self.assertIsNone(hc_call)
+
     @unittest.skip("Skipping because tmpfs is currently"
                    " not supported by podman API.")
     def test_create_container_with_tmpfs(self):

@@ -104,7 +104,8 @@ class PodmanWorker(ContainerWorker):
         if healthcheck:
             healthcheck = self.parse_healthcheck(healthcheck)
             self.params.pop('healthcheck', None)
-            args.update(healthcheck)
+            if healthcheck:
+                args.update(healthcheck)
 
         # getting dimensions into separate parameters
         dimensions = self.params.get('dimensions')
