@@ -48,7 +48,7 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS, Rocky or openEuler, run:
+   For CentOS or Rocky, run:
 
    .. code-block:: console
 
@@ -65,7 +65,7 @@ Install dependencies for the virtual environment
 
 #. Install the virtual environment dependencies.
 
-   For CentOS, Rocky or openEuler, you don't need to do anything.
+   For CentOS or Rocky, you don't need to do anything.
 
    For Debian or Ubuntu, run:
 

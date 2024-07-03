@@ -120,34 +120,6 @@
         use: systemd
       become: true
 
-    # NOTE(wxy): There are some issues on openEuler, fix them by hand.
-    # 1. iptables-legacy is used by default.
-    # 2. NTP sync doesn't work by default.
-    - block:
-        # The Ubuntu 22.04 in container uses iptables-nft while the host
-        # openEuler 22.03 uses iptables-legacy by default. We should update
-        # openEuler to keep iptables the same.
-        - name: Set iptables from legacy to nft for container
-          shell:
-            cmd: |
-              dnf install -y iptables-nft
-              iptables-save  > iptables.txt
-              iptables-nft-restore < iptables.txt
-              update-alternatives --set iptables /usr/sbin/iptables-nft
-          become: true
-
-        # The command `timedatectl status` always times out if the command
-        # `timedatectl show-timesync` is not run first.
-        - name: Install systemd-timesyncd
-          package:
-            name: systemd-timesyncd
-            state: present
-          become: True
-        - name: Let ntp service work
-          shell: timedatectl show-timesync
-          become: true
-      when: ansible_facts.distribution == 'openEuler'
-
     - name: Wait for ntp time sync
       command: timedatectl status
       register: timedatectl_status

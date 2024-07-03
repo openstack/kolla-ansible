@@ -15,7 +15,6 @@ Kolla Ansible supports the following host Operating Systems (OS):
 
 * CentOS Stream 9
 * Debian Bookworm (12)
-* openEuler 22.03 LTS
 * Rocky Linux 9
 * Ubuntu Jammy (22.04)
 
