@@ -125,7 +125,7 @@ EOF
     deactivate
     source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
     echo 'designate_enable_notifications_sink: "yes"' >> /etc/kolla/globals.yml
-    kolla-ansible -i ${RAW_INVENTORY} --tags designate,nova,nova-cell,neutron -vvv reconfigure &> /tmp/logs/ansible/reconfigure-designate
+    kolla-ansible reconfigure -i ${RAW_INVENTORY} --tags designate,nova,nova-cell,neutron -vvv &> /tmp/logs/ansible/reconfigure-designate
     deactivate
     source ~/openstackclient-venv/bin/activate
 

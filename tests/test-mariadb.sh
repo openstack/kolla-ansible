@@ -11,7 +11,7 @@ export PYTHONUNBUFFERED=1
 
 function mariadb_stop {
     echo "Stopping the database cluster"
-    kolla-ansible -i ${RAW_INVENTORY} -vvv stop --yes-i-really-really-mean-it --tags mariadb --skip-tags common
+    kolla-ansible stop -i ${RAW_INVENTORY} -vvv --yes-i-really-really-mean-it --tags mariadb --skip-tags common
     if [[ $(sudo ${container_engine} ps -q | grep mariadb | wc -l) -ne 0 ]]; then
         echo "Failed to stop MariaDB cluster"
         return 1
@@ -21,7 +21,7 @@ function mariadb_stop {
 function mariadb_recovery {
     # Recover the database cluster.
     echo "Recovering the database cluster"
-    kolla-ansible -i ${RAW_INVENTORY} -vvv mariadb_recovery --tags mariadb --skip-tags common
+    kolla-ansible mariadb-recovery -i ${RAW_INVENTORY} -vvv --tags mariadb --skip-tags common
 }
 
 function test_recovery {
@@ -32,7 +32,7 @@ function test_recovery {
 
 function test_backup {
     echo "Performing full backup"
-    kolla-ansible -i ${RAW_INVENTORY} -vvv mariadb_backup --full
+    kolla-ansible mariadb-backup -i ${RAW_INVENTORY} -vvv --full
     # Sleep for 30 seconds, not because it's absolutely necessary.
     # The full backup is already completed at this point, as the
     # ansible job is waiting for the completion of the backup script
@@ -42,7 +42,7 @@ function test_backup {
     # data gets written within those 30 seconds.
     echo "Sleeping for 30 seconds"
     sleep 30
-    kolla-ansible -i ${RAW_INVENTORY} -vvv mariadb_backup --incremental
+    kolla-ansible mariadb-backup -i ${RAW_INVENTORY} -vvv --incremental
 }
 
 function test_backup_with_retries {

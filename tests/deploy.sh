@@ -41,7 +41,7 @@ function certificates {
 
     # generate self-signed certificates for the optional internal TLS tests
     if [[ "$TLS_ENABLED" = "True" ]]; then
-        kolla-ansible -i ${RAW_INVENTORY} -vvv certificates > /tmp/logs/ansible/certificates
+        kolla-ansible certificates -i ${RAW_INVENTORY} -vvv > /tmp/logs/ansible/certificates
     fi
     if [[ "$LE_ENABLED" = "True" ]]; then
         init_pebble
@@ -64,13 +64,13 @@ function deploy {
     certificates
 
     # Actually do the deployment
-    kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/deploy-prechecks
-    kolla-ansible -i ${RAW_INVENTORY} -vvv pull &> /tmp/logs/ansible/pull
-    kolla-ansible -i ${RAW_INVENTORY} -vvv deploy &> /tmp/logs/ansible/deploy
-    kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy &> /tmp/logs/ansible/post-deploy
+    kolla-ansible prechecks -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/deploy-prechecks
+    kolla-ansible pull -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/pull
+    kolla-ansible deploy -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/deploy
+    kolla-ansible post-deploy -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/post-deploy
 
     if [[ $HAS_UPGRADE == 'no' ]]; then
-        kolla-ansible -i ${RAW_INVENTORY} -vvv validate-config &> /tmp/logs/ansible/validate-config
+        kolla-ansible validate-config -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/validate-config
     fi
 }
 

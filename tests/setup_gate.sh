@@ -116,7 +116,7 @@ EOF
 RAW_INVENTORY=/etc/kolla/inventory
 
 source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
-kolla-ansible -i ${RAW_INVENTORY} -vvv bootstrap-servers &> /tmp/logs/ansible/bootstrap-servers
+kolla-ansible bootstrap-servers -i ${RAW_INVENTORY} -vvv  &> /tmp/logs/ansible/bootstrap-servers
 deactivate
 
 prepare_images

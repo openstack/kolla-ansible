@@ -17,7 +17,7 @@ function upgrade_bifrost {
     # CI.
     # TODO(mgoddard): make some configuration file changes and trigger a real
     # upgrade.
-    kolla-ansible -i ${RAW_INVENTORY} -vvv deploy-bifrost &> /tmp/logs/ansible/upgrade-bifrost
+    kolla-ansible deploy-bifrost -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/upgrade-bifrost
 }
 
 
