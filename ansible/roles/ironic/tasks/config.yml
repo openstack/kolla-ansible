@@ -47,6 +47,32 @@
   when:
     - ironic_inspector_policy.results
 
+- name: Check if Ironic Inspector known_devices.yaml shall be overwritten
+  stat:
+    path: "{{ node_custom_config }}/ironic-inspector/known_devices.yaml"
+  delegate_to: localhost
+  run_once: True
+  register: ironic_inspector_known_devices
+
+- name: Set known_devices file path
+  set_fact:
+    ironic_inspector_known_devices_file_path: "{{ ironic_inspector_known_devices.stat.path }}"
+  when:
+    - ironic_inspector_known_devices.stat.exists
+
+- name: Copying over known_devices.yaml
+  template:
+    src: "{{ ironic_inspector_known_devices_file_path }}"
+    dest: "{{ node_config_directory }}/ironic-inspector/known_devices.yaml"
+    mode: "0660"
+  become: true
+  when:
+    - ironic_inspector_known_devices_file_path is defined
+    - inventory_hostname in groups["ironic-inspector"]
+    - ironic_services["ironic-inspector"].enabled | bool
+  notify:
+    - "Restart ironic-inspector container"
+
 - include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool or ironic_enable_tls_backend | bool
