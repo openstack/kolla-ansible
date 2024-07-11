@@ -43,7 +43,9 @@
     volumes: "{{ ironic_inspector.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[ironic_inspector.group][0] }}"
-  when: inventory_hostname in groups[ironic_inspector.group]
+  when:
+    - inventory_hostname in groups[ironic_inspector.group]
+    - enable_ironic_inspector | bool
 
 - name: Running ironic-tftp bootstrap container
   vars:
