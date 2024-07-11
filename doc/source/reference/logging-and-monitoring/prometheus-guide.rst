@@ -106,7 +106,7 @@ following:
       static_configs:
         - targets:
   {% for host in groups['prometheus'] %}
-          - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ 3456 }}'
+          - '{{ hostvars[host][('ansible_' + hostvars[host]['api_interface'] | replace('-','_'))]['ipv4']['address'] }}:{{ 3456 }}'
   {% endfor %}
 
 The jobs, ``custom``, and ``custom_template``  would be appended to the default
