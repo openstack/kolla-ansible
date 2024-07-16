@@ -7,6 +7,7 @@
     module_args:
       url: "{{ opensearch_internal_endpoint }}/_cluster/stats"
       status_code: 200
+      ca_path: "{{ openstack_cacert }}"
   register: result
   until: result.get('status') == 200
   retries: 30
@@ -23,6 +24,7 @@
       method: GET
       status_code: 200, 404
       return_content: yes
+      ca_path: "{{ openstack_cacert }}"
   register: opensearch_retention_policy_check
   delegate_to: "{{ groups['opensearch'][0] }}"
   run_once: true
@@ -39,6 +41,7 @@
       return_content: yes
       body: "{{ opensearch_retention_policy | from_yaml | to_json }}"
       body_format: json
+      ca_path: "{{ openstack_cacert }}"
   register: opensearch_retention_policy_create
   delegate_to: "{{ groups['opensearch'][0] }}"
   run_once: true
@@ -59,6 +62,7 @@
       return_content: yes
       body: "{{ opensearch_set_policy_body | to_json }}"
       body_format: json
+      ca_path: "{{ openstack_cacert }}"
   delegate_to: "{{ groups['opensearch'][0] }}"
   run_once: true
   changed_when: opensearch_retention_policy_create.status == 201
