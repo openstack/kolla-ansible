@@ -136,6 +136,21 @@ cron_logrotate_schedule: "daily"
 # Fluentd
 ####################
 
+# Enable the additional watch timer
+fluentd_enable_watch_timer: "false"
+
+# Set limits for queue size and chunk size
+# We need to ensure that the bulk_message_request_threshold is set below the
+# default maximum content length for the OpenSearch bulk API (100MB). By
+# default the bulk_message_request_threshold is unlimited, which can lead to
+# large payloads being sent and subsequently rejected by the OpenSearch API.
+fluentd_bulk_message_request_threshold: "20M"
+
+# The fluentd buffer chunk limit size is the maximum size of a single chunk in
+# the buffer. This should be set to a value that is less than the maximum size
+# of the bulk_message_request_threshold.
+fluentd_buffer_chunk_limit_size: "8M"
+
 fluentd_input_openstack_services:
   - name: aodh
     enabled: "{{ enable_aodh | bool }}"
