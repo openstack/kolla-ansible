@@ -72,6 +72,12 @@ driver = noop
 {% endif %}
 
 [oslo_messaging_rabbit]
+{% if om_enable_queue_manager | bool %}
+use_queue_manager = true
+{% if service_name == 'heat-api' or service_name == 'heat-api-cfn' %}
+processname = {{ service_name }}
+{% endif %}
+{% endif %}
 heartbeat_in_pthread = {{ service_name == 'heat-api' or service_name == 'heat-api-cfn' }}
 {% if om_enable_rabbitmq_tls | bool %}
 ssl = true

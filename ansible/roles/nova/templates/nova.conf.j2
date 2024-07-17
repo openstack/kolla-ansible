@@ -139,6 +139,12 @@ driver = noop
 {% endif %}
 
 [oslo_messaging_rabbit]
+{% if om_enable_queue_manager | bool %}
+use_queue_manager = true
+{% if service_name == 'nova-api' or service_name == 'nova-metadata' %}
+processname = {{ service_name }}
+{% endif %}
+{% endif %}
 heartbeat_in_pthread = {{ service_name == 'nova-api' }}
 {% if om_enable_rabbitmq_tls | bool %}
 ssl = true
