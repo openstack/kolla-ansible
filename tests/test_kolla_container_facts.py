@@ -310,3 +310,27 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('volumes', self.dfw.result)
         self.assertEqual(len(self.dfw.result['volumes']), 0)
         self.assertNotIn('nonexistent_volume', self.dfw.result['volumes'])
+
+    def test_get_containers_names(self):
+        """Test fetching container names when containers exist"""
+        self.dfw = get_DockerFactsWorker({'action': 'get_containers_names'})
+        full_cont_list = get_containers(self.fake_data['containers'])
+        self.dfw.client.containers.list.return_value = full_cont_list
+        expected_names = ["my_container"]
+
+        self.dfw.get_containers_names()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.assertIn('container_names', self.dfw.result)
+        self.assertEqual(self.dfw.result['container_names'], expected_names)
+
+    def test_get_containers_names_no_containers(self):
+        """Test fetching container names when no containers exist"""
+        self.dfw = get_DockerFactsWorker({'action': 'get_containers_names'})
+        self.dfw.client.containers.list.return_value = []
+
+        self.dfw.get_containers_names()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.assertIn('container_names', self.dfw.result)
+        self.assertEqual(self.dfw.result['container_names'], [])
