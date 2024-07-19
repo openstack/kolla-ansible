@@ -328,3 +328,24 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
+
+- name: Restart neutron-ovn-vpn-agent container
+  vars:
+    service_name: "neutron-ovn-vpn-agent"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    environment: "{{ service.environment | default(omit) }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    user: "{{ service.user | default(omit) }}"
+    cap_add: "{{ service.cap_add | default(omit) }}"
+    security_opt: "{{ service.security_opt | default(omit) }}"
+    pid_mode: "{{ service.pid_mode | default(omit) }}"
+    cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"

@@ -1,0 +1,33 @@
+---
+- name: VPNaaS | Install requirements in venv
+  ansible.builtin.pip:
+    name:
+      - "python-neutronclient"
+      - "openstacksdk"
+    virtualenv: "{{ ovn_vpnaas_venv }}"
+    state: present
+
+- name: VPNaaS | Load OpenStack credentials from openrc
+  ansible.builtin.shell: |
+    set -o pipefail
+    . {{ ovn_vpnaas_openrc }}
+    env | grep ^OS_
+  args:
+    executable: /bin/bash
+  register: openrc_env
+  changed_when: false
+
+- name: VPNaaS | Convert OS_* env to dict
+  ansible.builtin.set_fact:
+    os_auth_env: >-
+      {{
+        dict(
+          openrc_env.stdout_lines
+          | map('split', '=', 1)
+          | list
+        )
+      }}
+
+- name: VPNaaS | Add venv to PATH
+  ansible.builtin.set_fact:
+    os_auth_env: "{{ os_auth_env | combine({'PATH': ovn_vpnaas_venv + '/bin:' + ansible_facts['env']['PATH']}) }}"

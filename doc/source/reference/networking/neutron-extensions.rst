@@ -45,6 +45,13 @@ For more information on FWaaS in Neutron refer to the
 Neutron VPNaaS (VPN-as-a-Service)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. warning::
+
+   OVN VPNaaS is currently not supported on RHEL 10 based distributions
+   (e.g., Rocky Linux 10, CentOS Stream 10) due to an upstream bug in
+   Neutron. See `LP#2146308 <https://bugs.launchpad.net/neutron/+bug/2146308>`_
+   for details.
+
 Preparation and deployment
 --------------------------
 
@@ -60,15 +67,20 @@ Verification
 VPNaaS is a complex subject, hence this document provides directions for a
 simple smoke test to verify the service is up and running.
 
-On the network node(s), the ``neutron_vpnaas_agent`` should be up (image naming
-and versioning may differ depending on deploy configuration):
+In ml2/ovn setups a special neutron_ovn_vpn_agent is running on neutron
+node(s).
+Version may differ depending on deploy configuration:
 
 .. code-block:: console
 
-   # docker ps --filter name=neutron_vpnaas_agent
+   # docker ps --filter name=neutron_ovn_vpn_agent
 
-   CONTAINER ID   IMAGE                                                               COMMAND         CREATED          STATUS        PORTS  NAMES
-   97d25657d55e   operator:5000/kolla/centos-source-neutron-vpnaas-agent:4.0.0   "kolla_start"   44 minutes ago   Up 44 minutes        neutron_vpnaas_agent
+    CONTAINER ID   IMAGE                                COMMAND                  CREATED      STATUS                PORTS     NAMES
+    7f6efad28d30   kolla/neutron-ovn-vpn-agent:18.1.0   "dumb-init --single-…"   7 days ago   Up 7 days (healthy)             neutron_ovn_vpn_agent
+
+On ml2/ovs deployments there is no special agent.
+The vpnaas code is running inside the neutron_l3_agent container.
+
 
 .. warning::
 
@@ -92,21 +104,20 @@ Verify both VPN services are active:
 
 .. code-block:: console
 
-   # neutron vpn-service-list
+   # openstack vpn service list
 
-   +--------------------------------------+----------+--------------------------------------+--------+
-   | id                                   | name     | router_id                            | status |
-   +--------------------------------------+----------+--------------------------------------+--------+
-   | ad941ec4-5f3d-4a30-aae2-1ab3f4347eb1 | vpn_west | 051f7ce3-4301-43cc-bfbd-7ffd59af539e | ACTIVE |
-   | edce15db-696f-46d8-9bad-03d087f1f682 | vpn_east | 058842e0-1d01-4230-af8d-0ba6d0da8b1f | ACTIVE |
-   +--------------------------------------+----------+--------------------------------------+--------+
+    +--------------------------------------+----------+--------------------------------------+--------+--------+-------+--------+
+    | ID                                   | Name     | Router                               | Subnet | Flavor | State | Status |
+    +--------------------------------------+----------+--------------------------------------+--------+--------+-------+--------+
+    | 03f85023-28d9-4f35-a10e-2c8dd3c11b65 | vpn_west | e3603217-fd22-404c-b27e-9285c2a79a17 | None   | None   | True  | ACTIVE |
+    | 1abdc71a-2eb7-4b2a-8871-eb9d91f39957 | vpn_east | 3485bdd2-4c42-449e-ae9f-d071a8cb9e5c | None   | None   | True  | ACTIVE |
+    +--------------------------------------+----------+--------------------------------------+--------+--------+-------+--------+
 
 Two VMs can now be booted, one on vpn_east, the other on vpn_west, and
 encrypted ping packets observed being sent from one to the other.
 
-For more information on this and VPNaaS in Neutron refer to the
-:neutron-vpnaas-doc:`Neutron VPNaaS Testing <contributor/index.html#testing>`
-and the `OpenStack wiki <https://wiki.openstack.org/wiki/Neutron/VPNaaS>`_.
+For more information on VPNaaS in Neutron refer to the
+`OpenStack docs <https://docs.openstack.org/neutron-vpnaas>`_.
 
 Trunking
 ~~~~~~~~

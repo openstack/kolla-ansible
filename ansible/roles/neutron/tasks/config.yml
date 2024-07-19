@@ -77,6 +77,7 @@
       - "neutron-ovn-agent"
       - "neutron-ovn-maintenance-worker"
       - "neutron-ovn-metadata-agent"
+      - "neutron-ovn-vpn-agent"
       - "neutron-periodic-worker"
       - "neutron-rpc-server"
       - "neutron-server"
@@ -292,6 +293,21 @@
     dest: "{{ node_config_directory }}/{{ service_name }}/neutron_ovn_metadata_agent.ini"
     mode: "0660"
   when: service | service_enabled_and_mapped_to_host
+
+- name: Copying over neutron_ovn_vpn_agent.ini
+  become: true
+  vars:
+    service_name: "neutron-ovn-vpn-agent"
+    service: "{{ neutron_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/neutron_ovn_vpn_agent.ini.j2"
+      - "{{ node_custom_config }}/neutron/neutron_ovn_vpn_agent.ini"
+    dest: "{{ node_config_directory }}/{{ service_name }}/neutron_ovn_vpn_agent.ini"
+    mode: "0660"
+  when: service | service_enabled_and_mapped_to_host
+  notify:
+    - "Restart {{ service_name }} container"
 
 - name: Copying over metering_agent.ini
   become: true

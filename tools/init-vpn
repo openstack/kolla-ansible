@@ -1,66 +1,129 @@
 #!/usr/bin/env bash
-
 # Script originally copied from https://wiki.openstack.org/wiki/Neutron/VPNaaS/HowToInstall
 
-# Test for credentials set
-if [[ "${OS_USERNAME}" == "" ]]; then
-    echo "No Keystone credentials specified.  Try running source openrc"
-    exit
-fi
-
-EXT_NW_ID=`neutron net-list | awk '/public/{print $2}'`
-WEST_SUBNET='192.168.1.0/24'
-EAST_SUBNET='192.168.2.0/24'
+WEST_SUBNET='192.168.10.0/24'
+EAST_SUBNET='192.168.20.0/24'
 
 function setup_site(){
     local site_name=$1
     local cidr=$2
-    neutron net-create net_$site_name
-    neutron subnet-create --name subnet_$site_name net_$site_name $2
-    neutron router-create router_$site_name
-    neutron router-interface-add router_$site_name subnet_$site_name
-    neutron router-gateway-set router_$site_name $EXT_NW_ID
-    neutron vpn-service-create --name vpn_$site_name router_$site_name subnet_$site_name
+    echo ">>> Creating network and subnet for site '$site_name'..."
+    openstack network create net_$site_name
+    openstack subnet create --network net_$site_name --subnet-range $cidr subnet_$site_name
+
+    echo ">>> Creating router '$site_name' with external gateway 'public1'..."
+    openstack router create --external-gateway public1 router_$site_name
+    openstack router add subnet router_$site_name subnet_$site_name
+
+    echo ">>> Creating VPN service for site '$site_name'..."
+    openstack vpn service create vpn_$site_name --router router_$site_name
+
+    echo ">>> Creating local endpoint group for site '$site_name'..."
+    openstack vpn endpoint group create ${site_name}-local-epg --type subnet --value subnet_$site_name
 }
 
 function get_external_ip(){
-    local router_id=`neutron router-show $1 | awk '/ id /{print $4}'`
-    echo `neutron router-list | grep '$router_id' | awk -F '"' '{print $16}'`
+    openstack vpn service show -f value -c ext_v4_ip $1
 }
 
 function clean_site(){
     local site_name=$1
-    neutron ipsec-site-connection-delete conn_$site_name
-    neutron vpn-service-list | awk '/vpn_'$site_name'/{print "neutron vpn-service-delete " $2}' |
-bash
-    neutron router-gateway-clear router_$site_name
-    neutron router-interface-delete router_$site_name subnet_$site_name
-    neutron router-list | awk '/router_'$site_name'/{print "neutron router-delete " $2}' | bash
-    neutron subnet-list | awk '/subnet_'$site_name'/{print "neutron subnet-delete " $2}' | bash
-    neutron net-list | awk '/net_'$site_name'/{print "neutron net-delete " $2}' | bash
+    echo ">>> Cleaning configuration for site '$site_name'..."
+    openstack vpn ipsec site connection delete conn_$site_name || true
+    openstack vpn service delete vpn_$site_name || true
+    openstack vpn endpoint group delete ${site_name}-local-epg || true
+    openstack router remove subnet router_$site_name subnet_$site_name || true
+    openstack router unset --external-gateway router_$site_name || true
+    openstack router delete router_$site_name || true
+    openstack subnet delete subnet_$site_name || true
+    openstack network delete net_$site_name || true
 }
 
 function setup(){
-    neutron vpn-ikepolicy-create ikepolicy1
-    neutron vpn-ipsecpolicy-create ipsecpolicy1
+    echo ">>> Creating IKE policy..."
+    openstack vpn ike policy create ikepolicy --ike-version v2 --auth-algorithm sha256 --encryption-algorithm aes-256 --pfs group14
+
+    echo ">>> Creating IPSec policy..."
+    openstack vpn ipsec policy create ipsecpolicy --auth-algorithm sha256 --encryption-algorithm aes-256 --pfs group14
+
+    echo ">>> Configuring WEST site..."
     setup_site west $WEST_SUBNET
-    WEST_IP=$(get_external_ip router_west)
+    echo ">>> Creating peer endpoint group for WEST..."
+    openstack vpn endpoint group create west-peer-epg --type cidr --value $EAST_SUBNET
+    WEST_IP=$(get_external_ip vpn_west)
+    echo ">>> VPN WEST external IP: $WEST_IP"
+
+    echo ">>> Configuring EAST site..."
     setup_site east $EAST_SUBNET
-    EAST_IP=$(get_external_ip router_east)
-    neutron ipsec-site-connection-create --name conn_east --vpnservice-id vpn_east --ikepolicy-id \
-ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $WEST_IP --peer-id $WEST_IP --peer-cidr \
-$WEST_SUBNET --psk secret
-    neutron ipsec-site-connection-create --name conn_west --vpnservice-id vpn_west --ikepolicy-id \
-ikepolicy1 --ipsecpolicy-id ipsecpolicy1 --peer-address $EAST_IP --peer-id $EAST_IP --peer-cidr \
-$EAST_SUBNET --psk secret
+    echo ">>> Creating peer endpoint group for EAST..."
+    openstack vpn endpoint group create east-peer-epg --type cidr --value $WEST_SUBNET
+    EAST_IP=$(get_external_ip vpn_east)
+    echo ">>> VPN EAST external IP: $EAST_IP"
+
+    echo ">>> Creating VPN connection 'conn_east'..."
+    openstack vpn ipsec site connection create conn_east --vpnservice vpn_east --ikepolicy ikepolicy \
+      --ipsecpolicy ipsecpolicy --local-endpoint-group east-local-epg --peer-address $WEST_IP \
+      --peer-id $WEST_IP --peer-endpoint-group east-peer-epg --psk secret
+
+    echo ">>> Creating VPN connection 'conn_west'..."
+    openstack vpn ipsec site connection create conn_west --vpnservice vpn_west --ikepolicy ikepolicy \
+      --ipsecpolicy ipsecpolicy --local-endpoint-group west-local-epg --peer-address $EAST_IP \
+      --peer-id $EAST_IP --peer-endpoint-group west-peer-epg --psk secret
+
+    echo ">>> Waiting for VPN connections to become ACTIVE..."
+    wait_for_vpn_active conn_east
+    wait_for_vpn_active conn_west
+
+    echo ">>> All VPN connections are ACTIVE!"
+}
+
+function wait_for_vpn_active(){
+    local conn_name=$1
+    local timeout=300
+    local interval=10
+    local elapsed=0
+
+    echo ">>> Checking VPN status for $conn_name every $interval seconds (timeout: $timeout seconds)..."
+
+    while true; do
+        STATUS=$(openstack vpn ipsec site connection show $conn_name -f value -c status)
+        if [ "$STATUS" == "ACTIVE" ]; then
+            echo ">>> VPN connection $conn_name is ACTIVE"
+            break
+        fi
+
+        if [ $elapsed -ge $timeout ]; then
+            echo ">>> Timeout waiting for VPN connection $conn_name to become ACTIVE"
+            exit 1
+        fi
+
+        sleep $interval
+        elapsed=$((elapsed + interval))
+    done
 }
 
 function cleanup(){
+    echo ">>> Cleaning all VPN configurations..."
     clean_site west
     clean_site east
-    neutron vpn-ikepolicy-delete ikepolicy1
-    neutron vpn-ipsecpolicy-delete ipsecpolicy1
+    openstack vpn endpoint group delete west-peer-epg || true
+    openstack vpn endpoint group delete east-peer-epg || true
+    openstack vpn ike policy delete ikepolicy || true
+    openstack vpn ipsec policy delete ipsecpolicy || true
 }
 
+function check() {
+  if [ -z ${OS_USERNAME} ]; then
+      echo ">>> Keystone credentials not found. Try: source /etc/kolla/admin-openrc.sh"
+      exit 1
+  fi
+}
+
+check
 cleanup
 setup
+
+echo ">>> Displaying current VPN connections:"
+openstack vpn ipsec site connection list
+
+echo ">>> VPN setup completed successfully."
