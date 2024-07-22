@@ -19,15 +19,20 @@
             "preserve_properties": true,
             "optional": true
         }
-{% if enable_prometheus_alertmanager | bool %}
-        ,{
+        {% if enable_prometheus_alertmanager | bool %},
+        {
             "source": "{{ container_config_directory }}/*.rules",
             "dest": "/etc/prometheus/",
             "optional": true,
             "owner": "prometheus",
             "perm": "0600"
-        }
-{% endif %}
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {
