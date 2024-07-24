@@ -365,6 +365,21 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.create_container.assert_called_once_with(
             **{k: self.fake_data['params'][k] for k in expected_args})
 
+    def test_create_container_with_None_healthcheck(self):
+        self.fake_data['params']['healthcheck'] = \
+            {'test': ['NONE']}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        inject_env_when_create_container(self.fake_data['params'])
+        self.assertTrue(self.dw.changed)
+        expected_args = {'command', 'detach', 'environment', 'host_config',
+                         'image', 'labels', 'name', 'tty',
+                         'volumes'}
+        self.dw.dc.create_container.assert_called_once_with(
+            **{k: self.fake_data['params'][k] for k in expected_args})
+
     def test_create_container_with_tmpfs(self):
         self.fake_data['params']['tmpfs'] = ['/tmp']  # nosec: B108
         self.dw = get_DockerWorker(self.fake_data['params'])
