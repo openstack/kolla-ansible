@@ -78,24 +78,6 @@ Limitations and Recommendations
    ``ceph_nova_keyring: ceph.client.nova.keyring`` and ``ceph_nova_user: nova``
    in ``/etc/kolla/globals.yml``
 
-Ubuntu Jammy 22.04
-------------------
-
-The Zed release adds support for Ubuntu Jammy 22.04 as a host operating
-system. Ubuntu Jammy 22.04 support was also added to the Yoga stable
-release. Ubuntu Focal 20.04 users upgrading from Yoga can thus directly
-upgrade to Ubuntu Jammy 22.04 on the host and then upgrade to the Zed release.
-
-
-CentOS Stream 8
----------------
-
-The Wallaby release adds support for CentOS Stream 8 as a host operating
-system. CentOS Stream 8 support will also be added to a Victoria stable
-release. CentOS Linux users upgrading from Victoria should first migrate hosts
-and container images from CentOS Linux to CentOS Stream before upgrading to
-Wallaby.
-
 Preparation (the foreword)
 --------------------------
 
