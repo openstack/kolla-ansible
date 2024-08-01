@@ -142,3 +142,15 @@
     - not enable_letsencrypt | bool
     - kolla_enable_tls_internal | bool
     - not kolla_same_external_internal_vip | bool
+- block:
+    - name: Copy Certificate and Key for ProxySQL
+      copy:
+        src: "{{ external_dir if kolla_same_external_internal_vip | bool else internal_dir }}/{{ 'external' if  kolla_same_external_internal_vip | bool else 'internal' }}.{{item}}"
+        dest: "{{ kolla_certificates_dir }}/proxysql-{{ 'cert' if item == 'crt' else item }}.pem"
+        mode: "0660"
+      with_items:
+        - "crt"
+        - "key"
+  when:
+    - database_enable_tls_internal | bool
+    - kolla_enable_tls_internal | bool
