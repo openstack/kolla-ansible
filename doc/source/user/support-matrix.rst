@@ -25,6 +25,13 @@ Kolla Ansible supports the following host Operating Systems (OS):
 * openEuler 22.03 LTS
 * Rocky Linux 9
 * Ubuntu Jammy (22.04)
+* Ubuntu Noble (24.04)
+
+.. note::
+
+  Ubuntu Noble (24.04) can use both Jammy (default) and Noble based Kolla images.
+  In order to use the latter - please set ``kolla_base_distro_version`` to
+  ``noble`` and ``distro_python_version`` to ``3.12``.
 
 Supported container images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
