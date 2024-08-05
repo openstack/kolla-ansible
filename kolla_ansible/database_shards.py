@@ -87,8 +87,8 @@ def database_shards_info(context, hostnames):
 
         host_shard_id = host.get('mariadb_shard_id')
         if host_shard_id is None:
-            raise FilterError(f"'mariadb_shard_id' is undefined "
-                              "for host '{hostname}'")
+            raise FilterError("'mariadb_shard_id' is undefined "
+                              f"for host '{hostname}'")
         else:
             host_shard_id = str(host_shard_id)
 
