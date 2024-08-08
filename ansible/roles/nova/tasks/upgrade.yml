@@ -44,10 +44,8 @@
     action: "stop_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
-  with_dict: "{{ nova_services }}"
+  with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - nova_safety_upgrade | bool
 
 - import_tasks: rolling_upgrade.yml

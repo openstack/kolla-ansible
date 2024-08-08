@@ -30,7 +30,7 @@
 
 - name: Checking free port for Nova NoVNC Proxy
   vars:
-    nova_novncproxy: "{{ nova_cell_services['nova-novncproxy'] }}"
+    service: "{{ nova_cell_services['nova-novncproxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_novncproxy_listen_port }}"
@@ -39,12 +39,11 @@
     state: stopped
   when:
     - container_facts['nova_novncproxy'] is not defined
-    - nova_novncproxy.enabled | bool
-    - inventory_hostname in groups[nova_novncproxy.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Serial Proxy
   vars:
-    nova_serialproxy: "{{ nova_cell_services['nova-serialproxy'] }}"
+    service: "{{ nova_cell_services['nova-serialproxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_serialproxy_listen_port }}"
@@ -53,12 +52,11 @@
     state: stopped
   when:
     - container_facts['nova_serialproxy'] is not defined
-    - nova_serialproxy.enabled | bool
-    - inventory_hostname in groups[nova_serialproxy.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Spice HTML5 Proxy
   vars:
-    nova_spicehtml5proxy: "{{ nova_cell_services['nova-spicehtml5proxy'] }}"
+    service: "{{ nova_cell_services['nova-spicehtml5proxy'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_spicehtml5proxy_listen_port }}"
@@ -67,12 +65,11 @@
     state: stopped
   when:
     - container_facts['nova_spicehtml5proxy'] is not defined
-    - nova_spicehtml5proxy.enabled | bool
-    - inventory_hostname in groups[nova_spicehtml5proxy.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova SSH (API interface)
   vars:
-    nova_ssh: "{{ nova_cell_services['nova-ssh'] }}"
+    service: "{{ nova_cell_services['nova-ssh'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_ssh_port }}"
@@ -81,12 +78,11 @@
     state: stopped
   when:
     - container_facts['nova_ssh'] is not defined
-    - nova_ssh.enabled | bool
-    - inventory_hostname in groups[nova_ssh.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova SSH (migration interface)
   vars:
-    nova_ssh: "{{ nova_cell_services['nova-ssh'] }}"
+    service: "{{ nova_cell_services['nova-ssh'] }}"
   wait_for:
     host: "{{ migration_interface_address }}"
     port: "{{ nova_ssh_port }}"
@@ -96,12 +92,11 @@
   when:
     - migration_interface_address != api_interface_address
     - container_facts['nova_ssh'] is not defined
-    - nova_ssh.enabled | bool
-    - inventory_hostname in groups[nova_ssh.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Libvirt
   vars:
-    nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
+    service: "{{ nova_cell_services['nova-libvirt'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_libvirt_port }}"
@@ -110,19 +105,17 @@
     state: stopped
   when:
     - container_facts['nova_libvirt'] is not defined
-    - nova_libvirt.enabled | bool
-    - inventory_hostname in groups[nova_libvirt.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking that host libvirt is not running
   vars:
-    nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
+    service: "{{ nova_cell_services['nova-libvirt'] }}"
   stat: path=/var/run/libvirt/libvirt-sock
   register: result
   failed_when: result.stat.exists
   when:
     - container_facts['nova_libvirt'] is not defined
-    - nova_libvirt.enabled | bool
-    - inventory_hostname in groups[nova_libvirt.group]
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking that nova_libvirt container is not running
   vars:

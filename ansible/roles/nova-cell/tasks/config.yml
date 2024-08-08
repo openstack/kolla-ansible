@@ -7,10 +7,7 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ nova_cell_services }}"
+  with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: copy-certs.yml
   when:
@@ -59,10 +56,7 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ nova_cell_services }}"
+  with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -81,10 +75,8 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/nova.conf"
     mode: "0660"
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - item.key in nova_cell_services_require_nova_conf
-  with_dict: "{{ nova_cell_services }}"
+  with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -97,9 +89,8 @@
     dest: "{{ node_config_directory }}/nova-compute/provider_config.yaml"
     mode: "0660"
   when:
-    - inventory_hostname in groups[service.group]
+    - service | service_enabled_and_mapped_to_host
     - nova_cell_compute_provider_config is defined
-    - service.enabled | bool
   notify:
     - Restart nova-compute container
 
@@ -111,9 +102,7 @@
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-libvirt/{{ item.dest }}"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_items:
     - { src: "qemu.conf.j2", dest: "qemu.conf" }
     - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
@@ -138,8 +127,7 @@
     mode: "0660"
   when:
     - libvirt_enable_sasl | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   with_items:
     - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-compute" }
     - { src: "auth.conf.j2", dest: "auth.conf", service: "nova-libvirt" }
@@ -155,9 +143,7 @@
     src: "{{ item.src }}"
     dest: "{{ node_config_directory }}/nova-ssh/{{ item.dest }}"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_items:
     - { src: "sshd_config.j2", dest: "sshd_config" }
     - { src: "id_rsa", dest: "id_rsa" }
@@ -176,8 +162,7 @@
   when:
     - nova_compute_virt_type == "vmware"
     - not vmware_vcenter_insecure | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart nova-compute container
 
@@ -194,9 +179,7 @@
         - "{{ node_custom_config }}/nova_compute/release"
         - "{{ node_custom_config }}/nova/release"
       skip: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart nova-compute container
 
@@ -209,9 +192,7 @@
     dest: "{{ node_config_directory }}/nova-compute/hostnqn"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart nova-compute container
 
@@ -222,11 +203,9 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ nova_policy_file }}"
     mode: "0660"
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - nova_policy_file is defined
     - item.key in nova_cell_services_require_policy_json
-  with_dict: "{{ nova_cell_services }}"
+  with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -240,8 +219,7 @@
   become: True
   when:
     - vendordata_file_path is defined
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ item }} container"
   with_items:

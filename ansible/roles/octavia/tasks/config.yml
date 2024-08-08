@@ -10,10 +10,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -42,9 +39,7 @@
   become: true
   when:
     - octavia_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -58,10 +53,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -77,9 +69,7 @@
     - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia-wsgi.conf"
     - "{{ node_custom_config }}/octavia/octavia-wsgi.conf"
     - "octavia-wsgi.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart octavia-api container
 
@@ -96,10 +86,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -125,9 +112,7 @@
         dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
       notify:
         - Restart octavia-worker container
@@ -140,9 +125,7 @@
         dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
       notify:
         - Restart octavia-housekeeping container
@@ -155,9 +138,7 @@
         dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
       notify:
         - Restart octavia-health-manager container

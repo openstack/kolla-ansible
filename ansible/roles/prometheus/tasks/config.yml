@@ -7,10 +7,7 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ prometheus_services }}"
+  with_dict: "{{ prometheus_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: copy-certs.yml
   when:
@@ -22,10 +19,7 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ prometheus_services }}"
+  with_dict: "{{ prometheus_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container
 
@@ -48,8 +42,8 @@
     dest: "{{ node_config_directory }}/prometheus-server/{{ item.path | basename }}"
     mode: "0660"
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool and enable_prometheus_alertmanager | bool
+    - service | service_enabled_and_mapped_to_host
+    - enable_prometheus_alertmanager | bool
     - prometheus_alert_rules is defined and prometheus_alert_rules.files | length > 0
   with_items: "{{ prometheus_alert_rules.files }}"
   notify:
@@ -87,9 +81,7 @@
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
     mode: "0660"
     extend_lists: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus.yml"
     - "{{ node_custom_config }}/prometheus/prometheus.yml"
@@ -105,9 +97,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-server/web.yml"
     mode: "0600"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/web.yml"
     - "{{ node_custom_config }}/prometheus/web.yml"
@@ -123,9 +113,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-alertmanager/prometheus-alertmanager.yml"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-alertmanager.yml"
     - "{{ node_custom_config }}/prometheus/prometheus-alertmanager.yml"
@@ -152,8 +140,7 @@
     dest: "{{ node_config_directory }}/prometheus-alertmanager/{{ item.path | basename }}"
     mode: 0660
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - alertmanager_notification_templates is defined and alertmanager_notification_templates.files | length > 0
   with_items: "{{ alertmanager_notification_templates.files }}"
   notify:
@@ -170,9 +157,7 @@
       - "{{ role_path }}/templates/my.cnf.j2"
     dest: "{{ node_config_directory }}/prometheus-mysqld-exporter/my.cnf"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart prometheus-mysqld-exporter container
 
@@ -184,9 +169,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-openstack-exporter/clouds.yml"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus-openstack-exporter/{{ inventory_hostname }}/clouds.yml"
     - "{{ node_custom_config }}/prometheus-openstack-exporter/clouds.yml"
@@ -202,9 +185,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-blackbox-exporter/prometheus-blackbox-exporter.yml"
     mode: "0660"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-blackbox-exporter.yml"
     - "{{ node_custom_config }}/prometheus/prometheus-blackbox-exporter.yml"
@@ -252,9 +233,7 @@
   vars:
     base: "{{ node_custom_config }}/prometheus/"
     service: "{{ prometheus_services['prometheus-server'] }}"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over prometheus msteams config file
   vars:
@@ -263,9 +242,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-msteams/msteams.yml"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-msteams.yml"
     - "{{ node_custom_config }}/prometheus/prometheus-msteams.yml"
@@ -280,9 +257,7 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-msteams/msteams.tmpl"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus-msteams.tmpl"
     - "{{ node_custom_config }}/prometheus/prometheus-msteams.tmpl"

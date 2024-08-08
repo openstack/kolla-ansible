@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if the folder for custom meter definitions exist
   stat:
@@ -42,11 +39,9 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   when:
     - should_copy_custom_meter_definitions
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
 
 - name: Copying custom meter definitions to Ceilometer
   copy:
@@ -57,9 +52,7 @@
   become: true
   when:
     - should_copy_custom_meter_definitions
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -118,9 +111,7 @@
   become: true
   when:
     - ceilometer_polling_file.stat.exists
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -145,9 +136,7 @@
   become: true
   when:
     - ceilometer_gnocchi_resources_file.stat.exists
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -186,10 +175,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -206,10 +192,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/ceilometer.conf"
     mode: "0660"
   become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -231,8 +214,7 @@
   register: ceilometer_event_definitions_overwriting
   when:
     - ceilometer_event_definitions_file.stat.exists
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart ceilometer-notification container
 
@@ -246,8 +228,7 @@
   become: true
   register: ceilometer_event_definitions
   when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - not ceilometer_event_definitions_file.stat.exists
   notify:
     - Restart ceilometer-notification container
@@ -263,9 +244,7 @@
     dest: "{{ node_config_directory }}/ceilometer-notification/event_pipeline.yaml"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart ceilometer-notification container
 
@@ -290,10 +269,8 @@
   register: ceilometer_pipeline_overwriting
   when:
     - ceilometer_pipeline_file.stat.exists
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - item.key in services_require_pipeline
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -309,11 +286,9 @@
     mode: "0660"
   become: true
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - item.key in services_require_pipeline
     - not ceilometer_pipeline_file.stat.exists
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -328,8 +303,7 @@
   when:
     - nova_compute_virt_type == "vmware"
     - not vmware_vcenter_insecure | bool
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   notify:
     - Restart ceilometer-compute container
 
@@ -341,8 +315,6 @@
   become: true
   when:
     - ceilometer_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ ceilometer_services }}"
+  with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"

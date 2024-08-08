@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ telegraf_services }}"
+  with_dict: "{{ telegraf_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: copy-certs.yml
   when:
@@ -22,10 +19,7 @@
     dest: "{{ node_config_directory }}/telegraf/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ telegraf_services }}"
+  with_dict: "{{ telegraf_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart telegraf container
 
@@ -37,9 +31,7 @@
     dest: "{{ node_config_directory }}/telegraf/telegraf.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/telegraf/{{ inventory_hostname }}/telegraf.conf"
     - "{{ node_custom_config }}/telegraf/telegraf.conf"
@@ -55,9 +47,7 @@
     dest: "{{ node_config_directory }}/telegraf/config"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - item.value.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_fileglob:
     - "{{ role_path }}/templates/config/*.conf"
   notify:

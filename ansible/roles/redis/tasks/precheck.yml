@@ -16,7 +16,7 @@
 
 - name: Checking free port for Redis
   vars:
-    redis: "{{ redis_services['redis'] }}"
+    service: "{{ redis_services['redis'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ redis_port }}"
@@ -25,5 +25,4 @@
     state: stopped
   when:
     - container_facts['redis'] is not defined
-    - inventory_hostname in groups[redis.group]
-    - redis.enabled | bool
+    - service | service_enabled_and_mapped_to_host

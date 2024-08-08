@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -41,10 +38,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -60,9 +54,7 @@
     - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove-wsgi.conf"
     - "{{ node_custom_config }}/trove/trove-wsgi.conf"
     - "trove-wsgi.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart trove-api container
 
@@ -81,9 +73,7 @@
   become: true
   when:
     - item.key in services_need_confs
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -100,10 +90,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/trove.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -114,7 +101,6 @@
     mode: "0660"
   when:
     - trove_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - Restart {{ item.key }} container

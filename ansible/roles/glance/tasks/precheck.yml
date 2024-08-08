@@ -14,6 +14,8 @@
   register: container_facts
 
 - name: Checking free port for Glance API
+  vars:
+    service: "{{ glance_services['glance-api'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ glance_api_listen_port }}"
@@ -21,8 +23,7 @@
     timeout: 1
     state: stopped
   when:
-    - glance_services['glance-api'].host_in_groups | bool
-    - glance_services['glance-api'].enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - container_facts['glance_api'] is not defined
 
 - name: Check if S3 configurations are defined

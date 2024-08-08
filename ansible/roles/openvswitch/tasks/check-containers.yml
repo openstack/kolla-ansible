@@ -10,9 +10,6 @@
     volumes: "{{ item.value.volumes }}"
     dimensions: "{{ item.value.dimensions }}"
     healthcheck: "{{ item.value.healthcheck }}"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ openvswitch_services }}"
+  with_dict: "{{ openvswitch_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"

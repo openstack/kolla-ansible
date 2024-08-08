@@ -7,10 +7,7 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if extra ml2 plugins exists
   find:
@@ -26,7 +23,7 @@
 
 - name: Creating TLS backend PEM File
   vars:
-    neutron_tls_proxy: "{{ neutron_services['neutron-tls-proxy'] }}"
+    service: "{{ neutron_services['neutron-tls-proxy'] }}"
   assemble:
     src: "{{ node_config_directory }}/neutron-tls-proxy/"
     dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-cert-and-key.pem"
@@ -34,9 +31,7 @@
     regexp: "^neutron-(cert|key)\\.pem$"
     remote_src: true
   become: true
-  when:
-    - neutron_tls_proxy.enabled | bool
-    - neutron_tls_proxy.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Check if policies shall be overwritten
   stat:
@@ -65,9 +60,7 @@
   become: true
   when:
     - neutron_policy_file is defined
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -77,10 +70,7 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -114,10 +104,8 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/neutron.conf"
     mode: "0660"
   when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
     - item.key in services_need_neutron_conf
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -136,24 +124,20 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/neutron_vpnaas.conf"
     mode: "0660"
   when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
     - item.key in services_need_neutron_vpnaas_conf
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
 - name: Copying over ssh key
   become: true
   vars:
-    neutron_server: "{{ neutron_services['neutron-server'] }}"
+    service: "{{ neutron_services['neutron-server'] }}"
   template:
     src: "id_rsa"
     dest: "{{ node_config_directory }}/neutron-server/id_rsa"
     mode: 0600
-  when:
-    - neutron_server.enabled | bool
-    - neutron_server.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over ml2_conf.ini
   become: true
@@ -171,9 +155,7 @@
     mode: "0660"
   when:
     - item.key in services_need_ml2_conf_ini
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -181,6 +163,7 @@
   become: true
   vars:
     service_name: "neutron-linuxbridge-agent"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/linuxbridge_agent.ini.j2"
@@ -188,9 +171,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/linuxbridge_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/linuxbridge_agent.ini"
     mode: "0660"
-  when:
-    - neutron_services[service_name].enabled | bool
-    - neutron_services[service_name].host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -198,6 +179,7 @@
   become: true
   vars:
     service_name: "neutron-openvswitch-agent"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/openvswitch_agent.ini.j2"
@@ -205,9 +187,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/openvswitch_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/openvswitch_agent.ini"
     mode: "0660"
-  when:
-    - neutron_services[service_name].enabled | bool
-    - neutron_services[service_name].host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -215,7 +195,7 @@
   become: true
   vars:
     service_name: "neutron-sriov-agent"
-    neutron_sriov_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/sriov_agent.ini.j2"
@@ -223,9 +203,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/sriov_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/sriov_agent.ini"
     mode: "0660"
-  when:
-    - neutron_sriov_agent.enabled | bool
-    - neutron_sriov_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -233,7 +211,7 @@
   become: true
   vars:
     service_name: "neutron-mlnx-agent"
-    neutron_mlnx_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/mlnx_agent.ini.j2"
@@ -241,9 +219,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/mlnx_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/mlnx_agent.ini"
     mode: "0660"
-  when:
-    - neutron_mlnx_agent.enabled | bool
-    - neutron_mlnx_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -251,7 +227,7 @@
   become: true
   vars:
     service_name: "neutron-eswitchd"
-    neutron_eswitchd: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/eswitchd.conf.j2"
@@ -259,9 +235,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/eswitchd.conf"
     dest: "{{ node_config_directory }}/{{ service_name }}/eswitchd.conf"
     mode: "0660"
-  when:
-    - neutron_eswitchd.enabled | bool
-    - neutron_eswitchd.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -269,7 +243,7 @@
   become: true
   vars:
     service_name: "neutron-dhcp-agent"
-    neutron_dhcp_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/dhcp_agent.ini.j2"
@@ -277,9 +251,7 @@
       - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/dhcp_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/dhcp_agent.ini"
     mode: "0660"
-  when:
-    - neutron_dhcp_agent.enabled | bool
-    - neutron_dhcp_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -287,7 +259,7 @@
   become: true
   vars:
     service_name: "neutron-dhcp-agent"
-    neutron_dhcp_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/{{ service_name }}/dnsmasq.conf"
@@ -296,9 +268,7 @@
     - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/dnsmasq.conf"
     - "{{ node_custom_config }}/neutron/dnsmasq.conf"
     - "dnsmasq.conf.j2"
-  when:
-    - neutron_dhcp_agent.enabled | bool
-    - neutron_dhcp_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -317,9 +287,7 @@
     mode: "0660"
   when:
     - item.key in services_need_l3_agent_ini
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -339,9 +307,7 @@
   when:
     - enable_neutron_fwaas | bool
     - item.key in services_need_fwaas_driver_ini
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
 
@@ -349,16 +315,14 @@
   become: true
   vars:
     service_name: "neutron-metadata-agent"
-    neutron_metadata_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/metadata_agent.ini.j2"
       - "{{ node_custom_config }}/neutron/metadata_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/metadata_agent.ini"
     mode: "0660"
-  when:
-    - neutron_metadata_agent.enabled | bool
-    - neutron_metadata_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -366,16 +330,14 @@
   become: true
   vars:
     service_name: "neutron-ovn-metadata-agent"
-    neutron_ovn_metadata_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron_ovn_metadata_agent.ini.j2"
       - "{{ node_custom_config }}/neutron/neutron_ovn_metadata_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/neutron_ovn_metadata_agent.ini"
     mode: "0660"
-  when:
-    - neutron_ovn_metadata_agent.enabled | bool
-    - neutron_ovn_metadata_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -383,16 +345,14 @@
   become: true
   vars:
     service_name: "neutron-metering-agent"
-    neutron_metering_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/metering_agent.ini.j2"
       - "{{ node_custom_config }}/neutron/metering_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/metering_agent.ini"
     mode: "0660"
-  when:
-    - neutron_metering_agent.enabled | bool
-    - neutron_metering_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -400,16 +360,14 @@
   become: true
   vars:
     service_name: "ironic-neutron-agent"
-    ironic_neutron_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/ironic_neutron_agent.ini.j2"
       - "{{ node_custom_config }}/neutron/ironic_neutron_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ironic_neutron_agent.ini"
     mode: "0660"
-  when:
-    - ironic_neutron_agent.enabled | bool
-    - ironic_neutron_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -417,16 +375,14 @@
   become: true
   vars:
     service_name: "neutron-bgp-dragent"
-    neutron_bgp_dragent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/bgp_dragent.ini.j2"
       - "{{ node_custom_config }}/neutron/bgp_dragent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/bgp_dragent.ini"
     mode: "0660"
-  when:
-    - neutron_bgp_dragent.enabled | bool
-    - neutron_bgp_dragent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -434,16 +390,14 @@
   become: true
   vars:
     service_name: "neutron-ovn-agent"
-    neutron_ovn_agent: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/ovn_agent.ini.j2"
       - "{{ node_custom_config }}/neutron/ovn_agent.ini"
     dest: "{{ node_config_directory }}/{{ service_name }}/ovn_agent.ini"
     mode: "0660"
-  when:
-    - neutron_ovn_agent.enabled | bool
-    - neutron_ovn_agent.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -451,7 +405,7 @@
   become: true
   vars:
     service_name: "neutron-server"
-    neutron_server: "{{ neutron_services[service_name] }}"
+    service: "{{ neutron_services[service_name] }}"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/nsx.ini.j2"
@@ -460,8 +414,7 @@
     dest: "{{ node_config_directory }}/{{ service_name }}/nsx.ini"
     mode: "0660"
   when:
-    - neutron_server.enabled | bool
-    - neutron_server.host_in_groups | bool
+    - service | service_enabled_and_mapped_to_host
     - neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs']
   notify:
     - "Restart {{ service_name }} container"
@@ -475,9 +428,7 @@
     src: neutron-l3-agent-wrapper.sh.j2
     dest: "{{ node_config_directory }}/{{ service_name }}/neutron-l3-agent-wrapper.sh"
     mode: "0770"
-  when:
-    - service.enabled | bool
-    - service.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - "Restart {{ service_name }} container"
 
@@ -506,7 +457,7 @@
 
 - name: Copying over neutron-tls-proxy.cfg
   vars:
-    neutron_tls_proxy: "{{ neutron_services['neutron-tls-proxy'] }}"
+    service: "{{ neutron_services['neutron-tls-proxy'] }}"
   template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-tls-proxy.cfg"
@@ -516,9 +467,7 @@
     - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron-tls-proxy.cfg"
     - "{{ node_custom_config }}/neutron/neutron-tls-proxy.cfg"
     - "neutron-tls-proxy.cfg.j2"
-  when:
-    - neutron_tls_proxy.enabled | bool
-    - neutron_tls_proxy.host_in_groups | bool
+  when: service | service_enabled_and_mapped_to_host
   notify:
     - Restart neutron-tls-proxy container
 
@@ -538,9 +487,7 @@
     mode: "0660"
   when:
     - enable_neutron_taas | bool
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
     - item.key in services_need_neutron_taas_conf
-  with_dict: "{{ neutron_services }}"
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
   notify:
     - "Restart {{ item.key }} container"
