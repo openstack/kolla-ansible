@@ -1,6 +1,6 @@
 ---
 # NOTE(mnasiadka): external_ids:system-id uniquely identifies a physical system, used by OVN and other controllers
-- name: Set system-id and hw-offload
+- name: Set system-id, hostname and hw-offload
   become: true
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
@@ -19,6 +19,8 @@
     - { col: "other_config", name: "hw-offload", value: true, state: "{{ 'present' if openvswitch_hw_offload | bool else 'absent' }}" }
   when:
     - openvswitch_services['openvswitch-vswitchd'].host_in_groups | bool
+  notify:
+    - "Restart openvswitch-vswitchd container"
 
 - name: Ensuring OVS bridge is properly setup
   become: true
