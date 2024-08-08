@@ -58,6 +58,17 @@ function test_octavia {
     # Add a floating IP to the load balancer.
     lb_fip=$(openstack floating ip create public1 -f value -c name)
     lb_vip=$(openstack loadbalancer show lb -f value -c vip_address)
+    attempt=0
+    while [[ $(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID) == "" ]]; do
+        echo "Port for LB with VIP ip addr $lb_vip not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "ERROR: Port for LB with VIP ip addr failed to become available"
+            openstack port list --fixed-ip ip-address=$lb_vip
+            return 1
+        fi
+        sleep $attempt
+    done
     lb_port_id=$(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID)
     openstack floating ip set $lb_fip --port $lb_port_id
 
@@ -124,6 +135,17 @@ function test_internal_dns_integration {
         openstack server create --image cirros --flavor m1.tiny --network dns-test-network ${SERVER_NAME}
 
         SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
+        attempt=0
+        while [[ $(openstack port list --device-id ${SERVER_ID} -f value -c ID) == "" ]]; do
+            echo "Port for server ${SERVER_NAME} not available yet"
+            attempt=$((attempt+1))
+            if [[ $attempt -eq 10 ]]; then
+                echo "ERROR: Port for server ${SERVER_NAME} failed to become available"
+                openstack port list --device-id ${SERVER_ID}
+                return 1
+            fi
+            sleep $attempt
+        done
         PORT_ID=$(openstack port list --device-id ${SERVER_ID} -f value -c ID)
 
         DNS_ASSIGNMENT=$(openstack port show ${PORT_ID} -f json -c dns_assignment)

@@ -74,6 +74,17 @@ function test_octavia {
     echo "Add a floating IP to the load balancer."
     lb_fip=$(openstack floating ip create public1 -f value -c name)
     lb_vip=$(openstack loadbalancer show test_ovn_lb -f value -c vip_address)
+    attempt=0
+    while [[ $(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID) == "" ]]; do
+        echo "Port for LB with VIP ip addr $lb_vip not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "ERROR: Port for LB with VIP ip addr failed to become available"
+            openstack port list --fixed-ip ip-address=$lb_vip
+            return 1
+        fi
+        sleep $attempt
+    done
     lb_port_id=$(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID)
     openstack floating ip set $lb_fip --port $lb_port_id
 
