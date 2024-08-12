@@ -33,7 +33,7 @@
 
 - name: Bootstrap cephadm
   vars:
-    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name].ipv4.address }}"
+    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }}"
   command:
     cmd: >
          cephadm
@@ -80,7 +80,7 @@
     ceph_conf_fixed: |
       [global]
       fsid = {{ ceph_fsid }}
-      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
   copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"
