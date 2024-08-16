@@ -1,4 +1,14 @@
 ---
+# NOTE(mgoddard): After OVN DB leader restarts there is a period before a new
+# leader has been elected where the old leader is returned in the cluster
+# status. This can result in a failure to apply the connection settings if a
+# different leader is elected.  Wait for a few seconds for the leader election
+# to complete.
+- name: Wait for leader election
+  pause:
+    seconds: "{{ ovn_leader_election_pause }}"
+  when: ovn_nb_db_cluster_exists | default(false) or ovn_sb_db_cluster_exists | default(false)
+
 - name: Get OVN_Northbound cluster leader
   become: true
   command: "{{ kolla_container_engine }} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound"
