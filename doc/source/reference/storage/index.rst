@@ -12,6 +12,7 @@ supported by kolla.
    cinder-guide
    cinder-guide-quobyte
    cinder-guide-pure
+   cinder-guide-lightbits
    manila-guide
    manila-hnas-guide
    swift-guide

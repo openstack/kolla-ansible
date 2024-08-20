@@ -296,6 +296,9 @@ that appears in cinder.conf:
    * - Pure Storage FlashArray for OpenStack
      - cinder_backend_pure_nvme_tcp_name
      - Pure-FlashArray-nvme-tcp
+   * - Lightbits Labs storage backend
+     - cinder_backend_lightbits_name
+     - Lightbits-NVMe-TCP
 
 These are the names you use when
 `configuring <https://docs.openstack.org/cinder/latest/admin/multi-backend.html#volume-type>`_
