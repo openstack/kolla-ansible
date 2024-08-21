@@ -37,7 +37,6 @@ function upgrade {
     fi
     kolla-ansible -i ${RAW_INVENTORY} -vvv stop --tags $SERVICE_TAGS --yes-i-really-really-mean-it &> /tmp/logs/ansible/stop
     kolla-ansible -i ${RAW_INVENTORY} -vvv genconfig &> /tmp/logs/ansible/genconfig
-    kolla-ansible -i ${RAW_INVENTORY} -vvv reconfigure --tags rabbitmq &> /tmp/logs/ansible/reconfigure-rabbitmq
     kolla-ansible -i ${RAW_INVENTORY} -vvv rabbitmq-reset-state &> /tmp/logs/ansible/rabbitmq-reset-state
 
     kolla-ansible -i ${RAW_INVENTORY} -vvv pull &> /tmp/logs/ansible/pull-upgrade
