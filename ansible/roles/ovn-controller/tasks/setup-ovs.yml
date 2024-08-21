@@ -12,8 +12,10 @@
 
 - name: Configure OVN in OVSDB
   vars:
-    ovn_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
-    ovn_macs: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ ovn_base_mac | random_mac(seed=inventory_hostname + bridge) }}{% if not loop.last %},{% endif %}{% endfor %}"
+    # Format: physnet1:br1,physnet2:br2
+    ovn_mappings: "{{ neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
+    # Format: physnet1:00:11:22:33:44:55,physnet2:00:11:22:33:44:56
+    ovn_macs: "{% for physnet, bridge in neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) %}{{ physnet }}:{{ ovn_base_mac | random_mac(seed=inventory_hostname + bridge) }}{% if not loop.last %},{% endif %}{% endfor %}"
     ovn_cms_opts: "{{ 'enable-chassis-as-gw' if inventory_hostname in groups['ovn-controller-network'] else '' }}{{ ',availability-zones=' + neutron_ovn_availability_zones | join(',') if inventory_hostname in groups['ovn-controller-network'] and neutron_ovn_availability_zones }}"
   become: true
   kolla_toolbox:

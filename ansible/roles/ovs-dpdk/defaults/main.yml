@@ -37,8 +37,10 @@ ovsdpdk_services:
 ####################
 # OVS
 ####################
-ovs_bridge_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
-ovs_port_mappings: "{% for bridge in neutron_bridge_name.split(',') %} {{ neutron_external_interface.split(',')[loop.index0] }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
+# Format: physnet1:br1,physnet2:br2
+ovs_bridge_mappings: "{{ neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
+# Format: eth1:br1,eth2:br2
+ovs_port_mappings: "{{ neutron_external_interface.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
 tunnel_interface_network: "{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['network'] }}/{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['netmask'] }}"
 tunnel_interface_cidr: "{{ dpdk_tunnel_interface_address }}/{{ tunnel_interface_network | ipaddr('prefix') }}"
 ovs_cidr_mappings: "{% if neutron_bridge_name.split(',') | length != 1 %} {neutron_bridge_name.split(',')[0]}:{{ tunnel_interface_cidr }} {% else %} {{ neutron_bridge_name }}:{{ tunnel_interface_cidr }} {% endif %}"
