@@ -12,6 +12,9 @@
 - name: Check if extra configuration file exists
   find:
     path: "{{ node_custom_config }}/grafana/"
+    excludes:
+      - "prometheus.yaml"
+      - "provisioning.yaml"
   delegate_to: localhost
   changed_when: False
   run_once: True
@@ -56,23 +59,6 @@
     - item is defined
   with_items:
     - "{{ check_extra_conf_grafana.files }}"
-  notify:
-    - Restart grafana container
-
-- name: Check if custom grafana home dashboard exists
-  stat:
-    path: "{{ node_custom_config }}/grafana/grafana_home_dashboard.json"
-  delegate_to: localhost
-  register: grafana_custom_dashboard_file
-  run_once: True
-
-- name: Copying over grafana home dashboard if exists
-  become: true
-  template:
-    src: "{{ node_custom_config }}/grafana/grafana_home_dashboard.json"
-    dest: "{{ node_config_directory }}/grafana/grafana_home_dashboard.json"
-    mode: "0660"
-  when: grafana_custom_dashboard_file.stat.exists
   notify:
     - Restart grafana container
 
