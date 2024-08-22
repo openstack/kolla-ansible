@@ -278,6 +278,9 @@ that appears in cinder.conf:
    * - Pure Storage FlashArray for OpenStack
      - cinder_backend_pure_roce_name
      - Pure-FlashArray-roce
+   * - Pure Storage FlashArray for OpenStack
+     - cinder_backend_pure_nvme_tcp_name
+     - Pure-FlashArray-nvme-tcp
 
 These are the names you use when
 `configuring <https://docs.openstack.org/cinder/latest/admin/multi-backend.html#volume-type>`_

@@ -39,6 +39,20 @@ configure the ``FlashArray NVMe-RoCE`` Cinder driver in
 
   The NVMe-RoCE driver is only supported from OpenStack Zed and later.
 
+To use the ``Pure Storage FlashArray NVMe-TCP`` Cinder backend, enable and
+configure the ``FlashArray NVMe-TCP`` Cinder driver in
+``/etc/kolla/globals.yml``.
+
+.. code-block:: yaml
+
+  enable_cinder_backend_pure_nvme_tcp: "yes"
+
+.. end
+
+.. note::
+
+  The NVMe-TCP driver is only supported from OpenStack 2023.2 (Bobcat) and later.
+
 It is important to note that you cannot mix iSCSI and FC Pure Storage
 FlashArray drivers in the same OpenStack cluster.
 
