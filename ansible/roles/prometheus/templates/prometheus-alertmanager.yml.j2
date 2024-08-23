@@ -6,17 +6,7 @@ route:
   group_wait: 10s
   group_interval: 5m
   repeat_interval: 3h
-{% if enable_prometheus_msteams | bool %}
-  routes:
-    - receiver: 'prometheus-msteams'
-{% endif %}
 receivers:
   - name: default-receiver
-{% if enable_prometheus_msteams | bool %}
-  - name: 'prometheus-msteams'
-    webhook_configs:
-    - send_resolved: true
-      url: 'http://localhost:{{ prometheus_msteams_port }}/alertmanager'
-{% endif %}
 templates:
   - '/etc/prometheus/*.tmpl'
