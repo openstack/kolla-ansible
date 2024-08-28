@@ -620,6 +620,16 @@
   tasks:
     # Upgrade: update config.
     - block:
+        # Perform the intermediate RabbitMQ version upgrades on 2023.1
+        - name: Run rabbitmq-version-upgrade.sh script
+          shell:
+            cmd: tests/rabbitmq-version-upgrade.sh
+            executable: /bin/bash
+            chdir: "{{ kolla_ansible_src_dir }}"
+          environment:
+            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
+          when: is_slurp
+
         # NOTE(mgoddard): This only affects the remote copy of the repo, not the
         # one on the executor.
         - name: Checkout the current ansible-collection-kolla branch
