@@ -27,7 +27,7 @@ Kolla Ansible supports the following host Operating Systems (OS):
    release onwards. The Yoga supports both CentOS Stream 8 and Rocky Linux 9,
    and provides a route for migration.
 
-* CentOS Stream 8
+* CentOS Stream 8 (untested since EOL of CentOS Stream 8)
 * Debian Bullseye (11)
 * openEuler 20.03 LTS SP2
 * RHEL 8 (deprecated)
@@ -42,7 +42,7 @@ Supported container images
 For best results, the base container image distribution should match the host
 OS distribution. The following values are supported for ``kolla_base_distro``:
 
-* ``centos``
+* ``centos`` (untested since EOL of CentOS Stream 8)
 * ``debian``
 * ``rhel`` (deprecated)
 * ``ubuntu``
