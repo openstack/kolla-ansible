@@ -94,11 +94,9 @@ class PodmanWorker(ContainerWorker):
         args['mounts'] = mounts
         args['volumes'] = filtered_volumes
 
-        # in case value is not string it has to be converted
-        environment = self.params.get('environment')
-        if environment:
-            for key, value in environment.items():
-                environment[key] = str(value)
+        env = self._format_env_vars()
+        args['environment'] = {k: str(v) for k, v in env.items()}
+        self.params.pop('environment', None)
 
         healthcheck = self.params.get('healthcheck')
         if healthcheck:
