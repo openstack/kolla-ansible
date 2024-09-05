@@ -6,6 +6,9 @@
     service_ks_register_auth: "{{ openstack_nova_auth }}"
     service_ks_register_user_roles: "{{ nova_ks_user_roles }}"
 
+# Create new set of configs on nodes
+- import_tasks: config.yml
+
 - name: Run Nova upgrade checks
   become: true
   vars:
@@ -48,4 +51,15 @@
   when:
     - nova_safety_upgrade | bool
 
-- import_tasks: rolling_upgrade.yml
+- import_tasks: check-containers.yml
+
+# TODO(donghm): Flush_handlers to restart nova services
+# should be run in serial nodes to decrease downtime if
+# the previous task did not run. Update when the
+# Ansible strategy module for rolling upgrade is finished.
+
+- name: Flush handlers
+  meta: flush_handlers
+
+# NOTE(dszumski): The Nova upgrade is not finished here and
+# continues in subsequent tasks.
