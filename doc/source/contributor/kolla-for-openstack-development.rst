@@ -35,8 +35,9 @@ Usage
 -----
 
 When enabled, the source repo for the service in question will be cloned under
-``/opt/stack/`` on the target node(s). This will be bind mounted into the
-container's virtualenv under the location expected by the service on startup.
+``/opt/stack/`` on the target node(s). This will be bind mounted to
+container's ``/dev-mode`` directory. From there, it will be installed at every
+startup of the container using ``kolla_install_projects`` script.
 
 After making code changes, simply restart the container to pick them up:
 
