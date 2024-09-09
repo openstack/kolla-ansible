@@ -161,6 +161,7 @@ manila_share_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' if om_enable_queue_manager | bool else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
 manila_scheduler_default_volumes:
@@ -168,12 +169,14 @@ manila_scheduler_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' if om_enable_queue_manager | bool else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
 manila_api_default_volumes:
   - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' if om_enable_queue_manager | bool else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
 manila_data_default_volumes:
   - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
