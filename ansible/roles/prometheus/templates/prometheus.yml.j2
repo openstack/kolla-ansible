@@ -252,6 +252,19 @@ scrape_configs:
 {% endif %}
 {% endfor %}
 
+{% if enable_prometheus_proxysql_exporter | bool %}
+  - job_name: proxysql
+    static_configs:
+{% for host in groups["loadbalancer"] %}
+      - targets:
+        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['proxysql_prometheus_exporter_port'] }}'
+{% if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{% endif %}
+{% endfor %}
+{% endif %}
+
 alerting:
   alertmanagers:
     - static_configs:

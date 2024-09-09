@@ -481,6 +481,19 @@ function test_internal_dns_integration {
     fi
 }
 
+function test_proxysql_prometheus_exporter {
+    if [[ $SCENARIO == "cells" ]]; then
+        if curl -v http://127.0.0.1:6070/metrics 2>/dev/null | grep '^proxysql_'; then
+            echo "[i] Proxysql prometheus exporter - PASS"
+            mkdir -p /tmp/logs/prometheus-exporters/proxysql
+            curl -v http://127.0.0.1:6070/metrics 2>/dev/null -o /tmp/logs/prometheus-exporters/proxysql/exporter.txt
+        else
+            echo "[e] Proxysql prometheus exporter - FAIL"
+            exit 1
+        fi
+    fi
+}
+
 function test_openstack_logged {
     . /etc/kolla/admin-openrc.sh
     . ~/openstackclient-venv/bin/activate
@@ -488,6 +501,7 @@ function test_openstack_logged {
     test_neutron_modules
     test_instance_boot
     test_internal_dns_integration
+    test_proxysql_prometheus_exporter
 
     # Check for x86_64 architecture to run q35 tests
     if [[ $(uname -m) == "x86_64" ]]; then
