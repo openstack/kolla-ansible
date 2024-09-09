@@ -117,14 +117,26 @@ openstack_projects = [
 
 # Global variables
 # For replacement, use in docs as |VAR_NAME| (note there's no space around variable name)
-# When adding new variables, make sure you add them to GLOBAL_VARIABLE_MAP dictionary as well
+# When adding new variables, that you want to use in documentation, make sure you add
+# them to GLOBAL_VARIABLE_MAP dictionary as well. KOLLA_OPENSTACK_RELEASE_UNMAINTAINED is
+# used only to denote unmaintained branches, and it is not intended to be used for
+# replacing anything in documentation.
 
 KOLLA_OPENSTACK_RELEASE = openstackdocstheme.ext._get_series_name()
+
+KOLLA_OPENSTACK_RELEASE_UNMAINTAINED = [
+    'yoga',
+    'zed',
+]
 
 if KOLLA_OPENSTACK_RELEASE == 'latest':
     KOLLA_OPENSTACK_RELEASE = 'master'
     KOLLA_BRANCH_NAME = 'master'
     TESTED_RUNTIMES_GOVERNANCE_URL = 'https://governance.openstack.org/tc/reference/runtimes/'
+elif KOLLA_OPENSTACK_RELEASE in KOLLA_OPENSTACK_RELEASE_UNMAINTAINED:
+    KOLLA_BRANCH_NAME = 'unmaintained/{}'.format(KOLLA_OPENSTACK_RELEASE)
+    TESTED_RUNTIMES_GOVERNANCE_URL =\
+        'https://governance.openstack.org/tc/reference/runtimes/{}.html'.format(KOLLA_OPENSTACK_RELEASE)
 else:
     KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
     TESTED_RUNTIMES_GOVERNANCE_URL =\
