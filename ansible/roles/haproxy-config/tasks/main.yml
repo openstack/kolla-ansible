@@ -54,8 +54,9 @@
 
 - name: "Configuring firewall for {{ project_name }}"
   firewalld:
-    offline: "yes"
-    permanent: "yes"
+    immediate: true
+    offline: true
+    permanent: true
     port: "{{ item.value.port }}/tcp"
     state: "enabled"
     zone: "{{ external_api_firewalld_zone }}"
@@ -68,5 +69,3 @@
     - enable_external_api_firewalld | bool
     - kolla_action != "config"
   with_dict: "{{ project_services | extract_haproxy_services }}"
-  notify:
-    - "Reload firewalld"
