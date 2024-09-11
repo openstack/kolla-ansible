@@ -317,6 +317,21 @@ to the HAProxy containers using SSH.
   admin access level. This is needed so Let's Encrypt can interact
   with HAProxy.
 
+You can configure separate ACME servers for internal and external
+certificate requests.
+
+.. code-block:: yaml
+
+  letsencrypt_external_cert_server: "<ACME server URL for external cert>"
+  letsencrypt_internal_cert_server: "<ACME server URL for internal cert>"
+
+.. note::
+
+  The ``letsencrypt_external_cert_server`` has a default value of
+  ``https://acme-v02.api.letsencrypt.org/directory``. Ensure that
+  ``letsencrypt_internal_cert_server`` is reachable from the controller
+  if you configure it for internal certificate requests.
+
 Generating a Private Certificate Authority
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

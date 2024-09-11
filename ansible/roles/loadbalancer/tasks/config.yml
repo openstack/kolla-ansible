@@ -184,43 +184,9 @@
   notify:
     - Restart keepalived container
 
-- name: Copying over haproxy.pem
-  vars:
-    service: "{{ loadbalancer_services['haproxy'] }}"
-  copy:
-    src: "{{ kolla_external_fqdn_cert }}"
-    dest: "{{ node_config_directory }}/haproxy/{{ item }}"
-    mode: "0660"
-  become: true
-  when:
-    - not enable_letsencrypt | bool
-    - kolla_enable_tls_external | bool
-    - not kolla_externally_managed_cert | bool
-    - service | service_enabled_and_mapped_to_host
-  with_items:
-    - "haproxy.pem"
-  notify:
-    - Restart haproxy container
-
-- name: Copying over haproxy-internal.pem
-  vars:
-    service: "{{ loadbalancer_services['haproxy'] }}"
-  copy:
-    src: "{{ kolla_internal_fqdn_cert }}"
-    dest: "{{ node_config_directory }}/haproxy/{{ item }}"
-    mode: "0660"
-  become: true
-  when:
-    - not enable_letsencrypt | bool
-    - kolla_enable_tls_internal | bool
-    - not kolla_externally_managed_cert | bool
-    - service | service_enabled_and_mapped_to_host
-  with_items:
-    - "haproxy-internal.pem"
-  notify:
-    - Restart haproxy container
-
 - include_tasks: copy-certs.yml
+  when:
+    - loadbalancer_copy_certs
 
 - name: Copying over haproxy start script
   vars:
