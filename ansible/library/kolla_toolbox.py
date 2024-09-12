@@ -181,7 +181,9 @@ def use_docker(module):
                        "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
         job = client.exec_create(kolla_toolbox, command_line,
                                  environment=environment, **kwargs)
-        json_output = client.exec_start(job)
+        json_output, error = client.exec_start(job, demux=True)
+        if error:
+            module.log(msg='Inner module stderr: %s' % error)
 
         try:
             output = json.loads(json_output)
