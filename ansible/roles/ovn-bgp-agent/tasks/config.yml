@@ -1,0 +1,43 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ project_name }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ovn_bgp_agent_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ project_name }}/config.json"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ ovn_bgp_agent_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - Restart ovn_bgp_agent container
+
+- name: Copying over bgp-agent.conf
+  become: true
+  vars:
+    service: "{{ ovn_bgp_agent_services['ovn_bgp_agent'] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/bgp-agent.conf.j2"
+      - "{{ node_custom_config }}/ovn-bgp-agent/bgp-agent.conf"
+      - "{{ node_custom_config }}/ovn-bgp-agent/{{ inventory_hostname }}/bgp-agent.conf"
+    dest: "{{ node_config_directory }}/{{ project_name }}/bgp-agent.conf"
+    mode: "0770"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart ovn_bgp_agent container

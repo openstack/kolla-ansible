@@ -1,0 +1,22 @@
+---
+- name: Check IPv6 support
+  command: /usr/sbin/sysctl -n net.ipv6.conf.all.disable_ipv6
+  register: ipv6_disabled
+  changed_when: false
+
+- name: Setting sysctl values
+  become: true
+  vars:
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
+  sysctl:
+    name: "{{ item.name }}"
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  with_items:
+    - { name: "net.ipv4.ip_forward", value: "1"}
+    - { name: "net.ipv6.conf.all.forwarding", value: "{{ '1' if not ipv6_disabled | bool else '0' }}"}
+  when:
+    - set_sysctl | bool
+    - item.value != 'KOLLA_SKIP'

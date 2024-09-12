@@ -272,6 +272,7 @@ om_enable_rabbitmq_quorum_queues: true
 ####################
 network_interface: "eth0"
 neutron_external_interface: "eth1"
+neutron_no_external_interface: "{{ enable_ovn_bgp_agent | bool }}"
 kolla_external_vip_interface: "{{ network_interface }}"
 api_interface: "{{ network_interface }}"
 swift_storage_interface: "{{ network_interface }}"
@@ -773,6 +774,7 @@ enable_designate: "no"
 enable_etcd: "no"
 enable_fluentd: "yes"
 enable_fluentd_systemd: "{{ (enable_fluentd | bool) and (enable_central_logging | bool) }}"
+enable_frr: "{{ enable_ovn_bgp_agent | bool }}"
 enable_gnocchi: "no"
 enable_gnocchi_statsd: "no"
 enable_grafana: "no"
@@ -780,6 +782,7 @@ enable_grafana_external: "{{ enable_grafana | bool }}"
 enable_hacluster: "{{ enable_masakari_hostmonitor | bool }}"
 enable_heat: "{{ enable_openstack_core | bool }}"
 enable_horizon: "{{ enable_openstack_core | bool }}"
+enable_horizon_bgpvpn: "{{ enable_neutron_bgpvpn | bool }}"
 enable_horizon_blazar: "{{ enable_blazar | bool }}"
 enable_horizon_cloudkitty: "{{ enable_cloudkitty | bool }}"
 enable_horizon_designate: "{{ enable_designate | bool }}"
@@ -818,6 +821,7 @@ enable_mistral: "no"
 enable_multipathd: "no"
 enable_neutron_vpnaas: "no"
 enable_neutron_sriov: "no"
+enable_neutron_bgpvpn: "{{ enable_ovn_bgp_agent | bool and (('nb_ovn_bgp_driver' in ovn_bgp_agent_driver and ovn_bgp_agent_exposing_method | intersect(['dynamic', 'l2vni', 'vrf']) | length > 0) or 'ovn_evpn_driver' in ovn_bgp_agent_driver) }}"
 enable_neutron_mlnx: "no"
 enable_neutron_dvr: "no"
 enable_neutron_fwaas: "no"
@@ -841,6 +845,7 @@ enable_octavia_driver_agent: "{{ enable_octavia | bool and neutron_plugin_agent 
 enable_octavia_jobboard: "{{ enable_octavia | bool and 'amphora' in octavia_provider_drivers }}"
 enable_openvswitch: "{{ enable_neutron | bool and neutron_plugin_agent != 'linuxbridge' }}"
 enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
+enable_ovn_bgp_agent: "no"
 enable_ovs_dpdk: "no"
 enable_osprofiler: "no"
 enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"
@@ -1127,6 +1132,12 @@ neutron_ovn_availability_zones: []
 
 # Enable OVN agent
 neutron_enable_ovn_agent: "no"
+
+####################
+# ovn-bgp-agent / FRR options
+####################
+ovn_bgp_agent_driver: "nb_ovn_bgp_driver"
+ovn_bgp_agent_exposing_method: "vrf"
 
 #######################
 # Nova options

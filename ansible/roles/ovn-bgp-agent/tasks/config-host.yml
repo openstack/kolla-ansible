@@ -1,0 +1,41 @@
+---
+# NOTE(msnatepg): arp_filter is enabled to avoid possible ARP conflicts when the host has ports
+# that are connected to a VNI where the switch is the VTEP. For these interfaces, the interfaces
+# created by ovn-bgp-agent would also reply to arp requests that are intended to be answered by the hosts static network configuration.
+
+- name: Setting sysctl values
+  become: true
+  vars:
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
+  sysctl:
+    name: "{{ item.name }}"
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  with_items:
+    - { name: "net.ipv4.conf.all.arp_filter", value: "1"}
+    - { name: "net.ipv4.conf.all.rp_filter", value: "0"}
+    - { name: "net.ipv4.conf.default.rp_filter", value: "0"}
+  when:
+    - set_sysctl | bool
+
+# NOTE(msnatepg): We need to disable rp_filter for every interface
+# The max value from conf/{all,interface}/rp_filter is used when doing source validation on the {interface}.
+# https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/networking/ip-sysctl.rst?#n1670
+
+- name: Disable ipv4 rp_filter on each interface
+  become: true
+  sysctl:
+    name: "net.ipv4.conf.{{ item | replace('.','/')  }}.rp_filter"
+    state: "present"
+    value: "0"
+    sysctl_set: "true"
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  loop: "{{ ansible_facts.interfaces }}"
+  when: "set_sysctl | bool and \
+        (item.startswith('eno') or \
+        item.startswith('ens') or \
+        item.startswith('enp') or \
+        item.startswith('enx') or \
+        item.startswith('eth'))"

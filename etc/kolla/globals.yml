@@ -156,6 +156,7 @@ workaround_ansible_issue_8743: yes
 # configurations. It is recommended this interface not be configured with any IP
 # addresses for that reason.
 #neutron_external_interface: "eth1"
+# neutron_no_external_interface: "{{ enable_ovn_bgp_agent | bool }}"
 
 # Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_nsxp, vmware_dvs ]
 # if vmware_nsxv3 or vmware_nsxp is selected, enable_openvswitch MUST be set to "no" (default is yes)
@@ -177,6 +178,17 @@ workaround_ansible_issue_8743: yes
 # for security groups rules. More information can be found here:
 # https://docs.openstack.org/neutron/latest/admin/config-logging.html
 #enable_neutron_packet_logging: "no"
+
+####################
+# ovn-bgp-agent / FRR options
+####################
+# We only provide an example here, this should be configured through host based file overrides
+#bgp_loopback_ip: "10.1.2.60"
+#bgp_loopback_interface: "lo"
+#bgp_local_asn: "64999"
+
+#ovn_bgp_agent_driver: "nb_ovn_bgp_driver"
+#ovn_bgp_agent_exposing_method: "vrf"
 
 ####################
 # keepalived options
@@ -344,12 +356,14 @@ workaround_ansible_issue_8743: yes
 #enable_etcd: "no"
 #enable_fluentd: "yes"
 #enable_fluentd_systemd: "{{ (enable_fluentd | bool) and (enable_central_logging | bool) }}"
+#enable_frr: "{{ enable_ovn_bgp_agent | bool }}"
 #enable_gnocchi: "no"
 #enable_gnocchi_statsd: "no"
 #enable_grafana: "no"
 #enable_grafana_external: "{{ enable_grafana | bool }}"
 #enable_heat: "{{ enable_openstack_core | bool }}"
 #enable_horizon: "{{ enable_openstack_core | bool }}"
+#enable_horizon_bgpvpn: "{{ enable_neutron_bgpvpn | bool }}"
 #enable_horizon_blazar: "{{ enable_blazar | bool }}"
 #enable_horizon_cloudkitty: "{{ enable_cloudkitty | bool }}"
 #enable_horizon_designate: "{{ enable_designate | bool }}"
@@ -385,6 +399,7 @@ workaround_ansible_issue_8743: yes
 #enable_multipathd: "no"
 #enable_neutron_vpnaas: "no"
 #enable_neutron_sriov: "no"
+#enable_neutron_bgpvpn: "{{ enable_ovn_bgp_agent | bool and (('nb_ovn_bgp_driver' in ovn_bgp_agent_driver and ovn_bgp_agent_exposing_method | intersect(['dynamic', 'l2vni', 'vrf']) | length > 0) or 'ovn_evpn_driver' in ovn_bgp_agent_driver) }}"
 #enable_neutron_dvr: "no"
 #enable_neutron_fwaas: "no"
 #enable_neutron_qos: "no"
@@ -407,6 +422,7 @@ workaround_ansible_issue_8743: yes
 #enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }}"
 #enable_openvswitch: "{{ enable_neutron | bool and neutron_plugin_agent != 'linuxbridge' }}"
 #enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
+#enable_ovn_bgp_agent: "no"
 #enable_ovs_dpdk: "no"
 #enable_osprofiler: "no"
 #enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"

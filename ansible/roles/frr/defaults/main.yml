@@ -1,0 +1,46 @@
+---
+frr_services:
+  frr:
+    container_name: "frr"
+    image: "{{ frr_image_full }}"
+    enabled: "{{ enable_frr }}"
+    privileged: True
+    group: frr
+    host_in_groups: >-
+      {{
+      inventory_hostname in groups['frr']
+      }}
+    volumes: "{{ frr_default_volumes + frr_extra_volumes }}"
+    dimensions: "{{ frr_dimensions }}"
+    healthcheck: "{{ frr_healthcheck }}"
+
+####################
+# Docker
+####################
+frr_tag: "{{ openstack_tag }}"
+frr_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/frr"
+frr_image_full: "{{ frr_image }}:{{ frr_tag }}"
+
+frr_dimensions: "{{ default_container_dimensions }}"
+
+frr_enable_healthchecks: "{{ enable_container_healthchecks }}"
+frr_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+frr_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+frr_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+frr_healthcheck_test: ["CMD-SHELL", "vtysh -c 'sh zebra'"]
+frr_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+frr_healthcheck:
+  interval: "{{ frr_healthcheck_interval }}"
+  retries: "{{ frr_healthcheck_retries }}"
+  start_period: "{{ frr_healthcheck_start_period }}"
+  test: "{% if frr_enable_healthchecks | bool %}{{ frr_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ frr_healthcheck_timeout }}"
+
+frr_default_volumes:
+  - "{{ node_config_directory }}/frr/:{{ container_config_directory }}:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "/var/run/:/var/run/"
+
+frr_extra_volumes: "{{ default_extra_volumes }}"

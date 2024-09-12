@@ -59,6 +59,8 @@
         - enable_opensearch_{{ enable_opensearch | bool }}
         - enable_opensearch_dashboards_{{ enable_opensearch_dashboards | bool }}
         - enable_openvswitch_{{ enable_openvswitch | bool }}_enable_ovs_dpdk_{{ enable_ovs_dpdk | bool }}
+        - enable_frr_{{ enable_frr | bool }}
+        - enable_ovn_bgp_agent_{{ enable_ovn_bgp_agent | bool }}
         - enable_ovn_{{ enable_ovn | bool }}
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
@@ -600,6 +602,20 @@
     - { role: placement,
         tags: placement }
 
+- name: Apply role frr
+  gather_facts: false
+  hosts:
+    - frr
+    - '&enable_frr_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ frr_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  roles:
+    - { role: frr,
+        tags: frr }
+
 - name: Apply role openvswitch
   gather_facts: false
   hosts:
@@ -687,6 +703,20 @@
   roles:
     - { role: neutron,
         tags: neutron }
+
+- name: Apply role ovn-bgp-agent
+  gather_facts: false
+  hosts:
+    - ovn-bgp-agent
+    - '&enable_ovn_bgp_agent_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ ovn_bgp_agent_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  roles:
+    - { role: ovn-bgp-agent,
+        tags: ovn-bgp-agent }
 
 - name: Apply role kuryr
   gather_facts: false

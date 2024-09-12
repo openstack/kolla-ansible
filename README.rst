@@ -96,6 +96,7 @@ Kolla Ansible deploys containers for the following infrastructure components:
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
 - `Redis <https://redis.io/>`__ an in-memory data structure store.
+- `FRR <https://frrouting.org/>`__ as a routing daemon for OVN-BGP-Agent.
 
 Directories
 ===========

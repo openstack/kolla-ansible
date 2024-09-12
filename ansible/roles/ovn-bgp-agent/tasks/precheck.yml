@@ -1,0 +1,20 @@
+---
+- import_role:
+    name: service-precheck
+  vars:
+    service_precheck_services: "{{ ovn_bgp_agent_services }}"
+    service_name: "{{ project_name }}"
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - ovn-bgp-agent
+  register: container_facts
+
+- name: Fail when ovn-bgp-agent is enabled without OVN
+  ansible.builtin.fail:
+    msg: "ovn-bgp-agent needs OVN to be configured in neutron_plugin_agent, currently {{ neutron_plugin_agent }} is configured"
+  when: "'ovn' not in neutron_plugin_agent"

@@ -1,0 +1,95 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ project_name }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ frr_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Ensuring pid directories exist
+  file:
+    path: "/var/run/{{ project_name }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ frr_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ project_name }}/config.json"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ frr_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - Restart frr container
+
+- name: Copying over start-frr
+  become: true
+  vars:
+    service: "{{ frr_services['frr'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/start-frr"
+    mode: "0770"
+  with_first_found:
+    - "{{ node_custom_config }}/frr/{{ inventory_hostname }}/start-frr"
+    - "{{ node_custom_config }}/frr/start-frr"
+    - "start-frr.j2"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart frr container
+
+- name: Copying over daemons
+  become: true
+  vars:
+    service: "{{ frr_services['frr'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/daemons"
+    mode: "0660"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/frr/{{ inventory_hostname }}/daemons"
+        - "{{ node_custom_config }}/frr/daemons"
+      skip: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart frr container
+
+- name: Copying over frr.conf
+  become: true
+  vars:
+    service: "{{ frr_services['frr'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/{{ project_name }}/frr.conf"
+    mode: "0660"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/frr/{{ inventory_hostname }}/frr.conf"
+        - "{{ node_custom_config }}/frr/frr.conf"
+      skip: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+  notify:
+    - Restart frr container

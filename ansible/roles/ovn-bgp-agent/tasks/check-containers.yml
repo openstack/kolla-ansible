@@ -1,0 +1,18 @@
+---
+- name: Check ovn_bgp_agent containers
+  become: true
+  kolla_container:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ item.value.container_name }}"
+    image: "{{ item.value.image }}"
+    privileged: "{{ item.value.privileged | default(False) }}"
+    volumes: "{{ item.value.volumes }}"
+    dimensions: "{{ item.value.dimensions }}"
+    healthcheck: "{{ item.value.healthcheck }}"
+  when:
+    - item.value.enabled | bool
+    - item.value.host_in_groups | bool
+  with_dict: "{{ ovn_bgp_agent_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"

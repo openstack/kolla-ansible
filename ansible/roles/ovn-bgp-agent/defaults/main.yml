@@ -1,0 +1,48 @@
+---
+ovn_bgp_agent_services:
+  ovn_bgp_agent:
+    container_name: "ovn_bgp_agent"
+    image: "{{ ovn_bgp_agent_image_full }}"
+    enabled: "{{ enable_ovn_bgp_agent }}"
+    privileged: True
+    group: ovn-bgp-agent
+    host_in_groups: >-
+      {{
+      inventory_hostname in groups['ovn-bgp-agent']
+      }}
+    volumes: "{{ ovn_bgp_agent_default_volumes + ovn_bgp_agent_extra_volumes }}"
+    dimensions: "{{ ovn_bgp_agent_dimensions }}"
+    healthcheck: "{{ ovn_bgp_agent_healthcheck }}"
+
+####################
+# Docker
+####################
+ovn_bgp_agent_tag: "{{ openstack_tag }}"
+ovn_bgp_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ovn-bgp-agent"
+ovn_bgp_agent_image_full: "{{ ovn_bgp_agent_image }}:{{ ovn_bgp_agent_tag }}"
+
+ovn_bgp_agent_dimensions: "{{ default_container_dimensions }}"
+
+ovn_bgp_agent_enable_healthchecks: False
+ovn_bgp_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+ovn_bgp_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+ovn_bgp_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+ovn_bgp_agent_healthcheck_test: ["CMD-SHELL", "vtysh -c 'sh version'"]
+ovn_bgp_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+ovn_bgp_agent_healthcheck:
+  interval: "{{ ovn_bgp_agent_healthcheck_interval }}"
+  retries: "{{ ovn_bgp_agent_healthcheck_retries }}"
+  start_period: "{{ ovn_bgp_agent_healthcheck_start_period }}"
+  test: "{% if ovn_bgp_agent_enable_healthchecks | bool %}{{ ovn_bgp_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ ovn_bgp_agent_healthcheck_timeout }}"
+
+ovn_bgp_agent_default_volumes:
+  - "{{ node_config_directory }}/ovn-bgp-agent/:{{ container_config_directory }}:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "/var/run/frr/:/run/frr/"
+  - "/run/openvswitch/:/var/run/openvswitch/"
+  - "/etc/iproute2/rt_tables:/etc/iproute2/rt_tables"
+
+ovn_bgp_agent_extra_volumes: "{{ default_extra_volumes }}"
