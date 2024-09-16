@@ -4,13 +4,16 @@
     templates:
       - check-requirements
       - openstack-cover-jobs
-      - openstack-python3-jobs
       - ansible-role-jobs
       - publish-openstack-docs-pti
       - release-notes-jobs-python3
       - periodic-stable-jobs
     check:
       jobs:
+        - openstack-tox-pep8
+        - openstack-tox-py310
+        - openstack-tox-py311
+        - openstack-tox-py312
         - kolla-ansible-centos9s
         - kolla-ansible-debian
         - kolla-ansible-debian-podman
@@ -78,6 +81,9 @@
         - kolla-ansible-debian-upgrade-aarch64
     gate:
       jobs:
+        - openstack-tox-py310
+        - openstack-tox-py311
+        - openstack-tox-py312
         - kolla-ansible-debian
         - kolla-ansible-debian-upgrade
         - kolla-ansible-debian-podman
@@ -91,6 +97,9 @@
         - kolla-ansible-ubuntu-prometheus-opensearch-upgrade
         - kolla-ansible-ubuntu-upgrade
         - kolla-ansible-ubuntu-podman
+    post:
+      jobs:
+        - publish-openstack-python-branch-tarball
     experimental:
       jobs:
         - kolla-ansible-rocky9-swift-upgrade
