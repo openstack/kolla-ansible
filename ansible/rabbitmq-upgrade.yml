@@ -1,0 +1,21 @@
+---
+- import_playbook: gather-facts.yml
+
+- name: Group hosts based on configuration (RabbitMQ Only)
+  hosts: all
+  gather_facts: false
+  max_fail_percentage: >-
+    {{ group_hosts_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tasks:
+    - name: Group hosts based on enabled services (RabbitMQ Only)
+      group_by:
+        key: "enable_rabbitmq_{{ enable_rabbitmq | bool }}"
+      changed_when: false
+  tags: always
+
+- import_playbook: rabbitmq.yml
+  vars:
+    kolla_action: upgrade
+    rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-{{ rabbitmq_version_suffix | regex_replace('\\.', '-') }}"

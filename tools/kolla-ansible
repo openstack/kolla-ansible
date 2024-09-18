@@ -199,6 +199,7 @@ Commands:
     post-deploy          Do post deploy on deploy node
     pull                 Pull all images for containers (only pulls, no running container changes)
     rabbitmq-reset-state Force reset the state of RabbitMQ
+    rabbitmq-upgrade <version> Upgrade to a specific version of RabbitMQ
     reconfigure          Reconfigure OpenStack service
     stop                 Stop Kolla containers
     certificates         Generate self-signed certificate for TLS *For Development Only*
@@ -247,6 +248,7 @@ gather-facts
 post-deploy
 pull
 rabbitmq-reset-state
+rabbitmq-upgrade
 reconfigure
 stop
 certificates
@@ -571,6 +573,12 @@ EOF
 (rabbitmq-reset-state)
         ACTION="Force reset the state of RabbitMQ"
         PLAYBOOK="${BASEDIR}/ansible/rabbitmq-reset-state.yml"
+        ;;
+(rabbitmq-upgrade)
+        RMQ_VERSION="$2"
+        ACTION="Upgrade to a specific version of RabbitMQ"
+        PLAYBOOK="${BASEDIR}/ansible/rabbitmq-upgrade.yml"
+        EXTRA_OPTS="$EXTRA_OPTS -e rabbitmq_version_suffix=${RMQ_VERSION}"
         ;;
 (bash-completion)
         bash_completion
