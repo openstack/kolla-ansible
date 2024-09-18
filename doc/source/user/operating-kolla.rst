@@ -176,6 +176,16 @@ issues:
 
 At a convenient time, the upgrade can now be run.
 
+SLURP extra preparations
+++++++++++++++++++++++++
+
+RabbitMQ has two major version releases per year but does not support jumping
+two versions in one upgrade. So if you want to perform a skip-level upgrade,
+you must first upgrade RabbitMQ to an intermediary version. Please see the
+`RabbitMQ SLURP section
+<https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#slurp>`__
+for details.
+
 Perform the Upgrade
 -------------------
 
