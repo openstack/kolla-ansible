@@ -180,6 +180,9 @@ therefore RabbitMQ version 3.13).
 
    This command should be run from the Antelope release.
 
+   Note that this command is NOT idempotent. See "RabbitMQ versions" below for
+   an alternative approach.
+
 .. code-block:: console
 
    kolla-ansible rabbitmq-upgrade 3.12
