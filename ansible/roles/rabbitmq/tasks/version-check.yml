@@ -1,0 +1,53 @@
+---
+- block:
+    - name: Get container facts
+      become: true
+      kolla_container_facts:
+        container_engine: "{{ kolla_container_engine }}"
+        name:
+          - "{{ service.container_name }}"
+      register: container_facts
+
+    - block:
+        - name: Get current RabbitMQ version
+          become: true
+          command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl --version"
+          register: rabbitmq_version_current
+          changed_when: false
+
+        - name: Get new RabbitMQ version
+          become: true
+          vars:
+            rabbitmq_container: "{{ rabbitmq_services['rabbitmq'] }}"
+          kolla_container:
+            action: "start_container"
+            command: "rabbitmqctl --version"
+            container_engine: "{{ kolla_container_engine }}"
+            detach: false
+            environment:
+              KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+            image: "{{ rabbitmq_container.image }}"
+            name: "rabbitmq_version_check"
+            restart_policy: oneshot
+            volumes: "{{ rabbitmq_default_volumes + rabbitmq_extra_volumes }}"
+          register: rabbitmq_version_new
+          failed_when: false
+          check_mode: false
+
+        - name: Catch when RabbitMQ is being downgraded
+          assert:
+            that: rabbitmq_version_current.stdout is version(rabbitmq_version_new.stdout | trim, 'le', version_type='semver')
+            fail_msg: >
+              Looks like you're about to downgrade RabbitMQ from version {{ rabbitmq_version_current.stdout }} to version {{ rabbitmq_version_new.stdout | trim }}.
+              If you're absolutely certain you want to do this, please skip the tag `rabbitmq-version-check`.
+              Otherwise, see these docs for how to pin the version of RabbitMQ:
+              https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#rabbitmq-versions
+
+      when: container_facts[service.container_name] is defined
+
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
+  run_once: true
+  tags: rabbitmq-version-check
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
