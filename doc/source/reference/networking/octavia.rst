@@ -427,6 +427,24 @@ Add ``octavia_network_type`` to ``globals.yml`` and set the value to ``tenant``
 
 Next，follow the deployment instructions as normal.
 
+Failure handling
+----------------
+
+On large deployments, where neutron-openvswitch-agent sync could takes
+more then 5 minutes, you can get an error on octavia-interface.service
+systemd unit, because it can't wait either o-hm0 interface is already
+attached to br-int, or octavia management VxLAN is already configured
+on that host. In this case you have to add ``octavia_interface_wait_timeout``
+to ``globals.yml`` and set the value to new timeout in seconds
+
+.. code-block:: yaml
+
+   octavia_interface_wait_timeout: 1800
+
+On deployments with up to 2500 network ports per network node sync process
+could take up to 30mins. But you have to consider this value according
+to your deployment size.
+
 OVN provider
 ============
 
