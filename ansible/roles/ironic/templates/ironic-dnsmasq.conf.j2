@@ -9,9 +9,8 @@ bind-interfaces
 {% set tag = item.tag | default('range_' ~ loop.index) %}
 {% set lease_time = item.lease_time | default(ironic_dnsmasq_dhcp_default_lease_time) %}
 dhcp-range=set:{{ tag }},{{ item.range }},{{ lease_time }}
-{% if item.routers is defined %}
-dhcp-option=tag:{{ tag }},option:router,{{ item.routers }}
-{% endif %}
+{% if item.routers is defined %}dhcp-option=tag:{{ tag }},option:router,{{ item.routers }}{% endif %}
+{% if item.ntp_server is defined %}dhcp-option=tag:{{ tag }},option:ntp-server,{{ item.ntp_server }}{% endif %}
 {% endfor %}
 
 {% if api_address_family == 'ipv6' %}

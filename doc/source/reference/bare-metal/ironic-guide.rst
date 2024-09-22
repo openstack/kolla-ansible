@@ -42,6 +42,16 @@ are possible by separating addresses with commas):
      - range: "192.168.5.100,192.168.5.110"
        routers: "192.168.5.1"
 
+Together with an router there can be provided the NTP (time source) server.
+For example it can be the same address as default router for the range:
+
+.. code-block:: yaml
+
+   ironic_dnsmasq_dhcp_ranges:
+     - range: "192.168.5.100,192.168.5.110"
+       routers: "192.168.5.1"
+       ntp_server: "192.168.5.1"
+
 To support DHCP relay, it is also possible to define a netmask in the range.
 It is advisable to also provide a router to allow the traffic to reach the
 Ironic server.
