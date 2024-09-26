@@ -129,6 +129,25 @@
   notify:
     - "Restart {{ item.key }} container"
 
+- name: Copying over networking_bgpvpn.conf
+  become: true
+  vars:
+    service_name: "{{ item.key }}"
+    services_need_networking_bgpvpn_conf:
+      - "neutron-server"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/networking_bgpvpn.conf.j2"
+      - "{{ node_custom_config }}/neutron/networking_bgpvpn.conf"
+      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/networking_bgpvpn.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/networking_bgpvpn.conf"
+    mode: "0660"
+  when:
+    - item.key in services_need_networking_bgpvpn_conf
+  with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
+  notify:
+    - "Restart {{ item.key }} container"
+
 - name: Copying over ssh key
   become: true
   vars:
