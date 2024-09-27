@@ -231,7 +231,10 @@ keepalived_virtual_router_id: "51"
 opensearch_datadir_volume: "opensearch"
 
 opensearch_internal_endpoint: "{{ opensearch_address | kolla_url(internal_protocol, opensearch_port) }}"
+opensearch_dashboards_internal_fqdn: "{{ kolla_internal_fqdn }}"
 opensearch_dashboards_external_fqdn: "{{ kolla_external_fqdn }}"
+opensearch_dashboards_internal_endpoint: "{{ opensearch_dashboards_internal_fqdn | kolla_url(internal_protocol, opensearch_dashboards_port) }}"
+opensearch_dashboards_external_endpoint: "{{ opensearch_dashboards_external_fqdn | kolla_url(public_protocol, opensearch_dashboards_port_external) }}"
 opensearch_dashboards_user: "opensearch"
 opensearch_log_index_prefix: "{{ kibana_log_prefix if kibana_log_prefix is defined else 'flog' }}"
 
@@ -320,35 +323,47 @@ neutron_ipam_driver: "internal"
 # The list should be in alphabetical order
 aodh_internal_fqdn: "{{ kolla_internal_fqdn }}"
 aodh_external_fqdn: "{{ kolla_external_fqdn }}"
+aodh_internal_endpoint: "{{ aodh_internal_fqdn | kolla_url(internal_protocol, aodh_api_port) }}"
+aodh_public_endpoint: "{{ aodh_external_fqdn | kolla_url(public_protocol, aodh_api_public_port) }}"
 aodh_api_port: "8042"
 aodh_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else aodh_api_port }}"
 aodh_api_listen_port: "{{ aodh_api_port }}"
 
 barbican_internal_fqdn: "{{ kolla_internal_fqdn }}"
 barbican_external_fqdn: "{{ kolla_external_fqdn }}"
+barbican_internal_endpoint: "{{ barbican_internal_fqdn | kolla_url(internal_protocol, barbican_api_port) }}"
+barbican_public_endpoint: "{{ barbican_external_fqdn | kolla_url(public_protocol, barbican_api_public_port) }}"
 barbican_api_port: "9311"
 barbican_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else barbican_api_port }}"
 barbican_api_listen_port: "{{ barbican_api_port }}"
 
 blazar_internal_fqdn: "{{ kolla_internal_fqdn }}"
 blazar_external_fqdn: "{{ kolla_external_fqdn }}"
+blazar_internal_base_endpoint: "{{ blazar_internal_fqdn | kolla_url(internal_protocol, blazar_api_port) }}"
+blazar_public_base_endpoint: "{{ blazar_external_fqdn | kolla_url(public_protocol, blazar_api_public_port) }}"
 blazar_api_port: "1234"
 blazar_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else blazar_api_port }}"
 blazar_api_listen_port: "{{ blazar_api_port }}"
 
 ceph_rgw_internal_fqdn: "{{ kolla_internal_fqdn }}"
 ceph_rgw_external_fqdn: "{{ kolla_external_fqdn }}"
+ceph_rgw_internal_base_endpoint: "{{ ceph_rgw_internal_fqdn | kolla_url(internal_protocol, ceph_rgw_port) }}"
+ceph_rgw_public_base_endpoint: "{{ ceph_rgw_external_fqdn | kolla_url(public_protocol, ceph_rgw_public_port) }}"
 ceph_rgw_port: "6780"
 ceph_rgw_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else ceph_rgw_port }}"
 
 cinder_internal_fqdn: "{{ kolla_internal_fqdn }}"
 cinder_external_fqdn: "{{ kolla_external_fqdn }}"
+cinder_internal_base_endpoint: "{{ cinder_internal_fqdn | kolla_url(internal_protocol, cinder_api_port) }}"
+cinder_public_base_endpoint: "{{ cinder_external_fqdn | kolla_url(public_protocol, cinder_api_public_port) }}"
 cinder_api_port: "8776"
 cinder_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else cinder_api_port }}"
 cinder_api_listen_port: "{{ cinder_api_port }}"
 
 cloudkitty_internal_fqdn: "{{ kolla_internal_fqdn }}"
 cloudkitty_external_fqdn: "{{ kolla_external_fqdn }}"
+cloudkitty_internal_endpoint: "{{ cloudkitty_internal_fqdn | kolla_url(internal_protocol, cloudkitty_api_port) }}"
+cloudkitty_public_endpoint: "{{ cloudkitty_external_fqdn | kolla_url(public_protocol, cloudkitty_api_public_port) }}"
 cloudkitty_api_port: "8889"
 cloudkitty_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else cloudkitty_api_port }}"
 cloudkitty_api_listen_port: "{{ cloudkitty_api_port }}"
@@ -359,6 +374,8 @@ cyborg_api_port: "6666"
 
 designate_internal_fqdn: "{{ kolla_internal_fqdn }}"
 designate_external_fqdn: "{{ kolla_external_fqdn }}"
+designate_internal_endpoint: "{{ designate_internal_fqdn | kolla_url(internal_protocol, designate_api_port) }}"
+designate_public_endpoint: "{{ designate_external_fqdn | kolla_url(public_protocol, designate_api_public_port) }}"
 designate_api_port: "9001"
 designate_api_listen_port: "{{ designate_api_port }}"
 designate_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else designate_api_port }}"
@@ -375,6 +392,8 @@ fluentd_syslog_port: "5140"
 
 glance_internal_fqdn: "{{ kolla_internal_fqdn }}"
 glance_external_fqdn: "{{ kolla_external_fqdn }}"
+glance_internal_endpoint: "{{ glance_internal_fqdn | kolla_url(internal_protocol, glance_api_port) }}"
+glance_public_endpoint: "{{ glance_external_fqdn | kolla_url(public_protocol, glance_api_public_port) }}"
 glance_api_port: "9292"
 glance_api_listen_port: "{{ glance_api_port }}"
 glance_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else glance_api_port }}"
@@ -382,12 +401,16 @@ glance_tls_proxy_stats_port: "9293"
 
 gnocchi_internal_fqdn: "{{ kolla_internal_fqdn }}"
 gnocchi_external_fqdn: "{{ kolla_external_fqdn }}"
+gnocchi_internal_endpoint: "{{ gnocchi_internal_fqdn | kolla_url(internal_protocol, gnocchi_api_port) }}"
+gnocchi_public_endpoint: "{{ gnocchi_external_fqdn | kolla_url(public_protocol, gnocchi_api_public_port) }}"
 gnocchi_api_port: "8041"
 gnocchi_api_listen_port: "{{ gnocchi_api_port }}"
 gnocchi_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else gnocchi_api_port }}"
 
 grafana_internal_fqdn: "{{ kolla_internal_fqdn }}"
 grafana_external_fqdn: "{{ kolla_external_fqdn }}"
+grafana_internal_endpoint: "{{ grafana_internal_fqdn | kolla_url(internal_protocol, grafana_server_port) }}"
+grafana_public_endpoint: "{{ grafana_external_fqdn | kolla_url(public_protocol, grafana_server_public_port) }}"
 grafana_server_port: "3000"
 grafana_server_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else grafana_server_port }}"
 grafana_server_listen_port: "{{ grafana_server_port }}"
@@ -420,17 +443,23 @@ ssl_modern_settings: |
 
 heat_internal_fqdn: "{{ kolla_internal_fqdn }}"
 heat_external_fqdn: "{{ kolla_external_fqdn }}"
+heat_internal_base_endpoint: "{{ heat_internal_fqdn | kolla_url(internal_protocol, heat_api_port) }}"
+heat_public_base_endpoint: "{{ heat_external_fqdn | kolla_url(public_protocol, heat_api_public_port) }}"
 heat_api_port: "8004"
 heat_api_listen_port: "{{ heat_api_port }}"
 heat_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else heat_api_port }}"
 heat_cfn_internal_fqdn: "{{ kolla_internal_fqdn }}"
 heat_cfn_external_fqdn: "{{ kolla_external_fqdn }}"
+heat_cfn_internal_base_endpoint: "{{ heat_cfn_internal_fqdn | kolla_url(internal_protocol, heat_api_cfn_port) }}"
+heat_cfn_public_base_endpoint: "{{ heat_cfn_external_fqdn | kolla_url(public_protocol, heat_api_cfn_public_port) }}"
 heat_api_cfn_port: "8000"
 heat_api_cfn_listen_port: "{{ heat_api_cfn_port }}"
 heat_api_cfn_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else heat_api_cfn_port }}"
 
 horizon_internal_fqdn: "{{ kolla_internal_fqdn }}"
 horizon_external_fqdn: "{{ kolla_external_fqdn }}"
+horizon_internal_endpoint: "{{ kolla_internal_fqdn | kolla_url(internal_protocol, horizon_tls_port if kolla_enable_tls_internal | bool else horizon_port) }}"
+horizon_public_endpoint: "{{ kolla_external_fqdn | kolla_url(public_protocol, horizon_tls_port if kolla_enable_tls_external | bool else horizon_port) }}"
 horizon_port: "80"
 horizon_tls_port: "443"
 horizon_listen_port: "{{ horizon_tls_port if horizon_enable_tls_backend | bool else horizon_port }}"
@@ -439,11 +468,15 @@ influxdb_http_port: "8086"
 
 ironic_internal_fqdn: "{{ kolla_internal_fqdn }}"
 ironic_external_fqdn: "{{ kolla_external_fqdn }}"
+ironic_internal_endpoint: "{{ ironic_internal_fqdn | kolla_url(internal_protocol, ironic_api_port) }}"
+ironic_public_endpoint: "{{ ironic_external_fqdn | kolla_url(public_protocol, ironic_api_public_port) }}"
 ironic_api_port: "6385"
 ironic_api_listen_port: "{{ ironic_api_port }}"
 ironic_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else ironic_api_port }}"
 ironic_inspector_internal_fqdn: "{{ kolla_internal_fqdn }}"
 ironic_inspector_external_fqdn: "{{ kolla_external_fqdn }}"
+ironic_inspector_internal_endpoint: "{{ ironic_inspector_internal_fqdn | kolla_url(internal_protocol, ironic_inspector_port) }}"
+ironic_inspector_public_endpoint: "{{ ironic_inspector_external_fqdn | kolla_url(public_protocol, ironic_inspector_public_port) }}"
 ironic_inspector_port: "5050"
 ironic_inspector_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else ironic_inspector_port }}"
 ironic_inspector_listen_port: "{{ ironic_inspector_port }}"
@@ -465,12 +498,16 @@ letsencrypt_webserver_port: "8081"
 
 magnum_internal_fqdn: "{{ kolla_internal_fqdn }}"
 magnum_external_fqdn: "{{ kolla_external_fqdn }}"
+magnum_internal_base_endpoint: "{{ magnum_internal_fqdn | kolla_url(internal_protocol, magnum_api_port) }}"
+magnum_public_base_endpoint: "{{ magnum_external_fqdn | kolla_url(public_protocol, magnum_api_public_port) }}"
 magnum_api_port: "9511"
 magnum_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else magnum_api_port }}"
 magnum_api_listen_port: "{{ magnum_api_port }}"
 
 manila_internal_fqdn: "{{ kolla_internal_fqdn }}"
 manila_external_fqdn: "{{ kolla_external_fqdn }}"
+manila_internal_base_endpoint: "{{ manila_internal_fqdn | kolla_url(internal_protocol, manila_api_port) }}"
+manila_public_base_endpoint: "{{ manila_external_fqdn | kolla_url(public_protocol, manila_api_public_port) }}"
 manila_api_port: "8786"
 manila_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else manila_api_port }}"
 manila_api_listen_port: "{{ manila_api_port }}"
@@ -504,6 +541,8 @@ mariadb_shards_info: "{{ groups['mariadb'] | database_shards_info() }}"
 
 masakari_internal_fqdn: "{{ kolla_internal_fqdn }}"
 masakari_external_fqdn: "{{ kolla_external_fqdn }}"
+masakari_internal_endpoint: "{{ masakari_internal_fqdn | kolla_url(internal_protocol, masakari_api_port) }}"
+masakari_public_endpoint: "{{ masakari_external_fqdn | kolla_url(public_protocol, masakari_api_public_port) }}"
 masakari_api_port: "15868"
 masakari_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else masakari_api_port }}"
 masakari_api_listen_port: "{{ masakari_api_port }}"
@@ -514,12 +553,16 @@ memcache_security_strategy: "ENCRYPT"
 
 mistral_internal_fqdn: "{{ kolla_internal_fqdn }}"
 mistral_external_fqdn: "{{ kolla_external_fqdn }}"
+mistral_internal_base_endpoint: "{{ mistral_internal_fqdn | kolla_url(internal_protocol, mistral_api_port) }}"
+mistral_public_base_endpoint: "{{ mistral_external_fqdn | kolla_url(public_protocol, mistral_api_public_port) }}"
 mistral_api_port: "8989"
 mistral_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else mistral_api_port }}"
 mistral_api_listen_port: "{{ mistral_api_port }}"
 
 neutron_internal_fqdn: "{{ kolla_internal_fqdn }}"
 neutron_external_fqdn: "{{ kolla_external_fqdn }}"
+neutron_internal_endpoint: "{{ neutron_internal_fqdn | kolla_url(internal_protocol, neutron_server_port) }}"
+neutron_public_endpoint: "{{ neutron_external_fqdn | kolla_url(public_protocol, neutron_server_public_port) }}"
 neutron_server_port: "9696"
 neutron_server_listen_port: "{{ neutron_server_port }}"
 neutron_server_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else neutron_server_port }}"
@@ -527,6 +570,8 @@ neutron_tls_proxy_stats_port: "9697"
 
 nova_internal_fqdn: "{{ kolla_internal_fqdn }}"
 nova_external_fqdn: "{{ kolla_external_fqdn }}"
+nova_internal_base_endpoint: "{{ nova_internal_fqdn | kolla_url(internal_protocol, nova_api_port) }}"
+nova_public_base_endpoint: "{{ nova_external_fqdn | kolla_url(public_protocol, nova_api_public_port) }}"
 nova_api_port: "8774"
 nova_api_listen_port: "{{ nova_api_port }}"
 nova_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else nova_api_port }}"
@@ -550,6 +595,8 @@ nova_serialproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'w
 
 octavia_internal_fqdn: "{{ kolla_internal_fqdn }}"
 octavia_external_fqdn: "{{ kolla_external_fqdn }}"
+octavia_internal_endpoint: "{{ octavia_internal_fqdn | kolla_url(internal_protocol, octavia_api_port) }}"
+octavia_public_endpoint: "{{ octavia_external_fqdn | kolla_url(public_protocol, octavia_api_public_port) }}"
 octavia_api_port: "9876"
 octavia_api_listen_port: "{{ octavia_api_port }}"
 octavia_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else octavia_api_port }}"
@@ -572,13 +619,17 @@ ovsdb_port: "6640"
 
 placement_internal_fqdn: "{{ kolla_internal_fqdn }}"
 placement_external_fqdn: "{{ kolla_external_fqdn }}"
+placement_internal_endpoint: "{{ placement_internal_fqdn | kolla_url(internal_protocol, placement_api_port) }}"
+placement_public_endpoint: "{{ placement_external_fqdn | kolla_url(public_protocol, placement_api_public_port) }}"
 # Default Placement API port of 8778 already in use
 placement_api_port: "8780"
 placement_api_listen_port: "{{ placement_api_port }}"
 placement_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else placement_api_port }}"
 
-prometheus_external_fqdn: "{{ kolla_external_fqdn }}"
 prometheus_internal_fqdn: "{{ kolla_internal_fqdn }}"
+prometheus_external_fqdn: "{{ kolla_external_fqdn }}"
+prometheus_internal_endpoint: "{{ prometheus_internal_fqdn | kolla_url(internal_protocol, prometheus_port) }}"
+prometheus_public_endpoint: "{{ prometheus_external_fqdn | kolla_url(public_protocol, prometheus_public_port) }}"
 prometheus_port: "9091"
 prometheus_listen_port: "{{ prometheus_port }}"
 prometheus_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else prometheus_port }}"
@@ -597,6 +648,8 @@ proxysql_prometheus_exporter_port: "6070"
 # Prometheus alertmanager ports
 prometheus_alertmanager_internal_fqdn: "{{ kolla_internal_fqdn }}"
 prometheus_alertmanager_external_fqdn: "{{ kolla_external_fqdn }}"
+prometheus_alertmanager_internal_endpoint: "{{ prometheus_alertmanager_internal_fqdn | kolla_url(internal_protocol, prometheus_alertmanager_port) }}"
+prometheus_alertmanager_public_endpoint: "{{ prometheus_alertmanager_external_fqdn | kolla_url(public_protocol, prometheus_alertmanager_public_port) }}"
 prometheus_alertmanager_port: "9093"
 prometheus_alertmanager_cluster_port: "9094"
 prometheus_alertmanager_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else prometheus_alertmanager_port }}"
@@ -625,19 +678,24 @@ redis_sentinel_port: "26379"
 
 skyline_apiserver_internal_fqdn: "{{ kolla_internal_fqdn }}"
 skyline_apiserver_external_fqdn: "{{ kolla_external_fqdn }}"
+skyline_apiserver_internal_endpoint: "{{ skyline_apiserver_internal_fqdn | kolla_url(internal_protocol, skyline_apiserver_port) }}"
+skyline_apiserver_public_endpoint: "{{ skyline_apiserver_external_fqdn | kolla_url(public_protocol, skyline_apiserver_public_port) }}"
 skyline_console_internal_fqdn: "{{ kolla_internal_fqdn }}"
 skyline_console_external_fqdn: "{{ kolla_external_fqdn }}"
+skyline_console_internal_endpoint: "{{ skyline_console_internal_fqdn | kolla_url(internal_protocol, skyline_console_port) }}"
+skyline_console_public_endpoint: "{{ skyline_console_external_fqdn | kolla_url(public_protocol, skyline_console_public_port) }}"
 skyline_apiserver_port: "9998"
 skyline_apiserver_listen_port: "{{ skyline_apiserver_port }}"
 skyline_apiserver_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_apiserver_port }}"
 skyline_console_port: "9999"
 skyline_console_listen_port: "{{ skyline_console_port }}"
 skyline_console_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_console_port }}"
-skyline_console_public_endpoint: "{{ skyline_console_external_fqdn | kolla_url(public_protocol, skyline_console_public_port) }}"
 skyline_enable_sso: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 
 swift_internal_fqdn: "{{ kolla_internal_fqdn }}"
 swift_external_fqdn: "{{ kolla_external_fqdn }}"
+swift_internal_base_endpoint: "{{ swift_internal_fqdn | kolla_url(internal_protocol, swift_proxy_server_port) }}"
+swift_public_base_endpoint: "{{ swift_external_fqdn | kolla_url(public_protocol, swift_proxy_server_port) }}"
 swift_proxy_server_port: "8080"
 swift_proxy_server_listen_port: "{{ swift_proxy_server_port }}"
 swift_object_server_port: "6000"
@@ -649,24 +707,32 @@ syslog_udp_port: "{{ fluentd_syslog_port }}"
 
 tacker_internal_fqdn: "{{ kolla_internal_fqdn }}"
 tacker_external_fqdn: "{{ kolla_external_fqdn }}"
+tacker_internal_endpoint: "{{ tacker_internal_fqdn | kolla_url(internal_protocol, tacker_server_port) }}"
+tacker_public_endpoint: "{{ tacker_external_fqdn | kolla_url(public_protocol, tacker_server_public_port) }}"
 tacker_server_port: "9890"
 tacker_server_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else tacker_server_port }}"
 tacker_server_listen_port: "{{ tacker_server_port }}"
 
 trove_internal_fqdn: "{{ kolla_internal_fqdn }}"
 trove_external_fqdn: "{{ kolla_external_fqdn }}"
+trove_internal_base_endpoint: "{{ trove_internal_fqdn | kolla_url(internal_protocol, trove_api_port) }}"
+trove_public_base_endpoint: "{{ trove_external_fqdn | kolla_url(public_protocol, trove_api_public_port) }}"
 trove_api_port: "8779"
 trove_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else trove_api_port }}"
 trove_api_listen_port: "{{ trove_api_port }}"
 
 venus_internal_fqdn: "{{ kolla_internal_fqdn }}"
 venus_external_fqdn: "{{ kolla_external_fqdn }}"
+venus_internal_endpoint: "{{ venus_internal_fqdn | kolla_url(internal_protocol, venus_api_port) }}"
+venus_public_endpoint: "{{ venus_external_fqdn | kolla_url(public_protocol, venus_api_public_port) }}"
 venus_api_port: "10010"
 venus_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else venus_api_port }}"
 venus_api_listen_port: "{{ venus_api_port }}"
 
 watcher_internal_fqdn: "{{ kolla_internal_fqdn }}"
 watcher_external_fqdn: "{{ kolla_external_fqdn }}"
+watcher_internal_endpoint: "{{ watcher_internal_fqdn | kolla_url(internal_protocol, watcher_api_port) }}"
+watcher_public_endpoint: "{{ watcher_external_fqdn | kolla_url(public_protocol, watcher_api_public_port) }}"
 watcher_api_port: "9322"
 watcher_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else watcher_api_port }}"
 watcher_api_listen_port: "{{ watcher_api_port }}"
@@ -681,6 +747,8 @@ zun_wsproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'ws' }}
 zun_cni_daemon_port: "9036"
 zun_internal_fqdn: "{{ kolla_internal_fqdn }}"
 zun_external_fqdn: "{{ kolla_external_fqdn }}"
+zun_internal_base_endpoint: "{{ zun_internal_fqdn | kolla_url(internal_protocol, zun_api_port) }}"
+zun_public_base_endpoint: "{{ zun_external_fqdn | kolla_url(public_protocol, zun_api_public_port) }}"
 
 public_protocol: "{{ 'https' if kolla_enable_tls_external | bool else 'http' }}"
 internal_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
@@ -1031,18 +1099,12 @@ glance_api_hosts: "{{ [groups['glance-api'] | first] if glance_backend_file | bo
 # NOTE(mnasiadka): For use in common role
 glance_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
 
-glance_internal_endpoint: "{{ glance_internal_fqdn | kolla_url(internal_protocol, glance_api_port) }}"
-glance_public_endpoint: "{{ glance_external_fqdn | kolla_url(public_protocol, glance_api_public_port) }}"
-
 #######################
 # Barbican options
 #######################
 # Valid options are [ simple_crypto, p11_crypto ]
 barbican_crypto_plugin: "simple_crypto"
 barbican_library_path: "/usr/lib/libCryptoki2_64.so"
-
-barbican_internal_endpoint: "{{ barbican_internal_fqdn | kolla_url(internal_protocol, barbican_api_port) }}"
-barbican_public_endpoint: "{{ barbican_external_fqdn | kolla_url(public_protocol, barbican_api_public_port) }}"
 
 #################
 # Gnocchi options
@@ -1092,9 +1154,6 @@ designate_backend_external_bind9_nameservers: ""
 # Valid options are [ '', redis ]
 designate_coordination_backend: "{{ 'redis' if enable_redis | bool else '' }}"
 
-designate_internal_endpoint: "{{ designate_internal_fqdn | kolla_url(internal_protocol, designate_api_port) }}"
-designate_public_endpoint: "{{ designate_external_fqdn | kolla_url(public_protocol, designate_api_public_port) }}"
-
 designate_enable_notifications_sink: "no"
 designate_notifications_topic_name: "notifications_designate"
 
@@ -1122,9 +1181,6 @@ neutron_legacy_iptables: "no"
 
 # Enable distributed floating ip for OVN deployments
 neutron_ovn_distributed_fip: "no"
-
-neutron_internal_endpoint: "{{ neutron_internal_fqdn | kolla_url(internal_protocol, neutron_server_port) }}"
-neutron_public_endpoint: "{{ neutron_external_fqdn | kolla_url(public_protocol, neutron_server_public_port) }}"
 
 # SRIOV physnet:interface mappings when SRIOV is enabled
 # "sriovnet1" and tunnel_interface used here as placeholders
@@ -1174,9 +1230,6 @@ enable_neutron_horizon_policy_file: "{{ enable_neutron }}"
 enable_nova_horizon_policy_file: "{{ enable_nova }}"
 
 horizon_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
-
-horizon_internal_endpoint: "{{ kolla_internal_fqdn | kolla_url(internal_protocol, horizon_tls_port if kolla_enable_tls_internal | bool else horizon_port) }}"
-horizon_public_endpoint: "{{ kolla_external_fqdn | kolla_url(public_protocol, horizon_tls_port if kolla_enable_tls_external | bool else horizon_port) }}"
 
 ###################
 # External Ceph options
@@ -1262,8 +1315,6 @@ prometheus_openstack_exporter_endpoint_type: "internal"
 prometheus_openstack_exporter_compute_api_version: "latest"
 prometheus_libvirt_exporter_interval: "60s"
 
-prometheus_public_endpoint: "{{ prometheus_external_fqdn | kolla_url(public_protocol, prometheus_public_port) }}"
-prometheus_internal_endpoint: "{{ prometheus_internal_fqdn | kolla_url(internal_protocol, prometheus_port) }}"
 
 ####################
 # InfluxDB options
@@ -1303,28 +1354,8 @@ s3_secret_key:
 # telemetry data.
 telegraf_enable_docker_input: "no"
 
-####################
-# Grafana
-####################
-grafana_internal_endpoint: "{{ kolla_internal_fqdn | kolla_url(internal_protocol, grafana_server_port) }}"
-grafana_public_endpoint: "{{ kolla_external_fqdn | kolla_url(public_protocol, grafana_server_public_port) }}"
-
-#############
-# Ironic
-#############
-ironic_internal_endpoint: "{{ ironic_internal_fqdn | kolla_url(internal_protocol, ironic_api_port) }}"
-ironic_public_endpoint: "{{ ironic_external_fqdn | kolla_url(public_protocol, ironic_api_public_port) }}"
-
 # Valid options are [ '', redis, etcd ]
 ironic_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
-
-########
-# Swift
-########
-swift_internal_base_endpoint: "{{ swift_internal_fqdn | kolla_url(internal_protocol, swift_proxy_server_port) }}"
-
-swift_internal_endpoint: "{{ swift_internal_base_endpoint }}/v1/AUTH_%(tenant_id)s"
-swift_public_endpoint: "{{ swift_external_fqdn | kolla_url(public_protocol, swift_proxy_server_port, '/v1/AUTH_%(tenant_id)s') }}"
 
 ##########
 # Octavia
@@ -1341,9 +1372,6 @@ octavia_auto_configure: "{{ 'amphora' in octavia_provider_drivers }}"
 #   In this case octavia_network_interface should be set to a network interface
 #   on the Octavia worker nodes on the same provider network.
 octavia_network_type: "provider"
-
-octavia_internal_endpoint: "{{ octavia_internal_fqdn | kolla_url(internal_protocol, octavia_api_port) }}"
-octavia_public_endpoint: "{{ octavia_external_fqdn | kolla_url(public_protocol, octavia_api_public_port) }}"
 
 ###################################
 # Identity federation configuration
