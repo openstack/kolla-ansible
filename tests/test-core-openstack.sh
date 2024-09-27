@@ -191,16 +191,17 @@ function resize_instance {
 
     # Confirming the resize operation is not instantaneous. Wait for change to
     # be reflected in server status.
+    local attempt
     attempt=1
     while [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; do
         echo "Instance is not active yet"
         attempt=$((attempt+1))
-        if [[ $attempt -eq 5 ]]; then
+        if [[ $attempt -eq 10 ]]; then
             echo "FAILED: Instance failed to become active after resize confirm"
             openstack --debug server show ${name}
             return 1
         fi
-        sleep 2
+        sleep 10
     done
 }
 
