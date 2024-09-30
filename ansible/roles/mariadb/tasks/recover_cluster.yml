@@ -9,6 +9,7 @@
     path: "{{ item }}"
     state: absent
   delegate_to: localhost
+  connection: local
   changed_when: false
   check_mode: no
   run_once: true
@@ -82,10 +83,12 @@
         dest: "{{ mariadb_recover_tmp_file_path }}"
         mode: 0644
       delegate_to: localhost
+      connection: local
       changed_when: false
       when: seqno_compare.results | map(attribute='stdout') | join('') == ""
 
     - name: Registering mariadb_recover_inventory_name from temp file
+      connection: local
       set_fact:
         mariadb_recover_inventory_name: "{{ lookup('file', mariadb_recover_tmp_file_path) }}"
   when:
