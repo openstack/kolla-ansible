@@ -16,7 +16,8 @@ keystone_services:
         tls_backend: "{{ keystone_enable_tls_backend }}"
         port: "{{ keystone_public_port }}"
         listen_port: "{{ keystone_public_listen_port }}"
-        backend_http_extra: "{{ ['balance source'] if enable_keystone_federation | bool else [] }}"
+        backend_http_extra:
+          - balance "{{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
       keystone_external:
         enabled: "{{ enable_keystone }}"
         mode: "http"
@@ -24,7 +25,8 @@ keystone_services:
         tls_backend: "{{ keystone_enable_tls_backend }}"
         port: "{{ keystone_public_port }}"
         listen_port: "{{ keystone_public_listen_port }}"
-        backend_http_extra: "{{ ['balance source'] if enable_keystone_federation | bool else [] }}"
+        backend_http_extra:
+          - balance "{{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
       # NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
       # TODO(yoctozepto): Remove after Zed.
       keystone_admin:
@@ -34,6 +36,8 @@ keystone_services:
         tls_backend: "{{ keystone_enable_tls_backend }}"
         port: "{{ keystone_admin_port }}"
         listen_port: "{{ keystone_admin_listen_port }}"
+        backend_http_extra:
+          - balance "{{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
   keystone-ssh:
     container_name: "keystone_ssh"
     group: "keystone"
