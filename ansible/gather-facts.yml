@@ -16,13 +16,6 @@
         # Don't gather if fact caching is in use
         - not ansible_facts
 
-    - name: Gather package facts
-      package_facts:
-      when:
-        - "'packages' not in ansible_facts"
-        - kolla_action is defined
-        - kolla_action == "precheck"
-
     - name: Group hosts to determine when using --limit
       group_by:
         key: "all_using_limit_{{ (ansible_play_batch | length) != (groups['all'] | length) }}"
@@ -60,14 +53,4 @@
         - item not in groups["all_using_limit_True"]
         # Don't gather if fact caching is in use
         - not hostvars[item].ansible_facts
-
-    - name: Gather package facts
-      package_facts:
-      delegate_facts: True
-      delegate_to: "{{ item }}"
-      with_items: "{{ delegate_hosts }}"
-      when:
-        - "'packages' not in hostvars[item].ansible_facts"
-        - kolla_action is defined
-        - "kolla_action == 'precheck'"
   tags: always
