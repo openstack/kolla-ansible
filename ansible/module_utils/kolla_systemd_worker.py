@@ -23,6 +23,7 @@ TEMPLATE = '''# ${service_name}
 [Unit]
 Description=${engine} ${service_name}
 After=${deps}
+Wants=${deps}
 StartLimitInterval=${restart_timeout}
 StartLimitBurst=${restart_retries}
 
