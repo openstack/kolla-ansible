@@ -458,12 +458,20 @@ case "$1" in
 (destroy)
         ACTION="Destroy Kolla containers, volumes and host configuration"
         PLAYBOOK="${BASEDIR}/ansible/destroy.yml"
+
+        INVENTORIES_COMMA_SEPARATED=""
+        for INVENTORY in ${INVENTORIES[@]}; do
+            INVENTORIES_COMMA_SEPARATED="${INVENTORIES_COMMA_SEPARATED},${INVENTORY}"
+        done
+        INVENTORIES_COMMA_SEPARATED=$(echo "${INVENTORIES_COMMA_SEPARATED}" | sed -e 's/^,//g')
+
         if [[ "${INCLUDE_IMAGES}" == "--include-images" ]]; then
             EXTRA_OPTS="$EXTRA_OPTS -e destroy_include_images=yes"
         fi
         if [[ "${INCLUDE_DEV}" == "--include-dev" ]]; then
             EXTRA_OPTS="$EXTRA_OPTS -e destroy_include_dev=yes"
         fi
+        EXTRA_OPTS="$EXTRA_OPTS -e inventories_comma_separated=${INVENTORIES_COMMA_SEPARATED}"
         if [[ "${DANGER_CONFIRM}" != "--yes-i-really-really-mean-it" ]]; then
             cat << EOF
 WARNING:
