@@ -73,7 +73,7 @@ function prepare_images {
         GATE_IMAGES="^cron,^opensearch,^fluentd,^haproxy,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
     fi
 
-    if [[ $SCENARIO == "skyline" ]]; then
+    if [[ $SCENARIO == "skyline" || $SCENARIO == "skyline-sso" ]]; then
         GATE_IMAGES+=",^skyline"
     fi
 
