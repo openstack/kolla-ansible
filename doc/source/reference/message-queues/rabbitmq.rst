@@ -203,7 +203,7 @@ you must override the image. if you want to use version 3.12 change
 
 .. code-block:: yaml
 
-   rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-3.12"
+   rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-3-12"
 
 You can then upgrade RabbitMQ with the usual command:
 
