@@ -6,13 +6,20 @@
             "dest": "/etc/cinder/cinder.conf",
             "owner": "cinder",
             "perm": "0600"
-        }{% if cinder_backend_ceph | bool %},
+        },{% if cinder_backend_huawei | bool and cinder_backend_huawei_xml_files | length > 0 %}{% for file in cinder_backend_huawei_xml_files %}
+        {
+            "source": "{{ container_config_directory }}/{{ file }}",
+            "dest": "/etc/cinder/{{ file }}",
+            "owner": "cinder",
+            "perm": "0600",
+            "optional": {{ (not cinder_backend_huawei | bool) | string | lower }}
+        },{% endfor%}{% endif %}{% if cinder_backend_ceph | bool %}
         {
             "source": "{{ container_config_directory }}/ceph",
             "dest": "/etc/ceph",
             "owner": "cinder",
             "perm": "0600"
-        }{% endif %},
+        },{% endif %}
         {
             "source": "{{ container_config_directory }}/nfs_shares",
             "dest": "/etc/cinder/nfs_shares",
