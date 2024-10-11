@@ -286,8 +286,6 @@ disable verification of the backend certificate:
 
   kolla_verify_tls_backend: "no"
 
-.. _admin-tls-generating-a-private-ca:
-
 Generating TLS certificates with Let's Encrypt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -308,7 +306,7 @@ to the HAProxy containers using SSH.
 
 .. note::
 
-  If ``letsencrypt_email`` is not valid email, letsencrypt role will
+  If ``letsencrypt_email`` is not a valid email, the ``letsencrypt`` role will
   not work correctly.
 
 .. note::
@@ -316,6 +314,8 @@ to the HAProxy containers using SSH.
   If ``enable_letsencrypt`` is set to true, haproxy's socket will run with
   admin access level. This is needed so Let's Encrypt can interact
   with HAProxy.
+
+.. _admin-tls-generating-a-private-ca:
 
 Generating a Private Certificate Authority
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
