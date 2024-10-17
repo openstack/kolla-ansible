@@ -13,12 +13,9 @@
 # limitations under the License.
 
 import json
-import re
+import traceback
 
 from ansible.module_utils.basic import AnsibleModule
-
-from ast import literal_eval
-from shlex import split
 
 DOCUMENTATION = '''
 ---
@@ -34,6 +31,7 @@ options:
       - Name of container engine to use
     required: True
     type: str
+    choices: ['docker', 'podman']
   module_name:
     description:
       - The module name to invoke
@@ -43,12 +41,12 @@ options:
     description:
       - The module args use by the module
     required: False
-    type: str or dict
+    type: dict
   module_extra_vars:
     description:
       - The extra variables used by the module
     required: False
-    type: str or dict
+    type: dict
   user:
     description:
       - The user to execute Ansible inside kolla_toolbox with
@@ -56,27 +54,29 @@ options:
     type: str
   api_version:
     description:
-      - The version of the API for docker-py to use when contacting Docker
+      - The version of the API for client to use when contacting container API
     required: False
     type: str
     default: auto
   timeout:
     description:
-      - The default timeout for docker-py client when contacting Docker API
+      - The default timeout for client when contacting container API
     required: False
     type: int
     default: 180
-author: Jeffrey Zhang
+authors: Jeffrey Zhang, Roman Krček
 '''
 
 EXAMPLES = '''
 - hosts: controller
   tasks:
-    - name: Ensure the direct absent
+    - name: Ensure the directory is removed
       kolla_toolbox:
-        container_engine: docker
+        container_engine: podman
         module_name: file
-        module_args: path=/tmp/a state=absent
+        module_args:
+          path: /tmp/a
+          state: absent
     - name: Create mysql database
       kolla_toolbox:
         container_engine: docker
@@ -86,7 +86,7 @@ EXAMPLES = '''
           login_user: root
           login_password: admin
           name: testdb
-    - name: Creating default user role
+    - name: Create default user role
       kolla_toolbox:
         container_engine: docker
         module_name: openstack.cloud.identity_role
@@ -103,177 +103,189 @@ EXAMPLES = '''
 '''
 
 
-JSON_REG = re.compile(r'^(?P<host>\w+) \| (?P<status>\w+)!? =>(?P<stdout>.*)$',
-                      re.MULTILINE | re.DOTALL)
-NON_JSON_REG = re.compile((r'^(?P<host>\w+) \| (?P<status>\w+)!? \| '
-                           r'rc=(?P<exit_code>\d+) >>\n(?P<stdout>.*)\n$'),
-                          re.MULTILINE | re.DOTALL)
+class KollaToolboxWorker():
+    def __init__(self, module, client, container_errors) -> None:
+        self.module = module
+        self.client = client
+        self.container_errors = container_errors
+        self.result = dict()
 
-
-def gen_commandline(params):
-    command = ['ansible', 'localhost']
-    if params.get('module_name'):
-        command.extend(['-m', params.get('module_name')])
-    if params.get('module_args'):
-        try:
-            module_args = literal_eval(params.get('module_args'))
-        except SyntaxError:
-            if not isinstance(params.get('module_args'), str):
-                raise
-
-            # account for string arguments
-            module_args = split(params.get('module_args'))
-        if isinstance(module_args, dict):
-            module_args = ' '.join("{}='{}'".format(key, value)
-                                   for key, value in module_args.items())
-        if isinstance(module_args, list):
-            module_args = ' '.join(module_args)
-        command.extend(['-a', module_args])
-    if params.get('module_extra_vars'):
-        extra_vars = params.get('module_extra_vars')
-        if isinstance(extra_vars, dict):
-            extra_vars = json.dumps(extra_vars)
-        command.extend(['--extra-vars', extra_vars])
-    return command
-
-
-def get_docker_client():
-    import docker
-    return docker.APIClient
-
-
-def use_docker(module):
-    client = get_docker_client()(
-        version=module.params.get('api_version'),
-        timeout=module.params.get('timeout'))
-    command_line = gen_commandline(module.params)
-    kolla_toolbox = client.containers(filters=dict(name='kolla_toolbox',
-                                                   status='running'))
-    if not kolla_toolbox:
-        module.fail_json(msg='kolla_toolbox container is not running.')
-
-    kolla_toolbox = kolla_toolbox[0]
-    kwargs = {}
-    if 'user' in module.params:
-        kwargs['user'] = module.params['user']
-
-    # Use the JSON output formatter, so that we can parse it.
-    environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
-                   "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
-    job = client.exec_create(kolla_toolbox, command_line,
-                             environment=environment, **kwargs)
-    json_output, error = client.exec_start(job, demux=True)
-    if error:
-        module.log(msg='Inner module stderr: %s' % error)
-
-    try:
-        output = json.loads(json_output)
-    except Exception:
-        module.fail_json(
-            msg='Can not parse the inner module output: %s' % json_output)
-
-    # Expected format is the following:
-    # {
-    #   "plays": [
-    #     {
-    #       "tasks": [
-    #         {
-    #           "hosts": {
-    #             "localhost": {
-    #               <module result>
-    #             }
-    #           }
-    #         }
-    #       ]
-    #     {
-    #   ]
-    # }
-    try:
-        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
-    except (KeyError, IndexError):
-        module.fail_json(
-            msg='Ansible JSON output has unexpected format: %s' % output)
-
-    # Remove Ansible's internal variables from returned fields.
-    ret.pop('_ansible_no_log', None)
-    return ret
-
-
-def get_kolla_toolbox():
-    from podman import PodmanClient
-
-    with PodmanClient(base_url="http+unix:/run/podman/podman.sock") as client:
-        for cont in client.containers.list(all=True):
-            cont.reload()
-            if cont.name == 'kolla_toolbox' and cont.status == 'running':
-                return cont
-
-
-def use_podman(module):
-    from podman.errors.exceptions import APIError
-
-    try:
-        kolla_toolbox = get_kolla_toolbox()
-        if not kolla_toolbox:
-            module.fail_json(msg='kolla_toolbox container is not running.')
-
-        kwargs = {}
-        if 'user' in module.params:
-            kwargs['user'] = module.params['user']
-        environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
-                       "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
-        command_line = gen_commandline(module.params)
-
-        _, raw_output = kolla_toolbox.exec_run(
-            command_line,
-            environment=environment,
-            tty=True,
-            **kwargs
+    def _get_toolbox_container(self):
+        """Get the kolla_toolbox container object, if up and running."""
+        cont = self.client.containers.list(
+            filters=dict(name='kolla_toolbox', status='running')
         )
-    except APIError as e:
-        module.fail_json(msg=f'Encountered Podman API error: {e.explanation}')
+        if not cont:
+            self.module.fail_json(
+                msg='kolla_toolbox container is missing or not running!'
+            )
+        return cont[0]
 
-    try:
-        json_output = raw_output.decode('utf-8')
-        output = json.loads(json_output)
-    except Exception:
-        module.fail_json(
-            msg='Can not parse the inner module output: %s' % json_output)
+    def _format_module_args(self, module_args: dict) -> list:
+        """Format dict of module parameters into list of 'key=value' pairs."""
+        pairs = list()
+        for key, value in module_args.items():
+            if isinstance(value, dict):
+                value_json = json.dumps(value)
+                pairs.append(f"{key}='{value_json}'")
+            else:
+                pairs.append(f"{key}='{value}'")
+        return pairs
 
-    try:
-        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
-    except (KeyError, IndexError):
-        module.fail_json(
-            msg='Ansible JSON output has unexpected format: %s' % output)
+    def _generate_command(self) -> list:
+        """Generate the command that will be executed inside kolla_toolbox."""
+        args_formatted = self._format_module_args(
+            self.module.params.get('module_args'))
+        extra_vars_formatted = self._format_module_args(
+            self.module.params.get('module_extra_vars'))
 
-    # Remove Ansible's internal variables from returned fields.
-    ret.pop('_ansible_no_log', None)
+        command = ['ansible', 'localhost']
+        command.extend(['-m', self.module.params.get('module_name')])
+        if args_formatted:
+            command.extend(['-a', ' '.join(args_formatted)])
+        if extra_vars_formatted:
+            command.extend(['-e', ' '.join(extra_vars_formatted)])
+        if self.module.check_mode:
+            command.append('--check')
 
-    return ret
+        return command
+
+    def _run_command(self, kolla_toolbox, command, *args, **kwargs) -> bytes:
+        try:
+            _, output_raw = kolla_toolbox.exec_run(command,
+                                                   *args,
+                                                   **kwargs)
+        except self.container_errors.APIError as e:
+            self.module.fail_json(
+                msg='Container engine client encountered API error: '
+                    f'{e.explanation}'
+            )
+        return output_raw
+
+    def _process_container_output(self, output_raw: bytes) -> dict:
+        """Convert raw bytes output from container.exec_run into dictionary."""
+        try:
+            output_json = json.loads(output_raw.decode('utf-8'))
+        except json.JSONDecodeError as e:
+            self.module.fail_json(
+                msg=f'Parsing kolla_toolbox JSON output failed: {e}'
+            )
+
+        # Expected format for the output is the following:
+        # {
+        #   "plays": [
+        #     {
+        #       "tasks": [
+        #         {
+        #           "hosts": {
+        #             "localhost": {
+        #               <module result>
+        #             }
+        #           }
+        #         }
+        #       ]
+        #     {
+        #   ]
+        # }
+
+        try:
+            result = output_json['plays'][0]['tasks'][0]['hosts']['localhost']
+            result.pop('_ansible_no_log', None)
+        except KeyError:
+            self.module.fail_json(
+                msg=f'Ansible JSON output has unexpected format: {output_json}'
+            )
+
+        return result
+
+    def main(self) -> None:
+        """Run command inside the kolla_toolbox container with defined args."""
+
+        kolla_toolbox = self._get_toolbox_container()
+        command = self._generate_command()
+        environment = {'ANSIBLE_STDOUT_CALLBACK': 'json',
+                       'ANSIBLE_LOAD_CALLBACK_PLUGINS': 'True'}
+
+        output_raw = self._run_command(kolla_toolbox,
+                                       command,
+                                       environment=environment,
+                                       tty=True,
+                                       user=self.module.params.get('user'))
+
+        self.result = self._process_container_output(output_raw)
+
+
+def create_container_client(module: AnsibleModule):
+    """Return container engine client based on the parameters."""
+    container_engine = module.params.get('container_engine')
+    api_version = module.params.get('api_version')
+    timeout = module.params.get('timeout')
+
+    if container_engine == 'docker':
+        try:
+            import docker
+            import docker.errors as container_errors
+        except ImportError:
+            module.fail_json(
+                msg='The docker library could not be imported!'
+            )
+        client = docker.DockerClient(
+            base_url='http+unix:/var/run/docker.sock',
+            version=api_version,
+            timeout=timeout)
+    else:
+        try:
+            import podman
+            import podman.errors as container_errors
+        except ImportError:
+            module.fail_json(
+                msg='The podman library could not be imported!'
+            )
+        # NOTE(r-krcek): PodmanClient has a glitch in which when you pass
+        # 'auto' to api_version, it literally creates an url of /vauto
+        # for API calls, instead of actually finding the compatible version
+        # like /v5.0.0, this leads to 404 Error when accessing the API.
+        if api_version == 'auto':
+            client = podman.PodmanClient(
+                base_url='http+unix:/run/podman/podman.sock',
+                timeout=timeout)
+        else:
+            client = podman.PodmanClient(
+                base_url='http+unix:/run/podman/podman.sock',
+                version=api_version,
+                timeout=timeout)
+    return client, container_errors
+
+
+def create_ansible_module() -> AnsibleModule:
+    argument_spec = dict(
+        container_engine=dict(type='str',
+                              choices=['podman', 'docker'],
+                              required=True),
+        module_name=dict(type='str', required=True),
+        module_args=dict(type='dict', default=dict()),
+        module_extra_vars=dict(type='dict', default=dict()),
+        api_version=dict(type='str', default='auto'),
+        timeout=dict(type='int', default=180),
+        user=dict(type='str'),
+    )
+
+    return AnsibleModule(argument_spec=argument_spec,
+                         supports_check_mode=True)
 
 
 def main():
-    specs = dict(
-        container_engine=dict(required=True, type='str'),
-        module_name=dict(required=True, type='str'),
-        module_args=dict(type='str'),
-        module_extra_vars=dict(type='json'),
-        api_version=dict(required=False, type='str', default='auto'),
-        timeout=dict(required=False, type='int', default=180),
-        user=dict(required=False, type='str'),
-    )
-    module = AnsibleModule(argument_spec=specs, bypass_checks=True)
+    module = create_ansible_module()
+    client, container_errors = create_container_client(module)
+    ktbw = KollaToolboxWorker(module, client, container_errors)
 
-    container_engine = module.params.get('container_engine').lower()
-    if container_engine == 'docker':
-        result = use_docker(module)
-    elif container_engine == 'podman':
-        result = use_podman(module)
-    else:
-        module.fail_json(msg='Missing or invalid container engine.')
-
-    module.exit_json(**result)
+    try:
+        ktbw.main()
+        module.exit_json(**ktbw.result)
+    except Exception:
+        module.fail_json(changed=True,
+                         msg=repr(traceback.format_exc()))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
