@@ -44,7 +44,8 @@ function filter_out_expected_critical {
         # See: https://bugs.launchpad.net/neutron/+bug/1863579
         grep -v "Unhandled error: oslo_db.exception.DBConnectionError" |
         grep -v "WSREP has not yet prepared node for application use" |
-        grep -v "Failed to fetch token data from identity server"
+        grep -v "Failed to fetch token data from identity server" |
+        grep -v "Max connect timeout reached while reaching hostgroup"
         ;;
     *)
         # Sometimes we see this during upgrades of Keystone.
