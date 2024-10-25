@@ -32,6 +32,16 @@ mysql_variables:
    monitor_ping_interval: "{{ mariadb_monitor_ping_interval }}"
    monitor_ping_timeout: "{{ mariadb_monitor_ping_timeout }}"
    monitor_ping_max_failures: "{{ mariadb_monitor_ping_max_failures }}"
+   monitor_connect_timeout: 6000
+   connect_timeout_client: 100000
+   connect_timeout_server: 30000
+   connect_timeout_server_max: 100000
+{% if database_enable_tls_backend | bool %}
+   ssl_p2s_ca: "/etc/proxysql/certs/root.crt"
+   ssl_p2s_cert: "/etc/proxysql/certs/mariadb-cert.pem"
+   ssl_p2s_key: "/etc/proxysql/certs/mariadb-key.pem"
+   have_ssl: true
+{% endif %}
 
 mysql_servers:
 {% for shard_id, shard in mariadb_shards_info.shards.items() %}
@@ -49,6 +59,9 @@ mysql_servers:
     max_replication_lag: {{ proxysql_backend_max_replication_lag }}
     weight :  {{ WEIGHT }}
     comment :  "Writer {{ host }}"
+{% if database_enable_tls_backend | bool %}
+    use_ssl: 1
+{% endif %}
 {% endfor %}
 {% endfor %}
 

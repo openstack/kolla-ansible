@@ -33,6 +33,10 @@ from jinja2 import TemplateNotFound
 from kolla_ansible import kolla_address
 from kolla_ansible import put_address_in_context
 import os.path
+try:
+    from ansible_collections.ansible.utils.plugins.filter import ipwrap
+except ImportError:
+    from ansible_collections.ansible.netcommon.plugins.filter import ipwrap
 
 
 class AbsolutePathLoader(BaseLoader):
@@ -57,6 +61,7 @@ def check(template, out, err, env=Environment(loader=AbsolutePathLoader(),
         env.filters['password_hash'] = get_encrypted_password
         env.filters['kolla_address'] = kolla_address
         env.filters['put_address_in_context'] = put_address_in_context
+        env.filters['ipwrap'] = ipwrap
         env.get_template(template)
         out.write("%s: Syntax OK\n" % template)
         return 0
