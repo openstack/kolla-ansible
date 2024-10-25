@@ -20,6 +20,10 @@ glance_api_servers = {{ glance_internal_endpoint }}
 glance_num_retries = {{ groups['glance-api'] | length }}
 glance_ca_certificates_file = {{ openstack_cacert }}
 
+{% if service_name == "cinder-volume" and cinder_cluster_name != "" %}
+cluster = {{ cinder_cluster_name }}
+{% endif %}
+
 {% if cinder_enabled_backends %}
 enabled_backends = {{ cinder_enabled_backends|map(attribute='name')|join(',') }}
 {% endif %}
