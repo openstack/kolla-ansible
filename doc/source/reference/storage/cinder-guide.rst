@@ -11,7 +11,6 @@ Cinder can be deployed using Kolla and supports the following storage
 backends:
 
 * ceph
-* hnas_nfs
 * iscsi
 * lvm
 * nfs
@@ -257,9 +256,6 @@ that appears in cinder.conf:
    * - Network File System (NFS)
      - cinder_backend_nfs_name
      - nfs-1
-   * - Hitachi NAS Platform NFS
-     - cinder_backend_hnas_nfs_name
-     - hnas-nfs
    * - VMware Virtual Machine Disk File
      - cinder_backend_vmwarevc_vmdk_name
      - vmwarevc-vmdk
