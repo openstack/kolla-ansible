@@ -110,7 +110,7 @@ def add_ansible_args(parser):
     parser.add_argument(
         "--vault-password-file",
         "--vault-pass-file",
-        metavar="VAULT_APSSWORD_FILES",
+        metavar="VAULT_PASSWORD_FILES",
         action="append",
         help="vault password file",
         default=[]
