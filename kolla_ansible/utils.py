@@ -45,15 +45,20 @@ def _detect_install_prefix(path: os.path) -> str:
     return prefix_path
 
 
-def _get_direct_url(dist: Distribution) -> str:
+def _get_direct_url_if_editable(dist: Distribution) -> str:
     direct_url = os.path.join(dist._path, 'direct_url.json')
+    editable = None
     if os.path.isfile(direct_url):
         with open(direct_url, 'r') as f:
             direct_url_content = json.loads(f.readline().strip())
-            url = direct_url_content['url']
-            prefix = 'file://'
-            if url.startswith(prefix):
-                return url[len(prefix):]
+            dir_info = direct_url_content.get('dir_info')
+            if dir_info is not None:
+                editable = dir_info.get('editable')
+            if editable:
+                url = direct_url_content['url']
+                prefix = 'file://'
+                if url.startswith(prefix):
+                    return url[len(prefix):]
 
     return None
 
@@ -66,7 +71,7 @@ def _get_base_path() -> os.path:
 
     kolla_ansible_dist = list(Distribution.discover(name="kolla_ansible"))
     if kolla_ansible_dist:
-        direct_url = _get_direct_url(kolla_ansible_dist[0])
+        direct_url = _get_direct_url_if_editable(kolla_ansible_dist[0])
         if direct_url:
             return direct_url
 
