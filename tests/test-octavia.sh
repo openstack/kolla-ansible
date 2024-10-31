@@ -11,7 +11,7 @@ export PYTHONUNBUFFERED=1
 function check_certificate_expiry {
     RAW_INVENTORY=/etc/kolla/inventory
     source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
-    kolla-ansible octavia-certificates --check-expiry 7
+    kolla-ansible octavia-certificates -i ${RAW_INVENTORY} --check-expiry 7
     deactivate
 }
 
