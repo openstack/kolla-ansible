@@ -23,6 +23,17 @@ from kolla_ansible.exception import FilterError
 from kolla_ansible.helpers import _call_bool_filter
 
 
+def is_loopback(address):
+    """Determines if the provided IP address is a loopback address.
+
+    :param address: string representing an IP address (IPv4 or IPv6)
+    :returns: bool indicating whether the address is a loopback address
+    """
+
+    ip = ipaddress.ip_address(address)
+    return ip.is_loopback
+
+
 @pass_context
 def kolla_address(context, network_name, hostname=None, override_var=None):
     """returns IP address on the requested network
@@ -124,6 +135,25 @@ def kolla_address(context, network_name, hostname=None, override_var=None):
 
     if address_family == 'ipv4':
         address = af_interface.get('address')
+
+        # NOTE(ednxzu): we do the following code in case the primary
+        # address of the interface is a loopback address. This is
+        # because sometimes, for example when doing BGP to the host,
+        # the host's ip address will be mounted on the loopback interface,
+        # as a secondary ip. This ensures that if there is a secondary
+        # address on a loopback interface, this secondary address is used.
+
+        non_loopback_addresses = []
+        if address and is_loopback(address):
+            ipv4_secondaries = interface.get("ipv4_secondaries", [])
+            non_loopback_addresses = [
+                sec["address"] for sec in ipv4_secondaries
+                if not is_loopback(sec["address"])
+            ]
+
+        if non_loopback_addresses:
+            address = non_loopback_addresses[0]
+
     elif address_family == 'ipv6':
         # ipv6 has no concept of a secondary address
         # explicitly exclude the vip addresses

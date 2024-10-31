@@ -19,6 +19,7 @@ import unittest
 import jinja2
 
 from kolla_ansible.exception import FilterError
+from kolla_ansible.kolla_address import is_loopback
 from kolla_ansible.kolla_address import kolla_address
 from kolla_ansible.kolla_url import kolla_url
 from kolla_ansible.put_address_in_context import put_address_in_context
@@ -389,6 +390,80 @@ class TestKollaAddressFilter(unittest.TestCase):
         })
         self.assertEqual(
             addr, kolla_address(context, 'api', None, override_var))
+
+    def test_is_loopback_ipv4(self):
+        self.assertTrue(is_loopback("127.0.0.1"))
+        self.assertFalse(is_loopback("192.0.2.1"))
+
+    def test_is_loopback_ipv6(self):
+        self.assertTrue(is_loopback("::1"))
+        self.assertFalse(is_loopback("2001:db8::1"))
+
+    def test_loopback_primary_with_nonloopback_secondary(self):
+        loopback_addr = "127.0.0.1"
+        nonloopback_addr = "192.0.2.1"
+        context = self._make_context({
+            "inventory_hostname": "primary",
+            "hostvars": {
+                "primary": {
+                    "api_address_family": "ipv4",
+                    "api_interface": "lo",
+                    "ansible_facts": {
+                        "lo": {
+                            "ipv4": {"address": loopback_addr},
+                            "ipv4_secondaries": [
+                                {"address": nonloopback_addr},
+                            ],
+                        },
+                    },
+                },
+            },
+        })
+        self.assertEqual(nonloopback_addr, kolla_address(context, "api"))
+
+    def test_loopback_primary_with_only_loopback_secondaries(self):
+        loopback_addr = "127.0.0.1"
+        loopback_secondary = "127.0.0.2"
+        context = self._make_context({
+            "inventory_hostname": "primary",
+            "hostvars": {
+                "primary": {
+                    "api_address_family": "ipv4",
+                    "api_interface": "lo",
+                    "ansible_facts": {
+                        "lo": {
+                            "ipv4": {"address": loopback_addr},
+                            "ipv4_secondaries": [
+                                {"address": loopback_secondary},
+                            ],
+                        },
+                    },
+                },
+            },
+        })
+        self.assertEqual(loopback_addr, kolla_address(context, "api"))
+
+    def test_nonloopback_primary_ignores_secondaries(self):
+        primary_addr = "192.0.2.10"
+        secondary_addr = "192.0.2.11"
+        context = self._make_context({
+            "inventory_hostname": "primary",
+            "hostvars": {
+                "primary": {
+                    "api_address_family": "ipv4",
+                    "api_interface": "eth0",
+                    "ansible_facts": {
+                        "eth0": {
+                            "ipv4": {"address": primary_addr},
+                            "ipv4_secondaries": [
+                                {"address": secondary_addr},
+                            ],
+                        },
+                    },
+                },
+            },
+        })
+        self.assertEqual(primary_addr, kolla_address(context, "api"))
 
 
 class TestKollaUrlFilter(unittest.TestCase):
