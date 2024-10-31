@@ -74,13 +74,19 @@
       - zuul: openstack/kolla
 
 - job:
-    name: kolla-ansible-kvm-base
     parent: kolla-ansible-base
-    voting: false
+    name: kolla-ansible-scenario-base
     files:
       - ^requirements-core.yml
-      - ^ansible/roles/(nova-cell)/
       - ^tests/templates/(inventory|globals-default.j2)
+      - ^tests/(pre|run).yml
+
+- job:
+    name: kolla-ansible-kvm-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(nova-cell)/
       - ^tests/templates/nova-compute-overrides.j2
     vars:
       virt_type: kvm
@@ -102,25 +108,21 @@
 
 - job:
     name: kolla-ansible-bifrost-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/bifrost/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-bifrost.sh
     vars:
       scenario: bifrost
 
 - job:
     name: kolla-ansible-ironic-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(ironic|neutron|nova|nova-cell)/
       - ^tests/deploy-tenks\.sh$
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/templates/ironic-overrides\.j2$
       - ^tests/templates/tenks-deploy-config\.yml\.j2$
       - ^tests/test-dashboard\.sh$
@@ -132,13 +134,11 @@
 
 - job:
     name: kolla-ansible-zun-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(zun|kuryr|etcd|cinder|iscsi)/
       - ^tests/setup_disks.sh
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-core-openstack.sh
       - ^tests/test-zun.sh
       - ^tests/test-dashboard.sh
@@ -147,14 +147,12 @@
 
 - job:
     name: kolla-ansible-swift-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(glance|swift)/
       - ^tests/setup_disks.sh
       - ^tests/init-swift.sh
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-core-openstack.sh
       - ^tests/test-dashboard.sh
       - ^tests/test-swift.sh
@@ -170,12 +168,10 @@
 
 - job:
     name: kolla-ansible-magnum-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(designate|magnum|trove)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-dashboard.sh
       - ^tests/test-magnum.sh
     vars:
@@ -183,12 +179,10 @@
 
 - job:
     name: kolla-ansible-octavia-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(octavia|octavia-certificates)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-dashboard.sh
       - ^tests/test-octavia.sh
     vars:
@@ -196,13 +190,11 @@
 
 - job:
     name: kolla-ansible-masakari-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/masakari/
       - ^ansible/roles/hacluster/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-masakari.sh
       - ^tests/test-dashboard.sh
     vars:
@@ -210,24 +202,20 @@
 
 - job:
     name: kolla-ansible-mariadb-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: true
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/mariadb/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-mariadb.sh
     vars:
       scenario: mariadb
 
 - job:
     name: kolla-ansible-scenario-nfv-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(aodh|barbican|heat|mistral|redis|tacker)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-scenario-nfv.sh
       - ^tests/test-dashboard.sh
     vars:
@@ -235,12 +223,10 @@
 
 - job:
     name: kolla-ansible-cells-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/nova/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^ansible/roles/loadbalancer/
       - ^tests/test-core-openstack.sh
       - ^tests/test-proxysql.sh
@@ -249,12 +235,10 @@
 
 - job:
     name: kolla-ansible-ovn-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(neutron|octavia|openvswitch|ovn-controller|ovn-db)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-ovn.sh
       - ^tests/test-core-openstack.sh
       - ^tests/reconfigure.sh
@@ -263,24 +247,20 @@
 
 - job:
     name: kolla-ansible-prometheus-opensearch-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(common|opensearch|grafana|prometheus)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-prometheus-opensearch.sh
     vars:
       scenario: prometheus-opensearch
 
 - job:
     name: kolla-ansible-venus-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/(common|opensearch|venus)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-venus.sh
     vars:
       scenario: venus
@@ -295,19 +275,19 @@
     voting: false
     files:
       - ^requirements-core.yml
+      - ^tests/templates/(inventory|globals-default.j2)
+      - ^tests/(pre|run).yml
       - ^kolla_ansible/
       - ^tests/run-hashi-vault.yml
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-hashicorp-vault-passwords.sh
 
 - job:
     name: kolla-ansible-haproxy-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/haproxy/
       - ^kolla_ansible/kolla_url.py
-      - ^tests/templates/(inventory|globals-default.j2)
     vars:
       external_api_interface_name: vxlan2
       external_api_network_prefix: "192.0.3."
@@ -317,13 +297,11 @@
 
 - job:
     name: kolla-ansible-lets-encrypt-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/common/templates/conf/input/11-letsencrypt.conf.j2
       - ^ansible/roles/(letsencrypt|loadbalancer)/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-core-openstack.sh
       - ^tests/test-dashboard.sh
       - ^tests/deploy.sh
@@ -334,24 +312,20 @@
 
 - job:
     name: kolla-ansible-skyline-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^requirements-core.yml
+    files: !inherit
       - ^ansible/roles/skyline/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-skyline.sh
     vars:
       scenario: skyline
 
 - job:
     name: kolla-ansible-skyline-sso-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
     files:
-      - ^requirements-core.yml
       - ^ansible/roles/skyline/
-      - ^tests/templates/(inventory|globals-default.j2)
       - ^tests/test-skyline-sso.sh
     vars:
       scenario: skyline-sso
