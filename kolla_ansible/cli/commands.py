@@ -201,7 +201,8 @@ class OctaviaCertificates(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         extra_vars = {}
 
-        if hasattr(parsed_args, "check_expiry"):
+        if hasattr(parsed_args, "check_expiry") \
+                and parsed_args.check_expiry is not None:
             self.app.LOG.info("Checking if certificates expire "
                               "within given number of days.")
             extra_vars["octavia_certs_check_expiry"] = "yes"
