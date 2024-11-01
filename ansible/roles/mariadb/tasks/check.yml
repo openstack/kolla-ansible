@@ -4,19 +4,18 @@
     role: service-check
 
 - name: Wait for MariaDB service to be ready through VIP
-  become: true
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_query
     module_args:
-      login_db: "mysql"
-      login_host: "{{ api_interface_address }}"
-      login_port: "{{ mariadb_port }}"
-      login_user: "{{ database_user }}"
+      ca_cert: "{{ openstack_cacert if database_enable_tls_internal | bool else omit }}"
+      login_user: "{{ mariadb_shard_database_user }}"
       login_password: "{{ database_password }}"
+      login_host: "{{ database_address }}"
       query: "SHOW DATABASES;"
   register: result
   until: result is success
   changed_when: False
   retries: 6
   delay: 10
+  become: true

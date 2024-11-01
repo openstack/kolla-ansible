@@ -33,3 +33,15 @@
     dest: "{{ node_config_directory }}/nova-cell-bootstrap/nova.conf"
     mode: "0660"
   when: inventory_hostname == groups[nova_cell_conductor_group][0]
+
+- name: "Copy certificates and keys for {{ project_name }}"
+  import_role:
+    role: service-cert-copy
+  vars:
+    project_services:
+      nova-cell-bootstrap:
+        group: "{{ nova_cell_conductor_group }}"
+        enabled: True
+  when:
+    - nova_cell_copy_certs | bool
+    - inventory_hostname == groups[nova_cell_conductor_group][0]
