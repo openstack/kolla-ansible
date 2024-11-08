@@ -107,15 +107,16 @@
         module_args:
           user: "{{ item.user }}"
           role: "{{ item.role }}"
-          project: "{{ item.project }}"
-          domain: "{{ service_ks_register_domain }}"
+          project: "{{ item.project | default(omit) }}"
+          domain: "{{ item.domain | default(omit) }}"
+          system: "{{ item.system | default(omit) }}"
           region_name: "{{ service_ks_register_region_name }}"
           auth: "{{ service_ks_register_auth }}"
           interface: "{{ service_ks_register_interface }}"
           cacert: "{{ service_ks_cacert }}"
       with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
       loop_control:
-        label: "{{ item.user }} -> {{ item.project }} -> {{ item.role }}"
+        label: "{{ item.user }} -> {{ item.project | default(item.domain) | default(item.system) }} -> {{ item.role }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
