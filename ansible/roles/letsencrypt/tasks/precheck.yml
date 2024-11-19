@@ -31,3 +31,14 @@
   when:
     - enable_letsencrypt | bool
     - kolla_enable_tls_external | bool
+
+- name: Validating letsencrypt EAB variables
+  run_once: true
+  assert:
+    that:
+      - letsencrypt_eab_key_id != ""
+      - letsencrypt_eab_hmac != ""
+    fail_msg: "Both letsencrypt_eab_key_id and letsencrypt_eab_hmac must be set when External account binding is turned on."
+  when:
+    - enable_letsencrypt | bool
+    - letsencrypt_external_account_binding | bool
