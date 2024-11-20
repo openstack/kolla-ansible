@@ -173,6 +173,6 @@ def run_command(executable: str,
     if quiet:
         kwargs["stdout"] = subprocess.DEVNULL
         kwargs["stderr"] = subprocess.DEVNULL
-        subprocess.run(full_cmd, shell=False, **kwargs)  # nosec
+        subprocess.run(full_cmd, check=True, shell=False, **kwargs)  # nosec
     else:
-        subprocess.run(full_cmd, shell=False, **kwargs)  # nosec
+        subprocess.run(full_cmd, check=True, shell=False, **kwargs)  # nosec
