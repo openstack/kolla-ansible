@@ -1,20 +1,27 @@
 {% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = '/usr/sbin/{{ apache_binary }} -DFOREGROUND' if nova_wsgi_provider == 'apache' else 'uwsgi /etc/nova/nova-api-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/nova.conf",
             "dest": "/etc/nova/nova.conf",
             "owner": "nova",
             "perm": "0600"
-        },
+        }{% if nova_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/nova-api-wsgi.conf",
             "dest": "/etc/{{ apache_conf_dir }}/nova-api-wsgi.conf",
             "owner": "nova",
             "perm": "0600"
-        }{% if nova_policy_file is defined %},
+        }{% elif nova_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/nova-api-uwsgi.ini",
+            "dest": "/etc/nova/nova-api-uwsgi.ini",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if nova_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ nova_policy_file }}",
             "dest": "/etc/nova/{{ nova_policy_file }}",
