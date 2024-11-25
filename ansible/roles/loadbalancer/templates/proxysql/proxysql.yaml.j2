@@ -10,13 +10,13 @@ errorlog: "/var/log/kolla/proxysql/proxysql.log"
 
 admin_variables:
    admin_credentials: "{{ proxysql_admin_user }}:{{ proxysql_admin_password }}"
-   mysql_ifaces: "{{ api_interface_address }}:{{ proxysql_admin_port }};{{ kolla_internal_vip_address }}:{{ proxysql_admin_port }};/var/lib/kolla/proxysql/admin.sock"
+   mysql_ifaces: "{{ api_interface_address | put_address_in_context('url') }}:{{ proxysql_admin_port }};{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ proxysql_admin_port }};/var/lib/kolla/proxysql/admin.sock"
    stats_credentials: "{{ proxysql_stats_user }}:{{ proxysql_stats_password }}"
 
 mysql_variables:
    threads: {{ proxysql_workers }}
    max_connections: {{ proxysql_max_connections }}
-   interfaces: "{{ kolla_internal_vip_address }}:{{ database_port }}"
+   interfaces: "{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ database_port }}"
    monitor_username: "{{ mariadb_monitor_user }}"
    monitor_password: "{{ mariadb_monitor_password }}"
 
