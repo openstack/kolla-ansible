@@ -77,14 +77,27 @@ fi
 
 echo "Getting folders name..."
 for dir in $FOLDER_PATH/*; do
+    skip="false"
+
+    for inventory in $kolla_ansible_inventories; do
+        if [ "$dir" == "$inventory" ]; then
+            skip="true"
+            break
+        fi
+    done
+
     if [ "$dir" == "$FOLDER_PATH/passwords.yml" ] || \
        [ "$dir" == "$FOLDER_PATH/globals.yml" ] || \
        [ "$dir" == "$FOLDER_PATH/globals.d" ] || \
        [ "$dir" == "$FOLDER_PATH/kolla-build.conf" ] || \
        [ "$dir" == "$FOLDER_PATH/config" ] || \
        [ "$dir" == "$FOLDER_PATH/certificates" ]; then
-        echo "Skipping:" $dir
-    else
+        echo "Skipping: $dir"
+        skip="true"
+    fi
+
+    # If it's not to be skipped, remove it
+    if [ "$skip" == "false" ]; then
         rm -rfv $dir
     fi
 done
