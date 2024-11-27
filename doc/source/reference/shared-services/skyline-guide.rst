@@ -81,3 +81,18 @@ To replace all use
 Since the files are overwritten inside the container, you have to remove the
 container and recreate it if you want to revert to the default logos. Just
 removing the configuration will not remove the files.
+
+External Swift
+~~~~~~~~~~~~~~
+
+If you are running an external Swift compatible object store you can add
+it to the skyline dashboard. Since Skyline can not use Keystone's
+endpoint api, you have to tell it the url of your external service.
+
+You have to set ``skyline_external_swift`` and
+``skyline_external_swift_url`` in your configuration:
+
+.. code-block:: yaml
+
+   skyline_external_swift: "yes"
+   skyline_external_swift_url: "https://<your-host>/swift"
