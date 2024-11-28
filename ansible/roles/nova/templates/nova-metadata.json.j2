@@ -1,0 +1,50 @@
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{
+    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/nova.conf",
+            "dest": "/etc/nova/nova.conf",
+            "owner": "nova",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/nova-metadata-wsgi.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/nova-metadata-wsgi.conf",
+            "owner": "nova",
+            "perm": "0600"
+        }{% if nova_policy_file is defined %},
+        {
+            "source": "{{ container_config_directory }}/{{ nova_policy_file }}",
+            "dest": "/etc/nova/{{ nova_policy_file }}",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if nova_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/nova-cert.pem",
+            "dest": "/etc/nova/certs/nova-cert.pem",
+            "owner": "nova",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/nova-key.pem",
+            "dest": "/etc/nova/certs/nova-key.pem",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if vendordata_file_path is defined %},
+        {
+            "source": "{{ container_config_directory }}/vendordata.json",
+            "dest": "/etc/nova/vendordata.json",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/nova",
+            "owner": "nova:nova",
+            "recurse": true
+        }
+    ]
+}
