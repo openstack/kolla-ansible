@@ -113,7 +113,15 @@ function prepare_images {
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [DEFAULT]
 engine = ${CONTAINER_ENGINE}
+EOF
 
+    if [[ $BASE_DISTRO == "debian" || $BASE_DISTRO == "ubuntu" ]]; then
+        sudo tee -a /etc/kolla/kolla-build.conf <<EOF
+base_image = quay.io/openstack.kolla/${BASE_DISTRO}
+EOF
+    fi
+
+    sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}
 EOF
