@@ -50,6 +50,65 @@
   when:
     - vendordata_file.stat.exists
 
+- name: Ensure compute_id exists in nova_compute volume
+  vars:
+    service: "{{ nova_cell_services['nova-compute'] }}"
+    hypervisor_nodename: "{{ hostvars[inventory_hostname].ansible_facts.nodename }}"
+  when: service | service_enabled_and_mapped_to_host
+  block:
+    - name: List all hypervisors
+      kolla_toolbox:
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.resources
+        module_args:
+          auth: "{{ openstack_nova_auth }}"
+          ca_cert: "{{ openstack_cacert }}"
+          region_name: "{{ openstack_region_name }}"
+          endpoint_type: "{{ openstack_interface }}"
+          service: "compute"
+          type: "hypervisor"
+      register: hypervisors
+      check_mode: false
+      become: true
+      delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+
+    - name: Match current hypervisor
+      ansible.builtin.set_fact:
+        matched_hypervisors: >-
+          {{ hypervisors.resources | selectattr('name', 'equalto', hypervisor_nodename) }}
+      when: hypervisors.resources | length > 0
+
+    - name: Assert that only one hypervisor was matched
+      ansible.builtin.assert:
+        that:
+          - matched_hypervisors | length == 1
+        fail_msg: |
+          "Found multiple compute services with same host name, please check your Nova "
+          "compute agents list and fix it. The query with hypervisor name "
+          "'{{ hypervisor_nodename }}' returned following: {{ matched_hypervisors }}"
+      when:
+        - hypervisors.resources | length > 0
+        - matched_hypervisors | length > 0
+
+    - name: Copy the matched hypervisor UUID to compute_id
+      ansible.builtin.copy:
+        content: "{{ matched_hypervisors[0].id }}"
+        dest: "{{ node_config_directory }}/nova-compute/compute_id"
+        mode: "0660"
+      become: true
+      when:
+        - hypervisors.resources | length > 0
+        - matched_hypervisors | length == 1
+
+    # If the host was never registered, create a new hypervisor id and copy as compute_id
+    - name: Generate a new UUID then copy to compute_id
+      ansible.builtin.copy:
+        content: "{{ hypervisor_nodename | to_uuid }}"
+        dest: "{{ node_config_directory }}/nova-compute/compute_id"
+        mode: "0660"
+      become: true
+      when: hypervisors.resources | length == 0 or matched_hypervisors | length == 0
+
 - name: Copying over config.json files for services
   become: true
   template:
