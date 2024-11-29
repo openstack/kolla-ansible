@@ -21,6 +21,7 @@ import sys
 import yaml
 
 from importlib.metadata import Distribution
+from time import sleep
 
 LOG = logging.getLogger(__name__)
 
@@ -106,12 +107,24 @@ def galaxy_collection_install(requirements_file: str,
     args += ["--requirements-file", requirements_file]
     if force:
         args += ["--force"]
-    try:
-        run_command("ansible-galaxy", args)
-    except subprocess.CalledProcessError as e:
-        LOG.error("Failed to install Ansible collections from %s via Ansible "
-                  "Galaxy: returncode %d", requirements_file, e.returncode)
-        sys.exit(e.returncode)
+
+    for retry_count in range(1, 6):
+        try:
+            run_command("ansible-galaxy", args)
+        except subprocess.CalledProcessError as e:
+            if retry_count < 5:
+                LOG.warning(f"Failed to install Ansible collections from "
+                            f"{requirements_file} using Ansible Galaxy "
+                            f"(error: {e}) (retry: {retry_count}/5)")
+                sleep(2)
+                continue
+            else:
+                LOG.error(f"Failed to install Ansible collections from "
+                          f"{requirements_file} using Ansible Galaxy "
+                          f"(error: {e}) after 5 retries")
+                LOG.error("Exiting")
+                sys.exit(e.returncode)
+        break
 
 
 def read_file(path: os.path, mode: str = "r") -> str | bytes:
