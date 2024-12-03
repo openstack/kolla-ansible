@@ -4,7 +4,6 @@
 - name: "{{ kolla_role_name | default(project_name) }} | Check containers"
   become: true
   vars:
-    service_name: "{{ item.key }}"
     service: "{{ item.value }}"
   kolla_container:
     action: "compare_container"
@@ -26,5 +25,13 @@
     command: "{{ service.command | default(omit) }}"
     cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
   with_dict: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ service_name }} container"
+  register: container_check
+
+# NOTE(yoctozepto): Must be a separate task because one cannot see the whole
+# result in the previous task and Ansible has a quirk regarding notifiers.
+# For details see https://github.com/ansible/ansible/issues/22579
+- name: "{{ kolla_role_name | default(project_name) }} | Notify handlers to restart containers"
+  debug:
+    msg: Notifying handlers
+  changed_when: container_check is changed
+  notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
