@@ -35,8 +35,6 @@
   with_nested:
     - "{{ cinder_services | dict2items }}"
     - "{{ cinder_ceph_backends + [cinder_backup_ceph_backend] }}"
-  notify:
-    - "Restart {{ service_name }} container"
 
 - name: Copy over Ceph keyring files for cinder-volume
   vars:
@@ -51,8 +49,6 @@
   when:
     - external_ceph_cephx_enabled | bool
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart cinder-volume container
 
 - name: Copy over Ceph keyring files for cinder-backup
   vars:
@@ -69,8 +65,6 @@
   when:
     - external_ceph_cephx_enabled | bool
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart cinder-backup container
 
 - name: Ensuring config directory has correct owner and permission
   become: true

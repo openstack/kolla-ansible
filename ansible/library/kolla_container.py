@@ -267,6 +267,8 @@ EXAMPLES = '''
 def generate_module():
     # NOTE(jeffrey4l): add empty string '' to choices let us use
     # pid_mode: "{{ service.pid_mode | default ('') }}" in yaml
+    # NOTE(r-krcek): arguments_spec should also be reflected in the list of
+    # arguments in service-check-containers role
     argument_spec = dict(
         common_options=dict(required=False, type='dict', default=dict()),
         action=dict(required=True, type='str',

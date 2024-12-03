@@ -1,15 +1,3 @@
 ---
-- name: Check common containers
-  become: true
-  kolla_container:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    volumes: "{{ item.value.volumes }}"
-    dimensions: "{{ item.value.dimensions }}"
-    privileged: "{{ item.value.privileged | default(False) }}"
-    environment: "{{ item.value.environment }}"
-  with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
+- import_role:
+    name: service-check-containers

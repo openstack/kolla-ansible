@@ -1,15 +1,3 @@
 ---
-- name: Check iscsi containers
-  become: true
-  kolla_container:
-    action: "compare_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item.value.container_name }}"
-    image: "{{ item.value.image }}"
-    ipc_mode: "{{ item.value.ipc_mode }}"
-    privileged: "{{ item.value.privileged | default(False) }}"
-    volumes: "{{ item.value.volumes }}"
-    dimensions: "{{ item.value.dimensions }}"
-  with_dict: "{{ iscsi_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
+- import_role:
+    name: service-check-containers
