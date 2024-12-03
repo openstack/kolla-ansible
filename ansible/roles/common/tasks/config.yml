@@ -46,8 +46,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Find custom fluentd input config files
   find:
@@ -147,8 +145,6 @@
   become: true
   when:
     - common_services.fluentd | service_enabled_and_mapped_to_host
-  notify:
-    - Restart fluentd container
 
 - name: Copying over cron logrotate config file
   vars:
@@ -214,8 +210,6 @@
   become: true
   when:
     - common_services.cron | service_enabled_and_mapped_to_host
-  notify:
-    - Restart cron container
 
 - name: Ensure RabbitMQ Erlang cookie exists
   become: true
@@ -226,8 +220,6 @@
   when:
     - common_services['kolla-toolbox'] | service_enabled_and_mapped_to_host
     - enable_rabbitmq | bool
-  notify:
-    - Restart kolla-toolbox container
 
 - name: Ensuring config directories have correct owner and permission
   become: true

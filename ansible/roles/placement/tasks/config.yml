@@ -39,8 +39,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   with_dict: "{{ placement_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over placement.conf
   become: true
@@ -56,8 +54,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/placement.conf"
     mode: "0660"
   with_dict: "{{ placement_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over placement-api wsgi configuration
   become: true
@@ -72,8 +68,6 @@
     - "{{ node_custom_config }}/placement/{{ inventory_hostname }}/placement-api-wsgi.conf"
     - "{{ node_custom_config }}/placement/placement-api-wsgi.conf"
     - "placement-api-wsgi.conf.j2"
-  notify:
-    - Restart placement-api container
 
 - name: Copying over migrate-db.rc.j2 configuration
   become: true
@@ -84,8 +78,6 @@
     dest: "{{ node_config_directory }}/placement-api/migrate-db.rc"
     mode: "0660"
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart placement-api container
 
 - name: Copying over existing policy file
   become: true
@@ -96,5 +88,3 @@
   when:
     - placement_policy_file is defined
   with_dict: "{{ placement_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"

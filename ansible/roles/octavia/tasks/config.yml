@@ -40,8 +40,6 @@
   when:
     - octavia_policy_file is defined
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - include_tasks: copy-certs.yml
   when:
@@ -54,8 +52,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over octavia-wsgi.conf
   vars:
@@ -70,8 +66,6 @@
     - "{{ node_custom_config }}/octavia/octavia-wsgi.conf"
     - "octavia-wsgi.conf.j2"
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart octavia-api container
 
 - name: Copying over octavia.conf
   vars:
@@ -87,8 +81,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - block:
 
@@ -114,8 +106,6 @@
       become: true
       when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-worker container
 
     - name: Copying certificate files for octavia-housekeeping
       vars:
@@ -127,8 +117,6 @@
       become: true
       when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-housekeeping container
 
     - name: Copying certificate files for octavia-health-manager
       vars:
@@ -140,8 +128,6 @@
       become: true
       when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-health-manager container
 
   when: "'amphora' in octavia_provider_drivers"
   vars:

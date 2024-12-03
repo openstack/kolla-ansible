@@ -13,8 +13,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-openvswitch-agent container
   vars:
@@ -31,8 +29,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart fake neutron-openvswitch-agent container
   vars:
@@ -49,8 +45,6 @@
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-linuxbridge-agent container
   vars:
@@ -67,8 +61,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-dhcp-agent container
   vars:
@@ -84,8 +76,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Get container facts
   become: true
@@ -95,8 +85,6 @@
     name:
       - neutron_l3_agent
   register: container_facts
-  when:
-    - kolla_action != "config"
   listen: Restart neutron-l3-agent container
 
 - name: Group hosts
@@ -120,7 +108,6 @@
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - groups['neutron_l3_agent_running_False'] is defined
     - inventory_hostname in groups['neutron_l3_agent_running_False']
   listen: Restart neutron-l3-agent container
@@ -131,7 +118,6 @@
   when:
     - groups['neutron_l3_agent_running_False'] is defined
     - groups['neutron_l3_agent_running_True'] is defined
-    - kolla_action != "config"
   listen: Restart neutron-l3-agent container
 
 - name: Restart running neutron-l3-agent container
@@ -150,7 +136,6 @@
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
-    - kolla_action != "config"
     - inventory_hostname == item
   loop: "{{ groups['neutron_l3_agent_running_True'] | default([]) }}"
   loop_control:
@@ -171,8 +156,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-mlnx-agent container
   vars:
@@ -187,8 +170,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-eswitchd container
   vars:
@@ -203,8 +184,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-tls-proxy container
   vars:
@@ -219,8 +198,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-metadata-agent container
   vars:
@@ -236,8 +213,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-ovn-metadata-agent container
   vars:
@@ -253,8 +228,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-bgp-dragent container
   vars:
@@ -270,8 +243,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-infoblox-ipam-agent container
   vars:
@@ -287,8 +258,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-metering-agent container
   vars:
@@ -304,8 +273,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart ironic-neutron-agent container
   vars:
@@ -321,8 +288,6 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart neutron-ovn-agent container
   vars:
@@ -338,5 +303,3 @@
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"

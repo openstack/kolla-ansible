@@ -53,8 +53,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over barbican-api.ini
   vars:
@@ -68,8 +66,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart barbican-api container
 
 - name: Checking whether barbican-api-paste.ini file exists
   vars:
@@ -92,8 +88,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - check_barbican_api_paste_ini.stat.exists
-  notify:
-    - Restart barbican-api container
 
 - name: Copying over barbican.conf
   vars:
@@ -109,8 +103,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   template:
@@ -121,5 +113,3 @@
   when:
     - barbican_policy_file is defined
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container

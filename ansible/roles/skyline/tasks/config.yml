@@ -22,8 +22,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over gunicorn.py files for services
   vars:
@@ -37,8 +35,6 @@
   with_first_found:
     - "{{ node_custom_config }}/skyline/gunicorn.py"
     - "gunicorn.py.j2"
-  notify:
-    - "Restart skyline-apiserver container"
 
 - name: Copying over nginx.conf files for services
   vars:
@@ -52,8 +48,6 @@
   with_first_found:
     - "{{ node_custom_config }}/skyline/nginx.conf"
     - "nginx.conf.j2"
-  notify:
-    - "Restart skyline-console container"
 
 - name: Copying over config.json files for services
   template:
@@ -62,8 +56,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over custom logos
   become: true
@@ -77,5 +69,3 @@
     - service | service_enabled_and_mapped_to_host
     - skyline_custom_logos | length > 0
   with_items: "{{ skyline_custom_logos }}"
-  notify:
-    - Restart skyline-console container

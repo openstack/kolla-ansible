@@ -55,8 +55,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over glance-api.conf
   vars:
@@ -72,8 +70,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart glance-api container
 
 - name: Copying over glance-cache.conf for glance_api
   vars:
@@ -90,8 +86,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - enable_glance_image_cache | bool
-  notify:
-    - Restart glance-api container
 
 - name: Copying over glance-swift.conf for glance_api
   vars:
@@ -108,8 +102,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - glance_backend_swift | bool
-  notify:
-    - Restart glance-api container
 
 - name: Copying over glance-image-import.conf
   vars:
@@ -122,8 +114,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - glance_enable_interoperable_image_import | bool
-  notify:
-    - Restart glance-api container
 
 - name: Copying over property-protections-rules.conf
   vars:
@@ -136,8 +126,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - glance_enable_property_protection | bool
-  notify:
-    - Restart glance-api container
 
 - name: Copying over existing policy file
   vars:
@@ -150,8 +138,6 @@
   when:
     - glance_policy_file is defined
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart glance-api container
 
 - name: Copying over glance-haproxy-tls.cfg
   vars:
@@ -166,5 +152,3 @@
     - "{{ node_custom_config }}/glance/glance-tls-proxy.cfg"
     - "glance-tls-proxy.cfg.j2"
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart glance-tls-proxy container

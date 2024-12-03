@@ -52,8 +52,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over nova.conf
   become: true
@@ -69,8 +67,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/nova.conf"
     mode: "0660"
   with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over existing policy file
   become: true
@@ -82,8 +78,6 @@
     - nova_policy_file is defined
     - item.key in nova_services_require_policy_json
   with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over nova-api-wsgi.conf
   vars:
@@ -94,8 +88,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - "Restart nova-api container"
 
 - name: Copying over vendordata file
   vars:
@@ -108,5 +100,3 @@
   when:
     - vendordata_file_path is defined
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - "Restart nova-api container"

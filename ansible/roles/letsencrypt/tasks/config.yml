@@ -16,8 +16,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ letsencrypt_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over letsencrypt-webserver.conf
   vars:
@@ -32,8 +30,6 @@
     - "{{ node_custom_config }}/letsencrypt/letsencrypt-webserver.conf"
     - "letsencrypt-webserver.conf.j2"
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart letsencrypt-webserver container
 
 - name: Copying files for letsencrypt-lego
   vars:
@@ -48,8 +44,6 @@
     - { src: "id_rsa.j2", dest: "id_rsa" }
     - { src: "letsencrypt-lego-run.sh.j2", dest: "letsencrypt-lego-run.sh" }
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart letsencrypt-lego container
 
 - include_tasks: copy-certs.yml
   when:

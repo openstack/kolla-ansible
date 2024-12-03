@@ -39,8 +39,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ kuryr_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart kuryr container
 
 - name: Copying over kuryr.conf
   vars:
@@ -56,8 +54,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ kuryr_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart kuryr container
 
 - name: Copying over kuryr.spec
   vars:
@@ -70,8 +66,6 @@
   when: service | service_enabled_and_mapped_to_host
   with_items:
     - "kuryr"
-  notify:
-    - Restart kuryr container
 
 - name: Copying over existing policy file
   template:
@@ -82,5 +76,3 @@
   when:
     - kuryr_policy_file is defined
   with_dict: "{{ kuryr_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart kuryr container

@@ -8,8 +8,6 @@
 
 - name: Look up the cluster leader
   include_tasks: 'lookup_leader.yml'
-  when:
-    - kolla_action != "config"
   listen:
     - Restart etcd container
     - Bootstrap etcd services
@@ -42,7 +40,6 @@
   when:
     - inventory_hostname not in (groups.etcd_is_leader_True | default([]))
     - groups.etcd.index(inventory_hostname) % 4 == item
-    - kolla_action != "config"
     - kolla_action != "upgrade"
   listen:
     - Restart etcd container
@@ -58,7 +55,6 @@
   include_tasks: 'restart_services.yml'
   when:
     - inventory_hostname in (groups.etcd_is_leader_True | default([]))
-    - kolla_action != "config"
   listen:
     - Restart etcd container
     - Bootstrap etcd services

@@ -53,8 +53,6 @@
   when:
     - should_copy_custom_meter_definitions
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Check if the folder ["{{ node_custom_config }}/ceilometer/{{ ceilometer_dynamic_pollsters_local_folder }}"] for dynamic pollsters definitions exist
   stat:
@@ -93,8 +91,6 @@
   when:
     - should_copy_dynamic_pollster_definitions
     - inventory_hostname in groups['ceilometer-central']
-  notify:
-    - "Restart ceilometer-central container"
 
 - name: Check if custom polling.yaml exists
   stat:
@@ -112,8 +108,6 @@
   when:
     - ceilometer_polling_file.stat.exists
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Set ceilometer polling file's path
   set_fact:
@@ -137,8 +131,6 @@
   when:
     - ceilometer_gnocchi_resources_file.stat.exists
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Set ceilometer gnocchi_resources file's path
   set_fact:
@@ -176,8 +168,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over ceilometer.conf
   vars:
@@ -193,8 +183,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Check custom event_definitions.yaml exists
   stat:
@@ -215,8 +203,6 @@
   when:
     - ceilometer_event_definitions_file.stat.exists
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart ceilometer-notification container
 
 - name: Copying over event_definitions.yaml for notification service
   vars:
@@ -230,8 +216,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - not ceilometer_event_definitions_file.stat.exists
-  notify:
-    - Restart ceilometer-notification container
 
 - name: Copying over event_pipeline.yaml
   vars:
@@ -245,8 +229,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart ceilometer-notification container
 
 - name: Check custom pipeline.yaml exists
   stat:
@@ -271,8 +253,6 @@
     - ceilometer_pipeline_file.stat.exists
     - item.key in services_require_pipeline
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying over pipeline.yaml file
   vars:
@@ -289,8 +269,6 @@
     - item.key in services_require_pipeline
     - not ceilometer_pipeline_file.stat.exists
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: Copying VMware vCenter CA file
   become: true
@@ -304,8 +282,6 @@
     - nova_compute_virt_type == "vmware"
     - not vmware_vcenter_insecure | bool
     - service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart ceilometer-compute container
 
 - name: Copying over existing policy file
   template:
@@ -316,5 +292,3 @@
   when:
     - ceilometer_policy_file is defined
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"

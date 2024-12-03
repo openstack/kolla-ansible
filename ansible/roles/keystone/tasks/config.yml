@@ -46,8 +46,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over keystone.conf
   vars:
@@ -65,8 +63,6 @@
   with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
   when:
     - item.key in [ "keystone", "keystone-fernet" ]
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying keystone-startup script for keystone
   vars:
@@ -77,8 +73,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart keystone container
 
 - name: Create Keystone domain-specific config directory
   vars:
@@ -114,8 +108,6 @@
     - service | service_enabled_and_mapped_to_host
     - keystone_domain_directory.stat.exists
   with_items: "{{ keystone_domains.files | default([]) }}"
-  notify:
-    - Restart keystone container
 
 - name: Copying over existing policy file
   template:
@@ -127,8 +119,6 @@
     - item.key in [ "keystone", "keystone-fernet" ]
     - keystone_policy_file is defined
   with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - include_tasks: config-federation-oidc.yml
   when:
@@ -147,8 +137,6 @@
     - "{{ node_custom_config }}/keystone/{{ inventory_hostname }}/wsgi-keystone.conf"
     - "{{ node_custom_config }}/keystone/wsgi-keystone.conf"
     - "wsgi-keystone.conf.j2"
-  notify:
-    - Restart keystone container
 
 - name: Checking whether keystone-paste.ini file exists
   vars:
@@ -171,8 +159,6 @@
   when:
     - service | service_enabled_and_mapped_to_host
     - check_keystone_paste_ini.stat.exists
-  notify:
-    - Restart keystone container
 
 - name: Generate the required cron jobs for the node
   command: >
@@ -209,8 +195,6 @@
     - { src: "id_rsa", dest: "id_rsa" }
     - { src: "ssh_config.j2", dest: "ssh_config" }
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart keystone-fernet container
 
 - name: Copying files for keystone-ssh
   vars:
@@ -224,5 +208,3 @@
     - { src: "sshd_config.j2", dest: "sshd_config" }
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart keystone-ssh container

@@ -20,8 +20,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ telegraf_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart telegraf container
 
 - name: Copying over telegraf config file
   vars:
@@ -36,8 +34,6 @@
     - "{{ node_custom_config }}/telegraf/{{ inventory_hostname }}/telegraf.conf"
     - "{{ node_custom_config }}/telegraf/telegraf.conf"
     - "telegraf.conf.j2"
-  notify:
-    - Restart telegraf container
 
 - name: Copying over telegraf plugin files
   vars:
@@ -50,5 +46,3 @@
   when: service | service_enabled_and_mapped_to_host
   with_fileglob:
     - "{{ role_path }}/templates/config/*.conf"
-  notify:
-    - Restart telegraf container

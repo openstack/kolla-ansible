@@ -39,8 +39,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   with_dict: "{{ heat_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over heat.conf
   become: true
@@ -56,8 +54,6 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/heat.conf"
     mode: "0660"
   with_dict: "{{ heat_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over existing policy file
   become: true
@@ -68,8 +64,6 @@
   when:
     - heat_policy_file is defined
   with_dict: "{{ heat_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - Restart {{ item.key }} container
 
 - name: Copying over heat-api wsgi config
   vars:
@@ -80,8 +74,6 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart heat-api container
 
 - name: Copying over heat-api-cfn wsgi config
   vars:
@@ -92,5 +84,3 @@
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
-  notify:
-    - Restart heat-api-cfn container
