@@ -217,6 +217,8 @@ cinder_enable_conversion_tmpfs: false
 ####################
 # OpenStack
 ####################
+cinder_internal_endpoint: "{{ cinder_internal_base_endpoint }}/v3"
+cinder_public_endpoint: "{{ cinder_public_base_endpoint }}/v3"
 cinder_v3_internal_endpoint: "{{ cinder_internal_base_endpoint }}/v3/%(tenant_id)s"
 cinder_v3_public_endpoint: "{{ cinder_public_base_endpoint }}/v3/%(tenant_id)s"
 
@@ -341,9 +343,16 @@ cinder_source_version: "{{ kolla_source_version }}"
 # Keystone
 ####################
 cinder_ks_services:
+  - name: "cinder"
+    type: "block-storage"
+    description: "Openstack Block Storage"
+    endpoints:
+      - {'interface': 'internal', 'url': '{{ cinder_internal_endpoint }}'}
+      - {'interface': 'public', 'url': '{{ cinder_public_endpoint }}'}
+  # TODO(mattcrees): switch to absent in G-cycle, remove in H
   - name: "cinderv3"
     type: "volumev3"
-    description: "Openstack Block Storage"
+    description: "Openstack Block Storage (deprecated)"
     endpoints:
       - {'interface': 'internal', 'url': '{{ cinder_v3_internal_endpoint }}'}
       - {'interface': 'public', 'url': '{{ cinder_v3_public_endpoint }}'}
