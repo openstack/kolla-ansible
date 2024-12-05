@@ -1,17 +1,18 @@
 ---
 - block:
-    - name: "{{ project_name }} | Creating services"
+    - name: "{{ project_name }} | Creating/deleting services"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.catalog_service
         module_args:
           name: "{{ item.name }}"
-          service_type: "{{ item.type }}"
-          description: "{{ item.description }}"
+          service_type: "{{ item.type | default(omit) }}"
+          description: "{{ item.description | default(omit) }}"
           region_name: "{{ service_ks_register_region_name }}"
           auth: "{{ service_ks_register_auth }}"
           interface: "{{ service_ks_register_interface }}"
           cacert: "{{ service_ks_cacert }}"
+          state: "{{ item.state | default('present') }}"
       loop: "{{ service_ks_register_services }}"
       loop_control:
         label: "{{ item.name }} ({{ item.type }})"
@@ -21,7 +22,7 @@
       delay: "{{ service_ks_register_delay }}"
       when: item.enabled | default(True) | bool
 
-    - name: "{{ project_name }} | Creating endpoints"
+    - name: "{{ project_name }} | Creating/deleting endpoints"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.endpoint
@@ -34,6 +35,7 @@
           auth: "{{ service_ks_register_auth }}"
           interface: "{{ service_ks_register_interface }}"
           cacert: "{{ service_ks_cacert }}"
+          state: "{{ item.state | default('present') }}"
       with_subelements:
         - "{{ service_ks_register_services }}"
         - endpoints
