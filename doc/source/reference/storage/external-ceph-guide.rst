@@ -211,8 +211,7 @@ Cinder for Ceph includes following steps:
 
   * ``/etc/kolla/config/cinder/cinder-volume/ceph.client.cinder.keyring``
   * ``/etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring``
-  * ``/etc/kolla/config/cinder/cinder-backup/
-    ceph.client.cinder-backup.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring``
 
 .. note::
 
@@ -281,8 +280,7 @@ the use with availability zones:
   * ``/etc/kolla/config/cinder/cinder-volume/ceph1.client.cinder.keyring``
   * ``/etc/kolla/config/cinder/cinder-backup/ceph1.client.cinder.keyring``
   * ``/etc/kolla/config/cinder/cinder-backup/ceph2.client.cinder.keyring``
-  * ``/etc/kolla/config/cinder/cinder-backup/
-    ceph2.client.cinder-backup.keyring``
+  * ``/etc/kolla/config/cinder/cinder-backup/ceph2.client.cinder-backup.keyring``
 
 .. note::
 
@@ -296,8 +294,8 @@ Nova must also be configured to allow access to Cinder volumes:
   * ``/etc/kolla/config/nova/ceph.conf``
   * ``/etc/kolla/config/nova/ceph.client.cinder.keyring``
 
-To configure ``different Ceph backend`` for nova-compute host, which
-is useful for the use with availability zones:
+To configure different Ceph backends for nova-compute hosts, which is useful
+for use with availability zones:
 
 * Edit inventory file in the way described below:
 
@@ -364,8 +362,8 @@ Configuring Nova for Ceph includes following steps:
      keys for Cinder and Nova, you will need to override
      ``ceph_nova_user`` to match.
 
-To configure ``different Ceph backend`` for nova-compute host, which
-is useful for the use with availability zones:
+To configure different Ceph backends for nova-compute hosts, which is useful
+for use with availability zones:
 
 Edit inventory file in the way described below:
 
