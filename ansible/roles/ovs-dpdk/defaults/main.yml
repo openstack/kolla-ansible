@@ -40,7 +40,7 @@ ovsdpdk_services:
 ovs_bridge_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
 ovs_port_mappings: "{% for bridge in neutron_bridge_name.split(',') %} {{ neutron_external_interface.split(',')[loop.index0] }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
 tunnel_interface_network: "{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['network'] }}/{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['netmask'] }}"
-tunnel_interface_cidr: "{{ dpdk_tunnel_interface_address }}/{{ tunnel_interface_network | ipaddr('prefix') }}"
+tunnel_interface_cidr: "{{ dpdk_tunnel_interface_address }}/{{ tunnel_interface_network | ansible.utils.ipaddr('prefix') }}"
 ovs_cidr_mappings: "{% if neutron_bridge_name.split(',') | length != 1 %} {neutron_bridge_name.split(',')[0]}:{{ tunnel_interface_cidr }} {% else %} {{ neutron_bridge_name }}:{{ tunnel_interface_cidr }} {% endif %}"
 ovs_mem_channels: 4
 ovs_socket_mem: 1024
