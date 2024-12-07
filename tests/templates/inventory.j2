@@ -11,7 +11,7 @@
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 {% else %}
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 {% endif %}
@@ -31,28 +31,28 @@ control
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 {% else %}
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 {% endif %}
 
 [storage]
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 
 [monitoring]
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 
 [deployment]
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endfor %}
 
 {% if scenario == 'cells' %}
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {% set cell_name = 'cell' ~ loop.index %}
 [{{ cell_name }}]
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }} mariadb_shard_id={{ loop.index0 % 2 }}
@@ -123,7 +123,7 @@ storage
 # In CI we want Pacemaker to run on primary and secondary (to test with HA).
 
 [hacluster]
-{% for host in hostvars %}
+{% for host in hostvars | reject('equalto', 'localhost') %}
 {% if host in ['primary', 'secondary'] %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {% endif %}
