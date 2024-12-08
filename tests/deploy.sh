@@ -9,13 +9,13 @@ export PYTHONUNBUFFERED=1
 function init_pebble {
 
     sudo echo "[i] Pulling letsencrypt/pebble" > /tmp/logs/ansible/certificates
-    sudo docker pull letsencrypt/pebble &>> /tmp/logs/ansible/certificates
+    sudo docker pull quay.io/openstack.kolla/pebble:latest &>> /tmp/logs/ansible/certificates
 
     sudo echo "[i] Force removing old pebble container" &>> /tmp/logs/ansible/certificates
     sudo docker rm -f pebble &>> /tmp/logs/ansible/certificates
 
     sudo echo "[i] Run new pebble container" &>> /tmp/logs/ansible/certificates
-    sudo docker run --name pebble --rm -d -e "PEBBLE_VA_NOSLEEP=1" -e "PEBBLE_VA_ALWAYS_VALID=1" --net=host letsencrypt/pebble &>> /tmp/logs/ansible/certificates
+    sudo docker run --name pebble --rm -d -e "PEBBLE_VA_NOSLEEP=1" -e "PEBBLE_VA_ALWAYS_VALID=1" --net=host quay.io/openstack.kolla/pebble:latest &>> /tmp/logs/ansible/certificates
 
     sudo echo "[i] Wait for pebble container be up" &>> /tmp/logs/ansible/certificates
     # wait until pebble starts
