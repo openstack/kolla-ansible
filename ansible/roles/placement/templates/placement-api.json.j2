@@ -1,7 +1,8 @@
 {% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = '/usr/sbin/{{ apache_binary }} -DFOREGROUND' if placement_wsgi_provider == 'apache' else 'uwsgi /etc/placement/placement-api-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/placement.conf",
@@ -14,13 +15,19 @@
             "dest": "/etc/placement/{{ placement_policy_file }}",
             "owner": "placement",
             "perm": "0600"
-        }{% endif %},
+        }{% endif %}{% if placement_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/placement-api-wsgi.conf",
             "dest": "/etc/{{ apache_conf_dir }}/00-placement-api.conf",
             "owner": "placement",
             "perm": "0600"
-        },
+        }{% elif placement_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/placement-api-uwsgi.ini",
+            "dest": "/etc/placement/placement-api-uwsgi.ini",
+            "owner": "placement",
+            "perm": "0600"
+        }{% endif %},
         {
             "source": "{{ container_config_directory }}/migrate-db.rc",
             "dest": "/etc/placement/migrate-db.rc",
