@@ -122,22 +122,23 @@ openstack_projects = [
 # used only to denote unmaintained branches, and it is not intended to be used for
 # replacing anything in documentation.
 
-KOLLA_OPENSTACK_RELEASE = openstackdocstheme.ext._get_series_name()
+OPENSTACK_RELEASE = openstackdocstheme.ext._get_series_name()
 
 KOLLA_OPENSTACK_RELEASE_UNMAINTAINED = [
-    'yoga',
-    'zed',
+    '2023.1',
 ]
 
-if KOLLA_OPENSTACK_RELEASE == 'latest':
+if OPENSTACK_RELEASE == 'latest':
     KOLLA_OPENSTACK_RELEASE = 'master'
     KOLLA_BRANCH_NAME = 'master'
     TESTED_RUNTIMES_GOVERNANCE_URL = 'https://governance.openstack.org/tc/reference/runtimes/'
-elif KOLLA_OPENSTACK_RELEASE in KOLLA_OPENSTACK_RELEASE_UNMAINTAINED:
+elif OPENSTACK_RELEASE in KOLLA_OPENSTACK_RELEASE_UNMAINTAINED:
+    KOLLA_OPENSTACK_RELEASE = OPENSTACK_RELEASE
     KOLLA_BRANCH_NAME = 'unmaintained/{}'.format(KOLLA_OPENSTACK_RELEASE)
     TESTED_RUNTIMES_GOVERNANCE_URL =\
         'https://governance.openstack.org/tc/reference/runtimes/{}.html'.format(KOLLA_OPENSTACK_RELEASE)
 else:
+    KOLLA_OPENSTACK_RELEASE = OPENSTACK_RELEASE
     KOLLA_BRANCH_NAME = 'stable/{}'.format(KOLLA_OPENSTACK_RELEASE)
     TESTED_RUNTIMES_GOVERNANCE_URL =\
         'https://governance.openstack.org/tc/reference/runtimes/{}.html'.format(KOLLA_OPENSTACK_RELEASE)
@@ -155,6 +156,7 @@ GLOBAL_VARIABLE_MAP = {
     '|KOLLA_OPENSTACK_RELEASE|': KOLLA_OPENSTACK_RELEASE,
     '|KOLLA_BRANCH_NAME|': KOLLA_BRANCH_NAME,
     '|KOLLA_BRANCH_NAME_DASHED|': KOLLA_BRANCH_NAME.replace('/', '-'),
+    '|OPENSTACK_RELEASE|': OPENSTACK_RELEASE,
     '|TESTED_RUNTIMES_GOVERNANCE_URL|': TESTED_RUNTIMES_GOVERNANCE_URL,
 }
 
