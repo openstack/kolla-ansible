@@ -204,12 +204,16 @@
       - { name: "watcher", enabled: "{{ enable_watcher | bool }}" }
       - { name: "zun", enabled: "{{ enable_zun | bool }}" }
   template:
-    src: "cron-logrotate-global.conf.j2"
+    src: "{{ item }}"
     dest: "{{ node_config_directory }}/cron/logrotate.conf"
     mode: "0660"
   become: true
   when:
     - common_services.cron | service_enabled_and_mapped_to_host
+  with_first_found:
+    - "{{ node_custom_config }}/cron/{{ inventory_hostname }}/cron-logrotate-global.conf"
+    - "{{ node_custom_config }}/cron/cron-logrotate-global.conf"
+    - "cron-logrotate-global.conf.j2"
 
 - name: Ensure RabbitMQ Erlang cookie exists
   become: true
