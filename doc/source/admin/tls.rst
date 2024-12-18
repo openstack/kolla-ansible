@@ -72,7 +72,7 @@ using the ``multinode`` inventory:
 
 .. code-block:: console
 
-  kolla-ansible -i ~/multinode certificates
+  kolla-ansible certificates -i ~/multinode
 
 TLS Configuration for internal/external VIP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,7 +352,7 @@ configuration file and the inventory file:
 
 .. code-block:: console
 
-  kolla-ansible -i multinode certificates
+  kolla-ansible certificates -i multinode
 
 The ``certificates`` role performs the following actions:
 

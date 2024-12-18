@@ -301,19 +301,19 @@ accordingly.
   .. code-block:: console
 
      cd kolla-ansible/tools
-     ./kolla-ansible -i ../../all-in-one bootstrap-servers
+     ./kolla-ansible bootstrap-servers -i ../../all-in-one
 
 #. Do pre-deployment checks for hosts:
 
   .. code-block:: console
 
-     kolla-ansible -i ../../all-in-one prechecks
+     kolla-ansible prechecks -i ../../all-in-one
 
 #. Finally proceed to actual OpenStack deployment:
 
   .. code-block:: console
 
-     kolla-ansible -i ../../all-in-one deploy
+     kolla-ansible deploy -i ../../all-in-one
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to

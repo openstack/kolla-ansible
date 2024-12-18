@@ -237,7 +237,7 @@ RabbitMQ containers and volumes. Because the RabbitMQ containers are destroyed,
 
    .. code-block:: bash
 
-      kolla-ansible -i inventory stop
+      kolla-ansible stop -i inventory
 
 #. On each node running RabbitMQ, destroy its containers and volumes:
 
@@ -251,7 +251,7 @@ RabbitMQ containers and volumes. Because the RabbitMQ containers are destroyed,
 
    .. code-block:: bash
 
-      kolla-ansible -i inventory deploy
+      kolla-ansible deploy -i inventory
 
 Post-redeploy changes
 ^^^^^^^^^^^^^^^^^^^^^
