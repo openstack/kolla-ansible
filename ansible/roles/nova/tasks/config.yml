@@ -89,6 +89,16 @@
   become: true
   when: service | service_enabled_and_mapped_to_host
 
+- name: Copying over nova-metadata-wsgi.conf
+  vars:
+    service: "{{ nova_services['nova-metadata'] }}"
+  template:
+    src: "nova-metadata-wsgi.conf.j2"
+    dest: "{{ node_config_directory }}/nova-metadata/nova-metadata-wsgi.conf"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+
 - name: Copying over vendordata file
   vars:
     service: "{{ nova_services['nova-api'] }}"

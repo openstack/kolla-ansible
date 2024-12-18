@@ -25,6 +25,15 @@ nova_services:
         port: "{{ nova_api_public_port }}"
         listen_port: "{{ nova_api_listen_port }}"
         tls_backend: "{{ nova_enable_tls_backend }}"
+  nova-metadata:
+    container_name: "nova_metadata"
+    group: "nova-metadata"
+    image: "{{ nova_api_image_full }}"
+    enabled: True
+    volumes: "{{ nova_metadata_default_volumes + nova_metadata_extra_volumes }}"
+    dimensions: "{{ nova_metadata_dimensions }}"
+    healthcheck: "{{ nova_metadata_healthcheck }}"
+    haproxy:
       nova_metadata:
         enabled: "{{ enable_nova }}"
         mode: "http"
@@ -118,6 +127,7 @@ nova_api_tag: "{{ nova_tag }}"
 nova_api_image_full: "{{ nova_api_image }}:{{ nova_api_tag }}"
 
 nova_api_dimensions: "{{ default_container_dimensions }}"
+nova_metadata_dimensions: "{{ default_container_dimensions }}"
 nova_scheduler_dimensions: "{{ default_container_dimensions }}"
 nova_super_conductor_dimensions: "{{ default_container_dimensions }}"
 
@@ -133,6 +143,19 @@ nova_api_healthcheck:
   start_period: "{{ nova_api_healthcheck_start_period }}"
   test: "{% if nova_api_enable_healthchecks | bool %}{{ nova_api_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ nova_api_healthcheck_timeout }}"
+
+nova_metadata_enable_healthchecks: "{{ enable_container_healthchecks }}"
+nova_metadata_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+nova_metadata_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+nova_metadata_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+nova_metadata_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if nova_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ nova_metadata_listen_port }} "]
+nova_metadata_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+nova_metadata_healthcheck:
+  interval: "{{ nova_metadata_healthcheck_interval }}"
+  retries: "{{ nova_metadata_healthcheck_retries }}"
+  start_period: "{{ nova_metadata_healthcheck_start_period }}"
+  test: "{% if nova_metadata_enable_healthchecks | bool %}{{ nova_metadata_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ nova_metadata_healthcheck_timeout }}"
 
 nova_scheduler_enable_healthchecks: "{{ enable_container_healthchecks }}"
 nova_scheduler_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -167,6 +190,12 @@ nova_api_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ kolla_dev_repos_directory ~ '/nova:/dev-mode/nova' if nova_dev_mode | bool else '' }}"
+nova_metadata_default_volumes:
+  - "{{ node_config_directory }}/nova-metadata/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ kolla_dev_repos_directory ~ '/nova:/dev-mode/nova' if nova_dev_mode | bool else '' }}"
 nova_scheduler_default_volumes:
   - "{{ node_config_directory }}/nova-scheduler/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -189,6 +218,7 @@ nova_api_bootstrap_default_volumes:
 
 nova_extra_volumes: "{{ default_extra_volumes }}"
 nova_api_extra_volumes: "{{ nova_extra_volumes }}"
+nova_metadata_extra_volumes: "{{ nova_extra_volumes }}"
 nova_scheduler_extra_volumes: "{{ nova_extra_volumes }}"
 nova_super_conductor_extra_volumes: "{{ nova_extra_volumes }}"
 # Used by bootstrapping containers.
