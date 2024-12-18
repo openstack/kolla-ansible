@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+
+# Clear any old environment that may conflict.
+for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+export OS_USER_DOMAIN_NAME=Default
+export OS_SYSTEM_SCOPE=all
+export OS_USERNAME={{ keystone_admin_user }}
+export OS_PASSWORD={{ keystone_admin_password }}
+export OS_AUTH_URL={{ keystone_public_url }}
+export OS_IDENTITY_API_VERSION=3
+export OS_REGION_NAME={{ openstack_region_name }}
+export OS_AUTH_PLUGIN=password
+{% if kolla_admin_openrc_cacert is not none and kolla_admin_openrc_cacert | length > 0 %}
+export OS_CACERT={{ kolla_admin_openrc_cacert }}
+{% endif %}
