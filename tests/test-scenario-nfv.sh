@@ -9,21 +9,8 @@ export PYTHONUNBUFFERED=1
 
 function test_tacker {
     echo "TESTING: Tacker VIM,VNFD and VNF creation"
-    sh contrib/demos/tacker/deploy-tacker-demo
     openstack vim list
     openstack vnf list
-    openstack vnf descriptor list
-
-    while [[ $(openstack vnf show kolla-sample-vnf -f value -c status) != "ACTIVE" ]]; do
-            echo "VNF not running yet"
-            attempt=$((attempt+1))
-            if [[ $attempt -eq 10 ]]; then
-                echo "VNF failed to start"
-                openstack vnf show kolla-sample-vnf
-                return 1
-            fi
-            sleep 10
-        done
 }
 
 function test_barbican {

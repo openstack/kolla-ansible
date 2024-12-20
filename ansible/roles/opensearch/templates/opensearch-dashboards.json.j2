@@ -1,0 +1,34 @@
+{
+    "command": "/usr/share/opensearch-dashboards/bin/opensearch-dashboards --config /etc/opensearch-dashboards/opensearch_dashboards.yml",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/opensearch_dashboards.yml",
+            "dest": "/etc/opensearch-dashboards/opensearch_dashboards.yml",
+            "owner": "opensearch-dashboards",
+            "perm": "0640"
+        }{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/opensearch-dashboards",
+            "owner": "opensearch-dashboards:opensearch-dashboards",
+            "recurse": true
+        },
+        {
+            "path": "/usr/share/opensearch-dashboards/optimize/bundles",
+            "owner": "opensearch-dashboards:opensearch-dashboards",
+            "recurse": true
+        },
+        {
+            "path": "/var/lib/opensearch-dashboards",
+            "owner": "opensearch-dashboards:opensearch-dashboards",
+            "recurse": true
+        }
+    ]
+}

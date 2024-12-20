@@ -15,7 +15,8 @@ TraceEnable off
 
 <VirtualHost {{ api_interface_address }}:{{ horizon_listen_port }}>
     LogLevel warn
-    ErrorLog /var/log/kolla/horizon/horizon.log
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/kolla/horizon/horizon-error.log
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog /var/log/kolla/horizon/horizon-access.log logformat
 
@@ -30,6 +31,10 @@ TraceEnable off
         Require all granted
     </Location>
 
+    <Location "/server-status">
+        Require local
+    </Location>
+
     Alias /static {{ python_path }}/static
     <Location "/static">
         SetHandler None
@@ -39,6 +44,9 @@ TraceEnable off
     SSLEngine On
     SSLCertificateFile /etc/horizon/certs/horizon-cert.pem
     SSLCertificateKeyFile /etc/horizon/certs/horizon-key.pem
+{% endif %}
+{% if horizon_httpd_limitrequestbody is defined %}
+    LimitRequestBody {{ horizon_httpd_limitrequestbody }}
 {% endif %}
 </VirtualHost>
 

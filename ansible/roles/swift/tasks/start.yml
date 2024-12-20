@@ -35,7 +35,7 @@
 
 - name: Starting swift-rsyncd container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_rsyncd_image_full }}"
@@ -50,7 +50,7 @@
 
 - name: Starting swift-account-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     name: "swift_account_server"
@@ -60,11 +60,12 @@
       - "{{ node_config_directory }}/swift-account-server/:{{ container_config_directory }}/:ro"
       - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
       - "/etc/localtime:/etc/localtime:ro"
+      - "swift_recon_cache:/var/cache/swift"
   when: inventory_hostname in groups['swift-account-server']
 
 - name: Starting swift-account-auditor container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_account_image_full }}"
@@ -79,7 +80,7 @@
 
 - name: Starting swift-account-replication-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -97,7 +98,7 @@
 
 - name: Starting swift-account-replicator container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -114,7 +115,7 @@
 
 - name: Starting swift-account-reaper container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_account_image_full }}"
@@ -128,7 +129,7 @@
 
 - name: Starting swift-container-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_container_image_full }}"
@@ -138,11 +139,12 @@
       - "{{ node_config_directory }}/swift-container-server/:{{ container_config_directory }}/:ro"
       - "{{ swift_devices_mount_point }}:{{ swift_devices_mount_point }}:shared"
       - "/etc/localtime:/etc/localtime:ro"
+      - "swift_recon_cache:/var/cache/swift"
   when: inventory_hostname in groups['swift-container-server']
 
 - name: Starting swift-container-auditor container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_container_image_full }}"
@@ -157,7 +159,7 @@
 
 - name: Starting swift-container-replication-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -175,7 +177,7 @@
 
 - name: Starting swift-container-replicator container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -192,7 +194,7 @@
 
 - name: Starting swift-container-updater container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_container_image_full }}"
@@ -207,7 +209,7 @@
 
 - name: Starting swift-object-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_object_image_full }}"
@@ -222,7 +224,7 @@
 
 - name: Starting swift-object-auditor container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_object_image_full }}"
@@ -237,7 +239,7 @@
 
 - name: Starting swift-object-replication-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -255,7 +257,7 @@
 
 - name: Starting swift-object-replicator container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -272,7 +274,7 @@
 
 - name: Starting swift-object-updater container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_object_image_full }}"
@@ -287,7 +289,7 @@
 
 - name: Starting swift-object-expirer container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_object_expirer_image_full }}"
@@ -302,7 +304,7 @@
 
 - name: Starting swift-proxy-server container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ swift_proxy_server_image_full }}"

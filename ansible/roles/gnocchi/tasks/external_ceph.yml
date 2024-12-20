@@ -1,29 +1,31 @@
 ---
-- name: Copy over ceph.conf file
-  template:
-    src: "{{ node_custom_config }}/gnocchi/ceph.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
-    mode: "0660"
+- name: Ensuring gnocchi service ceph config subdir exists
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}/ceph"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ gnocchi_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copy over ceph gnocchi keyring
-  template:
-    src: "{{ node_custom_config }}/gnocchi/{{ ceph_gnocchi_keyring }}"
-    dest: "{{ node_config_directory }}/{{ item.key }}/{{ ceph_gnocchi_keyring }}"
+- name: Copy over ceph config for Gnocchi
+  merge_configs:
+    sources:
+      - "{{ node_custom_config }}/gnocchi/{{ ceph_cluster }}.conf"
+      - "{{ node_custom_config }}/gnocchi/{{ item.key }}/{{ ceph_cluster }}.conf"
+    dest: "{{ node_config_directory }}/{{ item.key }}/ceph/{{ ceph_cluster }}.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ gnocchi_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copy over ceph Gnocchi keyrings
+  template:
+    src: "{{ node_custom_config }}/gnocchi/{{ ceph_cluster }}.client.{{ ceph_gnocchi_user }}.keyring"
+    dest: "{{ node_config_directory }}/{{ item.key }}/ceph/{{ ceph_cluster }}.client.{{ ceph_gnocchi_user }}.keyring"
+    mode: "0660"
+  become: true
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Ensuring config directory has correct owner and permission
   become: true
@@ -32,7 +34,4 @@
     recurse: yes
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ gnocchi_services }}"
+  with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"

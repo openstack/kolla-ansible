@@ -1,7 +1,7 @@
 ---
 - name: Creating rabbitmq volume
   become: true
-  kolla_docker:
+  kolla_container:
     action: "create_volume"
     common_options: "{{ docker_common_options }}"
     name: "{{ project_name }}"
@@ -12,7 +12,7 @@
     service_name: "rabbitmq"
     service: "{{ rabbitmq_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -21,6 +21,6 @@
     labels:
       BOOTSTRAP:
     name: "{{ project_name }}_bootstrap"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ service.volumes }}"
   when: rabbitmq_volume is changed

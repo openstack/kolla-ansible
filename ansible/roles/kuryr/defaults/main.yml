@@ -16,15 +16,21 @@ kuryr_services:
     privileged: True
     cap_add:
       - NET_ADMIN
-    volumes: "{{ kuryr_default_volumes + kuryr_extra_volumes }}"
+    volumes: "{{ kuryr_default_volumes + kuryr_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ kuryr_dimensions }}"
     healthcheck: "{{ kuryr_healthcheck }}"
 
+####################
+# Config Validate
+####################
+kuryr_config_validation:
+  - generator: "/kuryr/etc/kuryr-config-generator.conf"
+    config: "/etc/kuryr/kuryr.conf"
 
 ####################
 # Docker
 ####################
-kuryr_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/kuryr-libnetwork"
+kuryr_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}kuryr-libnetwork"
 kuryr_tag: "{{ openstack_tag }}"
 kuryr_image_full: "{{ kuryr_image }}:{{ kuryr_tag }}"
 
@@ -46,10 +52,10 @@ kuryr_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/lib/modules:/lib/modules:ro"
-  - "/run:/run:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "/usr/lib/docker:/usr/lib/docker"
-  - "{{ kolla_dev_repos_directory ~ '/kuryr/kuryr:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/kuryr' if kuryr_dev_mode | bool else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/kuryr-libnetwork/kuryr_libnetwork:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/kuryr_libnetwork' if kuryr_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/kuryr:/dev-mode/kuryr' if kuryr_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/kuryr-libnetwork:/dev-mode/kuryr-libnetwork' if kuryr_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 kuryr_extra_volumes: "{{ default_extra_volumes }}"

@@ -12,14 +12,14 @@ function upgrade {
 
     source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
 
-    kolla-ansible -i ${RAW_INVENTORY} -vvv prechecks &> /tmp/logs/ansible/upgrade-prechecks
-    kolla-ansible -i ${RAW_INVENTORY} -vvv pull &> /tmp/logs/ansible/pull-upgrade
-    kolla-ansible -i ${RAW_INVENTORY} -vvv upgrade &> /tmp/logs/ansible/upgrade
+    kolla-ansible certificates -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/certificates
+    kolla-ansible prechecks -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/upgrade-prechecks
+    kolla-ansible pull -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/pull-upgrade
+    kolla-ansible upgrade -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/upgrade
 
-    # NOTE(yoctozepto): These actions remove the leftovers of the admin port.
-    # TODO(yoctozepto): Remove after Zed.
-    kolla-ansible -i ${RAW_INVENTORY} -vvv deploy --tags keystone &> /tmp/logs/ansible/upgrade-deploy
-    kolla-ansible -i ${RAW_INVENTORY} -vvv post-deploy &> /tmp/logs/ansible/upgrade-post-deploy
+    kolla-ansible post-deploy -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/upgrade-post-deploy
+
+    kolla-ansible validate-config -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/validate-config
 }
 
 

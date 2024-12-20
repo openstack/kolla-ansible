@@ -1,0 +1,70 @@
+---
+# For RabbitMQ we need to be careful about restarting services, to avoid losing quorum.
+- name: Apply role rabbitmq
+  gather_facts: false
+  hosts:
+    - rabbitmq
+    - '&enable_rabbitmq_True'
+  max_fail_percentage: >-
+    {{ rabbitmq_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - rabbitmq
+  tasks:
+    - import_role:
+        name: rabbitmq
+      vars:
+        role_rabbitmq_cluster_cookie: '{{ rabbitmq_cluster_cookie }}'
+        role_rabbitmq_cluster_port: '{{ rabbitmq_cluster_port }}'
+        role_rabbitmq_epmd_port: '{{ rabbitmq_epmd_port }}'
+        role_rabbitmq_groups: rabbitmq
+        role_rabbitmq_management_port: '{{ rabbitmq_management_port }}'
+        role_rabbitmq_monitoring_password: '{{ rabbitmq_monitoring_password }}'
+        role_rabbitmq_monitoring_user: '{{ rabbitmq_monitoring_user }}'
+        role_rabbitmq_password: '{{ rabbitmq_password }}'
+        role_rabbitmq_port: '{{ rabbitmq_port }}'
+        role_rabbitmq_prometheus_port: '{{ rabbitmq_prometheus_port }}'
+        role_rabbitmq_user: '{{ rabbitmq_user }}'
+
+- name: Restart rabbitmq services
+  gather_facts: false
+  hosts:
+    - rabbitmq_restart
+    - '&enable_rabbitmq_True'
+  # Restart in batches
+  serial: "33%"
+  max_fail_percentage: >-
+    {{ rabbitmq_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - rabbitmq
+  tasks:
+    - import_role:
+        name: rabbitmq
+        tasks_from: restart_services.yml
+      vars:
+        role_rabbitmq_cluster_cookie: '{{ rabbitmq_cluster_cookie }}'
+        role_rabbitmq_groups: rabbitmq
+
+- name: Apply rabbitmq post-configuration
+  gather_facts: false
+  hosts:
+    - rabbitmq
+    - '&enable_rabbitmq_True'
+  max_fail_percentage: >-
+    {{ rabbitmq_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - rabbitmq
+  tasks:
+    - name: Include rabbitmq post-deploy.yml
+      include_role:
+        name: rabbitmq
+        tasks_from: post-deploy.yml
+      when: kolla_action in ['deploy', 'reconfigure', 'upgrade']
+      vars:
+        role_rabbitmq_cluster_cookie: '{{ rabbitmq_cluster_cookie }}'
+        role_rabbitmq_groups: rabbitmq

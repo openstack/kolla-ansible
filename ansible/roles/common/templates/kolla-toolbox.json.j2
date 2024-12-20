@@ -1,5 +1,5 @@
 {
-    "command": "sleep infinity",
+    "command": "kolla_toolbox",
     "config_files": [
         {% if enable_rabbitmq | bool %}{
             "source": "{{ container_config_directory }}/rabbitmq-erlang.cookie",
@@ -17,6 +17,12 @@
             "source": "{{ container_config_directory }}/erl_inetrc",
             "dest": "/etc/rabbitmq/erl_inetrc",
             "owner": "rabbitmq",
+            "perm": "0600"
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
             "perm": "0600"
         }{% endif %}
     ],

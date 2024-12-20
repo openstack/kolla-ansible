@@ -8,9 +8,12 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - octavia_api
       - octavia_health_manager
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for Octavia API
@@ -61,3 +64,11 @@
     - octavia_auto_configure | bool
     - octavia_network_type == "tenant"
     - neutron_plugin_agent != 'openvswitch'
+
+- name: Checking whether Redis is enabled for octavia jobboard
+  assert:
+    that: enable_redis | bool
+    fail_msg: "Redis must be enabled when using octavia jobboard"
+  run_once: True
+  when:
+    - enable_octavia_jobboard | bool

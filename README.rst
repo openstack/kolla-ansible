@@ -48,7 +48,6 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `CloudKitty <https://docs.openstack.org/cloudkitty/latest/>`__
 - `Cyborg <https://docs.openstack.org/cyborg/latest/>`__
 - `Designate <https://docs.openstack.org/designate/latest/>`__
-- `Freezer <https://docs.openstack.org/freezer/latest/>`__
 - `Glance <https://docs.openstack.org/glance/latest/>`__
 - `Heat <https://docs.openstack.org/heat/latest/>`__
 - `Horizon <https://docs.openstack.org/horizon/latest/>`__
@@ -59,18 +58,14 @@ Kolla Ansible deploys containers for the following OpenStack projects:
 - `Manila <https://docs.openstack.org/manila/latest/>`__
 - `Masakari <https://docs.openstack.org/masakari/latest/>`__
 - `Mistral <https://docs.openstack.org/mistral/latest/>`__
-- `Monasca <https://docs.openstack.org/monasca-api/latest/>`__
-- `Murano <https://docs.openstack.org/murano/latest/>`__
 - `Neutron <https://docs.openstack.org/neutron/latest/>`__
 - `Nova <https://docs.openstack.org/nova/latest/>`__
 - `Octavia <https://docs.openstack.org/octavia/latest/>`__
-- `Sahara <https://docs.openstack.org/sahara/latest/>`__
-- `Senlin <https://docs.openstack.org/senlin/latest/>`__
-- `Solum <https://docs.openstack.org/solum/latest/>`__
+- Skyline (`APIServer <https://docs.openstack.org/skyline-apiserver/latest/>`__ and `Console <https://docs.openstack.org/skyline-console/latest/>`__)
 - `Swift <https://docs.openstack.org/swift/latest/>`__
 - `Tacker <https://docs.openstack.org/tacker/latest/>`__
 - `Trove <https://docs.openstack.org/trove/latest/>`__
-- `Vitrage <https://docs.openstack.org/vitrage/latest/>`__
+- `Venus <https://docs.openstack.org/venus/latest/>`__
 - `Watcher <https://docs.openstack.org/watcher/latest/>`__
 - `Zun <https://docs.openstack.org/zun/latest/>`__
 
@@ -84,8 +79,8 @@ Kolla Ansible deploys containers for the following infrastructure components:
   `InfluxDB <https://www.influxdata.com/products/influxdb-overview/>`__,
   `Prometheus <https://prometheus.io/>`__, and
   `Grafana <https://grafana.com/>`__ for performance monitoring.
-- `Elasticsearch <https://www.elastic.co/de/products/elasticsearch/>`__ and
-  `Kibana <https://www.elastic.co/de/products/kibana/>`__ to search, analyze,
+- `OpenSearch <https://opensearch.org/docs/latest/>`__ and
+  `OpenSearch Dashboards <https://opensearch.org/docs/latest/dashboards/index/>`__ to search, analyze,
   and visualize log messages.
 - `Etcd <https://etcd.io/>`__ a distributed reliable key-value store.
 - `Fluentd <https://www.fluentd.org/>`__ as an open source data collector
@@ -101,8 +96,6 @@ Kolla Ansible deploys containers for the following infrastructure components:
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
 - `Redis <https://redis.io/>`__ an in-memory data structure store.
-- `Zookeeper <https://zookeeper.apache.org/>`__ an open-source server which enables
-  highly reliable distributed coordination.
 
 Directories
 ===========
@@ -135,16 +128,16 @@ workflow <https://docs.openstack.org/infra/manual/developers.html>`__.
 -  File bugs, blueprints, track releases, etc on
    `Launchpad <https://launchpad.net/kolla-ansible>`__.
 -  Attend weekly
-   `meetings <https://wiki.openstack.org/wiki/Meetings/Kolla>`__.
+   `meetings <https://docs.openstack.org/kolla/latest/contributor/meeting.html>`__.
 -  Contribute `code <https://opendev.org/openstack/kolla-ansible>`__.
 
 Contributors
 ============
 
 Check out who's `contributing
-code <https://stackalytics.com/?module=kolla-group&metric=commits>`__ and
+code <https://stackalytics.io/?module=kolla-group&metric=commits>`__ and
 `contributing
-reviews <https://stackalytics.com/?module=kolla-group&metric=marks>`__.
+reviews <https://stackalytics.io/?module=kolla-group&metric=marks>`__.
 
 Notices
 =======

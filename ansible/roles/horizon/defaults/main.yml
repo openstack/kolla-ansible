@@ -9,23 +9,17 @@ horizon_services:
       ENABLE_BLAZAR: "{{ 'yes' if enable_horizon_blazar | bool else 'no' }}"
       ENABLE_CLOUDKITTY: "{{ 'yes' if enable_horizon_cloudkitty | bool else 'no' }}"
       ENABLE_DESIGNATE: "{{ 'yes' if enable_horizon_designate | bool else 'no' }}"
-      ENABLE_FREEZER: "{{ 'yes' if enable_horizon_freezer | bool else 'no' }}"
+      ENABLE_FWAAS: "{{ 'yes' if enable_horizon_fwaas | bool else 'no' }}"
       ENABLE_HEAT: "{{ 'yes' if enable_horizon_heat | bool else 'no' }}"
       ENABLE_IRONIC: "{{ 'yes' if enable_horizon_ironic | bool else 'no' }}"
       ENABLE_MAGNUM: "{{ 'yes' if enable_horizon_magnum | bool else 'no' }}"
       ENABLE_MANILA: "{{ 'yes' if enable_horizon_manila | bool else 'no' }}"
       ENABLE_MASAKARI: "{{ 'yes' if enable_horizon_masakari | bool else 'no' }}"
       ENABLE_MISTRAL: "{{ 'yes' if enable_horizon_mistral | bool else 'no' }}"
-      ENABLE_MONASCA: "{{ 'yes' if enable_horizon_monasca | bool else 'no' }}"
-      ENABLE_MURANO: "{{ 'yes' if enable_horizon_murano | bool else 'no' }}"
       ENABLE_NEUTRON_VPNAAS: "{{ 'yes' if enable_horizon_neutron_vpnaas | bool else 'no' }}"
       ENABLE_OCTAVIA: "{{ 'yes' if enable_horizon_octavia | bool else 'no' }}"
-      ENABLE_SAHARA: "{{ 'yes' if enable_horizon_sahara | bool else 'no' }}"
-      ENABLE_SENLIN: "{{ 'yes' if enable_horizon_senlin | bool else 'no' }}"
-      ENABLE_SOLUM: "{{ 'yes' if enable_horizon_solum | bool else 'no' }}"
       ENABLE_TACKER: "{{ 'yes' if enable_horizon_tacker | bool else 'no' }}"
       ENABLE_TROVE: "{{ 'yes' if enable_horizon_trove | bool else 'no' }}"
-      ENABLE_VITRAGE: "{{ 'yes' if enable_horizon_vitrage | bool else 'no' }}"
       ENABLE_WATCHER: "{{ 'yes' if enable_horizon_watcher | bool else 'no' }}"
       ENABLE_ZUN: "{{ 'yes' if enable_horizon_zun | bool else 'no' }}"
       FORCE_GENERATE: "{{ 'yes' if horizon_dev_mode | bool else 'no' }}"
@@ -50,10 +44,13 @@ horizon_services:
         external: false
         port: "{{ horizon_port }}"
         listen_port: "{{ horizon_listen_port }}"
+        frontend_redirect_extra:
+          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
       horizon_external:
         enabled: "{{ enable_horizon }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ horizon_external_fqdn }}"
         port: "{% if kolla_enable_tls_external | bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_http_extra:
@@ -65,8 +62,11 @@ horizon_services:
         enabled: "{{ enable_horizon | bool and kolla_enable_tls_external | bool }}"
         mode: "redirect"
         external: true
+        external_fqdn: "{{ horizon_external_fqdn }}"
         port: "{{ horizon_port }}"
         listen_port: "{{ horizon_listen_port }}"
+        frontend_redirect_extra:
+          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
       acme_client:
         enabled: "{{ enable_horizon }}"
         with_frontend: false
@@ -101,7 +101,7 @@ horizon_database_shard:
 ####################
 # Docker
 ####################
-horizon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/horizon"
+horizon_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}horizon"
 horizon_tag: "{{ openstack_tag }}"
 horizon_image_full: "{{ horizon_image }}:{{ horizon_tag }}"
 
@@ -122,13 +122,10 @@ horizon_healthcheck:
 
 horizon_default_volumes:
   - "{{ node_config_directory }}/horizon/:{{ container_config_directory }}/:ro"
-  - "{{ kolla_dev_repos_directory ~ '/horizon/horizon:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/horizon' if horizon_dev_mode | bool else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/horizon/openstack_dashboard:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/openstack_dashboard' if horizon_dev_mode | bool else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/murano-dashboard/muranodashboard:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/muranodashboard' if horizon_murano_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/horizon:/dev-mode/horizon' if horizon_dev_mode | bool else '' }}"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "/tmp:/tmp"
 
 horizon_extra_volumes: "{{ default_extra_volumes }}"
 
@@ -150,16 +147,18 @@ horizon_wsgi_threads: 1
 # Kolla
 ####################
 horizon_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
-murano_dashboard_git_repository: "{{ kolla_dev_repos_git }}/murano-dashboard"
 
 horizon_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 horizon_dev_mode: "{{ kolla_dev_mode }}"
-horizon_murano_dev_mode: "{{ kolla_dev_mode }}"
 horizon_source_version: "{{ kolla_source_version }}"
-horizon_murano_source_version: "{{ kolla_source_version }}"
 
 # This variable was created for administrators to define which one of the Keystone's URLs should be configured in Horizon.
 # In some cases, such as when using OIDC, horizon will need to be configured with Keystone's public URL.
 # Therefore, instead of overriding the whole "horizon_keystone_url", this change allows an easier integration because
 # the Keystone public URL is already defined with variable "keystone_public_url".
 horizon_use_keystone_public_url: False
+
+###################
+# Copy certificates
+###################
+horizon_copy_certs: "{{ kolla_copy_ca_into_containers | bool or horizon_enable_tls_backend | bool }}"

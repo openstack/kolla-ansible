@@ -9,14 +9,16 @@ export PYTHONUNBUFFERED=1
 
 function test_ironic_logged {
     # Assumes init-runonce has been executed.
-    . /etc/kolla/admin-openrc.sh
+    KOLLA_CONFIG_PATH=${KOLLA_CONFIG_PATH:-/etc/kolla}
+    export OS_CLIENT_CONFIG_FILE=${KOLLA_CONFIG_PATH}/clouds.yaml
+    export OS_CLOUD=kolla-admin-internal
     . ~/openstackclient-venv/bin/activate
 
     echo "Enabling DHCP on the external (\"public\") subnet"
     openstack subnet set --dhcp public1-subnet
 
     # Smoke test ironic API.
-    openstack baremetal driver list
+    openstack --os-cloud kolla-admin-system-internal baremetal driver list
     openstack baremetal node list
     openstack baremetal port list
     # Ironic Inspector API

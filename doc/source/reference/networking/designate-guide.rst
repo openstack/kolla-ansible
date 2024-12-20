@@ -24,13 +24,23 @@ Enable Designate service in ``/etc/kolla/globals.yml``
 .. code-block:: yaml
 
    enable_designate: "yes"
+   neutron_dns_domain: "example.org."
+
+.. important::
+   The ``neutron_dns_domain`` value has to be different to ``openstacklocal``
+   (its default value) and has to end with a period ``.``.
+
+.. important::
+   ``DNS Integration`` is enabled by default and can be disabled by
+   adding ``neutron_dns_integration: no`` to ``/etc/kolla/globals.yml``
+   and reconfiguring with ``--tags`` neutron.
 
 Configure Designate options in ``/etc/kolla/globals.yml``
 
 .. important::
 
    Designate MDNS node requires the ``dns_interface`` to be reachable from
-   public network.
+   management network.
 
 .. code-block:: yaml
 
@@ -64,7 +74,7 @@ Infoblox Backend
 .. important::
 
    When using Infoblox as the Designate backend the MDNS node
-   requires the container to listen on port 53. As this is a privilaged
+   requires the container to listen on port 53. As this is a privileged
    port you will need to build your designate-mdns container to run
    as the user root rather than designate.
 
@@ -90,6 +100,15 @@ For more information about how the Infoblox backend works, see
 
 Neutron and Nova Integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``designate-sink`` is an optional service which listens for event
+notifications, such as compute.instance.create.end, handlers are
+available for Nova and Neutron. Notification events can then be used
+to trigger record creation & deletion.
+
+.. note::
+   Service ``designate-sink`` in kolla deployments is disabled by default
+   and can be enabled by ``designate_enable_notifications_sink: yes``.
 
 Create default Designate Zone for Neutron:
 

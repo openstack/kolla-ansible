@@ -14,26 +14,20 @@ keystone_services:
         mode: "http"
         external: false
         tls_backend: "{{ keystone_enable_tls_backend }}"
-        port: "{{ keystone_public_port }}"
-        listen_port: "{{ keystone_public_listen_port }}"
-        backend_http_extra: "{{ ['balance source'] if enable_keystone_federation | bool else [] }}"
+        port: "{{ keystone_internal_port }}"
+        listen_port: "{{ keystone_internal_listen_port }}"
+        backend_http_extra:
+          - "balance {{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
       keystone_external:
         enabled: "{{ enable_keystone }}"
         mode: "http"
         external: true
+        external_fqdn: "{{ keystone_external_fqdn }}"
         tls_backend: "{{ keystone_enable_tls_backend }}"
         port: "{{ keystone_public_port }}"
         listen_port: "{{ keystone_public_listen_port }}"
-        backend_http_extra: "{{ ['balance source'] if enable_keystone_federation | bool else [] }}"
-      # NOTE(yoctozepto): Admin port settings are kept only for upgrade compatibility.
-      # TODO(yoctozepto): Remove after Zed.
-      keystone_admin:
-        enabled: "{{ enable_keystone and kolla_action == 'upgrade' }}"
-        mode: "http"
-        external: false
-        tls_backend: "{{ keystone_enable_tls_backend }}"
-        port: "{{ keystone_admin_port }}"
-        listen_port: "{{ keystone_admin_listen_port }}"
+        backend_http_extra:
+          - "balance {{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
   keystone-ssh:
     container_name: "keystone_ssh"
     group: "keystone"
@@ -60,6 +54,13 @@ keystone_services:
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
     dimensions: "{{ keystone_fernet_dimensions }}"
     healthcheck: "{{ keystone_fernet_healthcheck }}"
+
+####################
+# Config Validate
+####################
+keystone_config_validation:
+  - generator: "/keystone/config-generator/keystone.conf"
+    config: "/etc/keystone/keystone.conf"
 
 ####################
 # Database
@@ -94,15 +95,15 @@ keystone_groupname: "keystone"
 ####################
 keystone_tag: "{{ openstack_tag }}"
 
-keystone_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone"
+keystone_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}keystone"
 keystone_service_tag: "{{ keystone_tag }}"
 keystone_image_full: "{{ keystone_image }}:{{ keystone_service_tag }}"
 
-keystone_fernet_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone-fernet"
+keystone_fernet_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}keystone-fernet"
 keystone_fernet_tag: "{{ keystone_tag }}"
 keystone_fernet_image_full: "{{ keystone_fernet_image }}:{{ keystone_fernet_tag }}"
 
-keystone_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keystone-ssh"
+keystone_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}keystone-ssh"
 keystone_ssh_tag: "{{ keystone_tag }}"
 keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 
@@ -153,7 +154,7 @@ keystone_default_volumes:
   - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/keystone/keystone:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/keystone' if keystone_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/keystone:/dev-mode/keystone' if keystone_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
 
@@ -199,15 +200,11 @@ keystone_service_endpoints:
   - {'interface': 'internal', 'url': '{{ keystone_internal_url }}'}
   - {'interface': 'public', 'url': '{{ keystone_public_url }}'}
 
-# TODO(yoctozepto): Remove admin_endpoint leftovers in Antelope (2023.1).
-keystone_service_admin_endpoint: {'interface': 'admin', 'url': '{{ keystone_internal_url }}'}
-keystone_create_admin_endpoint: false
-
 keystone_ks_services:
   - name: "keystone"
     type: "identity"
     description: "Openstack Identity Service"
-    endpoints: "{{ keystone_service_endpoints + ([keystone_service_admin_endpoint] if kolla_action == 'upgrade' or keystone_create_admin_endpoint | bool else []) }}"
+    endpoints: "{{ keystone_service_endpoints }}"
 
 ####################
 # TLS
@@ -226,15 +223,31 @@ keystone_host_federation_oidc_metadata_folder: "{{ node_config_directory }}/keys
 keystone_host_federation_oidc_idp_certificate_folder: "{{ node_config_directory }}/keystone/federation/oidc/cert"
 keystone_host_federation_oidc_attribute_mappings_folder: "{{ node_config_directory }}/keystone/federation/oidc/attribute_maps"
 keystone_federation_oidc_jwks_uri: ""
+keystone_federation_oidc_additional_options: {}
 
 # These variables are used to define multiple trusted Horizon dashboards.
 # keystone_trusted_dashboards: ['<https://dashboardServerOne/auth/websso/>', '<https://dashboardServerTwo/auth/websso/>', '<https://dashboardServerN/auth/websso/>']
-keystone_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
+horizon_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
+skyline_trusted_dashboards: "{{ ['%s/api/openstack/skyline/api/v1/websso' % (skyline_console_public_endpoint)] if enable_skyline | bool else [] }}"
+keystone_trusted_dashboards: "{{ horizon_trusted_dashboards + skyline_trusted_dashboards }}"
 keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 keystone_should_remove_attribute_mappings: False
 keystone_should_remove_identity_providers: False
 keystone_federation_oidc_response_type: "id_token"
+# can be set to any supported headers, according to
+# https://github.com/OpenIDC/mod_auth_openidc/blob/ea3af872dcdbb4634a7e541c5e8c7326dafbb090/auth_openidc.conf
+# e.g."X-Forwarded-Proto", "X-Forwarded-Port" etc.
+keystone_federation_oidc_forwarded_headers: ""
+keystone_federation_oidc_claim_delimiter: ";"
 keystone_federation_oidc_scopes: "openid email profile"
 
 # OIDC caching
 keystone_oidc_enable_memcached: "{{ enable_memcached }}"
+
+# Database
+keystone_database_enable_tls_internal: "{{ database_enable_tls_internal | bool }}"
+
+###################
+# Copy certificates
+###################
+keystone_copy_certs: "{{ kolla_copy_ca_into_containers | bool or keystone_enable_tls_backend | bool }}"

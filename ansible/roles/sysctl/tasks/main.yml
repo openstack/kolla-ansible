@@ -1,0 +1,20 @@
+---
+- name: Check IPv6 support
+  command: "{{ sysctl_path }} -n net.ipv6.conf.all.disable_ipv6"
+  register: ipv6_disabled
+  changed_when: false
+
+- name: Setting sysctl values
+  become: true
+  vars:
+    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
+  sysctl:
+    name: "{{ item.name }}"
+    state: "{{ should_set | ternary('present', 'absent') }}"
+    value: "{{ should_set | ternary(item.value, omit) }}"
+    sysctl_set: "{{ should_set }}"
+    sysctl_file: "{{ kolla_sysctl_conf_path }}"
+  with_items: "{{ settings }}"
+  when:
+    - item.value != 'KOLLA_SKIP'
+    - not ('ipv6' in item.name and ipv6_disabled.stdout | bool)

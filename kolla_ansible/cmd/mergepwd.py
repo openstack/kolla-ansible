@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import argparse
+import os
+import stat
 import sys
 import yaml
 
@@ -21,8 +23,20 @@ def mergepwd(old, new, final, clean=False):
     with open(old, "r") as old_file:
         old_passwords = yaml.safe_load(old_file)
 
+    if os.stat(old).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{old}\" is world-readable.")
+
+    if os.stat(old).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{old}\" is world-writeable.")
+
     with open(new, "r") as new_file:
         new_passwords = yaml.safe_load(new_file)
+
+    if os.stat(new).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{new}\" is world-readable.")
+
+    if os.stat(new).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{new}\" is world-writeable.")
 
     if not isinstance(old_passwords, dict):
         print("ERROR: Old passwords file not in expected key/value format")
@@ -41,7 +55,15 @@ def mergepwd(old, new, final, clean=False):
         # old behavior
         new_passwords.update(old_passwords)
 
-    with open(final, "w") as destination:
+    try:
+        os.remove(final)
+    except OSError:
+        pass
+
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    mode = 0o640
+
+    with os.fdopen(os.open(final, flags, mode=mode), 'w') as destination:
         yaml.safe_dump(new_passwords, destination, default_flow_style=False)
 
 

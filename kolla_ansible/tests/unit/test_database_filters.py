@@ -53,6 +53,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
         root_prefix = 'root_shard_'
         backup_prefix = 'backup_shard_'
         db_cred = 'SECRET'
+        backup_db_cred = 'SECRET1'
         db_shards = ['0', '1']
 
         context = self._make_context({
@@ -62,6 +63,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[0],
                     'enable_mariabackup': enable_mariabackup,
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix,
                     'mariadb_shard_backup_user_prefix': backup_prefix,
                 },
@@ -69,6 +71,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[0],
                     'enable_mariabackup': enable_mariabackup,
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix,
                     'mariadb_shard_backup_user_prefix': backup_prefix,
                 },
@@ -76,6 +79,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[1],
                     'enable_mariabackup': enable_mariabackup,
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix,
                     'mariadb_shard_backup_user_prefix': backup_prefix,
                 },
@@ -103,7 +107,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     "user": f"{root_prefix}0"
                 },
                 {
-                    "password": db_cred,
+                    "password": backup_db_cred,
                     "shard_id": db_shards[0],
                     "user": f"{backup_prefix}0"
                 },
@@ -113,7 +117,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     "user": f"{root_prefix}1"
                 },
                 {
-                    "password": db_cred,
+                    "password": backup_db_cred,
                     "shard_id": db_shards[1],
                     "user": f"{backup_prefix}1"
                 }
@@ -188,6 +192,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
         root_prefix_2 = 'batman_shard_'
         backup_prefix = 'backupman_shard_'
         db_cred = 'kRypTonyte'
+        backup_db_cred = 'kRypTonyte1'
         db_shards = ['0', '1']
 
         context = self._make_context({
@@ -197,6 +202,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[0],
                     'enable_mariabackup': enable_mariabackup,
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix,
                     'mariadb_shard_backup_user_prefix': backup_prefix,
                 },
@@ -204,6 +210,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[0],
                     'enable_mariabackup': enable_mariabackup,
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix,
                     'mariadb_shard_backup_user_prefix': backup_prefix,
                 },
@@ -211,6 +218,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     'mariadb_shard_id': db_shards[1],
                     'enable_mariabackup': 'no',
                     'database_password': db_cred,
+                    'mariadb_backup_database_password': backup_db_cred,
                     'mariadb_shard_root_user_prefix': root_prefix_2,
                 },
             },
@@ -237,7 +245,7 @@ class TestKollaDatabaseShardsInfoFilter(unittest.TestCase):
                     "user": f"{root_prefix}0"
                 },
                 {
-                    "password": db_cred,
+                    "password": backup_db_cred,
                     "shard_id": db_shards[0],
                     "user": f"{backup_prefix}0"
                 },

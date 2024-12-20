@@ -1,0 +1,20 @@
+---
+- name: Running Skyline bootstrap container
+  vars:
+    skyline_apiserver: "{{ skyline_services['skyline-apiserver'] }}"
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_BOOTSTRAP:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ skyline_apiserver.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_skyline"
+    restart_policy: oneshot
+    volumes: "{{ skyline_apiserver.volumes | reject('equalto', '') | list }}"
+  run_once: True
+  delegate_to: "{{ groups[skyline_apiserver.group][0] }}"

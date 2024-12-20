@@ -47,9 +47,9 @@ function generate_pciwhitelist {
     for nic in $(list_dpdk_nics); do
         address="$(get_value $nic address)"
         if [ "$_Whitelist" == '' ]; then
-            _Whitelist="-w $address"
+            _Whitelist="-a $address"
         else
-            _Whitelist="$_Whitelist -w $address"
+            _Whitelist="$_Whitelist -a $address"
         fi
     done
     echo $_Whitelist
@@ -386,8 +386,8 @@ function usage {
 ovs-dpdkctl.sh: A tool to configure ovs with dpdk.
 
 - This tool automate the process of binding host insterfacesto a dpdk
-  compaible driver (uio_pci_generic | vfio-pci) at boot.
-- This tool automate bootstraping ovs so that it can use the
+  compatible driver (uio_pci_generic | vfio-pci) at boot.
+- This tool automate bootstrapping ovs so that it can use the
   dpdk accelerated netdev datapath.
 
 commands:
@@ -403,14 +403,14 @@ commands:
     - removes ovs-dpdkctl configuration file.
   - bind_nics:
     - iterates over all dpdk interfaces defined in ovs-dpdkctl config
-      and binds the interface to the target driver specifed in the config
+      and binds the interface to the target driver specified in the config
       if current driver does not equal target.
   - unbind_nics:
     - iterates over all dpdk interfaces defined in ovs-dpdkctl config
       and restores the interface to its original non dpdk driver.
   - init:
-    - defines dpdk specific configuration paramater in the ovsdb.
-    - creates bridges as spcified by ovs bridge_mappings in
+    - defines dpdk specific configuration parameter in the ovsdb.
+    - creates bridges as specified by ovs bridge_mappings in
       ovs-dpdkctl config.
     - creates dpdk ports as defined by ovs port_mappings in
       ovs-dpdkctl config.
@@ -418,10 +418,10 @@ commands:
     - prints this message
 
 options:
-  - debuging:
-    - To enable debuging export OVS_DPDK_CTL_DEBUG=True
+  - debugging:
+    - To enable debugging export OVS_DPDK_CTL_DEBUG=True
   - install:
-    - The varibles described below can be defined to customise
+    - The variables described below can be defined to customise
       installation of ovs-dpdkctl.
       <variable>=<value> ovs-dpdkctl.sh install
     - bridge_mappings:
@@ -462,7 +462,7 @@ options:
       - Example: ovs_mem_channels=2
       - Default: "4"
     - ovs_socket_mem:
-      - A comma separated list of hugepage memory, specifed in MBs per numa node,
+      - A comma separated list of hugepage memory, specified in MBs per numa node,
         allocated to the ovs-vswitchd to use for the dpdk dataplane.
       - For best performance memory should be allocated evenly across all numa node
         that will run a pmd.
@@ -482,7 +482,7 @@ options:
       - The pci_whitelist allows multiple dpdk primary process to
         utilise different pci devices without resulting in a conflict
         of ownership.
-      - Example: pci_whitelist="-w <pci address 1> -w <pci address 2>"
+      - Example: pci_whitelist="-a <pci address 1> -a <pci address 2>"
       - Default: auto generated form port_mappings.
 EOF
 

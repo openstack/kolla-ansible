@@ -1,0 +1,40 @@
+---
+ovn_controller_services:
+  ovn-controller:
+    container_name: ovn_controller
+    group: ovn-controller
+    enabled: true
+    image: "{{ ovn_controller_image_full }}"
+    volumes: "{{ ovn_controller_default_volumes + ovn_controller_extra_volumes }}"
+    dimensions: "{{ ovn_controller_dimensions }}"
+
+####################
+# Docker
+####################
+ovn_tag: "{{ openstack_tag }}"
+
+ovn_controller_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovn-controller"
+ovn_controller_tag: "{{ ovn_tag }}"
+ovn_controller_image_full: "{{ ovn_controller_image }}:{{ ovn_controller_tag }}"
+
+ovn_controller_dimensions: "{{ default_container_dimensions }}"
+
+ovn_controller_default_volumes:
+  - "{{ node_config_directory }}/ovn-controller/:{{ container_config_directory }}/:ro"
+  - "/run/openvswitch:/run/openvswitch:shared"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+
+ovn_controller_extra_volumes: "{{ default_extra_volumes }}"
+
+#####
+# OVN
+#####
+# Base MAC for ovn-chassis-mac-mappings generation
+ovn_base_mac: "52:54:00"
+# Configure OVN remote probe interval time in ms
+ovn_remote_probe_interval: "60000"
+# Configure OVN openflow interval in s
+ovn_openflow_probe_interval: "60"
+# Configure OVN monitor-all in boolean
+ovn_monitor_all: "false"

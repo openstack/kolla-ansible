@@ -1,0 +1,37 @@
+---
+# NOTE(r-krcek): List of arguments should follow argument_spec in
+# kolla_container module
+- name: "{{ kolla_role_name | default(project_name) }} | Check containers"
+  become: true
+  vars:
+    service: "{{ item.value }}"
+  kolla_container:
+    action: "compare_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image | default(omit) }}"
+    volumes: "{{ service.volumes | default(omit) }}"
+    dimensions: "{{ service.dimensions | default(omit) }}"
+    tmpfs: "{{ service.tmpfs | default(omit) }}"
+    volumes_from: "{{ service.volumes_from | default(omit) }}"
+    privileged: "{{ service.privileged | default(omit) }}"
+    cap_add: "{{ service.cap_add | default(omit) }}"
+    environment: "{{ service.environment | default(omit) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+    ipc_mode: "{{ service.ipc_mode | default(omit) }}"
+    pid_mode: "{{ service.pid_mode | default(omit) }}"
+    security_opt: "{{ service.security_opt | default(omit) }}"
+    labels: "{{ service.labels | default(omit) }}"
+    command: "{{ service.command | default(omit) }}"
+    cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
+  with_dict: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host }}"
+  register: container_check
+
+# NOTE(yoctozepto): Must be a separate task because one cannot see the whole
+# result in the previous task and Ansible has a quirk regarding notifiers.
+# For details see https://github.com/ansible/ansible/issues/22579
+- name: "{{ kolla_role_name | default(project_name) }} | Notify handlers to restart containers"
+  debug:
+    msg: Notifying handlers
+  changed_when: container_check is changed
+  notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"

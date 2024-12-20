@@ -3,6 +3,8 @@
     - name: Check if bifrost_deploy container is running
       become: true
       kolla_container_facts:
+        action: get_containers
+        container_engine: "{{ kolla_container_engine }}"
         name:
           - bifrost_deploy
       register: container_facts
@@ -21,7 +23,7 @@
 
         - name: Stopping bifrost_deploy container
           become: true
-          kolla_docker:
+          kolla_container:
             action: "stop_container"
             common_options: "{{ docker_common_options }}"
             name: "bifrost_deploy"

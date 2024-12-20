@@ -6,17 +6,16 @@ global
     daemon
     log {{ syslog_server }}:{{ syslog_udp_port }} {{ syslog_haproxy_facility }}
     maxconn {{ haproxy_max_connections }}
-    nbproc {{ haproxy_processes }}
-    {% if (haproxy_processes | int > 1) and (haproxy_process_cpu_map | bool) %}
-        {% for cpu_idx in range(0, haproxy_processes) %}
-    cpu-map {{ cpu_idx + 1 }} {{ cpu_idx }}
-        {% endfor %}
+    nbthread {{ haproxy_threads }}
+    {% if (haproxy_threads | int > 1) and (haproxy_thread_cpu_map | bool) %}
+    cpu-map auto:1/all 0-63
     {% endif %}
     stats socket /var/lib/kolla/haproxy/haproxy.sock group kolla mode 660{% if haproxy_socket_level_admin | bool %} level admin{% endif %}
 
     {% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
-    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
-    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    {% for line in haproxy_ssl_settings.split('\n') %}
+    {{ line }}
+    {% endfor %}
     tune.ssl.default-dh-param 4096
     ca-base {{ haproxy_backend_cacert_dir }}
     {% endif %}
@@ -43,6 +42,13 @@ listen stats
    stats refresh 15s
    stats realm Haproxy\ Stats
    stats auth {{ haproxy_user }}:{{ haproxy_password }}
+
+{% if enable_prometheus_haproxy_exporter | bool %}
+listen metrics
+   bind {{ api_interface_address }}:{{ prometheus_haproxy_exporter_port }}
+   mode http
+   http-request use-service prometheus-exporter if { path /metrics }
+{% endif %}
 
 frontend status
     bind {{ api_interface_address }}:{{ haproxy_monitor_port }}

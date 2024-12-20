@@ -1,6 +1,63 @@
 ---
+- name: Copying over haproxy.pem
+  vars:
+    service: "{{ loadbalancer_services['haproxy'] }}"
+  copy:
+    src: "{{ kolla_external_fqdn_cert }}"
+    dest: "{{ node_config_directory }}/haproxy/{{ item }}"
+    mode: "0660"
+  become: true
+  when:
+    - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_external | bool
+    - not kolla_externally_managed_cert | bool
+    - service | service_enabled_and_mapped_to_host
+  with_items:
+    - "haproxy.pem"
+
+- name: Copying over haproxy-internal.pem
+  vars:
+    service: "{{ loadbalancer_services['haproxy'] }}"
+  copy:
+    src: "{{ kolla_internal_fqdn_cert }}"
+    dest: "{{ node_config_directory }}/haproxy/{{ item }}"
+    mode: "0660"
+  become: true
+  when:
+    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_internal | bool
+    - not kolla_externally_managed_cert | bool
+    - service | service_enabled_and_mapped_to_host
+  with_items:
+    - "haproxy-internal.pem"
+
+- name: Copying over proxysql-cert.pem
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  copy:
+    src: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
+    dest: "{{ node_config_directory }}/proxysql/proxysql-cert.pem"
+    mode: "0660"
+  become: true
+  when:
+    - database_enable_tls_internal | bool
+    - service | service_enabled_and_mapped_to_host
+
+- name: Copying over proxysql-key.pem
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  copy:
+    src: "{{ kolla_certificates_dir }}/proxysql-key.pem"
+    dest: "{{ node_config_directory }}/proxysql/proxysql-key.pem"
+    mode: "0660"
+  become: true
+  when:
+    - database_enable_tls_internal | bool
+    - service | service_enabled_and_mapped_to_host
+
 - name: "Copy certificates and keys for {{ project_name }}"
   import_role:
     role: service-cert-copy
   vars:
     project_services: "{{ loadbalancer_services }}"
+    project_name: mariadb

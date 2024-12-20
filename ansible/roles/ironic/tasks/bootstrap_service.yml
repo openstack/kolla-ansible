@@ -9,7 +9,7 @@
       KOLLA_UPGRADE:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -18,7 +18,7 @@
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ ironic_api.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[ironic_api.group][0] }}"
@@ -28,7 +28,7 @@
   vars:
     ironic_inspector: "{{ ironic_services['ironic-inspector'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -39,7 +39,7 @@
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic_inspector"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ ironic_inspector.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[ironic_inspector.group][0] }}"
@@ -47,9 +47,9 @@
 
 - name: Running ironic-tftp bootstrap container
   vars:
-    ironic_tftp: "{{ ironic_services['ironic-tftp'] }}"
+    service: "{{ ironic_services['ironic-tftp'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -58,10 +58,10 @@
       HTTPBOOT_PATH: /var/lib/ironic/httpboot
       KOLLA_BOOTSTRAP:
       KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ ironic_tftp.image }}"
+    image: "{{ service.image }}"
     labels:
       BOOTSTRAP:
     name: "bootstrap_ironic_tftp"
-    restart_policy: no
-    volumes: "{{ ironic_tftp.volumes }}"
-  when: inventory_hostname in groups[ironic_tftp.group]
+    restart_policy: oneshot
+    volumes: "{{ service.volumes }}"
+  when: service | service_enabled_and_mapped_to_host

@@ -1,4 +1,7 @@
 ---
+- include_tasks: get_resources_info.yml
+  when: octavia_auto_configure | bool
+
 - name: Ensuring config directories exist
   file:
     path: "{{ node_config_directory }}/{{ item.key }}"
@@ -7,10 +10,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -39,15 +39,11 @@
   become: true
   when:
     - octavia_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool or octavia_enable_tls_backend | bool
+    - octavia_copy_certs
 
 - name: Copying over config.json files for services
   template:
@@ -55,12 +51,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over octavia-wsgi.conf
   vars:
@@ -74,11 +65,7 @@
     - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia-wsgi.conf"
     - "{{ node_custom_config }}/octavia/octavia-wsgi.conf"
     - "octavia-wsgi.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart octavia-api container
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over octavia.conf
   vars:
@@ -93,12 +80,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/octavia.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ octavia_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
 - block:
 
@@ -122,12 +104,8 @@
         dest: "{{ node_config_directory }}/octavia-worker/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-worker container
 
     - name: Copying certificate files for octavia-housekeeping
       vars:
@@ -137,12 +115,8 @@
         dest: "{{ node_config_directory }}/octavia-housekeeping/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-housekeeping container
 
     - name: Copying certificate files for octavia-health-manager
       vars:
@@ -152,12 +126,8 @@
         dest: "{{ node_config_directory }}/octavia-health-manager/{{ item }}"
         mode: "0660"
       become: true
-      when:
-        - inventory_hostname in groups[service.group]
-        - service.enabled | bool
+      when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-      notify:
-        - Restart octavia-health-manager container
 
   when: "'amphora' in octavia_provider_drivers"
   vars:

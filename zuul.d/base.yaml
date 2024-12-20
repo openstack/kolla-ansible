@@ -1,5 +1,48 @@
 ---
 - job:
+    name: kolla-ansible-variables
+    vars:
+      address_family: 'ipv4'
+      # Test latest ansible-core version on Ubuntu, minimum supported on others.
+      # Use SLURP version (two releases back) on SLURP upgrades.
+      ansible_core_version_constraint: >-
+        {{ ansible_core_version_slurp if is_slurp else ansible_core_version_min if is_upgrade or ansible_facts.distribution != "Ubuntu" else ansible_core_version_max }}
+      ansible_core_version_slurp: "==2.16.*"
+      ansible_core_version_max: "==2.17.*"
+      ansible_core_version_min: "==2.16.*"
+      # Test latest ansible-core version on Ubuntu, minimum supported on others.
+      # Use SLURP version (two releases back) on SLURP upgrades.
+      # TODO(mnasiadka): Remove in D.
+      ansible_version_constraint: >-
+          {{ ansible_version_slurp if is_slurp else ansible_version_min if is_upgrade or ansible_facts.distribution != "Ubuntu" else ansible_version_max }}
+      ansible_version_slurp: "==9.*"
+      ansible_version_min: "==9.*"
+      ansible_version_max: "==10.*"
+      # NOTE(mgoddard): Test the use of interface names with dashes.
+      api_interface_name: "vxlan-0"
+      api_network_prefix: "192.0.2."
+      api_network_prefix_length: "24"
+      configure_swap_size: 0
+      container_engine: "docker"
+      is_upgrade: false
+      is_slurp: false
+      kolla_internal_vip_address: "192.0.2.10"
+      le_enabled: false
+      neutron_external_bridge_name: br-0
+      neutron_external_interface_name: "veth-{{ neutron_external_bridge_name }}-ext"
+      neutron_external_network_prefix: "198.51.100."
+      neutron_external_network_prefix_length: "24"
+      neutron_external_vxlan_interface_name: "vxlan-1"
+      neutron_tenant_network_dns_server: "8.8.8.8"
+      neutron_tenant_network_prefix: "203.0.113."
+      neutron_tenant_network_prefix_length: "24"
+      previous_release: "2024.2"
+      scenario: core
+      tls_enabled: false
+      virt_type: qemu
+
+- job:
+    parent: kolla-ansible-variables
     name: kolla-ansible-base
     pre-run: tests/pre.yml
     run: tests/run.yml
@@ -17,6 +60,7 @@
       - ^releasenotes/.*$
       - ^deploy-guide/.*$
       - ^test-requirements.txt$
+      - ^lint-requirements.txt$
       - ^etc/kolla/globals.yml$
       - ^tox.ini$
       - ^\..+
@@ -24,34 +68,27 @@
       - ^contrib/
       - ^specs/
       - ^kolla_ansible/tests/
-      - ^zuul\.d/
-    vars:
-      previous_release: yoga
-      scenario: core
-      virt_type: qemu
-      is_upgrade: no
-      api_network_prefix: "192.0.2."
-      api_network_prefix_length: "24"
-      api_interface_name: vxlan0
-      kolla_internal_vip_address: "192.0.2.10"
-      address_family: 'ipv4'
-      neutron_external_network_prefix: "198.51.100."
-      neutron_external_network_prefix_length: "24"
-      neutron_external_bridge_name: br0
-      neutron_external_interface_name: "veth-{{ neutron_external_bridge_name }}-ext"
-      neutron_external_vxlan_interface_name: vxlan1
-      tls_enabled: false
-      configure_swap_size: 0
+      - ^tools/validate-.*$
     roles:
       - zuul: zuul/zuul-jobs
       - zuul: openstack/kolla
 
 - job:
-    name: kolla-ansible-kvm-base
     parent: kolla-ansible-base
-    voting: false
+    name: kolla-ansible-scenario-base
     files:
+      - ^ansible/group_vars/all.yml
+      - ^requirements-core.yml
+      - ^tests/templates/(inventory|globals-default.j2)
+      - ^tests/(pre|run).yml
+
+- job:
+    name: kolla-ansible-kvm-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
       - ^ansible/roles/(nova-cell)/
+      - ^tests/templates/nova-compute-overrides.j2
     vars:
       virt_type: kvm
 
@@ -63,13 +100,18 @@
       api_network_prefix: "fd::"
       api_network_prefix_length: "64"
       kolla_internal_vip_address: "fd::ff:0"
+      neutron_external_network_prefix: "fd:1::"
+      neutron_external_network_prefix_length: "64"
+      neutron_tenant_network_prefix: "fd:f0::"
+      neutron_tenant_network_prefix_length: "64"
+      neutron_tenant_network_dns_server: 2001:4860:4860::8888
       address_family: 'ipv6'
 
 - job:
     name: kolla-ansible-bifrost-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/bifrost/
       - ^tests/test-bifrost.sh
     vars:
@@ -77,9 +119,9 @@
 
 - job:
     name: kolla-ansible-ironic-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(ironic|neutron|nova|nova-cell)/
       - ^tests/deploy-tenks\.sh$
       - ^tests/templates/ironic-overrides\.j2$
@@ -93,9 +135,9 @@
 
 - job:
     name: kolla-ansible-zun-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(zun|kuryr|etcd|cinder|iscsi)/
       - ^tests/setup_disks.sh
       - ^tests/test-core-openstack.sh
@@ -106,9 +148,9 @@
 
 - job:
     name: kolla-ansible-swift-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(glance|swift)/
       - ^tests/setup_disks.sh
       - ^tests/init-swift.sh
@@ -127,9 +169,9 @@
 
 - job:
     name: kolla-ansible-magnum-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(designate|magnum|trove)/
       - ^tests/test-dashboard.sh
       - ^tests/test-magnum.sh
@@ -138,9 +180,9 @@
 
 - job:
     name: kolla-ansible-octavia-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(octavia|octavia-certificates)/
       - ^tests/test-dashboard.sh
       - ^tests/test-octavia.sh
@@ -149,9 +191,9 @@
 
 - job:
     name: kolla-ansible-masakari-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/masakari/
       - ^ansible/roles/hacluster/
       - ^tests/test-masakari.sh
@@ -160,21 +202,10 @@
       scenario: masakari
 
 - job:
-    name: kolla-ansible-monasca-base
-    parent: kolla-ansible-base
-    voting: false
-    files:
-      - ^ansible/roles/(elasticsearch|influxdb|kafka|kibana|monasca|storm|zookeeper)/
-      - ^tests/test-monasca.sh
-      - ^tests/test-dashboard.sh
-    vars:
-      scenario: monasca
-
-- job:
     name: kolla-ansible-mariadb-base
-    parent: kolla-ansible-base
-    voting: false
-    files:
+    parent: kolla-ansible-scenario-base
+    voting: true
+    files: !inherit
       - ^ansible/roles/mariadb/
       - ^tests/test-mariadb.sh
     vars:
@@ -182,9 +213,9 @@
 
 - job:
     name: kolla-ansible-scenario-nfv-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/(aodh|barbican|heat|mistral|redis|tacker)/
       - ^tests/test-scenario-nfv.sh
       - ^tests/test-dashboard.sh
@@ -193,63 +224,109 @@
 
 - job:
     name: kolla-ansible-cells-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
+    files: !inherit
       - ^ansible/roles/nova/
+      - ^ansible/roles/loadbalancer/
       - ^tests/test-core-openstack.sh
+      - ^tests/test-proxysql.sh
     vars:
       scenario: cells
 
 - job:
     name: kolla-ansible-ovn-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^ansible/roles/(neutron|octavia|openvswitch|ovn)/
+    files: !inherit
+      - ^ansible/roles/(neutron|octavia|openvswitch|ovn-controller|ovn-db)/
       - ^tests/test-ovn.sh
       - ^tests/test-core-openstack.sh
+      - ^tests/reconfigure.sh
     vars:
       scenario: ovn
 
 - job:
-    name: kolla-ansible-prometheus-efk-base
-    parent: kolla-ansible-base
+    name: kolla-ansible-prometheus-opensearch-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^ansible/roles/(common|elasticsearch|grafana|kibana|prometheus)/
-      - ^tests/test-prometheus-efk.sh
+    files: !inherit
+      - ^ansible/roles/(common|opensearch|grafana|prometheus)/
+      - ^tests/test-prometheus-opensearch.sh
     vars:
-      scenario: prometheus-efk
+      scenario: prometheus-opensearch
 
 - job:
     name: kolla-ansible-venus-base
-    parent: kolla-ansible-base
+    parent: kolla-ansible-scenario-base
     voting: false
-    files:
-      - ^ansible/roles/(common|elasticsearch|venus)/
+    files: !inherit
+      - ^ansible/roles/(common|opensearch|venus)/
       - ^tests/test-venus.sh
     vars:
       scenario: venus
 
 - job:
     name: kolla-ansible-hashi-vault-base
+    parent: kolla-ansible-variables
     run: tests/run-hashi-vault.yml
     required-projects:
       - openstack/kolla-ansible
       - openstack/requirements
     voting: false
-    irrelevant-files:
-      - ^.*\.rst$
-      - ^doc/.*
-      - ^releasenotes/.*$
-      - ^deploy-guide/.*$
-      - ^test-requirements.txt$
-      - ^etc/kolla/globals.yml$
-      - ^tox.ini$
-      - ^\..+
-      - ^LICENSE$
-      - ^contrib/
-      - ^specs/
-      - ^kolla_ansible/tests/
-      - ^zuul\.d/
+    files:
+      - ^requirements-core.yml
+      - ^tests/templates/(inventory|globals-default.j2)
+      - ^tests/(pre|run).yml
+      - ^kolla_ansible/
+      - ^tests/run-hashi-vault.yml
+      - ^tests/test-hashicorp-vault-passwords.sh
+
+- job:
+    name: kolla-ansible-haproxy-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/haproxy/
+      - ^kolla_ansible/kolla_url.py
+    vars:
+      external_api_interface_name: vxlan2
+      external_api_network_prefix: "192.0.3."
+      external_api_network_prefix_length: "24"
+      kolla_external_vip_address: "192.0.3.10"
+      scenario: haproxy
+
+- job:
+    name: kolla-ansible-lets-encrypt-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/common/templates/conf/input/11-letsencrypt.conf.j2
+      - ^ansible/roles/(letsencrypt|loadbalancer)/
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-dashboard.sh
+      - ^tests/deploy.sh
+    vars:
+      scenario: lets-encrypt
+      tls_enabled: true
+      le_enabled: true
+
+- job:
+    name: kolla-ansible-skyline-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/skyline/
+      - ^tests/test-skyline.sh
+    vars:
+      scenario: skyline
+
+- job:
+    name: kolla-ansible-skyline-sso-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files:
+      - ^ansible/roles/skyline/
+      - ^tests/test-skyline-sso.sh
+    vars:
+      scenario: skyline-sso

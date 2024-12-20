@@ -8,13 +8,16 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - nova_api
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for Nova API
   vars:
-    nova_api: "{{ nova_services['nova-api'] }}"
+    service: "{{ nova_services['nova-api'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_api_listen_port }}"
@@ -23,12 +26,11 @@
     state: stopped
   when:
     - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups[nova_api.group]
-    - nova_api.enabled | bool
+    - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Metadata
   vars:
-    nova_api: "{{ nova_services['nova-api'] }}"
+    service: "{{ nova_services['nova-api'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_metadata_listen_port }}"
@@ -37,5 +39,4 @@
     state: stopped
   when:
     - container_facts['nova_api'] is not defined
-    - inventory_hostname in groups[nova_api.group]
-    - nova_api.enabled | bool
+    - service | service_enabled_and_mapped_to_host

@@ -13,6 +13,8 @@ state_path = /var/lib/zun
 container_driver = docker
 capsule_driver = cri
 
+sandbox_image = k8s.gcr.io/pause:3.6
+
 [network]
 driver = kuryr
 
@@ -39,7 +41,7 @@ region_name = {{ openstack_region_name }}
 cafile = {{ openstack_cacert }}
 
 {% if enable_memcached | bool %}
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
@@ -62,7 +64,7 @@ region_name = {{ openstack_region_name }}
 cafile = {{ openstack_cacert }}
 
 {% if enable_memcached | bool %}
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
@@ -114,7 +116,7 @@ host_shared_with_nova = {{ inventory_hostname in groups['compute'] and enable_no
 [websocket_proxy]
 wsproxy_host = {{ api_interface_address }}
 wsproxy_port = {{ zun_wsproxy_port }}
-base_url = {{ zun_wsproxy_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ zun_wsproxy_port }}
+base_url = {{ zun_wsproxy_protocol }}://{{ zun_external_fqdn | put_address_in_context('url') }}:{{ zun_wsproxy_port }}
 
 [docker]
 api_url = tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
@@ -124,8 +126,15 @@ docker_remote_api_port = 2375
 [cni_daemon]
 cni_daemon_port = {{ zun_cni_daemon_port }}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = {{ service_name == 'zun-api' }}
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}

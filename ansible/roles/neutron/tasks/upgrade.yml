@@ -1,6 +1,15 @@
 ---
+- import_tasks: neutron_plugin_agent_check.yml
+
 - include_tasks: rolling_upgrade.yml
   when: neutron_enable_rolling_upgrade | bool
 
 - include_tasks: legacy_upgrade.yml
   when: not neutron_enable_rolling_upgrade | bool
+
+# TODO(mnasiadka): Remove this task in the E cycle.
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_neutron_auth }}"
+    service_ks_register_user_roles: "{{ neutron_ks_user_roles }}"

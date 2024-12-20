@@ -1,0 +1,98 @@
+---
+ovn_db_services:
+  ovn-northd:
+    container_name: ovn_northd
+    group: ovn-northd
+    enabled: true
+    image: "{{ ovn_northd_image_full }}"
+    volumes: "{{ ovn_northd_default_volumes + ovn_northd_extra_volumes }}"
+    dimensions: "{{ ovn_northd_dimensions }}"
+  ovn-nb-db:
+    container_name: ovn_nb_db
+    group: ovn-nb-db
+    enabled: true
+    image: "{{ ovn_nb_db_image_full }}"
+    volumes: "{{ ovn_nb_db_default_volumes + ovn_nb_db_extra_volumes }}"
+    dimensions: "{{ ovn_nb_db_dimensions }}"
+  ovn-sb-db:
+    container_name: ovn_sb_db
+    group: ovn-sb-db
+    enabled: true
+    image: "{{ ovn_sb_db_image_full }}"
+    volumes: "{{ ovn_sb_db_default_volumes + ovn_sb_db_extra_volumes }}"
+    dimensions: "{{ ovn_sb_db_dimensions }}"
+
+
+####################
+# Docker
+####################
+ovn_tag: "{{ openstack_tag }}"
+
+ovn_northd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovn-northd"
+ovn_northd_tag: "{{ ovn_tag }}"
+ovn_northd_image_full: "{{ ovn_northd_image }}:{{ ovn_northd_tag }}"
+
+ovn_nb_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovn-nb-db-server"
+ovn_nb_db_tag: "{{ ovn_tag }}"
+ovn_nb_db_image_full: "{{ ovn_nb_db_image }}:{{ ovn_nb_db_tag }}"
+
+ovn_sb_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovn-sb-db-server"
+ovn_sb_db_tag: "{{ ovn_tag }}"
+ovn_sb_db_image_full: "{{ ovn_sb_db_image }}:{{ ovn_sb_db_tag }}"
+
+ovn_northd_dimensions: "{{ default_container_dimensions }}"
+ovn_nb_db_dimensions: "{{ default_container_dimensions }}"
+ovn_sb_db_dimensions: "{{ default_container_dimensions }}"
+
+ovn_northd_default_volumes:
+  - "{{ node_config_directory }}/ovn-northd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
+ovn_nb_db_default_volumes:
+  - "{{ node_config_directory }}/ovn-nb-db/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "ovn_nb_db:/var/lib/openvswitch/ovn-nb/"
+  - "kolla_logs:/var/log/kolla/"
+ovn_sb_db_default_volumes:
+  - "{{ node_config_directory }}/ovn-sb-db/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "ovn_sb_db:/var/lib/openvswitch/ovn-sb/"
+  - "kolla_logs:/var/log/kolla/"
+
+ovn_db_extra_volumes: "{{ default_extra_volumes }}"
+ovn_northd_extra_volumes: "{{ ovn_db_extra_volumes }}"
+ovn_nb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
+ovn_sb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
+
+#####
+# OVN
+#####
+# Configure OVN remote probe interval time in ms
+ovn_remote_probe_interval: "60000"
+# Configure OVN openflow interval in s
+ovn_openflow_probe_interval: "60"
+# Configure OVN DB inactivity probe time in ms
+ovn_db_inactivity_probe: "60000"
+ovn_sb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
+ovn_nb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
+# OVN startup commands
+ovn_nb_command: >-
+  /usr/share/ovn/scripts/ovn-ctl run_nb_ovsdb
+  --db-nb-addr={{ api_interface_address | put_address_in_context('url') }}
+  --db-nb-cluster-local-addr={{ api_interface_address | put_address_in_context('url') }}
+  {{ ovn_nb_db_bootstrap_args | default('') }}
+  --db-nb-sock=/run/ovn/ovnnb_db.sock
+  --db-nb-pidfile=/run/ovn/ovnnb_db.pid
+  --db-nb-file=/var/lib/openvswitch/ovn-nb/ovnnb.db
+  --ovn-nb-logfile=/var/log/kolla/openvswitch/ovn-nb-db.log
+ovn_sb_command: >-
+  /usr/share/ovn/scripts/ovn-ctl run_sb_ovsdb
+  --db-sb-addr={{ api_interface_address | put_address_in_context('url') }}
+  --db-sb-cluster-local-addr={{ api_interface_address | put_address_in_context('url') }}
+  {{ ovn_sb_db_bootstrap_args | default('') }}
+  --db-sb-sock=/run/ovn/ovnsb_db.sock
+  --db-sb-pidfile=/run/ovn/ovnsb_db.pid
+  --db-sb-file=/var/lib/openvswitch/ovn-sb/ovnsb.db
+  --ovn-sb-logfile=/var/log/kolla/openvswitch/ovn-sb-db.log
+# Workaround: pause after restarting containers to allow for leader election.
+ovn_leader_election_pause: 5

@@ -1,9 +1,11 @@
+{% if keepalived_track_script_enabled | bool %}
 vrrp_script check_alive {
     script "/check_alive.sh"
     interval 2
     fall 2
     rise 10
 }
+{% endif %}
 
 vrrp_instance kolla_internal_vip_{{ keepalived_virtual_router_id }} {
     state BACKUP
@@ -40,7 +42,9 @@ vrrp_instance kolla_internal_vip_{{ keepalived_virtual_router_id }} {
         auth_type PASS
         auth_pass {{ keepalived_password }}
     }
+{% if keepalived_track_script_enabled | bool %}
     track_script {
         check_alive
     }
+{% endif %}
 }

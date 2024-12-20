@@ -4,7 +4,7 @@
     service_name: "mariadb"
     service: "{{ mariadb_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -23,6 +23,7 @@
     timeout: 60
     search_regex: "MariaDB"
   register: check_mariadb_port
+  check_mode: false
   until: check_mariadb_port is success
   retries: 10
   delay: 6
@@ -31,7 +32,8 @@
   become: true
   command: >-
     {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
-    mysql -uroot -p{{ database_password }}
+    mariadb -uroot -p{{ database_password }}
+    -h {{ api_interface_address }} -P {{ mariadb_port }}
     --silent --skip-column-names
     -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
   changed_when: false
@@ -40,6 +42,7 @@
   retries: 10
   delay: 6
   no_log: true
+  check_mode: false
   when:
     # NOTE(yoctozepto): we don't want to wait for new nodes to fully sync
     # with an existing cluster as this could take time

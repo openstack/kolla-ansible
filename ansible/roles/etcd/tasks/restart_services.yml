@@ -1,0 +1,41 @@
+---
+- name: Restart etcd container
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment }}"
+
+- name: Wait for etcd service port liveness
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ etcd_client_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_etcd_client_port
+  until: check_etcd_client_port is success
+  retries: 10
+  delay: 6
+
+- name: Wait for etcd endpoints to be healthy
+  become: true
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  command: >-
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    etcdctl endpoint health
+  changed_when: false
+  register: result
+  until:
+    - result is success
+    - ((result.stdout | from_json | first)['health'] | default(False) | bool)
+  retries: 10
+  delay: 6

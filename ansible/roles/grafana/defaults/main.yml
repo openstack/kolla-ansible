@@ -13,11 +13,14 @@ grafana_services:
         mode: "http"
         external: false
         port: "{{ grafana_server_port }}"
+        listen_port: "{{ grafana_server_listen_port }}"
       grafana_server_external:
         enabled: "{{ enable_grafana_external | bool }}"
         mode: "http"
         external: true
-        port: "{{ grafana_server_port }}"
+        external_fqdn: "{{ grafana_external_fqdn }}"
+        port: "{{ grafana_server_public_port }}"
+        listen_port: "{{ grafana_server_listen_port }}"
 
 ####################
 # Database
@@ -54,31 +57,24 @@ grafana_data_sources:
       url: "{{ influxdb_internal_endpoint }}"
       access: "proxy"
       basicAuth: false
-  elasticsearch:
-    enabled: "{{ enable_elasticsearch | bool }}"
+  opensearch:
+    enabled: "{{ enable_opensearch | bool }}"
     data:
-      name: "elasticsearch"
-      type: "elasticsearch"
+      name: "opensearch"
+      type: "grafana-opensearch-datasource"
       access: "proxy"
-      url: "{{ elasticsearch_internal_endpoint }}"
-      database: "flog-*"
+      url: "{{ opensearch_internal_endpoint }}"
       jsonData:
-        esVersion: 5
+        flavor: "OpenSearch"
+        database: "{{ opensearch_log_index_prefix }}-*"
+        version: "2.11.1"
         timeField: "@timestamp"
-  monasca:
-    enabled: "{{ enable_monasca | bool }}"
-    data:
-      name: "Monasca"
-      type: "monasca-datasource"
-      access: "proxy"
-      url: "{{ monasca_api_internal_base_endpoint }}"
-      jsonData:
-        keystoneAuth: True
+        logLevelField: "log_level"
 
 ##########
 # Grafana
 ##########
-grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/grafana"
+grafana_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}grafana"
 grafana_tag: "{{ openstack_tag }}"
 grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"
@@ -88,12 +84,14 @@ grafana_default_volumes:
   - "{{ node_config_directory }}/grafana/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "grafana:/var/lib/grafana/"
   - "kolla_logs:/var/log/kolla/"
 grafana_extra_volumes: "{{ default_extra_volumes }}"
 
 grafana_start_first_node_delay: 10
 grafana_start_first_node_retries: 12
+
+# TODO(dawudm): make this True in the D release
+grafana_remove_old_volume: false
 
 ############
 # Prometheus

@@ -1,12 +1,12 @@
 <source>
   @type tail
   path /var/log/kolla/rabbitmq/rabbit@{{ ansible_facts.hostname }}.log
-  pos_file /var/run/td-agent/rabbit.pos
+  pos_file /var/run/fluentd/rabbit.pos
   tag infra.rabbit
-  enable_watch_timer false
+  enable_watch_timer {{ fluentd_enable_watch_timer }}
   <parse>
     @type multiline
-    format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/
-    format1 /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) \[(?<log_level>\w+)\] (?<Payload>.*)/
+    format_firstline /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}(\d+\+\d{2}:\d{2})?/
+    format1 /^(?<Timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})(\d+\+\d{2}:\d{2})? \[(?<log_level>\w+)\] (?<Payload>.*)/
   </parse>
 </source>

@@ -21,6 +21,7 @@
     host: "{{ mariadb_shards_info.shards[shard_id].hosts[0] }}"
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_user
     module_args:
       login_host: "{{ host }}"
@@ -30,7 +31,7 @@
       name: "{{ mariadb_monitor_user }}"
       password: "{% if enable_proxysql | bool %}{{ mariadb_monitor_password }}{% endif %}"
       host: "%"
-      priv: "*.*:USAGE"
+      priv: "*.*:USAGE,REPLICATION CLIENT"
   tags: always
   with_dict: "{{ mariadb_shards_info.shards }}"
   loop_control:

@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ cyborg_services }}"
+  with_dict: "{{ cyborg_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -39,11 +36,7 @@
   become: true
   when:
     - cyborg_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ cyborg_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ cyborg_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: copy-certs.yml
   when:
@@ -55,12 +48,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ cyborg_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ cyborg_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over cyborg.conf
   vars:
@@ -75,12 +63,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/cyborg.conf"
     mode: "0660"
   become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ cyborg_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ cyborg_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over cyborg-api-paste.ini
   vars:
@@ -92,8 +75,4 @@
     dest: "{{ node_config_directory }}/cyborg-api/api-paste.ini"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups['cyborg-api']
-    - service.enabled | bool
-  notify:
-    - Restart cyborg-api container
+  when: service | service_enabled_and_mapped_to_host

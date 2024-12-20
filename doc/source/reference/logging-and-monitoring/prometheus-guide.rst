@@ -34,6 +34,30 @@ In order to remove leftover volume containing Prometheus 1.x data, execute:
 
 on all hosts wherever Prometheus was previously deployed.
 
+Basic Auth
+~~~~~~~~~~
+
+Prometheus is protected with basic HTTP authentication. Kolla-ansible will
+create the following users: ``admin``, ``grafana`` (if grafana is
+enabled) and ``skyline`` (if skyline is enabled). The grafana username can
+be overridden using the variable
+``prometheus_grafana_user``, the skyline username can
+be overridden using the variable ``prometheus_skyline_user``.
+The passwords are defined by the
+``prometheus_password``, ``prometheus_grafana_password`` and
+``prometheus_skyline_password`` variables in
+``passwords.yml``. The list of basic auth users can be extended using the
+``prometheus_basic_auth_users_extra`` variable:
+
+.. code-block:: yaml
+
+   prometheus_basic_auth_users_extra:
+      - username: user
+        password: hello
+        enabled: true
+
+or completely overridden with the ``prometheus_basic_auth_users`` variable.
+
 Extending the default command line options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -82,7 +106,7 @@ following:
       static_configs:
         - targets:
   {% for host in groups['prometheus'] %}
-          - '{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ 3456 }}'
+          - '{{ hostvars[host][('ansible_' + hostvars[host]['api_interface'] | replace('-','_'))]['ipv4']['address'] }}:{{ 3456 }}'
   {% endfor %}
 
 The jobs, ``custom``, and ``custom_template``  would be appended to the default
@@ -100,7 +124,7 @@ Extra files
 
 Sometimes it is necessary to reference additional files from within
 ``prometheus.yml``, for example, when defining file service discovery
-configuration. To enable you to do this, kolla-ansible will resursively
+configuration. To enable you to do this, kolla-ansible will recursively
 discover any files in ``{{ node_custom_config }}/prometheus/extras`` and
 template them. The templated output is then copied to
 ``/etc/prometheus/extras`` within the container on startup. For example to
@@ -156,3 +180,66 @@ files:
         - 192.168.1.1
       labels:
           job: ipmi_exporter
+
+Metric Instance labels
+~~~~~~~~~~~~~~~~~~~~~~
+
+Previously, Prometheus metrics used to label instances based on their IP
+addresses. This behaviour can now be changed such that instances can be
+labelled based on their inventory hostname instead. The IP address remains as
+the target address, therefore, even if the hostname is unresolvable, it doesn't
+pose an issue.
+
+The default behavior still labels instances with their IP addresses. However,
+this can be adjusted by changing the ``prometheus_instance_label`` variable.
+This variable accepts the following values:
+
+* ``None``: Instance labels will be IP addresses (default)
+* ``{{ ansible_facts.hostname }}``: Instance labels will be hostnames
+* ``{{ ansible_facts.nodename }}``: Instance labels will FQDNs
+
+To implement this feature, modify the configuration file
+``/etc/kolla/globals.yml`` and update the ``prometheus_instance_label``
+variable accordingly. Remember, changing this variable will cause Prometheus to
+scrape metrics with new names for a short period. This will result in duplicate
+metrics until all metrics are replaced with their new labels.
+
+.. code-block:: yaml
+
+   prometheus_instance_label: "{{ ansible_facts.hostname }}"
+
+This metric labeling feature may become the default setting in future releases.
+Therefore, if you wish to retain the current default (IP address labels), make
+sure to set the ``prometheus_instance_label`` variable to ``None``.
+
+.. note::
+
+   This feature may generate duplicate metrics temporarily while Prometheus
+   updates the metric labels. Please be aware of this while analyzing metrics
+   during the transition period.
+
+Exporter configuration
+~~~~~~~~~~~~~~~~~~~~~~
+
+Node Exporter
+-------------
+
+Sometimes it can be useful to monitor hosts outside of the Kolla deployment.
+One method of doing this is to configure a list of additional targets using the
+``prometheus_node_exporter_targets_extra`` variable.  The format of which
+should be a list of dictionaries with the following keys:
+
+* target: URL of node exporter to scrape
+* labels: (Optional) A list of labels to set on the metrics scaped from this
+  exporter.
+
+For example:
+
+.. code-block:: yaml
+  :caption: ``/etc/kolla/globals.yml``
+
+  prometheus_node_exporter_targets_extra:
+    - target: http://10.0.0.1:1234
+      labels:
+        instance: host1
+

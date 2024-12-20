@@ -20,7 +20,8 @@ heat_services:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
-        port: "{{ heat_api_port }}"
+        external_fqdn: "{{ heat_external_fqdn }}"
+        port: "{{ heat_api_public_port }}"
         listen_port: "{{ heat_api_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
   heat-api-cfn:
@@ -43,7 +44,8 @@ heat_services:
         enabled: "{{ enable_heat }}"
         mode: "http"
         external: true
-        port: "{{ heat_api_cfn_port }}"
+        external_fqdn: "{{ heat_cfn_external_fqdn }}"
+        port: "{{ heat_api_cfn_public_port }}"
         listen_port: "{{ heat_api_cfn_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
   heat-engine:
@@ -54,6 +56,13 @@ heat_services:
     volumes: "{{ heat_engine_default_volumes + heat_engine_extra_volumes }}"
     dimensions: "{{ heat_engine_dimensions }}"
     healthcheck: "{{ heat_engine_healthcheck }}"
+
+####################
+# Config Validate
+####################
+heat_config_validation:
+  - generator: "/heat/config-generator.conf"
+    config: "/etc/heat/heat.conf"
 
 ####################
 # Database
@@ -81,15 +90,15 @@ heat_database_shard:
 ####################
 heat_tag: "{{ openstack_tag }}"
 
-heat_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/heat-api"
+heat_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}heat-api"
 heat_api_tag: "{{ heat_tag }}"
 heat_api_image_full: "{{ heat_api_image }}:{{ heat_api_tag }}"
 
-heat_api_cfn_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/heat-api-cfn"
+heat_api_cfn_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}heat-api-cfn"
 heat_api_cfn_tag: "{{ heat_tag }}"
 heat_api_cfn_image_full: "{{ heat_api_cfn_image }}:{{ heat_api_cfn_tag }}"
 
-heat_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/heat-engine"
+heat_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}heat-engine"
 heat_engine_tag: "{{ heat_tag }}"
 heat_engine_image_full: "{{ heat_engine_image }}:{{ heat_engine_tag }}"
 
@@ -140,19 +149,19 @@ heat_api_default_volumes:
   - "{{ node_config_directory }}/heat-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/heat:/dev-mode/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 heat_api_cfn_default_volumes:
   - "{{ node_config_directory }}/heat-api-cfn/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/heat:/dev-mode/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 heat_engine_default_volumes:
   - "{{ node_config_directory }}/heat-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/heat/heat:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/heat' if heat_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/heat:/dev-mode/heat' if heat_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 heat_extra_volumes: "{{ default_extra_volumes }}"
@@ -163,12 +172,10 @@ heat_engine_extra_volumes: "{{ heat_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-heat_internal_endpoint: "{{ internal_protocol }}://{{ heat_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
-heat_public_endpoint: "{{ public_protocol }}://{{ heat_external_fqdn | put_address_in_context('url') }}:{{ heat_api_port }}/v1/%(tenant_id)s"
+heat_internal_endpoint: "{{ heat_internal_base_endpoint }}/v1/%(tenant_id)s"
+heat_public_endpoint: "{{ heat_public_base_endpoint }}/v1/%(tenant_id)s"
 
-heat_cfn_public_base_endpoint: "{{ public_protocol }}://{{ heat_cfn_external_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}"
-
-heat_cfn_internal_endpoint: "{{ internal_protocol }}://{{ heat_cfn_internal_fqdn | put_address_in_context('url') }}:{{ heat_api_cfn_port }}/v1"
+heat_cfn_internal_endpoint: "{{ heat_cfn_internal_base_endpoint }}/v1"
 heat_cfn_public_endpoint: "{{ heat_cfn_public_base_endpoint }}/v1"
 
 heat_logging_debug: "{{ openstack_logging_debug }}"
@@ -228,7 +235,7 @@ heat_ks_roles:
   - "{{ heat_stack_user_role }}"
 
 heat_ks_user_roles:
-  - project: "{{ keystone_admin_project }}"
+  - project: "{{ openstack_auth.project_name }}"
     user: "{{ openstack_auth.username }}"
     role: "{{ heat_stack_owner_role }}"
 
@@ -236,3 +243,5 @@ heat_ks_user_roles:
 # TLS
 ####################
 heat_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+heat_copy_certs: "{{ kolla_copy_ca_into_containers | bool or heat_enable_tls_backend | bool }}"

@@ -3,7 +3,7 @@
   become: true
   command: >
     {{ kolla_container_engine }} exec keystone kolla_keystone_bootstrap
-    {{ openstack_auth.username }} {{ openstack_auth.password }} {{ keystone_admin_project }}
+    {{ openstack_auth.username }} {{ openstack_auth.password }} {{ openstack_auth.project_name }}
     admin {{ keystone_internal_url }} {{ keystone_public_url }} {{ item }}
   register: keystone_bootstrap
   changed_when: (keystone_bootstrap.stdout | from_json).changed
@@ -21,7 +21,8 @@
 - name: Creating default user role
   become: true
   kolla_toolbox:
-    module_name: "os_keystone_role"
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.identity_role
     module_args:
       name: "{{ keystone_default_user_role }}"
       auth: "{{ openstack_keystone_auth }}"

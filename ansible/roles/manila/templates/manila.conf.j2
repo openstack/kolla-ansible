@@ -13,7 +13,7 @@ osapi_share_workers = {{ manila_api_workers }}
 rootwrap_config = /etc/manila/rootwrap.conf
 api_paste_config = /etc/manila/api-paste.ini
 
-enabled_share_protocols = "{{ manila_backends|selectattr('enabled', 'equalto', true)|sum(attribute='protocols', start=[]) | unique | join(',') }}"
+enabled_share_protocols = "{{ manila_enabled_backends | sum(attribute='protocols', start=[]) | unique | join(',') }}"
 
 auth_strategy = keystone
 
@@ -43,7 +43,7 @@ password = {{ manila_keystone_password }}
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -56,10 +56,17 @@ topics = {{ manila_enabled_notification_topics | map(attribute='name') | join(',
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 [oslo_middleware]

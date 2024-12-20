@@ -1,23 +1,37 @@
 ---
-- name: Copy over ceph.conf for Glance
-  template:
-    src: "{{ node_custom_config }}/glance/ceph.conf"
-    dest: "{{ node_config_directory }}/glance-api/ceph.conf"
-    mode: "0660"
+- name: Ensuring glance service ceph config subdir exists
+  vars:
+    service: "{{ glance_services['glance-api'] }}"
+  file:
+    path: "{{ node_config_directory }}/glance-api/ceph"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
   become: true
-  when: inventory_hostname in groups['glance-api']
-  notify:
-    - Restart glance-api container
+  when: service | service_enabled_and_mapped_to_host
 
-- name: Copy over ceph Glance keyring
-  template:
-    src: "{{ node_custom_config }}/glance/{{ ceph_glance_keyring }}"
-    dest: "{{ node_config_directory }}/glance-api/{{ ceph_glance_keyring }}"
+- name: Copy over multiple ceph configs for Glance
+  merge_configs:
+    sources:
+      - "{{ node_custom_config }}/glance/{{ item.cluster }}.conf"
+      - "{{ node_custom_config }}/glance/glance-api/{{ item.cluster }}.conf"
+    dest: "{{ node_config_directory }}/glance-api/ceph/{{ item.cluster }}.conf"
     mode: "0660"
   become: true
   when: inventory_hostname in groups['glance-api']
-  notify:
-    - Restart glance-api container
+  with_items: "{{ glance_ceph_backends }}"
+
+- name: Copy over ceph Glance keyrings
+  vars:
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
+  template:
+    src: "{{ node_custom_config }}/glance/{{ keyring }}"
+    dest: "{{ node_config_directory }}/glance-api/ceph/{{ keyring }}"
+    mode: "0660"
+  become: true
+  with_items: "{{ glance_ceph_backends }}"
+  when: inventory_hostname in groups['glance-api']
 
 - name: Ensuring config directory has correct owner and permission
   file:

@@ -4,7 +4,7 @@
     service_name: "fluentd"
     service: "{{ common_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -12,15 +12,13 @@
     volumes: "{{ service.volumes }}"
     environment: "{{ service.environment }}"
     dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart kolla-toolbox container
   vars:
     service_name: "kolla-toolbox"
     service: "{{ common_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -29,8 +27,6 @@
     volumes: "{{ service.volumes }}"
     environment: "{{ service.environment }}"
     dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
   notify:
     - Initializing toolbox container using normal user
 
@@ -44,7 +40,7 @@
     service_name: "cron"
     service: "{{ common_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -52,5 +48,3 @@
     volumes: "{{ service.volumes }}"
     environment: "{{ service.environment }}"
     dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"

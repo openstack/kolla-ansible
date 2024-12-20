@@ -4,7 +4,7 @@
     service_name: "cinder-api"
     service: "{{ cinder_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -12,15 +12,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart cinder-scheduler container
   vars:
     service_name: "cinder-scheduler"
     service: "{{ cinder_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -28,15 +26,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart cinder-volume container
   vars:
     service_name: "cinder-volume"
     service: "{{ cinder_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -47,15 +43,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart cinder-backup container
   vars:
     service_name: "cinder-backup"
     service: "{{ cinder_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -64,8 +58,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 # NOTE(mgoddard): After upgrading cinder, services will have an RPC version cap
 # in place.  We need to restart all services in order to allow them to use the

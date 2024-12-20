@@ -8,8 +8,6 @@
   when:
     - kolla_copy_ca_into_containers | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: "{{ project_name }} | Copying over backend internal TLS certificate"
   vars:
@@ -25,13 +23,8 @@
     mode: "0644"
   become: true
   when:
-    - item.value.haproxy is defined
-    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
-    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
-    - not kolla_externally_managed_cert | bool
+    - kolla_copy_backend_tls_files | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"
 
 - name: "{{ project_name }} | Copying over backend internal TLS key"
   vars:
@@ -47,10 +40,5 @@
     mode: "0600"
   become: true
   when:
-    - item.value.haproxy is defined
-    - item.value.haproxy.values() | selectattr('enabled', 'defined') | map(attribute='enabled') | map('bool') | select | list | length > 0
-    - item.value.haproxy.values() | selectattr('tls_backend', 'defined') | map(attribute='tls_backend') | map('bool') | select | list | length > 0
-    - not kolla_externally_managed_cert | bool
+    - kolla_copy_backend_tls_files | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
-  notify:
-    - "Restart {{ item.key }} container"

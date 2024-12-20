@@ -1,0 +1,26 @@
+---
+- name: Ensure etcd volume
+  become: true
+  kolla_container:
+    action: "create_volume"
+    common_options: "{{ docker_common_options }}"
+    name: "kolla_etcd"
+  register: etcd_volume
+
+# NOTE(jan.gutter): If the play is interrupted before properly bootstrapping,
+# we will incorrectly assume that an etcd cluster exists. This likely requires
+# manual intervention to unwedge. If a volume exists we must assume there's
+# data on it.
+
+- name: Divide hosts by their etcd volume availability
+  group_by:
+    key: etcd_had_volume_{{ etcd_volume is not changed }}
+  changed_when: false
+
+- name: Establish whether the cluster has already existed
+  set_fact:
+    etcd_cluster_exists: "{{ groups.etcd_had_volume_True is defined }}"
+  changed_when:
+    - etcd_remove_deleted_members | bool
+    - groups.etcd_had_volume_True is defined
+  notify: Check for deleted members

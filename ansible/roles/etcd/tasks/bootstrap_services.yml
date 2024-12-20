@@ -1,0 +1,36 @@
+---
+- name: Add new member to etcd cluster
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  command: >-
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    etcdctl member add {{ ansible_facts.hostname }}
+    --peer-urls={{ etcd_protocol }}://{{ 'api' | kolla_address(inventory_hostname) | put_address_in_context('url') }}:{{ etcd_peer_port }}
+  delegate_to: "{{ etcd_cluster_leader | default(groups[service.group][0]) }}"
+
+- name: Bootstrapping etcd containers
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    environment: "{{ etcd_base_environment | combine(etcd_bootstrap_service_environment) }}"
+    image: "{{ service.image }}"
+    name: "{{ service.container_name }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+
+- name: Wait for etcd service port liveness
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ etcd_client_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_etcd_client_port
+  until: check_etcd_client_port is success
+  retries: 10
+  delay: 6

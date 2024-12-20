@@ -7,7 +7,7 @@ glance_services:
     enabled: true
     image: "{{ glance_api_image_full }}"
     environment: "{{ glance_api_container_proxy }}"
-    privileged: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
+    privileged: "{{ enable_cinder | bool and (enable_cinder_backend_iscsi | bool or cinder_backend_ceph | bool) }}"
     volumes: "{{ glance_api_default_volumes + glance_api_extra_volumes }}"
     dimensions: "{{ glance_api_dimensions }}"
     healthcheck: "{{ glance_api_healthcheck }}"
@@ -26,7 +26,8 @@ glance_services:
         enabled: "{{ enable_glance | bool and not glance_enable_tls_backend | bool }}"
         mode: "http"
         external: true
-        port: "{{ glance_api_port }}"
+        external_fqdn: "{{ glance_external_fqdn }}"
+        port: "{{ glance_api_public_port }}"
         frontend_http_extra:
           - "timeout client {{ haproxy_glance_api_client_timeout }}"
         backend_http_extra:
@@ -57,13 +58,27 @@ glance_services:
         enabled: "{{ enable_glance | bool and glance_enable_tls_backend | bool }}"
         mode: "http"
         external: true
-        port: "{{ glance_api_port }}"
+        external_fqdn: "{{ glance_external_fqdn }}"
+        port: "{{ glance_api_public_port }}"
         frontend_http_extra:
           - "timeout client {{ haproxy_glance_api_client_timeout }}"
         backend_http_extra:
           - "timeout server {{ haproxy_glance_api_server_timeout }}"
         custom_member_list: "{{ haproxy_tls_members.split(';') }}"
         tls_backend: "yes"
+
+####################
+# Config Validate
+####################
+glance_config_validation:
+  - generator: "/glance/etc/oslo-config-generator/glance-api.conf"
+    config: "/etc/glance/glance-api.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-cache.conf"
+    config: "/etc/glance/glance-cache.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-manage.conf"
+    config: "/etc/glance/glance-manage.conf"
+  - generator: "/glance/etc/oslo-config-generator/glance-scrubber.conf"
+    config: "/etc/glance/glance-scrubber.conf"
 
 ####################
 # HAProxy
@@ -124,18 +139,26 @@ glance_database_shard:
 haproxy_glance_api_client_timeout: "6h"
 haproxy_glance_api_server_timeout: "6h"
 
+####################
+# Glance S3 Backend
+####################
+glance_backend_s3_url: "{{ s3_url }}"
+glance_backend_s3_bucket: "{{ s3_bucket }}"
+glance_backend_s3_access_key: "{{ s3_access_key }}"
+glance_backend_s3_secret_key: "{{ s3_secret_key }}"
 
 ####################
 # Docker
 ####################
+haproxy_tag: "{{ openstack_tag }}"
 glance_tag: "{{ openstack_tag }}"
 
-glance_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/glance-api"
+glance_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}glance-api"
 glance_api_tag: "{{ glance_tag }}"
 glance_api_image_full: "{{ glance_api_image }}:{{ glance_api_tag }}"
 
-glance_tls_proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/haproxy"
-glance_tls_proxy_tag: "{{ glance_tag }}"
+glance_tls_proxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}haproxy"
+glance_tls_proxy_tag: "{{ haproxy_tag }}"
 glance_tls_proxy_image_full: "{{ glance_tls_proxy_image }}:{{ glance_tls_proxy_tag }}"
 
 glance_api_dimensions: "{{ default_container_dimensions }}"
@@ -172,7 +195,7 @@ glance_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "{{ glance_file_datadir_volume }}:/var/lib/glance/"
-  - "{{ kolla_dev_repos_directory ~ '/glance/glance:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/glance' if glance_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/glance:/dev-mode/glance' if glance_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
   # NOTE(yoctozepto): below to support Cinder iSCSI backends
   - "{% if enable_cinder | bool and enable_cinder_backend_iscsi | bool %}iscsi_info:/etc/iscsi{% endif %}"
@@ -193,15 +216,15 @@ glance_api_container_proxy: "{{ container_proxy }}"
 # Glance
 ####################
 glance_backends:
+  - name: s3
+    type: s3
+    enabled: "{{ glance_backend_s3 | bool }}"
   - name: file
     type: file
     enabled: "{{ glance_backend_file | bool }}"
   - name: http
     type: http
     enabled: true
-  - name: rbd
-    type: rbd
-    enabled: "{{ glance_backend_ceph | bool }}"
   - name: vmware
     type: vmware
     enabled: "{{ glance_backend_vmware | bool }}"
@@ -212,7 +235,16 @@ glance_backends:
     type: swift
     enabled: "{{ glance_backend_swift | bool }}"
 
-glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list }}"
+glance_ceph_backends:
+  - name: "rbd"
+    type: "rbd"
+    cluster: "{{ ceph_cluster }}"
+    pool: "{{ ceph_glance_pool_name }}"
+    user: "{{ ceph_glance_user }}"
+    enabled: "{{ glance_backend_ceph | bool }}"
+
+glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
+glance_default_backend: "{% if glance_backend_vmware | bool %}vmware{% elif glance_backend_ceph | bool %}{{ glance_ceph_backends[0].name }}{% elif glance_backend_swift | bool %}swift{% elif glance_backend_s3 | bool %}s3{% else %}file{% endif %}"
 
 ####################
 # OpenStack
@@ -251,8 +283,8 @@ syslog_server: "{{ api_interface_address }}"
 syslog_glance_tls_proxy_facility: "local2"
 
 glance_tls_proxy_max_connections: 40000
-glance_tls_proxy_processes: 1
-glance_tls_proxy_process_cpu_map: "no"
+glance_tls_proxy_threads: 1
+glance_tls_proxy_thread_cpu_map: "no"
 glance_tls_proxy_defaults_max_connections: 10000
 
 # Glance TLS proxy timeout values
@@ -266,3 +298,8 @@ glance_tls_proxy_check_timeout: "10s"
 
 # Check http://www.haproxy.org/download/1.5/doc/configuration.txt for available options
 glance_tls_proxy_defaults_balance: "roundrobin"
+
+###################
+# Copy certificates
+###################
+glance_copy_certs: "{{ kolla_copy_ca_into_containers | bool or glance_enable_tls_backend | bool }}"

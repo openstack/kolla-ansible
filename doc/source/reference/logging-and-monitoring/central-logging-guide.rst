@@ -18,76 +18,90 @@ the following:
 
    enable_central_logging: "yes"
 
-Elasticsearch
-~~~~~~~~~~~~~
+OpenSearch
+~~~~~~~~~~
 
-Kolla deploys Elasticsearch as part of the E*K stack to store, organize
-and make logs easily accessible.
+Kolla deploys OpenSearch to store, organize and make logs easily accessible.
 
-By default Elasticsearch is deployed on port ``9200``.
+By default OpenSearch is deployed on port ``9200``.
 
 .. note::
 
-   Elasticsearch stores a lot of logs, so if you are running centralized logging,
+   OpenSearch stores a lot of logs, so if you are running centralized logging,
    remember to give ``/var/lib/docker`` adequate space.
 
    Alternatively it is possible to use a local directory instead of the volume
-   ``elasticsearch`` to store the data of Elasticsearch. The path can be set via
-   the variable ``elasticsearch_datadir_volume``.
+   ``opensearch`` to store the data of OpenSearch. The path can be set via
+   the variable ``opensearch_datadir_volume``.
 
-Curator
--------
+Applying log retention policies
+-------------------------------
 
-To stop your disks filling up, retention policies can be set. These are
-enforced by Elasticsearch Curator which can be enabled by setting the
-following in ``/etc/kolla/globals.yml``:
+To stop your disks filling up, the Index State Management plugin for
+OpenSearch can be used to define log retention policies. A default
+retention policy is applied to all indices which match the
+``opensearch_log_index_prefix``. This policy first closes old indices,
+and then eventually deletes them. It can be customised via the following
+variables:
 
-.. code-block:: yaml
+- ``opensearch_apply_log_retention_policy``
+- ``opensearch_soft_retention_period_days``
+- ``opensearch_hard_retention_period_days``
 
-   enable_elasticsearch_curator: "yes"
+By default the soft and hard retention periods are 30 and 60 days
+respectively. If you are upgrading from ElasticSearch, and have previously
+configured ``elasticsearch_curator_soft_retention_period_days`` or
+``elasticsearch_curator_hard_retention_period_days``, those variables will
+be used instead of the defaults. You should migrate your configuration to
+use the new variable names before the Caracal release.
 
-Elasticsearch Curator is configured via an actions file. The format of the
-actions file is described in the `Elasticsearch Curator documentation <https://www.elastic.co/guide/en/elasticsearch/client/curator/current/actionfile.html>`_.
-A default actions file is provided which closes indices and then deletes them
-some time later. The periods for these operations, as well as the prefix for
-determining which indicies should be managed are defined in the Elasticsearch
-role defaults and can be overridden in ``/etc/kolla/globals.yml`` if required.
+Advanced users may wish to customise the retention policy, which
+is possible by overriding ``opensearch_retention_policy`` with
+a valid policy. See the `Index Management plugin documentation <https://opensearch.org/docs/latest/im-plugin/index/>`__
+for further details.
 
-If the default actions file is not malleable enough, a custom actions file can
-be placed in the Kolla custom config directory, for example:
-``/etc/kolla/config/elasticsearch/elasticsearch-curator-actions.yml``.
+Updating log retention policies
+-------------------------------
 
-When testing the actions file you may wish to perform a dry run to be certain
-of what Curator will actually do. A dry run can be enabled by setting the
-following in ``/etc/kolla/globals.yml``:
+By design, Kolla Ansible will NOT update an existing retention
+policy in OpenSearch. This is to prevent policy changes that may have
+been made via the OpenSearch Dashboards UI, or external tooling,
+from being wiped out.
 
-.. code-block:: yaml
+There are three options for modifying an existing policy:
 
-   elasticsearch_curator_dry_run: "yes"
+1. Via the OpenSearch Dashboards UI. See the `Index Management plugin documentation <https://opensearch.org/docs/latest/im-plugin/index/>`__
+for further details.
 
-The actions which *would* be taken if a dry run were to be disabled are then
-logged in the Elasticsearch Kolla logs folder under
-``/var/log/kolla/elasticsearch/elasticsearch-curator.log``.
+2. Via the OpenSearch API using external tooling.
 
-Kibana
-~~~~~~
+3. By manually removing the existing policy via the OpenSearch Dashboards
+   UI (or API), before re-applying the updated policy with Kolla Ansible.
 
-Kolla deploys Kibana as part of the E*K stack in order to allow operators to
+OpenSearch Dashboards
+~~~~~~~~~~~~~~~~~~~~~
+
+Kolla deploys OpenSearch dashboards to allow operators to
 search and visualise logs in a centralised manner.
 
-After successful deployment, Kibana can be accessed using a browser on
-``<kolla_external_vip_address>:5601``.
+After a successful deployment, OpenSearch Dashboards can be accessed using a
+browser on ``<kolla_internal_fqdn>:5601`` or
+``<kolla_external_fqdn>:5601``.
 
-The default username is ``kibana``, the password can be located under
-``<kibana_password>`` in ``/etc/kolla/passwords.yml``.
+The default username is ``opensearch``, the password can be located under
+``<opensearch_dashboards_password>`` in ``/etc/kolla/passwords.yml``.
+
+If you want to prevent OpenSearch Dashboards being exposed on the external
+VIP, you can set ``enable_opensearch_dashboards_external`` to ``false`` in
+``/etc/kolla/globals.yml``.
 
 First Login
 -----------
 
-When Kibana is opened for the first time, it requires creating a default index
-pattern. To view, analyse and search logs, at least one index pattern has to
-be created. To match indices stored in ElasticSearch, we suggest using the
-following configuration:
+When OpenSearch Dashboards is opened for the first time, it requires creating
+a default index pattern. To view, analyse and search logs, at least one
+index pattern has to be created. To match indices stored in OpenSearch,
+we suggest using the following configuration:
 
 #. Index pattern - flog-*
 #. Time Filter field name - @timestamp
@@ -125,12 +139,12 @@ services across the cluster.
 The current search can also be saved by clicking the ``Save Search`` icon
 available from the menu on the right hand side.
 
-Example: using Kibana to diagnose a common failure
---------------------------------------------------
+Example: using OpenSearch Dashboards to diagnose a common failure
+-----------------------------------------------------------------
 
-The following example demonstrates how Kibana can be used to diagnose a common
-OpenStack problem, where an instance fails to launch with the error 'No valid
-host was found'.
+The following example demonstrates how OpenSearch can be used to diagnose a
+common OpenStack problem, where an instance fails to launch with the error
+'No valid host was found'.
 
 First, re-run the server creation with ``--debug``:
 
@@ -148,17 +162,18 @@ example ID looks like this:
 
    X-Compute-Request-Id: req-c076b50a-6a22-48bf-8810-b9f41176a6d5
 
-Taking the value of ``X-Compute-Request-Id``, enter the value into the Kibana
-search bar, minus the leading ``req-``. Assuming some basic filters have been
-added as shown in the previous section, Kibana should now show the path this
-request made through the OpenStack deployment, starting at a ``nova-api`` on
-a control node, through the ``nova-scheduler``, ``nova-conductor``, and finally
+Taking the value of ``X-Compute-Request-Id``, enter the value into the
+OpenSearch Dashboards search bar, minus the leading ``req-``. Assuming some
+basic filters have been added as shown in the previous section, OpenSearch
+Dashboards should now show the path this request made through the
+OpenStack deployment, starting at a ``nova-api`` on a control node,
+through the ``nova-scheduler``, ``nova-conductor``, and finally
 ``nova-compute``. Inspecting the ``Payload`` of the entries marked ``ERROR``
 should quickly lead to the source of the problem.
 
 While some knowledge is still required of how Nova works in this instance, it
-can still be seen how Kibana helps in tracing this data, particularly in a
-large scale deployment scenario.
+can still be seen how OpenSearch Dashboards helps in tracing this data,
+particularly in a large scale deployment scenario.
 
 Visualize data - Visualize tab
 ------------------------------
@@ -261,3 +276,13 @@ network equipment. This can be done by configuring custom fluentd inputs.
 Configuration of custom fluentd inputs is possible by placing input
 configuration files in ``/etc/kolla/config/fluentd/input/*.conf`` on the
 control host.
+
+Systemd Logs
+------------
+
+By default, when enabling central logging, we also enable reading ``systemd``
+logs from the ``/var/log/journal`` file.
+
+To disable this behavior when central logging is enabled, set the value of
+the variable ``enable_fluentd_systemd`` to ``false`` in the configuration
+file ``/etc/kolla/globals.yml``.

@@ -18,14 +18,10 @@ bind_port = {{ neutron_server_listen_port }}
 api_paste_config = /etc/neutron/api-paste.ini
 
 api_workers = {{ neutron_api_workers }}
-metadata_workers = {{ neutron_metadata_workers }}
 rpc_workers = {{ openstack_service_rpc_workers }}
 rpc_state_report_workers = {{ openstack_service_rpc_workers }}
 
-# NOTE(SamYaple): We must specify this value here rather than the metadata conf
-# because it is used by the l3 and dhcp agents. The reason the path has 'kolla'
-# in it is because we are sharing this socket in a volume which is it's own dir
-metadata_proxy_socket = /var/lib/neutron/kolla/metadata_proxy
+state_path = /var/lib/neutron/kolla
 
 {% if neutron_plugin_agent == "openvswitch" or (neutron_plugin_agent == "ovn" and neutron_ovn_dhcp_agent | bool) %}
 interface_driver = openvswitch
@@ -37,8 +33,6 @@ interface_driver = linuxbridge
 ovs_integration_bridge = br-int-{{ item }}
 host = {{ ansible_facts.hostname }}_{{ item }}
 {% endif %}
-
-allow_overlapping_ips = true
 
 {% if neutron_plugin_agent == 'vmware_nsxv' %}
 core_plugin = vmware_nsx.plugin.NsxVPlugin
@@ -67,10 +61,8 @@ transport_url = {{ rpc_transport_url }}
 router_distributed = True
 {% endif %}
 
-{% if enable_designate | bool %}
-{% if designate_ns_record is string %}
-dns_domain = {{ designate_ns_record }}.
-{% endif %}
+dns_domain = {{ neutron_dns_domain }}
+{% if enable_designate | bool and neutron_dns_integration | bool %}
 external_dns_driver = designate
 {% if neutron_plugin_agent == 'vmware_nsxv' %}
 nsx_extension_drivers = vmware_nsxv_dns
@@ -125,7 +117,7 @@ password = {{ neutron_keystone_password }}
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
@@ -139,10 +131,17 @@ topics = {{ neutron_enabled_notification_topics | map(attribute='name') | join('
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 {% if neutron_policy_file is defined %}
@@ -192,7 +191,6 @@ password = {{ placement_keystone_password }}
 user_domain_name = {{ default_user_domain_name }}
 project_name = service
 project_domain_name = {{ default_project_domain_name }}
-os_region_name = {{ openstack_region_name }}
 endpoint_type = internal
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}

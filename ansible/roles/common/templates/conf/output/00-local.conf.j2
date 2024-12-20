@@ -18,7 +18,7 @@
   <store>
        @type elasticsearch
        host {{ elasticsearch_address }}
-       port {{ elasticsearch_port }}
+       port {{ elasticsearch_port | default('9200') }}
        scheme {{ fluentd_elasticsearch_scheme }}
 {% if fluentd_elasticsearch_path != '' %}
        path {{ fluentd_elasticsearch_path }}
@@ -35,35 +35,51 @@
        password {{ fluentd_elasticsearch_password }}
 {% endif %}
        logstash_format true
-       logstash_prefix {{ kibana_log_prefix }}
+       logstash_prefix {{ opensearch_log_index_prefix }}
        reconnect_on_error true
        request_timeout {{ fluentd_elasticsearch_request_timeout }}
        suppress_type_name true
+       bulk_message_request_threshold {{ fluentd_bulk_message_request_threshold }}
        <buffer>
          @type file
          path /var/lib/fluentd/data/elasticsearch.buffer/{{ item.facility }}.*
          flush_interval 15s
+         chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
        </buffer>
   </store>
-{% elif enable_monasca | bool and monasca_ingest_control_plane_logs | bool %}
+{% elif log_direct_to_opensearch %}
   <store>
-     @type monasca
-     keystone_url {{ keystone_internal_url }}
-     monasca_api {{ monasca_log_api_internal_endpoint }}
-     monasca_api_version v2.0
-     username {{ monasca_agent_user }}
-     password {{ monasca_agent_password }}
-     domain_id default
-     project_name {{ monasca_control_plane_project }}
-     message_field_name Payload
-     max_retry_wait 1800s
-     disable_retry_limit true
-     <buffer>
-       @type file
-       path /var/lib/fluentd/data/monasca.buffer/{{ item.facility }}.*
-       chunk_limit_size 8m
-     </buffer>
-  </store>
+       @type opensearch
+       host {{ opensearch_address }}
+       port {{ opensearch_port }}
+       scheme {{ fluentd_opensearch_scheme }}
+{% if fluentd_opensearch_path != '' %}
+       path {{ fluentd_opensearch_path }}
+{% endif %}
+{% if fluentd_opensearch_scheme == 'https' %}
+       ssl_version {{ fluentd_opensearch_ssl_version }}
+       ssl_verify {{ fluentd_opensearch_ssl_verify }}
+{% if fluentd_opensearch_cacert | length > 0 %}
+       ca_file {{ fluentd_opensearch_cacert }}
+{% endif %}
+{% endif %}
+{% if fluentd_opensearch_user != '' and fluentd_opensearch_password != ''%}
+       user {{ fluentd_opensearch_user }}
+       password {{ fluentd_opensearch_password }}
+{% endif %}
+       logstash_format true
+       logstash_prefix {{ opensearch_log_index_prefix }}
+       reconnect_on_error true
+       request_timeout {{ fluentd_opensearch_request_timeout }}
+       suppress_type_name true
+       bulk_message_request_threshold {{ fluentd_bulk_message_request_threshold }}
+       <buffer>
+         @type file
+         path /var/lib/fluentd/data/opensearch.buffer/{{ item.facility }}.*
+         flush_interval 15s
+         chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
+       </buffer>
+    </store>
 {% endif %}
 </match>
 {% endfor %}

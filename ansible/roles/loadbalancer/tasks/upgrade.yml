@@ -1,2 +1,21 @@
 ---
+# TODO(dawudm) We should replace these two tasks with a task to check the port
+# is free in precheck.yml in the D release
+- name: Stop and remove containers for haproxy exporter containers
+  become: true
+  kolla_container:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "prometheus_haproxy_exporter"
+  when:
+    - inventory_hostname in groups['loadbalancer']
+
+- name: Removing config for haproxy exporter
+  file:
+    path: "{{ node_config_directory }}/prometheus-haproxy-exporter"
+    state: "absent"
+  become: true
+  when:
+    - inventory_hostname in groups['loadbalancer']
+
 - import_tasks: deploy.yml

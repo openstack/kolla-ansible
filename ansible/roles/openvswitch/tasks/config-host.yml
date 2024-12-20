@@ -5,3 +5,16 @@
   vars:
     modules:
       - {'name': openvswitch}
+
+# NOTE(m.hiner): Podman considers non-existent mount directory
+# as a error, so it has to be created beforehand.
+# See: https://github.com/containers/podman/issues/14781
+- name: Create /run/openvswitch directory on host
+  become: True
+  file:
+    path: /run/openvswitch
+    state: directory
+    mode: "0770"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+  when: kolla_container_engine == 'podman'

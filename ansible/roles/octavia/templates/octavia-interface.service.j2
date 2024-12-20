@@ -7,6 +7,10 @@ After=docker.service
 Type=oneshot
 User=root
 Group=root
+Restart=on-failure
+{% if octavia_interface_wait_timeout is defined %}
+TimeoutStartSec={{ octavia_interface_wait_timeout }}
+{% endif %}
 RemainAfterExit=true
 ExecStartPre=/sbin/ip link set dev {{ octavia_network_interface }} address {{ port_info.port.mac_address }}
 ExecStart=/sbin/dhclient -v {{ octavia_network_interface }} -cf /etc/dhcp/octavia-dhclient.conf

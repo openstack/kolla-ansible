@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright 2016 99cloud Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.version import StrictVersion
-import docker
 import json
 import re
 
-from ansible.module_utils.ansible_release import __version__ as ansible_version
 from ansible.module_utils.basic import AnsibleModule
 
 from ast import literal_eval
+from shlex import split
 
 DOCUMENTATION = '''
 ---
@@ -33,6 +29,11 @@ description:
   - A module targerting at invoking ansible module in kolla_toolbox
     container as used by Kolla project.
 options:
+  container_engine:
+    description:
+      - Name of container engine to use
+    required: True
+    type: str
   module_name:
     description:
       - The module name to invoke
@@ -73,10 +74,12 @@ EXAMPLES = '''
   tasks:
     - name: Ensure the direct absent
       kolla_toolbox:
+        container_engine: docker
         module_name: file
         module_args: path=/tmp/a state=absent
     - name: Create mysql database
       kolla_toolbox:
+        container_engine: docker
         module_name: mysql_db
         module_args:
           login_host: 192.168.1.10
@@ -85,9 +88,10 @@ EXAMPLES = '''
           name: testdb
     - name: Creating default user role
       kolla_toolbox:
-        module_name: os_keystone_role
+        container_engine: docker
+        module_name: openstack.cloud.identity_role
         module_args:
-          name: _member_
+          name: member
           auth: "{{ '{{ openstack_keystone_auth }}' }}"
         module_extra_vars:
           openstack_keystone_auth:
@@ -111,13 +115,19 @@ def gen_commandline(params):
     if params.get('module_name'):
         command.extend(['-m', params.get('module_name')])
     if params.get('module_args'):
-        if StrictVersion(ansible_version) < StrictVersion('2.11.0'):
-            module_args = params.get('module_args')
-        else:
+        try:
             module_args = literal_eval(params.get('module_args'))
+        except SyntaxError:
+            if not isinstance(params.get('module_args'), str):
+                raise
+
+            # account for string arguments
+            module_args = split(params.get('module_args'))
         if isinstance(module_args, dict):
             module_args = ' '.join("{}='{}'".format(key, value)
                                    for key, value in module_args.items())
+        if isinstance(module_args, list):
+            module_args = ' '.join(module_args)
         command.extend(['-a', module_args])
     if params.get('module_extra_vars'):
         extra_vars = params.get('module_extra_vars')
@@ -128,24 +138,11 @@ def gen_commandline(params):
 
 
 def get_docker_client():
+    import docker
     return docker.APIClient
 
 
-def docker_supports_environment_in_exec(client):
-    docker_version = StrictVersion(client.api_version)
-    return docker_version >= StrictVersion('1.25')
-
-
-def main():
-    specs = dict(
-        module_name=dict(required=True, type='str'),
-        module_args=dict(type='str'),
-        module_extra_vars=dict(type='json'),
-        api_version=dict(required=False, type='str', default='auto'),
-        timeout=dict(required=False, type='int', default=180),
-        user=dict(required=False, type='str'),
-    )
-    module = AnsibleModule(argument_spec=specs, bypass_checks=True)
+def use_docker(module):
     client = get_docker_client()(
         version=module.params.get('api_version'),
         timeout=module.params.get('timeout'))
@@ -160,80 +157,122 @@ def main():
     if 'user' in module.params:
         kwargs['user'] = module.params['user']
 
-    # NOTE(mgoddard): Docker 1.12 has API version 1.24, and was installed by
-    # kolla-ansible bootstrap-servers on Rocky and earlier releases. This API
-    # version does not have support for specifying environment variables for
-    # exec jobs, which is necessary to use the Ansible JSON output formatter.
-    # While we continue to support this version of Docker, fall back to the old
-    # regex-based method for API version 1.24 and earlier.
-    # TODO(mgoddard): Remove this conditional (keep the if) when we require
-    # Docker API version 1.25+.
-    if docker_supports_environment_in_exec(client):
-        # Use the JSON output formatter, so that we can parse it.
+    # Use the JSON output formatter, so that we can parse it.
+    environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
+                   "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
+    job = client.exec_create(kolla_toolbox, command_line,
+                             environment=environment, **kwargs)
+    json_output, error = client.exec_start(job, demux=True)
+    if error:
+        module.log(msg='Inner module stderr: %s' % error)
+
+    try:
+        output = json.loads(json_output)
+    except Exception:
+        module.fail_json(
+            msg='Can not parse the inner module output: %s' % json_output)
+
+    # Expected format is the following:
+    # {
+    #   "plays": [
+    #     {
+    #       "tasks": [
+    #         {
+    #           "hosts": {
+    #             "localhost": {
+    #               <module result>
+    #             }
+    #           }
+    #         }
+    #       ]
+    #     {
+    #   ]
+    # }
+    try:
+        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
+    except (KeyError, IndexError):
+        module.fail_json(
+            msg='Ansible JSON output has unexpected format: %s' % output)
+
+    # Remove Ansible's internal variables from returned fields.
+    ret.pop('_ansible_no_log', None)
+    return ret
+
+
+def get_kolla_toolbox():
+    from podman import PodmanClient
+
+    with PodmanClient(base_url="http+unix:/run/podman/podman.sock") as client:
+        for cont in client.containers.list(all=True):
+            cont.reload()
+            if cont.name == 'kolla_toolbox' and cont.status == 'running':
+                return cont
+
+
+def use_podman(module):
+    from podman.errors.exceptions import APIError
+
+    try:
+        kolla_toolbox = get_kolla_toolbox()
+        if not kolla_toolbox:
+            module.fail_json(msg='kolla_toolbox container is not running.')
+
+        kwargs = {}
+        if 'user' in module.params:
+            kwargs['user'] = module.params['user']
         environment = {"ANSIBLE_STDOUT_CALLBACK": "json",
                        "ANSIBLE_LOAD_CALLBACK_PLUGINS": "True"}
-        job = client.exec_create(kolla_toolbox, command_line,
-                                 environment=environment, **kwargs)
-        json_output = client.exec_start(job)
+        command_line = gen_commandline(module.params)
 
-        try:
-            output = json.loads(json_output)
-        except Exception:
-            module.fail_json(
-                msg='Can not parse the inner module output: %s' % json_output)
+        _, raw_output = kolla_toolbox.exec_run(
+            command_line,
+            environment=environment,
+            tty=True,
+            **kwargs
+        )
+    except APIError as e:
+        module.fail_json(msg=f'Encountered Podman API error: {e.explanation}')
 
-        # Expected format is the following:
-        # {
-        #   "plays": [
-        #     {
-        #       "tasks": [
-        #         {
-        #           "hosts": {
-        #             "localhost": {
-        #               <module result>
-        #             }
-        #           }
-        #         }
-        #       ]
-        #     {
-        #   ]
-        # }
-        try:
-            ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
-        except (KeyError, IndexError):
-            module.fail_json(
-                msg='Ansible JSON output has unexpected format: %s' % output)
+    try:
+        json_output = raw_output.decode('utf-8')
+        output = json.loads(json_output)
+    except Exception:
+        module.fail_json(
+            msg='Can not parse the inner module output: %s' % json_output)
 
-        # Remove Ansible's internal variables from returned fields.
-        ret.pop('_ansible_no_log', None)
+    try:
+        ret = output['plays'][0]['tasks'][0]['hosts']['localhost']
+    except (KeyError, IndexError):
+        module.fail_json(
+            msg='Ansible JSON output has unexpected format: %s' % output)
+
+    # Remove Ansible's internal variables from returned fields.
+    ret.pop('_ansible_no_log', None)
+
+    return ret
+
+
+def main():
+    specs = dict(
+        container_engine=dict(required=True, type='str'),
+        module_name=dict(required=True, type='str'),
+        module_args=dict(type='str'),
+        module_extra_vars=dict(type='json'),
+        api_version=dict(required=False, type='str', default='auto'),
+        timeout=dict(required=False, type='int', default=180),
+        user=dict(required=False, type='str'),
+    )
+    module = AnsibleModule(argument_spec=specs, bypass_checks=True)
+
+    container_engine = module.params.get('container_engine').lower()
+    if container_engine == 'docker':
+        result = use_docker(module)
+    elif container_engine == 'podman':
+        result = use_podman(module)
     else:
-        job = client.exec_create(kolla_toolbox, command_line, **kwargs)
-        output = client.exec_start(job)
+        module.fail_json(msg='Missing or invalid container engine.')
 
-        for exp in [JSON_REG, NON_JSON_REG]:
-            m = exp.match(output)
-            if m:
-                inner_output = m.groupdict().get('stdout')
-                status = m.groupdict().get('status')
-                break
-        else:
-            module.fail_json(
-                msg='Can not parse the inner module output: %s' % output)
-
-        ret = dict()
-        try:
-            ret = json.loads(inner_output)
-        except ValueError:
-            # Some modules (e.g. command) do not produce a JSON output.
-            # Instead, check the status, and assume changed on success.
-            ret['stdout'] = inner_output
-            if status != "SUCCESS":
-                ret['failed'] = True
-            else:
-                # No way to know whether changed - assume yes.
-                ret['changed'] = True
-
-    module.exit_json(**ret)
+    module.exit_json(**result)
 
 
 if __name__ == "__main__":

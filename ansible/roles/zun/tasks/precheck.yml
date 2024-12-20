@@ -8,10 +8,13 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - zun_api
       - zun_wsproxy
       - zun_cni_daemon
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for Zun API
@@ -48,10 +51,9 @@
     - inventory_hostname in groups['zun-cni-daemon']
 
 - name: Ensure kuryr enabled for zun
-  fail:
-    msg: "kuryr is required but not enabled"
+  assert:
+    that: enable_kuryr | bool
+    fail_msg: "kuryr is required but not enabled"
   run_once: True
-  changed_when: false
   when:
     - enable_zun | bool
-    - not enable_kuryr | bool

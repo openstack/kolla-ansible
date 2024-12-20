@@ -1,4 +1,12 @@
 {
     "command": "/opt/libvirt-exporter --web.listen-address={{ api_interface_address }}:{{ prometheus_libvirt_exporter_port }}",
-    "config_files": []
+    "config_files": [
+        {% if kolla_copy_ca_into_containers | bool %}
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
+    ]
 }

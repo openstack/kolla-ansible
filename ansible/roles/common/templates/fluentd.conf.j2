@@ -1,0 +1,41 @@
+#jinja2: trim_blocks: False
+{# Ansible restricts Jinja includes to the same directory or subdirectory of a
+   template. To support customised configuration outside of this path we use
+   the template lookup plugin. Jinja includes have a lower overhead, so we use
+   those where possible. #}
+
+# Inputs
+{%- for path in fluentd_input_files %}
+{%- if path.startswith('/') %}
+{{ lookup('template', path) }}
+{%- else %}
+{% include path %}
+{%- endif %}
+{%- endfor %}
+
+# Filters
+{%- for path in fluentd_filter_files %}
+{%- if path.startswith('/') %}
+{{ lookup('template', path) }}
+{%- else %}
+{% include path %}
+{%- endif %}
+{%- endfor %}
+
+# Formats
+{%- for path in fluentd_format_files %}
+{%- if path.startswith('/') %}
+{{ lookup('template', path) }}
+{%- else %}
+{% include path %}
+{%- endif %}
+{%- endfor %}
+
+# Outputs
+{%- for path in fluentd_output_files %}
+{%- if path.startswith('/') %}
+{{ lookup('template', path) }}
+{%- else %}
+{% include path %}
+{%- endif %}
+{%- endfor %}

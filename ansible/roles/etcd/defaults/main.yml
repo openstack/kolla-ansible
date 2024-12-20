@@ -4,31 +4,60 @@ etcd_services:
     container_name: etcd
     group: etcd
     enabled: true
-    environment:
-      ETCD_DATA_DIR: "/var/lib/etcd"
-      ETCD_NAME: "{{ ansible_facts.hostname }}"
-      ETCD_ADVERTISE_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
-      ETCD_LISTEN_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
-      ETCD_LISTEN_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
-      ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
-      ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-      ETCD_INITIAL_CLUSTER_STATE: "new"
-      ETCD_OUT_FILE: "/var/log/kolla/etcd/etcd.log"
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-      ETCD_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
-      ETCD_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
-      ETCD_PEER_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
-      ETCD_PEER_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
+    environment: "{{ etcd_base_environment | combine(etcd_default_environment) }}"
     image: "{{ etcd_image_full }}"
     volumes: "{{ etcd_default_volumes + etcd_extra_volumes }}"
     dimensions: "{{ etcd_dimensions }}"
+    haproxy:
+      etcd:
+        enabled: true
+        mode: "http"
+        external: false
+        port: "{{ etcd_client_port }}"
+        tls_backend: "{{ etcd_enable_tls | bool }}"
 
+####################
+# Environment
+####################
+etcd_base_environment:
+  # KOLLA_BOOTSTRAP_STATUS is used to indicate whether the container should
+  # be recreated. Otherwise the kolla_container task doesn't detect that the
+  # environment has changed if variables are removed.
+  KOLLA_BOOTSTRAP_STATUS: "undefined"
+  ETCDCTL_API: "3"
+  ETCDCTL_ENDPOINTS: "{{ etcd_client_internal_endpoint }}"
+  ETCDCTL_WRITE_OUT: "json"
+  ETCD_DATA_DIR: "/var/lib/etcd"
+  ETCD_NAME: "{{ ansible_facts.hostname }}"
+  ETCD_ADVERTISE_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+  ETCD_LISTEN_CLIENT_URLS: "{{ etcd_client_internal_endpoint }}"
+  ETCD_LISTEN_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+  ETCD_LOGGER: "zap"
+  ETCD_LOG_OUTPUTS: "stderr,/var/log/kolla/etcd/etcd.log"
+  KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+  ETCD_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
+  ETCD_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
+  ETCD_PEER_CERT_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-cert.pem{% endif %}"
+  ETCD_PEER_KEY_FILE: "{% if etcd_enable_tls | bool %}/etc/etcd/certs/etcd-key.pem{% endif %}"
+etcd_default_environment:
+  KOLLA_BOOTSTRAP_STATUS: "bootstrap completed"
+etcd_bootstrap_service_environment:
+  KOLLA_BOOTSTRAP_STATUS: "bootstrap service"
+  ETCD_INITIAL_CLUSTER_STATE: "existing"
+  ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+  ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
+  ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd_had_volume_True'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }},{% endfor %}{{ ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(inventory_hostname) | put_address_in_context('url') }}:{{ etcd_peer_port }}"
+etcd_bootstrap_cluster_environment:
+  KOLLA_BOOTSTRAP_STATUS: "bootstrap cluster"
+  ETCD_INITIAL_CLUSTER_STATE: "new"
+  ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
+  ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
+  ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 
 ####################
 # Docker
 ####################
-etcd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/etcd"
+etcd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}etcd"
 etcd_tag: "{{ openstack_tag }}"
 etcd_image_full: "{{ etcd_image }}:{{ etcd_tag }}"
 etcd_dimensions: "{{ default_container_dimensions }}"
@@ -44,5 +73,15 @@ etcd_extra_volumes: "{{ default_extra_volumes }}"
 ############
 # Endpoints
 ############
-etcd_client_internal_endpoint: "{{ internal_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}"
-etcd_peer_internal_endpoint: "{{ internal_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_peer_port }}"
+etcd_client_internal_endpoint: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}"
+etcd_peer_internal_endpoint: "{{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_peer_port }}"
+
+###################
+# Managing members
+###################
+etcd_remove_deleted_members: "no"
+
+###################
+# Copy certificates
+###################
+etcd_copy_certs: "{{ kolla_copy_ca_into_containers | bool or etcd_enable_tls | bool }}"

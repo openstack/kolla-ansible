@@ -7,10 +7,7 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ ovsdpdk_services }}"
+  with_dict: "{{ ovsdpdk_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over config.json files for services
   become: true
@@ -18,12 +15,7 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
-  when:
-    - item.value.enabled | bool
-    - item.value.host_in_groups | bool
-  with_dict: "{{ ovsdpdk_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ ovsdpdk_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying ovs-dpdkctl tool
   become: true
@@ -45,7 +37,7 @@
     hugepage_mountpoint: "{{ ovs_hugepage_mountpoint }}"
     ovs_physical_port_policy: "{{ ovs_physical_port_policy }}"
 
-- name: Binds the interface to the target driver specifed in the config
+- name: Binds the interface to the target driver specified in the config
   become: True
   command: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh bind_nics"
   environment:

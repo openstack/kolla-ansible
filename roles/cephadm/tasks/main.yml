@@ -1,12 +1,6 @@
 ---
 - include_tasks: pkg_{{ ansible_os_family | lower }}.yml
 
-- name: Install cephadm
-  package:
-    name: cephadm
-    state: present
-  become: True
-
 - name: Ensure /etc/ceph exists
   file:
     path: /etc/ceph
@@ -39,16 +33,19 @@
 
 - name: Bootstrap cephadm
   vars:
-    mon_ip: "{{ hostvars[inventory_hostname]['ansible_'+api_interface_name].ipv4.address }}"
+    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }}"
   command:
     cmd: >
-         cephadm bootstrap
+         cephadm
+         --docker
+         bootstrap
          --ssh-private-key=/etc/ceph/cephadm.id
          --ssh-public-key=/etc/ceph/cephadm.pub
          --skip-monitoring-stack
          --skip-dashboard
          --skip-firewalld
-         --mon-addrv='[v2:{{ mon_ip }}:3300,v1:{{ mon_ip }}:6789]'
+         --log-to-file
+         --mon-ip {{ mon_ip }}
   become: True
   register: cephadm_bootstrap_output
 
@@ -56,7 +53,7 @@
   vars:
     regexp: 'Cluster fsid: (.*)'
   set_fact:
-    ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp,'\\1') | first }}"
+    ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp, '\\1') | first }}"
 
 - name: Template out cluster spec
   template:
@@ -74,7 +71,7 @@
   command:
     cmd: >
          cephadm shell --
-         bash /var/run/ceph/commands.sh
+         bash -x /var/run/ceph/commands.sh
   become: True
 
 # TODO(mnasiadka): Fix merge_configs to support tabs
@@ -83,7 +80,7 @@
     ceph_conf_fixed: |
       [global]
       fsid = {{ ceph_fsid }}
-      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_'+api_interface_name].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
   copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"

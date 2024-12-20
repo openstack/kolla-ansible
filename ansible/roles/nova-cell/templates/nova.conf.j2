@@ -9,7 +9,7 @@ state_path = /var/lib/nova
 allow_resize_to_same_host = true
 
 {% if service_name == "nova-compute-ironic" %}
-host={{ ansible_facts.hostname }}-ironic
+host={{ nova_compute_ironic_custom_host | default(ansible_facts.hostname) }}-ironic
 log_file = /var/log/kolla/nova/nova-compute-ironic.log
 compute_driver = ironic.IronicDriver
 ram_allocation_ratio = 1.0
@@ -26,7 +26,7 @@ compute_driver = libvirt.LibvirtDriver
 # Though my_ip is not used directly, lots of other variables use $my_ip
 my_ip = {{ api_interface_address }}
 
-{% if enable_ceilometer | bool or enable_designate | bool %}
+{% if enable_ceilometer | bool %}
 instance_usage_audit = True
 instance_usage_audit_period = hour
 {% if enable_watcher | bool %}
@@ -35,6 +35,11 @@ compute_monitors=nova.compute.monitors.cpu.virt_driver
 {% endif %}
 
 transport_url = {{ nova_cell_rpc_transport_url }}
+
+{% if vendordata_file_path is defined and (service_name == 'nova-compute' or service_name == 'nova-compute-ironic') %}
+[api]
+vendordata_jsonfile_path = /etc/nova/vendordata.json
+{% endif %}
 
 [conductor]
 workers = {{ nova_cell_conductor_workers }}
@@ -49,7 +54,7 @@ novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups[nova_cell_compute_group] %}
-novncproxy_base_url = {{ public_protocol }}://{{ nova_novncproxy_fqdn | put_address_in_context('url') }}:{{ nova_novncproxy_port }}/vnc_lite.html
+novncproxy_base_url = {{ nova_novncproxy_fqdn | kolla_url(public_protocol,  nova_novncproxy_public_port, '/vnc_lite.html') }}
 {% endif %}
 {% endif %}
 {% elif nova_console == 'spice' %}
@@ -61,7 +66,7 @@ enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
 {% if inventory_hostname in groups[nova_cell_compute_group] %}
-html5proxy_base_url = {{ public_protocol }}://{{ nova_spicehtml5proxy_fqdn | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_port }}/spice_auto.html
+html5proxy_base_url = {{ nova_spicehtml5proxy_fqdn | kolla_url(public_protocol, nova_spicehtml5proxy_public_port, '/spice_auto.html') }}
 {% endif %}
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
@@ -74,7 +79,7 @@ enabled = false
 {% if enable_nova_serialconsole_proxy | bool %}
 [serial_console]
 enabled = true
-base_url = {{ nova_serialproxy_protocol }}://{{ nova_serialproxy_fqdn | put_address_in_context('url') }}:{{ nova_serialproxy_port }}/
+base_url = {{ nova_serialproxy_fqdn | kolla_url(nova_serialproxy_protocol, nova_serialproxy_public_port) }}/
 serialproxy_host = {{ api_interface_address }}
 serialproxy_port = {{ nova_serialproxy_listen_port }}
 proxyclient_address = {{ api_interface_address }}
@@ -184,10 +189,17 @@ topics = {{ nova_enabled_notification_topics | map(attribute='name') | join(',')
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 {% if service_name in nova_cell_services_require_policy_json and nova_policy_file is defined %}
@@ -200,6 +212,11 @@ helper_command=sudo nova-rootwrap /etc/nova/rootwrap.conf privsep-helper --confi
 
 [guestfs]
 debug = {{ nova_logging_debug }}
+
+{% if service_name == 'nova-conductor' %}
+[scheduler]
+max_attempts = 10
+{% endif %}
 
 [placement]
 auth_type = password
@@ -249,3 +266,16 @@ track_instance_changes = false
 [pci]
 passthrough_whitelist = {{ nova_pci_passthrough_whitelist | to_json }}
 {% endif %}
+
+[service_user]
+send_service_user_token = true
+auth_url = {{ keystone_internal_url }}
+auth_type = password
+project_domain_id = {{ default_project_domain_id }}
+user_domain_id = {{ default_user_domain_id }}
+project_name = service
+username = {{ nova_keystone_user }}
+password = {{ nova_keystone_password }}
+cafile = {{ openstack_cacert }}
+region_name = {{ openstack_region_name }}
+valid_interfaces = internal

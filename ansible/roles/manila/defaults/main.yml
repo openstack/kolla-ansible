@@ -14,11 +14,14 @@ manila_services:
         mode: "http"
         external: false
         port: "{{ manila_api_port }}"
+        listen_port: "{{ manila_api_listen_port }}"
       manila_api_external:
         enabled: "{{ enable_manila }}"
         mode: "http"
         external: true
-        port: "{{ manila_api_port }}"
+        external_fqdn: "{{ manila_external_fqdn }}"
+        port: "{{ manila_api_public_port }}"
+        listen_port: "{{ manila_api_listen_port }}"
   manila-scheduler:
     container_name: "manila_scheduler"
     group: "manila-scheduler"
@@ -33,7 +36,7 @@ manila_services:
     image: "{{ manila_share_image_full }}"
     enabled: True
     privileged: True
-    volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes }}"
+    volumes: "{{ manila_share_default_volumes + manila_share_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ manila_share_dimensions }}"
     healthcheck: "{{ manila_share_healthcheck }}"
   manila-data:
@@ -42,10 +45,16 @@ manila_services:
     image: "{{ manila_data_image_full }}"
     enabled: True
     privileged: True
-    volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes }}"
+    volumes: "{{ manila_data_default_volumes + manila_data_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ manila_data_dimensions }}"
     healthcheck: "{{ manila_data_healthcheck }}"
 
+####################
+# Config Validate
+####################
+manila_config_validation:
+  - generator: "/manila/etc/oslo-config-generator/manila.conf"
+    config: "/etc/manila/manila.conf"
 
 #####################
 ## Database
@@ -73,19 +82,19 @@ manila_database_shard:
 #####################
 manila_tag: "{{ openstack_tag }}"
 
-manila_share_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/manila-share"
+manila_share_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}manila-share"
 manila_share_tag: "{{ manila_tag }}"
 manila_share_image_full: "{{ manila_share_image }}:{{ manila_share_tag }}"
 
-manila_scheduler_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/manila-scheduler"
+manila_scheduler_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}manila-scheduler"
 manila_scheduler_tag: "{{ manila_tag }}"
 manila_scheduler_image_full: "{{ manila_scheduler_image }}:{{ manila_scheduler_tag }}"
 
-manila_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/manila-api"
+manila_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}manila-api"
 manila_api_tag: "{{ manila_tag }}"
 manila_api_image_full: "{{ manila_api_image }}:{{ manila_api_tag }}"
 
-manila_data_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/manila-data"
+manila_data_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}manila-data"
 manila_data_tag: "{{ manila_tag }}"
 manila_data_image_full: "{{ manila_data_image }}:{{ manila_data_tag }}"
 
@@ -150,30 +159,30 @@ manila_share_default_volumes:
   - "{{ node_config_directory }}/manila-share/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "/lib/modules:/lib/modules:ro"
-  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/manila:/dev-mode/manila' if manila_dev_mode | bool else '' }}"
 manila_scheduler_default_volumes:
   - "{{ node_config_directory }}/manila-scheduler/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/manila:/dev-mode/manila' if manila_dev_mode | bool else '' }}"
 manila_api_default_volumes:
   - "{{ node_config_directory }}/manila-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/manila:/dev-mode/manila' if manila_dev_mode | bool else '' }}"
 manila_data_default_volumes:
   - "{{ node_config_directory }}/manila-data/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/manila/manila:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/manila' if manila_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/manila:/dev-mode/manila' if manila_dev_mode | bool else '' }}"
 
 manila_extra_volumes: "{{ default_extra_volumes }}"
 manila_share_extra_volumes: "{{ manila_extra_volumes }}"
@@ -184,9 +193,6 @@ manila_data_extra_volumes: "{{ manila_extra_volumes }}"
 #####################
 ## OpenStack
 #####################
-manila_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}"
-manila_public_base_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ manila_api_port }}"
-
 manila_internal_endpoint: "{{ manila_internal_base_endpoint }}/v1/%(tenant_id)s"
 manila_public_endpoint: "{{ manila_public_base_endpoint }}/v1/%(tenant_id)s"
 
@@ -219,24 +225,30 @@ manila_backends:
     protocols:
       - "NFS"
       - "CIFS"
-  - name: "cephfsnative1"
-    driver: "cephfsnative"
-    enabled: "{{ enable_manila_backend_cephfs_native | bool }}"
-    protocols:
-      - "CEPHFS"
-  - name: "cephfsnfs1"
-    driver: "cephfsnfs"
-    enabled: "{{ enable_manila_backend_cephfs_nfs | bool }}"
-    protocols:
-      - "NFS"
-      - "CIFS"
   - name: "glusterfsnfs1"
     driver: "glusterfsnfs"
     enabled: "{{ enable_manila_backend_glusterfs_nfs | bool }}"
     protocols:
       - "NFS"
 
-manila_enabled_backends: "{{ manila_backends | selectattr('enabled', 'equalto', true) | list }}"
+manila_ceph_backends:
+  - name: "cephfsnative1"
+    share_name: "CEPHFS1"
+    driver: "cephfsnative"
+    cluster: "{{ ceph_cluster }}"
+    enabled: "{{ enable_manila_backend_cephfs_native | bool }}"
+    protocols:
+      - "CEPHFS"
+  - name: "cephfsnfs1"
+    share_name: "CEPHFSNFS1"
+    driver: "cephfsnfs"
+    cluster: "{{ ceph_cluster }}"
+    enabled: "{{ enable_manila_backend_cephfs_nfs | bool }}"
+    protocols:
+      - "NFS"
+      - "CIFS"
+
+manila_enabled_backends: "{{ manila_backends | selectattr('enabled', 'equalto', true) | list + manila_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
 
 
 ####################

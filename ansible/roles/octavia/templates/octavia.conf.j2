@@ -53,7 +53,7 @@ project_name = {{ octavia_service_auth_project }}
 project_domain_name = {{ default_project_domain_name }}
 cafile = {{ openstack_cacert }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -70,7 +70,7 @@ password = {{ octavia_keystone_password }}
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -101,9 +101,9 @@ amp_secgroup_list = {{ octavia_amp_secgroup_list }}
 amp_flavor_id = {{ octavia_amp_flavor_id }}
 {% endif %}
 {% else %}
-amp_image_owner_id = {{ project_info.openstack_projects.0.id }}
+amp_image_owner_id = {{ project_info.projects.0.id }}
 amp_boot_network_list = {{ network_info.id }}
-amp_secgroup_list = {{ (sec_grp_info.results | selectattr('item.name', 'equalto', octavia_amp_security_groups['mgmt-sec-grp'].name) | list).0.secgroup.id }}
+amp_secgroup_list = {{ (sec_grp_info.results | selectattr('item.name', 'equalto', octavia_amp_security_groups['mgmt-sec-grp'].name) | list).0.security_group.id }}
 amp_flavor_id = {{ amphora_flavor_info.id }}
 {% endif %}
 
@@ -122,10 +122,17 @@ rpc_thread_pool_size = 2
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = {{ service_name == 'octavia-api' }}
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 {% if octavia_policy_file is defined %}
@@ -147,3 +154,12 @@ ca_certificates_file = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 endpoint_type = internal
 ca_certificates_file = {{ openstack_cacert }}
+{% if enable_octavia_jobboard | bool %}
+
+[task_flow]
+persistence_connection = mysql+pymysql://{{ octavia_persistence_database_user }}:{{ octavia_persistence_database_password }}@{{ octavia_persistence_database_address }}/{{ octavia_persistence_database_name }}
+jobboard_enabled = true
+jobboard_backend_password = "{{ redis_master_password }}"
+jobboard_backend_port = "{{ redis_port }}"
+jobboard_backend_hosts = {% for host in groups['redis'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}

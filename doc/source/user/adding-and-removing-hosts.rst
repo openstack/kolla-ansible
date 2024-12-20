@@ -171,6 +171,14 @@ For each host, clean up its services:
      openstack compute service delete --os-compute-api-version 2.53 $id
    done
 
+If the node is also running the ``etcd`` service, set
+``etcd_remove_deleted_members: "yes"`` in ``globals.yml`` to automatically
+remove nodes from the ``etcd`` cluster that have been removed from the inventory.
+
+Alternatively the ``etcd`` members can be removed manually with ``etcdctl``.
+For more details, please consult the ``runtime reconfiguration`` documentation
+section for the version of etcd in operation.
+
 .. _removing-existing-compute-nodes:
 
 Removing existing compute nodes

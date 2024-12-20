@@ -1,7 +1,7 @@
 ---
 - name: Create MariaDB volume
   become: true
-  kolla_docker:
+  kolla_container:
     action: "create_volume"
     common_options: "{{ docker_common_options }}"
     name: "mariadb"
@@ -46,10 +46,11 @@
           become: true
           command: >-
             {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
-            mysql -uroot -p{{ database_password }}
+            mariadb -uroot -p{{ database_password }}
             --silent --skip-column-names
             -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
           changed_when: false
+          check_mode: false
           register: check_mariadb_sync_status
           no_log: true
 

@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -41,12 +38,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over designate.conf
   vars:
@@ -61,12 +53,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/designate.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over pools.yaml
   vars:
@@ -76,14 +63,10 @@
     dest: "{{ node_config_directory }}/designate-worker/pools.yaml"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+  when: service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/designate/pools.yaml"
     - "{{ role_path }}/templates/pools.yaml.j2"
-  notify:
-    - Restart designate-worker container
 
 - name: Copying over named.conf
   vars:
@@ -95,15 +78,12 @@
   become: true
   when:
     - designate_backend == 'bind9'
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host
   with_first_found:
     - "{{ node_custom_config }}/designate/designate-backend-bind9/{{ inventory_hostname }}/named.conf"
     - "{{ node_custom_config }}/designate/designate-backend-bind9/named.conf"
     - "{{ node_custom_config }}/designate/named.conf"
     - "{{ role_path }}/templates/named.conf.j2"
-  notify:
-    - Restart designate-backend-bind9 container
 
 - name: Copying over rndc.conf
   template:
@@ -114,11 +94,7 @@
   when:
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over rndc.key
   template:
@@ -129,11 +105,7 @@
   when:
     - designate_backend == 'bind9' and designate_backend_external == 'no'
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
 - include_tasks: backend_external.yml
   when: designate_backend_external == 'bind9'
@@ -146,8 +118,4 @@
   become: true
   when:
     - designate_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ designate_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"

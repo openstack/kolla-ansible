@@ -56,6 +56,16 @@ deployment.
 Limitations and Recommendations
 -------------------------------
 
+.. warning::
+
+   Please notice that using the ansible ``--limit`` option is not recommended.
+   The reason is, that there are known bugs with it, e.g. when `upgrading parts of nova.
+   <https://bugs.launchpad.net/kolla-ansible/+bug/2054348>`__
+   We accept bug reports for this and try to fix issues when they are known.
+   The core problem is how the ``register:`` keyword works and how it
+   interacts with the ``--limit`` option. You can find more information in the above
+   bug report.
+
 .. note::
 
    Please note that when the ``use_preconfigured_databases`` flag is set to
@@ -65,25 +75,7 @@ Limitations and Recommendations
 .. note::
 
    If you have separate keys for nova and cinder, please be sure to set
-   ``ceph_nova_keyring: ceph.client.nova.keyring`` and ``ceph_nova_user: nova``
-   in ``/etc/kolla/globals.yml``
-
-Ubuntu Focal 20.04
-------------------
-
-The Victoria release adds support for Ubuntu Focal 20.04 as a host operating
-system. Ubuntu users upgrading from Ussuri should first upgrade OpenStack
-containers to Victoria, which uses the Ubuntu Focal 20.04 base container image.
-Hosts should then be upgraded to Ubuntu Focal 20.04.
-
-CentOS Stream 8
----------------
-
-The Wallaby release adds support for CentOS Stream 8 as a host operating
-system. CentOS Stream 8 support will also be added to a Victoria stable
-release. CentOS Linux users upgrading from Victoria should first migrate hosts
-and container images from CentOS Linux to CentOS Stream before upgrading to
-Wallaby.
+   ``ceph_nova_user: nova`` in ``/etc/kolla/globals.yml``
 
 Preparation (the foreword)
 --------------------------
@@ -111,6 +103,13 @@ First, upgrade the ``kolla-ansible`` package:
 
    If you are running from Git repository, then just checkout the desired
    branch and run ``pip3 install --upgrade`` with the repository directory.
+
+If performing a skip-level (SLURP) upgrade, update ``ansible`` or
+``ansible-core`` to a version supported by the release you're upgrading to.
+
+.. code-block:: console
+
+   pip3 install --upgrade 'ansible-core>=|ANSIBLE_CORE_VERSION_MIN|,<|ANSIBLE_CORE_VERSION_MAX|.99'
 
 If upgrading to a Yoga release or later, install or upgrade Ansible Galaxy
 dependencies:
@@ -175,6 +174,16 @@ issues:
    kolla-ansible prechecks
 
 At a convenient time, the upgrade can now be run.
+
+SLURP extra preparations
+++++++++++++++++++++++++
+
+RabbitMQ has two major version releases per year but does not support jumping
+two versions in one upgrade. So if you want to perform a skip-level upgrade,
+you must first upgrade RabbitMQ to an intermediary version. Please see the
+`RabbitMQ SLURP section
+<https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#slurp>`__
+for details.
 
 Perform the Upgrade
 -------------------
@@ -245,6 +254,10 @@ necessary update containers, without generating configuration.
 
 ``kolla-ansible -i INVENTORY prune-images`` is used to prune orphaned Docker
 images on hosts.
+
+``kolla-ansible -i INVENTORY genconfig`` is used to generate configuration
+files for enabled OpenStack services, without then restarting the containers so
+it is not applied right away.
 
 ``kolla-ansible -i INVENTORY1 -i INVENTORY2 ...`` Multiple inventories can be
 specified by passing the ``--inventory`` or ``-i`` command line option multiple

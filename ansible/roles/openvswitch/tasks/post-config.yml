@@ -1,8 +1,9 @@
 ---
 # NOTE(mnasiadka): external_ids:system-id uniquely identifies a physical system, used by OVN and other controllers
-- name: Set system-id and hw-offload
+- name: Set system-id, hostname and hw-offload
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     user: root
     module_name: openvswitch_db
     module_args:
@@ -14,16 +15,39 @@
       state: "{{ item.state | default('present') }}"
   loop:
     - { col: "external_ids", name: "system-id", value: "{{ openvswitch_system_id }}" }
+    - { col: "external_ids", name: "hostname", value: "{{ openvswitch_hostname }}" }
     - { col: "other_config", name: "hw-offload", value: true, state: "{{ 'present' if openvswitch_hw_offload | bool else 'absent' }}" }
+  when:
+    - openvswitch_services['openvswitch-vswitchd'].host_in_groups | bool
+  notify:
+    - "Restart openvswitch-vswitchd container"
 
 - name: Ensuring OVS bridge is properly setup
   become: true
-  command: "{{ kolla_container_engine }} exec openvswitch_db /usr/local/bin/kolla_ensure_openvswitch_configured {{ item.0 }} {{ item.1 }}"
-  register: status
-  changed_when: status.stdout.find('changed') != -1
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    user: root
+    module_name: openvswitch_bridge
+    module_args:
+      bridge: "{{ item }}"
+      fail_mode: standalone
+  loop: "{{ neutron_bridge_name.split(',') }}"
   when:
     - inventory_hostname in groups["network"]
       or (inventory_hostname in groups["compute"] and computes_need_external_bridge | bool )
+
+- name: Ensuring OVS ports are properly setup
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    user: root
+    module_name: openvswitch_port
+    module_args:
+      bridge: "{{ item.0 }}"
+      port: "{{ item.1 }}"
   with_together:
     - "{{ neutron_bridge_name.split(',') }}"
     - "{{ neutron_external_interface.split(',') }}"
+  when:
+    - inventory_hostname in groups["network"]
+      or (inventory_hostname in groups["compute"] and computes_need_external_bridge | bool )

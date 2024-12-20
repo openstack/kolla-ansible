@@ -3,7 +3,7 @@
   vars:
     nova_api: "{{ nova_services['nova-api'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -14,7 +14,7 @@
     labels:
       BOOTSTRAP:
     name: "nova_api_online_data_migrations"
-    restart_policy: "no"
+    restart_policy: "oneshot"
     volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
   run_once: true
   delegate_to: "{{ groups[nova_api.group][0] }}"

@@ -24,6 +24,12 @@
 # Dummy variable to allow Ansible to accept this file.
 workaround_ansible_issue_8743: yes
 
+# This variable may be used to set the maximum failure percentage for all
+# plays. More fine-grained control is possible via per-service variables, e.g.
+# nova_max_fail_percentage. The default behaviour is to set a max fail
+# percentage of 100, which is equivalent to not setting it.
+#kolla_max_fail_percentage:
+
 ###############
 # Kolla options
 ###############
@@ -71,12 +77,13 @@ workaround_ansible_issue_8743: yes
 # Optionally change the path to sysctl.conf modified by Kolla Ansible plays.
 #kolla_sysctl_conf_path: /etc/sysctl.conf
 
-################
+##################
 # Container engine
-################
+##################
 
-# Valid options are [ docker ]
-# kolla_container_engine: docker
+# Valid options are [ docker, podman ]
+#kolla_container_engine: docker
+
 
 ################
 # Docker options
@@ -115,7 +122,7 @@ workaround_ansible_issue_8743: yes
 # interface by default. This interface must contain an IP address.
 # It is possible for hosts to have non-matching names of interfaces - these can
 # be set in an inventory file per host or per group or stored separately, see
-#     http://docs.ansible.com/ansible/intro_inventory.html
+#     http://docs.ansible.com/ansible/latest/intro_inventory.html
 # Yet another way to workaround the naming problem is to create a bond for the
 # interface on all hosts and give the bond name here. Similar strategy can be
 # followed for other types of interfaces.
@@ -238,7 +245,7 @@ workaround_ansible_issue_8743: yes
 #kolla_copy_ca_into_containers: "no"
 #haproxy_backend_cacert: "{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.trust.crt' }}"
 #haproxy_backend_cacert_dir: "/etc/ssl/certs"
-
+#database_enable_tls_backend: "{{ 'yes' if kolla_enable_tls_backend | bool and enable_proxysql | bool else 'no' }}"
 ##################
 # Backend options
 ##################
@@ -260,6 +267,26 @@ workaround_ansible_issue_8743: yes
 # ACME client to complete http-01 challenge.
 # Please read the docs for more details.
 #acme_client_servers: []
+
+####################
+# LetsEncrypt options
+####################
+# This option is required for letsencrypt role to work properly.
+#letsencrypt_email: ""
+
+####################
+# LetsEncrypt certificate server options
+####################
+#letsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
+# attempt to renew Let's Encrypt certificate every 12 hours
+#letsencrypt_cron_renew_schedule:  "0   */12   *   *   *"
+
+####################
+# LetsEncrypt external account binding options
+####################
+#letsencrypt_external_account_binding: "no"
+#letsencrypt_eab_hmac: ""
+#letsencrypt_eab_key_id: ""
 
 ################
 # Region options
@@ -294,7 +321,6 @@ workaround_ansible_issue_8743: yes
 #enable_neutron: "{{ enable_openstack_core | bool }}"
 #enable_nova: "{{ enable_openstack_core | bool }}"
 #enable_rabbitmq: "{{ 'yes' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'no' }}"
-#enable_outward_rabbitmq: "{{ enable_murano | bool }}"
 
 # OpenStack services can be enabled or disabled with these options
 #enable_aodh: "no"
@@ -308,58 +334,49 @@ workaround_ansible_issue_8743: yes
 #enable_ceph_rgw_loadbalancer: "{{ enable_ceph_rgw | bool }}"
 #enable_cinder: "no"
 #enable_cinder_backup: "yes"
-#enable_cinder_backend_hnas_nfs: "no"
 #enable_cinder_backend_iscsi: "{{ enable_cinder_backend_lvm | bool }}"
 #enable_cinder_backend_lvm: "no"
 #enable_cinder_backend_nfs: "no"
 #enable_cinder_backend_quobyte: "no"
 #enable_cinder_backend_pure_iscsi: "no"
 #enable_cinder_backend_pure_fc: "no"
+#enable_cinder_backend_pure_roce: "no"
+#enable_cinder_backend_pure_nvme_tcp: "no"
 #enable_cloudkitty: "no"
 #enable_collectd: "no"
 #enable_cyborg: "no"
 #enable_designate: "no"
 #enable_destroy_images: "no"
-#enable_elasticsearch: "{{ 'yes' if enable_central_logging | bool or enable_osprofiler | bool or enable_skydive | bool or enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'elasticsearch') else 'no' }}"
-#enable_elasticsearch_curator: "no"
 #enable_etcd: "no"
 #enable_fluentd: "yes"
-#enable_freezer: "no"
+#enable_fluentd_systemd: "{{ (enable_fluentd | bool) and (enable_central_logging | bool) }}"
 #enable_gnocchi: "no"
 #enable_gnocchi_statsd: "no"
-#enable_grafana: "{{ enable_monasca | bool }}"
+#enable_grafana: "no"
 #enable_grafana_external: "{{ enable_grafana | bool }}"
 #enable_heat: "{{ enable_openstack_core | bool }}"
 #enable_horizon: "{{ enable_openstack_core | bool }}"
 #enable_horizon_blazar: "{{ enable_blazar | bool }}"
 #enable_horizon_cloudkitty: "{{ enable_cloudkitty | bool }}"
 #enable_horizon_designate: "{{ enable_designate | bool }}"
-#enable_horizon_freezer: "{{ enable_freezer | bool }}"
+#enable_horizon_fwaas: "{{ enable_neutron_fwaas | bool }}"
 #enable_horizon_heat: "{{ enable_heat | bool }}"
 #enable_horizon_ironic: "{{ enable_ironic | bool }}"
 #enable_horizon_magnum: "{{ enable_magnum | bool }}"
 #enable_horizon_manila: "{{ enable_manila | bool }}"
 #enable_horizon_masakari: "{{ enable_masakari | bool }}"
 #enable_horizon_mistral: "{{ enable_mistral | bool }}"
-#enable_horizon_monasca: "{{ enable_monasca | bool }}"
-#enable_horizon_murano: "{{ enable_murano | bool }}"
 #enable_horizon_neutron_vpnaas: "{{ enable_neutron_vpnaas | bool }}"
 #enable_horizon_octavia: "{{ enable_octavia | bool }}"
-#enable_horizon_sahara: "{{ enable_sahara | bool }}"
-#enable_horizon_senlin: "{{ enable_senlin | bool }}"
-#enable_horizon_solum: "{{ enable_solum | bool }}"
 #enable_horizon_tacker: "{{ enable_tacker | bool }}"
 #enable_horizon_trove: "{{ enable_trove | bool }}"
-#enable_horizon_vitrage: "{{ enable_vitrage | bool }}"
 #enable_horizon_watcher: "{{ enable_watcher | bool }}"
 #enable_horizon_zun: "{{ enable_zun | bool }}"
-#enable_influxdb: "{{ enable_monasca | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb') }}"
+#enable_influxdb: "{{ enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb' }}"
 #enable_ironic: "no"
 #enable_ironic_neutron_agent: "{{ enable_neutron | bool and enable_ironic | bool }}"
+#enable_ironic_prometheus_exporter: "{{ enable_ironic | bool and enable_prometheus | bool }}"
 #enable_iscsid: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
-#enable_kafka: "{{ enable_monasca | bool }}"
-#enable_kibana: "{{ 'yes' if enable_central_logging | bool or enable_monasca | bool else 'no' }}"
-#enable_kibana_external: "{{ enable_kibana | bool }}"
 #enable_kuryr: "no"
 #enable_magnum: "no"
 #enable_manila: "no"
@@ -371,12 +388,11 @@ workaround_ansible_issue_8743: yes
 #enable_mariabackup: "no"
 #enable_masakari: "no"
 #enable_mistral: "no"
-#enable_monasca: "no"
 #enable_multipathd: "no"
-#enable_murano: "no"
 #enable_neutron_vpnaas: "no"
 #enable_neutron_sriov: "no"
 #enable_neutron_dvr: "no"
+#enable_neutron_fwaas: "no"
 #enable_neutron_qos: "no"
 #enable_neutron_agent_ha: "no"
 #enable_neutron_bgp_dragent: "no"
@@ -391,19 +407,19 @@ workaround_ansible_issue_8743: yes
 #enable_nova_ssh: "yes"
 #enable_octavia: "no"
 #enable_octavia_driver_agent: "{{ enable_octavia | bool and neutron_plugin_agent == 'ovn' }}"
+#enable_octavia_jobboard: "{{ enable_octavia | bool and 'amphora' in octavia_provider_drivers }}"
+#enable_opensearch: "{{ enable_central_logging | bool or enable_osprofiler | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'opensearch') }}"
+#enable_opensearch_dashboards: "{{ enable_opensearch | bool }}"
+#enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }}"
 #enable_openvswitch: "{{ enable_neutron | bool and neutron_plugin_agent != 'linuxbridge' }}"
 #enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
 #enable_ovs_dpdk: "no"
 #enable_osprofiler: "no"
 #enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"
 #enable_prometheus: "no"
-#enable_proxysql: "no"
+#enable_proxysql: "yes"
 #enable_redis: "no"
-#enable_sahara: "no"
-#enable_senlin: "no"
-#enable_skydive: "no"
-#enable_solum: "no"
-#enable_storm: "{{ enable_monasca | bool }}"
+#enable_skyline: "no"
 #enable_swift: "no"
 #enable_swift_s3api: "no"
 #enable_tacker: "no"
@@ -411,10 +427,17 @@ workaround_ansible_issue_8743: yes
 #enable_trove: "no"
 #enable_trove_singletenant: "no"
 #enable_venus: "no"
-#enable_vitrage: "no"
 #enable_watcher: "no"
-#enable_zookeeper: "{{ enable_kafka | bool or enable_storm | bool }}"
 #enable_zun: "no"
+
+#############
+# S3 options
+#############
+# Common options for S3 Cinder Backup and Glance S3 backend.
+#s3_url:
+#s3_bucket:
+#s3_access_key:
+#s3_secret_key:
 
 ##################
 # RabbitMQ options
@@ -448,26 +471,20 @@ workaround_ansible_issue_8743: yes
 #external_ceph_cephx_enabled: "yes"
 
 # Glance
-#ceph_glance_keyring: "ceph.client.glance.keyring"
 #ceph_glance_user: "glance"
 #ceph_glance_pool_name: "images"
 # Cinder
-#ceph_cinder_keyring: "ceph.client.cinder.keyring"
 #ceph_cinder_user: "cinder"
 #ceph_cinder_pool_name: "volumes"
-#ceph_cinder_backup_keyring: "ceph.client.cinder-backup.keyring"
 #ceph_cinder_backup_user: "cinder-backup"
 #ceph_cinder_backup_pool_name: "backups"
 # Nova
-#ceph_nova_keyring: "{{ ceph_cinder_keyring }}"
-#ceph_nova_user: "nova"
+#ceph_nova_user: "{{ ceph_cinder_user }}"
 #ceph_nova_pool_name: "vms"
 # Gnocchi
-#ceph_gnocchi_keyring: "ceph.client.gnocchi.keyring"
 #ceph_gnocchi_user: "gnocchi"
 #ceph_gnocchi_pool_name: "gnocchi"
 # Manila
-#ceph_manila_keyring: "ceph.client.manila.keyring"
 #ceph_manila_user: "manila"
 
 #############################
@@ -485,6 +502,9 @@ workaround_ansible_issue_8743: yes
 # 28800(8 hour), 43200(12 hour), 86400(1 day), 604800(1 week).
 #fernet_token_expiry: 86400
 
+# Whether or not to apply changes to service user passwords when services are
+# reconfigured
+#update_keystone_service_user_passwords: "true"
 
 ########################
 # Glance - Image Options
@@ -494,6 +514,7 @@ workaround_ansible_issue_8743: yes
 #glance_backend_file: "yes"
 #glance_backend_swift: "no"
 #glance_backend_vmware: "no"
+#glance_backend_s3: "no"
 #enable_glance_image_cache: "no"
 #glance_enable_property_protection: "no"
 #glance_enable_interoperable_image_import: "no"
@@ -501,6 +522,14 @@ workaround_ansible_issue_8743: yes
 # Due to this feature being experimental in glance,
 # the default value is "no".
 #glance_enable_rolling_upgrade: "no"
+
+####################
+# Glance S3 Backend
+####################
+#glance_backend_s3_url: "{{ s3_url }}"
+#glance_backend_s3_bucket: "{{ s3_bucket }}"
+#glance_backend_s3_access_key: "{{ s3_access_key }}"
+#glance_backend_s3_secret_key: "{{ s3_secret_key }}"
 
 ####################
 # Osprofiler options
@@ -535,10 +564,16 @@ workaround_ansible_issue_8743: yes
 # Valid options are [ '', redis, etcd ]
 #cinder_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
 
-# Valid options are [ nfs, swift, ceph ]
+# Valid options are [ nfs, swift, ceph, s3 ]
 #cinder_backup_driver: "ceph"
 #cinder_backup_share: ""
 #cinder_backup_mount_options_nfs: ""
+
+# Cinder backup S3 options
+#cinder_backup_s3_url: "{{ s3_url }}"
+#cinder_backup_s3_bucket: "{{ s3_bucket }}"
+#cinder_backup_s3_access_key: "{{ s3_access_key }}"
+#cinder_backup_s3_secret_key: "{{ s3_secret_key }}"
 
 #######################
 # Cloudkitty options
@@ -573,13 +608,11 @@ workaround_ansible_issue_8743: yes
 # The number of fake driver per compute node
 #num_nova_fake_per_node: 5
 
-# The flag "nova_safety_upgrade" need to be consider when
-# "nova_enable_rolling_upgrade" is enabled. The "nova_safety_upgrade"
-# controls whether the nova services are all stopped before rolling
-# upgrade to the new version, for the safety and availability.
-# If "nova_safety_upgrade" is "yes", that will stop all nova services (except
-# nova-compute) for no failed API operations before upgrade to the
-# new version. And opposite.
+# The "nova_safety_upgrade" controls whether the nova services
+# are all stopped before rolling upgrade to the new version,
+# for the safety and availability. If "nova_safety_upgrade" is "yes",
+# that will stop all nova services (except nova-compute) for no failed
+# API operations before upgrade to the new version. And opposite.
 #nova_safety_upgrade: "no"
 
 # Valid options are [ none, novnc, spice ]
@@ -597,7 +630,7 @@ workaround_ansible_issue_8743: yes
 #############################
 # Horizon - Dashboard Options
 #############################
-#horizon_backend_database: "{{ enable_murano | bool }}"
+#horizon_backend_database: false
 
 #############################
 # Ironic options
@@ -715,7 +748,7 @@ workaround_ansible_issue_8743: yes
 #enable_prometheus_mysqld_exporter: "{{ enable_mariadb | bool }}"
 #enable_prometheus_node_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_cadvisor: "{{ enable_prometheus | bool }}"
-#enable_prometheus_fluentd_integration: "{{ enable_prometheus | bool and enable fluentd | bool }}"
+#enable_prometheus_fluentd_integration: "{{ enable_prometheus | bool and enable_fluentd | bool }}"
 #enable_prometheus_memcached: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager_external: "{{ enable_prometheus_alertmanager | bool }}"
@@ -725,7 +758,6 @@ workaround_ansible_issue_8743: yes
 #enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_libvirt_exporter: "{{ enable_prometheus | bool and enable_nova | bool and nova_compute_virt_type in ['kvm', 'qemu'] }}"
 #enable_prometheus_etcd_integration: "{{ enable_prometheus | bool and enable_etcd | bool }}"
-#enable_prometheus_msteams: "no"
 
 # The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager).
 # prometheus_external_labels:
@@ -743,7 +775,6 @@ workaround_ansible_issue_8743: yes
 # Extra parameters passed to Prometheus exporters.
 #prometheus_blackbox_exporter_cmdline_extras:
 #prometheus_elasticsearch_exporter_cmdline_extras:
-#prometheus_haproxy_exporter_cmdline_extras:
 #prometheus_memcached_exporter_cmdline_extras:
 #prometheus_mysqld_exporter_cmdline_extras:
 #prometheus_node_exporter_cmdline_extras:
@@ -754,15 +785,6 @@ workaround_ansible_issue_8743: yes
 #prometheus_ceph_mgr_exporter_endpoints:
 #  - host1:port1
 #  - host2:port2
-
-#########
-# Freezer
-#########
-# Freezer can utilize two different database backends, elasticsearch or mariadb.
-# Elasticsearch is preferred, however it is not compatible with the version deployed
-# by kolla-ansible. You must first setup an external elasticsearch with 2.3.0.
-# By default, kolla-ansible deployed mariadb is the used database backend.
-#freezer_database_backend: "mariadb"
 
 ##########
 # Telegraf
@@ -860,3 +882,10 @@ workaround_ansible_issue_8743: yes
 
 # this is UDP port
 #hacluster_corosync_port: 5405
+
+##############
+# etcd options
+##############
+# If `etcd_remove_deleted_members` is enabled, Kolla Ansible will automatically
+# remove etcd members from the cluster that are no longer in the inventory.
+#etcd_remove_deleted_members: "no"

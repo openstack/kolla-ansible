@@ -14,11 +14,16 @@ trove_services:
         mode: "http"
         external: false
         port: "{{ trove_api_port }}"
+        listen_port: "{{ trove_api_listen_port }}"
+        tls_backend: "{{ trove_enable_tls_backend }}"
       trove_api_external:
         enabled: "{{ enable_trove }}"
         mode: "http"
         external: true
-        port: "{{ trove_api_port }}"
+        listen_port: "{{ trove_api_listen_port }}"
+        tls_backend: "{{ trove_enable_tls_backend }}"
+        external_fqdn: "{{ trove_external_fqdn }}"
+        port: "{{ trove_api_public_port }}"
   trove-conductor:
     container_name: trove_conductor
     group: trove-conductor
@@ -36,6 +41,12 @@ trove_services:
     dimensions: "{{ trove_taskmanager_dimensions }}"
     healthcheck: "{{ trove_taskmanager_healthcheck }}"
 
+####################
+# Config Validate
+####################
+trove_config_validation:
+  - generator: "/trove/tools/trove-config-generator.conf"
+    config: "/etc/trove/trove.conf"
 
 ####################
 # Database
@@ -63,15 +74,15 @@ trove_database_shard:
 ####################
 trove_tag: "{{ openstack_tag }}"
 
-trove_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/trove-conductor"
+trove_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}trove-conductor"
 trove_conductor_tag: "{{ trove_tag }}"
 trove_conductor_image_full: "{{ trove_conductor_image }}:{{ trove_conductor_tag }}"
 
-trove_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/trove-api"
+trove_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}trove-api"
 trove_api_tag: "{{ trove_tag }}"
 trove_api_image_full: "{{ trove_api_image }}:{{ trove_api_tag }}"
 
-trove_taskmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/trove-taskmanager"
+trove_taskmanager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}trove-taskmanager"
 trove_taskmanager_tag: "{{ trove_tag }}"
 trove_taskmanager_image_full: "{{ trove_taskmanager_image }}:{{ trove_taskmanager_tag }}"
 
@@ -123,21 +134,21 @@ trove_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/trove:/dev-mode/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"
 trove_conductor_default_volumes:
   - "{{ node_config_directory }}/trove-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/trove:/dev-mode/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"
 trove_taskmanager_default_volumes:
   - "{{ node_config_directory }}/trove-taskmanager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/trove/trove:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/trove' if trove_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/trove:/dev-mode/trove' if trove_dev_mode | bool else '' }}"
   - "trove:/var/lib/trove/"
 
 trove_extra_volumes: "{{ default_extra_volumes }}"
@@ -148,8 +159,8 @@ trove_taskmanager_extra_volumes: "{{ trove_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-trove_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
-trove_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ trove_api_port }}/v1.0/%(tenant_id)s"
+trove_internal_endpoint: "{{ trove_internal_base_endpoint }}/v1.0/%(tenant_id)s"
+trove_public_endpoint: "{{ trove_public_base_endpoint }}/v1.0/%(tenant_id)s"
 
 trove_logging_debug: "{{ openstack_logging_debug }}"
 
@@ -192,3 +203,10 @@ trove_ks_users:
     user: "{{ trove_keystone_user }}"
     password: "{{ trove_keystone_password }}"
     role: "admin"
+
+####################
+# TLS
+####################
+trove_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+trove_copy_certs: "{{ kolla_copy_ca_into_containers | bool or trove_enable_tls_backend | bool }}"

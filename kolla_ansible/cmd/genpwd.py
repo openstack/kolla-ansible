@@ -16,9 +16,11 @@ import argparse
 import hmac
 import os
 import random
+import stat
 import string
 import sys
 
+from ansible.utils.encrypt import random_salt
 from cryptography import fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -55,13 +57,21 @@ def generate_RSA(bits=4096):
 
 
 def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
-           fernet_keys, hmac_md5_keys):
+           fernet_keys, hmac_md5_keys, bcrypt_keys):
     try:
         with open(passwords_file, 'r') as f:
             passwords = yaml.safe_load(f.read())
     except FileNotFoundError:
         print(f"ERROR: Passwords file \"{passwords_file}\" is missing")
         sys.exit(1)
+
+    if os.stat(passwords_file).st_mode & stat.S_IROTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-readable. The permissions will be changed.")
+
+    if os.stat(passwords_file).st_mode & stat.S_IWOTH:
+        print(f"WARNING: Passwords file \"{passwords_file}\" is"
+              " world-writeable. The permissions will be changed.")
 
     if not isinstance(passwords, dict):
         print("ERROR: Passwords file not in expected key/value format")
@@ -89,6 +99,11 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
                     .hexdigest())
             elif k in fernet_keys:
                 passwords[k] = fernet.Fernet.generate_key().decode()
+            elif k in bcrypt_keys:
+                # NOTE(wszusmki) To be compatible with the ansible
+                # password_hash filter, we use the utility function from the
+                # ansible library.
+                passwords[k] = random_salt(22)
             else:
                 passwords[k] = ''.join([
                     random.SystemRandom().choice(
@@ -96,7 +111,15 @@ def genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
                     for n in range(length)
                 ])
 
-    with open(passwords_file, 'w') as f:
+    try:
+        os.remove(passwords_file)
+    except OSError:
+        pass
+
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    mode = 0o640
+
+    with os.fdopen(os.open(passwords_file, flags, mode=mode), 'w') as f:
         f.write(yaml.safe_dump(passwords, default_flow_style=False))
 
 
@@ -120,8 +143,9 @@ def main():
 
     # SSH key pair
     ssh_keys = ['kolla_ssh_key', 'nova_ssh_key',
-                'keystone_ssh_key', 'bifrost_ssh_key', 'octavia_amp_ssh_key',
-                'neutron_ssh_key']
+                'keystone_ssh_key', 'bifrost_ssh_key',
+                'octavia_amp_ssh_key', 'neutron_ssh_key',
+                'haproxy_ssh_key']
 
     # If these keys are None, leave them as None
     blank_keys = ['docker_registry_password']
@@ -133,11 +157,14 @@ def main():
     # Fernet keys
     fernet_keys = ['barbican_crypto_key']
 
+    # bcrypt salts
+    bcrypt_keys = ['prometheus_bcrypt_salt']
+
     # length of password
     length = 40
 
     genpwd(passwords_file, length, uuid_keys, ssh_keys, blank_keys,
-           fernet_keys, hmac_md5_keys)
+           fernet_keys, hmac_md5_keys, bcrypt_keys)
 
 
 if __name__ == '__main__':

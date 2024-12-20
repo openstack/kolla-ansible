@@ -3,7 +3,8 @@ debug = {{ glance_logging_debug }}
 
 # NOTE(elemoine) log_dir alone does not work for Glance
 log_file = /var/log/kolla/glance/glance-api.log
-use_forwarded_for = true
+
+worker_self_reference_url = {{ 'https' if glance_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ glance_api_port }}
 
 {% if glance_enable_tls_backend | bool %}
 bind_host = 127.0.0.1
@@ -49,7 +50,7 @@ password = {{ glance_keystone_password }}
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -57,15 +58,7 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 flavor = {% if enable_glance_image_cache | bool %}keystone+cachemanagement{% else %}keystone{% endif %}
 
 [glance_store]
-{% if glance_backend_vmware | bool %}
-default_backend = vmware
-{% elif glance_backend_ceph | bool %}
-default_backend = rbd
-{% elif glance_backend_swift | bool %}
-default_backend = swift
-{% else %}
-default_backend = file
-{% endif %}
+default_backend = "{{ glance_default_backend }}"
 
 {% if glance_backend_file | bool %}
 [file]
@@ -73,9 +66,12 @@ filesystem_store_datadir = /var/lib/glance/images/
 {% endif %}
 
 {% if glance_backend_ceph | bool %}
-[rbd]
-rbd_store_user = {{ ceph_glance_user }}
-rbd_store_pool = {{ ceph_glance_pool_name }}
+{% for backend in glance_ceph_backends %}
+[{{ backend.name }}]
+rbd_store_user = {{ backend.user }}
+rbd_store_pool = {{ backend.pool }}
+rbd_store_ceph_conf = /etc/ceph/{{ backend.cluster }}.conf
+{% endfor %}
 {% endif %}
 
 {% if glance_backend_swift | bool %}
@@ -88,6 +84,14 @@ swift_store_region = {{ openstack_region_name }}
 default_swift_reference = swift
 swift_store_config_file = /etc/glance/glance-swift.conf
 swift_store_auth_insecure = True
+{% endif %}
+
+{% if glance_backend_s3 | bool %}
+[s3]
+s3_store_host = {{ glance_backend_s3_url }}
+s3_store_access_key = {{ glance_backend_s3_access_key }}
+s3_store_secret_key = {{ glance_backend_s3_secret_key }}
+s3_store_bucket = {{ glance_backend_s3_bucket }}
 {% endif %}
 
 {% if glance_backend_vmware | bool %}
@@ -120,10 +124,17 @@ topics = {{ glance_enabled_notification_topics | map(attribute='name') | join(',
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 {% if glance_policy_file is defined %}
@@ -145,3 +156,6 @@ auth_endpoint = {{ keystone_internal_url }}
 barbican_endpoint_type = internal
 verify_ssl_path = {{ openstack_cacert }}
 {% endif %}
+
+[cors]
+allowed_origin = {{ horizon_public_endpoint }}

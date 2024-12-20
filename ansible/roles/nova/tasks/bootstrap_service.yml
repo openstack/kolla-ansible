@@ -1,11 +1,9 @@
 ---
-# TODO(mgoddard): We could use nova-manage db sync --local_cell, otherwise we
-# sync cell0 twice. Should not be harmful without though.
 - name: Running Nova API bootstrap container
   become: true
   vars:
     nova_api: "{{ nova_services['nova-api'] }}"
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -16,7 +14,7 @@
     labels:
       BOOTSTRAP:
     name: "nova_api_bootstrap"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ nova_api_bootstrap_default_volumes + nova_api_bootstrap_extra_volumes }}"
   register: bootstrap_result
   changed_when: bootstrap_result.stdout | default("") | length > 0

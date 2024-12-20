@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ multipathd_services }}"
+  with_dict: "{{ multipathd_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over config.json files for services
   template:
@@ -18,12 +15,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ multipathd_services }}"
-  notify:
-    - Restart multipathd container
+  with_dict: "{{ multipathd_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over multipath.conf
   vars:
@@ -37,8 +29,4 @@
     - "{{ node_custom_config }}/multipath/{{ inventory_hostname }}/multipath.conf"
     - "{{ node_custom_config }}/multipath.conf"
     - "multipath.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart multipathd container
+  when: service | service_enabled_and_mapped_to_host

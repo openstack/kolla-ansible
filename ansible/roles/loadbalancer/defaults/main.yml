@@ -26,22 +26,34 @@ loadbalancer_services:
     privileged: True
     volumes: "{{ keepalived_default_volumes + keepalived_extra_volumes }}"
     dimensions: "{{ keepalived_dimensions }}"
+  haproxy-ssh:
+    container_name: "haproxy_ssh"
+    group: loadbalancer
+    enabled: "{{ enable_letsencrypt | bool }}"
+    image: "{{ haproxy_ssh_image_full }}"
+    volumes: "{{ haproxy_ssh_default_volumes }}"
+    dimensions: "{{ haproxy_ssh_dimensions }}"
+    healthcheck: "{{ haproxy_ssh_healthcheck }}"
 
 
 ####################
 # Docker
 ####################
-keepalived_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/keepalived"
+keepalived_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}keepalived"
 keepalived_tag: "{{ openstack_tag }}"
 keepalived_image_full: "{{ keepalived_image }}:{{ keepalived_tag }}"
 
-haproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/haproxy"
+haproxy_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}haproxy"
 haproxy_tag: "{{ openstack_tag }}"
 haproxy_image_full: "{{ haproxy_image }}:{{ haproxy_tag }}"
 
-proxysql_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/proxysql"
+proxysql_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}proxysql"
 proxysql_tag: "{{ openstack_tag }}"
 proxysql_image_full: "{{ proxysql_image }}:{{ proxysql_tag }}"
+
+haproxy_ssh_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}haproxy-ssh"
+haproxy_ssh_tag: "{{ haproxy_tag }}"
+haproxy_ssh_image_full: "{{ haproxy_ssh_image }}:{{ haproxy_ssh_tag }}"
 
 syslog_server: "{{ api_interface_address }}"
 syslog_haproxy_facility: "local1"
@@ -51,14 +63,15 @@ keepalived_traffic_mode: "multicast"
 
 # Extended global configuration, optimization options.
 haproxy_max_connections: 40000
-haproxy_processes: 1
-haproxy_process_cpu_map: "no"
+haproxy_threads: 1
+haproxy_thread_cpu_map: "no"
 # Matches the mariadb 10000 max connections limit
 haproxy_defaults_max_connections: 10000
 
 haproxy_dimensions: "{{ default_container_dimensions }}"
 proxysql_dimensions: "{{ default_container_dimensions }}"
 keepalived_dimensions: "{{ default_container_dimensions }}"
+haproxy_ssh_dimensions: "{{ default_container_dimensions }}"
 
 haproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
 haproxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -86,11 +99,27 @@ proxysql_healthcheck:
   test: "{% if proxysql_enable_healthchecks | bool %}{{ proxysql_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ proxysql_healthcheck_timeout }}"
 
+haproxy_ssh_enable_healthchecks: "{{ enable_container_healthchecks }}"
+haproxy_ssh_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+haproxy_ssh_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+haproxy_ssh_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+haproxy_ssh_healthcheck_test: ["CMD-SHELL", "healthcheck_listen sshd {{ haproxy_ssh_port }}"]
+haproxy_ssh_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+haproxy_ssh_healthcheck:
+  interval: "{{ haproxy_ssh_healthcheck_interval }}"
+  retries: "{{ haproxy_ssh_healthcheck_retries }}"
+  start_period: "{{ haproxy_ssh_healthcheck_start_period }}"
+  test: "{% if haproxy_ssh_enable_healthchecks | bool %}{{ haproxy_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ haproxy_ssh_healthcheck_timeout }}"
+
+
 haproxy_default_volumes:
   - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
+  - "letsencrypt_certificates:/etc/haproxy/certificates"
+
 proxysql_default_volumes:
   - "{{ node_config_directory }}/proxysql/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -105,6 +134,13 @@ keepalived_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "{{ 'haproxy_socket:/var/lib/kolla/haproxy/' if enable_haproxy | bool else '' }}"
   - "{{ 'proxysql_socket:/var/lib/kolla/proxysql/' if enable_proxysql | bool else '' }}"
+haproxy_ssh_default_volumes:
+  - "{{ node_config_directory }}/haproxy-ssh/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "haproxy_socket:/var/lib/kolla/haproxy/"
+  - "{{ 'letsencrypt:/etc/letsencrypt' if enable_letsencrypt | bool else omit }}"
+  - "{{ 'letsencrypt_certificates:/etc/haproxy/certificates' if enable_letsencrypt | bool else omit }}"
 
 haproxy_extra_volumes: "{{ default_extra_volumes }}"
 proxysql_extra_volumes: "{{ default_extra_volumes }}"
@@ -126,6 +162,9 @@ proxysql_backend_max_replication_lag: "0"
 proxysql_admin_user: "kolla-admin"
 proxysql_stats_user: "kolla-stats"
 
+# Proxysql prometheus exporter
+proxysql_prometheus_exporter_memory_metrics_interval: "60"
+
 # Default timeout values
 haproxy_http_request_timeout: "10s"
 haproxy_http_keep_alive_timeout: "10s"
@@ -143,6 +182,27 @@ haproxy_defaults_balance: "roundrobin"
 haproxy_host_ipv4_tcp_retries2: "KOLLA_UNSET"
 
 # HAProxy socket admin permissions enable
-haproxy_socket_level_admin: "no"
-
+haproxy_socket_level_admin: "{{ enable_letsencrypt | bool }}"
 kolla_externally_managed_cert: False
+
+# Allow to disable keepalived tracking script (e.g. for single node environments
+# where this proves problematic in some cases)
+keepalived_track_script_enabled: True
+
+# Default backend for single external frontend (for missing mappings)
+haproxy_external_single_frontend_default_backend: "horizon_external_back"
+
+haproxy_external_single_frontend_public_port: "443"
+
+haproxy_external_single_frontend_options:
+  - option httplog
+  - option forwardfor
+  - "timeout client {{ haproxy_glance_api_client_timeout }}"
+
+haproxy_glance_api_client_timeout: "6h"
+loadbalancer_copy_certs: "{{ kolla_copy_ca_into_containers | bool or kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool or kolla_enable_tls_backend | bool or database_enable_tls_internal | bool or database_enable_tls_backend | bool }}"
+
+################
+# ProxySQL
+################
+mariadb_monitor_read_only_interval: ""

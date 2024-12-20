@@ -87,8 +87,8 @@ def database_shards_info(context, hostnames):
 
         host_shard_id = host.get('mariadb_shard_id')
         if host_shard_id is None:
-            raise FilterError(f"'mariadb_shard_id' is undefined "
-                              "for host '{hostname}'")
+            raise FilterError("'mariadb_shard_id' is undefined "
+                              f"for host '{hostname}'")
         else:
             host_shard_id = str(host_shard_id)
 
@@ -121,6 +121,7 @@ def database_shards_info(context, hostnames):
                     raise FilterError("'mariadb_shard_backup_user_prefix' "
                                       "variable is unavailable")
                 db_user = f"{db_backup_prefix}{host_shard_id}"
+                db_password = host.get('mariadb_backup_database_password')
                 user_dict = {'password': db_password, 'user': db_user,
                              'shard_id': host_shard_id}
                 shards_info['users'].append(user_dict)

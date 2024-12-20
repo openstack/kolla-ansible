@@ -7,10 +7,13 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
+  with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
+
+- include_tasks: external_huawei.yml
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ cinder_services }}"
+    - cinder_backend_huawei | bool
+    - cinder_backend_huawei_xml_files | length > 0
+    - inventory_hostname in groups['cinder-volume']
 
 - include_tasks: external_ceph.yml
   when:
@@ -39,7 +42,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool or cinder_enable_tls_backend | bool
+    - cinder_copy_certs
 
 - name: Copying over config.json files for services
   template:
@@ -47,12 +50,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ cinder_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over cinder-wsgi.conf
   vars:
@@ -66,11 +64,7 @@
     - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/cinder-wsgi.conf"
     - "{{ node_custom_config }}/cinder/cinder-wsgi.conf"
     - "cinder-wsgi.conf.j2"
-  when:
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
-  notify:
-    - Restart cinder-api container
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over cinder.conf
   vars:
@@ -85,12 +79,18 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/cinder.conf"
     mode: "0660"
   become: true
-  when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ cinder_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Generating 'hostnqn' file for cinder_volume
+  vars:
+    service: "{{ cinder_services['cinder-volume'] }}"
+    hostnqn: "nqn.2014-08.org.nvmexpress:uuid:{{ ansible_facts.hostname | to_uuid }}"
+  template:
+    src: "templates/hostnqn.j2"
+    dest: "{{ node_config_directory }}/cinder-volume/hostnqn"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
   become: true
@@ -99,14 +99,12 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ cinder_policy_file }}"
     mode: "0660"
   when:
-    - item.value.enabled | bool
     - cinder_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ cinder_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over nfs_shares files for cinder_volume
+  vars:
+    service: "{{ cinder_services['cinder-volume'] }}"
   become: true
   template:
     src: "{{ item }}"
@@ -122,7 +120,5 @@
         - "{{ node_custom_config }}/cinder/nfs_shares"
         - "{{ node_custom_config }}/cinder/cinder-volume/nfs_shares"
         - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/nfs_shares"
-      skip: "{{ not enable_cinder_backend_nfs | bool and not enable_cinder_backend_hnas_nfs | bool }}"
-  when: inventory_hostname in groups['cinder-volume']
-  notify:
-    - Restart cinder-volume container
+      skip: "{{ not enable_cinder_backend_nfs | bool }}"
+  when: service | service_enabled_and_mapped_to_host

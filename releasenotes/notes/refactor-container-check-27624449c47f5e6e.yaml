@@ -1,0 +1,23 @@
+---
+features:
+  - |
+    Refactor services' check-containers and optimise
+
+    This might fix some hidden bugs where the check tasks forgot to
+    include params important for the service.
+
+    We also get a nice optimisation by using a filtered loop instead
+    of task skipping per service with 'when'. As proven in
+    https://review.opendev.org/c/openstack/kolla-ansible/+/914997
+
+    This refactoring allows for further optimisation and
+    fixing work to proceed with much less hassle. Including getting
+    rid of many notify statements as the restarts are now safely handled
+    by check-containers. Some notifies had to stay, because of special
+    edge cases eg. in rolling upgrades and loadbalancer config.
+
+    One downside is we remove the little optimisation for Zun that
+    ignored config change for copying loopback but this is an
+    acceptable tradeoff considering the benefits above.
+
+    `Blueprint performance-improvements <https://blueprints.launchpad.net/kolla-ansible/+spec/performance-improvements>`__

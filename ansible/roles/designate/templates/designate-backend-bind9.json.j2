@@ -2,7 +2,7 @@
 {% set bind_file = 'bind/named.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'named.conf' %}
 
 {
-    "command": "/usr/sbin/{{ bind_cmd }} -U {{ designate_backend_bind9_workers }} -g",
+    "command": "/usr/sbin/{{ bind_cmd }} {{ designate_backend_bind9_cmdline_extras }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/named.conf",
@@ -23,7 +23,13 @@
             "owner": "root",
             "perm": "0600",
             "optional": true
-        }
+        }{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {

@@ -22,7 +22,7 @@ ceilometer_services:
     enabled: True
     privileged: True
     image: "{{ ceilometer_compute_image_full }}"
-    volumes: "{{ ceilometer_compute_default_volumes + ceilometer_compute_extra_volumes }}"
+    volumes: "{{ ceilometer_compute_default_volumes + ceilometer_compute_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ ceilometer_compute_dimensions }}"
     healthcheck: "{{ ceilometer_compute_healthcheck }}"
   ceilometer-ipmi:
@@ -34,25 +34,31 @@ ceilometer_services:
     dimensions: "{{ ceilometer_ipmi_dimensions }}"
     healthcheck: "{{ ceilometer_ipmi_healthcheck }}"
 
+####################
+# Config Validate
+####################
+ceilometer_config_validation:
+  - generator: "/ceilometer/etc/ceilometer/ceilometer-config-generator.conf"
+    config: "/etc/ceilometer/ceilometer.conf"
 
 ####################
 # Docker
 ####################
 ceilometer_tag: "{{ openstack_tag }}"
 
-ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-notification"
+ceilometer_notification_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ceilometer-notification"
 ceilometer_notification_tag: "{{ ceilometer_tag }}"
 ceilometer_notification_image_full: "{{ ceilometer_notification_image }}:{{ ceilometer_notification_tag }}"
 
-ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-central"
+ceilometer_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ceilometer-central"
 ceilometer_central_tag: "{{ ceilometer_tag }}"
 ceilometer_central_image_full: "{{ ceilometer_central_image }}:{{ ceilometer_central_tag }}"
 
-ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-compute"
+ceilometer_compute_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ceilometer-compute"
 ceilometer_compute_tag: "{{ ceilometer_tag }}"
 ceilometer_compute_image_full: "{{ ceilometer_compute_image }}:{{ ceilometer_compute_tag }}"
 
-ceilometer_ipmi_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ceilometer-ipmi"
+ceilometer_ipmi_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ceilometer-ipmi"
 ceilometer_ipmi_tag: "{{ ceilometer_tag }}"
 ceilometer_ipmi_image_full: "{{ ceilometer_ipmi_image }}:{{ ceilometer_ipmi_tag }}"
 
@@ -118,30 +124,30 @@ ceilometer_notification_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ceilometer:/dev-mode/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 ceilometer_central_default_volumes:
   - "{{ node_config_directory }}/ceilometer-central/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ceilometer:/dev-mode/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 ceilometer_compute_default_volumes:
   - "{{ node_config_directory }}/ceilometer-compute/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
   - "{{ ceilometer_libvirt_volume }}:/var/lib/libvirt"
-  - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ceilometer:/dev-mode/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 ceilometer_ipmi_default_volumes:
   - "{{ node_config_directory }}/ceilometer-ipmi/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "ceilometer:/var/lib/ceilometer/"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/ceilometer/ceilometer:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ceilometer' if ceilometer_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ceilometer:/dev-mode/ceilometer' if ceilometer_dev_mode | bool else '' }}"
 
 ceilometer_extra_volumes: "{{ default_extra_volumes }}"
 ceilometer_notification_extra_volumes: "{{ ceilometer_extra_volumes }}"

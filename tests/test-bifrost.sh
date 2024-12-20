@@ -8,11 +8,13 @@ export PYTHONUNBUFFERED=1
 
 
 function test_bifrost {
+    container_engine="${1:-docker}"
+
     # TODO(mgoddard): More testing, deploy bare metal nodes.
     # TODO(mgoddard): Use openstackclient when clouds.yaml works. See
     # https://bugs.launchpad.net/bifrost/+bug/1754070.
     attempts=0
-    while [[ $(sudo docker exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal driver list -f value" | wc -l) -eq 0 ]]; do
+    while [[ $(sudo ${container_engine} exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal driver list -f value" | wc -l) -eq 0 ]]; do
         attempts=$((attempts + 1))
         if [[ $attempts -gt 6 ]]; then
             echo "Timed out waiting for ironic conductor to become active"
@@ -20,10 +22,10 @@ function test_bifrost {
         fi
         sleep 10
     done
-    sudo docker exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node list"
-    sudo docker exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node create --driver ipmi --name test-node"
-    sudo docker exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node delete test-node"
+    sudo $container_engine exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node list"
+    sudo $container_engine exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node create --driver ipmi --name test-node"
+    sudo $container_engine exec bifrost_deploy bash -c "OS_CLOUD=bifrost openstack baremetal node delete test-node"
 }
 
 
-test_bifrost
+test_bifrost $1

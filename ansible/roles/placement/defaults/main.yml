@@ -20,9 +20,17 @@ placement_services:
         enabled: "{{ enable_placement }}"
         mode: "http"
         external: true
-        port: "{{ placement_api_port }}"
+        external_fqdn: "{{ placement_external_fqdn }}"
+        port: "{{ placement_api_public_port }}"
         listen_port: "{{ placement_api_listen_port }}"
         tls_backend: "{{ placement_enable_tls_backend }}"
+
+####################
+# Config Validate
+####################
+placement_config_validation:
+  - generator: "/placement/etc/placement/config-generator.conf"
+    config: "/etc/placement/placement.conf"
 
 ####################
 # Database
@@ -50,7 +58,7 @@ placement_database_shard:
 ####################
 placement_tag: "{{ openstack_tag }}"
 
-placement_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/placement-api"
+placement_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}placement-api"
 placement_api_tag: "{{ placement_tag }}"
 placement_api_image_full: "{{ placement_api_image }}:{{ placement_api_tag }}"
 
@@ -74,16 +82,13 @@ placement_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/placement/placement:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/placement' if placement_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/placement:/dev-mode/placement' if placement_dev_mode | bool else '' }}"
 
 placement_api_extra_volumes: "{{ default_extra_volumes }}"
 
 ####################
 # OpenStack
 ####################
-placement_internal_endpoint: "{{ internal_protocol }}://{{ placement_internal_fqdn | put_address_in_context('url') }}:{{ placement_api_port }}"
-placement_public_endpoint: "{{ public_protocol }}://{{ placement_external_fqdn | put_address_in_context('url') }}:{{ placement_api_port }}"
-
 placement_logging_debug: "{{ openstack_logging_debug }}"
 
 openstack_placement_auth: "{{ openstack_auth }}"
@@ -137,3 +142,5 @@ placement_ks_users:
 # TLS
 ####################
 placement_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+placement_copy_certs: "{{ kolla_copy_ca_into_containers | bool or placement_enable_tls_backend | bool }}"

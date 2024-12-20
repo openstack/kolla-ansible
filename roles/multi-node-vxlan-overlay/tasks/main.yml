@@ -6,17 +6,18 @@
       - vxlan_interface_name is defined
       - vxlan_vni is defined
 
-# We have had cases where the nodepool private IP address is not assigned,
-# which causes hard to diagnose errors later on. Catch it early.
-- name: Assert that the nodepool private IPv4 address is assigned
-  assert:
-    that: nodepool.private_ipv4 in ansible_all_ipv4_addresses
-    fail_msg: >-
-      The nodepool private IP address {{ nodepool.private_ipv4 }} is not assigned
-
 - name: Set VXLAN interface facts
   set_fact:
-    tunnel_local_address: "{{ nodepool.private_ipv4 }}"
+    tunnel_local_address: "{{ nodepool.private_ipv4 if nodepool.private_ipv4 | length > 0 else nodepool.public_ipv4 }}"
+
+# We have had cases where the nodepool private or public IP address is not assigned,
+# which causes hard to diagnose errors later on. Catch it early.
+
+- name: Assert that the nodepool private or public IPv4 address is assigned
+  assert:
+    that: tunnel_local_address in ansible_all_ipv4_addresses
+    fail_msg: >-
+      The nodepool private/public IP address {{ tunnel_local_address }} is not assigned
 
 - name: Create VXLAN interface
   become: true

@@ -32,8 +32,8 @@ a buffer key - three in total. If the rotation interval is set lower than the
 sum of the token expiry and token allow expired window, more active keys will
 be configured in Keystone as necessary.
 
-Further infomation on Fernet tokens is available in the :keystone-doc:`Keystone
-documentation <admin/fernet-token-faq.html>`.
+Further information on Fernet tokens is available in the
+:keystone-doc:`Keystone documentation <admin/fernet-token-faq.html>`.
 
 Federated identity
 ------------------
@@ -95,6 +95,14 @@ used by OpenStack command line client. Example config shown below:
 .. code-block:: yaml
 
     keystone_federation_oidc_jwks_uri: "https://<AUTH PROVIDER>/<ID>/discovery/v2.0/keys"
+
+Some identity providers need additional mod_auth_openidc config.
+Example for Keycloak shown below:
+
+.. code-block:: yaml
+
+    keystone_federation_oidc_additional_options:
+      OIDCTokenBindingPolicy: disabled
 
 Identity providers configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

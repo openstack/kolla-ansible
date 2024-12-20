@@ -24,6 +24,50 @@
             "dest": "/etc/proxysql/rules",
             "owner": "proxysql",
             "perm": "0700"
-        }
+        }{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
+        {% if database_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates/root.crt",
+            "dest": "/etc/proxysql/certs/root.crt",
+            "owner": "proxysql",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/mariadb-cert.pem",
+            "dest": "/etc/proxysql/certs/mariadb-cert.pem",
+            "owner": "proxysql",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/mariadb-key.pem",
+            "dest": "/etc/proxysql/certs/mariadb-key.pem",
+            "owner": "proxysql",
+            "perm": "0600"
+        }{% endif %}
+        {% if database_enable_tls_internal | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates/root.crt",
+            "dest": "/var/lib/proxysql/proxysql-ca.pem",
+            "owner": "proxysql",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/proxysql-cert.pem",
+            "dest": "/var/lib/proxysql/proxysql-cert.pem",
+            "owner": "proxysql",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/proxysql-key.pem",
+            "dest": "/var/lib/proxysql/proxysql-key.pem",
+            "owner": "proxysql",
+            "perm": "0600"
+        }{% endif %}
     ]
 }

@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ magnum_services }}"
+  with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -31,6 +28,29 @@
   when:
     - magnum_policy.results
 
+- name: Check if kubeconfig file is supplied
+  stat:
+    path: "{{ node_custom_config }}/magnum/kubeconfig"
+  delegate_to: localhost
+  run_once: True
+  register: magnum_kubeconfig_file
+
+- name: Copying over kubeconfig file
+  template:
+    src: "{{ node_custom_config }}/magnum/kubeconfig"
+    dest: "{{ node_config_directory }}/{{ item.key }}/kubeconfig"
+    mode: "0660"
+  become: true
+  when:
+    - magnum_kubeconfig_file.stat.exists
+  with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Set magnum kubeconfig file's path
+  set_fact:
+    magnum_kubeconfig_file_path: "{{ magnum_kubeconfig_file.stat.path }}"
+  when:
+    - magnum_kubeconfig_file.stat.exists
+
 - include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool
@@ -41,12 +61,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ magnum_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over magnum.conf
   vars:
@@ -61,12 +76,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/magnum.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ magnum_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over existing policy file
   template:
@@ -76,8 +86,4 @@
   become: true
   when:
     - magnum_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ magnum_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"

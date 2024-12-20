@@ -41,7 +41,7 @@ This absolutely solves the problem of persistent data, but it introduces
 another security issue, permissions. With this host bind mount solution
 the data in ``var/lib/mysql`` will be owned by the mysql user in the
 container. Unfortunately, that mysql user in the container could have
-any UID/GID and thats who will own the data outside the container
+any UID/GID and that's who will own the data outside the container
 introducing a potential security risk. Additionally, this method
 dirties the host and requires host permissions to the directories
 to bind mount.
@@ -98,8 +98,8 @@ The following variables should be configured in Kolla Ansible's
     * Bool - set to true or false
 
 
-Prerequsites
-============
+Prerequisites
+=============
 Firewalld needs to be installed beforehand.
 
 Kayobe can be used to automate the installation and configuration of firewalld

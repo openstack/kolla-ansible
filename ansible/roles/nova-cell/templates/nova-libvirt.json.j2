@@ -51,8 +51,8 @@
             "merge": true
         }{% endif %}{% if nova_backend == "rbd" %},
         {
-            "source": "{{ container_config_directory }}/ceph.conf",
-            "dest": "/etc/ceph/ceph.conf",
+            "source": "{{ container_config_directory }}/{{ nova_cell_ceph_backend['cluster'] }}.conf",
+            "dest": "/etc/ceph/{{ nova_cell_ceph_backend['cluster'] }}.conf",
             "owner": "nova",
             "perm": "0600"
         }{% endif %}{% if libvirt_enable_sasl | bool %},
@@ -65,6 +65,12 @@
         {
             "source": "{{ container_config_directory }}/auth.conf",
             "dest": "/root/.config/libvirt/auth.conf",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
             "owner": "root",
             "perm": "0600"
         }{% endif %}

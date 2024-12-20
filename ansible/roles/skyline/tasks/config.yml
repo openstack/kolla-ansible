@@ -1,0 +1,71 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
+
+- include_tasks: copy-certs.yml
+  when:
+    - skyline_copy_certs
+
+- name: Copying over skyline.yaml files for services
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/skyline.yaml.j2"
+      - "{{ node_custom_config }}/skyline/skyline.yaml"
+    dest: "{{ node_config_directory }}/{{ item.key }}/skyline.yaml"
+    mode: "0660"
+  become: true
+  with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over gunicorn.py files for services
+  vars:
+    service: "{{ skyline_services['skyline-apiserver'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/skyline-apiserver/gunicorn.py"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+  with_first_found:
+    - "{{ node_custom_config }}/skyline/gunicorn.py"
+    - "gunicorn.py.j2"
+
+- name: Copying over nginx.conf files for services
+  vars:
+    service: "{{ skyline_services['skyline-console'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/skyline-console/nginx.conf"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+  with_first_found:
+    - "{{ node_custom_config }}/skyline/nginx.conf"
+    - "nginx.conf.j2"
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over custom logos
+  become: true
+  vars:
+    service: "{{ skyline_services['skyline-console'] }}"
+  copy:
+    src: "{{ node_custom_config }}/skyline/logos/{{ item }}"
+    dest: "{{ node_config_directory }}/skyline-console/logos/"
+    mode: 0660
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - skyline_custom_logos | length > 0
+  with_items: "{{ skyline_custom_logos }}"

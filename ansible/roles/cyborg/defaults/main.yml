@@ -8,6 +8,20 @@ cyborg_services:
     volumes: "{{ cyborg_api_default_volumes + cyborg_api_extra_volumes }}"
     dimensions: "{{ cyborg_api_dimensions }}"
     healthcheck: "{{ cyborg_api_healthcheck }}"
+    haproxy:
+      cyborg_api:
+        enabled: "{{ enable_cyborg }}"
+        mode: "http"
+        external: false
+        port: "{{ cyborg_api_port }}"
+        listen_port: "{{ cyborg_api_listen_port }}"
+      cyborg_api_external:
+        enabled: "{{ enable_cyborg }}"
+        mode: "http"
+        external: true
+        external_fqdn: "{{ cyborg_external_fqdn }}"
+        port: "{{ cyborg_api_public_port }}"
+        listen_port: "{{ cyborg_api_listen_port }}"
   cyborg-agent:
     container_name: cyborg_agent
     group: cyborg-agent
@@ -25,6 +39,13 @@ cyborg_services:
     volumes: "{{ cyborg_conductor_default_volumes + cyborg_conductor_extra_volumes }}"
     dimensions: "{{ cyborg_conductor_dimensions }}"
     healthcheck: "{{ cyborg_conductor_healthcheck }}"
+
+####################
+# Config Validate
+####################
+cyborg_config_validation:
+  - generator: "/cyborg/tools/config/cyborg-config-generator.conf"
+    config: "/etc/cyborg/cyborg.conf"
 
 ####################
 # Database
@@ -52,15 +73,15 @@ cyborg_database_shard:
 ####################
 cyborg_tag: "{{ openstack_tag }}"
 
-cyborg_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cyborg-api"
+cyborg_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}cyborg-api"
 cyborg_api_tag: "{{ cyborg_tag }}"
 cyborg_api_image_full: "{{ cyborg_api_image }}:{{ cyborg_api_tag }}"
 
-cyborg_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cyborg-agent"
+cyborg_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}cyborg-agent"
 cyborg_agent_tag: "{{ cyborg_tag }}"
 cyborg_agent_image_full: "{{ cyborg_agent_image }}:{{ cyborg_agent_tag }}"
 
-cyborg_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/cyborg-conductor"
+cyborg_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}cyborg-conductor"
 cyborg_conductor_tag: "{{ cyborg_tag }}"
 cyborg_conductor_image_full: "{{ cyborg_conductor_image }}:{{ cyborg_conductor_tag }}"
 
@@ -134,8 +155,8 @@ cyborg_conductor_extra_volumes: "{{ cyborg_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-cyborg_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ cyborg_api_port }}"
-cyborg_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ cyborg_api_port }}"
+cyborg_internal_endpoint: "{{ cyborg_internal_fqdn | kolla_url(internal_protocol, cyborg_api_port, '/v2') }}"
+cyborg_public_endpoint: "{{ cyborg_external_fqdn | kolla_url(public_protocol, cyborg_api_port, '/v2') }}"
 
 cyborg_logging_debug: "{{ openstack_logging_debug }}"
 
@@ -158,8 +179,8 @@ cyborg_enabled_notification_topics: "{{ cyborg_notification_topics | selectattr(
 ####################
 cyborg_ks_services:
   - name: "cyborg"
-    type: "cyborg"
-    description: "OpenStack Cyborg Service"
+    type: "accelerator"
+    description: "Acceleration Service"
     endpoints:
       - {'interface': 'internal', 'url': '{{ cyborg_internal_endpoint }}'}
       - {'interface': 'public', 'url': '{{ cyborg_public_endpoint }}'}

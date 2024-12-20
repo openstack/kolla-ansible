@@ -67,11 +67,11 @@ external_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %
 ####################
 # Docker
 ####################
-mariadb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mariadb-server"
+mariadb_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mariadb-server"
 mariadb_tag: "{{ openstack_tag }}"
 mariadb_image_full: "{{ mariadb_image }}:{{ mariadb_tag }}"
 
-mariadb_clustercheck_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mariadb-clustercheck"
+mariadb_clustercheck_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mariadb-clustercheck"
 mariadb_clustercheck_tag: "{{ mariadb_tag }}"
 mariadb_clustercheck_image_full: "{{ mariadb_clustercheck_image }}:{{ mariadb_clustercheck_tag }}"
 
@@ -82,7 +82,7 @@ mariadb_default_volumes:
   - "{{ node_config_directory }}/mariadb/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "mariadb:/var/lib/mysql"
+  - "{{ mariadb_datadir_volume }}:/var/lib/mysql"
   - "kolla_logs:/var/log/kolla/"
 mariadb_clustercheck_default_volumes:
   - "{{ node_config_directory }}/mariadb-clustercheck/:{{ container_config_directory }}/:ro"
@@ -120,12 +120,8 @@ mariadb_wsrep_extra_provider_options: []
 ####################
 # Backups
 ####################
-mariabackup_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mariadb-server"
-mariabackup_tag: "{{ mariadb_tag }}"
-mariabackup_image_full: "{{ mariabackup_image }}:{{ mariabackup_tag }}"
-
 mariadb_backup_host: "{{ groups[mariadb_shard_group][0] }}"
-mariadb_backup_database_schema: "PERCONA_SCHEMA"
+mariadb_backup_database_schema: "mysql"
 mariadb_backup_database_user: "{% if mariadb_loadbalancer == 'haproxy' %}backup{% else %}{{ mariadb_shard_backup_user_prefix }}{{ mariadb_shard_id | string }}{% endif %}"
 mariadb_backup_type: "full"
 mariadb_backup_possible: "{{ mariadb_loadbalancer != 'haproxy' or inventory_hostname in mariadb_default_database_shard_hosts }}"
@@ -133,7 +129,7 @@ mariadb_backup_possible: "{{ mariadb_loadbalancer != 'haproxy' or inventory_host
 ####################
 # Clustercheck
 ####################
-enable_mariadb_clustercheck: "{{ enable_haproxy }}"
+enable_mariadb_clustercheck: "{{ 'True' if mariadb_loadbalancer == 'haproxy' else 'False' }}"
 
 ####################
 # Sharding

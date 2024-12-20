@@ -29,14 +29,15 @@ authenticated with SASL. This should not be considered as providing a secure,
 encrypted channel, since the username/password SASL mechanisms available for
 TCP are no longer considered cryptographically secure. However, it does at
 least provide some authentication for the libvirt API. For a more secure
-encrypted channel, use :ref`libvirt TLS <libvirt-tls>`.
+encrypted channel, use :ref:`libvirt TLS <libvirt-tls>`.
 
 SASL is enabled according to the ``libvirt_enable_sasl`` flag, which defaults
 to ``true``.
 
 The username is configured via ``libvirt_sasl_authname``, and defaults to
-``kolla``. The password is configured via ``libvirt_sasl_password``, and is
-generated with other passwords using and stored in ``passwords.yml``.
+``nova``. The password is configured via ``libvirt_sasl_password``, and is
+generated with other passwords using ``kolla-mergepwd`` and ``kolla-genpwd``
+and stored in ``passwords.yml``.
 
 The list of enabled authentication mechanisms is configured via
 ``libvirt_sasl_mech_list``, and defaults to ``["SCRAM-SHA-256"]`` if libvirt
@@ -53,6 +54,23 @@ Kolla Ansible does not currently support deploying and configuring
 libvirt as a host daemon. However, since the Yoga release, if a libvirt daemon
 has already been set up, then Kolla Ansible may be configured to use it. This
 may be achieved by setting ``enable_nova_libvirt_container`` to ``false``.
+
+When the firewall driver is set to ``openvswitch``, libvirt will plug VMs
+directly into the integration bridge, ``br-int``. To do this it uses the
+``ovs-vsctl`` utility. The search path for this binary is controlled by the
+``$PATH`` environment variable (as seen by the libvirt process). There are a
+few options to ensure that this binary can be found:
+
+* Set ``openvswitch_ovs_vsctl_wrapper_enabled`` to ``True``. This will install
+  a wrapper script to the path: ``/usr/bin/ovs-vsctl`` that will execute
+  ``ovs-vsctl`` in the context of the ``openvswitch_vswitchd`` container. This
+  option is useful if you do not have openvswitch installed on the host. It
+  also has the advantage that the ``ovs-vsctl`` utility will match the version
+  of the server.
+
+* Install openvswitch on the hypervisor. Kolla mounts ``/run/openvswitch`` from
+  the host into the ``openvswitch_vswitchd`` container. This means that socket
+  is in the location ``ovs-vsctl`` expects with its default options.
 
 Migration from container to host
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +94,7 @@ to ``true`` will cause the Docker volumes to be removed.
 A future extension could support migration of existing VMs, but this is
 currently out of scope.
 
-.. libvirt-tls:
+.. _libvirt-tls:
 
 Libvirt TLS
 ===========

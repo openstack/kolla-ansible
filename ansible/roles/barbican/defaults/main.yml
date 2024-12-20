@@ -20,7 +20,8 @@ barbican_services:
         enabled: "{{ enable_barbican }}"
         mode: "http"
         external: true
-        port: "{{ barbican_api_port }}"
+        external_fqdn: "{{ barbican_external_fqdn }}"
+        port: "{{ barbican_api_public_port }}"
         listen_port: "{{ barbican_api_listen_port }}"
         tls_backend: "{{ barbican_enable_tls_backend }}"
   barbican-keystone-listener:
@@ -40,6 +41,12 @@ barbican_services:
     dimensions: "{{ barbican_worker_dimensions }}"
     healthcheck: "{{ barbican_worker_healthcheck }}"
 
+####################
+# Config Validate
+####################
+barbican_config_validation:
+  - generator: "/barbican/etc/oslo-config-generator/barbican.conf"
+    config: "/etc/barbican/barbican.conf"
 
 ####################
 # Database
@@ -67,15 +74,15 @@ barbican_database_shard:
 ####################
 barbican_tag: "{{ openstack_tag }}"
 
-barbican_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/barbican-api"
+barbican_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}barbican-api"
 barbican_api_tag: "{{ barbican_tag }}"
 barbican_api_image_full: "{{ barbican_api_image }}:{{ barbican_api_tag }}"
 
-barbican_keystone_listener_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/barbican-keystone-listener"
+barbican_keystone_listener_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}barbican-keystone-listener"
 barbican_keystone_listener_tag: "{{ barbican_tag }}"
 barbican_keystone_listener_image_full: "{{ barbican_keystone_listener_image }}:{{ barbican_keystone_listener_tag }}"
 
-barbican_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/barbican-worker"
+barbican_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}barbican-worker"
 barbican_worker_tag: "{{ barbican_tag }}"
 barbican_worker_image_full: "{{ barbican_worker_image }}:{{ barbican_worker_tag }}"
 
@@ -128,19 +135,19 @@ barbican_api_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "barbican:/var/lib/barbican/"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/barbican:/dev-mode/barbican' if barbican_dev_mode | bool else '' }}"
 barbican_keystone_listener_default_volumes:
   - "{{ node_config_directory }}/barbican-keystone-listener/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/barbican:/dev-mode/barbican' if barbican_dev_mode | bool else '' }}"
 barbican_worker_default_volumes:
   - "{{ node_config_directory }}/barbican-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/barbican/barbican:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/barbican' if barbican_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/barbican:/dev-mode/barbican' if barbican_dev_mode | bool else '' }}"
 
 barbican_extra_volumes: "{{ default_extra_volumes }}"
 barbican_api_extra_volumes: "{{ barbican_extra_volumes }}"
@@ -206,3 +213,5 @@ barbican_enabled_notification_topics: "{{ barbican_notification_topics | selecta
 # TLS
 ####################
 barbican_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+barbican_copy_certs: "{{ kolla_copy_ca_into_containers | bool or barbican_enable_tls_backend | bool }}"

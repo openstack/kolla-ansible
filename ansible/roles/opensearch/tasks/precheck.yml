@@ -1,0 +1,27 @@
+---
+- import_role:
+    name: service-precheck
+  vars:
+    service_precheck_services: "{{ opensearch_services }}"
+    service_name: "{{ project_name }}"
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - opensearch
+  check_mode: false
+  register: container_facts
+
+- name: Checking free port for Opensearch
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ opensearch_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts['opensearch'] is not defined
+    - inventory_hostname in groups['opensearch']

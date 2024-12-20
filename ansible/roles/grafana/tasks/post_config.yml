@@ -2,6 +2,7 @@
 - name: Wait for grafana application ready
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: uri
     module_args:
       url: "{{ grafana_internal_endpoint }}/login"
@@ -12,9 +13,17 @@
   delay: 2
   run_once: true
 
+- name: Remove old grafana docker volume
+  become: true
+  kolla_container:
+    action: "remove_volume"
+    name: grafana
+  when: grafana_remove_old_volume | bool
+
 - name: Enable grafana datasources
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: uri
     module_args:
       url: "{{ grafana_internal_endpoint }}/api/datasources"
@@ -36,6 +45,7 @@
 - name: Disable Getting Started panel
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: uri
     module_args:
       url: "{{ grafana_internal_endpoint }}/api/user/helpflags/1"
@@ -47,4 +57,4 @@
   register: grafana_response
   changed_when: grafana_response.status == 200
   run_once: true
-  when: grafana_custom_dashboard_file.stat.exists
+  when: "'grafana_home_dashboard.json' in check_extra_conf_grafana.files | map(attribute='path') | map('basename')"

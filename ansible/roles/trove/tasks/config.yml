@@ -7,10 +7,7 @@
     group: "{{ config_owner_group }}"
     mode: "0770"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
   stat:
@@ -33,7 +30,7 @@
 
 - include_tasks: copy-certs.yml
   when:
-    - kolla_copy_ca_into_containers | bool
+    - trove_copy_certs
 
 - name: Copying over config.json files for services
   template:
@@ -41,12 +38,21 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over trove-wsgi.conf
+  vars:
+    service: "{{ trove_services['trove-api'] }}"
+  become: true
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/trove-api/trove-wsgi.conf"
+    mode: "0660"
+  with_first_found:
+    - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove-wsgi.conf"
+    - "{{ node_custom_config }}/trove/trove-wsgi.conf"
+    - "trove-wsgi.conf.j2"
+  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over trove-guestagent.conf
   vars:
@@ -63,11 +69,7 @@
   become: true
   when:
     - item.key in services_need_confs
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over trove.conf
   vars:
@@ -82,12 +84,7 @@
     dest: "{{ node_config_directory }}/{{ item.key }}/trove.conf"
     mode: "0660"
   become: true
-  when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
-  with_dict: "{{ trove_services }}"
-  notify:
-    - "Restart {{ item.key }} container"
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over existing policy file
   template:
@@ -96,7 +93,4 @@
     mode: "0660"
   when:
     - trove_policy_file is defined
-    - inventory_hostname in groups[item.value.group]
-  with_dict: "{{ trove_services }}"
-  notify:
-    - Restart {{ item.key }} container
+  with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"

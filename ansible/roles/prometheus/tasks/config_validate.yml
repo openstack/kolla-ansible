@@ -1,0 +1,28 @@
+---
+- name: Validating prometheus config files
+  vars:
+    service: "{{ prometheus_services['prometheus-server'] }}"
+  shell: >-
+    {{ kolla_container_engine }} exec -i {{ service.container_name }} bash -c
+    "/opt/prometheus/promtool check config /etc/prometheus/prometheus.yml;
+    /opt/prometheus/promtool check web-config /etc/prometheus/web.yml"
+  register: "prometheus_config_validation_results"
+  check_mode: false
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Assert prometheus config files are valid
+  vars:
+    service: "{{ prometheus_services['prometheus-server'] }}"
+  assert:
+    that: "prometheus_config_validation_results.rc == 0"
+    fail_msg: >-
+      "{{ service.container_name }} config files are invalid, the output was:
+       {{ prometheus_config_validation_results.stdout }}"
+    success_msg: >-
+      "{{ service.container_name }} config files are valid"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool

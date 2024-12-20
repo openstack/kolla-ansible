@@ -1,0 +1,92 @@
+---
+# For MariaDB we need to be careful about restarting services, to avoid losing quorum.
+- name: Apply role mariadb
+  gather_facts: false
+  hosts:
+    - mariadb
+    - '&enable_mariadb_True'
+  max_fail_percentage: >-
+    {{ mariadb_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - mariadb
+  tasks:
+    - import_role:
+        name: mariadb
+
+- name: Restart mariadb services
+  gather_facts: false
+  hosts:
+    - mariadb_restart
+    - '&enable_mariadb_True'
+  # Restart in batches
+  serial: "33%"
+  max_fail_percentage: >-
+    {{ mariadb_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - mariadb
+  tasks:
+    - import_role:
+        name: mariadb
+        tasks_from: restart_services.yml
+
+- name: Start mariadb services
+  gather_facts: false
+  hosts:
+    - mariadb_start
+    - '&enable_mariadb_True'
+  # Start in batches
+  serial: "33%"
+  max_fail_percentage: >-
+    {{ mariadb_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - mariadb
+  tasks:
+    - import_role:
+        name: mariadb
+        tasks_from: restart_services.yml
+
+- name: Restart bootstrap mariadb service
+  gather_facts: false
+  hosts:
+    - mariadb_bootstrap_restart
+    - '&enable_mariadb_True'
+  max_fail_percentage: >-
+    {{ mariadb_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - mariadb
+  tasks:
+    - import_role:
+        name: mariadb
+        tasks_from: restart_services.yml
+
+- name: Apply mariadb post-configuration
+  gather_facts: false
+  hosts:
+    - mariadb
+    - '&enable_mariadb_True'
+  max_fail_percentage: >-
+    {{ mariadb_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - mariadb
+  tasks:
+    - name: Include mariadb post-deploy.yml
+      include_role:
+        name: mariadb
+        tasks_from: post-deploy.yml
+      when: kolla_action in ['deploy', 'reconfigure', 'upgrade']
+
+    - name: Include mariadb post-upgrade.yml
+      include_role:
+        name: mariadb
+        tasks_from: post-upgrade.yml
+      when: kolla_action == 'upgrade'

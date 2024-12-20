@@ -8,13 +8,16 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - openvswitch_db
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for OVSDB
   vars:
-    openvswitch_db: "{{ openvswitch_services['openvswitch-db-server'] }}"
+    service: "{{ openvswitch_services['openvswitch-db-server'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ ovsdb_port }}"
@@ -23,5 +26,4 @@
     state: stopped
   when:
     - container_facts['openvswitch_db'] is not defined
-    - inventory_hostname in groups[openvswitch_db.group]
-    - openvswitch_db.enabled | bool
+    - service | service_enabled_and_mapped_to_host

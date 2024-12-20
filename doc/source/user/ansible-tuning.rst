@@ -139,3 +139,24 @@ facts via facter:
 .. code-block:: yaml
 
    kolla_ansible_setup_gather_subset: "all,!facter"
+
+Max failure percentage
+----------------------
+
+It is possible to specify a `maximum failure percentage
+<https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#setting-a-maximum-failure-percentage>`__
+using ``kolla_max_fail_percentage``. By default this is undefined, which is
+equivalent to a value of 100, meaning that Ansible will continue execution
+until all hosts have failed or completed. For example:
+
+.. code-block:: yaml
+
+   kolla_max_fail_percentage: 50
+
+A max fail percentage may be set for specific services using
+``<service>_max_fail_percentage``. For example:
+
+.. code-block:: yaml
+
+   kolla_max_fail_percentage: 50
+   nova_max_fail_percentage: 25

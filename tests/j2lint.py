@@ -23,6 +23,7 @@ Simple j2 linter, useful for checking jinja2 template syntax
 Adapted for OpenStack Kolla/Kolla-Ansible purposes
 """
 
+from ansible.plugins.filter.core import get_encrypted_password
 from ansible.plugins.filter.core import to_json
 from functools import reduce
 from jinja2 import BaseLoader
@@ -32,6 +33,10 @@ from jinja2 import TemplateNotFound
 from kolla_ansible import kolla_address
 from kolla_ansible import put_address_in_context
 import os.path
+try:
+    from ansible_collections.ansible.utils.plugins.filter import ipwrap
+except ImportError:
+    from ansible_collections.ansible.netcommon.plugins.filter import ipwrap
 
 
 class AbsolutePathLoader(BaseLoader):
@@ -51,8 +56,12 @@ def check(template, out, err, env=Environment(loader=AbsolutePathLoader(),
         env.filters['bool'] = bool
         env.filters['hash'] = hash
         env.filters['to_json'] = to_json
+        # NOTE(wszumski): password_hash is mapped to the function:
+        # get_encrypted_password in ansible.filters.core.
+        env.filters['password_hash'] = get_encrypted_password
         env.filters['kolla_address'] = kolla_address
         env.filters['put_address_in_context'] = put_address_in_context
+        env.filters['ipwrap'] = ipwrap
         env.get_template(template)
         out.write("%s: Syntax OK\n" % template)
         return 0

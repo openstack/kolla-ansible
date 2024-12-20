@@ -54,6 +54,7 @@ function teardown {
 
 function test_hashicorp_vault_passwords {
     echo "Setting up development Vault server..."
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
     install_vault
     start_vault
     test_vault

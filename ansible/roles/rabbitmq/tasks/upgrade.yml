@@ -1,44 +1,12 @@
 ---
-# NOTE(pbourke): These tasks perform a 'full stop upgrade', which is necessary when moving between
-# major releases. In future kolla-ansible releases we may be able to change this to a rolling
-# restart. For info on this process see https://www.rabbitmq.com/upgrade.html
-- name: Checking if rabbitmq container needs upgrading
-  vars:
-    service_name: "rabbitmq"
-    service: "{{ rabbitmq_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "compare_image"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ project_name }}"
-    image: "{{ rabbitmq_image_full }}"
-    environment: "{{ service.environment }}"
-  when: inventory_hostname in groups[role_rabbitmq_groups]
-  register: rabbitmq_differs
+- import_tasks: version-check.yml
+
+- include_tasks: remove-ha-all-policy.yml
+  when:
+    - not om_enable_rabbitmq_high_availability | bool
 
 - import_tasks: config.yml
 
+- import_tasks: feature-flags.yml
+
 - import_tasks: check-containers.yml
-
-- name: Stopping all rabbitmq instances but the first node
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ project_name }}"
-  when:
-    - inventory_hostname != groups[role_rabbitmq_groups] | first
-    - rabbitmq_differs['result']
-
-- name: Stopping rabbitmq on the first node
-  become: true
-  kolla_docker:
-    action: "stop_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ project_name }}"
-  when:
-    - inventory_hostname == groups[role_rabbitmq_groups] | first
-    - rabbitmq_differs['result']
-
-- name: Flush handlers
-  meta: flush_handlers

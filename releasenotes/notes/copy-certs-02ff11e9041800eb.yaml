@@ -1,0 +1,14 @@
+---
+fixes:
+  - |
+    Fixes unwanted restarts during copying of certificates.
+    By removing conditional statements from role handlers in #745164,
+    copying certificates caused containers to restart, this is unwanted
+    during the genconfig process. However, if we would remove handler
+    notifiers from copying certificates, the container would never
+    restart, since from #745164, containers will restart only if any
+    of the files specified in config.json change.
+    So this adds certificate folder to config.json file for containers.
+    Certificates are copied to intermediary location inside of the
+    container, from which the script kolla_copy_cacerts will install them
+    in the system's trust store.

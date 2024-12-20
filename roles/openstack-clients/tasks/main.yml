@@ -1,0 +1,10 @@
+---
+- name: Setup OpenStack clients
+  ansible.builtin.pip:
+    extra_args: "-c {{ openstack_clients_upper_constraints_file }}"
+    name: "{{ item.package }}"
+    virtualenv: "{{ openstack_clients_venv_path }}"
+    virtualenv_command: "python3 -m venv"
+  become: true
+  when: item.enabled
+  loop: "{{ openstack_clients_pip_packages }}"

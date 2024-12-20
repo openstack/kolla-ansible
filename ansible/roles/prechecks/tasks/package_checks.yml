@@ -3,18 +3,30 @@
   command: "{{ ansible_facts.python.executable }} -c \"import docker; print(docker.__version__)\""
   register: result
   changed_when: false
-  when: inventory_hostname in groups['baremetal']
+  check_mode: false
+  when:
+    - inventory_hostname in groups['baremetal']
+    - kolla_container_engine == 'docker'
   failed_when: result is failed or result.stdout is version(docker_py_version_min, '<')
+
+- name: Checking dbus-python package
+  command: "{{ ansible_facts.python.executable }} -c \"import dbus\""
+  register: dbus_present
+  changed_when: false
+  when: inventory_hostname in groups['baremetal']
+  failed_when: dbus_present is failed
 
 # NOTE(osmanlicilegi): ansible_version.full includes patch number that's useless
 # to check. as ansible_version does not provide major.minor in dict, we need to
 # set it as variable.
 - name: Checking Ansible version
-  vars:
-    ansible_version_host: "{{ ansible_version.major }}.{{ ansible_version.minor }}"
-  fail:
-    msg: >-
+  assert:
+    that:
+      - ansible_version_host is version(ansible_version_min, '>=')
+      - ansible_version_host is version(ansible_version_max, '<=')
+    fail_msg: >-
       Ansible version should be between {{ ansible_version_min }} and {{ ansible_version_max }}.
       Current version is {{ ansible_version.full }} which is not supported.
+  vars:
+    ansible_version_host: "{{ ansible_version.major }}.{{ ansible_version.minor }}"
   run_once: true
-  when: ansible_version_host is version(ansible_version_min, '<') or ansible_version_host is version(ansible_version_max, '>')

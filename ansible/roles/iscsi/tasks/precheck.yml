@@ -8,13 +8,16 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - iscsid
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for iscsi
   wait_for:
-    host: "{{ api_interface_address }}"
+    host: "{{ tgtd_interface_address }}"
     port: "{{ iscsi_port }}"
     connect_timeout: 1
     timeout: 1
@@ -25,9 +28,9 @@
     - iscsi_services.iscsid.enabled | bool
 
 - name: Check supported platforms for tgtd
-  fail:
-    msg:
-      The SCSI target daemon tgtd is not supported on CentOS/RHEL 8 and later
+  assert:
+    that: ansible_facts.os_family != 'RedHat'
+    fail_msg: >
+      The SCSI target daemon tgtd is not supported on CentOS/RHEL
   when:
-    - ansible_facts.os_family == 'RedHat'
     - enable_tgtd | bool

@@ -2,6 +2,7 @@
 - name: Enable log_bin_trust_function_creators function
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_variables
     module_args:
       login_host: "{{ database_address }}"
@@ -19,7 +20,7 @@
   vars:
     glance_api: "{{ glance_services['glance-api'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -30,7 +31,7 @@
     labels:
       BOOTSTRAP:
     name: "bootstrap_glance"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ glance_api.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ glance_api_hosts[0] }}"
@@ -38,6 +39,7 @@
 - name: Disable log_bin_trust_function_creators function
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_variables
     module_args:
       login_host: "{{ database_address }}"

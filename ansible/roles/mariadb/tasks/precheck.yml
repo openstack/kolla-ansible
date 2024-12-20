@@ -8,14 +8,17 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - mariadb
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for MariaDB
   wait_for:
     host: "{{ api_interface_address }}"
-    port: "{{ database_port }}"
+    port: "{{ mariadb_port }}"
     connect_timeout: 1
     timeout: 1
     state: stopped

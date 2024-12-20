@@ -3,7 +3,7 @@
   vars:
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 list_cells --verbose'
     common_options: "{{ docker_common_options }}"
@@ -12,12 +12,13 @@
     labels:
       BOOTSTRAP:
     name: "nova_list_cells"
-    restart_policy: no
-    volumes: "{{ nova_cell_bootstrap_default_volumes + nova_cell_bootstrap_extra_volumes }}"
+    restart_policy: oneshot
+    volumes: "{{ nova_cell_get_settings_volumes }}"
   register: existing_cells_list
   changed_when: false
   failed_when:
     - existing_cells_list.rc != 0
+  check_mode: false
 
 - name: Extract current cell settings from list
   vars:

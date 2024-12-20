@@ -1,0 +1,42 @@
+---
+- name: Create br-int bridge on OpenvSwitch
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    user: root
+    module_name: openvswitch_bridge
+    module_args:
+      bridge: br-int
+      state: present
+      fail_mode: secure
+
+- name: Configure OVN in OVSDB
+  vars:
+    # Format: physnet1:br1,physnet2:br2
+    ovn_mappings: "{{ neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
+    # Format: physnet1:00:11:22:33:44:55,physnet2:00:11:22:33:44:56
+    ovn_macs: "{% for physnet, bridge in neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) %}{{ physnet }}:{{ ovn_base_mac | random_mac(seed=inventory_hostname + bridge) }}{% if not loop.last %},{% endif %}{% endfor %}"
+    ovn_cms_opts: "{{ 'enable-chassis-as-gw' if inventory_hostname in groups['ovn-controller-network'] else '' }}{{ ',availability-zones=' + neutron_ovn_availability_zones | join(',') if inventory_hostname in groups['ovn-controller-network'] and neutron_ovn_availability_zones }}"
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    user: root
+    module_name: openvswitch_db
+    module_args:
+      table: Open_vSwitch
+      record: .
+      col: external_ids
+      key: "{{ item.name }}"
+      value: "{{ item.value if item.state | default('present') == 'present' else omit }}"
+      state: "{{ item.state | default('present') }}"
+  loop:
+    - { name: ovn-encap-ip, value: "{{ tunnel_interface_address }}" }
+    - { name: ovn-encap-type, value: geneve }
+    - { name: ovn-remote, value: "{{ ovn_sb_connection }}" }
+    - { name: ovn-remote-probe-interval, value: "{{ ovn_remote_probe_interval }}" }
+    - { name: ovn-openflow-probe-interval, value: "{{ ovn_openflow_probe_interval }}" }
+    - { name: ovn-monitor-all, value: "{{ ovn_monitor_all | bool }}" }
+    - { name: ovn-bridge-mappings, value: "{{ ovn_mappings }}", state: "{{ 'present' if (inventory_hostname in groups['ovn-controller-network'] or computes_need_external_bridge | bool) else 'absent' }}" }
+    - { name: ovn-chassis-mac-mappings, value: "{{ ovn_macs }}", state: "{{ 'present' if inventory_hostname in groups['ovn-controller-compute'] else 'absent' }}" }
+    - { name: ovn-cms-options, value: "{{ ovn_cms_opts }}", state: "{{ 'present' if ovn_cms_opts != '' else 'absent' }}" }
+  when: inventory_hostname in groups.get('ovn-controller', [])

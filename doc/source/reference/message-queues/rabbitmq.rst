@@ -109,3 +109,105 @@ https://erlang.org/doc/man/erl.html#emulator-flags
 The ``+sbwt none +sbwtdcpu none +sbwtdio none`` arguments prevent busy waiting
 of the scheduler, for more details see:
 https://www.rabbitmq.com/runtime.html#busy-waiting.
+
+High Availability
+~~~~~~~~~~~~~~~~~
+
+RabbitMQ offers two options to configure HA:
+  * Quorum queues (enabled by default and controlled by
+    ``om_enable_rabbitmq_quorum_queues`` variable)
+  * Classic queue mirroring and durable queues (deprecated in RabbitMQ and to
+    be dropped in 4.0, controlled by ``om_enable_rabbitmq_high_availability``)
+
+There are some queue types which are intentionally not mirrored
+using the exclusionary pattern ``^(?!(amq\\.)|(.*_fanout_)|(reply_)).*``.
+
+After enabling one of these values on a running system, there are some
+additional steps needed to migrate from transient to durable queues.
+
+.. warning::
+
+   Since the default changed from non-HA to Quorum queues in Bobcat release,
+   following procedure is required to be carried out before a SLURP upgrade to
+   Caracal.
+
+1. Stop all OpenStack services which use RabbitMQ, so that they will not
+   attempt to recreate any queues yet.
+
+   .. code-block:: console
+
+      kolla-ansible stop --tags <service-tags>
+
+2. Generate the new config for all services.
+
+   .. code-block:: console
+
+      kolla-ansible genconfig
+
+3. Reconfigure RabbitMQ if you are using
+   ``om_enable_rabbitmq_high_availability``.
+
+   .. code-block:: console
+
+      kolla-ansible reconfigure --tags rabbitmq
+
+4. Reset the state on each RabbitMQ, to remove the old transient queues and
+   exchanges.
+
+   .. code-block:: console
+
+      kolla-ansible rabbitmq-reset-state
+
+5. Start the OpenStack services again, at which point they will recreate the
+   appropriate queues as durable.
+
+   .. code-block:: console
+
+      kolla-ansible deploy --tags <service-tags>
+
+SLURP
+~~~~~
+
+RabbitMQ has two major version releases per year but does not support jumping
+two versions in one upgrade. So if you want to perform a skip-level upgrade,
+you must first upgrade RabbitMQ to an intermediary version. To do this, Kolla
+provides multiple RabbitMQ versions in the odd OpenStack releases. To use the
+upgrade from Antelope to Caracal as an example, we start on RabbitMQ version
+3.11. In Antelope, you should upgrade to RabbitMQ version 3.12 with the command
+below. You can then proceed with the usual SLURP upgrade to Caracal (and
+therefore RabbitMQ version 3.13).
+
+.. warning::
+
+   This command should be run from the Antelope release.
+
+   Note that this command is NOT idempotent. See "RabbitMQ versions" below for
+   an alternative approach.
+
+.. code-block:: console
+
+   kolla-ansible rabbitmq-upgrade 3.12
+
+RabbitMQ versions
+~~~~~~~~~~~~~~~~~
+
+Alternatively, you can set ``rabbitmq_image`` in your configuration
+``globals.yml`` for idempotence in deployments. As an example, Kolla ships
+versions 3.11, 3.12 and 3.13 of RabbitMQ in Antelope. By default, Antelope
+Kolla-Ansible will deploy version 3.11. If you wish to deploy a later version,
+you must override the image. if you want to use version 3.12 change
+``rabbitmq_image`` in ``globals.yml`` as follows:
+
+.. code-block:: yaml
+
+   rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-3-12"
+
+You can then upgrade RabbitMQ with the usual command:
+
+.. code-block:: console
+
+   kolla-ansible upgrade --tags rabbitmq
+
+Note again that RabbitMQ does not support upgrades between more than one major
+version, so if you wish to upgrade to version 3.13 you must first upgrade to
+3.12.

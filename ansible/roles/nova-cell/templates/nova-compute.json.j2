@@ -14,14 +14,14 @@
             "perm": "0600"
         }{% endif %}{% if nova_backend == "rbd" %},
         {
-            "source": "{{ container_config_directory }}/{{ ceph_nova_keyring }}",
-            "dest": "/etc/ceph/{{ ceph_nova_keyring }}",
+            "source": "{{ container_config_directory }}/{{ nova_cell_ceph_backend['cluster'] }}.client.{{ nova_cell_ceph_backend['vms']['user'] }}.keyring",
+            "dest": "/etc/ceph/{{ nova_cell_ceph_backend['cluster'] }}.client.{{ nova_cell_ceph_backend['vms']['user'] }}.keyring",
             "owner": "nova",
             "perm": "0600"
         },
         {
-            "source": "{{ container_config_directory }}/ceph.conf",
-            "dest": "/etc/ceph/ceph.conf",
+            "source": "{{ container_config_directory }}/{{ nova_cell_ceph_backend['cluster'] }}.conf",
+            "dest": "/etc/ceph/{{ nova_cell_ceph_backend['cluster'] }}.conf",
             "owner": "nova",
             "perm": "0600"
         }{% endif %}{% if nova_compute_virt_type == "vmware" and not vmware_vcenter_insecure | bool %},
@@ -55,6 +55,12 @@
             "owner": "nova",
             "perm": "0600",
             "optional": true
+        },
+        {
+            "source": "{{ container_config_directory }}/hostnqn",
+            "dest": "/etc/nvme/hostnqn",
+            "owner": "root",
+            "perm": "0644"
         }{% if nova_compute_virt_type in ['kvm', 'qemu'] and libvirt_enable_sasl | bool %},
         {
             "source": "{{ container_config_directory }}/auth.conf",
@@ -66,6 +72,18 @@
             "source": "{{ container_config_directory }}/provider_config.yaml",
             "dest": "/etc/nova/provider_config/provider_config.yaml",
             "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if vendordata_file_path is defined %},
+        {
+            "source": "{{ container_config_directory }}/vendordata.json",
+            "dest": "/etc/nova/vendordata.json",
+            "owner": "nova",
+            "perm": "0600"
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
             "perm": "0600"
         }{% endif %}
     ],

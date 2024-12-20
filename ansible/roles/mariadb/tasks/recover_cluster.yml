@@ -9,6 +9,7 @@
     path: "{{ item }}"
     state: absent
   delegate_to: localhost
+  connection: local
   changed_when: false
   check_mode: no
   run_once: true
@@ -17,16 +18,17 @@
 - block:
     - name: Stop MariaDB containers
       become: true
-      kolla_docker:
+      kolla_container:
         name: "{{ mariadb_service.container_name }}"
         action: "stop_container"
+        common_options: "{{ docker_common_options }}"
         ignore_missing: true
 
     # Run wsrep recovery with detach=false to block until completion. Use a
     # different container name to avoid the mariadb container being removed.
     - name: Run MariaDB wsrep recovery
       become: true
-      kolla_docker:
+      kolla_container:
         action: "start_container"
         common_options: "{{ docker_common_options }}"
         detach: false
@@ -37,18 +39,18 @@
         labels:
           BOOTSTRAP:
         name: mariadb_wsrep_recovery
-        restart_policy: no
+        restart_policy: oneshot
         volumes: "{{ mariadb_service.volumes }}"
 
     - name: Copying MariaDB log file to /tmp
       become: true
-      command: "cp {{ docker_runtime_directory or '/var/lib/docker' }}/volumes/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
+      command: "cp {{ container_engine_volumes_path }}/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
     # Look for sequence number in logs. Format is:
     # WSREP: Recovered position: <UUID>:<seqno>.
     - name: Get MariaDB wsrep recovery seqno
       become: true
-      shell: tail -n 200 /tmp/mariadb_tmp.log | awk -F" " '$0~/Recovered position/{print $NF;exit;}' | awk -F":" '{print $2}'
+      shell: awk -F" " '/Recovered position/{seqno=$NF} END{split(seqno, a, ":"); print a[2]}' /tmp/mariadb_tmp.log
       register: wsrep_recovery_seqno
 
     - name: Removing MariaDB log file from /tmp
@@ -82,10 +84,12 @@
         dest: "{{ mariadb_recover_tmp_file_path }}"
         mode: 0644
       delegate_to: localhost
+      connection: local
       changed_when: false
       when: seqno_compare.results | map(attribute='stdout') | join('') == ""
 
     - name: Registering mariadb_recover_inventory_name from temp file
+      connection: local
       set_fact:
         mariadb_recover_inventory_name: "{{ lookup('file', mariadb_recover_tmp_file_path) }}"
   when:
@@ -99,7 +103,7 @@
   become: true
   lineinfile:
     create: yes
-    dest: "{{ docker_runtime_directory or '/var/lib/docker' }}/volumes/mariadb/_data/grastate.dat"
+    dest: "{{ container_engine_volumes_path }}/mariadb/_data/grastate.dat"
     regexp: 'safe_to_bootstrap:(.*)$'
     line: 'safe_to_bootstrap: 1'
     state: present
@@ -109,7 +113,7 @@
 
 - name: Starting first MariaDB container
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -119,7 +123,7 @@
     labels:
       BOOTSTRAP:
     name: "{{ mariadb_service.container_name }}"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ mariadb_service.volumes }}"
   when:
     - bootstrap_host is defined
@@ -142,7 +146,7 @@
 
 - name: Set first MariaDB container as primary
   become: true
-  shell: "{{ kolla_container_engine }} exec {{ mariadb_service.container_name }} mysql -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
+  shell: "{{ kolla_container_engine }} exec {{ mariadb_service.container_name }} mariadb -uroot -p{{ database_password }} -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
   no_log: True
   when:
     - bootstrap_host is defined
@@ -152,7 +156,7 @@
   become: true
   command: >-
     {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
-    mysql -uroot -p{{ database_password }}
+    mariadb -uroot -p{{ database_password }}
     --silent --skip-column-names
     -e 'SHOW STATUS LIKE "wsrep_evs_state"'
   changed_when: false
@@ -167,7 +171,7 @@
 
 - name: Restart slave MariaDB container(s)
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
@@ -176,7 +180,7 @@
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment | default({}) }}"
     healthcheck: "{{ item.value.healthcheck | default(omit) }}"
-  with_dict: "{{ mariadb_services }}"
+  with_dict: "{{ mariadb_services | select_services_enabled_and_mapped_to_host }}"
   when:
     - bootstrap_host is defined
     - bootstrap_host != inventory_hostname
@@ -198,7 +202,7 @@
 
 - name: Restart master MariaDB container(s)
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
@@ -207,7 +211,7 @@
     dimensions: "{{ item.value.dimensions }}"
     environment: "{{ item.value.environment | default({}) }}"
     healthcheck: "{{ item.value.healthcheck | default(omit) }}"
-  with_dict: "{{ mariadb_services }}"
+  with_dict: "{{ mariadb_services | select_services_enabled_and_mapped_to_host }}"
   when:
     - bootstrap_host is defined
     - bootstrap_host == inventory_hostname

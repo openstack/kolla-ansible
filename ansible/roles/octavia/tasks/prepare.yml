@@ -2,7 +2,8 @@
 - name: Create amphora flavor
   become: true
   kolla_toolbox:
-    module_name: os_nova_flavor
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.compute_flavor
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -25,7 +26,8 @@
 - name: Create nova keypair for amphora
   become: True
   kolla_toolbox:
-    module_name: os_keypair
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.keypair
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -40,7 +42,8 @@
 - name: Get {{ octavia_service_auth_project }} project id
   become: True
   kolla_toolbox:
-    module_name: os_project_info
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.project_info
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -54,7 +57,8 @@
 - name: Create security groups for octavia
   become: true
   kolla_toolbox:
-    module_name: os_security_group
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.security_group
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -73,7 +77,8 @@
 - name: Add rules for security groups
   become: true
   kolla_toolbox:
-    module_name: os_security_group_rule
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.security_group_rule
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -83,6 +88,7 @@
       protocol: "{{ item.1.protocol }}"
       port_range_min: "{{ item.1.src_port | default(omit) }}"
       port_range_max: "{{ item.1.dst_port | default(omit) }}"
+      ethertype: "IPv{{ octavia_network_address_family[-1] }}"
   with_subelements:
     - "{{ octavia_amp_security_groups }}"
     - rules
@@ -93,7 +99,8 @@
 - name: Create loadbalancer management network
   become: true
   kolla_toolbox:
-    module_name: os_network
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.network
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -114,7 +121,8 @@
 - name: Create loadbalancer management subnet
   become: true
   kolla_toolbox:
-    module_name: os_subnet
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.subnet
     module_args:
       auth: "{{ octavia_user_auth }}"
       cacert: "{{ openstack_cacert }}"
@@ -133,4 +141,21 @@
       ipv6_address_mode: "{{ octavia_amp_network['subnet']['ipv6_address_mode'] | default(omit) }}"
       ipv6_ra_mode: "{{ octavia_amp_network['subnet']['ipv6_ra_mode'] | default(omit) }}"
   run_once: True
+  delegate_to: "{{ groups['octavia-api'][0] }}"
+
+- name: Create loadbalancer management router for IPv6
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.router
+    module_args:
+      auth: "{{ octavia_user_auth }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      state: present
+      name: "{{ octavia_amp_router['name'] }}"
+      interfaces: "{{ octavia_amp_router['subnet'] }}"
+  run_once: True
+  when: octavia_network_address_family == "ipv6"
   delegate_to: "{{ groups['octavia-api'][0] }}"

@@ -1,0 +1,181 @@
+---
+opensearch_services:
+  opensearch:
+    container_name: opensearch
+    group: opensearch
+    enabled: true
+    image: "{{ opensearch_image_full }}"
+    environment:
+      OPENSEARCH_JAVA_OPTS: "{{ opensearch_java_opts }}"
+    volumes: "{{ opensearch_default_volumes + opensearch_extra_volumes }}"
+    dimensions: "{{ opensearch_dimensions }}"
+    healthcheck: "{{ opensearch_healthcheck }}"
+    haproxy:
+      opensearch:
+        enabled: "{{ enable_opensearch }}"
+        mode: "http"
+        external: false
+        port: "{{ opensearch_port }}"
+        frontend_http_extra:
+          - "option dontlog-normal"
+  opensearch-dashboards:
+    container_name: opensearch_dashboards
+    group: opensearch-dashboards
+    enabled: "{{ enable_opensearch_dashboards }}"
+    environment:
+      OPENSEARCH_DASHBOARDS_SECURITY_PLUGIN: "False"
+    image: "{{ opensearch_dashboards_image_full }}"
+    volumes: "{{ opensearch_dashboards_default_volumes + opensearch_dashboards_extra_volumes }}"
+    dimensions: "{{ opensearch_dashboards_dimensions }}"
+    healthcheck: "{{ opensearch_dashboards_healthcheck }}"
+    haproxy:
+      opensearch-dashboards:
+        enabled: "{{ enable_opensearch_dashboards }}"
+        mode: "http"
+        external: false
+        port: "{{ opensearch_dashboards_port }}"
+        auth_user: "{{ opensearch_dashboards_user }}"
+        auth_pass: "{{ opensearch_dashboards_password }}"
+      opensearch_dashboards_external:
+        enabled: "{{ enable_opensearch_dashboards_external | bool }}"
+        mode: "http"
+        external: true
+        external_fqdn: "{{ opensearch_dashboards_external_fqdn }}"
+        port: "{{ opensearch_dashboards_port_external }}"
+        listen_port: "{{ opensearch_dashboards_listen_port }}"
+        auth_user: "{{ opensearch_dashboards_user }}"
+        auth_pass: "{{ opensearch_dashboards_password }}"
+
+
+####################
+# Opensearch
+####################
+
+# Register Opensearch internal endpoint in the Keystone service catalogue
+opensearch_enable_keystone_registration: False
+
+opensearch_cluster_name: "kolla_logging"
+opensearch_heap_size: "1g"
+opensearch_java_opts: "{% if opensearch_heap_size %}-Xms{{ opensearch_heap_size }} -Xmx{{ opensearch_heap_size }}{% endif %} -Dlog4j2.formatMsgNoLookups=true"
+
+opensearch_apply_log_retention_policy: true
+
+# Duration after which an index is staged for deletion. This is implemented
+# by closing the index. Whilst in this state the index contributes negligible
+# load on the cluster and may be manually re-opened if required.
+# NOTE: We carry over legacy settings from ElasticSearch Curator if they
+# are set. This may be removed in a later release.
+opensearch_soft_retention_period_days: "{{ elasticsearch_curator_soft_retention_period_days | default(30) }}"
+
+# Duration after which an index is permanently erased from the cluster.
+opensearch_hard_retention_period_days: "{{ elasticsearch_curator_hard_retention_period_days | default(60) }}"
+
+opensearch_retention_policy: |
+  policy:
+    description: Retention policy for OpenStack logs
+    error_notification:
+    default_state: open
+    states:
+    - name: open
+      actions: []
+      transitions:
+      - state_name: close
+        conditions:
+          min_index_age: "{{ opensearch_soft_retention_period_days }}d"
+    - name: close
+      actions:
+      - retry:
+          count: 3
+          backoff: exponential
+          delay: 1m
+        close: {}
+      transitions:
+      - state_name: delete
+        conditions:
+          min_index_age: "{{ opensearch_hard_retention_period_days }}d"
+    - name: delete
+      actions:
+      - retry:
+          count: 3
+          backoff: exponential
+          delay: 1m
+        delete: {}
+      transitions: []
+    ism_template:
+    - index_patterns:
+      - "{{ opensearch_log_index_prefix }}-*"
+      priority: 1
+
+####################
+# Keystone
+####################
+opensearch_openstack_auth: "{{ openstack_auth }}"
+
+opensearch_ks_services:
+  - name: "opensearch"
+    type: "log-storage"
+    description: "Opensearch"
+    endpoints:
+      - {'interface': 'internal', 'url': '{{ opensearch_internal_endpoint }}'}
+
+#######################
+# OpenSearch Dashboards
+#######################
+opensearch_dashboards_default_app_id: "discover"
+opensearch_dashboards_opensearch_request_timeout: 300000
+opensearch_dashboards_opensearch_shard_timeout: 0
+opensearch_dashboards_opensearch_ssl_verify: true
+
+####################
+# Docker
+####################
+opensearch_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}opensearch"
+opensearch_tag: "{{ openstack_tag }}"
+opensearch_image_full: "{{ opensearch_image }}:{{ opensearch_tag }}"
+
+opensearch_dashboards_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}opensearch-dashboards"
+opensearch_dashboards_tag: "{{ opensearch_tag }}"
+opensearch_dashboards_image_full: "{{ opensearch_dashboards_image }}:{{ opensearch_dashboards_tag }}"
+
+opensearch_dimensions: "{{ default_container_dimensions }}"
+opensearch_dashboards_dimensions: "{{ default_container_dimensions }}"
+
+opensearch_enable_healthchecks: "{{ enable_container_healthchecks }}"
+opensearch_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+opensearch_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+opensearch_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+opensearch_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ opensearch_port }}"]
+opensearch_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+opensearch_healthcheck:
+  interval: "{{ opensearch_healthcheck_interval }}"
+  retries: "{{ opensearch_healthcheck_retries }}"
+  start_period: "{{ opensearch_healthcheck_start_period }}"
+  test: "{% if opensearch_enable_healthchecks | bool %}{{ opensearch_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ opensearch_healthcheck_timeout }}"
+opensearch_dashboards_enable_healthchecks: "{{ enable_container_healthchecks }}"
+opensearch_dashboards_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+opensearch_dashboards_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+opensearch_dashboards_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+opensearch_dashboards_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ opensearch_dashboards_port }}"]
+opensearch_dashboards_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+opensearch_dashboards_healthcheck:
+  interval: "{{ opensearch_dashboards_healthcheck_interval }}"
+  retries: "{{ opensearch_dashboards_healthcheck_retries }}"
+  start_period: "{{ opensearch_dashboards_healthcheck_start_period }}"
+  test: "{% if opensearch_dashboards_enable_healthchecks | bool %}{{ opensearch_dashboards_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ opensearch_dashboards_healthcheck_timeout }}"
+
+opensearch_default_volumes:
+  - "{{ node_config_directory }}/opensearch/:{{ container_config_directory }}/"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "{{ opensearch_datadir_volume }}:/var/lib/opensearch/data"
+  - "kolla_logs:/var/log/kolla/"
+opensearch_dashboards_default_volumes:
+  - "{{ node_config_directory }}/opensearch-dashboards/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+opensearch_extra_volumes: "{{ default_extra_volumes }}"
+opensearch_dashboards_extra_volumes: "{{ default_extra_volumes }}"

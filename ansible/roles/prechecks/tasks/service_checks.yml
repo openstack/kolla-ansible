@@ -1,10 +1,20 @@
 ---
+- name: Checking if system uses systemd
+  become: true
+  assert:
+    that:
+      - "ansible_facts.service_mgr == 'systemd'"
+  when: inventory_hostname in groups['baremetal']
+
 - name: Checking Docker version
   become: true
   command: "{{ kolla_container_engine }} --version"
   register: result
   changed_when: false
-  when: inventory_hostname in groups['baremetal']
+  check_mode: false
+  when:
+    - kolla_container_engine == 'docker'
+    - inventory_hostname in groups['baremetal']
   failed_when: result is failed
                or result.stdout | regex_replace('.*\\b(\\d+\\.\\d+\\.\\d+)\\b.*', '\\1') is version(docker_version_min, '<')
 
@@ -19,12 +29,14 @@
   register: result
   changed_when: false
   failed_when: result.stdout | regex_replace('(.*ssh_key.*)', '') is search(":")
+  check_mode: false
 
 - name: Check if nscd is running
   command: pgrep nscd
   ignore_errors: yes
   failed_when: false
   changed_when: false
+  check_mode: false
   register: nscd_status
 
 - name: Fail if nscd is running
@@ -51,3 +63,10 @@
     msg: "We are sorry but enable_ceph is no longer supported. Please use external ceph support."
   when:
     - (enable_ceph | default()) | bool
+
+- name: Validate rabbitmq variables
+  run_once: True
+  fail:
+    msg: |
+      Please set only one of om_enable_rabbitmq_high_availability or om_enable_rabbitmq_quorum_queues
+  when: (om_enable_rabbitmq_high_availability | bool) == (om_enable_rabbitmq_quorum_queues | bool)

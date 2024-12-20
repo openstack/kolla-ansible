@@ -13,12 +13,15 @@ gnocchi_services:
         enabled: "{{ enable_gnocchi }}"
         mode: "http"
         external: false
-        port: "{{ gnocchi_api_listen_port }}"
+        port: "{{ gnocchi_api_port }}"
+        listen_port: "{{ gnocchi_api_listen_port }}"
       gnocchi_api_external:
         enabled: "{{ enable_gnocchi }}"
         mode: "http"
         external: true
-        port: "{{ gnocchi_api_listen_port }}"
+        external_fqdn: "{{ gnocchi_external_fqdn }}"
+        port: "{{ gnocchi_api_public_port }}"
+        listen_port: "{{ gnocchi_api_listen_port }}"
   gnocchi-metricd:
     container_name: gnocchi_metricd
     group: gnocchi-metricd
@@ -36,6 +39,12 @@ gnocchi_services:
     dimensions: "{{ gnocchi_statsd_dimensions }}"
     healthcheck: "{{ gnocchi_statsd_healthcheck }}"
 
+####################
+# Config Validate
+####################
+gnocchi_config_validation:
+  - generator: "/gnocchi/gnocchi/gnocchi-config-generator.conf"
+    config: "/etc/gnocchi/gnocchi.conf"
 
 ####################
 # Swift
@@ -70,15 +79,15 @@ gnocchi_database_shard:
 ####################
 gnocchi_tag: "{{ openstack_tag }}"
 
-gnocchi_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/gnocchi-api"
+gnocchi_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}gnocchi-api"
 gnocchi_api_tag: "{{ gnocchi_tag }}"
 gnocchi_api_image_full: "{{ gnocchi_api_image }}:{{ gnocchi_api_tag }}"
 
-gnocchi_statsd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/gnocchi-statsd"
+gnocchi_statsd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}gnocchi-statsd"
 gnocchi_statsd_tag: "{{ gnocchi_tag }}"
 gnocchi_statsd_image_full: "{{ gnocchi_statsd_image }}:{{ gnocchi_statsd_tag }}"
 
-gnocchi_metricd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/gnocchi-metricd"
+gnocchi_metricd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}gnocchi-metricd"
 gnocchi_metricd_tag: "{{ gnocchi_tag }}"
 gnocchi_metricd_image_full: "{{ gnocchi_metricd_image }}:{{ gnocchi_metricd_tag }}"
 
@@ -154,9 +163,6 @@ gnocchi_statsd_extra_volumes: "{{ gnocchi_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-gnocchi_internal_endpoint: "{{ internal_protocol }}://{{ gnocchi_internal_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
-gnocchi_public_endpoint: "{{ public_protocol }}://{{ gnocchi_external_fqdn | put_address_in_context('url') }}:{{ gnocchi_api_port }}"
-
 gnocchi_logging_debug: "{{ openstack_logging_debug }}"
 
 gnocchi_metricd_workers: "{{ openstack_service_workers }}"

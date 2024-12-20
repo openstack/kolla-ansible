@@ -1,0 +1,28 @@
+---
+features:
+  - |
+    Performance: Don't notify handlers during config
+
+    This patch builds upon genconfig optimisation and it takes it
+    further by not having genconfig ever touch the handlers!
+    Calling the handlers and skipping them created an unnecessary slow down
+    if only config was ran. It also depends on the config checking fix.
+
+    This gets us closer to the single responsibility principle -
+    config only generates the config, container checks only validate
+    whether container restart is needed.
+
+    And this also means that we will have single place were containers
+    are restarted, were we can fix the ansible quirk of it restarting
+    the whole group even when one container changed in the following patches.
+
+    The only exception is the loadbalance role. As the loadbalancer services
+    have their config altered by other roles registering their services
+    using loadbalancer-config. This is in contrast to typical roles,
+    which do config in one step and can then run check-containers in
+    the next step.
+
+fixes:
+  - |
+    Fixes some handlers that were missing the necessary guard,
+    making genconfig actually able to restart some containers.

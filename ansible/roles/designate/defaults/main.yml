@@ -19,7 +19,8 @@ designate_services:
         enabled: "{{ enable_designate }}"
         mode: "http"
         external: true
-        port: "{{ designate_api_port }}"
+        external_fqdn: "{{ designate_external_fqdn }}"
+        port: "{{ designate_api_public_port }}"
         listen_port: "{{ designate_api_listen_port }}"
   designate-backend-bind9:
     container_name: designate_backend_bind9
@@ -70,6 +71,12 @@ designate_services:
     dimensions: "{{ designate_sink_dimensions }}"
     healthcheck: "{{ designate_sink_healthcheck }}"
 
+####################
+# Config Validate
+####################
+designate_config_validation:
+  - generator: "/designate/etc/designate/designate-config-generator.conf"
+    config: "/etc/designate/designate.conf"
 
 ####################
 # Database
@@ -97,31 +104,31 @@ designate_database_shard:
 ####################
 designate_tag: "{{ openstack_tag }}"
 
-designate_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-central"
+designate_central_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-central"
 designate_central_tag: "{{ designate_tag }}"
 designate_central_image_full: "{{ designate_central_image }}:{{ designate_central_tag }}"
 
-designate_producer_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-producer"
+designate_producer_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-producer"
 designate_producer_tag: "{{ designate_tag }}"
 designate_producer_image_full: "{{ designate_producer_image }}:{{ designate_producer_tag }}"
 
-designate_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-api"
+designate_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-api"
 designate_api_tag: "{{ designate_tag }}"
 designate_api_image_full: "{{ designate_api_image }}:{{ designate_api_tag }}"
 
-designate_backend_bind9_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-backend-bind9"
+designate_backend_bind9_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-backend-bind9"
 designate_backend_bind9_tag: "{{ designate_tag }}"
 designate_backend_bind9_image_full: "{{ designate_backend_bind9_image }}:{{ designate_backend_bind9_tag }}"
 
-designate_mdns_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-mdns"
+designate_mdns_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-mdns"
 designate_mdns_tag: "{{ designate_tag }}"
 designate_mdns_image_full: "{{ designate_mdns_image }}:{{ designate_mdns_tag }}"
 
-designate_sink_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-sink"
+designate_sink_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-sink"
 designate_sink_tag: "{{ designate_tag }}"
 designate_sink_image_full: "{{ designate_sink_image }}:{{ designate_sink_tag }}"
 
-designate_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/designate-worker"
+designate_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}designate-worker"
 designate_worker_tag: "{{ designate_tag }}"
 designate_worker_image_full: "{{ designate_worker_image }}:{{ designate_worker_tag }}"
 
@@ -229,7 +236,7 @@ designate_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 designate_backend_bind9_default_volumes:
   - "{{ node_config_directory }}/designate-backend-bind9/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -241,31 +248,31 @@ designate_central_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 designate_mdns_default_volumes:
   - "{{ node_config_directory }}/designate-mdns/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 designate_producer_default_volumes:
   - "{{ node_config_directory }}/designate-producer/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 designate_worker_default_volumes:
   - "{{ node_config_directory }}/designate-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 designate_sink_default_volumes:
   - "{{ node_config_directory }}/designate-sink/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/designate/designate:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/designate' if designate_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/designate:/dev-mode/designate' if designate_dev_mode | bool else '' }}"
 
 designate_extra_volumes: "{{ default_extra_volumes }}"
 designate_api_extra_volumes: "{{ designate_extra_volumes }}"
@@ -306,6 +313,7 @@ designate_dnssec_validation: "yes"
 designate_recursion: "no"
 ## Example for designate_forwarders_addresses: "10.199.200.1; 10.199.100.1"
 designate_forwarders_addresses: ""
+designate_backend_bind9_cmdline_extras: "-U {{ designate_backend_bind9_workers }} -g"
 
 ####################
 # Infoblox

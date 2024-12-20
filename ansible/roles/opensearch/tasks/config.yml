@@ -1,0 +1,49 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_dict: "{{ opensearch_services | select_services_enabled_and_mapped_to_host }}"
+
+- include_tasks: copy-certs.yml
+  when:
+    - kolla_copy_ca_into_containers | bool
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  with_dict: "{{ opensearch_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over opensearch service config file
+  vars:
+    service: "{{ opensearch_services['opensearch'] }}"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/opensearch.yml.j2"
+      - "{{ node_custom_config }}/opensearch.yml"
+      - "{{ node_custom_config }}/opensearch/opensearch.yml"
+      - "{{ node_custom_config }}/opensearch/{{ inventory_hostname }}/opensearch.yml"
+    dest: "{{ node_config_directory }}/opensearch/opensearch.yml"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+
+- name: Copying over opensearch-dashboards config file
+  vars:
+    service: "{{ opensearch_services['opensearch-dashboards'] }}"
+  merge_yaml:
+    sources:
+      - "{{ role_path }}/templates/opensearch_dashboards.yml.j2"
+      - "{{ node_custom_config }}/opensearch/opensearch_dashboards.yml"
+      - "{{ node_custom_config }}/opensearch/{{ inventory_hostname }}/opensearch_dashboards.yml"
+    dest: "{{ node_config_directory }}/opensearch-dashboards/opensearch_dashboards.yml"
+    mode: "0660"
+  become: true
+  when: service | service_enabled_and_mapped_to_host

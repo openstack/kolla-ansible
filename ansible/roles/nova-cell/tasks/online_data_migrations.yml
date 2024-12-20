@@ -3,7 +3,7 @@
   vars:
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -14,6 +14,6 @@
     labels:
       BOOTSTRAP:
     name: "nova_cell_online_data_migrations"
-    restart_policy: "no"
+    restart_policy: "oneshot"
     volumes: "{{ nova_cell_bootstrap_default_volumes + nova_cell_bootstrap_extra_volumes }}"
   when: inventory_hostname == groups[nova_cell_conductor_group][0]

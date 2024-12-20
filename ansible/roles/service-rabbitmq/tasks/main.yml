@@ -2,6 +2,7 @@
 - block:
     - name: "{{ project_name }} | Ensure RabbitMQ vhosts exist"
       kolla_toolbox:
+        container_engine: "{{ kolla_container_engine }}"
         module_name: rabbitmq_vhost
         module_args:
           name: "{{ item }}"
@@ -14,11 +15,12 @@
 
     - name: "{{ project_name }} | Ensure RabbitMQ users exist"
       kolla_toolbox:
+        container_engine: "{{ kolla_container_engine }}"
         module_name: rabbitmq_user
         module_args:
           user: "{{ item.user }}"
           password: "{{ item.password }}"
-          node: "rabbit@{{ ansible_facts.hostname }}"
+          node: "rabbit@{{ hostvars[service_rabbitmq_delegate_host]['ansible_facts']['hostname'] }}"
           update_password: always
           vhost: "{{ item.vhost }}"
           configure_priv: ".*"
@@ -28,9 +30,7 @@
         user: rabbitmq
       loop: "{{ service_rabbitmq_users }}"
       loop_control:
-        label:
-          user: "{{ item.user }}"
-          vhost: "{{ item.vhost }}"
+        label: "{{ item.user }} -> {{ item.vhost }}"
       register: service_rabbitmq_result
       until: service_rabbitmq_result is success
       retries: "{{ service_rabbitmq_retries }}"

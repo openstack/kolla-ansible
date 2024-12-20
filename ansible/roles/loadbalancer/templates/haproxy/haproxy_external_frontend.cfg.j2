@@ -1,0 +1,11 @@
+{%- set external_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy.pem' if kolla_enable_tls_external|bool else '' %}
+
+frontend external_frontend
+    mode http
+    http-request del-header X-Forwarded-Proto
+{% for http_option in haproxy_external_single_frontend_options %}
+    {{ http_option }}
+{% endfor %}
+    http-request set-header X-Forwarded-Proto https if { ssl_fc }
+    bind {{ kolla_external_vip_address }}:{{ haproxy_external_single_frontend_public_port }} {{ external_tls_bind_info }}
+    use_backend %[req.hdr(host),lower,map_dom(/etc/haproxy/external-frontend-map,{{ haproxy_external_single_frontend_default_backend }})]

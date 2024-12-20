@@ -1,12 +1,10 @@
 ---
 - name: Stop glance service
   vars:
-    glance_api: "{{ glance_services['glance-api'] }}"
+    service: "{{ glance_services['glance-api'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "stop_container"
     common_options: "{{ docker_common_options }}"
-    name: "{{ glance_api.container_name }}"
-  when:
-    - glance_api.host_in_groups | bool
-    - glance_api.enabled | bool
+    name: "{{ service.container_name }}"
+  when: service | service_enabled_and_mapped_to_host

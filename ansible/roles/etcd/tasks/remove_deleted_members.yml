@@ -1,0 +1,39 @@
+---
+- name: List the etcd members
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+  become: true
+  command: >-
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    etcdctl member list
+  changed_when: false
+  run_once: true
+  delegate_to: "{{ etcd_cluster_leader | default(groups[service.group][0]) }}"
+  register: etcd_member_list_result
+
+- name: Remove deleted members from the etcd cluster
+  vars:
+    service_name: "etcd"
+    service: "{{ etcd_services[service_name] }}"
+    etcd_members_from_inventory: >-
+      {{ groups['etcd']
+      | map('extract', hostvars, 'ansible_facts')
+      | map(attribute='hostname')
+      | list }}
+    etcd_deleted_members: >-
+      {{ etcd_member_list_result.stdout | from_json
+      | json_query('members[].name')
+      | difference(etcd_members_from_inventory) }}
+    etcd_member_id: >-
+      {{ etcd_member_list_result.stdout | from_json
+      | json_query('members[].{key: name, value: ID}') | items2dict }}
+  become: true
+  command: >-
+    {{ kolla_container_engine }} exec {{ service.container_name }}
+    etcdctl member remove {{ '%x' % etcd_member_id[etcd_deleted_member] }}
+  run_once: true
+  delegate_to: "{{ etcd_cluster_leader | default(groups[service.group][0]) }}"
+  loop: "{{ etcd_deleted_members }}"
+  loop_control:
+    loop_var: etcd_deleted_member

@@ -59,15 +59,35 @@
         path: "{{ external_dir }}/external.key"
         mode: "0660"
         state: file
+  when:
+    - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == '' or database_enable_tls_internal | bool
+    - kolla_enable_tls_external | bool or database_enable_tls_internal | bool
 
-    - name: Creating external Server PEM File
-      assemble:
-        regexp: \.(crt|key)$
-        src: "{{ external_dir }}"
-        dest: "{{ kolla_external_fqdn_cert }}"
+- name: Creating external Server PEM File
+  assemble:
+    regexp: \.(crt|key)$
+    src: "{{ external_dir }}"
+    dest: "{{ kolla_external_fqdn_cert }}"
+    mode: "0660"
+  when:
+    - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_external | bool
+
+- block:
+    - name: Copy Certificate for ProxySQL
+      copy:
+        src: "{{ external_dir }}/external.crt"
+        dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
+        mode: "0660"
+
+    - name: Copy Key for ProxySQL
+      copy:
+        src: "{{ external_dir }}/external.key"
+        dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"
   when:
-    - kolla_enable_tls_external | bool
+    - database_enable_tls_internal | bool
+    - kolla_same_external_internal_vip | bool
 
 - block:
     - name: Copy the external PEM file to be the internal when internal + external are same network
@@ -77,6 +97,7 @@
         remote_src: yes
         mode: "0660"
   when:
+    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
     - kolla_enable_tls_external | bool
     - kolla_enable_tls_internal | bool
     - kolla_same_external_internal_vip | bool
@@ -129,13 +150,34 @@
         path: "{{ internal_dir }}/internal.key"
         mode: "0660"
         state: file
+  when:
+    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == '' or database_enable_tls_internal | bool
+    - kolla_enable_tls_internal | bool or database_enable_tls_internal | bool
+    - not kolla_same_external_internal_vip | bool
 
-    - name: Creating internal Server PEM File
-      assemble:
-        regexp: \.(crt|key)$
-        src: "{{ internal_dir }}"
-        dest: "{{ kolla_internal_fqdn_cert }}"
+- name: Creating internal Server PEM File
+  assemble:
+    regexp: \.(crt|key)$
+    src: "{{ internal_dir }}"
+    dest: "{{ kolla_internal_fqdn_cert }}"
+    mode: "0660"
+  when:
+    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_internal | bool
+    - not kolla_same_external_internal_vip | bool
+
+- block:
+    - name: Copy Certificate for ProxySQL
+      copy:
+        src: "{{ internal_dir }}/internal.crt"
+        dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
+        mode: "0660"
+
+    - name: Copy Key for ProxySQL
+      copy:
+        src: "{{ internal_dir }}/internal.key"
+        dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"
   when:
-    - kolla_enable_tls_internal | bool
+    - database_enable_tls_internal | bool
     - not kolla_same_external_internal_vip | bool

@@ -1,0 +1,381 @@
+DEBUG = {{ horizon_logging_debug }}
+TEMPLATE_DEBUG = DEBUG
+COMPRESS_OFFLINE = True
+WEBROOT = '/'
+ALLOWED_HOSTS = ['*']
+
+{% if horizon_backend_database | bool %}
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+DATABASES = {
+    'default': {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': '{{ horizon_database_name }}',
+    'USER': '{{ horizon_database_user }}',
+    'PASSWORD': '{{ horizon_database_password }}',
+    'HOST': '{{ database_address }}',
+    'PORT': '{{ database_port }}'
+    }
+}
+{% elif groups['memcached'] | length > 0 and not horizon_backend_database | bool %}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+CACHES['default']['LOCATION'] = [{% for host in groups['memcached'] %}'{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}{% endfor %}]
+{% endif %}
+
+{% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+{% endif %}
+
+OPENSTACK_API_VERSIONS = {
+    "identity": 3,
+}
+
+OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = {{ horizon_keystone_multidomain | bool }}
+OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN = {{ 'True' if horizon_keystone_domain_choices|length > 1 else 'False' }}
+OPENSTACK_KEYSTONE_DOMAIN_CHOICES = (
+{% for key, value in horizon_keystone_domain_choices.items() %}
+    ('{{ key }}', '{{ value }}'),
+{% endfor %}
+)
+
+LOCAL_PATH = '/tmp'
+SECRET_KEY='{{ horizon_secret_key }}'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+{% if multiple_regions_names|length > 1 %}
+AVAILABLE_REGIONS = [
+{% for region_name in multiple_regions_names %}
+    ('{{ keystone_internal_url }}', '{{ region_name }}'),
+{% endfor %}
+]
+{% endif %}
+
+OPENSTACK_HOST = "{{ kolla_internal_fqdn }}"
+# TODO(fprzewozn): URL /v3 suffix is required until Horizon bug #2073639 is resolved
+OPENSTACK_KEYSTONE_URL = "{{ horizon_keystone_url }}/v3"
+OPENSTACK_KEYSTONE_DEFAULT_ROLE = "{{ keystone_default_user_role }}"
+
+{% if enable_keystone_federation | bool %}
+WEBSSO_ENABLED = True
+WEBSSO_KEYSTONE_URL = "{{ keystone_public_url }}/v3"
+WEBSSO_CHOICES = (
+    ("credentials", _("Keystone Credentials")),
+    {% for idp in keystone_identity_providers %}
+    ("{{ idp.name }}_{{ idp.protocol }}", "{{ idp.public_name }}"),
+    {% endfor %}
+)
+WEBSSO_IDP_MAPPING = {
+{% for idp in keystone_identity_providers %}
+    "{{ idp.name }}_{{ idp.protocol }}": ("{{ idp.name }}", "{{ idp.protocol }}"),
+{% endfor %}
+}
+{% endif %}
+
+{% if openstack_cacert == "" %}
+{% else %}
+OPENSTACK_SSL_CACERT = '{{ openstack_cacert }}'
+{% endif %}
+
+OPENSTACK_KEYSTONE_BACKEND = {
+    'name': 'native',
+    'can_edit_user': True,
+    'can_edit_group': True,
+    'can_edit_project': True,
+    'can_edit_domain': True,
+    'can_edit_role': True,
+}
+
+OPENSTACK_HYPERVISOR_FEATURES = {
+    'can_set_mount_point': False,
+    'can_set_password': False,
+    'requires_keypair': False,
+    'enable_quotas': True
+}
+
+OPENSTACK_CINDER_FEATURES = {
+    'enable_backup': {{ 'True' if enable_cinder_backup | bool else 'False' }},
+}
+
+OPENSTACK_NEUTRON_NETWORK = {
+    'enable_router': True,
+    'enable_quotas': True,
+    'enable_ipv6': True,
+    'enable_distributed_router': False,
+    'enable_ha_router': False,
+    'enable_lb': True,
+    'enable_firewall': True,
+    'enable_vpn': True,
+    'enable_fip_topology_check': True,
+    'supported_vnic_types': ['*'],
+}
+
+OPENSTACK_HEAT_STACK = {
+    'enable_user_pass': True,
+}
+
+
+IMAGE_CUSTOM_PROPERTY_TITLES = {
+    "architecture": _("Architecture"),
+    "kernel_id": _("Kernel ID"),
+    "ramdisk_id": _("Ramdisk ID"),
+    "image_state": _("Euca2ools state"),
+    "project_id": _("Project ID"),
+    "image_type": _("Image Type"),
+}
+
+IMAGE_RESERVED_CUSTOM_PROPERTIES = []
+HORIZON_IMAGES_UPLOAD_MODE = 'direct'
+OPENSTACK_ENDPOINT_TYPE = "internalURL"
+API_RESULT_LIMIT = 1000
+API_RESULT_PAGE_SIZE = 20
+SWIFT_FILE_TRANSFER_CHUNK_SIZE = 512 * 1024
+DROPDOWN_MAX_ITEMS = 30
+TIME_ZONE = "UTC"
+POLICY_FILES_PATH = '/etc/openstack-dashboard'
+
+{% if horizon_custom_themes | length > 0 %}
+AVAILABLE_THEMES = [
+     ('default', 'Default', 'themes/default'),
+     ('material', 'Material', 'themes/material'),
+{% for theme in horizon_custom_themes %}
+     ('{{ theme.name|e }}', '{{ theme.label|e }}', '/etc/openstack-dashboard/themes/{{ theme.name|e }}'),
+{% endfor %}
+]
+{% endif %}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'operation': {
+            # The format of "%(message)s" is defined by
+            # OPERATION_LOG_OPTIONS['format']
+            'format': '%(asctime)s %(message)s'
+        },
+    },
+    'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
+        'console': {
+            # Set the level to "DEBUG" for verbose output logging.
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+        'operation': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'operation',
+        },
+    },
+    'loggers': {
+        # Logging from django.db.backends is VERY verbose, send to null
+        # by default.
+        'django.db.backends': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
+        'requests': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
+        'horizon': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'horizon.operation_log': {
+            'handlers': ['operation'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'openstack_dashboard': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'novaclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'cinderclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'keystoneclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'glanceclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'neutronclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'heatclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'ceilometerclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'swiftclient': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'openstack_auth': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'nose.plugins.manager': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'iso8601': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
+        'scss': {
+            'handlers': ['null'],
+            'propagate': False,
+        },
+    },
+}
+
+SECURITY_GROUP_RULES = {
+    'all_tcp': {
+        'name': _('All TCP'),
+        'ip_protocol': 'tcp',
+        'from_port': '1',
+        'to_port': '65535',
+    },
+    'all_udp': {
+        'name': _('All UDP'),
+        'ip_protocol': 'udp',
+        'from_port': '1',
+        'to_port': '65535',
+    },
+    'all_icmp': {
+        'name': _('All ICMP'),
+        'ip_protocol': 'icmp',
+        'from_port': '-1',
+        'to_port': '-1',
+    },
+    'ssh': {
+        'name': 'SSH',
+        'ip_protocol': 'tcp',
+        'from_port': '22',
+        'to_port': '22',
+    },
+    'smtp': {
+        'name': 'SMTP',
+        'ip_protocol': 'tcp',
+        'from_port': '25',
+        'to_port': '25',
+    },
+    'dns': {
+        'name': 'DNS',
+        'ip_protocol': 'tcp',
+        'from_port': '53',
+        'to_port': '53',
+    },
+    'http': {
+        'name': 'HTTP',
+        'ip_protocol': 'tcp',
+        'from_port': '80',
+        'to_port': '80',
+    },
+    'pop3': {
+        'name': 'POP3',
+        'ip_protocol': 'tcp',
+        'from_port': '110',
+        'to_port': '110',
+    },
+    'imap': {
+        'name': 'IMAP',
+        'ip_protocol': 'tcp',
+        'from_port': '143',
+        'to_port': '143',
+    },
+    'ldap': {
+        'name': 'LDAP',
+        'ip_protocol': 'tcp',
+        'from_port': '389',
+        'to_port': '389',
+    },
+    'https': {
+        'name': 'HTTPS',
+        'ip_protocol': 'tcp',
+        'from_port': '443',
+        'to_port': '443',
+    },
+    'smtps': {
+        'name': 'SMTPS',
+        'ip_protocol': 'tcp',
+        'from_port': '465',
+        'to_port': '465',
+    },
+    'imaps': {
+        'name': 'IMAPS',
+        'ip_protocol': 'tcp',
+        'from_port': '993',
+        'to_port': '993',
+    },
+    'pop3s': {
+        'name': 'POP3S',
+        'ip_protocol': 'tcp',
+        'from_port': '995',
+        'to_port': '995',
+    },
+    'ms_sql': {
+        'name': 'MS SQL',
+        'ip_protocol': 'tcp',
+        'from_port': '1433',
+        'to_port': '1433',
+    },
+    'mysql': {
+        'name': 'MYSQL',
+        'ip_protocol': 'tcp',
+        'from_port': '3306',
+        'to_port': '3306',
+    },
+    'rdp': {
+        'name': 'RDP',
+        'ip_protocol': 'tcp',
+        'from_port': '3389',
+        'to_port': '3389',
+    },
+}
+
+REST_API_REQUIRED_SETTINGS = [
+    'CREATE_IMAGE_DEFAULTS',
+    'DEFAULT_BOOT_SOURCE',
+    'ENFORCE_PASSWORD_CHECK',
+    'LAUNCH_INSTANCE_DEFAULTS',
+    'OPENSTACK_HYPERVISOR_FEATURES',
+    'OPENSTACK_IMAGE_FORMATS',
+    'OPENSTACK_KEYSTONE_BACKEND',
+    'OPENSTACK_KEYSTONE_DEFAULT_DOMAIN',
+]
+

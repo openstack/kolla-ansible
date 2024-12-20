@@ -37,8 +37,10 @@ ovsdpdk_services:
 ####################
 # OVS
 ####################
-ovs_bridge_mappings: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index0 + 1 }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
-ovs_port_mappings: "{% for bridge in neutron_bridge_name.split(',') %} {{ neutron_external_interface.split(',')[loop.index0] }}:{{ bridge }}{% if not loop.last %},{% endif %}{% endfor %}"
+# Format: physnet1:br1,physnet2:br2
+ovs_bridge_mappings: "{{ neutron_physical_networks.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
+# Format: eth1:br1,eth2:br2
+ovs_port_mappings: "{{ neutron_external_interface.split(',') | zip(neutron_bridge_name.split(',')) | map('join', ':') | join(',') }}"
 tunnel_interface_network: "{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['network'] }}/{{ hostvars[inventory_hostname].ansible_facts[dpdk_tunnel_interface]['ipv4']['netmask'] }}"
 tunnel_interface_cidr: "{{ dpdk_tunnel_interface_address }}/{{ tunnel_interface_network | ipaddr('prefix') }}"
 ovs_cidr_mappings: "{% if neutron_bridge_name.split(',') | length != 1 %} {neutron_bridge_name.split(',')[0]}:{{ tunnel_interface_cidr }} {% else %} {{ neutron_bridge_name }}:{{ tunnel_interface_cidr }} {% endif %}"
@@ -48,7 +50,7 @@ ovs_hugepage_mountpoint: /dev/hugepages
 
 # ovs <2.7 required dpdk phyical port names to be index
 # in pci address order as dpdkX where X is the index
-# ovs>=2.7 allows arbitray names but the pci address
+# ovs>=2.7 allows arbitrary names but the pci address
 # must be set in a new dpdkdev-opt field
 # valid values are indexed or named.
 ovs_physical_port_policy: named
@@ -58,11 +60,11 @@ ovs_physical_port_policy: named
 ####################
 ovsdpdk_tag: "{{ openstack_tag }}"
 
-ovsdpdk_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ovsdpdk-db"
+ovsdpdk_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovsdpdk-db"
 ovsdpdk_db_tag: "{{ ovsdpdk_tag }}"
 ovsdpdk_db_image_full: "{{ ovsdpdk_db_image }}:{{ ovsdpdk_db_tag }}"
 
-ovsdpdk_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ovsdpdk-vswitchd"
+ovsdpdk_vswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovsdpdk-vswitchd"
 ovsdpdk_vswitchd_tag: "{{ ovsdpdk_tag }}"
 ovsdpdk_vswitchd_image_full: "{{ ovsdpdk_vswitchd_image }}:{{ ovsdpdk_vswitchd_tag }}"
 ovsdpdk_db_dimensions: "{{ default_container_dimensions }}"

@@ -1,0 +1,24 @@
+---
+fixes:
+  - |
+    Fixed bug `#2039498
+    <https://bugs.launchpad.net/kolla-ansible/+bug/2039498>`__ where the Grafana
+    docker volume was bind mounted over Grafana plugins installed at image
+    build time. This was fixed by copying the dashboards into the container
+    from an existing bind mount instead of using the ``grafana`` volume.
+    However, this leaves behind the volume, which can be removed by setting
+    ``grafana_remove_old_volume`` to ``true``. Please note that any plugins
+    installed via the CLI directly and not through Kolla will be lost when
+    doing this. In a future release, ``grafana_remove_old_volume`` will default
+    to ``true``.
+
+upgrade:
+  - |
+    The ``grafana`` volume is no longer used. If you wish to automatically
+    remove the old volume, set ``grafana_remove_old_volume`` to ``true``. Note
+    that doing this will lose any plugins installed via the CLI directly and
+    not through Kolla. If you have previously installed Grafana plugins via the
+    Grafana UI or CLI, you must change to installing them at image `build time
+    <https://docs.openstack.org/kolla/latest/admin/image-building.html#dockerfile-customisation>`__.
+    The Grafana volume, which contains existing custom plugins, will be
+    automatically removed in the D release.

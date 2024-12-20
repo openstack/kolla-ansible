@@ -14,7 +14,7 @@
   vars:
     neutron_server: "{{ neutron_services['neutron-server'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -27,7 +27,7 @@
     labels:
       UPGRADE:
     name: "bootstrap_neutron"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ neutron_server.volumes }}"
   run_once: True
   delegate_to: "{{ groups['neutron-server'][0] }}"
@@ -45,19 +45,19 @@
 
 - name: Stopping all neutron-server for contract db
   vars:
-    neutron_server: "{{ neutron_services['neutron-server'] }}"
-    first_neutron_server_host: "{{ groups[neutron_server.group][0] }}"
+    service: "{{ neutron_services['neutron-server'] }}"
+    first_neutron_server_host: "{{ groups[service.group][0] }}"
     results_of_check_pending_contract_scripts: "{{ hostvars[first_neutron_server_host]['neutron_check_contract_db_stdout'] }}"
     # NOTE(hrw): no idea
     filter_rc: "results[?rc!=`0`]"
     is_stop_neutron_server: "{{ results_of_check_pending_contract_scripts | json_query(filter_rc) }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "stop_container"
     common_options: "{{ docker_common_options }}"
-    name: "{{ neutron_server.container_name }}"
+    name: "{{ service.container_name }}"
   when:
-    - neutron_server.host_in_groups | bool
+    - service.host_in_groups | bool
     - is_stop_neutron_server | length > 0
   notify:
     - "Restart neutron-server container"
@@ -66,7 +66,7 @@
   vars:
     neutron_server: "{{ neutron_services['neutron-server'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -79,7 +79,7 @@
     labels:
       UPGRADE:
     name: "bootstrap_neutron"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ neutron_server.volumes }}"
   run_once: True
   delegate_to: "{{ groups['neutron-server'][0] }}"

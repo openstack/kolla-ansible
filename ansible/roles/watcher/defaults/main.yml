@@ -14,11 +14,14 @@ watcher_services:
         mode: "http"
         external: false
         port: "{{ watcher_api_port }}"
+        listen_port: "{{ watcher_api_listen_port }}"
       watcher_api_external:
         enabled: "{{ enable_watcher }}"
         mode: "http"
         external: true
-        port: "{{ watcher_api_port }}"
+        external_fqdn: "{{ watcher_external_fqdn }}"
+        port: "{{ watcher_api_public_port }}"
+        listen_port: "{{ watcher_api_listen_port }}"
   watcher-applier:
     container_name: watcher_applier
     group: watcher-applier
@@ -36,6 +39,12 @@ watcher_services:
     dimensions: "{{ watcher_engine_dimensions }}"
     healthcheck: "{{ watcher_engine_healthcheck }}"
 
+####################
+# Config Validate
+####################
+watcher_config_validation:
+  - generator: "/watcher/etc/watcher/oslo-config-generator/watcher.conf"
+    config: "/etc/watcher/watcher.conf"
 
 ####################
 # Database
@@ -63,15 +72,15 @@ watcher_database_shard:
 ####################
 watcher_tag: "{{ openstack_tag }}"
 
-watcher_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/watcher-engine"
+watcher_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}watcher-engine"
 watcher_engine_tag: "{{ watcher_tag }}"
 watcher_engine_image_full: "{{ watcher_engine_image }}:{{ watcher_engine_tag }}"
 
-watcher_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/watcher-api"
+watcher_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}watcher-api"
 watcher_api_tag: "{{ watcher_tag }}"
 watcher_api_image_full: "{{ watcher_api_image }}:{{ watcher_api_tag }}"
 
-watcher_applier_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/watcher-applier"
+watcher_applier_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}watcher-applier"
 watcher_applier_tag: "{{ watcher_tag }}"
 watcher_applier_image_full: "{{ watcher_applier_image }}:{{ watcher_applier_tag }}"
 
@@ -122,19 +131,19 @@ watcher_api_default_volumes:
   - "{{ node_config_directory }}/watcher-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/watcher:/dev-mode/watcher' if watcher_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 watcher_applier_default_volumes:
   - "{{ node_config_directory }}/watcher-applier/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/watcher:/dev-mode/watcher' if watcher_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 watcher_engine_default_volumes:
   - "{{ node_config_directory }}/watcher-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "{{ kolla_dev_repos_directory ~ '/watcher/watcher:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/watcher' if watcher_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/watcher:/dev-mode/watcher' if watcher_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 watcher_extra_volumes: "{{ default_extra_volumes }}"
@@ -145,9 +154,6 @@ watcher_engine_extra_volumes: "{{ watcher_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-watcher_internal_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ watcher_api_port }}"
-watcher_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ watcher_api_port }}"
-
 watcher_logging_debug: "{{ openstack_logging_debug }}"
 
 watcher_keystone_user: "watcher"

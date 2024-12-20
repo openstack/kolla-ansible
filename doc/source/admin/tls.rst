@@ -288,6 +288,50 @@ disable verification of the backend certificate:
 
 .. _admin-tls-generating-a-private-ca:
 
+Generating TLS certificates with Let's Encrypt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's Encrypt is a free, automated, and open certificate authority.
+
+To enable OpenStack to deploy the Let's Encrypt container to fetch
+certificates from the Let's Encrypt certificate authority, the following
+must be configured in ``globals.yml``:
+
+.. code-block:: yaml
+
+  enable_letsencrypt: "yes"
+  letsencrypt_email: "<The email used for registration and recovery contact>"
+
+The Let's Encrypt container will attempt to renew your certificates every 12
+hours. If the certificates are renewed, they will automatically be deployed
+to the HAProxy containers using SSH.
+
+.. note::
+
+  If ``letsencrypt_email`` is not valid email, letsencrypt role will
+  not work correctly.
+
+.. note::
+
+  If ``enable_letsencrypt`` is set to true, haproxy's socket will run with
+  admin access level. This is needed so Let's Encrypt can interact
+  with HAProxy.
+
+You can configure separate ACME servers for internal and external
+certificate requests.
+
+.. code-block:: yaml
+
+  letsencrypt_external_cert_server: "<ACME server URL for external cert>"
+  letsencrypt_internal_cert_server: "<ACME server URL for internal cert>"
+
+.. note::
+
+  The ``letsencrypt_external_cert_server`` has a default value of
+  ``https://acme-v02.api.letsencrypt.org/directory``. Ensure that
+  ``letsencrypt_internal_cert_server`` is reachable from the controller
+  if you configure it for internal certificate requests.
+
 Generating a Private Certificate Authority
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -334,3 +378,29 @@ options for TLS as is.
 
 If using this option, make sure that all certificates are present on the
 appropriate hosts in the appropriate location.
+
+.. _haproxy-tls-settings:
+
+HAProxy TLS related settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can select between different SSL/TLS ciphers by setting the following
+in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   kolla_haproxy_ssl_settings: "modern" # or "intermediate" or "legacy"
+
+The default value is "modern". These settings are adapted from the
+`Mozilla SSL Configuration Generator <https://ssl-config.mozilla.org/>`__.
+
+The setting "modern" is recommended for most deployments. The setting
+"intermediate" is recommended for deployments that need to support older
+clients. The setting "legacy" is not recommended, but is left as a
+compatibility option for older deployments.
+
+See the `Mozilla SSL Configuration Generator <https://ssl-config.mozilla.org/>`__
+for more information on exact supported client versions.
+
+The ``kolla_haproxy_ssl_settings`` setting also affects the glance and
+neutron haproxy TLS settings, if these proxy services are enabled.

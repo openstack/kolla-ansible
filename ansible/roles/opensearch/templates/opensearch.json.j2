@@ -1,0 +1,29 @@
+{
+    "command": "/usr/share/opensearch/bin/opensearch",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/opensearch.yml",
+            "dest": "/etc/opensearch/opensearch.yml",
+            "owner": "opensearch",
+            "perm": "0600"
+        }{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/lib/opensearch",
+            "owner": "opensearch:opensearch",
+            "recurse": true
+        },
+        {
+            "path": "/var/log/kolla/opensearch",
+            "owner": "opensearch:opensearch",
+            "recurse": true
+        }
+    ]
+}

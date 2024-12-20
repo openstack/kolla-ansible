@@ -1,0 +1,21 @@
+{% set num_nodes = groups['opensearch'] | length %}
+{% set recover_after_nodes = (num_nodes * 2 / 3) | round(0, 'floor') | int if num_nodes > 1 else 1 %}
+plugins.security.disabled: "true"
+
+node.name: "{{ 'api' | kolla_address | put_address_in_context('url') }}"
+network.host: "{{ 'api' | kolla_address | put_address_in_context('url') }}"
+
+cluster.name: "{{ opensearch_cluster_name }}"
+cluster.initial_master_nodes: [{% for host in groups['opensearch'] %}"{{ 'api' | kolla_address(host) }}"{% if not loop.last %},{% endif %}{% endfor %}]
+node.master: true
+node.data: true
+discovery.seed_hosts: [{% for host in groups['opensearch'] %}"{{ 'api' | kolla_address(host) | put_address_in_context('url') }}"{% if not loop.last %},{% endif %}{% endfor %}]
+
+http.port: {{ opensearch_port }}
+gateway.expected_nodes: {{ num_nodes }}
+gateway.recover_after_time: "5m"
+gateway.recover_after_nodes: {{ recover_after_nodes }}
+path.data: "/var/lib/opensearch/data"
+path.logs: "/var/log/kolla/opensearch"
+indices.fielddata.cache.size: 40%
+action.auto_create_index: "true"

@@ -1,0 +1,24 @@
+---
+- name: Run upgrade in MariaDB container
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    dimensions: "{{ service.dimensions }}"
+    environment:
+      KOLLA_UPGRADE:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+      DB_HOST: "{{ api_interface_address }}"
+      DB_PORT: "{{ mariadb_port }}"
+      DB_ROOT_PASSWORD: "{{ database_password }}"
+    image: "{{ service.image }}"
+    labels:
+      UPGRADE:
+    name: "upgrade_mariadb"
+    restart_policy: oneshot
+    volumes: "{{ service.volumes }}"
+  no_log: true

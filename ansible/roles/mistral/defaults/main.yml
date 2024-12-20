@@ -14,11 +14,14 @@ mistral_services:
         mode: "http"
         external: false
         port: "{{ mistral_api_port }}"
+        listen_port: "{{ mistral_api_listen_port }}"
       mistral_api_external:
         enabled: "{{ enable_mistral }}"
         mode: "http"
         external: true
-        port: "{{ mistral_api_port }}"
+        external_fqdn: "{{ mistral_external_fqdn }}"
+        port: "{{ mistral_api_public_port }}"
+        listen_port: "{{ mistral_api_listen_port }}"
   mistral-engine:
     container_name: mistral_engine
     group: mistral-engine
@@ -44,6 +47,12 @@ mistral_services:
     dimensions: "{{ mistral_executor_dimensions }}"
     healthcheck: "{{ mistral_executor_healthcheck }}"
 
+####################
+# Config Validate
+####################
+mistral_config_validation:
+  - generator: "/mistral/tools/config/config-generator.mistral.conf"
+    config: "/etc/mistral/mistral.conf"
 
 ####################
 # Database
@@ -71,19 +80,19 @@ mistral_database_shard:
 ####################
 mistral_tag: "{{ openstack_tag }}"
 
-mistral_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mistral-engine"
+mistral_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mistral-engine"
 mistral_engine_tag: "{{ mistral_tag }}"
 mistral_engine_image_full: "{{ mistral_engine_image }}:{{ mistral_engine_tag }}"
 
-mistral_event_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mistral-event-engine"
+mistral_event_engine_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mistral-event-engine"
 mistral_event_engine_tag: "{{ mistral_tag }}"
 mistral_event_engine_image_full: "{{ mistral_event_engine_image }}:{{ mistral_event_engine_tag }}"
 
-mistral_executor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mistral-executor"
+mistral_executor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mistral-executor"
 mistral_executor_tag: "{{ mistral_tag }}"
 mistral_executor_image_full: "{{ mistral_executor_image }}:{{ mistral_executor_tag }}"
 
-mistral_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/mistral-api"
+mistral_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}mistral-api"
 mistral_api_tag: "{{ mistral_tag }}"
 mistral_api_image_full: "{{ mistral_api_image }}:{{ mistral_api_tag }}"
 
@@ -149,25 +158,25 @@ mistral_engine_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/mistral:/dev-mode/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_event_engine_default_volumes:
   - "{{ node_config_directory }}/mistral-event-engine/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/mistral:/dev-mode/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_executor_default_volumes:
   - "{{ node_config_directory }}/mistral-executor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/mistral:/dev-mode/mistral' if mistral_dev_mode | bool else '' }}"
 mistral_api_default_volumes:
   - "{{ node_config_directory }}/mistral-api/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/mistral/mistral:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/mistral' if mistral_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/mistral:/dev-mode/mistral' if mistral_dev_mode | bool else '' }}"
 
 mistral_extra_volumes: "{{ default_extra_volumes }}"
 mistral_engine_extra_volumes: "{{ mistral_extra_volumes }}"
@@ -178,10 +187,8 @@ mistral_api_extra_volumes: "{{ mistral_extra_volumes }}"
 ####################
 # OpenStack
 ####################
-mistral_internal_base_endpoint: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ mistral_api_port }}"
-
 mistral_internal_endpoint: "{{ mistral_internal_base_endpoint }}/v2"
-mistral_public_endpoint: "{{ public_protocol }}://{{ kolla_external_fqdn | put_address_in_context('url') }}:{{ mistral_api_port }}/v2"
+mistral_public_endpoint: "{{ mistral_public_base_endpoint }}/v2"
 
 mistral_logging_debug: "{{ openstack_logging_debug }}"
 

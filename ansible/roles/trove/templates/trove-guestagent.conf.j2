@@ -1,6 +1,26 @@
 [DEFAULT]
+log_file = trove-guestagent.log
+log_dir = /var/log/trove/
 transport_url = {{ rpc_transport_url }}
 control_exchange = trove
 root_grant = ALL
 root_grant_option = True
 debug = {{ trove_logging_debug }}
+
+[service_credentials]
+auth_url = {{ keystone_internal_url }}
+region_name = {{ openstack_region_name }}
+project_name = service
+password = {{ trove_keystone_password }}
+project_domain_name = {{ default_project_domain_name }}
+user_domain_name = {{ default_user_domain_name }}
+username = {{ trove_keystone_user }}
+
+[oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
+{% endif %}

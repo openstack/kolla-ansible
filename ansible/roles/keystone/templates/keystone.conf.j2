@@ -16,7 +16,7 @@ policy_file = {{ keystone_policy_file }}
 {% endif %}
 
 [database]
-connection = mysql+pymysql://{{ keystone_database_user }}:{{ keystone_database_password }}@{{ keystone_database_address }}/{{ keystone_database_name }}
+connection = mysql+pymysql://{{ keystone_database_user }}:{{ keystone_database_password }}@{{ keystone_database_address }}/{{ keystone_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if keystone_database_enable_tls_internal | bool }}
 connection_recycle_time = {{ database_connection_recycle_time }}
 max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
@@ -59,10 +59,17 @@ topics = {{ keystone_enabled_notification_topics | map(attribute='name') | join(
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = {{ service_name == 'keystone' }}
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 {% if enable_osprofiler | bool %}
@@ -78,7 +85,7 @@ connection_string = {{ osprofiler_backend_connection_string }}
 allowed_origin = {{ grafana_public_endpoint }}
 {% endif %}
 
-{% if enable_keystone_federation %}
+{% if enable_keystone_federation | bool %}
 [federation]
 {% for dashboard in keystone_trusted_dashboards %}
 trusted_dashboard = {{ dashboard }}

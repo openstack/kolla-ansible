@@ -3,7 +3,7 @@
   vars:
     watcher_api: "{{ watcher_services['watcher-api'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -14,7 +14,7 @@
     labels:
       BOOTSTRAP:
     name: "bootstrap_watcher"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ watcher_api.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[watcher_api.group][0] }}"

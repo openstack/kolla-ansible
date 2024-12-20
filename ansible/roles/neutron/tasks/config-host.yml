@@ -1,10 +1,9 @@
 ---
-- name: Load and persist ip6_tables module
+- name: Load and persist kernel modules
   include_role:
     name: module-load
   vars:
-    modules:
-      - {'name': ip6_tables}
+    modules: "{{ neutron_modules_default + neutron_modules_extra }}"
   when: >-
     neutron_services |
     select_services_enabled_and_mapped_to_host |
@@ -13,25 +12,23 @@
     list |
     length > 0
 
+- name: Check IPv6 support
+  command: /usr/sbin/sysctl -n net.ipv6.conf.all.disable_ipv6
+  register: ipv6_disabled
+  changed_when: false
+
 - name: Setting sysctl values
-  become: true
+  include_role:
+    name: sysctl
   vars:
-    neutron_l3_agent: "{{ neutron_services['neutron-l3-agent'] }}"
-    should_set: "{{ item.value != 'KOLLA_UNSET' }}"
-  sysctl:
-    name: "{{ item.name }}"
-    state: "{{ should_set | ternary('present', 'absent') }}"
-    value: "{{ should_set | ternary(item.value, omit) }}"
-    sysctl_set: "{{ should_set }}"
-    sysctl_file: "{{ kolla_sysctl_conf_path }}"
-  with_items:
-    - { name: "net.ipv4.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh1 }}"}
-    - { name: "net.ipv4.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh2 }}"}
-    - { name: "net.ipv4.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh3 }}"}
-    - { name: "net.ipv6.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh1 }}"}
-    - { name: "net.ipv6.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh2 }}"}
-    - { name: "net.ipv6.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh3 }}"}
+    service: "{{ neutron_services['neutron-l3-agent'] }}"
+    settings:
+      - { name: "net.ipv4.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh1 }}"}
+      - { name: "net.ipv4.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh2 }}"}
+      - { name: "net.ipv4.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv4_neigh_gc_thresh3 }}"}
+      - { name: "net.ipv6.neigh.default.gc_thresh1", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh1 }}"}
+      - { name: "net.ipv6.neigh.default.gc_thresh2", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh2 }}"}
+      - { name: "net.ipv6.neigh.default.gc_thresh3", value: "{{ neutron_l3_agent_host_ipv6_neigh_gc_thresh3 }}"}
   when:
     - set_sysctl | bool
-    - item.value != 'KOLLA_SKIP'
-    - (neutron_l3_agent.enabled | bool and neutron_l3_agent.host_in_groups | bool)
+    - service | service_enabled_and_mapped_to_host

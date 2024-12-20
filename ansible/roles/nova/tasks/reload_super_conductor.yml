@@ -6,7 +6,7 @@
   vars:
     service: "{{ nova_services['nova-super-conductor'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -17,5 +17,4 @@
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
     - kolla_action == 'upgrade'
-    - inventory_hostname in groups[service.group]
-    - service.enabled | bool
+    - service | service_enabled_and_mapped_to_host

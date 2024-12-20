@@ -20,7 +20,8 @@ ironic_services:
         enabled: "{{ enable_ironic }}"
         mode: "http"
         external: true
-        port: "{{ ironic_api_port }}"
+        external_fqdn: "{{ ironic_external_fqdn }}"
+        port: "{{ ironic_api_public_port }}"
         listen_port: "{{ ironic_api_listen_port }}"
         tls_backend: "{{ ironic_enable_tls_backend }}"
   ironic-conductor:
@@ -29,7 +30,7 @@ ironic_services:
     enabled: true
     image: "{{ ironic_conductor_image_full }}"
     privileged: True
-    volumes: "{{ ironic_conductor_default_volumes + ironic_conductor_extra_volumes }}"
+    volumes: "{{ ironic_conductor_default_volumes + ironic_conductor_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ ironic_conductor_dimensions }}"
     healthcheck: "{{ ironic_conductor_healthcheck }}"
   ironic-inspector:
@@ -52,7 +53,8 @@ ironic_services:
         enabled: "{{ enable_ironic }}"
         mode: "http"
         external: true
-        port: "{{ ironic_inspector_port }}"
+        external_fqdn: "{{ ironic_inspector_external_fqdn }}"
+        port: "{{ ironic_inspector_public_port }}"
         listen_port: "{{ ironic_inspector_listen_port }}"
   ironic-tftp:
     container_name: ironic_tftp
@@ -77,13 +79,27 @@ ironic_services:
   ironic-dnsmasq:
     container_name: ironic_dnsmasq
     group: ironic-inspector
-    enabled: true
+    enabled: "{{ enable_ironic_dnsmasq }}"
     cap_add:
       - NET_ADMIN
+      - NET_RAW
     image: "{{ ironic_dnsmasq_image_full }}"
     volumes: "{{ ironic_dnsmasq_default_volumes + ironic_dnsmasq_extra_volumes }}"
     dimensions: "{{ ironic_dnsmasq_dimensions }}"
+  ironic-prometheus-exporter:
+    container_name: ironic_prometheus_exporter
+    group: ironic-conductor
+    enabled: "{{ enable_ironic_prometheus_exporter }}"
+    image: "{{ ironic_prometheus_exporter_image_full }}"
+    volumes: "{{ ironic_prometheus_exporter_default_volumes + ironic_prometheus_exporter_extra_volumes }}"
+    dimensions: "{{ ironic_prometheus_exporter_dimensions }}"
 
+####################
+# Config Validate
+####################
+ironic_config_validation:
+  - generator: "/ironic/tools/config/ironic-config-generator.conf"
+    config: "/etc/ironic/ironic.conf"
 
 ####################
 # Database
@@ -100,6 +116,7 @@ ironic_inspector_database_address: "{{ database_address | put_address_in_context
 # Database sharding
 ####################
 ironic_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ ironic_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+ironic_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
 ironic_database_shard:
   users:
     - user: "{{ ironic_database_user }}"
@@ -118,25 +135,29 @@ ironic_database_shard:
 ####################
 ironic_tag: "{{ openstack_tag }}"
 
-ironic_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-api"
+ironic_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ironic-api"
 ironic_api_tag: "{{ ironic_tag }}"
 ironic_api_image_full: "{{ ironic_api_image }}:{{ ironic_api_tag }}"
 
-ironic_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-conductor"
+ironic_conductor_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ironic-conductor"
 ironic_conductor_tag: "{{ ironic_tag }}"
 ironic_conductor_image_full: "{{ ironic_conductor_image }}:{{ ironic_conductor_tag }}"
 
-ironic_pxe_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-pxe"
+ironic_pxe_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ironic-pxe"
 ironic_pxe_tag: "{{ ironic_tag }}"
 ironic_pxe_image_full: "{{ ironic_pxe_image }}:{{ ironic_pxe_tag }}"
 
-ironic_inspector_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/ironic-inspector"
+ironic_inspector_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ironic-inspector"
 ironic_inspector_tag: "{{ ironic_tag }}"
 ironic_inspector_image_full: "{{ ironic_inspector_image }}:{{ ironic_inspector_tag }}"
 
-ironic_dnsmasq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/dnsmasq"
+ironic_dnsmasq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}dnsmasq"
 ironic_dnsmasq_tag: "{{ ironic_tag }}"
 ironic_dnsmasq_image_full: "{{ ironic_dnsmasq_image }}:{{ ironic_dnsmasq_tag }}"
+
+ironic_prometheus_exporter_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ironic-prometheus-exporter"
+ironic_prometheus_exporter_tag: "{{ ironic_tag }}"
+ironic_prometheus_exporter_image_full: "{{ ironic_prometheus_exporter_image }}:{{ ironic_prometheus_exporter_tag }}"
 
 ironic_api_dimensions: "{{ default_container_dimensions }}"
 ironic_conductor_dimensions: "{{ default_container_dimensions }}"
@@ -144,6 +165,7 @@ ironic_tftp_dimensions: "{{ default_container_dimensions }}"
 ironic_http_dimensions: "{{ default_container_dimensions }}"
 ironic_inspector_dimensions: "{{ default_container_dimensions }}"
 ironic_dnsmasq_dimensions: "{{ default_container_dimensions }}"
+ironic_prometheus_exporter_dimensions: "{{ default_container_dimensions }}"
 
 ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -202,7 +224,7 @@ ironic_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
-  - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ironic:/dev-mode/ironic' if ironic_dev_mode | bool else '' }}"
 ironic_conductor_default_volumes:
   - "{{ node_config_directory }}/ironic-conductor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -210,10 +232,11 @@ ironic_conductor_default_volumes:
   - "/lib/modules:/lib/modules:ro"
   - "/sys:/sys"
   - "/dev:/dev"
-  - "/run:/run:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "ironic:/var/lib/ironic"
-  - "{{ kolla_dev_repos_directory ~ '/ironic/ironic:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic' if ironic_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ironic:/dev-mode/ironic' if ironic_dev_mode | bool else '' }}"
+  - "{{ 'ironic_prometheus_exporter_data:/var/lib/ironic/metrics' if enable_ironic_prometheus_exporter | bool else '' }}"
 ironic_tftp_default_volumes:
   - "{{ node_config_directory }}/ironic-tftp/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -232,13 +255,19 @@ ironic_inspector_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "ironic_inspector_dhcp_hosts:/var/lib/ironic-inspector/dhcp-hostsdir"
-  - "{{ kolla_dev_repos_directory ~ '/ironic-inspector/ironic_inspector:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/ironic_inspector' if ironic_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/ironic-inspector:/dev-mode/ironic-inspector' if ironic_inspector_dev_mode | bool else '' }}"
 ironic_dnsmasq_default_volumes:
   - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla"
   - "ironic_inspector_dhcp_hosts:/etc/dnsmasq/dhcp-hostsdir:ro"
+ironic_prometheus_exporter_default_volumes:
+  - "{{ node_config_directory }}/ironic-prometheus-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla"
+  - "ironic_prometheus_exporter_data:/var/lib/ironic/metrics"
 
 ironic_extra_volumes: "{{ default_extra_volumes }}"
 ironic_api_extra_volumes: "{{ ironic_extra_volumes }}"
@@ -247,14 +276,12 @@ ironic_tftp_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_http_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_inspector_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_dnsmasq_extra_volumes: "{{ ironic_extra_volumes }}"
+ironic_prometheus_exporter_extra_volumes: "{{ ironic_extra_volumes }}"
 
 ####################
 # OpenStack
 ####################
 ironic_inspector_keystone_user: "ironic-inspector"
-
-ironic_inspector_internal_endpoint: "{{ internal_protocol }}://{{ ironic_inspector_internal_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
-ironic_inspector_public_endpoint: "{{ public_protocol }}://{{ ironic_inspector_external_fqdn | put_address_in_context('url') }}:{{ ironic_inspector_port }}"
 
 ironic_logging_debug: "{{ openstack_logging_debug }}"
 
@@ -276,10 +303,14 @@ ironic_dnsmasq_uefi_ipxe_boot_file: "snponly.efi"
 ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
 ironic_http_url: "http://{{ ironic_http_interface_address | put_address_in_context('url') }}:{{ ironic_http_port }}"
+ironic_tftp_listen_address: "{{ ironic_tftp_interface_address }}"
 ironic_enable_rolling_upgrade: "yes"
 ironic_upgrade_skip_wait_check: false
 ironic_inspector_kernel_cmdline_extras: []
 ironic_inspector_pxe_filter: "{% if enable_neutron | bool %}dnsmasq{% else %}noop{% endif %}"
+ironic_prometheus_exporter_data_dir: "/var/lib/ironic-prometheus-exporter/data"
+ironic_prometheus_exporter_sensor_data_interval: 30
+ironic_prometheus_exporter_sensor_data_undeployed_nodes: "true"
 
 
 ####################
@@ -289,7 +320,10 @@ ironic_inspector_git_repository: "{{ kolla_dev_repos_git }}/ironic-inspector"
 ironic_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 ironic_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 ironic_dev_mode: "{{ kolla_dev_mode }}"
+ironic_inspector_dev_mode: "{{ ironic_dev_mode }}"
 ironic_source_version: "{{ kolla_source_version }}"
+ironic_inspector_source_version: "{{ ironic_source_version }}"
+ironic_agent_files_directory: "{{ node_custom_config }}"
 
 
 ####################
@@ -329,7 +363,20 @@ ironic_ks_users:
     password: "{{ ironic_inspector_keystone_password }}"
     role: "admin"
 
+ironic_ks_user_roles:
+  - project: "service"
+    user: "{{ ironic_keystone_user }}"
+    role: "service"
+  - project: "service"
+    user: "{{ ironic_inspector_keystone_user }}"
+    role: "service"
+  - system: "all"
+    user: "{{ ironic_inspector_keystone_user }}"
+    role: "service"
+
 ####################
 # TLS
 ####################
 ironic_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+ironic_copy_certs: "{{ kolla_copy_ca_into_containers | bool or ironic_enable_tls_backend | bool }}"

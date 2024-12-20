@@ -1,53 +1,70 @@
 ---
-- name: Copying over ceph.conf for Cinder
+- name: Ensuring cinder service ceph config subdirs exists
+  vars:
+    service: "{{ cinder_services[item] }}"
+  file:
+    path: "{{ node_config_directory }}/{{ item }}/ceph"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+  with_items:
+    - "cinder-volume"
+    - "cinder-backup"
+
+- name: Copying over multiple ceph.conf for cinder services
   vars:
     services_need_config:
       - "cinder-volume"
       - "cinder-backup"
+    service_name: "{{ item.0.key }}"
+    service: "{{ item.0.value }}"
+    cluster: "{{ item.1.cluster }}"
   merge_configs:
     sources:
-      - "{{ node_custom_config }}/cinder/ceph.conf"
-      - "{{ node_custom_config }}/cinder/{{ item.key }}/ceph.conf"
-    dest: "{{ node_config_directory }}/{{ item.key }}/ceph.conf"
+      - "{{ node_custom_config }}/cinder/{{ cluster }}.conf"
+      - "{{ node_custom_config }}/cinder/{{ service_name }}/{{ cluster }}.conf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/ceph/{{ cluster }}.conf"
     mode: "0660"
   become: true
   when:
-    - item.value.enabled | bool
-    - inventory_hostname in groups[item.value.group]
-    - item.key in services_need_config
-  with_dict: "{{ cinder_services }}"
-  notify:
-    - Restart {{ item.key }} container
+    - service | service_enabled_and_mapped_to_host
+    - service_name in services_need_config
+  with_nested:
+    - "{{ cinder_services | dict2items }}"
+    - "{{ cinder_ceph_backends + [cinder_backup_ceph_backend] }}"
 
 - name: Copy over Ceph keyring files for cinder-volume
+  vars:
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
+    service: "{{ cinder_services['cinder-volume'] }}"
   template:
-    src: "{{ node_custom_config }}/cinder/cinder-volume/{{ ceph_cinder_keyring }}"
-    dest: "{{ node_config_directory }}/cinder-volume/"
+    src: "{{ node_custom_config }}/cinder/cinder-volume/{{ keyring }}"
+    dest: "{{ node_config_directory }}/cinder-volume/ceph/{{ keyring }}"
     mode: "0660"
   become: true
+  with_items: "{{ cinder_ceph_backends }}"
   when:
     - external_ceph_cephx_enabled | bool
-    - inventory_hostname in groups['cinder-volume']
-    - cinder_services['cinder-volume'].enabled | bool
-  notify:
-    - Restart cinder-volume container
+    - service | service_enabled_and_mapped_to_host
 
 - name: Copy over Ceph keyring files for cinder-backup
+  vars:
+    service: "{{ cinder_services['cinder-backup'] }}"
+    keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
   template:
-    src: "{{ node_custom_config }}/cinder/{{ item }}"
-    dest: "{{ node_config_directory }}/cinder-backup/"
+    src: "{{ node_custom_config }}/cinder/cinder-backup/{{ keyring }}"
+    dest: "{{ node_config_directory }}/cinder-backup/ceph/{{ keyring }}"
     mode: "0660"
   become: true
-  register: cinder_backup_ceph_keyring
   with_items:
-    - "cinder-backup/{{ ceph_cinder_keyring }}"
-    - "cinder-backup/{{ ceph_cinder_backup_keyring }}"
+    - "{{ cinder_ceph_backends }}"
+    - "{{ cinder_backup_ceph_backend }}"
   when:
     - external_ceph_cephx_enabled | bool
-    - inventory_hostname in groups['cinder-backup']
-    - cinder_services['cinder-backup'].enabled | bool
-  notify:
-    - Restart cinder-backup container
+    - service | service_enabled_and_mapped_to_host
 
 - name: Ensuring config directory has correct owner and permission
   become: true

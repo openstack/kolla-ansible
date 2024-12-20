@@ -2,7 +2,8 @@
 - block:
     - name: "{{ project_name }} | Creating services"
       kolla_toolbox:
-        module_name: "os_keystone_service"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.catalog_service
         module_args:
           name: "{{ item.name }}"
           service_type: "{{ item.type }}"
@@ -13,9 +14,7 @@
           cacert: "{{ service_ks_cacert }}"
       loop: "{{ service_ks_register_services }}"
       loop_control:
-        label:
-          name: "{{ item.name }}"
-          service_type: "{{ item.type }}"
+        label: "{{ item.name }} ({{ item.type }})"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -24,7 +23,8 @@
 
     - name: "{{ project_name }} | Creating endpoints"
       kolla_toolbox:
-        module_name: "os_keystone_endpoint"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.endpoint
         module_args:
           service: "{{ item.0.name }}"
           url: "{{ item.1.url }}"
@@ -38,10 +38,7 @@
         - "{{ service_ks_register_services }}"
         - endpoints
       loop_control:
-        label:
-          service: "{{ item.0.name }}"
-          url: "{{ item.1.url }}"
-          interface: "{{ item.1.interface }}"
+        label: "{{ item.0.name }} -> {{ item.1.url }} -> {{ item.1.interface }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -50,7 +47,8 @@
 
     - name: "{{ project_name }} | Creating projects"
       kolla_toolbox:
-        module_name: "os_project"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.project
         module_args:
           name: "{{ item }}"
           domain: "{{ service_ks_register_domain }}"
@@ -66,11 +64,13 @@
 
     - name: "{{ project_name }} | Creating users"
       kolla_toolbox:
-        module_name: "os_user"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.identity_user
         module_args:
           default_project: "{{ item.project }}"
           name: "{{ item.user }}"
           password: "{{ item.password }}"
+          update_password: "{{ 'always' if update_keystone_service_user_passwords | bool else 'on_create' }}"
           domain: "{{ service_ks_register_domain }}"
           region_name: "{{ service_ks_register_region_name }}"
           auth: "{{ service_ks_register_auth }}"
@@ -78,9 +78,7 @@
           cacert: "{{ service_ks_cacert }}"
       with_items: "{{ service_ks_register_users }}"
       loop_control:
-        label:
-          user: "{{ item.user }}"
-          project: "{{ item.project }}"
+        label: "{{ item.user }} -> {{ item.project }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
@@ -88,7 +86,8 @@
 
     - name: "{{ project_name }} | Creating roles"
       kolla_toolbox:
-        module_name: "os_keystone_role"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.identity_role
         module_args:
           name: "{{ item }}"
           region_name: "{{ service_ks_register_region_name }}"
@@ -103,22 +102,21 @@
 
     - name: "{{ project_name }} | Granting user roles"
       kolla_toolbox:
-        module_name: "os_user_role"
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: openstack.cloud.role_assignment
         module_args:
           user: "{{ item.user }}"
           role: "{{ item.role }}"
-          project: "{{ item.project }}"
-          domain: "{{ service_ks_register_domain }}"
+          project: "{{ item.project | default(omit) }}"
+          domain: "{{ item.domain | default(omit) }}"
+          system: "{{ item.system | default(omit) }}"
           region_name: "{{ service_ks_register_region_name }}"
           auth: "{{ service_ks_register_auth }}"
           interface: "{{ service_ks_register_interface }}"
           cacert: "{{ service_ks_cacert }}"
       with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
       loop_control:
-        label:
-          user: "{{ item.user }}"
-          role: "{{ item.role }}"
-          project: "{{ item.project }}"
+        label: "{{ item.user }} -> {{ item.project | default(item.domain) | default(item.system) }} -> {{ item.role }}"
       register: service_ks_register_result
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"

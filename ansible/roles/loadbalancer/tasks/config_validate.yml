@@ -1,0 +1,27 @@
+---
+- name: Validating haproxy config files
+  vars:
+    service: "{{ loadbalancer_services['haproxy'] }}"
+  shell: >-
+    {{ kolla_container_engine }} exec -i haproxy haproxy
+    -c -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/services.d/
+  register: haproxy_config_validation_result
+  check_mode: false
+  become: true
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool
+
+- name: Assert haproxy config is valid
+  vars:
+    service: "{{ loadbalancer_services['haproxy'] }}"
+  assert:
+    that:
+      - haproxy_config_validation_result.rc == 0
+    fail_msg: >-
+      haproxy config is invalid or
+      validation could not be performed.
+    success_msg: "haproxy config is valid"
+  when:
+    - inventory_hostname in groups[service.group]
+    - service.enabled | bool

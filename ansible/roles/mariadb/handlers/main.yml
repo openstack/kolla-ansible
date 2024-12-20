@@ -4,7 +4,7 @@
     service_name: "mariadb"
     service: "{{ mariadb_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     environment:
@@ -14,7 +14,7 @@
     labels:
       BOOTSTRAP:
     name: "{{ service.container_name }}"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
   listen: Bootstrap MariaDB cluster
@@ -37,7 +37,7 @@
   become: true
   command: >-
     {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
-    mysql -uroot -p{{ database_password }}
+    mariadb -uroot -p{{ database_password }}
     --silent --skip-column-names
     -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
   changed_when: false
@@ -48,45 +48,34 @@
   no_log: true
   listen: Bootstrap MariaDB cluster
 
+- name: Ensure MariaDB is running normally on bootstrap host
+  group_by:
+    key: mariadb_bootstrap_restart
+  listen: Bootstrap MariaDB cluster
+
 - name: Restart MariaDB on existing cluster members
-  include_tasks: 'restart_services.yml'
+  group_by:
+    key: mariadb_restart
   when:
     - groups[mariadb_shard_group + '_port_alive_True'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
-    - groups[mariadb_shard_group + '_port_alive_True'].index(inventory_hostname) % 4 == item
-    - kolla_action != "config"
-  listen: restart mariadb
-  loop:
-    - 0
-    - 1
-    - 2
-    - 3
+  listen: Restart mariadb container
 
 - name: Start MariaDB on new nodes
-  include_tasks: 'restart_services.yml'
+  group_by:
+    key: mariadb_start
   when:
     - bootstrap_host is not defined or bootstrap_host != inventory_hostname
     - groups[mariadb_shard_group + '_port_alive_False'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_False']
-    - groups[mariadb_shard_group + '_port_alive_False'].index(inventory_hostname) % 4 == item
-    - kolla_action != "config"
-  listen: restart mariadb
-  loop:
-    - 0
-    - 1
-    - 2
-    - 3
-
-- name: Ensure MariaDB is running normally on bootstrap host
-  include_tasks: 'restart_services.yml'
-  listen: Bootstrap MariaDB cluster
+  listen: Restart mariadb container
 
 - name: Restart mariadb-clustercheck container
   vars:
     service_name: "mariadb-clustercheck"
     service: "{{ mariadb_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     image: "{{ service.image }}"
@@ -94,7 +83,5 @@
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
     environment: "{{ service.environment }}"
-  listen:
-    - restart mariadb-clustercheck
   when:
-    - kolla_action != "config"
+    - service | service_enabled_and_mapped_to_host

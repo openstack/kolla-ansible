@@ -6,11 +6,24 @@
             "dest": "/etc/magnum/magnum.conf",
             "owner": "magnum",
             "perm": "0600"
-        }{% if magnum_policy_file is defined %},
+        }{% if magnum_kubeconfig_file_path is defined %},
+        {
+            "source": "{{ container_config_directory }}/kubeconfig",
+            "dest": "/var/lib/magnum/.kube/config",
+            "owner": "magnum",
+            "perm": "0600"
+        }{% endif %}
+        {% if magnum_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ magnum_policy_file }}",
             "dest": "/etc/magnum/{{ magnum_policy_file }}",
             "owner": "magnum",
+            "perm": "0600"
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
             "perm": "0600"
         }{% endif %}
     ],

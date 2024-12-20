@@ -29,7 +29,7 @@ password = {{ cloudkitty_keystone_password }}
 region_name = {{ openstack_region_name }}
 cafile = {{ openstack_cacert }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -44,10 +44,17 @@ lock_path = /var/lib/cloudkitty/tmp
 policy_file = {{ cloudkitty_policy_file }}
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = {{ service_name == 'cloudkitty-api' }}
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 [collect]
@@ -62,15 +69,11 @@ auth_section = keystone_authtoken
 region_name = {{ openstack_region_name }}
 {% endif %}
 
-{% if cloudkitty_collector_backend == "monasca" %}
-[collector_monasca]
-monasca_service_name = monasca
-interface = {{ cloudkitty_monasca_interface }}
-{% endif %}
-
 {% if cloudkitty_collector_backend == "prometheus" %}
 [collector_prometheus]
 prometheus_url = {{ cloudkitty_prometheus_url }}
+prometheus_user = admin
+prometheus_password = {{ prometheus_password }}
 
 {% if cloudkitty_prometheus_cafile is defined %}
 cafile = {{ cloudkitty_prometheus_cafile }}
@@ -86,6 +89,7 @@ backend = {{ cloudkitty_fetcher_backend }}
 [fetcher_keystone]
 keystone_version = 3
 auth_section = keystone_authtoken
+cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 {% endif %}
 
@@ -94,6 +98,8 @@ region_name = {{ openstack_region_name }}
 metric = openstack_identity_project_info
 scope_attribute = id
 prometheus_url = {{ cloudkitty_prometheus_url }}
+prometheus_user = admin
+prometheus_password = {{ prometheus_password }}
 
 {% if cloudkitty_prometheus_cafile is defined %}
 cafile = {{ cloudkitty_prometheus_cafile }}
@@ -148,8 +154,18 @@ host = {{ cloudkitty_elasticsearch_url }}
 index_name = {{ cloudkitty_elasticsearch_index_name }}
 insecure = {{ cloudkitty_elasticsearch_insecure_connections }}
 
-{% if cloudkitty_elasticsearch_cafile is defined %}
+{% if cloudkitty_elasticsearch_cafile | length > 0 %}
 cafile = {{ cloudkitty_elasticsearch_cafile }}
 {% endif %}
+{% endif %}
 
+{% if cloudkitty_storage_backend == 'opensearch' %}
+[storage_opensearch]
+host = {{ cloudkitty_opensearch_url }}
+index_name = {{ cloudkitty_opensearch_index_name }}
+insecure = {{ cloudkitty_opensearch_insecure_connections }}
+
+{% if cloudkitty_opensearch_cafile | length > 0 %}
+cafile = {{ cloudkitty_opensearch_cafile }}
+{% endif %}
 {% endif %}

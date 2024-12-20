@@ -1,16 +1,68 @@
 ---
-- name: Restart etcd container
-  vars:
-    service_name: "etcd"
-    service: "{{ etcd_services[service_name] }}"
-  become: true
-  kolla_docker:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    environment: "{{ service.environment }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
+- name: Bootstrap etcd on new cluster
+  include_tasks: 'bootstrap_cluster.yml'
   when:
     - kolla_action != "config"
+  listen:
+    - Bootstrap etcd cluster
+
+- name: Look up the cluster leader
+  include_tasks: 'lookup_leader.yml'
+  listen:
+    - Restart etcd container
+    - Bootstrap etcd services
+    - Bootstrap etcd cluster
+    - Check for deleted members
+
+- name: Bootstrap etcd on new services
+  include_tasks: 'bootstrap_services.yml'
+  when:
+    - groups.etcd_had_volume_False is defined
+    - inventory_hostname in groups.etcd_had_volume_False
+    - kolla_action != "config"
+  listen:
+    - Bootstrap etcd services
+
+# When upgrading an etcd cluster we have to do it one by one
+- name: Upgrade etcd non-leaders
+  include_tasks: 'restart_services.yml'
+  when:
+    - inventory_hostname not in (groups.etcd_is_leader_True | default([]))
+    - kolla_action == "upgrade"
+  listen:
+    - Restart etcd container
+  loop: "{{ groups.etcd }}"
+
+# When there is no upgrade we can restart 25% of the services without
+# losing quorum.
+- name: Rolling restart of etcd non-leaders
+  include_tasks: 'restart_services.yml'
+  when:
+    - inventory_hostname not in (groups.etcd_is_leader_True | default([]))
+    - groups.etcd.index(inventory_hostname) % 4 == item
+    - kolla_action != "upgrade"
+  listen:
+    - Restart etcd container
+    - Bootstrap etcd services
+    - Bootstrap etcd cluster
+  loop:
+    - 0
+    - 1
+    - 2
+    - 3
+
+- name: Restart etcd leader
+  include_tasks: 'restart_services.yml'
+  when:
+    - inventory_hostname in (groups.etcd_is_leader_True | default([]))
+  listen:
+    - Restart etcd container
+    - Bootstrap etcd services
+    - Bootstrap etcd cluster
+
+- name: Remove deleted members
+  include_tasks: 'remove_deleted_members.yml'
+  when:
+    - kolla_action != "config"
+  listen:
+    - Check for deleted members

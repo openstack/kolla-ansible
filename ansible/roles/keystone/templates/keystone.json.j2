@@ -67,8 +67,13 @@
             "owner": "{{ apache_user }}:{{ apache_user }}",
             "perm": "0600",
             "merge": true
-        }
-        {% endif %}
+        }{% endif %}{% if keystone_copy_certs | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
     ],
     "permissions": [
         {
@@ -78,7 +83,7 @@
         {
             "path": "/var/log/kolla/keystone/keystone.log",
             "owner": "keystone:keystone"
-        },{% if keystone_enable_federation_openid %}
+        },{% if keystone_enable_federation_openid | bool %}
         {
             "path": "{{ keystone_container_federation_oidc_metadata_folder }}",
             "owner": "{{ apache_user }}:{{ apache_user }}",

@@ -1,0 +1,73 @@
+---
+- name: Disable shard allocation
+  become: true
+  vars:
+    opensearch_shard_body: {"transient": {"cluster.routing.allocation.enable": "none"}}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_cluster/settings"
+      method: PUT
+      status_code: 200
+      return_content: yes
+      body: "{{ opensearch_shard_body | to_json }}"  # noqa jinja[invalid]
+      body_format: json
+      ca_path: "{{ openstack_cacert }}"
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  listen: "Restart opensearch container"
+  when:
+    - kolla_action == "upgrade"
+
+- name: Perform a flush
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_flush"
+      method: POST
+      status_code: 200
+      return_content: yes
+      body_format: json
+      ca_path: "{{ openstack_cacert }}"
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  retries: 10
+  delay: 5
+  register: result
+  until: ('status' in result) and result.status == 200
+  listen: "Restart opensearch container"
+  when:
+    - kolla_action == "upgrade"
+
+- name: Restart opensearch container
+  vars:
+    service_name: "opensearch"
+    service: "{{ opensearch_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    environment: "{{ service.environment }}"
+    volumes: "{{ service.volumes }}"
+    dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+
+- name: Restart opensearch-dashboards container
+  vars:
+    service_name: "opensearch-dashboards"
+    service: "{{ opensearch_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    dimensions: "{{ service.dimensions }}"
+    environment: "{{ service.environment | default(omit) }}"
+    image: "{{ service.image }}"
+    name: "{{ service.container_name }}"
+    volumes: "{{ service.volumes }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"

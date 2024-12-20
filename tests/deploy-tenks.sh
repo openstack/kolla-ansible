@@ -24,7 +24,7 @@ function deploy_tenks_logged {
 # Script installed onto the host to fool tenks into using the containerised
 # Open vSwitch rather than installing its own.
 
-sudo docker exec openvswitch_vswitchd ovs-vsctl "\$@"
+sudo ${CONTAINER_ENGINE} exec openvswitch_vswitchd ovs-vsctl "\$@"
 EOF
     sudo chmod 755 /usr/bin/ovs-vsctl
 
@@ -57,7 +57,7 @@ EOF
 
 function deploy_tenks {
     echo "Configuring virtual bare metal via Tenks"
-    deploy_tenks_logged > /tmp/logs/ansible/deploy-tenks 2>&1
+    deploy_tenks_logged $1 > /tmp/logs/ansible/deploy-tenks 2>&1
     result=$?
     if [[ $result != 0 ]]; then
         echo "Deploying tenks failed. See ansible/deploy-tenks for details"
@@ -67,4 +67,4 @@ function deploy_tenks {
     return $result
 }
 
-deploy_tenks
+deploy_tenks $1

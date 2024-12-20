@@ -12,9 +12,14 @@ host_href = {{ barbican_public_endpoint }}
 backlog = 4096
 
 db_auto_create = False
-sql_connection = mysql+pymysql://{{ barbican_database_user }}:{{ barbican_database_password }}@{{ barbican_database_address }}/{{ barbican_database_name }}
 
 transport_url = {{ rpc_transport_url }}
+
+[database]
+connection = mysql+pymysql://{{ barbican_database_user }}:{{ barbican_database_password }}@{{ barbican_database_address }}/{{ barbican_database_name }}
+connection_recycle_time = {{ database_connection_recycle_time }}
+max_pool_size = {{ database_max_pool_size }}
+max_retries = -1
 
 # ================= Secret Store Plugin ===================
 [secretstore]
@@ -65,7 +70,7 @@ auth_type = password
 cafile = {{ openstack_cacert }}
 region_name = {{ openstack_region_name }}
 
-memcache_security_strategy = ENCRYPT
+memcache_security_strategy = {{ memcache_security_strategy }}
 memcache_secret_key = {{ memcache_secret_key }}
 memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
 
@@ -78,10 +83,17 @@ topics = {{ barbican_enabled_notification_topics | map(attribute='name') | join(
 driver = noop
 {% endif %}
 
-{% if om_enable_rabbitmq_tls | bool %}
 [oslo_messaging_rabbit]
+heartbeat_in_pthread = false
+{% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
+{% endif %}
+{% if om_enable_rabbitmq_high_availability | bool %}
+amqp_durable_queues = true
+{% endif %}
+{% if om_enable_rabbitmq_quorum_queues | bool %}
+rabbit_quorum_queue = true
 {% endif %}
 
 [oslo_middleware]

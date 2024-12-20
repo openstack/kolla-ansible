@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from kolla_ansible.kolla_address import kolla_address
+from kolla_ansible.kolla_url import kolla_url
 from kolla_ansible.put_address_in_context import put_address_in_context
 
 
@@ -24,5 +25,6 @@ class FilterModule(object):
     def filters(self):
         return {
             'kolla_address': kolla_address,
+            'kolla_url': kolla_url,
             'put_address_in_context': put_address_in_context,
         }

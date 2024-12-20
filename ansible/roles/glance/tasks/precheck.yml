@@ -8,10 +8,15 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name: "{{ glance_services.values() | map(attribute='container_name') | list }}"
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for Glance API
+  vars:
+    service: "{{ glance_services['glance-api'] }}"
   wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ glance_api_listen_port }}"
@@ -19,6 +24,17 @@
     timeout: 1
     state: stopped
   when:
-    - glance_services['glance-api'].host_in_groups | bool
-    - glance_services['glance-api'].enabled | bool
+    - service | service_enabled_and_mapped_to_host
     - container_facts['glance_api'] is not defined
+
+- name: Check if S3 configurations are defined
+  assert:
+    that:
+      - vars[item] is defined
+    msg: "Glance S3 backend is enabled, either the {{ item }} or {{ item | replace('glance_backend_', '') }} variable must be defined."
+  with_items:
+    - glance_backend_s3_url
+    - glance_backend_s3_bucket
+    - glance_backend_s3_access_key
+    - glance_backend_s3_secret_key
+  when: glance_backend_s3 | bool

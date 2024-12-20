@@ -15,19 +15,13 @@ function test_ovn {
 
     # List OVN NB/SB entries
     echo "OVN NB DB entries:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
 
     echo "OVN SB DB entries:"
-    sudo docker exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
+    sudo ${container_engine} exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
 
-    # Test OVSDB cluster state
-    if [[ $BASE_DISTRO =~ ^(debian|ubuntu)$ ]]; then
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/openvswitch/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/openvswitch/ovnsb_db.ctl cluster/status OVN_Southbound)
-    else
-        OVNNB_STATUS=$(sudo docker exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
-        OVNSB_STATUS=$(sudo docker exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
-    fi
+    OVNNB_STATUS=$(sudo ${container_engine} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
+    OVNSB_STATUS=$(sudo ${container_engine} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
 
     if [[ $(grep -o "at tcp:" <<< ${OVNNB_STATUS} | wc -l) != "3" ]]; then
         echo "ERR: NB Cluster does not have 3 nodes"
@@ -80,13 +74,24 @@ function test_octavia {
     echo "Add a floating IP to the load balancer."
     lb_fip=$(openstack floating ip create public1 -f value -c name)
     lb_vip=$(openstack loadbalancer show test_ovn_lb -f value -c vip_address)
+    attempt=0
+    while [[ $(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID) == "" ]]; do
+        echo "Port for LB with VIP ip addr $lb_vip not available yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 10 ]]; then
+            echo "ERROR: Port for LB with VIP ip addr failed to become available"
+            openstack port list --fixed-ip ip-address=$lb_vip
+            return 1
+        fi
+        sleep $attempt
+    done
     lb_port_id=$(openstack port list --fixed-ip ip-address=$lb_vip -f value -c ID)
     openstack floating ip set $lb_fip --port $lb_port_id
 
     echo "OVN NB entries for LB:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
     echo "OVN NB entries for NAT:"
-    sudo docker exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
+    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
 
     echo "Attempt to access the load balanced HTTP server."
     attempts=12
@@ -133,5 +138,5 @@ function test_ovn_setup {
 }
 
 
-
+container_engine=${1:-docker}
 test_ovn_setup

@@ -3,7 +3,7 @@
   vars:
     heat_api: "{{ heat_services['heat-api'] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
     detach: False
@@ -15,8 +15,8 @@
       OS_INTERFACE: "internal"
       OS_USERNAME: "{{ openstack_auth.username }}"
       OS_PASSWORD: "{{ openstack_auth.password }}"
+      OS_PROJECT_NAME: "{{ openstack_auth.project_name }}"
       OS_USER_DOMAIN_NAME: "{{ openstack_auth.user_domain_name }}"
-      OS_SYSTEM_SCOPE: "{{ openstack_auth.system_scope }}"
       OS_REGION_NAME: "{{ openstack_region_name }}"
       OS_CACERT: "{{ openstack_cacert | default(omit) }}"
       HEAT_DOMAIN_ADMIN_PASSWORD: "{{ heat_domain_admin_password }}"
@@ -24,7 +24,7 @@
     labels:
       BOOTSTRAP:
     name: "bootstrap_heat"
-    restart_policy: no
+    restart_policy: oneshot
     volumes: "{{ heat_api.volumes | reject('equalto', '') | list }}"
   run_once: True
   delegate_to: "{{ groups[heat_api.group][0] }}"

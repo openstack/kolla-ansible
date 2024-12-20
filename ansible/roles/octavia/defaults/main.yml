@@ -20,7 +20,8 @@ octavia_services:
         enabled: "{{ enable_octavia }}"
         mode: "http"
         external: true
-        port: "{{ octavia_api_port }}"
+        external_fqdn: "{{ octavia_external_fqdn }}"
+        port: "{{ octavia_api_public_port }}"
         listen_port: "{{ octavia_api_listen_port }}"
         tls_backend: "{{ octavia_enable_tls_backend }}"
   octavia-driver-agent:
@@ -62,6 +63,12 @@ octavia_required_roles:
   - load-balancer_admin
   - load-balancer_quota_admin
 
+####################
+# Config Validate
+####################
+octavia_config_validation:
+  - generator: "/octavia/etc/config/octavia-config-generator.conf"
+    config: "/etc/octavia/octavia.conf"
 
 ####################
 # Database
@@ -70,18 +77,28 @@ octavia_database_name: "octavia"
 octavia_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia{% endif %}"
 octavia_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
+octavia_persistence_database_name: "octavia_persistence"
+octavia_persistence_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia_persistence{% endif %}"
+octavia_persistence_database_address: "{{ octavia_database_address }}"
+
 ####################
 # Database sharding
 ####################
 octavia_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
 octavia_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+octavia_persistence_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_persistence_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+octavia_persistence_database_shard_id: "{{ octavia_database_shard_id | int }}"
 octavia_database_shard:
   users:
     - user: "{{ octavia_database_user }}"
       password: "{{ octavia_database_password }}"
+    - user: "{{ octavia_persistence_database_user }}"
+      password: "{{ octavia_persistence_database_password }}"
   rules:
     - schema: "{{ octavia_database_name }}"
       shard_id: "{{ octavia_database_shard_id }}"
+    - schema: "{{ octavia_persistence_database_name }}"
+      shard_id: "{{ octavia_persistence_database_shard_id }}"
 
 
 ####################
@@ -89,23 +106,23 @@ octavia_database_shard:
 ####################
 octavia_tag: "{{ openstack_tag }}"
 
-octavia_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/octavia-api"
+octavia_api_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}octavia-api"
 octavia_api_tag: "{{ octavia_tag }}"
 octavia_api_image_full: "{{ octavia_api_image }}:{{ octavia_api_tag }}"
 
-octavia_driver_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/octavia-driver-agent"
+octavia_driver_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}octavia-driver-agent"
 octavia_driver_agent_tag: "{{ octavia_tag }}"
 octavia_driver_agent_image_full: "{{ octavia_driver_agent_image }}:{{ octavia_driver_agent_tag }}"
 
-octavia_health_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/octavia-health-manager"
+octavia_health_manager_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}octavia-health-manager"
 octavia_health_manager_tag: "{{ octavia_tag }}"
 octavia_health_manager_image_full: "{{ octavia_health_manager_image }}:{{ octavia_health_manager_tag }}"
 
-octavia_housekeeping_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/octavia-housekeeping"
+octavia_housekeeping_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}octavia-housekeeping"
 octavia_housekeeping_tag: "{{ octavia_tag }}"
 octavia_housekeeping_image_full: "{{ octavia_housekeeping_image }}:{{ octavia_housekeeping_tag }}"
 
-octavia_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/octavia-worker"
+octavia_worker_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}octavia-worker"
 octavia_worker_tag: "{{ octavia_tag }}"
 octavia_worker_image_full: "{{ octavia_worker_image }}:{{ octavia_worker_tag }}"
 
@@ -172,33 +189,33 @@ octavia_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/octavia:/dev-mode/octavia' if octavia_dev_mode | bool else '' }}"
   - "octavia_driver_agent:/var/run/octavia/"
 octavia_health_manager_default_volumes:
   - "{{ node_config_directory }}/octavia-health-manager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/octavia:/dev-mode/octavia' if octavia_dev_mode | bool else '' }}"
 octavia_driver_agent_default_volumes:
   - "{{ node_config_directory }}/octavia-driver-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/octavia:/dev-mode/octavia' if octavia_dev_mode | bool else '' }}"
   - "octavia_driver_agent:/var/run/octavia/"
 octavia_housekeeping_default_volumes:
   - "{{ node_config_directory }}/octavia-housekeeping/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/octavia:/dev-mode/octavia' if octavia_dev_mode | bool else '' }}"
 octavia_worker_default_volumes:
   - "{{ node_config_directory }}/octavia-worker/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-  - "{{ kolla_dev_repos_directory ~ '/octavia/octavia:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/octavia' if octavia_dev_mode | bool else '' }}"
+  - "{{ kolla_dev_repos_directory ~ '/octavia:/dev-mode/octavia' if octavia_dev_mode | bool else '' }}"
 
 octavia_extra_volumes: "{{ default_extra_volumes }}"
 octavia_api_extra_volumes: "{{ octavia_extra_volumes }}"
@@ -299,7 +316,7 @@ octavia_amp_security_groups:
     name: "lb-mgmt-sec-grp"
     enabled: true
     rules:
-      - protocol: icmp
+      - protocol: "{{ 'ipv6-icmp' if octavia_network_address_family == 'ipv6' else 'icmp' }}"
       - protocol: tcp
         src_port: 22
         dst_port: 22
@@ -347,6 +364,10 @@ octavia_amp_network:
 # Octavia management network subnet CIDR.
 octavia_amp_network_cidr: 10.1.0.0/24
 
+octavia_amp_router:
+  name: lb-mgmt-router
+  subnet: "{{ octavia_amp_network['subnet']['name'] }}"
+
 # Octavia provider drivers
 octavia_provider_drivers: "amphora:Amphora provider{% if neutron_plugin_agent == 'ovn' %}, ovn:OVN provider{% endif %}"
 octavia_provider_agents: "amphora_agent{% if neutron_plugin_agent == 'ovn' %}, ovn{% endif %}"
@@ -355,3 +376,5 @@ octavia_provider_agents: "amphora_agent{% if neutron_plugin_agent == 'ovn' %}, o
 # TLS
 ####################
 octavia_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+octavia_copy_certs: "{{ kolla_copy_ca_into_containers | bool or octavia_enable_tls_backend | bool }}"

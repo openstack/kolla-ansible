@@ -2,6 +2,7 @@
 - name: Creating shard root mysql user
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_user
     module_args:
       login_host: "{{ api_interface_address }}"
@@ -18,6 +19,7 @@
 - name: Creating mysql monitor user
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_user
     module_args:
       login_host: "{{ api_interface_address }}"
@@ -27,27 +29,14 @@
       name: "{{ mariadb_monitor_user }}"
       password: "{% if enable_proxysql | bool %}{{ mariadb_monitor_password }}{% endif %}"
       host: "%"
-      priv: "*.*:USAGE"
+      priv: "*.*:USAGE,REPLICATION CLIENT"
   when:
     - inventory_hostname == groups[mariadb_shard_group][0]
-
-- name: Creating the Mariabackup database
-  become: true
-  kolla_toolbox:
-    module_name: mysql_db
-    module_args:
-      login_host: "{{ api_interface_address }}"
-      login_port: "{{ mariadb_port }}"
-      login_user: "{{ mariadb_shard_database_user }}"
-      login_password: "{{ database_password }}"
-      name: "{{ mariadb_backup_database_schema }}"
-  when:
-    - enable_mariabackup | bool
-    - inventory_hostname == mariadb_backup_host
 
 - name: Creating database backup user and setting permissions
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_user
     module_args:
       login_host: "{{ api_interface_address }}"
@@ -57,7 +46,7 @@
       name: "{{ mariadb_backup_database_user }}"
       password: "{{ mariadb_backup_database_password }}"
       host: "%"
-      priv: "*.*:CREATE TABLESPACE,RELOAD,PROCESS,SUPER,LOCK TABLES,BINLOG MONITOR"
+      priv: "*.*:CREATE TABLESPACE,RELOAD,PROCESS,SUPER,LOCK TABLES,BINLOG MONITOR/{{ mariadb_backup_database_schema }}.mariadb_backup_history:CREATE"
       append_privs: True
   when:
     - enable_mariabackup | bool
@@ -66,6 +55,7 @@
 - name: Granting permissions on Mariabackup database to backup user
   become: true
   kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
     module_name: mysql_user
     module_args:
       login_host: "{{ api_interface_address }}"

@@ -4,22 +4,20 @@
     service_name: "ovsdpdk-db"
     service: "{{ ovsdpdk_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
   notify:
     - Waiting the ovs db service to be ready
     - Ensuring ovsdpdk bridges are properly setup indexed
     - Restart ovsdpdk-vswitchd container
     - Ensuring ovsdpdk bridges are properly setup named
     - wait for dpdk tunnel ip
-    - ovs-dpdk gather facts
+    - OVS-DPDK gather facts
 
 - name: Waiting the ovs db service to be ready
   vars:
@@ -56,7 +54,7 @@
     service_name: "ovsdpdk-vswitchd"
     service: "{{ ovsdpdk_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -64,8 +62,6 @@
     volumes: "{{ service.volumes }}"
     privileged: "{{ service.privileged | default(True) }}"
     dimensions: "{{ service.dimensions }}"
-  when:
-    - kolla_action != "config"
 
 - name: Ensuring ovsdpdk bridges are properly setup named
   vars:

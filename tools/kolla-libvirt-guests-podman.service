@@ -1,0 +1,17 @@
+[Unit]
+Description=Manage libvirt guests in kolla safely
+After=systemd-machined.service
+After=virt-guest-shutdown.target
+Requires=virt-guest-shutdown.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStopSec=610
+ExecStart=-/usr/bin/podman exec nova_libvirt /bin/rm -f /var/lib/libvirt/libvirt-guests
+ExecStart=-/usr/bin/podman start nova_compute
+ExecStop=/usr/bin/podman stop nova_compute
+ExecStop=/usr/bin/podman exec nova_libvirt /bin/sh -x /usr/libexec/libvirt-guests.sh shutdown

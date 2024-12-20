@@ -7,13 +7,13 @@ multipathd_services:
     ipc_mode: "host"
     privileged: True
     image: "{{ multipathd_image_full }}"
-    volumes: "{{ multipathd_default_volumes + multipathd_extra_volumes }}"
+    volumes: "{{ multipathd_default_volumes + multipathd_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
 
 
 ####################
 # Docker
 ####################
-multipathd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/multipathd"
+multipathd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}multipathd"
 multipathd_tag: "{{ openstack_tag }}"
 multipathd_image_full: "{{ multipathd_image }}:{{ multipathd_tag }}"
 
@@ -23,7 +23,7 @@ multipathd_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
-  - "/run/:/run/:shared"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "/sys/kernel/config:/configfs"
 multipathd_extra_volumes: "{{ default_extra_volumes }}"

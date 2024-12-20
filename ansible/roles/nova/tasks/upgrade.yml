@@ -1,10 +1,36 @@
 ---
-- name: Check nova upgrade status
+# TODO(bbezak): Remove this task in the Dalmatian cycle.
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_nova_auth }}"
+    service_ks_register_user_roles: "{{ nova_ks_user_roles }}"
+
+# Create new set of configs on nodes
+- import_tasks: config.yml
+
+- name: Run Nova upgrade checks
   become: true
-  command: "{{ kolla_container_engine }} exec -t nova_api nova-status upgrade check"
+  vars:
+    nova_api: "{{ nova_services['nova-api'] }}"
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: False
+    environment:
+      KOLLA_UPGRADE_CHECK:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ nova_api.image }}"
+    labels:
+      UPGRADE:
+    name: "nova_upgrade_checks"
+    restart_policy: oneshot
+    volumes: "{{ nova_api_default_volumes + nova_api_extra_volumes }}"
+  run_once: True
   register: nova_upgrade_check_stdout
-  when: inventory_hostname == groups['nova-api'][0]
+  delegate_to: "{{ groups['nova-api'][0] }}"
   failed_when: false
+  check_mode: false
 
 - name: Upgrade status check result
   fail:
@@ -17,14 +43,23 @@
 
 - name: Stopping top level nova services
   become: true
-  kolla_docker:
+  kolla_container:
     action: "stop_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ item.value.container_name }}"
-  with_dict: "{{ nova_services }}"
+  with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
   when:
-    - inventory_hostname in groups[item.value.group]
-    - item.value.enabled | bool
     - nova_safety_upgrade | bool
 
-- import_tasks: rolling_upgrade.yml
+- import_tasks: check-containers.yml
+
+# TODO(donghm): Flush_handlers to restart nova services
+# should be run in serial nodes to decrease downtime if
+# the previous task did not run. Update when the
+# Ansible strategy module for rolling upgrade is finished.
+
+- name: Flush handlers
+  meta: flush_handlers
+
+# NOTE(dszumski): The Nova upgrade is not finished here and
+# continues in subsequent tasks.

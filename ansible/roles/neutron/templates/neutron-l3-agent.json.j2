@@ -18,7 +18,13 @@
             "dest": "/etc/neutron/neutron_vpnaas.conf",
             "owner": "neutron",
             "perm": "0600"
-        },
+        }{% if enable_neutron_fwaas | bool %},
+        {
+            "source": "{{ container_config_directory }}/fwaas_driver.ini",
+            "dest": "/etc/neutron/fwaas_driver.ini",
+            "owner": "neutron",
+            "perm": "0600"
+        }{% endif %},
         {
             "source": "{{ container_config_directory }}/l3_agent.ini",
             "dest": "/etc/neutron/l3_agent.ini",
@@ -29,6 +35,12 @@
             "source": "{{ container_config_directory }}/{{ neutron_policy_file }}",
             "dest": "/etc/neutron/{{ neutron_policy_file }}",
             "owner": "neutron",
+            "perm": "0600"
+        }{% endif %}{% if neutron_copy_certs | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
             "perm": "0600"
         }{% endif %}
     ],

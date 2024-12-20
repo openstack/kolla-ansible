@@ -11,10 +11,26 @@ Cinder can be deployed using Kolla and supports the following storage
 backends:
 
 * ceph
-* hnas_nfs
 * iscsi
 * lvm
 * nfs
+
+HA
+~~
+
+When using cinder-volume in an HA configuration (more than one host in
+cinder-volume/storage group):
+
+- Make sure that the driver you are using supports `Active/Active High Availability <https://docs.openstack.org/cinder/|KOLLA_OPENSTACK_RELEASE|/reference/support-matrix.html#operation_active_active_ha>`
+  configuration
+- Add ``cinder_cluster_name: example_cluster_name`` to your ``globals.yml`` (or
+  host_vars for advanced multi-cluster configuration)
+
+.. note::
+
+   In case of non-standard configurations (e.g. mixed HA and non-HA Cinder backends),
+   you can skip the prechecks by setting ``cinder_cluster_skip_precheck`` to
+   ``true``.
 
 LVM
 ~~~
@@ -201,6 +217,34 @@ in Kolla, the following parameter must be specified in ``globals.yml``:
 All configuration for custom NFS backend should be performed
 via ``cinder.conf`` in config overrides directory.
 
+Cinder-Backup with S3 Backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuring Cinder-Backup for S3 includes the following steps:
+
+#. Enable Cinder-Backup S3 backend in ``globals.yml``:
+
+.. code-block:: yaml
+
+   cinder_backup_driver: "s3"
+
+#. Configure S3 connection details in ``/etc/kolla/globals.yml``:
+
+   * ``cinder_backup_s3_url`` (example: ``http://127.0.0.1:9000``)
+   * ``cinder_backup_s3_access_key`` (example: ``minio``)
+   * ``cinder_backup_s3_bucket`` (example: ``cinder``)
+   * ``cinder_backup_s3_secret_key`` (example: ``admin``)
+
+#. If you wish to use a single S3 backend for all supported services,
+use the following variables:
+
+   * ``s3_url``
+   * ``s3_access_key``
+   * ``s3_glance_bucket``
+   * ``s3_secret_key``
+
+   All Cinder-Backup S3 configurations use these options as default values.
+
 Customizing backend names in cinder.conf
 ----------------------------------------
 
@@ -229,9 +273,6 @@ that appears in cinder.conf:
    * - Network File System (NFS)
      - cinder_backend_nfs_name
      - nfs-1
-   * - Hitachi NAS Platform NFS
-     - cinder_backend_hnas_nfs_name
-     - hnas-nfs
    * - VMware Virtual Machine Disk File
      - cinder_backend_vmwarevc_vmdk_name
      - vmwarevc-vmdk
@@ -247,6 +288,12 @@ that appears in cinder.conf:
    * - Pure Storage FlashArray for OpenStack
      - cinder_backend_pure_fc_name
      - Pure-FlashArray-fc
+   * - Pure Storage FlashArray for OpenStack
+     - cinder_backend_pure_roce_name
+     - Pure-FlashArray-roce
+   * - Pure Storage FlashArray for OpenStack
+     - cinder_backend_pure_nvme_tcp_name
+     - Pure-FlashArray-nvme-tcp
 
 These are the names you use when
 `configuring <https://docs.openstack.org/cinder/latest/admin/multi-backend.html#volume-type>`_

@@ -1,0 +1,22 @@
+---
+- include_tasks: lookup_cluster.yml
+  when:
+    - inventory_hostname in groups['ovn-nb-db'] or
+      inventory_hostname in groups['ovn-sb-db']
+
+- include_tasks: bootstrap-initial.yml
+  when:
+    - inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '') or
+      inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '')
+
+- import_tasks: config.yml
+
+- import_tasks: check-containers.yml
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- import_tasks: bootstrap-db.yml
+  when:
+    - inventory_hostname in groups['ovn-nb-db']
+    - inventory_hostname in groups['ovn-sb-db']

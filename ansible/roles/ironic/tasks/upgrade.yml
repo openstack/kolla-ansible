@@ -9,7 +9,7 @@
     --os-password {{ openstack_auth.password }}
     --os-identity-api-version 3
     --os-user-domain-name {{ openstack_auth.user_domain_name }}
-    --os-system-scope {{ openstack_auth.system_scope }}
+    --os-system-scope "all"
     --os-region-name {{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
     baremetal node list --format json --column "Provisioning State"
@@ -27,33 +27,15 @@
   run_once: true
   when: not ironic_upgrade_skip_wait_check | bool
 
-# TODO(yoctozepto): Remove this task in Zed.
-- name: Remove old Ironic containers
-  become: true
-  kolla_docker:
-    action: "stop_and_remove_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item }}"
-  with_items:
-    # NOTE(yoctozepto): Removing conductor to avoid it
-    # thinking that the tftp and http servers are available.
-    - ironic_conductor
-    - ironic_pxe
-    - ironic_ipxe
-
 - include_tasks: rolling_upgrade.yml
   when: ironic_enable_rolling_upgrade | bool
 
 - include_tasks: legacy_upgrade.yml
   when: not ironic_enable_rolling_upgrade | bool
 
-# TODO(yoctozepto): Remove this task in Zed.
-- name: Remove old Ironic volumes
-  become: true
-  kolla_docker:
-    action: "remove_volume"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ item }}"
-  with_items:
-    - ironic_pxe
-    - ironic_ipxe
+# TODO(bbezak): Remove this task in the Dalmatian cycle.
+- import_role:
+    name: service-ks-register
+  vars:
+    service_ks_register_auth: "{{ openstack_ironic_auth }}"
+    service_ks_register_user_roles: "{{ ironic_ks_user_roles }}"

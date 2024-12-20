@@ -1,0 +1,83 @@
+---
+- name: Bootstrap new cluster
+  block:
+
+    - name: Set bootstrap args fact for NB (new cluster)
+      set_fact:
+        ovn_nb_db_bootstrap_args: "{% if groups['ovn-nb-db'] | length > 1 and inventory_hostname != groups['ovn-nb-db'][0] %} --db-nb-cluster-remote-addr={{ 'api' | kolla_address(groups['ovn-nb-db'][0]) | put_address_in_context('url') }} {% endif %}"
+      when: groups['ovn-nb-db_leader'] is not defined and groups['ovn-nb-db_follower'] is not defined
+
+    - name: Set bootstrap args fact for SB (new cluster)
+      set_fact:
+        ovn_sb_db_bootstrap_args: "{% if groups['ovn-sb-db'] | length > 1 and inventory_hostname != groups['ovn-sb-db'][0] %} --db-sb-cluster-remote-addr={{ 'api' | kolla_address(groups['ovn-sb-db'][0]) | put_address_in_context('url') }} {% endif %}"
+      when: groups['ovn-sb-db_leader'] is not defined and groups['ovn-sb-db_follower'] is not defined
+
+    - name: Check NB cluster status
+      command: >
+        {{ kolla_container_engine }} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl
+        cluster/status OVN_Northbound
+      become: true
+      changed_when: false
+      register: ovn_nb_db_cluster_status
+      when: groups['ovn-nb-db_leader'] is defined and inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '')
+      delegate_to: "{{ groups['ovn-nb-db_leader'][0] }}"
+
+    - name: Check SB cluster status
+      command: >
+        {{ kolla_container_engine }} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl
+        cluster/status OVN_Southbound
+      become: true
+      changed_when: false
+      register: ovn_sb_db_cluster_status
+      when: groups['ovn-sb-db_leader'] is defined and inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '')
+      delegate_to: "{{ groups['ovn-sb-db_leader'][0] }}"
+
+    - name: Remove an old node with the same ip address as the new node in NB DB
+      vars:
+        ovn_nb_old_node: "{{ ovn_nb_db_cluster_status | regex_search('\\((\\w{4}) at tcp:' + api_interface_address + ':6643\\)', '\\1') | first }}"
+      become: true
+      command: >
+        {{ kolla_container_engine }} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl
+        cluster/kick OVN_Northbound {{ ovn_nb_old_node }}
+      when:
+        - ovn_nb_db_cluster_status.stdout is defined
+        - (ovn_nb_db_cluster_status.stdout is search('at tcp:' + api_interface_address)) and inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '')
+      delegate_to: "{{ groups['ovn-nb-db_leader'][0] }}"
+
+    - name: Remove an old node with the same ip address as the new node in SB DB
+      vars:
+        ovn_sb_old_node: "{{ ovn_sb_db_cluster_status | regex_search('\\((\\w{4}) at tcp:' + api_interface_address + ':6644\\)', '\\1') | first }}"
+      become: true
+      command: >
+        {{ kolla_container_engine }} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl
+        cluster/kick OVN_Southbound {{ ovn_sb_old_node }}
+      when:
+        - ovn_sb_db_cluster_status.stdout is defined
+        - (ovn_sb_db_cluster_status.stdout is search('at tcp:' + api_interface_address)) and inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '')
+      delegate_to: "{{ groups['ovn-sb-db_leader'][0] }}"
+
+    - name: Set bootstrap args fact for NB (new member)
+      set_fact:
+        ovn_nb_db_bootstrap_args: "--db-nb-cluster-remote-addr={{ 'api' | kolla_address(groups.get('ovn-nb-db_leader', groups['ovn-nb-db'])[0] | default()) | put_address_in_context('url') }}"
+      when: inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '') and groups['ovn-nb-db_leader'] is defined
+
+    - name: Set bootstrap args fact for SB (new member)
+      set_fact:
+        ovn_sb_db_bootstrap_args: "--db-sb-cluster-remote-addr={{ 'api' | kolla_address(groups.get('ovn-sb-db_leader', groups['ovn-sb-db'])[0] | default()) | put_address_in_context('url') }}"
+      when: inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '') and groups['ovn-sb-db_leader'] is defined
+
+    - import_tasks: config.yml
+
+    - import_tasks: check-containers.yml
+
+    - name: Flush handlers
+      meta: flush_handlers
+
+    - import_tasks: bootstrap-db.yml
+
+    - name: Unset bootstrap args fact
+      set_fact:
+        ovn_nb_db_bootstrap_args:
+        ovn_sb_db_bootstrap_args:
+
+  any_errors_fatal: true

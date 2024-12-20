@@ -4,7 +4,7 @@
     service_name: "ceilometer-notification"
     service: "{{ ceilometer_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -12,15 +12,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart ceilometer-central container
   vars:
     service_name: "ceilometer-central"
     service: "{{ ceilometer_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -28,15 +26,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart ceilometer-compute container
   vars:
     service_name: "ceilometer-compute"
     service: "{{ ceilometer_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -45,15 +41,13 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"
 
 - name: Restart ceilometer-ipmi container
   vars:
     service_name: "ceilometer-ipmi"
     service: "{{ ceilometer_services[service_name] }}"
   become: true
-  kolla_docker:
+  kolla_container:
     action: "recreate_or_restart_container"
     common_options: "{{ docker_common_options }}"
     name: "{{ service.container_name }}"
@@ -61,5 +55,3 @@
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
-  when:
-    - kolla_action != "config"

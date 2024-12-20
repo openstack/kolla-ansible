@@ -20,13 +20,20 @@ Neutron external interface is used for communication with the external world,
 for example provider networks, routers and floating IPs.
 For setting up the neutron external interface modify
 ``/etc/kolla/globals.yml`` setting ``neutron_external_interface`` to the
-desired interface name. This interface is used by hosts in the ``network``
-group. It is also used by hosts in the ``compute`` group if
+desired interface name or comma-separated list of interface names. Its default
+value is ``eth1``. These external interfaces are used by hosts in the
+``network`` group.  They are also used by hosts in the ``compute`` group if
 ``enable_neutron_provider_networks`` is set or DVR is enabled.
 
-The interface is plugged into a bridge (Open vSwitch or Linux Bridge, depending
-on the driver) defined by ``neutron_bridge_name``, which defaults to ``br-ex``.
-The default Neutron physical network is ``physnet1``.
+The external interfaces are each plugged into a bridge (Open vSwitch or Linux
+Bridge, depending on the driver) defined by ``neutron_bridge_name``, which
+defaults to ``br-ex``. When there are multiple external interfaces,
+``neutron_bridge_name`` should be a comma-separated list of the same length.
+
+The default Neutron physical network is ``physnet1``, or ``physnet1`` to
+``physnetN`` when there are multiple external network interfaces. This may be
+changed by setting ``neutron_physical_networks`` to a comma-separated list of
+networks of the same length.
 
 Example: single interface
 -------------------------
@@ -53,6 +60,30 @@ These two lists are "zipped" together, such that ``eth1`` is plugged into the
 ``br-ex1`` bridge, and ``eth2`` is plugged into the ``br-ex2`` bridge.  Kolla
 Ansible maps these interfaces to Neutron physical networks ``physnet1`` and
 ``physnet2`` respectively.
+
+Example: custom physical networks
+---------------------------------
+
+Sometimes we may want to customise the physical network names used. This may be
+to allow for not all hosts having access to all physical networks, or to use
+more descriptive names.
+
+For example, in an environment with a separate physical network for Ironic
+provisioning, controllers might have access to two physical networks:
+
+.. code-block:: yaml
+
+   neutron_external_interface: "eth1,eth2"
+   neutron_bridge_name: "br-ex1,br-ex2"
+   neutron_physical_network: "physnet1,physnet2"
+
+While compute nodes have access only to ``physnet2``.
+
+.. code-block:: yaml
+
+   neutron_external_interface: "eth1"
+   neutron_bridge_name: "br-ex1"
+   neutron_physical_network: "physnet2"
 
 Example: shared interface
 -------------------------
@@ -87,6 +118,47 @@ created and configured by Ansible (this is also necessary when
 ``neutron_external_interface`` is configured correctly for hosts in the
 ``compute`` group.
 
+Internal DNS resolution
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The Networking service enables users to control the name assigned
+to ports using two attributes associated with ports, networks, and
+floating IPs. The following table shows the attributes available for each
+one of these resources:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 30
+
+   * - Resource
+     - dns_name
+     - dns_domain
+   * - Ports
+     - Yes
+     - Yes
+   * - Networks
+     - No
+     - Yes
+   * - Floating IPs
+     - Yes
+     - Yes
+
+To enable this functionality, you need to set the following in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   neutron_dns_integration: "yes"
+   neutron_dns_domain: "example.org."
+
+.. important::
+   The ``neutron_dns_domain`` value has to be different to ``openstacklocal``
+   (its default value) and has to end with a period ``.``.
+
+.. note::
+   The integration of the Networking service with an external DNSaaS (DNS-as-a-Service)
+   is described in :ref:`designate-guide`.
+
 OpenvSwitch (ml2/ovs)
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -108,6 +180,36 @@ to using the native OVS firewall driver by employing a configuration override
 
    [securitygroup]
    firewall_driver = openvswitch
+
+L3 agent high availability
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+L3 and DHCP agents can be created in a high availability (HA) state with:
+
+.. code-block:: yaml
+
+   enable_neutron_agent_ha: "yes"
+
+This allows networking to fail over across controllers if the active agent is
+stopped. If this option is enabled, it can be advantageous to also set:
+
+.. code-block:: yaml
+
+   neutron_l3_agent_failover_delay:
+
+Agents sometimes need to be restarted. This delay (in seconds) is invoked
+between the restart operations of each agent. When set properly, it will stop
+network outages caused by all agents restarting at the same time. The exact
+length of time it takes to restart is dependent on hardware and the number of
+routers present. A general rule of thumb is to set the value to ``40 + 3n``
+where ``n`` is the number of routers. For example, with 5 routers,
+``40 + (3 * 5) = 55`` so the value could be set to 55. A much better approach
+however would be to first time how long an outage lasts, then set the value
+accordingly.
+
+The default value is 0. A nonzero starting value would only result in
+outages if the failover time was greater than the delay, which would be more
+difficult to diagnose than consistent behaviour.
 
 OVN (ml2/ovn)
 ~~~~~~~~~~~~~
@@ -141,11 +243,20 @@ This might be desired for example when Ironic bare metal nodes are
 used as a compute service. Currently OVN is not able to answer DHCP
 queries on port type external, this is where Neutron agent helps.
 
+In order to deploy Neutron OVN Agent you need to set the following:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   neutron_enable_ovn_agent: "yes"
+
+Currently the agent is only needed for QoS for hardware offloaded ports.
+
 Mellanox Infiniband (ml2/mlnx)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to add ``mlnx_infiniband`` to the list of mechanism driver
-for ``neutron`` to support Infiniband virtual funtions, you need to
+for ``neutron`` to support Infiniband virtual functions, you need to
 set the following (assuming neutron SR-IOV agent is also enabled using
 ``enable_neutron_sriov`` flag):
 
@@ -175,3 +286,25 @@ authentication in external systems (e.g. in ``networking-generic-switch`` or
 
 You can set ``neutron_ssh_key`` variable in ``passwords.yml`` to control the
 used key.
+
+Custom Kernel Module Configuration for Neutron
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Neutron may require specific kernel modules for certain functionalities.
+While there are predefined default modules in the Ansible role, users have
+the flexibility to add custom modules as needed.
+
+To add custom kernel modules for Neutron, modify the configuration in
+``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   neutron_modules_extra:
+     - name: 'nf_conntrack_tftp'
+       params: 'hashsize=4096'
+
+In this example:
+
+- `neutron_modules_extra`: Allows users to specify additional modules and
+  their associated parameters. The given configuration adjusts the
+  `hashsize` parameter for the `nf_conntrack_tftp` module.

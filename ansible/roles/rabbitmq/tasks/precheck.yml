@@ -8,9 +8,11 @@
 - name: Get container facts
   become: true
   kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
     name:
       - rabbitmq
-      - outward_rabbitmq
+  check_mode: false
   register: container_facts
 
 - name: Checking free port for RabbitMQ
@@ -62,6 +64,7 @@
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
   command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
+  check_mode: false
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
 
@@ -75,119 +78,82 @@
     - not item.1 is match('^'+('api' | kolla_address(item.0.item))+'\\b')
 
 - name: Check if TLS certificate exists for RabbitMQ
+  assert:
+    that: cert | length > 0
+    fail_msg: No TLS certificate provided for RabbitMQ.
   vars:
     cert: "{{ query('first_found', paths, errors='ignore') }}"
     paths:
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/rabbitmq-cert.pem"
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
       - "{{ kolla_certificates_dir }}/rabbitmq-cert.pem"
-  fail:
-    msg: No TLS certificate provided for RabbitMQ.
   when:
+    - not kolla_externally_managed_cert | bool
     - rabbitmq_enable_tls | bool
-    - cert | length == 0
 
 - name: Check if TLS key exists for RabbitMQ
+  assert:
+    that: key | length > 0
+    fail_msg: No TLS key provided for RabbitMQ.
   vars:
     key: "{{ query('first_found', paths, errors='ignore') }}"
     paths:
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/rabbitmq-key.pem"
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
       - "{{ kolla_certificates_dir }}/rabbitmq-key.pem"
-  fail:
-    msg: No TLS key provided for RabbitMQ.
   when:
+    - not kolla_externally_managed_cert | bool
     - rabbitmq_enable_tls | bool
-    - key | length == 0
 
-- name: Checking free port for outward RabbitMQ
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ outward_rabbitmq_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_outward_rabbitmq | bool
-    - inventory_hostname in groups['outward-rabbitmq']
-    - container_facts['outward_rabbitmq'] is not defined
+- block:
+    - name: List RabbitMQ policies
+      become: true
+      command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_policies --silent"
+      register: rabbitmq_policies
+      changed_when: false
+      check_mode: false
 
-- name: Checking free port for outward RabbitMQ Management
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ outward_rabbitmq_management_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_outward_rabbitmq | bool
-    - inventory_hostname in groups['outward-rabbitmq']
-    - container_facts['outward_rabbitmq'] is not defined
+    - name: Check if RabbitMQ HA needs to be configured
+      assert:
+        that: "'ha-all' in rabbitmq_policies.stdout"
+        fail_msg: >
+          om_enable_rabbitmq_high_availability is True but no mirroring policy has been found.
+          Currently the procedure to migrate from transient non-mirrored queues to durable mirrored queues is manual.
+          Please follow the process described here: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#high-availability.
+          Note that this process may take several hours on larger systems, and may cause a degradation in performance at large scale.
+          If you do not wish to enable this feature, set om_enable_rabbitmq_high_availability to False.
 
-- name: Checking free port for outward RabbitMQ Cluster
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ outward_rabbitmq_cluster_port }}"
-    connect_timeout: 1
-    state: stopped
+  run_once: true
   when:
-    - enable_outward_rabbitmq | bool
-    - inventory_hostname in groups['outward-rabbitmq']
-    - container_facts['outward_rabbitmq'] is not defined
+    - container_facts['rabbitmq'] is defined
+    - om_enable_rabbitmq_high_availability | bool
+  tags: rabbitmq-ha-precheck
 
-- name: Checking free port for outward RabbitMQ EPMD
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ outward_rabbitmq_epmd_port }}"
-    connect_timeout: 1
-    state: stopped
-  when:
-    - enable_outward_rabbitmq | bool
-    - inventory_hostname in groups['outward-rabbitmq']
-    - container_facts['outward_rabbitmq'] is not defined
+- block:
+    - name: List RabbitMQ queues
+      become: true
+      command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
+      register: rabbitmq_queues
+      changed_when: false
+      check_mode: false
 
-- name: Check if all outward rabbit hostnames are resolvable
-  vars:
-    nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
-  command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
-  changed_when: false
-  register: outward_rabbitmq_hostnames
-  with_items: "{{ groups['outward-rabbitmq'] }}"
-  when:
-    - enable_outward_rabbitmq | bool
+    - name: Check if RabbitMQ quorum queues need to be configured
+      assert:
+        that: "{{ item.type == 'quorum' }}"
+        fail_msg: >
+          om_enable_rabbitmq_quorum_queues is True but {{ item.name }} is a non-quorum queue.
+          Currently the procedure to migrate to quorum queues is manual.
+          Please follow the process described here: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#high-availability.
+          Note that this process may take several hours on larger systems, and may cause a degradation in performance at large scale.
+          If you do not wish to enable this feature, set om_enable_rabbitmq_quorum_queues to False.
+      loop: "{{ (rabbitmq_queues.stdout | from_json) if rabbitmq_queues is not skipped else [] }}"
+      loop_control:
+        label: "{{ item.name }}"
+      # TODO(mattcress): remove skipping reply and fanout once https://review.opendev.org/c/openstack/oslo.messaging/+/888479 is merged.
+      when: not (item.name is search('reply_') or item.name is search('_fanout_'))
 
-- name: Check if each rabbit hostname resolves uniquely to the proper IP address
-  fail:
-    msg: Hostname has to resolve uniquely to the IP address of api_interface
-  with_subelements:
-    - "{{ outward_rabbitmq_hostnames.results }}"
-    - stdout_lines
+  run_once: true
   when:
-    - enable_outward_rabbitmq | bool
-    - not item.1 is match('^'+('api' | kolla_address(item.0.item))+'\\b')
-
-- name: Check if TLS certificate exists for outward RabbitMQ
-  vars:
-    cert: "{{ query('first_found', paths, errors='ignore') }}"
-    paths:
-      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/outward_rabbitmq-cert.pem"
-      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-cert.pem"
-      - "{{ kolla_certificates_dir }}/outward_rabbitmq-cert.pem"
-  fail:
-    msg: No TLS certificate provided for outward RabbitMQ.
-  when:
-    - enable_outward_rabbitmq | bool
-    - rabbitmq_enable_tls | bool
-    - cert | length == 0
-
-- name: Check if TLS key exists for outward RabbitMQ
-  vars:
-    key: "{{ query('first_found', paths, errors='ignore') }}"
-    paths:
-      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/outward_rabbitmq-key.pem"
-      - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}-key.pem"
-      - "{{ kolla_certificates_dir }}/outward_rabbitmq-key.pem"
-  fail:
-    msg: No TLS key provided for outward RabbitMQ.
-  when:
-    - enable_outward_rabbitmq | bool
-    - rabbitmq_enable_tls | bool
-    - key | length == 0
+    - container_facts['rabbitmq'] is defined
+    - om_enable_rabbitmq_quorum_queues | bool
+  tags: rabbitmq-ha-precheck
