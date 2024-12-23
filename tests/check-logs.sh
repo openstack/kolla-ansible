@@ -8,7 +8,7 @@ set -o pipefail
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
-declare -a fluentchecks=("got incomplete line before first line" "pattern not matched:")
+declare -a fluentchecks=("got incomplete line before first line" "pattern not matched:" "unreadable. It is excluded and would be examined next time." "Permission denied @ rb_sysopen")
 
 function check_openstack_log_file_for_level {
     # $1: file
@@ -26,7 +26,7 @@ function check_fluentd_log_file_for_level {
 function check_fluentd_log_file_for_content {
     # $1: file
     # $2: content
-    sudo egrep " $2 " $1
+    sudo egrep "$2" $1
 }
 
 function check_docker_log_file_for_sigkill {
@@ -96,7 +96,7 @@ for string in "${fluentchecks[@]}"; do
     if check_fluentd_log_file_for_content $fluentd_log_file "$string" >/dev/null; then
         any_critical=1
         echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_file"
-        echo "$string" >> $fluentd_file
+        echo "Check: $string" >> $fluentd_file
         check_fluentd_log_file_for_content $fluentd_log_file "$string" >> $fluentd_file
         echo >> $fluentd_file
     fi

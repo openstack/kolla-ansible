@@ -28,6 +28,8 @@ copy_logs() {
     elif [ "$CONTAINER_ENGINE" = "podman" ]; then
         cp -rL /etc/containers/ ${LOG_DIR}/system_configs/
     fi
+    # List all permissions to log files
+    ls -lLR /var/log/kolla > ${LOG_DIR}/system_logs/ls_lr_var_log_kolla.txt
     # Remove /var/log/kolla link to not double the data uploaded
     unlink /var/log/kolla
     cp -rvnL /var/log/* ${LOG_DIR}/system_logs/
