@@ -58,7 +58,7 @@ execution, which is described in
 
    .. code-block:: console
 
-      sudo apt install git python3-dev libffi-dev gcc libssl-dev
+      sudo apt install git python3-dev libffi-dev gcc libssl-dev libdbus-glib-1-dev
 
 Install dependencies for the virtual environment
 ------------------------------------------------
