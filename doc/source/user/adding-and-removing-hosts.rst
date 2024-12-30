@@ -30,21 +30,21 @@ with running ``bootstrap-servers`` on an existing system.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> bootstrap-servers [ --limit <limit> ]
+   kolla-ansible bootstrap-servers -i <inventory> [ --limit <limit> ]
 
 Pull down container images to the new hosts. The ``--limit`` argument may be
 used and only needs to include the new hosts.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> pull [ --limit <limit> ]
+   kolla-ansible pull -i <inventory> [ --limit <limit> ]
 
 Deploy containers to the new hosts. If using a ``--limit`` argument, ensure
 that all controllers are included, e.g. via ``--limit control``.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> deploy [ --limit <limit> ]
+   kolla-ansible deploy -i <inventory> [ --limit <limit> ]
 
 The new controllers are now deployed. It is recommended to perform testing
 of the control plane at this point to verify that the new controllers are
@@ -69,21 +69,21 @@ an existing system.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> bootstrap-servers [ --limit <limit> ]
+   kolla-ansible bootstrap-servers -i <inventory> [ --limit <limit> ]
 
 Pull down container images to the new hosts. The ``--limit`` argument may be
 used and only needs to include the new hosts.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> pull [ --limit <limit> ]
+   kolla-ansible pull -i <inventory> [ --limit <limit> ]
 
 Deploy containers on the new hosts. The ``--limit`` argument may be used and
 only needs to include the new hosts.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> deploy [ --limit <limit> ]
+   kolla-ansible deploy -i <inventory> [ --limit <limit> ]
 
 The new compute nodes are now deployed. It is recommended to perform
 testing of the compute nodes at this point to verify that they are functioning
@@ -145,7 +145,7 @@ Stop all services running on the hosts being removed:
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> stop --yes-i-really-really-mean-it [ --limit <limit> ]
+   kolla-ansible stop -i <inventory> --yes-i-really-really-mean-it [ --limit <limit> ]
 
 Remove the hosts from the Ansible inventory.
 
@@ -154,7 +154,7 @@ as MariaDB and RabbitMQ. Use a suitable limit, such as ``--limit control``.
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> deploy [ --limit <limit> ]
+   kolla-ansible deploy -i <inventory> [ --limit <limit> ]
 
 Perform testing to verify that the remaining cluster hosts are operating
 correctly.
@@ -212,7 +212,7 @@ Stop all services running on the hosts being removed:
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> stop --yes-i-really-really-mean-it [ --limit <limit> ]
+   kolla-ansible stop -i <inventory> --yes-i-really-really-mean-it [ --limit <limit> ]
 
 Remove the hosts from the Ansible inventory.
 

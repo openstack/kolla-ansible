@@ -225,7 +225,7 @@ Deploy Octavia with Kolla Ansible:
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> deploy --tags common,horizon,octavia
+   kolla-ansible deploy -i <inventory> --tags common,horizon,octavia
 
 Once the installation is completed, you need to :ref:`register an amphora image
 in glance <octavia-amphora-image>`.
@@ -333,7 +333,7 @@ Now deploy Octavia:
 
 .. code-block:: console
 
-   kolla-ansible -i <inventory> deploy --tags common,horizon,octavia
+   kolla-ansible deploy -i <inventory> --tags common,horizon,octavia
 
 .. _octavia-amphora-image:
 

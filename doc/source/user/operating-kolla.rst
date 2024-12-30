@@ -224,48 +224,48 @@ Kolla Ansible CLI
 When running the ``kolla-ansible`` CLI, additional arguments may be passed to
 ``ansible-playbook`` via the ``EXTRA_OPTS`` environment variable.
 
-``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
+``kolla-ansible deploy -i INVENTORY`` is used to deploy and start all Kolla
 containers.
 
-``kolla-ansible -i INVENTORY destroy`` is used to clean up containers and
+``kolla-ansible destroy -i INVENTORY`` is used to clean up containers and
 volumes in the cluster.
 
-``kolla-ansible -i INVENTORY mariadb_recovery`` is used to recover a
+``kolla-ansible mariadb_recovery -i INVENTORY`` is used to recover a
 completely stopped mariadb cluster.
 
-``kolla-ansible -i INVENTORY prechecks`` is used to check if all requirements
+``kolla-ansible rechecks -i INVENTORY`` is used to check if all requirements
 are meet before deploy for each of the OpenStack services.
 
-``kolla-ansible -i INVENTORY post-deploy`` is used to do post deploy on deploy
+``kolla-ansible post-deploy -i INVENTORY`` is used to do post deploy on deploy
 node to get the admin openrc file.
 
-``kolla-ansible -i INVENTORY pull`` is used to pull all images for containers.
+``kolla-ansible pull -i INVENTORY`` is used to pull all images for containers.
 
-``kolla-ansible -i INVENTORY reconfigure`` is used to reconfigure OpenStack
+``kolla-ansible reconfigure -i INVENTORY`` is used to reconfigure OpenStack
 service.
 
-``kolla-ansible -i INVENTORY upgrade`` is used to upgrades existing OpenStack
+``kolla-ansible upgrade -i INVENTORY`` is used to upgrades existing OpenStack
 Environment.
 
-``kolla-ansible -i INVENTORY stop`` is used to stop running containers.
+``kolla-ansible stop -i INVENTORY`` is used to stop running containers.
 
-``kolla-ansible -i INVENTORY deploy-containers`` is used to check and if
+``kolla-ansible deploy-containers -i INVENTORY`` is used to check and if
 necessary update containers, without generating configuration.
 
-``kolla-ansible -i INVENTORY prune-images`` is used to prune orphaned Docker
+``kolla-ansible prune-images -i INVENTORY`` is used to prune orphaned Docker
 images on hosts.
 
-``kolla-ansible -i INVENTORY genconfig`` is used to generate configuration
+``kolla-ansible genconfig -i INVENTORY`` is used to generate configuration
 files for enabled OpenStack services, without then restarting the containers so
 it is not applied right away.
 
-``kolla-ansible -i INVENTORY1 -i INVENTORY2 ...`` Multiple inventories can be
+``kolla-ansible ... -i INVENTORY1 -i INVENTORY2`` Multiple inventories can be
 specified by passing the ``--inventory`` or ``-i`` command line option multiple
 times. This can be useful to share configuration between multiple environments.
 Any common configuration can be set in ``INVENTORY1`` and ``INVENTORY2`` can be
 used to set environment specific details.
 
-``kolla-ansible -i INVENTORY gather-facts`` is used to gather Ansible facts,
+``kolla-ansible gather-facts -i INVENTORY`` is used to gather Ansible facts,
 for example to populate a fact cache.
 
 Using Hashicorp Vault for password storage
