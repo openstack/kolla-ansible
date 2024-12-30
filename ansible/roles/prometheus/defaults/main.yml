@@ -15,7 +15,8 @@ prometheus_services:
         port: "{{ prometheus_port }}"
         active_passive: "{{ prometheus_active_passive | bool }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /-/ready HTTP/1.0"
+          - "http-check send hdr Authorization 'Basic {{ (prometheus_haproxy_user + ':' + prometheus_haproxy_password) | b64encode }}'"
       prometheus_server_external:
         enabled: "{{ enable_prometheus_server_external | bool }}"
         mode: "http"
@@ -25,7 +26,8 @@ prometheus_services:
         listen_port: "{{ prometheus_listen_port }}"
         active_passive: "{{ prometheus_active_passive | bool }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /-/ready HTTP/1.0"
+          - "http-check send hdr Authorization 'Basic {{ (prometheus_haproxy_user + ':' + prometheus_haproxy_password) | b64encode }}'"
   prometheus-node-exporter:
     container_name: prometheus_node_exporter
     group: prometheus-node-exporter
@@ -156,12 +158,14 @@ prometheus_basic_auth_users_default:
   - username: "{{ prometheus_grafana_user }}"
     password: "{{ prometheus_grafana_password }}"
     enabled: "{{ enable_grafana }}"
+  - username: "{{ prometheus_haproxy_user }}"
+    password: "{{ prometheus_haproxy_password }}"
+    enabled: "{{ enable_haproxy | bool }}"
   - username: "{{ prometheus_skyline_user }}"
     password: "{{ prometheus_skyline_password }}"
     enabled: "{{ enable_skyline }}"
 
 prometheus_basic_auth_users_extra: []
-
 ####################
 # Database
 ####################
