@@ -34,13 +34,19 @@
             "dest": "/etc/keystone/{{ keystone_policy_file }}",
             "owner": "keystone",
             "perm": "0600"
-        }{% endif %},
+        }{% endif %}{% if keystone_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/wsgi-keystone.conf",
             "dest": "/etc/{{ keystone_dir }}/wsgi-keystone.conf",
             "owner": "keystone",
             "perm": "0600"
-        }{% if keystone_enable_tls_backend | bool %},
+        }{% elif keystone_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/keystone-uwsgi.ini",
+            "dest": "/etc/keystone/keystone-api-uwsgi.ini",
+            "owner": "keystone",
+            "perm": "0600"
+        }{% endif %}{% if keystone_enable_tls_backend | bool %},
         {
             "source": "{{ container_config_directory }}/keystone-cert.pem",
             "dest": "/etc/keystone/certs/keystone-cert.pem",
@@ -52,8 +58,7 @@
             "dest": "/etc/keystone/certs/keystone-key.pem",
             "owner": "keystone",
             "perm": "0600"
-        }{% endif %}
-        {% if keystone_enable_federation_openid | bool %},
+        }{% endif %}{% if keystone_enable_federation_openid | bool %},
         {
             "source": "{{ container_config_directory }}/federation/oidc/metadata",
             "dest": "{{ keystone_container_federation_oidc_metadata_folder }}",
