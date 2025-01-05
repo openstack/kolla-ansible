@@ -2,6 +2,8 @@
 Description=Octavia Interface Creator
 Requires=docker.service
 After=docker.service
+StartLimitIntervalSec=30
+StartLimitBurst=2
 
 [Service]
 Type=oneshot
@@ -11,6 +13,7 @@ Restart=on-failure
 {% if octavia_interface_wait_timeout is defined %}
 TimeoutStartSec={{ octavia_interface_wait_timeout }}
 {% endif %}
+RestartSec=30
 RemainAfterExit=true
 ExecStartPre=/sbin/ip link set dev {{ octavia_network_interface }} address {{ port_info.port.mac_address }}
 ExecStart=/sbin/dhclient -v {{ octavia_network_interface }} -cf /etc/dhcp/octavia-dhclient.conf
