@@ -21,8 +21,6 @@ function test_ironic_logged {
     openstack --os-cloud kolla-admin-system-internal baremetal driver list
     openstack baremetal node list
     openstack baremetal port list
-    # Ironic Inspector API
-    openstack baremetal introspection rule list
 
     openstack baremetal node show tk0
     openstack baremetal node power off tk0
