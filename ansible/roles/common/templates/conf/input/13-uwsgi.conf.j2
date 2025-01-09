@@ -1,0 +1,18 @@
+#jinja2: trim_blocks: False
+{% if fluentd_enabled_input_openstack_services | length > 0 -%}
+<source>
+  @type tail
+  path {% for service in fluentd_enabled_input_openstack_services %}/var/log/kolla/{{ service }}/*-uwsgi.log{% if not loop.last %},{% endif %}{% endfor %}
+  pos_file /var/run/fluentd/kolla-uwsgi.pos
+  tag kolla.*
+  ignore_repeated_permission_error true
+  enable_watch_timer {{ fluentd_enable_watch_timer }}
+  <parse>
+    @type regexp
+    expression /^(?:\[pid: (?<Pid>\d+)\|app: (?<App>\d+)\|req: (?<Req>\d+\/\d+)\] (?<Address>\S+) \((?<User>\w*)\) \{(?<Vars>\d+) vars +in (?<Bytes>\d+) bytes\} \[(?<Timestamp>\w+ \w+\s+\d+ \d+:\d+:\d+ \d+)\] )?(?<Payload>.*)$/
+    time_key Timestamp
+    keep_time_key true
+    time_format %c
+  </parse>
+</source>
+{%- endif %}
