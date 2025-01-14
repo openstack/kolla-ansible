@@ -107,6 +107,26 @@ You may optionally pass extra kernel parameters to the inspection kernel using:
 
 in ``/etc/kolla/globals.yml``.
 
+PXE filter (optional)
+~~~~~~~~~~~~~~~~~~~~~
+
+To keep parity with the standalone inspector you can enable the experimental
+PXE filter service:
+
+.. code-block:: yaml
+
+   enable_ironic_pxe_filter: "yes"
+
+The PXE filter container runs alongside ``ironic-dnsmasq`` and cleans up stale
+DHCP entries. It is especially useful when auto discovery is enabled and when
+the dnsmasq DHCP range overlaps with a Neutron-served network. For the upstream
+details see
+https://docs.openstack.org/ironic/latest/admin/inspection/pxe_filter.html.
+
+.. note::
+
+   Upstream still classifies this PXE filter implementation as experimental.
+
 Configure conductor's HTTP server port (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The port used for conductor's HTTP server is controlled via
