@@ -1,10 +1,8 @@
 ---
-# NOTE(r-krcek): List of arguments should follow argument_spec in
-# kolla_container module
-- name: "{{ kolla_role_name | default(project_name) }} | Check containers"
+- name: "{{ kolla_role_name | default(project_name) }} | Check containers with iteration"
   become: true
   vars:
-    service: "{{ item.value }}"
+    service: "{{ outer_item.value }}"
   kolla_container:
     action: "compare_container"
     common_options: "{{ docker_common_options }}"
@@ -24,27 +22,15 @@
     labels: "{{ service.labels | default(omit) }}"
     command: "{{ service.command | default(omit) }}"
     cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
-  with_dict: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host }}"
-  when: not (service.iterate | default(False)) | bool
+  loop:
+    - "{{ range(1,(service.iterate_var | int) + 1) | list }}"
   register: container_check
 
 # NOTE(yoctozepto): Must be a separate task because one cannot see the whole
 # result in the previous task and Ansible has a quirk regarding notifiers.
 # For details see https://github.com/ansible/ansible/issues/22579
 - name: "{{ kolla_role_name | default(project_name) }} | Notify handlers to restart containers"
-  vars:
-    service: "{{ item.value }}"
   debug:
     msg: Notifying handlers
   changed_when: container_check is changed
-  when: not (service.iterate | default(False)) | bool
-  notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
-
-- name: Include tasks
-  vars:
-    service: "{{ outer_item.value }}"
-  include_tasks: iterated.yml
-  loop: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host | dict2items }}"
-  loop_control:
-    loop_var: outer_item
-  when: (service.iterate | default(False)) | bool
+  notify: "Restart {{ outer_item.key }} container"

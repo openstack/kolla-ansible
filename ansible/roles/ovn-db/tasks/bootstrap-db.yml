@@ -56,3 +56,20 @@
   until: check_ovn_sb_db_port is success
   retries: 10
   delay: 6
+
+- name: Wait for ovn-sb-db-relay
+  vars:
+    ovn_sb_db_relay_group_id: "{{ item }}"
+    ovn_sb_db_relay_port: "{{ ovn_sb_db_relay_port_prefix ~ ovn_sb_db_relay_group_id }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ ovn_sb_db_relay_port }}"
+    connect_timeout: 1
+    timeout: 60
+  register: check_ovn_sb_db_relay_port
+  until: check_ovn_sb_db_relay_port is success
+  retries: 10
+  delay: 6
+  when:
+    - enable_ovn_sb_db_relay | bool
+  loop: "{{ range(1, (ovn_sb_db_relay_count | int) +1) }}"

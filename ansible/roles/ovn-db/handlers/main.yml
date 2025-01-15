@@ -25,6 +25,20 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
 
+- name: Restart ovn-sb-db-relay container
+  vars:
+    service_name: "ovn-sb-db-relay"
+    service: "{{ ovn_db_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}_{{ item }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+  loop: "{{ range(1, (ovn_sb_db_relay_count | int) + 1) | list }}"
+
 - name: Restart ovn-northd container
   vars:
     service_name: "ovn-northd"

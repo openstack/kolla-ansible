@@ -34,6 +34,9 @@ function test_ovn {
         echo "Output: ${OVNSB_STATUS}"
         exit 1
     fi
+
+    echo "OVS entries"
+    sudo ${container_engine} exec openvswitch_vswitchd ovs-vsctl list open
 }
 
 function test_octavia {
