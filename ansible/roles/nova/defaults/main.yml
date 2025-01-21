@@ -9,6 +9,7 @@ nova_services:
     volumes: "{{ nova_api_default_volumes + nova_api_extra_volumes }}"
     dimensions: "{{ nova_api_dimensions }}"
     healthcheck: "{{ nova_api_healthcheck }}"
+    wsgi: "nova.wsgi.osapi_compute:application"
     haproxy:
       nova_api:
         enabled: "{{ enable_nova }}"
@@ -37,6 +38,7 @@ nova_services:
     volumes: "{{ nova_metadata_default_volumes + nova_metadata_extra_volumes }}"
     dimensions: "{{ nova_metadata_dimensions }}"
     healthcheck: "{{ nova_metadata_healthcheck }}"
+    wsgi: "nova.wsgi.metadata:application"
     haproxy:
       nova_metadata:
         enabled: "{{ enable_nova }}"
@@ -310,5 +312,9 @@ nova_source_version: "{{ kolla_source_version }}"
 # TLS
 ####################
 nova_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
-
 nova_copy_certs: "{{ kolla_copy_ca_into_containers | bool or nova_enable_tls_backend | bool }}"
+
+####################
+# WSGI
+####################
+nova_wsgi_provider: "uwsgi"
