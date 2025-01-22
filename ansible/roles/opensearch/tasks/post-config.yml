@@ -13,6 +13,7 @@
   retries: 30
   delay: 2
   run_once: true
+  when: not ansible_check_mode
 
 - name: Check if a log retention policy exists
   become: true
@@ -46,7 +47,9 @@
   delegate_to: "{{ groups['opensearch'][0] }}"
   run_once: true
   changed_when: opensearch_retention_policy_create.status == 201
-  when: opensearch_retention_policy_check.status == 404
+  when:
+    - not ansible_check_mode
+    - opensearch_retention_policy_check.status == 404
 
 - name: Apply retention policy to existing indices
   become: true
@@ -66,4 +69,6 @@
   delegate_to: "{{ groups['opensearch'][0] }}"
   run_once: true
   changed_when: opensearch_retention_policy_create.status == 201
-  when: opensearch_retention_policy_check.status == 404
+  when:
+    - not ansible_check_mode
+    - opensearch_retention_policy_check.status == 404
