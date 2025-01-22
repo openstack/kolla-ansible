@@ -20,25 +20,53 @@ mysql_variables:
    threads: {{ proxysql_workers }}
    max_connections: {{ proxysql_max_connections }}
    interfaces: "{{ kolla_internal_vip_address | put_address_in_context('url') }}:{{ database_port }}"
-   connect_retries_delay: "{{ mariadb_connect_retries_delay }}"
-   connect_retries_on_failure: "{{ mariadb_connect_retries_on_failure }}"
-   shun_on_failures: "{{ mariadb_shun_on_failures }}"
-   monitor_username: "{{ mariadb_monitor_user }}"
-   monitor_password: "{{ mariadb_monitor_password }}"
-   monitor_connect_interval: "{{ mariadb_monitor_connect_interval }}"
+{% if mariadb_connect_retries_delay | length > 0 %}
+   connect_retries_delay: {{ mariadb_connect_retries_delay }}
+{% endif %}
+{% if mariadb_connect_retries_on_failure | length > 0 %}
+   connect_retries_on_failure: {{ mariadb_connect_retries_on_failure }}
+{% endif %}
+{% if mariadb_connect_timeout_client | length > 0 %}
+   connect_timeout_client: {{ mariadb_connect_timeout_client }}
+{% endif %}
+{% if mariadb_connect_timeout_server | length > 0 %}
+   connect_timeout_server: {{ mariadb_connect_timeout_server }}
+{% endif %}
+{% if mariadb_connect_timeout_server_max | length > 0 %}
+   connect_timeout_server_max: {{ mariadb_connect_timeout_server_max }}
+{% endif %}
+{% if mariadb_monitor_connect_interval | length > 0 %}
+   monitor_connect_interval: {{ mariadb_monitor_connect_interval }}
+{% endif %}
+{% if mariadb_monitor_connect_timeout | length > 0 %}
+   monitor_connect_timeout: {{ mariadb_monitor_connect_timeout }}
+{% endif %}
+{% if mariadb_monitor_galera_healthcheck_interval | length > 0 %}
    monitor_galera_healthcheck_interval: "{{ mariadb_monitor_galera_healthcheck_interval }}"
+{% endif %}
+{% if mariadb_monitor_galera_healthcheck_timeout | length > 0 %}
    monitor_galera_healthcheck_timeout: "{{ mariadb_monitor_galera_healthcheck_timeout }}"
+{% endif %}
+{% if mariadb_monitor_galera_healthcheck_max_timeout_count | length > 0 %}
    monitor_galera_healthcheck_max_timeout_count: "{{ mariadb_monitor_galera_healthcheck_max_timeout_count }}"
+{% endif %}
+{% if mariadb_monitor_ping_interval | length > 0 %}
    monitor_ping_interval: "{{ mariadb_monitor_ping_interval }}"
+{% endif %}
+{% if mariadb_monitor_ping_timeout | length > 0 %}
    monitor_ping_timeout: "{{ mariadb_monitor_ping_timeout }}"
+{% endif %}
+{% if mariadb_monitor_ping_max_failures | length > 0 %}
    monitor_ping_max_failures: "{{ mariadb_monitor_ping_max_failures }}"
+{% endif %}
 {% if mariadb_monitor_read_only_interval | length > 0 %}
    monitor_read_only_interval: {{ mariadb_monitor_read_only_interval }}
 {% endif %}
-   monitor_connect_timeout: 6000
-   connect_timeout_client: 100000
-   connect_timeout_server: 30000
-   connect_timeout_server_max: 100000
+   monitor_username: "{{ mariadb_monitor_user }}"
+   monitor_password: "{{ mariadb_monitor_password }}"
+{% if mariadb_shun_on_failures | length > 0 %}
+   shun_on_failures: {{ mariadb_shun_on_failures }}
+{% endif %}
 {% if database_enable_tls_backend | bool %}
    ssl_p2s_ca: "/etc/proxysql/certs/root.crt"
    ssl_p2s_cert: "/etc/proxysql/certs/mariadb-cert.pem"

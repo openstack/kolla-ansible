@@ -529,27 +529,6 @@ mariadb_clustercheck_port: "4569"
 mariadb_enable_tls_backend: "{{ database_enable_tls_backend }}"
 
 mariadb_monitor_user: "{{ 'monitor' if enable_proxysql | bool else 'haproxy' }}"
-mariadb_monitor_connect_interval: "2000"
-mariadb_monitor_galera_healthcheck_interval: "4000"
-mariadb_monitor_galera_healthcheck_timeout: "1000"
-mariadb_monitor_galera_healthcheck_max_timeout_count: "2"
-mariadb_monitor_ping_interval: "3000"
-mariadb_monitor_ping_timeout: "2000"
-mariadb_monitor_ping_max_failures: "2"
-#
-# Defaults preserved for multinode setup
-# Tweaked for single-node
-#
-# ProxySQL shuns servers on MySQL errors, which can cause failures
-# during upgrades or restarts. In single-node setups, ProxySQL can't reroute
-# traffic, leading to "Max connect timeout" errors. To avoid this in CI and
-# signle-node environments, delay error responses to clients by 10 seconds,
-# giving the backend time to recover without immediate failures.
-#
-# See ProxySQL docs for more: https://proxysql.com/documentation/global-variables/mysql-variables/#mysql-shun_on_failures
-mariadb_shun_on_failures: "{{ '10' if mariadb_shards_info.shards.values() | map(attribute='hosts') | map('length') | select('<=', 1) | list | length > 0 else '5' }}"
-mariadb_connect_retries_delay: "{{ '1000' if mariadb_shards_info.shards.values() | map(attribute='hosts') | map('length') | select('<=', 1) | list | length > 0 else '1' }}"
-mariadb_connect_retries_on_failure: "{{ '20' if mariadb_shards_info.shards.values() | map(attribute='hosts') | map('length') | select('<=', 1) | list | length > 0 else '10' }}"
 
 mariadb_datadir_volume: "mariadb"
 
