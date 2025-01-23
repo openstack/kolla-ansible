@@ -15,8 +15,8 @@ function test_zun_logged {
     openstack appcontainer service list
     openstack appcontainer host list
     openstack subnet set --no-dhcp demo-subnet
-    sudo ${container_engine} pull alpine
-    sudo ${container_engine} save alpine | openstack image create alpine --public --container-format docker --disk-format raw
+    sudo ${container_engine} pull quay.io/openstack.kolla/alpine
+    sudo ${container_engine} save quay.io/openstack.kolla/alpine | openstack image create alpine --public --container-format docker --disk-format raw
     openstack appcontainer run --net network=demo-net --name test alpine sleep 1000
     attempt=1
     while [[ $(openstack appcontainer show test -f value -c status) != "Running" ]]; do
