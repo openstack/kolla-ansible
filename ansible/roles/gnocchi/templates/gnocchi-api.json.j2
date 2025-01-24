@@ -1,20 +1,27 @@
-{% set gnocchi_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set gnocchi_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if gnocchi_wsgi_provider == 'apache' else 'uwsgi /etc/gnocchi/gnocchi-api-uwsgi.ini' %}
 {
-    "command": "{{ gnocchi_cmd }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/gnocchi.conf",
             "dest": "/etc/gnocchi/gnocchi.conf",
             "owner": "gnocchi",
             "perm": "0600"
-        },
+        }{% if gnocchi_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/wsgi-gnocchi.conf",
             "dest": "/etc/{{ gnocchi_dir }}/wsgi-gnocchi.conf",
             "owner": "gnocchi",
             "perm": "0600"
-        }{% if gnocchi_policy_file is defined %},
+        }{% elif gnocchi_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/gnocchi-api-uwsgi.ini",
+            "dest": "/etc/gnocchi/gnocchi-api-uwsgi.ini",
+            "owner": "gnocchi",
+            "perm": "0600"
+        }{% endif %}{% if gnocchi_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ gnocchi_policy_file }}",
             "dest": "/etc/gnocchi/{{ gnocchi_policy_file }}",
