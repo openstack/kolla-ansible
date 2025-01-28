@@ -447,6 +447,17 @@ function test_internal_dns_integration {
         openstack server create --image cirros --flavor m1.tiny --network dns-test-network ${SERVER_NAME}
 
         SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
+        attempt=0
+        while [[ -z $(openstack port list --device-id ${SERVER_ID} -f value -c ID) ]]; do
+            echo "Port for server ${SERVER_NAME} not available yet"
+            attempt=$((attempt+1))
+            if [[ $attempt -eq 10 ]]; then
+                echo "ERROR: Port for server ${SERVER_NAME} failed to become available"
+                openstack port list --device-id ${SERVER_ID}
+                return 1
+            fi
+            sleep $attempt
+        done
         PORT_ID=$(openstack port list --device-id ${SERVER_ID} -f value -c ID)
 
         DNS_ASSIGNMENT=$(openstack port show ${PORT_ID} -f json -c dns_assignment)
