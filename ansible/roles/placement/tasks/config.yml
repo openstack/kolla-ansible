@@ -63,11 +63,32 @@
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
     mode: "0660"
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - placement_wsgi_provider == "apache"
   with_first_found:
     - "{{ node_custom_config }}/placement/{{ inventory_hostname }}/placement-api-wsgi.conf"
     - "{{ node_custom_config }}/placement/placement-api-wsgi.conf"
     - "placement-api-wsgi.conf.j2"
+  notify:
+    - "Restart placement-api container"
+
+- name: "Configure uWSGI for Placement"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ placement_services }}"
+    service: "{{ placement_services['placement-api'] }}"
+    service_name: "placement-api"
+    service_uwsgi_config_http_port: "{{ placement_api_listen_port }}"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ placement_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/placement/certs/placement-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/placement/certs/placement-key.pem"
+    service_uwsgi_config_uid: "placement"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - placement_wsgi_provider == "uwsgi"
 
 - name: Copying over migrate-db.rc.j2 configuration
   become: true
