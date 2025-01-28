@@ -1,0 +1,38 @@
+---
+# Check whether all necessary containers are running.
+- name: "{{ kolla_role_name | default(project_name) }} | Get container facts"
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name: "{{ service_check_enabled_container_names }}"
+  register: container_facts
+  when: service_check_enabled_container_names | length > 0
+
+- name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are missing or not running"
+  vars:
+    missing_containers: >-
+      {{ service_check_enabled_container_names | difference(container_facts) | list }}
+  fail:
+    msg: >
+      The following {{ kolla_role_name | default(project_name) }} containers are missing or not running:
+      {{ missing_containers | join(', ') }}
+  when:
+    - container_facts is defined
+    - missing_containers | length > 0
+
+- name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are unhealthy"
+  vars:
+    unhealthy_containers: >-
+      {{ container_facts |
+      dict2items |
+      selectattr("value.Status", "defined") |
+      selectattr("value.Status", "search", "unhealthy") |
+      map(attribute='key') | list }}
+  fail:
+    msg: >
+      The following {{ kolla_role_name | default(project_name) }} containers are unhealthy:
+      {{ unhealthy_containers | join(', ') }}
+  when:
+    - container_facts is defined
+    - unhealthy_containers | length > 0
