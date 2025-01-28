@@ -21,7 +21,7 @@
         need_build_image: "{{ kolla_build_images | default(false) }}"
         build_image_tag: "change_{{ zuul.change | default('none') }}"
         openstack_core_enabled: "{{ openstack_core_enabled }}"
-        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'swift', 'ovn', 'lets-encrypt'] }}"
+        openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'zun', 'cells', 'ovn', 'lets-encrypt'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
@@ -34,15 +34,9 @@
         name: "{{ 'bind-utils' if ansible_os_family == 'RedHat' else 'dnsutils' }}"
       when: scenario == 'magnum'
 
-    - name: Install xfsprogs package for Swift filesystems
-      become: true
-      package:
-        name: xfsprogs
-      when: scenario == 'swift'
-
     - name: Prepare disks for a storage service
       script: "setup_disks.sh {{ disk_type }}"
-      when: scenario in ['cephadm', 'zun', 'swift']
+      when: scenario in ['cephadm', 'zun']
       become: true
       vars:
         disk_type: "{{ 'ceph-lvm' if scenario in ['cephadm'] else scenario }}"
@@ -155,7 +149,6 @@
         - neutron
         - nova
         - bifrost
-        - swift
 
     - name: Generate configuration files
       template:
@@ -314,13 +307,6 @@
       shell:
         cmd: "{{ kolla_ansible_venv_path }}/bin/ansible all -i {{ kolla_inventory_path }} -m setup > /tmp/logs/ansible/initial-setup"
 
-    - name: Set facts for Swift initialisation
-      set_fact:
-        # NOTE(yoctozepto): no support for upgrades for now
-        docker_image_tag: "{{ build_image_tag if need_build_image else (zuul.branch | basename) ~ '-' ~ base_distro ~ '-' ~ base_distro_version ~ docker_image_tag_suffix }}"
-        docker_image_prefix: "{{ 'primary:4000/lokolla/' if need_build_image else '{{ zuul_site_mirror_fqdn }}:4447/openstack.kolla/' }}"
-      when: scenario in ['swift']
-
     # NOTE(yoctozepto): k-a octavia-certificates should run before k-a bootstrap-servers
     # because the latter hijacks /etc/kolla permissions (due to same directory on the
     # same host being used by both)
@@ -353,20 +339,6 @@
         UPPER_CONSTRAINTS: "{{ upper_constraints_file }}"
         KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
         CONTAINER_ENGINE: "{{ container_engine }}"
-
-    - name: Run init-swift.sh script
-      script:
-        cmd: init-swift.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
-      environment:
-        KOLLA_SWIFT_BASE_IMAGE: "{{ docker_image_prefix }}swift-base:{{ docker_image_tag }}"
-        # NOTE(yoctozepto): no IPv6 for now
-        STORAGE_NODES: "{{ groups['all'] | map('extract', hostvars,
-                           ['ansible_'+api_interface_name | replace('-','_') , 'ipv4', 'address'])
-                           | join(' ') }}"
-        CONTAINER_ENGINE: "{{ container_engine }}"
-      when: scenario == 'swift'
 
     # At this point we have generated all necessary configuration, and are
     # ready to deploy the control plane services. Control flow now depends on
@@ -484,13 +456,6 @@
           environment:
             BASE_DISTRO: "{{ base_distro }}"
             CONTAINER_ENGINE: "{{ container_engine }}"
-
-        - name: Run test-swift.sh script
-          script:
-            cmd: test-swift.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == 'swift'
 
         - name: Run test-scenario-nfv.sh script
           script:
@@ -792,12 +757,6 @@
             PHASE: upgrade
             IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
           when: openstack_core_tested
-
-        - name: Run test-swift.sh script (post-upgrade)
-          command:
-            cmd: tests/test-swift.sh
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == 'swift'
 
         - name: Run test-prometheus-opensearch.sh script (post-upgrade)
           script:
