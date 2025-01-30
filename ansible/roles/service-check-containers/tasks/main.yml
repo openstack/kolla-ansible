@@ -33,12 +33,13 @@
 # For details see https://github.com/ansible/ansible/issues/22579
 - name: "Notify handlers to restart containers for {{ kolla_role_name | default(project_name) }}"
   vars:
+    handler: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
     service: "{{ item.value }}"
   debug:
-    msg: Notifying handlers
+    msg: "{{ ('Notifying handlers: ' + handler | join(',')) if container_check is changed else 'Nothing changed - not notifying handlers' }}"
   changed_when: container_check is changed
   when: not (service.iterate | default(False)) | bool
-  notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
+  notify: "{{ handler }}"
 
 - name: "Check containers that require iteration for {{ kolla_role_name | default(project_name) }}"
   vars:

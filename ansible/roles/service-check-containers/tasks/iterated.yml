@@ -30,7 +30,9 @@
 # result in the previous task and Ansible has a quirk regarding notifiers.
 # For details see https://github.com/ansible/ansible/issues/22579
 - name: "Notify handlers to restart containers for {{ kolla_role_name | default(project_name) }}"
+  vars:
+    handler: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
   debug:
-    msg: Notifying handlers
+    msg: "{{ ('Notifying handlers: ' + handler | join(',')) if container_check is changed else 'Nothing changed - not notifying handlers' }}"
   changed_when: container_check is changed
-  notify: "Restart {{ outer_item.key }} container"
+  notify: "{{ handler }}"
