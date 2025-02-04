@@ -10,11 +10,5 @@
     {"user": "{{ role_rabbitmq_user }}", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
     {"user": "{{ role_rabbitmq_monitoring_user }}", "vhost": "/", "configure": "^$", "write": "^$", "read": ".*"}{% endif %}
   ],
-{% if om_enable_rabbitmq_high_availability | bool %}
-  "policies":[
-    {"vhost": "/", "name": "ha-all", "pattern": "^(?!(amq\\.)|(.*_fanout_)|(reply_)).*", "apply-to": "all", "definition": {"ha-mode":{% if rabbitmq_ha_replica_count is not none %}"exactly","ha-params":{{ rabbitmq_ha_replica_count | int }}{% else %}"all"{% endif %}{% if rabbitmq_ha_promote_on_shutdown is not none %},"ha-promote-on-shutdown":"{{ rabbitmq_ha_promote_on_shutdown }}"{% endif %}{% if rabbitmq_message_ttl_ms is not none %},"message-ttl":{{ rabbitmq_message_ttl_ms | int }}{% endif %}{% if rabbitmq_queue_expiry_ms is not none %},"expires":{{ rabbitmq_queue_expiry_ms | int }}{% endif %}}, "priority":0}
-  ]
-{% else %}
   "policies":[]
-{% endif %}
 }

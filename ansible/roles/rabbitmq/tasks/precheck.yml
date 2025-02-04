@@ -106,30 +106,6 @@
     - rabbitmq_enable_tls | bool
 
 - block:
-    - name: List RabbitMQ policies
-      become: true
-      command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_policies --silent"
-      register: rabbitmq_policies
-      changed_when: false
-      check_mode: false
-
-    - name: Check if RabbitMQ HA needs to be configured
-      assert:
-        that: "'ha-all' in rabbitmq_policies.stdout"
-        fail_msg: >
-          om_enable_rabbitmq_high_availability is True but no mirroring policy has been found.
-          Currently the procedure to migrate from transient non-mirrored queues to durable mirrored queues is manual.
-          Please follow the process described here: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#high-availability.
-          Note that this process may take several hours on larger systems, and may cause a degradation in performance at large scale.
-          If you do not wish to enable this feature, set om_enable_rabbitmq_high_availability to False.
-
-  run_once: true
-  when:
-    - container_facts.containers['rabbitmq'] is defined
-    - om_enable_rabbitmq_high_availability | bool
-  tags: rabbitmq-ha-precheck
-
-- block:
     - name: List RabbitMQ queues
       become: true
       command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
