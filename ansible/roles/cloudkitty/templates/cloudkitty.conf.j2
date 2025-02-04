@@ -45,27 +45,21 @@ policy_file = {{ cloudkitty_policy_file }}
 {% endif %}
 
 [oslo_messaging_rabbit]
-{% if om_enable_queue_manager | bool %}
 use_queue_manager = true
 {% if service_name == 'cloudkitty-api' %}
 processname = {{ service_name }}
-{% endif %}
 {% endif %}
 heartbeat_in_pthread = {{ service_name == 'cloudkitty-api' }}
 {% if om_enable_rabbitmq_tls | bool %}
 ssl = true
 ssl_ca_file = {{ om_rabbitmq_cacert }}
 {% endif %}
-{% if om_enable_rabbitmq_quorum_queues | bool %}
 rabbit_quorum_queue = true
 {% if om_enable_rabbitmq_stream_fanout | bool %}
 rabbit_stream_fanout = true
 rabbit_qos_prefetch_count = {{ om_rabbitmq_qos_prefetch_count }}
 {% endif %}
-{% if om_enable_rabbitmq_transient_quorum_queue | bool %}
 rabbit_transient_quorum_queue = true
-{% endif %}
-{% endif %}
 
 [collect]
 collector = {{ cloudkitty_collector_backend }}
