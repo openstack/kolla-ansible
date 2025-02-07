@@ -39,7 +39,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['nova_novncproxy'] is not defined
+    - container_facts.containers['nova_novncproxy'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Serial Proxy
@@ -52,7 +52,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['nova_serialproxy'] is not defined
+    - container_facts.containers['nova_serialproxy'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Spice HTML5 Proxy
@@ -65,7 +65,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['nova_spicehtml5proxy'] is not defined
+    - container_facts.containers['nova_spicehtml5proxy'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova SSH (API interface)
@@ -78,7 +78,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['nova_ssh'] is not defined
+    - container_facts.containers['nova_ssh'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova SSH (migration interface)
@@ -92,7 +92,7 @@
     state: stopped
   when:
     - migration_interface_address != api_interface_address
-    - container_facts['nova_ssh'] is not defined
+    - container_facts.containers['nova_ssh'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking free port for Nova Libvirt
@@ -105,7 +105,7 @@
     timeout: 1
     state: stopped
   when:
-    - container_facts['nova_libvirt'] is not defined
+    - container_facts.containers['nova_libvirt'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking that host libvirt is not running
@@ -115,7 +115,7 @@
   register: result
   failed_when: result.stat.exists
   when:
-    - container_facts['nova_libvirt'] is not defined
+    - container_facts.containers['nova_libvirt'] is not defined
     - service | service_enabled_and_mapped_to_host
 
 - name: Checking that nova_libvirt container is not running
@@ -127,6 +127,6 @@
       the 'enable_nova_libvirt_container' flag. Stop and remove the container
       manually, taking care to migrate any state to the host libvirt daemon.
   when:
-    - container_facts['nova_libvirt'] is defined
+    - container_facts.containers['nova_libvirt'] is defined
     - not nova_libvirt.enabled | bool
     - inventory_hostname in groups[nova_libvirt.group]

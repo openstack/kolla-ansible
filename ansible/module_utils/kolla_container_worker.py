@@ -449,30 +449,6 @@ class ContainerWorker(ABC):
     def start_container(self):
         pass
 
-    def get_container_env(self):
-        name = self.params.get('name')
-        info = self.get_container_info()
-        if not info:
-            self.module.fail_json(msg="No such container: {}".format(name))
-        else:
-            envs = dict()
-            for env in info['Config']['Env']:
-                if '=' in env:
-                    key, value = env.split('=', 1)
-                else:
-                    key, value = env, ''
-                envs[key] = value
-
-            self.module.exit_json(**envs)
-
-    def get_container_state(self):
-        name = self.params.get('name')
-        info = self.get_container_info()
-        if not info:
-            self.module.fail_json(msg="No such container: {}".format(name))
-        else:
-            self.module.exit_json(**info['State'])
-
     def parse_healthcheck(self, healthcheck):
         if not healthcheck:
             return None

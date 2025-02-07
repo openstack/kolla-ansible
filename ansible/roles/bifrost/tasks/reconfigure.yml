@@ -1,12 +1,12 @@
 ---
 - name: Ensuring the containers up
   become: true
-  kolla_container:
-    common_options: "{{ docker_common_options }}"
+  kolla_container_facts:
     name: "{{ item.name }}"
-    action: "get_container_state"
+    action: "get_containers_state"
+    container_engine: "{{ kolla_container_engine }}"
   register: container_state
-  failed_when: not container_state.Running
+  failed_when: container_state.states[item.name] != "running"
   when: inventory_hostname in groups[item.group]
   with_items:
     - { name: bifrost-deploy, group: bifrost-deploy }
@@ -28,10 +28,10 @@
 # just remove the container and start again
 - name: Containers config strategy
   become: true
-  kolla_container:
-    common_options: "{{ docker_common_options }}"
+  kolla_container_facts:
     name: "{{ item.name }}"
-    action: "get_container_env"
+    action: "get_containers_env"
+    container_engine: "{{ kolla_container_engine }}"
   register: container_envs
   when: inventory_hostname in groups[item.group]
   with_items:
@@ -39,14 +39,17 @@
 
 - name: Remove the containers
   become: true
+  vars:
+    container_name: "{{ item[0]['name'] }}"
+    container_config_strategy: "{{ item[1].envs[container_name] }}"
   kolla_container:
     common_options: "{{ docker_common_options }}"
-    name: "{{ item[0]['name'] }}"
+    name: "{{ container_name }}"
     action: "remove_container"
   register: remove_containers
   when:
     - inventory_hostname in groups[item[0]['group']]
-    - config_strategy == "COPY_ONCE" or item[1]['KOLLA_CONFIG_STRATEGY'] == 'COPY_ONCE'
+    - config_strategy == "COPY_ONCE" or container_config_strategy == 'COPY_ONCE'
     - item[2]['rc'] == 1
   with_together:
     - [{ name: bifrost-deploy, group: bifrost-deploy }]
@@ -58,14 +61,17 @@
 
 - name: Restart containers
   become: true
+  vars:
+    container_name: "{{ item[0]['name'] }}"
+    container_config_strategy: "{{ item[1].envs[container_name] }}"
   kolla_container:
     common_options: "{{ docker_common_options }}"
-    name: "{{ item[0]['name'] }}"
+    name: "{{ container_name }}"
     action: "restart_container"
   when:
     - inventory_hostname in groups[item[0]['group']]
     - config_strategy == 'COPY_ALWAYS'
-    - item[1]['KOLLA_CONFIG_STRATEGY'] != 'COPY_ONCE'
+    - container_config_strategy != 'COPY_ONCE'
     - item[2]['rc'] == 1
   with_together:
     - [{ name: bifrost-deploy, group: bifrost-deploy }]

@@ -15,7 +15,7 @@
 # Probably what we care about is the existence of Fernet key 0.
 - name: Group nodes where keystone_fernet is running
   group_by:
-    key: keystone_fernet_{{ container_facts['keystone_fernet'].State | default('bootstrap') }}
+    key: keystone_fernet_running_{{ container_facts.containers['keystone_fernet'] is defined }}
   changed_when: false
 
 # NOTE(mgoddard): If we bootstrap Fernet keys on an existing cluster, this
@@ -23,12 +23,12 @@
 - name: Fail if any hosts need bootstrapping and not all hosts targeted
   fail:
     msg: >
-      Some hosts ({{ groups['keystone_fernet_bootstrap'] | join(', ') }}) need
+      Some hosts ({{ groups['keystone_fernet_running_False'] | join(', ') }}) need
       Fernet key bootstrapping, but not all Keystone hosts are in the target
       list. Stopping as it may be unsafe to proceed. Please run without --limit
       or --serial to bootstrap these hosts.
   when:
-    - groups['keystone_fernet_running'] is not defined
+    - groups['keystone_fernet_running_True'] is not defined
     - groups['keystone'] | difference(ansible_play_batch) | list | length > 0
 
 - name: Running Keystone bootstrap container
@@ -73,4 +73,4 @@
   run_once: True
   delegate_to: "{{ groups['keystone'][0] }}"
   when:
-    - groups['keystone_fernet_running'] is not defined
+    - groups['keystone_fernet_running_True'] is not defined

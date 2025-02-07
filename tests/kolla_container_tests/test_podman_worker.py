@@ -597,63 +597,6 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.pw.changed)
         my_container.remove.assert_called_once_with(force=True)
 
-    def test_get_container_env(self):
-        fake_env = dict(KOLLA_BASE_DISTRO='ubuntu',
-                        KOLLA_INSTALL_TYPE='binary',
-                        KOLLA_INSTALL_METATYPE='rdo')
-        self.pw = get_PodmanWorker({'name': 'my_container',
-                                    'action': 'get_container_env'})
-        self.fake_data['containers'][0].update(
-            self.fake_data['container_inspect'])
-        full_cont_list = get_containers(self.fake_data['containers'])
-        self.pw.pc.containers.list.return_value = full_cont_list
-        self.pw.get_container_env()
-
-        self.assertFalse(self.pw.changed)
-        self.pw.pc.containers.list.assert_called_once_with(all=True)
-        self.pw.module.exit_json.assert_called_once_with(**fake_env)
-
-    def test_get_container_env_negative(self):
-        self.pw = get_PodmanWorker({'name': 'fake_container',
-                                    'action': 'get_container_env'})
-        self.pw.pc.containers.list.return_value = get_containers(
-            self.fake_data['containers'])
-        self.pw.get_container_env()
-
-        self.assertFalse(self.pw.changed)
-        self.pw.module.fail_json.assert_called_once_with(
-            msg="No such container: fake_container")
-
-    def test_get_container_state(self):
-        State = {'Dead': False,
-                 'ExitCode': 0,
-                 'Pid': 12475,
-                 'StartedAt': '2016-06-07T11:22:37.66876269Z',
-                 'Status': 'running'}
-        self.fake_data['container_inspect'].update({'State': State})
-        self.pw = get_PodmanWorker({'name': 'my_container',
-                                    'action': 'get_container_state'})
-        self.fake_data['containers'][0].update({'State': State})
-        self.pw.pc.containers.list.return_value = get_containers(
-            self.fake_data['containers'])
-        self.pw.get_container_state()
-
-        self.assertFalse(self.pw.changed)
-        self.pw.pc.containers.list.assert_called_once_with(all=True)
-        self.pw.module.exit_json.assert_called_once_with(**State)
-
-    def test_get_container_state_negative(self):
-        self.pw = get_PodmanWorker({'name': 'fake_container',
-                                    'action': 'get_container_state'})
-        self.pw.pc.containers.list.return_value = get_containers(
-            self.fake_data['containers'])
-        self.pw.get_container_state()
-
-        self.assertFalse(self.pw.changed)
-        self.pw.pc.containers.list.assert_called_once_with(all=True)
-        self.pw.module.fail_json.assert_called_once_with(
-            msg="No such container: fake_container")
-
     def test_recreate_or_restart_container_not_container(self):
         self.pw = get_PodmanWorker({
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
