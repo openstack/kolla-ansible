@@ -28,11 +28,11 @@
   when:
     - inventory_hostname in groups[keystone.group]
 
-- name: Templating OpenID Identity Providers metadata
+- name: Copying OpenID Identity Providers metadata
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   become: true
-  template:
+  copy:
     src: "{{ item.metadata_folder }}/"
     dest: "{{ keystone_host_federation_oidc_metadata_folder }}"
     mode: "0660"
@@ -55,11 +55,11 @@
     - item.certificate_file is defined
     - inventory_hostname in groups[keystone.group]
 
-- name: Templating OpenStack Identity Providers attribute mappings
+- name: Copying OpenStack Identity Providers attribute mappings
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   become: true
-  template:
+  copy:
     src: "{{ item.file }}"
     dest: "{{ keystone_host_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     mode: "0660"
