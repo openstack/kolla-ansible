@@ -109,7 +109,7 @@ def contruct_volume(vol_dict: dict) -> mock.Mock:
     return volume
 
 
-def get_containers(override=None):
+def get_containers(override=None, all: bool = False):
     if override:
         cont_dicts = override
     else:
@@ -117,9 +117,11 @@ def get_containers(override=None):
 
     containers = []
     for c in cont_dicts:
-        # Only running containers should be returned by the container APIs
-        if c['State']['Status'] == 'running':
-            containers.append(construct_container(c))
+        # With the option "all", only running containers are returned
+        # by the container API
+        if not all and c['State']['Status'] != 'running':
+            continue
+        containers.append(construct_container(c))
 
     return containers
 
@@ -152,8 +154,9 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertDictEqual(
             self.fake_data['containers'][0],
             self.dfw.result['containers']['my_container'])
+        self.dfw.client.containers.list.assert_called_once_with(all=False)
 
-    def test_get_container_multi(self):
+    def test_get_containers_multi(self):
         self.dfw = get_DockerFactsWorker(
             {'name': ['my_container', 'exited_container'],
              'action': 'get_containers'})
@@ -165,8 +168,9 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('my_container', self.dfw.result['containers'])
         self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
+        self.dfw.client.containers.list.assert_called_once_with(all=False)
 
-    def test_get_container_all(self):
+    def test_get_containers_all_running(self):
         self.dfw = get_DockerFactsWorker({'name': [],
                                           'action': 'get_containers'})
         running_containers = get_containers(self.fake_data['containers'])
@@ -177,6 +181,21 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('my_container', self.dfw.result['containers'])
         self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
+        self.dfw.client.containers.list.assert_called_once_with(all=False)
+
+    def test_get_containers_all_including_stopped(self):
+        self.dfw = get_DockerFactsWorker({'name': [],
+                                          'action': 'get_containers',
+                                          'args': {
+                                              'get_all_containers': True}})
+        all_containers = get_containers(self.fake_data['containers'], all=True)
+        self.dfw.client.containers.list.return_value = all_containers
+        self.dfw.get_containers()
+
+        self.assertFalse(self.dfw.result['changed'])
+        self.assertIn('my_container', self.dfw.result['containers'])
+        self.assertIn('exited_container', self.dfw.result['containers'])
+        self.dfw.client.containers.list.assert_called_once_with(all=True)
 
     def test_get_containers_env(self):
         fake_env = dict(KOLLA_BASE_DISTRO='ubuntu',
