@@ -120,6 +120,9 @@ class ContainerFactsWorker():
             container_name = container.name
             if names and container_name not in names:
                 continue
+            # NOTE(r-krcek): For performance reasons don't include
+            # healthcheck logs. It can contain MBs worth of data!
+            container.attrs["State"].get("Health", dict()).pop("Log", None)
             self.result['containers'][container_name] = container.attrs
 
     def get_containers_state(self):
