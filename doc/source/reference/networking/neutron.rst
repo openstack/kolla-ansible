@@ -75,7 +75,7 @@ provisioning, controllers might have access to two physical networks:
 
    neutron_external_interface: "eth1,eth2"
    neutron_bridge_name: "br-ex1,br-ex2"
-   neutron_physical_network: "physnet1,physnet2"
+   neutron_physical_networks: "physnet1,physnet2"
 
 While compute nodes have access only to ``physnet2``.
 
@@ -83,7 +83,7 @@ While compute nodes have access only to ``physnet2``.
 
    neutron_external_interface: "eth1"
    neutron_bridge_name: "br-ex1"
-   neutron_physical_network: "physnet2"
+   neutron_physical_networks: "physnet2"
 
 Example: shared interface
 -------------------------
