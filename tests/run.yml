@@ -202,17 +202,13 @@
             mode: 0777
 
         - name: Download Ironic Python Agent (IPA) images
-          vars:
-            # TODO(mnasiadka): Revert back to master when it works
-            # tinyipa_image: "tinyipa-{{ zuul.branch | replace('/', '-') }}"
-            tinyipa_image: "tinyipa-stable-2024.2"
           get_url:
             url: "https://tarballs.opendev.org/openstack/ironic-python-agent/tinyipa/files/{{ item.src }}"
             dest: "/etc/kolla/config/ironic/{{ item.dest }}"
           with_items:
-            - src: "{{ tinyipa_image }}.gz"
+            - src: "tinyipa-{{ zuul.branch | replace('/', '-') }}.gz"
               dest: ironic-agent.initramfs
-            - src: "{{ tinyipa_image }}.vmlinuz"
+            - src: "tinyipa-{{ zuul.branch | replace('/', '-') }}.vmlinuz"
               dest: ironic-agent.kernel
       when: scenario == "ironic"
 
