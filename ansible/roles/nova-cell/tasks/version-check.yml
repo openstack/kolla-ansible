@@ -1,0 +1,88 @@
+---
+- block:
+    - name: Get new Libvirt version
+      become: true
+      kolla_container:
+        action: "start_container"
+        command: "libvirtd --version"
+        common_options: "{{ docker_common_options }}"
+        container_engine: "{{ kolla_container_engine }}"
+        detach: false
+        environment:
+          KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+        image: "{{ service.image }}"
+        name: "libvirt_version_check"
+        restart_policy: oneshot
+        remove_on_exit: true
+      register: libvirt_version_new
+      failed_when: false
+      check_mode: false
+      run_once: true
+      delegate_to: "{{ groups[service.group] | first }}"
+
+    - name: Cache new Libvirt version
+      set_fact:
+        libvirt_new_version: "{{ libvirt_version_new.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+      run_once: true
+      delegate_facts: true
+      delegate_to: "{{ groups[service.group] | first }}"
+
+    - name: Get nova_libvirt image info
+      include_role:
+        name: service-image-info
+      run_once: true
+
+    - name: Get container facts
+      become: true
+      kolla_container_facts:
+        action: get_containers
+        container_engine: "{{ kolla_container_engine }}"
+        name:
+          - "{{ service.container_name }}"
+      register: container_facts_per_host
+      run_once: true
+      delegate_to: "{{ item }}"
+      loop: "{{ groups[service.group] }}"
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Get current Libvirt version
+      become: true
+      command: "{{ kolla_container_engine }} exec {{ service.container_name }} libvirtd --version"
+      register: libvirt_version_current_results
+      changed_when: false
+      run_once: true
+      delegate_to: "{{ item.item }}"
+      loop: "{{ container_facts_per_host.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - item.containers[service.container_name] is defined
+        - item.containers[service.container_name].State.Running
+        - (hostvars[groups[service.group] | first].service_image_info.images | default([]) | length) > 0
+        - item.containers[service.container_name].Image
+          != hostvars[groups[service.group] | first].service_image_info.images[0].Id
+
+    - name: Check that the new Libvirt version is >= current
+      vars:
+        current_version: "{{ item.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+        new_version: "{{ hostvars[groups[service.group] | first].libvirt_new_version }}"
+      assert:
+        that: "{{ new_version is version(current_version, '>=', strict=true) }}"
+        fail_msg: >
+          It looks like you're about to downgrade Libvirt in the nova_libvirt container from
+          version {{ current_version }} to version {{ new_version }}. If you're absolutely certain
+          that you want to do this, please skip the tag `nova-libvirt-version-check`.
+        success_msg: >
+          Libvirt version check successful: target {{ new_version }} >= current {{ current_version }}.
+      run_once: true
+      loop: "{{ libvirt_version_current_results.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: item.stdout is defined
+
+  tags: nova-libvirt-version-check
+  when: enable_nova_libvirt_container | bool and (groups[service.group] | length) > 0
+  vars:
+    service_name: "nova-libvirt"
+    service: "{{ nova_cell_services[service_name] }}"
