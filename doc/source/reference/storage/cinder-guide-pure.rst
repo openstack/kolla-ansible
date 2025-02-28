@@ -71,7 +71,12 @@ If you wish to use any of these parameters then refer to the
 `Service Configuration <https://docs.openstack.org/kolla-ansible/latest/admin/advanced-configuration.html#openstack-service-configuration-in-kolla>`_
 documentation for instructions using the INI update strategy.
 
-The use of this backend requires that the ``purestorage`` SDK package is
-installed in the ``cinder-volume`` container. To do this follow the steps
+The use of this backend requires that an additional Python SDK package is
+installed in the ``cinder-volume`` container.
+
+Prior to 2024.2 (Dalmatian) the ``purestorage`` SDK is required. From
+2024.2 (Dalmatian) the SDK to install is called ``py-pure-client``.
+
+To install the appropriate SDK follow the steps
 outlined in the `kolla image building guide <https://docs.openstack.org/kolla/latest/admin/image-building.html>`_
 particularly the ``Package Customisation`` and ``Custom Repos`` sections.
