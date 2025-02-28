@@ -24,7 +24,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['prometheus'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ prometheus_port }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ prometheus_port }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -36,7 +36,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['prometheus-node-exporter'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_node_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -56,7 +56,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['prometheus-mysqld-exporter'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_mysqld_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -69,7 +69,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['loadbalancer'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ prometheus_haproxy_exporter_port }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ prometheus_haproxy_exporter_port }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -82,7 +82,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['rabbitmq'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_rabbitmq_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_rabbitmq_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -95,7 +95,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['prometheus-memcached-exporter'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_memcached_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -108,7 +108,7 @@ scrape_configs:
     static_configs:
 {% for host in groups["prometheus-cadvisor"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_cadvisor_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -121,7 +121,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['fluentd'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_fluentd_integration_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_fluentd_integration_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -159,7 +159,7 @@ scrape_configs:
     static_configs:
 {% for host in groups["prometheus-elasticsearch-exporter"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_elasticsearch_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -204,7 +204,7 @@ scrape_configs:
     static_configs:
 {% for host in groups["prometheus-libvirt-exporter"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_libvirt_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_libvirt_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -220,7 +220,7 @@ scrape_configs:
     static_configs:
 {% for host in groups["etcd"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_etcd_integration_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_etcd_integration_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -232,7 +232,8 @@ scrape_configs:
   - job_name: ironic_prometheus_exporter
     static_configs:
 {% for host in groups['ironic-conductor'] %}
-      - targets: ["{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['ironic_prometheus_exporter_port'] }}"]
+      - targets:
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['ironic_prometheus_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -245,7 +246,7 @@ scrape_configs:
     static_configs:
 {% for host in groups['prometheus-alertmanager'] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -257,7 +258,7 @@ scrape_configs:
     static_configs:
 {% for host in groups["loadbalancer"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['proxysql_prometheus_exporter_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['proxysql_prometheus_exporter_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
@@ -270,7 +271,7 @@ alerting:
     - static_configs:
 {% for host in groups["prometheus-alertmanager"] %}
       - targets:
-        - '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_alertmanager_port'] }}'
 {% if hostvars[host].prometheus_instance_label | default(false, true) %}
         labels:
           instance: "{{ hostvars[host].prometheus_instance_label }}"

@@ -325,6 +325,71 @@ class TestKollaAddressFilter(unittest.TestCase):
         })
         self.assertEqual(addr, kolla_address(context, 'api'))
 
+    def test_override_var_valid_ipv4(self):
+        addr = '192.0.2.1'
+        override_var = 'my_ip_address'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    override_var: addr,
+                },
+            },
+        })
+        self.assertEqual(
+            addr, kolla_address(context, 'api', override_var=override_var))
+
+    def test_override_var_valid_ipv6(self):
+        addr = 'fd::'
+        override_var = 'my_ip_address'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    override_var: addr,
+                },
+            },
+        })
+        self.assertEqual(
+            addr, kolla_address(context, 'api', override_var=override_var))
+
+    def test_override_var_invalid(self):
+        addr = 'this-is-an-fqdn.example.com'
+        override_var = 'my_ip_address'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    override_var: addr,
+                },
+            },
+        })
+        self.assertRaises(
+            FilterError, kolla_address, context, 'api',
+            override_var=override_var)
+
+    def test_override_var_missing(self):
+        addr = '192.0.2.1'
+        override_var = 'my_ip_address'
+        context = self._make_context({
+            'inventory_hostname': 'primary',
+            'hostvars': {
+                'primary': {
+                    'api_address_family': 'ipv4',
+                    'api_interface': 'fake-interface',
+                    'ansible_facts': {
+                        'fake_interface': {
+                            'ipv4': {
+                                'address': addr,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+        self.assertEqual(
+            addr, kolla_address(context, 'api', None, override_var))
+
 
 class TestKollaUrlFilter(unittest.TestCase):
 

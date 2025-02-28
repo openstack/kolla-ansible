@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ipaddress
+
 from jinja2.filters import pass_context
 from jinja2.runtime import Undefined
 
@@ -22,7 +24,7 @@ from kolla_ansible.helpers import _call_bool_filter
 
 
 @pass_context
-def kolla_address(context, network_name, hostname=None):
+def kolla_address(context, network_name, hostname=None, override_var=None):
     """returns IP address on the requested network
 
     The output is affected by '<network_name>_*' variables:
@@ -33,6 +35,8 @@ def kolla_address(context, network_name, hostname=None):
     :param network_name: string denoting the name of the network to get IP
                          address for, e.g. 'api'
     :param hostname: to override host which address is retrieved for
+    :param override_var: optional name of a host variable that can be used
+                         to override the IP address
     :returns: string with IP address
     """
 
@@ -57,6 +61,25 @@ def kolla_address(context, network_name, hostname=None):
                           .format(hostname=hostname))
 
     del hostvars  # remove for clarity (no need for other hosts)
+
+    if override_var is not None:
+        if override_var in host:
+            try:
+                # Use ipaddress to test IPv4/6 validity of
+                # the string returned from override_var and
+                # return the string-formatted, valid IP address
+                ip = ipaddress.ip_address(host[override_var])
+                return format(ip)
+            except ValueError:
+                # Catch ValueError from ipaddress and make the
+                # output more useful for operators
+                raise FilterError("variable '{override_var}' for "
+                                  "host '{hostname}' is set to "
+                                  "'{value}', which is not a valid "
+                                  "IPv4 or IPv6 address"
+                                  .format(override_var=override_var,
+                                          hostname=hostname,
+                                          value=host[override_var]))
 
     # NOTE(yoctozepto): variable "host" will *not* return Undefined
     # same applies to all its children (act like plain dictionary)
