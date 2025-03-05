@@ -385,6 +385,25 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.assertFalse(self.dw.dc.create_host_config.call_args[1]['tmpfs'])
 
+    def test_create_container_create_volumes(self):
+        self.fake_data['params']['volumes'] = [
+            "kolla_logs:/var/log/kolla/",
+            "fluentd_data:/var/lib/fluentd/data/",
+            "/var/log/journal:/var/log/journal:ro",
+            "/etc/kolla/fluentd/:/var/lib/kolla/config_files/:ro"
+        ]
+        self.dw = get_DockerWorker(self.fake_data['params'])
+
+        self.dw.create_volume = mock.MagicMock()
+        self.dw.create_container()
+        expected_calls = [
+            mock.call(name="kolla_logs"),
+            mock.call(name="fluentd_data")
+        ]
+
+        self.dw.create_volume.assert_has_calls(expected_calls, any_order=True)
+        self.assertEqual(self.dw.create_volume.call_count, 2)
+
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',
                                          'auth_password': 'fake_psw',
@@ -1081,7 +1100,8 @@ class TestVolume(base.BaseTestCase):
         self.assertTrue(self.dw.changed)
         self.dw.dc.create_volume.assert_called_once_with(
             name='rabbitmq',
-            driver='local')
+            driver='local',
+            labels={'kolla_managed': 'true'})
 
     def test_create_volume_exists(self):
         self.dw = get_DockerWorker({'name': 'nova_compute',

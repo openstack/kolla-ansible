@@ -279,6 +279,25 @@ class TestContainer(base.BaseTestCase):
         self.assertTrue(self.pw.changed)
         self.assertFalse(self.pw.pc.containers.create.call_args[1]['tmpfs'])
 
+    def test_create_container_create_volumes(self):
+        self.fake_data['params']['volumes'] = [
+            "kolla_logs:/var/log/kolla/",
+            "fluentd_data:/var/lib/fluentd/data/",
+            "/var/log/journal:/var/log/journal:ro",
+            "/etc/kolla/fluentd/:/var/lib/kolla/config_files/:ro"
+        ]
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+
+        self.pw.create_volume = mock.MagicMock()
+        self.pw.create_container()
+        expected_calls = [
+            mock.call(name="kolla_logs"),
+            mock.call(name="fluentd_data")
+        ]
+
+        self.pw.create_volume.assert_has_calls(expected_calls, any_order=True)
+        self.assertEqual(self.pw.create_volume.call_count, 2)
+
     def test_start_container_without_pull(self):
         self.fake_data['params'].update({'auth_username': 'fake_user',
                                          'auth_password': 'fake_psw',
@@ -1004,7 +1023,8 @@ class TestVolume(base.BaseTestCase):
         self.assertTrue(self.pw.changed)
         self.pw.pc.volumes.create.assert_called_once_with(
             name='rabbitmq',
-            driver='local')
+            driver='local',
+            labels={'kolla_managed': 'true'})
 
     def test_create_volume_exists(self):
         self.pw = get_PodmanWorker({'name': 'nova_compute',
