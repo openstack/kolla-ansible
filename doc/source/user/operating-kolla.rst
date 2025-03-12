@@ -233,8 +233,8 @@ volumes in the cluster.
 ``kolla-ansible mariadb_recovery -i INVENTORY`` is used to recover a
 completely stopped mariadb cluster.
 
-``kolla-ansible rechecks -i INVENTORY`` is used to check if all requirements
-are meet before deploy for each of the OpenStack services.
+``kolla-ansible prechecks -i INVENTORY`` is used to check if all requirements
+are met before deployment for each of the OpenStack services.
 
 ``kolla-ansible post-deploy -i INVENTORY`` is used to do post deploy on deploy
 node to get the admin openrc file.
