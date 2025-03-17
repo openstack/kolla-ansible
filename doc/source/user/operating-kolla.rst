@@ -128,8 +128,8 @@ most likely in
 
 Other files which may need manual updating are:
 
-- ``/etc/kolla/globals.yml``
-- ``/etc/kolla/passwords.yml``
+* ``/etc/kolla/globals.yml``
+* ``/etc/kolla/passwords.yml``
 
 For ``globals.yml``, it is best to follow the release notes (mentioned above).
 For ``passwords.yml``, one needs to use ``kolla-mergepwd`` and ``kolla-genpwd``

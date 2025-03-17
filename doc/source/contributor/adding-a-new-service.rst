@@ -76,16 +76,16 @@ which Kolla uses throughout and which should be followed.
 
 Other than the above, most service roles abide by the following pattern:
 
-- ``Register``: Involves registering the service with Keystone, creating
+* ``Register``: Involves registering the service with Keystone, creating
   endpoints, roles, users, etc.
 
-- ``Config``: Distributes the config files to the nodes to be pulled into
+* ``Config``: Distributes the config files to the nodes to be pulled into
   the container on startup.
 
-- ``Bootstrap``: Creating the database (but not tables), database user for
+* ``Bootstrap``: Creating the database (but not tables), database user for
   the service, permissions, etc.
 
-- ``Bootstrap Service``: Starts a one shot container on the host to create
+* ``Bootstrap Service``: Starts a one shot container on the host to create
   the database tables, and other initial run time config.
 
 Ansible handlers are used to create or restart containers when necessary.

@@ -332,7 +332,7 @@ To add custom kernel modules for Neutron, modify the configuration in
 
 In this example:
 
-- `neutron_modules_extra`: Allows users to specify additional modules and
+* `neutron_modules_extra`: Allows users to specify additional modules and
   their associated parameters. The given configuration adjusts the
   `hashsize` parameter for the `nf_conntrack_tftp` module.
 

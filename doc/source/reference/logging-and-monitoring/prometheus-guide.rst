@@ -132,7 +132,7 @@ configure `ipmi_exporter <https://github.com/soundcloud/ipmi_exporter>`_, using
 the default value for ``node_custom_config``, you could create the following
 files:
 
-- ``/etc/kolla/config/prometheus/prometheus.yml.d/ipmi-exporter.yml``:
+* ``/etc/kolla/config/prometheus/prometheus.yml.d/ipmi-exporter.yml``:
 
   .. code-block:: jinja
 
@@ -171,7 +171,7 @@ files:
   where ``ipmi_exporter_listen_address`` is a variable containing the IP address of
   the node where the exporter is running.
 
--  ``/etc/kolla/config/prometheus/extras/file_sd/ipmi-exporter-targets.yml``:
+*  ``/etc/kolla/config/prometheus/extras/file_sd/ipmi-exporter-targets.yml``:
 
    .. code-block:: yaml
 

@@ -9,12 +9,12 @@ Overview
 
 Designate provides DNSaaS services for OpenStack:
 
--  REST API for domain/record management
--  Multi-tenant
--  Integrated with Keystone for authentication
--  Framework in place to integrate with Nova and Neutron
+*  REST API for domain/record management
+*  Multi-tenant
+*  Integrated with Keystone for authentication
+*  Framework in place to integrate with Nova and Neutron
    notifications (for auto-generated records)
--  Support for Bind9 and Infoblox out of the box
+*  Support for Bind9 and Infoblox out of the box
 
 Configuration on Kolla deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -8,19 +8,21 @@ Endpoint Network Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When an OpenStack cloud is deployed, the REST API of each service is presented
-as a series of endpoints. These endpoints are the admin URL, the internal
-URL, and the external URL.
+as a series of endpoints. These endpoints are the internal URL, and the
+external URL.
 
 Kolla offers two options for assigning these endpoints to network addresses:
-- Combined - Where all three endpoints share the same IP address
-- Separate - Where the external URL is assigned to an IP address that is
-different than the IP address shared by the internal and admin URLs
+
+* Combined - Where both endpoints share the same IP address
+* Separate - Where the external URL is assigned to an IP address that is
+  different than the IP address used by the internal URL
 
 The configuration parameters related to these options are:
-- kolla_internal_vip_address
-- network_interface
-- kolla_external_vip_address
-- kolla_external_vip_interface
+
+* kolla_internal_vip_address
+* network_interface
+* kolla_external_vip_address
+* kolla_external_vip_interface
 
 For the combined option, set the two variables below, while allowing the
 other two to accept their default values. In this configuration all REST
@@ -50,8 +52,8 @@ a name, like ``www.example.net``, instead of an address like
 ``10.10.10.254``. If you prefer to use names to address the endpoints
 in your kolla deployment use the variables:
 
-- kolla_internal_fqdn
-- kolla_external_fqdn
+* kolla_internal_fqdn
+* kolla_external_fqdn
 
 .. code-block:: yaml
 

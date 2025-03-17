@@ -157,8 +157,8 @@ information:
 Kolla Ansible will search for these files for each compute node in the
 following locations and order on the host where Kolla Ansible is executed:
 
-- ``/etc/kolla/config/nova/nova-libvirt/<hostname>/``
-- ``/etc/kolla/config/nova/nova-libvirt/``
+* ``/etc/kolla/config/nova/nova-libvirt/<hostname>/``
+* ``/etc/kolla/config/nova/nova-libvirt/``
 
 In most cases you will want to have a unique set of server and client
 certificates and keys per hypervisor and with a common CA certificate. In this

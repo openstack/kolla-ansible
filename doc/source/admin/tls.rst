@@ -80,10 +80,10 @@ TLS Configuration for internal/external VIP
 The configuration variables that control TLS for the internal and/or external
 VIP are:
 
-- ``kolla_enable_tls_external``
-- ``kolla_enable_tls_internal``
-- ``kolla_internal_fqdn_cert``
-- ``kolla_external_fqdn_cert``
+* ``kolla_enable_tls_external``
+* ``kolla_enable_tls_internal``
+* ``kolla_internal_fqdn_cert``
+* ``kolla_external_fqdn_cert``
 
 .. note::
 
@@ -224,11 +224,11 @@ Glance, Heat, Placement, Horizon, Barbican, and Cinder.
 The configuration variables that control back-end TLS for service endpoints
 are:
 
-- ``kolla_enable_tls_backend``
-- ``kolla_tls_backend_cert``
-- ``kolla_tls_backend_key``
-- ``haproxy_backend_cacert``
-- ``haproxy_backend_cacert_dir``
+* ``kolla_enable_tls_backend``
+* ``kolla_tls_backend_cert``
+* ``kolla_tls_backend_key``
+* ``haproxy_backend_cacert``
+* ``haproxy_backend_cacert_dir``
 
 The default state for back-end TLS is disabled. To enable TLS for the back-end
 communication:
