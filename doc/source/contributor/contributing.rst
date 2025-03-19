@@ -27,7 +27,7 @@ IRC Channel
     ``#openstack-kolla`` (`channel logs`_) on `OFTC <http://oftc.net>`_
 
 Weekly Meetings
-    On Wednesdays at 15:00 UTC in the IRC channel (`meetings logs`_)
+    On Wednesdays in the IRC channel (`meeting information`_)
 
 Mailing list (prefix subjects with ``[kolla]``)
     http://lists.openstack.org/pipermail/openstack-discuss/
@@ -41,7 +41,7 @@ Whiteboard (etherpad)
     https://etherpad.openstack.org/p/KollaWhiteBoard
 
 .. _channel logs: http://eavesdrop.openstack.org/irclogs/%23openstack-kolla/
-.. _meetings logs:  http://eavesdrop.openstack.org/meetings/kolla/
+.. _meeting information: https://meetings.opendev.org/#Kolla_Team_Meeting
 
 Contacting the Core Team
 ~~~~~~~~~~~~~~~~~~~~~~~~
