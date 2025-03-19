@@ -21,7 +21,9 @@ HA
 When using cinder-volume in an HA configuration (more than one host in
 cinder-volume/storage group):
 
-- Make sure that the driver you are using supports `Active/Active High Availability <https://docs.openstack.org/cinder/|KOLLA_OPENSTACK_RELEASE|/reference/support-matrix.html#operation_active_active_ha>`
+- Make sure that the driver you are using supports `Active/Active High
+  Availability
+  <https://docs.openstack.org/cinder/|OPENSTACK_RELEASE|/reference/support-matrix.html#operation_active_active_ha>`__
   configuration
 - Add ``cinder_cluster_name: example_cluster_name`` to your ``globals.yml`` (or
   host_vars for advanced multi-cluster configuration)
