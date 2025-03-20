@@ -1,4 +1,5 @@
 # Copyright 2016 99cloud
+# Copyright 2023 StackHPC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +46,7 @@ options:
       - The action to perform
     required: True
     type: str
-author: Jeffrey Zhang
+author: Jeffrey Zhang, Michal Nasiadka
 '''
 
 EXAMPLES = '''
@@ -76,6 +77,18 @@ EXAMPLES = '''
         name:
           - glance_api
         action: get_containers_env
+
+    - name: Gather glance volume facts
+      kolla_container_facts:
+        container_engine: docker
+        name:
+          - glance_api
+        action: get_volumes
+
+    - name: Gather all volume facts
+      kolla_container_facts:
+        container_engine: docker
+        action: get_volumes
 '''
 
 
@@ -150,6 +163,20 @@ class ContainerFactsWorker():
                 envs = self._remap_envs(cont['Config']['Env'])
                 self.result['envs'][name] = envs
 
+    def get_volumes(self):
+        """Handles when module is called with action get_volumes."""
+        names = self.params.get('name')
+        self.result['volumes'] = dict()
+
+        if isinstance(names, str):
+            names = [names]
+
+        volumes = self.client.volumes.list()
+        for volume in volumes:
+            if names and volume.name not in names:
+                continue
+            self.result['volumes'][volume.name] = volume.attrs
+
 
 class DockerFactsWorker(ContainerFactsWorker):
     def __init__(self, module):
@@ -188,7 +215,8 @@ def main():
         action=dict(required=True, type='str',
                     choices=['get_containers',
                              'get_containers_env',
-                             'get_containers_state']),
+                             'get_containers_state',
+                             'get_volumes']),
     )
 
     required_if = [

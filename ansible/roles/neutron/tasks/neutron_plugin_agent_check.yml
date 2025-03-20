@@ -12,8 +12,9 @@
 
 - name: Get container volume facts
   become: true
-  kolla_container_volume_facts:
+  kolla_container_facts:
     container_engine: "{{ kolla_container_engine }}"
+    action: get_volumes
     name:
       - ovn_nb_db
       - ovn_sb_db
@@ -30,7 +31,7 @@
   assert:
     that:
       - neutron_plugin_agent == 'openvswitch'
-      - container_volume_facts['ovn_nb_db'] is not defined
-      - container_volume_facts['ovn_sb_db'] is not defined
+      - container_volume_facts.volumes['ovn_nb_db'] is not defined
+      - container_volume_facts.volumes['ovn_sb_db'] is not defined
     fail_msg: "ML2/OVS agent detected, neutron_plugin_agent is not set to 'openvswitch', Kolla-Ansible does not support this migration operation."
   when: container_facts.containers['neutron_openvswitch_agent'] is defined
