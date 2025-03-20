@@ -17,6 +17,7 @@ Kolla Ansible supports the following host Operating Systems (OS):
 * Debian Bookworm (12)
 * Rocky Linux 9
 * Ubuntu Jammy (22.04)
+* Ubuntu Noble (24.04)
 
 Supported container images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
