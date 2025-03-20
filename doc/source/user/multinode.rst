@@ -177,3 +177,19 @@ Run the deployment:
 
    kolla-ansible deploy -i <path/to/multinode/inventory/file>
 
+Validate generated configuration files of enabled services:
+
+.. code-block:: console
+
+   kolla-ansible validate-config -i <path/to/multinode/inventory/file>
+
+.. note::
+
+   Due to the nature of the configuration generation the validation can
+   currently only be done after the first deployment. For some validations
+   it is necessary to access the running containers.
+   The validation tasks can be found - and altered - in each ansible role under
+   ``kolla-ansible/ansible/roles/$role/tasks/config_validate.yml``.
+   The validation for most openstack services is done by the special role:
+   ``service-config-validate``.
+
