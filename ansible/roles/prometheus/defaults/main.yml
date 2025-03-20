@@ -294,10 +294,6 @@ prometheus_blackbox_exporter_endpoints_default:
       - "{{ ('skyline_console_internal:os_endpoint:' + skyline_console_internal_endpoint) if not kolla_same_external_internal_vip | bool }}"
     enabled: "{{ enable_skyline | bool }}"
   - endpoints:
-      - "swift:os_endpoint:{{ swift_public_base_endpoint }}"
-      - "{{ ('swift_internal:os_endpoint:' + swift_internal_base_endpoint) if not kolla_same_external_internal_vip | bool }}"
-    enabled: "{{ enable_swift | bool }}"
-  - endpoints:
       - "tacker:os_endpoint:{{ tacker_public_endpoint }}"
       - "{{ ('tacker_internal:os_endpoint:' + tacker_internal_endpoint) if not kolla_same_external_internal_vip | bool }}"
     enabled: "{{ enable_tacker | bool }}"
@@ -477,9 +473,8 @@ prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 
 prometheus_openstack_exporter_disabled_volume: "{{ '--disable-service.volume' if not enable_cinder | bool else '' }}"
 prometheus_openstack_exporter_disabled_dns: "{{ '--disable-service.dns' if not enable_designate | bool else '' }}"
-prometheus_openstack_exporter_disabled_object: "{{ '--disable-service.object-store' if not enable_swift | bool else '' }}"
 prometheus_openstack_exporter_disabled_lb: "{{ '--disable-service.load-balancer --disable-metric=neutron-loadbalancers --disable-metric=neutron-loadbalancers_not_active' if not enable_octavia | bool else '' }}"
-prometheus_openstack_exporter_disabled_items: "{{ [prometheus_openstack_exporter_disabled_volume, prometheus_openstack_exporter_disabled_dns, prometheus_openstack_exporter_disabled_object, prometheus_openstack_exporter_disabled_lb | trim] | join(' ') | trim }}"
+prometheus_openstack_exporter_disabled_items: "{{ [prometheus_openstack_exporter_disabled_volume, prometheus_openstack_exporter_disabled_dns, prometheus_openstack_exporter_disabled_lb | trim] | join(' ') | trim }}"
 
 prometheus_server_command: >-
   /opt/prometheus/prometheus --web.config.file=/etc/prometheus/web.yml --config.file /etc/prometheus/prometheus.yml

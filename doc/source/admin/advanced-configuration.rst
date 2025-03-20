@@ -253,7 +253,7 @@ it's advised to make above change before deploying.
 Use an external Syslog server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, Fluentd is used as a syslog server to collect Swift and HAProxy
+By default, Fluentd is used as a syslog server to collect HAProxy
 logs. When Fluentd is disabled or you want to use an external syslog server,
 You can set syslog parameters in ``globals.yml`` file. For example:
 
@@ -262,12 +262,11 @@ You can set syslog parameters in ``globals.yml`` file. For example:
    syslog_server: "172.29.9.145"
    syslog_udp_port: "514"
 
-You can also set syslog facility names for Swift and HAProxy logs.
-By default, Swift and HAProxy use ``local0`` and ``local1``, respectively.
+You can also set syslog facility names for HAProxy logs.
+By default, HAProxy uses ``local1``.
 
 .. code-block:: yaml
 
-   syslog_swift_facility: "local0"
    syslog_haproxy_facility: "local1"
 
 If Glance TLS backend is enabled (``glance_enable_tls_backend``), the syslog

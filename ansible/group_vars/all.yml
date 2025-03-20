@@ -286,8 +286,6 @@ network_interface: "eth0"
 neutron_external_interface: "eth1"
 kolla_external_vip_interface: "{{ network_interface }}"
 api_interface: "{{ network_interface }}"
-swift_storage_interface: "{{ network_interface }}"
-swift_replication_interface: "{{ swift_storage_interface }}"
 migration_interface: "{{ api_interface }}"
 tunnel_interface: "{{ network_interface }}"
 octavia_network_interface: "{{ 'o-hm0' if octavia_network_type == 'tenant' else api_interface }}"
@@ -302,8 +300,6 @@ ironic_tftp_interface: "{{ api_interface }}"
 network_address_family: "ipv4"
 api_address_family: "{{ network_address_family }}"
 storage_address_family: "{{ network_address_family }}"
-swift_storage_address_family: "{{ storage_address_family }}"
-swift_replication_address_family: "{{ swift_storage_address_family }}"
 migration_address_family: "{{ api_address_family }}"
 tunnel_address_family: "{{ network_address_family }}"
 octavia_network_address_family: "{{ api_address_family }}"
@@ -703,17 +699,6 @@ skyline_console_listen_port: "{{ skyline_console_port }}"
 skyline_console_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_console_port }}"
 skyline_enable_sso: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
 
-swift_internal_fqdn: "{{ kolla_internal_fqdn }}"
-swift_external_fqdn: "{{ kolla_external_fqdn }}"
-swift_internal_base_endpoint: "{{ swift_internal_fqdn | kolla_url(internal_protocol, swift_proxy_server_port) }}"
-swift_public_base_endpoint: "{{ swift_external_fqdn | kolla_url(public_protocol, swift_proxy_server_port) }}"
-swift_proxy_server_port: "8080"
-swift_proxy_server_listen_port: "{{ swift_proxy_server_port }}"
-swift_object_server_port: "6000"
-swift_account_server_port: "6001"
-swift_container_server_port: "6002"
-swift_rsync_port: "10873"
-
 syslog_udp_port: "{{ fluentd_syslog_port }}"
 
 tacker_internal_fqdn: "{{ kolla_internal_fqdn }}"
@@ -938,9 +923,6 @@ enable_prometheus: "no"
 enable_proxysql: "yes"
 enable_redis: "no"
 enable_skyline: "no"
-enable_swift: "no"
-enable_swift_s3api: "no"
-enable_swift_recon: "no"
 enable_tacker: "no"
 enable_telegraf: "no"
 enable_trove: "no"
@@ -1097,12 +1079,11 @@ openstack_auth:
 #######################
 # Glance options
 #######################
-glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool or glance_backend_swift | bool or glance_backend_vmware | bool) }}"
+glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool or glance_backend_vmware | bool) }}"
 glance_backend_ceph: "no"
 glance_backend_vmware: "no"
 glance_backend_s3: "no"
 enable_glance_image_cache: "no"
-glance_backend_swift: "{{ enable_swift | bool }}"
 glance_file_datadir_volume: "glance"
 glance_enable_rolling_upgrade: "no"
 glance_enable_property_protection: "no"
@@ -1121,8 +1102,8 @@ barbican_library_path: "/usr/lib/libCryptoki2_64.so"
 #################
 # Gnocchi options
 #################
-# Valid options are [ file, ceph, swift ]
-gnocchi_backend_storage: "{% if enable_swift | bool %}swift{% else %}file{% endif %}"
+# Valid options are [ file, ceph ]
+gnocchi_backend_storage: "file"
 
 # Valid options are [redis, '']
 gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
@@ -1141,7 +1122,7 @@ cinder_target_helper: "{{ 'lioadm' if ansible_facts.os_family == 'RedHat' else '
 # Valid options are [ '', redis, etcd ]
 cinder_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
 
-# Valid options are [ nfs, swift, ceph, s3 ]
+# Valid options are [ nfs, ceph, s3 ]
 cinder_backup_driver: "ceph"
 cinder_backup_share: ""
 cinder_backup_mount_options_nfs: ""

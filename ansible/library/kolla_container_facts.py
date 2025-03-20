@@ -140,8 +140,8 @@ class ContainerFactsWorker():
 
     def get_containers_state(self):
         """Handle when module is called with action get_containers_state"""
-        # NOTE(r-krcek): This function can be removed when bifrost and swift
-        # roles switch to modern format
+        # NOTE(r-krcek): This function can be removed when bifrost
+        # role switches to modern format
         names = self.params.get('name')
         self.result['states'] = dict()
 
@@ -152,8 +152,8 @@ class ContainerFactsWorker():
 
     def get_containers_env(self):
         """Handle when module is called with action get_containers_state"""
-        # NOTE(r-krcek): This function can be removed when bifrost and swift
-        # roles switch to modern format
+        # NOTE(r-krcek): This function can be removed when bifrost
+        # role switches to modern format
         names = self.params.get('name')
         self.result['envs'] = dict()
 

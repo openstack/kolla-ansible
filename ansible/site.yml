@@ -65,7 +65,6 @@
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
         - enable_redis_{{ enable_redis | bool }}
         - enable_skyline_{{ enable_skyline | bool }}
-        - enable_swift_{{ enable_swift | bool }}
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
         - enable_trove_{{ enable_trove | bool }}
@@ -292,11 +291,6 @@
           tags: skyline
           when: enable_skyline | bool
         - include_role:
-            name: swift
-            tasks_from: loadbalancer
-          tags: swift
-          when: enable_swift | bool
-        - include_role:
             name: tacker
             tasks_from: loadbalancer
           tags: tacker
@@ -503,23 +497,6 @@
   roles:
     - { role: opensearch,
         tags: opensearch }
-
-- name: Apply role swift
-  gather_facts: false
-  hosts:
-    - swift-account-server
-    - swift-container-server
-    - swift-object-server
-    - swift-proxy-server
-    - '&enable_swift_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ swift_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: swift,
-        tags: swift }
 
 - name: Apply role ceph-rgw
   gather_facts: false

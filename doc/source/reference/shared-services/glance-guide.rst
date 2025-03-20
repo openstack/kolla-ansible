@@ -16,7 +16,6 @@ backends:
 * file
 * ceph
 * vmware
-* swift
 
 File backend
 ~~~~~~~~~~~~
@@ -90,20 +89,6 @@ use the following variables:
    * ``s3_secret_key``
 
    All Glance S3 configurations use these options as default values.
-
-Swift backend
-~~~~~~~~~~~~~
-
-To store glance images in a swift cluster, the ``swift`` backend should
-be enabled.  Refer to :doc:`../storage/swift-guide` on how to configure
-swift in kolla.
-If ceph is enabled, will have higher precedence over swift as glance backend.
-
-To enable the swift backend manually:
-
-.. code-block:: yaml
-
-   glance_backend_swift: "yes"
 
 Upgrading glance
 ----------------

@@ -4,19 +4,3 @@
   vars:
     service_ks_register_auth: "{{ openstack_ceilometer_auth }}"
     service_ks_register_users: "{{ ceilometer_ks_users }}"
-
-- name: Associate the ResellerAdmin role and ceilometer user
-  become: true
-  kolla_toolbox:
-    container_engine: "{{ kolla_container_engine }}"
-    module_name: openstack.cloud.role_assignment
-    module_args:
-      project: "service"
-      user: "{{ ceilometer_keystone_user }}"
-      role: "ResellerAdmin"
-      region_name: "{{ openstack_region_name }}"
-      auth: "{{ openstack_ceilometer_auth }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
-  when: enable_swift | bool
-  run_once: True

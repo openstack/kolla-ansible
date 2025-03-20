@@ -87,22 +87,6 @@
     - service | service_enabled_and_mapped_to_host
     - enable_glance_image_cache | bool
 
-- name: Copying over glance-swift.conf for glance_api
-  vars:
-    service: "{{ glance_services['glance-api'] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/glance-swift.conf.j2"
-      - "{{ node_custom_config }}/glance-swift.conf"
-      - "{{ node_custom_config }}/glance/glance-swift.conf"
-      - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/glance-swift.conf"
-    dest: "{{ node_config_directory }}/glance-api/glance-swift.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - glance_backend_swift | bool
-
 - name: Copying over glance-image-import.conf
   vars:
     service: "{{ glance_services['glance-api'] }}"

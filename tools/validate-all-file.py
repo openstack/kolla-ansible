@@ -43,8 +43,6 @@ YAML_EXCLUDE_PATTERNS = ['.tox', '.testrepository', '.git',
 KOLLA_NETWORKS = [
     'api',
     'storage',
-    'swift_storage',
-    'swift_replication',
     'migration',
     'tunnel',
     'octavia_network',

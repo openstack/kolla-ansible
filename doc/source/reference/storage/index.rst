@@ -14,4 +14,3 @@ supported by kolla.
    cinder-guide-pure
    manila-guide
    manila-hnas-guide
-   swift-guide

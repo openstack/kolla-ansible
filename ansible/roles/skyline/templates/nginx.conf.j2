@@ -288,17 +288,7 @@ http {
         }
         {% endif %}
 
-        {% if enable_swift | bool %}# Region: {{ openstack_region_name }}, Service: swift
-        location {{ skyline_nginx_prefix }}/{{ openstack_region_name | lower }}/swift {
-            proxy_pass {{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/;
-            proxy_redirect {{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ swift_proxy_server_port }}/ {{ skyline_nginx_prefix }}/{{ openstack_region_name | lower }}/swift/;
-            proxy_buffering off;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header X-Forwarded-Host $host;
-            proxy_set_header Host $http_host;
-        }
-        {% elif enable_ceph_rgw | bool %}# Region: {{ openstack_region_name }}, Service: ceph_rgw
+        {% if enable_ceph_rgw | bool %}# Region: {{ openstack_region_name }}, Service: ceph_rgw
         location {{ skyline_nginx_prefix }}/{{ openstack_region_name | lower }}/swift {
             proxy_pass {{ internal_protocol }}://{{ ceph_rgw_internal_fqdn }}:{{ ceph_rgw_port }}/{{ 'swift' if not ceph_rgw_swift_compatibility | bool }};
             proxy_redirect {{ internal_protocol }}://{{ ceph_rgw_internal_fqdn }}:{{ ceph_rgw_port }}/{{ 'swift' if not ceph_rgw_swift_compatibility | bool }} {{ skyline_nginx_prefix }}/{{ openstack_region_name | lower }}/swift/;
