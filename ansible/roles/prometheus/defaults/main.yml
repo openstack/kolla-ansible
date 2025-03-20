@@ -325,7 +325,7 @@ prometheus_blackbox_exporter_endpoints_default:
   - endpoints:
       - "prometheus_alertmanager:http_2xx_alertmanager:{{ prometheus_alertmanager_public_endpoint if enable_prometheus_alertmanager_external else prometheus_alertmanager_internal_endpoint }}"
     enabled: "{{ enable_prometheus_alertmanager | bool }}"
-  - endpoints: "{% set rabbitmq_endpoints = [] %}{% for host in groups.get('rabbitmq', []) %}{{ rabbitmq_endpoints.append('rabbitmq_' + host + (':tls_connect:' if rabbitmq_enable_tls else ':tcp_connect:') + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['rabbitmq_port'] ) }}{% endfor %}{{ rabbitmq_endpoints }}"
+  - endpoints: "{% set rabbitmq_endpoints = [] %}{% for host in groups.get('rabbitmq', []) %}{{ rabbitmq_endpoints.append('rabbitmq_' + host + (':tls_connect:' if rabbitmq_enable_tls | bool else ':tcp_connect:') + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['rabbitmq_port'] ) }}{% endfor %}{{ rabbitmq_endpoints }}"
     enabled: "{{ enable_rabbitmq | bool }}"
   - endpoints: "{% set redis_endpoints = [] %}{% for host in groups.get('redis', []) %}{{ redis_endpoints.append('redis_' + host + ':tcp_connect:' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['redis_port']) }}{% endfor %}{{ redis_endpoints }}"
     enabled: "{{ enable_redis | bool }}"
