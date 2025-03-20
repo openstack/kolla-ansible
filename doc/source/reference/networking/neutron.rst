@@ -231,6 +231,33 @@ To change this behaviour you need to set the following:
 
    neutron_ovn_distributed_fip: "yes"
 
+By default, the number of relay groups (``ovn_sb_db_relay_count``) is computed
+by dividing the total number of ``ovn-controller`` hosts by the value in
+``ovn_sb_db_relay_compute_per_relay`` (which defaults to 50), and rounding up.
+For instance, if you have 120 hosts in the ``ovn-controller`` group, you would
+get ``ceil(120 / 50) = 3`` relay groups.
+You can override ``ovn_sb_db_relay_compute_per_relay`` to scale how many hosts
+each relay group handles, for example:
+
+.. code-block:: yaml
+
+   ovn_sb_db_relay_compute_per_relay: 25
+
+You can also bypass the automatic calculation and manually set a fixed number
+of relay groups with ``ovn_sb_db_relay_count``:
+
+.. code-block:: yaml
+
+   ovn_sb_db_relay_count: 10
+
+.. note::
+   If you set ``ovn_sb_db_relay_count`` explicitly, it effectively overrides
+   the calculated count based on ``ovn_sb_db_relay_compute_per_relay``.
+
+It is also possible to set a static mapping between a ``ovn-controller`` host
+(network node or hypervisor) and particular OVN relay using an Ansible host_var
+``ovn_sb_db_relay_client_group_id``.
+
 Similarly - in order to have Neutron DHCP agents deployed in OVN networking
 scenario, use:
 

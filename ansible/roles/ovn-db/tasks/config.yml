@@ -8,6 +8,7 @@
     mode: "0770"
   become: true
   with_dict: "{{ ovn_db_services | select_services_enabled_and_mapped_to_host }}"
+  when: item.key != 'ovn-sb-db-relay'
 
 - name: Copying over config.json files for services
   template:
@@ -16,3 +17,9 @@
     mode: "0660"
   become: true
   with_dict: "{{ ovn_db_services | select_services_enabled_and_mapped_to_host }}"
+  when: item.key != 'ovn-sb-db-relay'
+
+- name: Ensure configuration for relays exists
+  include_tasks: config-relay.yml
+  loop: "{{ range(1, ovn_sb_db_relay_count | int + 1) | list }}"
+  when: enable_ovn_sb_db_relay | bool

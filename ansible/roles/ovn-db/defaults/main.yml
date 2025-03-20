@@ -21,6 +21,15 @@ ovn_db_services:
     image: "{{ ovn_sb_db_image_full }}"
     volumes: "{{ ovn_sb_db_default_volumes + ovn_sb_db_extra_volumes }}"
     dimensions: "{{ ovn_sb_db_dimensions }}"
+  ovn-sb-db-relay:
+    container_name: ovn_sb_db_relay
+    group: ovn-sb-db-relay
+    enabled: "{{ enable_ovn_sb_db_relay | bool }}"
+    image: "{{ ovn_sb_db_relay_image_full }}"
+    iterate: true
+    iterate_var: "{{ ovn_sb_db_relay_count | int }}"
+    volumes: "{{ ovn_sb_db_relay_default_volumes + ovn_sb_db_relay_extra_volumes }}"
+    dimensions: "{{ ovn_sb_db_relay_dimensions }}"
 
 
 ####################
@@ -40,9 +49,14 @@ ovn_sb_db_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docke
 ovn_sb_db_tag: "{{ ovn_tag }}"
 ovn_sb_db_image_full: "{{ ovn_sb_db_image }}:{{ ovn_sb_db_tag }}"
 
+ovn_sb_db_relay_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}ovn-sb-db-relay"
+ovn_sb_db_relay_tag: "{{ ovn_tag }}"
+ovn_sb_db_relay_image_full: "{{ ovn_sb_db_relay_image }}:{{ ovn_sb_db_relay_tag }}"
+
 ovn_northd_dimensions: "{{ default_container_dimensions }}"
 ovn_nb_db_dimensions: "{{ default_container_dimensions }}"
 ovn_sb_db_dimensions: "{{ default_container_dimensions }}"
+ovn_sb_db_relay_dimensions: "{{ default_container_dimensions }}"
 
 ovn_northd_default_volumes:
   - "{{ node_config_directory }}/ovn-northd/:{{ container_config_directory }}/:ro"
@@ -58,11 +72,16 @@ ovn_sb_db_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "ovn_sb_db:/var/lib/openvswitch/ovn-sb/"
   - "kolla_logs:/var/log/kolla/"
+ovn_sb_db_relay_default_volumes:
+  - "{{ node_config_directory }}/ovn-sb-db-relay{{ ('-' + item | string) if item is defined }}/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "kolla_logs:/var/log/kolla/"
 
 ovn_db_extra_volumes: "{{ default_extra_volumes }}"
 ovn_northd_extra_volumes: "{{ ovn_db_extra_volumes }}"
 ovn_nb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
 ovn_sb_db_extra_volumes: "{{ ovn_db_extra_volumes }}"
+ovn_sb_db_relay_extra_volumes: "{{ ovn_db_extra_volumes }}"
 
 #####
 # OVN
@@ -75,6 +94,19 @@ ovn_openflow_probe_interval: "60"
 ovn_db_inactivity_probe: "60000"
 ovn_sb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
 ovn_nb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
+ovn_sb_db_relay_active_inactivity_probe: "{{ ovn_db_inactivity_probe | int * 2}}"
+ovn_sb_db_relay_passive_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
+ovn_sb_db_relay_max_backoff: "{{ ovn_db_inactivity_probe }}"
+
+# TODO(mnnasiadka): remove that once Debian gets OVS 3.3+
+ovn_sb_db_relay_config_file_args: >-
+  {% if kolla_base_distro == 'debian' %}
+  --db-sb-relay-remote={{ ovn_sb_connection_no_relay }}
+  -- --remote=ptcp:{{ ovn_sb_db_relay_port_prefix ~ ovn_sb_db_relay_group_id }}:{{ api_interface_address | put_address_in_context('url') }}
+  {% else %}
+  --db-sb-relay-config-file=/etc/ovn/ovsdb-relay.json
+  {% endif %}
+
 # OVN startup commands
 ovn_nb_command: >-
   /usr/share/ovn/scripts/ovn-ctl run_nb_ovsdb
@@ -94,5 +126,13 @@ ovn_sb_command: >-
   --db-sb-pidfile=/run/ovn/ovnsb_db.pid
   --db-sb-file=/var/lib/openvswitch/ovn-sb/ovnsb.db
   --ovn-sb-logfile=/var/log/kolla/openvswitch/ovn-sb-db.log
+ovn_sb_relay_command: >-
+  /usr/share/ovn/scripts/ovn-ctl run_sb_relay_ovsdb
+  --db-sb-relay-ctrl-sock=/run/ovn/ovnsb_db_relay_{{ ovn_sb_db_relay_group_id }}.ctl
+  --db-sb-relay-pidfile=/run/ovn/ovnsb_db_relay_{{ ovn_sb_db_relay_group_id }}.pid
+  --db-sb-relay-sock=/run/ovn/ovnsb_db_{{ ovn_sb_db_relay_group_id }}.sock
+  --db-sb-relay-use-remote-in-db=no
+  --ovn-sb-relay-logfile=/var/log/kolla/openvswitch/ovn-sb-relay-{{ ovn_sb_db_relay_group_id }}.log
+  {{ ovn_sb_db_relay_config_file_args }}
 # Workaround: pause after restarting containers to allow for leader election.
 ovn_leader_election_pause: 5
