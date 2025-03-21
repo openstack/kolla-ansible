@@ -22,8 +22,21 @@ check_podman_failures() {
 
 
 check_podman_unhealthies() {
+    while [ -n "$(sudo podman ps -a --format "{{.Names}}" --filter health=starting)" ]; do
+        echo "Containers with health status 'starting', waiting..."
+        sleep 10
+    done
+
     unhealthy_containers=$(sudo podman ps -a --format "{{.Names}}" \
         --filter health=unhealthy)
+
+    for container in $unhealthy_containers; do
+        echo "Discovered unhealthy container: $container"
+        echo "$container - ps axwuf"
+        sudo podman exec $container ps axwuf
+        echo "$container - netstat -an"
+        sudo podman exec $container netstat -an
+    done
 }
 
 
@@ -48,8 +61,21 @@ check_docker_failures() {
 
 
 check_docker_unhealthies() {
+    while [ -n "$(sudo docker ps -a --format "{{.Names}}" --filter health=starting)" ]; do
+        echo "Containers with health status 'starting', waiting..."
+        sleep 10
+    done
+
     unhealthy_containers=$(sudo docker ps -a --format "{{.Names}}" \
         --filter health=unhealthy)
+
+    for container in $unhealthy_containers; do
+        echo "Discovered unhealthy container: $container"
+        echo "$container - ps axwuf"
+        sudo docker exec $container ps axwuf
+        echo "$container - netstat -an"
+        sudo docker exec $container netstat -an
+    done
 }
 
 
