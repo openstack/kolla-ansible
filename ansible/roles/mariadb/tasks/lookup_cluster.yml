@@ -44,22 +44,22 @@
     - block:
         - name: Check MariaDB service WSREP sync status
           become: true
-          command: >-
-            {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
-            mariadb -uroot -p{{ database_password }}
-            --silent --skip-column-names
-            -e 'SHOW STATUS LIKE "wsrep_local_state_comment"'
-          changed_when: false
+          kolla_toolbox:
+            container_engine: "{{ kolla_container_engine }}"
+            module_name: mysql_query
+            module_args:
+              login_db: "mysql"
+              login_host: "{{ api_interface_address }}"
+              login_port: "{{ mariadb_port }}"
+              login_user: "{{ database_user }}"
+              login_password: "{{ database_password }}"
+              query: 'SHOW STATUS LIKE "wsrep_local_state_comment"'
           check_mode: false
           register: check_mariadb_sync_status
-          no_log: true
 
-        # NOTE(yoctozepto): this is extracted separately to properly escape
-        # the TAB character which likes to go wrong due to interaction between
-        # Python/Ansible/Jinja2/YAML, the way below works
         - name: Extract MariaDB service WSREP sync status
           set_fact:
-            mariadb_sync_status: "{{ check_mariadb_sync_status.stdout.split('\t')[1] }}"
+            mariadb_sync_status: "{{ check_mariadb_sync_status.query_result[0][0]['Value'] }}"
       when:
         - groups[mariadb_shard_group + '_port_alive_True'] is defined
         - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
