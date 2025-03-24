@@ -25,7 +25,7 @@ A basic Kolla inventory consists of several types of nodes, known in Ansible as
 * Compute - Compute nodes for compute services. This is where guest VMs
   live.
 
-* Storage - Storage nodes for cinder-volume, LVM or Swift.
+* Storage - Storage nodes for cinder-volume, LVM.
 
 * Monitoring - Monitor nodes which host monitoring services.
 
@@ -53,14 +53,6 @@ In Kolla operators should configure following network interfaces:
   network than internal ones. It is mandatory to set this option when
   ``kolla_enable_tls_external`` is set to yes. Defaults to
   ``network_interface``.
-
-* ``swift_storage_interface`` - This interface is used by Swift for storage
-  access traffic.  This can be heavily utilized so it's recommended to use
-  a high speed network fabric. Defaults to ``network_interface``.
-
-* ``swift_replication_interface`` - This interface is used by Swift for storage
-  replication traffic.  This can be heavily utilized so it's recommended to use
-  a high speed network fabric. Defaults to ``swift_storage_interface``.
 
 * ``tunnel_interface`` - This interface is used by Neutron for vm-to-vm traffic
   over tunneled networks (like VxLan). Defaults to ``network_interface``.

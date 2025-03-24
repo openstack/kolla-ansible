@@ -74,19 +74,11 @@ fluentd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_
 fluentd_tag: "{{ common_tag }}"
 fluentd_image_full: "{{ fluentd_image }}:{{ fluentd_tag }}"
 
-syslog_swift_facility: "local0"
 syslog_haproxy_facility: "local1"
 syslog_glance_tls_proxy_facility: "local2"
 syslog_neutron_tls_proxy_facility: "local4"
 
 syslog_facilities:
-  - name: "swift"
-    enabled: "{{ enable_swift | bool and (inventory_hostname in groups['swift-proxy-server'] or inventory_hostname in groups['swift-account-server'] or inventory_hostname in groups['swift-container-server'] or inventory_hostname in groups['swift-object-server']) }}"
-    facility: "{{ syslog_swift_facility }}"
-    logdir: "swift"
-    logfile: "swift_latest"
-    output_tag: true
-    output_time: true
   - name: "haproxy"
     enabled: "{{ enable_haproxy | bool and inventory_hostname in groups['loadbalancer'] }}"
     facility: "{{ syslog_haproxy_facility }}"

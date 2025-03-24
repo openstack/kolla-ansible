@@ -49,10 +49,6 @@ function prepare_images {
         GATE_IMAGES+=",^masakari-,^hacluster-"
     fi
 
-    if [[ $SCENARIO == "swift" ]]; then
-        GATE_IMAGES+=",^swift"
-    fi
-
     if [[ $SCENARIO == "ovn" ]]; then
         GATE_IMAGES+=",^redis,^octavia,^ovn"
     fi

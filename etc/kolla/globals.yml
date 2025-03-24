@@ -138,8 +138,6 @@ workaround_ansible_issue_8743: yes
 # the 'network_interface'. These interfaces must contain an IP address.
 #kolla_external_vip_interface: "{{ network_interface }}"
 #api_interface: "{{ network_interface }}"
-#swift_storage_interface: "{{ network_interface }}"
-#swift_replication_interface: "{{ swift_storage_interface }}"
 #tunnel_interface: "{{ network_interface }}"
 #dns_interface: "{{ network_interface }}"
 #octavia_network_interface: "{{ api_interface }}"
@@ -149,8 +147,6 @@ workaround_ansible_issue_8743: yes
 #network_address_family: "ipv4"
 #api_address_family: "{{ network_address_family }}"
 #storage_address_family: "{{ network_address_family }}"
-#swift_storage_address_family: "{{ storage_address_family }}"
-#swift_replication_address_family: "{{ swift_storage_address_family }}"
 #migration_address_family: "{{ api_address_family }}"
 #tunnel_address_family: "{{ network_address_family }}"
 #octavia_network_address_family: "{{ api_address_family }}"
@@ -426,8 +422,6 @@ workaround_ansible_issue_8743: yes
 #enable_proxysql: "yes"
 #enable_redis: "no"
 #enable_skyline: "no"
-#enable_swift: "no"
-#enable_swift_s3api: "no"
 #enable_tacker: "no"
 #enable_telegraf: "no"
 #enable_trove: "no"
@@ -518,7 +512,6 @@ workaround_ansible_issue_8743: yes
 # Configure image backend.
 #glance_backend_ceph: "no"
 #glance_backend_file: "yes"
-#glance_backend_swift: "no"
 #glance_backend_vmware: "no"
 #glance_backend_s3: "no"
 #enable_glance_image_cache: "no"
@@ -553,8 +546,8 @@ workaround_ansible_issue_8743: yes
 #################
 # Gnocchi options
 #################
-# Valid options are [ file, ceph, swift ]
-#gnocchi_backend_storage: "{% if enable_swift | bool %}swift{% else %}file{% endif %}"
+# Valid options are [ file, ceph ]
+#gnocchi_backend_storage: "file"
 
 # Valid options are [redis, '']
 #gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
@@ -570,7 +563,7 @@ workaround_ansible_issue_8743: yes
 # Valid options are [ '', redis, etcd ]
 #cinder_coordination_backend: "{{ 'redis' if enable_redis|bool else 'etcd' if enable_etcd|bool else '' }}"
 
-# Valid options are [ nfs, swift, ceph, s3 ]
+# Valid options are [ nfs, ceph, s3 ]
 #cinder_backup_driver: "ceph"
 #cinder_backup_share: ""
 #cinder_backup_mount_options_nfs: ""
@@ -710,31 +703,6 @@ workaround_ansible_issue_8743: yes
 # and define 'manila_glusterfs_ssh_password'
 #manila_glusterfs_target:
 #manila_glusterfs_mount_point_base:
-
-################################
-# Swift - Object Storage Options
-################################
-# Swift expects block devices to be available for storage. Two types of storage
-# are supported: 1 - storage device with a special partition name and filesystem
-# label, 2 - unpartitioned disk  with a filesystem. The label of this filesystem
-# is used to detect the disk which Swift will be using.
-
-# Swift support two matching modes, valid options are [ prefix, strict ]
-#swift_devices_match_mode: "strict"
-
-# This parameter defines matching pattern: if "strict" mode was selected,
-# for swift_devices_match_mode then swift_device_name should specify the name of
-# the special swift partition for example: "KOLLA_SWIFT_DATA", if "prefix" mode was
-# selected then swift_devices_name should specify a pattern which would match to
-# filesystems' labels prepared for swift.
-#swift_devices_name: "KOLLA_SWIFT_DATA"
-
-# Configure swift upgrade option, due to currently kolla support
-# two upgrade ways for swift: legacy_upgrade and rolling_upgrade
-# The variable "swift_enable_rolling_upgrade: yes" is meaning rolling_upgrade
-# were enabled and opposite
-# Rolling upgrade were enable by default
-#swift_enable_rolling_upgrade: "yes"
 
 ###################################
 # VMware - OpenStack VMware support
