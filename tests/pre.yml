@@ -127,31 +127,3 @@
       until: "'synchronized: yes' in timedatectl_status.stdout"
       retries: 90
       delay: 10
-
-    # TODO(mnasiadka): Remove when both podman and cephadm packages get promoted to usual repos
-    - name: Enable noble-proposed repository on Ubuntu 24.04
-      apt_repository:
-        repo: "deb http://archive.ubuntu.com/ubuntu/ noble-proposed restricted main multiverse universe"
-        state: present
-      become: true
-      when:
-        - container_engine in ['cephadm', 'podman']
-        - ansible_facts.distribution == "Ubuntu"
-        - ansible_facts.distribution_release == "noble"
-
-    # TODO(mnasiadka): Remove once ceph release is out with patched https://tracker.ceph.com/issues/66389
-    - name: Handling for cephadm apparmor bug on Ubuntu Noble 24.04
-      when:
-        - ansible_facts.distribution == "Ubuntu"
-        - ansible_facts.distribution_release == "noble"
-        - scenario == "cephadm"
-      block:
-        - name: Install AppArmor on Ubuntu Noble 24.04
-          apt:
-            name: apparmor
-          become: true
-
-        - name: Disable MongoDB Compass AppArmor profile
-          command:
-            cmd: "apparmor_parser -R /etc/apparmor.d/MongoDB_Compass"
-          become: true
