@@ -65,6 +65,10 @@ function prepare_images {
         GATE_IMAGES="^cron,^fluentd,^grafana,^haproxy,^proxysql,^keepalived,^kolla-toolbox,^mariadb,^memcached,^opensearch,^prometheus,^rabbitmq"
     fi
 
+    if [[ $SCENARIO == "ipv6" ]]; then
+        GATE_IMAGES+=",^prometheus"
+    fi
+
     if [[ $SCENARIO == "venus" ]]; then
         GATE_IMAGES="^cron,^opensearch,^fluentd,^haproxy,^proxysql,^keepalived,^keystone,^kolla-toolbox,^mariadb,^memcached,^rabbitmq,^venus"
     fi
