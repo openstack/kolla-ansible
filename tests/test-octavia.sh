@@ -16,7 +16,7 @@ function check_certificate_expiry {
 }
 
 function register_amphora_image {
-    amphora_url=https://tarballs.opendev.org/openstack/octavia/test-images/test-only-amphora-x64-haproxy-ubuntu-focal.qcow2
+    amphora_url=https://tarballs.opendev.org/openstack/octavia/test-images/test-only-amphora-x64-haproxy-ubuntu-jammy.qcow2
     curl -o amphora.qcow2 $amphora_url
     (. /etc/kolla/octavia-openrc.sh && openstack image create amphora-x64-haproxy --file amphora.qcow2  --tag amphora --disk-format qcow2 --property hw_architecture='x86_64' --property hw_rng_model=virtio)
 }
