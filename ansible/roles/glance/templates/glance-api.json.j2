@@ -1,15 +1,33 @@
 {
-    "command": "glance-api",
+    "command": "uwsgi /etc/glance/glance-api-uwsgi.ini",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/glance-api.conf",
             "dest": "/etc/glance/glance-api.conf",
             "owner": "glance",
             "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/glance-api-uwsgi.ini",
+            "dest": "/etc/glance/glance-api-uwsgi.ini",
+            "owner": "glance",
+            "perm": "0600"
         }{% if glance_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ glance_policy_file }}",
             "dest": "/etc/glance/{{ glance_policy_file }}",
+            "owner": "glance",
+            "perm": "0600"
+        }{% endif %}{% if glance_copy_certs | bool %},
+        {
+            "source": "{{ container_config_directory }}/glance-cert.pem",
+            "dest": "/etc/glance/certs/glance-cert.pem",
+            "owner": "glance",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/glance-key.pem",
+            "dest": "/etc/glance/certs/glance-key.pem",
             "owner": "glance",
             "perm": "0600"
         }{% endif %}{% if glance_backend_ceph | bool %},
