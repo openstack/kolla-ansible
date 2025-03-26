@@ -1,10 +1,14 @@
 ---
 - import_tasks: config-host.yml
 
-# Pin release version
+# Pin release version for rolling upgrades
+# This is only needed when performing a slow rolling upgrade process
+# where you need to maintain compatibility between different versions
+# during the upgrade. For direct version jumps, this section can be skipped.
 - import_tasks: config.yml
   vars:
-    pin_release_version: "{{ openstack_previous_release_name }}"
+    pin_release_version: "{{ ironic_pin_release_version }}"
+  when: ironic_pin_release_version | length > 0
 
 - import_tasks: check-containers.yml
 
