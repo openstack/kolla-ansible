@@ -281,6 +281,11 @@ class Stop(KollaAnsibleMixin, Command):
             required=True,
             help="WARNING! This action will remove the Openstack deployment!",
         )
+        group.add_argument(
+            "--ignore-missing",
+            action="store_true",
+            help="Don't fail if there are missing containers"
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -288,6 +293,9 @@ class Stop(KollaAnsibleMixin, Command):
 
         extra_vars = {}
         extra_vars["kolla_action"] = "stop"
+        extra_vars["kolla_action_stop_ignore_missing"] = (
+            "yes" if parsed_args.ignore_missing else "no"
+        )
 
         playbooks = _choose_playbooks(parsed_args)
 
