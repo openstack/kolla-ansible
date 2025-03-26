@@ -269,6 +269,10 @@ images on hosts.
 files for enabled OpenStack services, without then restarting the containers so
 it is not applied right away.
 
+``kolla-ansible validate-config -i INVENTORY`` is used to validate generated
+configuration files of enabled OpenStack services. By default, the results are
+saved to ``/var/log/kolla/config-validate`` when issues are detected.
+
 ``kolla-ansible ... -i INVENTORY1 -i INVENTORY2`` Multiple inventories can be
 specified by passing the ``--inventory`` or ``-i`` command line option multiple
 times. This can be useful to share configuration between multiple environments.
