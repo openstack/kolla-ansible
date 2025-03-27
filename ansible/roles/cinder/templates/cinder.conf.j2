@@ -239,6 +239,17 @@ san_ip = {{ pure_san_ip }}
 pure_api_token = {{ pure_api_token }}
 {% endif %}
 
+{% if enable_cinder_backend_lightbits | bool %}
+[{{ cinder_backend_lightbits_name }}]
+volume_driver = cinder.volume.drivers.lightos.LightOSVolumeDriver
+volume_backend_name = {{ lightbits_nvme_tcp_backend_name }}
+lightos_api_address = {{ lightbits_target_ips }}
+lightos_api_port = {{ lightbits_api_port }}
+lightos_default_num_replicas = {{ lightbits_default_num_replicas }}
+lightos_skip_ssl_verify = {{ lightbits_skip_ssl_verify }}
+lightos_jwt = {{ lightbits_JWT }}
+{% endif %}
+
 [privsep_entrypoint]
 helper_command=sudo cinder-rootwrap /etc/cinder/rootwrap.conf privsep-helper --config-file /etc/cinder/cinder.conf
 

@@ -43,6 +43,7 @@
     - not enable_cinder_backend_pure_fc | bool
     - not enable_cinder_backend_pure_roce | bool
     - not enable_cinder_backend_pure_nvme_tcp | bool
+    - not enable_cinder_backend_lightbits | bool
 
 - name: Checking LVM volume group exists for Cinder
   become: true
@@ -67,6 +68,16 @@
     - cinder_backup_s3_access_key
     - cinder_backup_s3_secret_key
   when: cinder_backup_driver == "s3"
+
+- name: Check if Lightbits configurations are defined
+  assert:
+    that:
+      - vars[item] is defined
+    msg: "Cinder Lightbits backend is enabled, the {{ item }} variable must be defined."
+  with_items:
+    - lightos_api_address
+    - lightos_jwt
+  when: enable_cinder_backend_lightbits == "yes"
 
 - name: Check if cinder_cluster_name is configured for HA configurations
   assert:
