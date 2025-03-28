@@ -51,7 +51,8 @@ function filter_out_expected_critical {
         # Sometimes we see this during upgrades of Keystone.
         # Usually in Placement but also in Neutron and Nova.
         # Especially in AIO.
-        grep -v "Failed to fetch token data from identity server"
+        grep -v "Failed to fetch token data from identity server" |
+        grep -v "Identity server rejected authorization necessary to fetch token data"
         ;;
     esac
 }
