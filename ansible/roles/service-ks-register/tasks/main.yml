@@ -102,7 +102,7 @@
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
 
-    - name: "{{ project_name }} | Granting user roles"
+    - name: "{{ project_name }} | Granting/revoking user roles"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.role_assignment
@@ -116,6 +116,7 @@
           auth: "{{ service_ks_register_auth }}"
           interface: "{{ service_ks_register_interface }}"
           cacert: "{{ service_ks_cacert }}"
+          state: "{{ item.state | default('present') }}"
       with_items: "{{ service_ks_register_users + service_ks_register_user_roles }}"
       loop_control:
         label: "{{ item.user }} -> {{ item.project | default(item.domain) | default(item.system) }} -> {{ item.role }}"
