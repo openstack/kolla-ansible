@@ -274,9 +274,10 @@ class PodmanWorker(ContainerWorker):
                     )
                 )
 
-    def check_volume(self):
+    def check_volume(self, name=None):
+        volume_name = name if name else self.params.get('name')
         try:
-            vol = self.pc.volumes.get(self.params.get('name'))
+            vol = self.pc.volumes.get(volume_name)
             return vol.attrs
         except APIError as e:
             if e.status_code == 404:
@@ -503,6 +504,9 @@ class PodmanWorker(ContainerWorker):
         return ulimits_opt
 
     def create_container(self):
+        # ensure volumes are pre-created before container creation
+        self.create_container_volumes()
+
         args = self.prepare_container_args()
         container = self.pc.containers.create(**args)
         if container.attrs == {}:
@@ -624,16 +628,28 @@ class PodmanWorker(ContainerWorker):
                     msg="Container timed out",
                     **container.attrs)
 
-    def create_volume(self):
-        if not self.check_volume():
+    def create_volume(self, name=None):
+        volume_name = name if name else self.params.get('name')
+        if not self.check_volume(name=volume_name):
             self.changed = True
             args = dict(
-                name=self.params.get('name'),
-                driver='local'
+                name=volume_name,
+                driver='local',
+                labels={'kolla_managed': 'true'}
             )
 
             vol = self.pc.volumes.create(**args)
             self.result = vol.attrs
+
+    def create_container_volumes(self):
+        volumes = self.params.get("volumes", []) or []
+
+        for volume in volumes:
+            volume_name = volume.split(":")[0]
+            if "/" in volume_name:
+                continue
+
+            self.create_volume(name=volume_name)
 
     def remove_volume(self):
         if self.check_volume():

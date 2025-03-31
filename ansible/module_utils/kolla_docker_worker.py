@@ -333,6 +333,9 @@ class DockerWorker(ContainerWorker):
 
     def create_container(self):
         self.changed = True
+        # ensure volumes are pre-created before container creation
+        self.create_container_volumes()
+
         options = self.build_container_options()
         self.dc.create_container(**options)
         if self.params.get('restart_policy') != 'oneshot':
@@ -458,10 +461,22 @@ class DockerWorker(ContainerWorker):
                 self.dc.stop(name, timeout=graceful_timeout)
                 self.dc.start(name)
 
-    def create_volume(self):
+    def create_volume(self, name=None):
+        volume_name = name if name else self.params.get('name')
         if not self.check_volume():
             self.changed = True
-            self.dc.create_volume(name=self.params.get('name'), driver='local')
+            self.dc.create_volume(name=volume_name, driver='local',
+                                  labels={'kolla_managed': 'true'})
+
+    def create_container_volumes(self):
+        volumes = self.params.get("volumes", [])
+
+        for volume in volumes:
+            volume_name = volume.split(":")[0]
+            if "/" in volume_name:
+                continue
+
+            self.create_volume(name=volume_name)
 
     def remove_volume(self):
         if self.check_volume():
