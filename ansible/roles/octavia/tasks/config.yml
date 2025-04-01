@@ -65,7 +65,27 @@
     - "{{ node_custom_config }}/octavia/{{ inventory_hostname }}/octavia-wsgi.conf"
     - "{{ node_custom_config }}/octavia/octavia-wsgi.conf"
     - "octavia-wsgi.conf.j2"
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - octavia_wsgi_provider == "apache"
+
+- name: "Configure uWSGI for Octavia"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ octavia_services }}"
+    service: "{{ octavia_services['octavia-api'] }}"
+    service_name: "octavia-api"
+    service_uwsgi_config_http_port: "{{ octavia_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_wsgi_file: "/var/lib/kolla/venv/bin/octavia-wsgi"
+    service_uwsgi_config_tls_backend: "{{ octavia_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/octavia/certs/octavia-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/octavia/certs/octavia-key.pem"
+    service_uwsgi_config_uid: "octavia"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - octavia_wsgi_provider == "uwsgi"
 
 - name: Copying over octavia.conf
   vars:

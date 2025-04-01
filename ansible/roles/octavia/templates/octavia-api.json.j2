@@ -1,20 +1,27 @@
 {% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ( '/usr/sbin/' + apache_binary + ' -DFOREGROUND' ) if octavia_wsgi_provider == 'apache' else 'uwsgi /etc/octavia/octavia-api-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/octavia.conf",
             "dest": "/etc/octavia/octavia.conf",
             "owner": "octavia",
             "perm": "0600"
-        },
+        }{% if octavia_wsgi_provider == "apache" %},
         {
             "source": "{{ container_config_directory }}/octavia-wsgi.conf",
             "dest": "/etc/{{ apache_conf_dir }}/octavia-wsgi.conf",
             "owner": "octavia",
             "perm": "0600"
-        }{% if octavia_policy_file is defined %},
+        }{% elif octavia_wsgi_provider == "uwsgi" %},
+        {
+            "source": "{{ container_config_directory }}/octavia-api-uwsgi.ini",
+            "dest": "/etc/octavia/octavia-api-uwsgi.ini",
+            "owner": "octavia",
+            "perm": "0600"
+        }{% endif %}{% if octavia_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ octavia_policy_file }}",
             "dest": "/etc/octavia/{{ octavia_policy_file }}",
