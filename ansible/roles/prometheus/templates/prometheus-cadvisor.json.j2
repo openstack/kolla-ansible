@@ -1,17 +1,20 @@
 {
     "command": "/opt/cadvisor --port={{ prometheus_cadvisor_port }} --log_dir=/var/log/kolla/prometheus{% if prometheus_cadvisor_cmdline_extras %} {{ prometheus_cadvisor_cmdline_extras }}{% endif %}",
-    "config_files": [],
-    "permissions": [
-        {
-            "path": "/var/log/kolla/prometheus",
-            "owner": "prometheus:prometheus",
-            "recurse": true
-        }{% if kolla_copy_ca_into_containers | bool %},
+    "config_files": [
+{% if kolla_copy_ca_into_containers | bool %}
         {
             "source": "{{ container_config_directory }}/ca-certificates",
             "dest": "/var/lib/kolla/share/ca-certificates",
             "owner": "root",
             "perm": "0600"
-        }{% endif %}
+        }
+{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/prometheus",
+            "owner": "prometheus:prometheus",
+            "recurse": true
+        }
     ]
 }
