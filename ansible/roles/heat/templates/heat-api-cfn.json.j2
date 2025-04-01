@@ -1,19 +1,27 @@
-{% set heat_api_cfn_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
-{% set wsgi_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if heat_wsgi_provider == 'apache' else 'uwsgi /etc/heat/heat-api-cfn-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ heat_api_cfn_cmd }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/heat.conf",
             "dest": "/etc/heat/heat.conf",
             "owner": "heat",
             "perm": "0600"
-        },{
+        }{% if heat_wsgi_provider == 'apache' %},
+        {
             "source": "{{ container_config_directory }}/wsgi-heat-api-cfn.conf",
-            "dest": "/etc/{{ wsgi_conf_dir }}/wsgi-heat-api-cfn.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/wsgi-heat-api-cfn.conf",
             "owner": "heat",
             "perm": "0600"
-        }{% if heat_policy_file is defined %},
+        }{% elif heat_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/heat-api-cfn-uwsgi.ini",
+            "dest": "/etc/heat/heat-api-cfn-uwsgi.ini",
+            "owner": "heat",
+            "perm": "0600"
+        }{% endif %}{% if heat_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ heat_policy_file }}",
             "dest": "/etc/heat/{{ heat_policy_file }}",

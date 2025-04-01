@@ -8,6 +8,7 @@ heat_services:
     volumes: "{{ heat_api_default_volumes + heat_api_extra_volumes }}"
     dimensions: "{{ heat_api_dimensions }}"
     healthcheck: "{{ heat_api_healthcheck }}"
+    wsgi: "heat.wsgi.api:application"
     haproxy:
       heat_api:
         enabled: "{{ enable_heat }}"
@@ -36,6 +37,7 @@ heat_services:
     volumes: "{{ heat_api_cfn_default_volumes + heat_api_cfn_extra_volumes }}"
     dimensions: "{{ heat_api_cfn_dimensions }}"
     healthcheck: "{{ heat_api_cfn_healthcheck }}"
+    wsgi: "heat.wsgi.cfn:application"
     haproxy:
       heat_api_cfn:
         enabled: "{{ enable_heat }}"
@@ -265,3 +267,8 @@ heat_database_enable_tls_internal: "{{ database_enable_tls_internal | bool }}"
 # Copy certificates
 ###################
 heat_copy_certs: "{{ kolla_copy_ca_into_containers | bool or heat_enable_tls_backend | bool or heat_database_enable_tls_internal | bool }}"
+
+######
+# WSGI
+######
+heat_wsgi_provider: "uwsgi"

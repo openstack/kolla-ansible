@@ -73,7 +73,27 @@
     dest: "{{ node_config_directory }}/heat-api/wsgi-heat-api.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - heat_wsgi_provider == "apache"
+
+- name: Configure uWSGI for heat-api
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ heat_services }}"
+    service: "{{ heat_services['heat-api'] }}"
+    service_name: "heat-api"
+    service_uwsgi_config_http_port: "{{ heat_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ heat_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/heat/certs/heat-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/heat/certs/heat-key.pem"
+    service_uwsgi_config_uid: "heat"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - heat_wsgi_provider == "uwsgi"
 
 - name: Copying over heat-api-cfn wsgi config
   vars:
@@ -83,4 +103,24 @@
     dest: "{{ node_config_directory }}/heat-api-cfn/wsgi-heat-api-cfn.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - heat_wsgi_provider == "apache"
+
+- name: Configure uWSGI for heat-api-cfn
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ heat_services }}"
+    service: "{{ heat_services['heat-api-cfn'] }}"
+    service_name: "heat-api-cfn"
+    service_uwsgi_config_http_port: "{{ heat_api_cfn_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ heat_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/heat/certs/heat-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/heat/certs/heat-key.pem"
+    service_uwsgi_config_uid: "heat"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - heat_wsgi_provider == "uwsgi"
