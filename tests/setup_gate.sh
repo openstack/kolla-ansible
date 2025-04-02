@@ -88,6 +88,12 @@ base_image = quay.io/openstack.kolla/${BASE_DISTRO}
 EOF
     fi
 
+    if [[ $BASE_DISTRO_TAG != "" ]]; then
+        sudo tee -a /etc/kolla/kolla-build.conf <<EOF
+base_tag = ${BASE_DISTRO_TAG}
+EOF
+    fi
+
     sudo tee -a /etc/kolla/kolla-build.conf <<EOF
 [profiles]
 gate = ${GATE_IMAGES}
