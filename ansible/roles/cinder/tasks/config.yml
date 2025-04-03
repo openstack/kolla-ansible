@@ -64,7 +64,27 @@
     - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/cinder-wsgi.conf"
     - "{{ node_custom_config }}/cinder/cinder-wsgi.conf"
     - "cinder-wsgi.conf.j2"
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - cinder_wsgi_provider == "apache"
+
+- name: "Configure uWSGI for Cinder"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ cinder_services }}"
+    service: "{{ cinder_services['cinder-api'] }}"
+    service_name: "cinder-api"
+    service_uwsgi_config_http_port: "{{ cinder_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ cinder_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/cinder/certs/cinder-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/cinder/certs/cinder-key.pem"
+    service_uwsgi_config_uid: "cinder"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - cinder_wsgi_provider == "uwsgi"
 
 - name: Copying over cinder.conf
   vars:

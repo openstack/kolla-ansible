@@ -1,20 +1,27 @@
 {% set cinder_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set cinder_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = '/usr/sbin/{{ apache_binary }} -DFOREGROUND' if cinder_wsgi_provider == 'apache' else 'uwsgi /etc/cinder/cinder-api-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ cinder_cmd }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/cinder.conf",
             "dest": "/etc/cinder/cinder.conf",
             "owner": "cinder",
             "perm": "0600"
-        },
+        }{% if cinder_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/cinder-wsgi.conf",
             "dest": "/etc/{{ cinder_dir }}/cinder-wsgi.conf",
             "owner": "cinder",
             "perm": "0600"
-        }{% if cinder_policy_file is defined %},
+        }{% elif cinder_wsgi_provider == 'uwsgi' %},
+        {
+            "source": "{{ container_config_directory }}/cinder-api-uwsgi.ini",
+            "dest": "/etc/cinder/cinder-api-uwsgi.ini",
+            "owner": "cinder",
+            "perm": "0600"
+        }{% endif %}{% if cinder_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ cinder_policy_file }}",
             "dest": "/etc/cinder/{{ cinder_policy_file }}",
