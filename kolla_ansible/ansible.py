@@ -253,7 +253,7 @@ def build_args(parsed_args,
     for vault_pass_file in parsed_args.vault_password_file:
         args += ["--vault-password-file", vault_pass_file]
     if parsed_args.ask_vault_password:
-        args += "--ask-vault-password"
+        args += ["--ask-vault-password"]
     vars_files = _get_vars_files(
         os.path.abspath(parsed_args.kolla_config_path))
     for vars_file in vars_files:
