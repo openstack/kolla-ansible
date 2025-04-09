@@ -34,8 +34,8 @@ check_podman_unhealthies() {
         echo "Discovered unhealthy container: $container"
         echo "$container - ps axwuf"
         sudo podman exec $container ps axwuf
-        echo "$container - netstat -an"
-        sudo podman exec $container netstat -an
+        echo "$container - ss -an"
+        sudo podman exec $container ss -an
     done
 }
 
@@ -73,8 +73,8 @@ check_docker_unhealthies() {
         echo "Discovered unhealthy container: $container"
         echo "$container - ps axwuf"
         sudo docker exec $container ps axwuf
-        echo "$container - netstat -an"
-        sudo docker exec $container netstat -an
+        echo "$container - ss -an"
+        sudo docker exec $container ss -an
     done
 }
 
