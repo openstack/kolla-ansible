@@ -26,6 +26,7 @@
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
         kolla_ansible_venv_path: "{{ ansible_env.HOME }}/kolla-ansible-venv"
+        kolla_runtime_venv_path: "{{ ansible_env.HOME }}/kolla-runtime-venv"
         kolla_internal_fqdn: "kolla.example.com"
 
     - name: Install dig for Designate testing
@@ -52,6 +53,30 @@
       when:
         - scenario == "lets-encrypt"
 
+    # NOTE(kevko): Rocky Linux has Python 3.9 as the default, but we want to use Python 3.12 instead.
+    - name: Install Python3.12 and dependencies on RHEL derivatives
+      dnf:
+        name:
+          - python3.12
+          - python3.12-devel
+          - python3.12-pip
+        state: latest
+      when: ansible_facts.os_family == 'RedHat'
+      become: true
+
+    # NOTE(kevko): While in Rocky, virtualenv is included as part of the packages above, in Debuntu, virtualenv is in a separate package.
+    - name: Install python3-virtualenv
+      package:
+        name: python3-virtualenv
+        state: present
+        update_cache: "{{ True if ansible_facts.os_family == 'Debian' else omit }}"
+      become: true
+      when: ansible_facts.os_family != 'RedHat'
+
+    - name: Create Kolla runtime venv
+      command:
+        cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_runtime_venv_path }}"
+        creates: "{{ kolla_runtime_venv_path }}"
 
 - hosts: primary
   any_errors_fatal: true
@@ -236,36 +261,10 @@
         state: directory
       become: true
 
-    - name: Install Python3.12 and dependencies needed for dbus-python on RHEL derivatives
-      dnf:
-        name:
-          - python3.12
-          - python3.12-devel
-          - python3.12-pip
-          - gcc
-          - dbus-devel
-          - glib2-devel
-          - dbus-x11
-        state: latest
-      when: ansible_facts.os_family == 'RedHat'
-      become: true
-
     - name: Create Kolla Ansible venv
       command:
         cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_ansible_venv_path }}"
         creates: "{{ kolla_ansible_venv_path }}"
-
-    - name: Ensure the latest tested pip
-      pip:
-        name: "pip==23.*"
-        state: latest
-        virtualenv: "{{ kolla_ansible_venv_path }}"
-
-    - name: Ensure the latest tested setuptools
-      pip:
-        name: "setuptools==67.2.0"
-        state: latest
-        virtualenv: "{{ kolla_ansible_venv_path }}"
 
     - name: Install kolla-ansible and dependencies
       pip:

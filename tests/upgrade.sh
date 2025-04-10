@@ -13,6 +13,11 @@ function upgrade {
     source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
 
     kolla-ansible certificates -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/certificates
+    # Previous versions had older docker, requests requirements for example
+    # Therefore we need to run bootstrap again to ensure libraries are in
+    # proper versions (ansible-collection-kolla is different for new version, potentionally
+    # also dependencies).
+    kolla-ansible bootstrap-servers -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/upgrade-bootstrap
     # Skip rabbitmq-ha-precheck before the queues are migrated.
     kolla-ansible prechecks -i ${RAW_INVENTORY} --skip-tags rabbitmq-ha-precheck -vvv &> /tmp/logs/ansible/upgrade-prechecks-pre-rabbitmq
 
