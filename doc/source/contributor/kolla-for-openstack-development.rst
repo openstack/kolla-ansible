@@ -31,6 +31,14 @@ To enable it just for heat, set:
 
    heat_dev_mode: true
 
+To customise the repository and branch to use, set:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   heat_git_repository: "https://git.example.com/openstack/heat.git"
+   heat_source_version: "custom"
+
 Usage
 -----
 
