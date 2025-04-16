@@ -80,12 +80,14 @@ cloudkitty_api_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' if om_enable_queue_manager | bool else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
 cloudkitty_processor_default_volumes:
   - "{{ node_config_directory }}/cloudkitty-processor/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' if om_enable_queue_manager | bool else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/cloudkitty/cloudkitty:/var/lib/kolla/venv/lib/python' ~ distro_python_version ~ '/site-packages/cloudkitty' if cloudkitty_dev_mode | bool else '' }}"
 
 cloudkitty_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
