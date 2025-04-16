@@ -164,8 +164,24 @@
       loop_control:
         label: "{{ item.name }}"
       when:
-        - item.name is search('reply_') or item.name is search('_fanout')
+        - item.name is search('reply_') or (item.name is search('_fanout') and not om_enable_rabbitmq_stream_fanout | bool)
         - om_enable_rabbitmq_transient_quorum_queue | bool
+
+    - name: Check if RabbitMQ streams need to be configured
+      assert:
+        that: "{{ item.type == 'stream' }}"
+        fail_msg: >
+          om_enable_rabbitmq_stream_fanout is True but {{ item.name }} is not a stream.
+          Currently the procedure to migrate to streams is manual.
+          Please follow the process described here: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#high-availability.
+          Note that this process may take several hours on larger systems.
+          If you do not wish to enable this feature, set om_enable_rabbitmq_stream_fanout to False.
+      loop: "{{ (rabbitmq_queues.stdout | from_json) if rabbitmq_queues is not skipped else [] }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - item.name is search('_fanout')
+        - om_enable_rabbitmq_stream_fanout | bool
 
   run_once: true
   when:
