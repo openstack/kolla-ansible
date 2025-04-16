@@ -124,6 +124,12 @@ rpc_thread_pool_size = 2
 transport_url = {{ notify_transport_url }}
 
 [oslo_messaging_rabbit]
+{% if om_enable_queue_manager | bool %}
+use_queue_manager = true
+{% if service_name == 'octavia-api' %}
+processname = {{ service_name }}
+{% endif %}
+{% endif %}
 heartbeat_in_pthread = {{ service_name == 'octavia-api' }}
 {% if om_enable_rabbitmq_tls | bool %}
 ssl = true
