@@ -1,6 +1,44 @@
 ---
 - import_tasks: config.yml
 
+# NOTE(mnasiadka): Remove me in 2025.2
+- name: Check for the existence of Prometheus v2 container volume
+  become: true
+  stat:
+    path: "{{ container_engine_volumes_path }}/prometheus_v2/_data"
+  register: prometheus_v2_data
+
+- name: Migrate Prometheus volume
+  when: prometheus_v2_data.stat.exists
+  block:
+    - name: Gracefully stop Prometheus
+      become: true
+      kolla_container:
+        name: "{{ prometheus_services['prometheus-server'].container_name }}"
+        action: "stop_and_remove_container"
+        common_options: "{{ docker_common_options }}"
+        ignore_missing: true
+
+    - name: Create new Prometheus v3 volume
+      become: true
+      kolla_container:
+        action: "create_volume"
+        name: "prometheus"
+        common_options: "{{ docker_common_options }}"
+
+    - name: Move _data from old to new volume
+      become: true
+      command: "mv {{ container_engine_volumes_path }}/prometheus_v2/_data {{ container_engine_volumes_path }}/prometheus/"
+      args:
+        removes: "{{ container_engine_volumes_path }}/prometheus_v2/_data"
+
+    - name: Remove old Prometheus v2 volume
+      become: true
+      kolla_container:
+        action: "remove_volume"
+        name: "prometheus_v2"
+        common_options: "{{ docker_common_options }}"
+
 - import_tasks: check-containers.yml
 
 - name: Flush handlers
