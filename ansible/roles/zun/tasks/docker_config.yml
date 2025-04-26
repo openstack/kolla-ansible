@@ -1,0 +1,40 @@
+---
+- name: Ensure docker.service.d directory exists
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: "0755"
+  become: true
+  when:
+    - inventory_hostname in groups['zun-compute']
+    - docker_configure_for_zun | bool
+
+- name: Configure Docker to listen on port 2375 for Zun
+  template:
+    src: "{{ role_path }}/templates/docker.conf.j2"
+    dest: /etc/systemd/system/docker.service.d/docker.conf
+    mode: "0644"
+  become: true
+  register: docker_config_updated
+  when:
+    - inventory_hostname in groups['zun-compute']
+    - docker_configure_for_zun | bool
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  become: true
+  when:
+    - docker_config_updated is changed
+    - inventory_hostname in groups['zun-compute']
+    - docker_configure_for_zun | bool
+
+- name: Restart Docker service
+  systemd:
+    name: docker
+    state: restarted
+  become: true
+  when:
+    - docker_config_updated is changed
+    - inventory_hostname in groups['zun-compute']
+    - docker_configure_for_zun | bool

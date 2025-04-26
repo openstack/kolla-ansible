@@ -82,7 +82,6 @@ container_proxy:
 # to the api_interface.  Allow the bind address to be an override.
 api_interface_address: "{{ 'api' | kolla_address }}"
 
-
 ####################
 # Database options
 ####################
@@ -129,7 +128,7 @@ docker_restart_policy: "unless-stopped"
 docker_restart_policy_retry: "10"
 
 # Extra docker options for Zun
-docker_configure_for_zun: "no"
+docker_configure_for_zun: "yes"
 docker_zun_options: -H tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
 docker_zun_config: {}
 
@@ -172,8 +171,8 @@ container_engine_volumes_path: "{{ docker_volumes_path if kolla_container_engine
 # Podman has problem with mounting whole /run directory
 # described here: https://github.com/containers/podman/issues/16305
 run_default_volumes_podman:
-  - '/run/netns:/run/netns:shared'
-  - '/run/lock/nova:/run/lock/nova:shared'
+  - "/run/netns:/run/netns:shared"
+  - "/run/lock/nova:/run/lock/nova:shared"
   - "/run/libvirt:/run/libvirt:shared"
   - "/run/nova:/run/nova:shared"
   - "/run/openvswitch:/run/openvswitch:shared"
@@ -181,8 +180,8 @@ run_default_volumes_podman:
 run_default_volumes_docker: []
 
 run_default_subdirectories:
-  - '/run/netns'
-  - '/run/lock/nova'
+  - "/run/netns"
+  - "/run/lock/nova"
   - "/run/libvirt"
   - "/run/nova"
   - "/run/openvswitch"
@@ -231,7 +230,6 @@ default_extra_volumes: []
 ####################
 # Arbitrary unique number from 0..255
 keepalived_virtual_router_id: "51"
-
 
 #######################
 ## Opensearch Options
@@ -431,22 +429,22 @@ kolla_haproxy_ssl_settings: "modern"
 haproxy_ssl_settings: "{{ ssl_legacy_settings if kolla_haproxy_ssl_settings == 'legacy' else ssl_intermediate_settings if kolla_haproxy_ssl_settings == 'intermediate' else ssl_modern_settings | default(ssl_modern_settings) }}"
 
 ssl_legacy_settings: |
-    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
-    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+  ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
+  ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
 
 ssl_intermediate_settings: |
-    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
-    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-    ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
-    ssl-default-server-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
-    ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-    ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+  ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
+  ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+  ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+  ssl-default-server-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
+  ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+  ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
 
 ssl_modern_settings: |
-    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-    ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
-    ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
-    ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+  ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+  ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+  ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+  ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
 
 heat_internal_fqdn: "{{ kolla_internal_fqdn }}"
 heat_external_fqdn: "{{ kolla_external_fqdn }}"
@@ -1310,7 +1308,6 @@ prometheus_openstack_exporter_endpoint_type: "internal"
 prometheus_openstack_exporter_compute_api_version: "latest"
 prometheus_libvirt_exporter_interval: "60s"
 
-
 ####################
 # InfluxDB options
 ####################
@@ -1322,12 +1319,8 @@ influxdb_internal_endpoint: "{{ kolla_internal_fqdn | kolla_url(internal_protoco
 #########################
 # Internal Image options
 #########################
-kolla_base_distro_version_default_map: {
-  "centos": "stream9",
-  "debian": "bookworm",
-  "rocky": "9",
-  "ubuntu": "noble",
-}
+kolla_base_distro_version_default_map:
+  { "centos": "stream9", "debian": "bookworm", "rocky": "9", "ubuntu": "noble" }
 
 distro_python_version: "3"
 
