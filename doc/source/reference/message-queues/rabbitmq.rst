@@ -134,18 +134,19 @@ additional steps needed to migrate from transient to durable queues.
    Bobcat release. This means that you will also need to perform this migration
    before a SLURP upgrade to Caracal.
 
-1. Stop all OpenStack services which use RabbitMQ, so that they will not
+1. Generate the new config for all services. After this, make sure not to
+   restart any containers until after the RabbitMQ state has been reset.
+
+   .. code-block:: console
+
+      kolla-ansible genconfig
+
+2. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
 
    .. code-block:: console
 
       kolla-ansible stop --tags <service-tags>
-
-2. Generate the new config for all services.
-
-   .. code-block:: console
-
-      kolla-ansible genconfig
 
 3. Reconfigure RabbitMQ if you are using
    ``om_enable_rabbitmq_high_availability``.
