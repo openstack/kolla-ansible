@@ -126,18 +126,19 @@ different type, the follow procedure will be needed.
    release, following procedure is required to be carried out before any
    upgrade to Epoxy.
 
-1. Stop all OpenStack services which use RabbitMQ, so that they will not
+1. Generate the new config for all services. After this, make sure not to
+   restart any containers until after the RabbitMQ state has been reset.
+
+   .. code-block:: console
+
+      kolla-ansible genconfig
+
+2. Stop all OpenStack services which use RabbitMQ, so that they will not
    attempt to recreate any queues yet.
 
    .. code-block:: console
 
       kolla-ansible stop --tags <service-tags>
-
-2. Generate the new config for all services.
-
-   .. code-block:: console
-
-      kolla-ansible genconfig
 
 3. Reconfigure RabbitMQ if you were previously using
    ``om_enable_rabbitmq_high_availability``.
