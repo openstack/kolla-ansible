@@ -315,6 +315,12 @@
             tasks_from: loadbalancer
           tags: zun
           when: enable_zun | bool
+        # NOTE(r-krcek): This last step will notify handlers if any
+        # changes to the configuration have been made.
+        - include_role:
+            name: loadbalancer
+            tasks_from: check-containers
+          when: kolla_action != 'config'
       when:
         - enable_haproxy | bool
         - kolla_action in ['deploy', 'reconfigure', 'upgrade', 'config']
