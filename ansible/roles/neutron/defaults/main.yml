@@ -70,6 +70,7 @@ neutron_services:
     dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
     healthcheck: "{{ neutron_linuxbridge_agent_healthcheck }}"
   neutron-dhcp-agent:
+    cgroupns_mode: "{{ 'host' if neutron_agents_wrappers | bool else 'private' }}"
     container_name: "neutron_dhcp_agent"
     image: "{{ neutron_dhcp_agent_image_full }}"
     privileged: True
@@ -79,13 +80,22 @@ neutron_services:
     volumes: "{{ neutron_dhcp_agent_default_volumes + neutron_dhcp_agent_extra_volumes }}"
     dimensions: "{{ neutron_dhcp_agent_dimensions }}"
     healthcheck: "{{ neutron_dhcp_agent_healthcheck }}"
+    pid_mode: "{{ 'host' if neutron_agents_wrappers | bool else '' }}"
+    environment:
+      KOLLA_IMAGE: "{{ neutron_dhcp_agent_image_full }}"
+      KOLLA_NAME: "neutron_dhcp_agent"
+      KOLLA_NEUTRON_WRAPPERS: "{{ 'true' if neutron_agents_wrappers | bool else 'false' }}"
   neutron-l3-agent:
+    cgroupns_mode: "{{ 'host' if neutron_agents_wrappers | bool else 'private' }}"
     container_name: "neutron_l3_agent"
     image: "{{ neutron_l3_agent_image_full }}"
     privileged: True
     enabled: "{{ neutron_plugin_agent not in ['ovn', 'vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] }}"
     environment:
+      KOLLA_IMAGE: "{{ neutron_l3_agent_image_full }}"
       KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
+      KOLLA_NAME: "neutron_l3_agent"
+      KOLLA_NEUTRON_WRAPPERS: "{{ 'true' if neutron_agents_wrappers | bool else 'false' }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['neutron-l3-agent']
@@ -94,6 +104,8 @@ neutron_services:
     volumes: "{{ neutron_l3_agent_default_volumes + neutron_l3_agent_extra_volumes }}"
     dimensions: "{{ neutron_l3_agent_dimensions }}"
     healthcheck: "{{ neutron_l3_agent_healthcheck }}"
+    pid_mode: "{{ 'host' if neutron_agents_wrappers | bool else '' }}"
+
   neutron-sriov-agent:
     container_name: "neutron_sriov_agent"
     image: "{{ neutron_sriov_agent_image_full }}"
@@ -515,6 +527,9 @@ neutron_dhcp_agent_default_volumes:
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
   - "{{ kolla_dev_repos_directory ~ '/neutron:/dev-mode/neutron' if neutron_dev_mode | bool else '' }}"
+  - "{{ '/var/run/docker.sock:/var/run/docker.sock:ro' if neutron_agents_wrappers | bool and kolla_container_engine == 'docker' }}"
+  - "{{ '/run/podman/podman.sock:/run/podman/podman.sock' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' }}"
+  - "{{ '/var/lib/containers:/var/lib/containers' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' }}"
 neutron_l3_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-l3-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -525,6 +540,9 @@ neutron_l3_agent_default_volumes:
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
   - "{{ kolla_dev_repos_directory ~ '/neutron:/dev-mode/neutron' if neutron_dev_mode | bool else '' }}"
+  - "{{ '/var/run/docker.sock:/var/run/docker.sock:ro' if neutron_agents_wrappers | bool and kolla_container_engine == 'docker' }}"
+  - "{{ '/run/podman/podman.sock:/run/podman/podman.sock' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' }}"
+  - "{{ '/var/lib/containers:/var/lib/containers' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' }}"
 neutron_sriov_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-sriov-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -671,6 +689,8 @@ neutron_l3_agent_host_ipv6_neigh_gc_thresh3: "{{ neutron_l3_agent_host_ipv4_neig
 
 neutron_api_workers: "{{ openstack_service_workers }}"
 neutron_metadata_workers: "{{ openstack_service_workers }}"
+
+neutron_agents_wrappers: "no"
 
 ####################
 # Subprojects

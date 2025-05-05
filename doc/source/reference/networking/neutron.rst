@@ -335,3 +335,18 @@ In this example:
 - `neutron_modules_extra`: Allows users to specify additional modules and
   their associated parameters. The given configuration adjusts the
   `hashsize` parameter for the `nf_conntrack_tftp` module.
+
+Running Neutron agents subprocesses in separate containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is an experimental feature in Kolla-Ansible that allows to overcome
+the issue of breaking data plane connectivity and dhcp services when
+restarting neutron-l3-agent and neutron-dhcp-agent.
+
+To enable it, modify the configuration in ``/etc/kolla/globals.yml``:
+
+.. code-block:: yaml
+
+   neutron_agents_wrappers: "yes"
+
+For additional details see `bug 1891469 <https://launchpad.net/bugs/1891469>`_
