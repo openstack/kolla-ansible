@@ -15,3 +15,4 @@ supported by kolla.
    cinder-guide-lightbits
    manila-guide
    manila-hnas-guide
+   manila-pure-guide
