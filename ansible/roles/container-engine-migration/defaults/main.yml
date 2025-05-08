@@ -1,0 +1,19 @@
+---
+engine_data:
+  docker:
+    name: docker
+    volumes_dir: "{{ docker_volumes_path }}"
+    volumes_mode: "0701"
+    packages:
+      - docker-ce
+  podman:
+    name: podman
+    volumes_dir: "{{ podman_volumes_path }}"
+    volumes_mode: "0700"
+    packages:
+      - podman
+
+# NOTE(mhiner): default is used to pass ansible syntax check,
+# which otherwise complains that kolla_container_engine is undefined.
+target_engine: "{{ kolla_container_engine | default('podman') }}"
+current_engine: "{{ 'docker' if kolla_container_engine == 'podman' else 'podman' }}"

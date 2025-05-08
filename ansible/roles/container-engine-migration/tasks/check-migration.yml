@@ -1,0 +1,15 @@
+---
+- name: Gather package facts
+  package_facts:
+  when:
+    - "'packages' not in ansible_facts"
+
+- name: Fail when attempting to migrate to current container engine
+  fail:
+    msg: -|
+      Cannot migrate to the same container engine that is currently used.
+      Packages from target_engine were found on the system.
+      If the migration failed in the stage of deploying the target engine,
+      you can resume it by running "kolla-ansible deploy"
+  when: "engine_data[target_engine].packages is subset(ansible_facts.packages)"
+  any_errors_fatal: true

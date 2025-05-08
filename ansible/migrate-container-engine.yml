@@ -1,0 +1,21 @@
+---
+- import_playbook: gather-facts.yml
+  vars:
+    kolla_action: migrate-container-engine
+
+- name: Prepare the Openstack migration
+  hosts: baremetal
+  gather_facts: false
+  roles:
+    - role: container-engine-migration
+
+- name: Migrate the Openstack
+  vars:
+    kolla_action: deploy
+    migration_flag:
+  import_playbook: site.yml
+  tags: redeploy
+
+- name: Verify the migration
+  import_playbook: post-deploy.yml
+  tags: post

@@ -3,6 +3,13 @@
   vars:
     logs_dir: "/tmp/logs"
   tasks:
+    # TODO(mhiner): Currently only Docker to Podman migration is tested.
+    # If we want to test the other direction we have to rework this.
+    - name: Change container engine after the migration
+      set_fact:
+        container_engine: "podman"
+      when: scenario == "container-engine-migration"
+
     - name: Print all facts
       copy:
         content: "{{ hostvars[inventory_hostname] | to_nice_json }}"

@@ -314,3 +314,41 @@ To specify additional volumes for a single container, set
 
   nova_libvirt_extra_volumes:
     - "/etc/foo:/etc/foo"
+
+Migrate container engine
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Kolla-Ansible supports two container engines - Docker and Podman.
+It is possible to migrate deployed OpenStack between these two engines.
+Migration is supported in both directions, meaning it is possible to
+migrate from Docker to Podman as well as from Podman to Docker.
+
+Before starting the migration, you have to change the value of
+``kolla_container_engine`` in your ``/etc/kolla/globals.yml`` file to the new
+container engine:
+
+.. code-block:: yaml
+
+   # previous value was docker
+   kolla_container_engine: podman
+
+Apart from this change, ``globals.yml`` should stay unchanged.
+The same goes for any other config file, such as the inventory file.
+
+.. warning::
+
+   Currently, rolling migration is not supported. You have to stop
+   all virtual machines running in your OpenStack. Otherwise,
+   migration will become unstable and can fail.
+
+After editing ``globals.yml`` and stopping virtual machines
+migration can be started with the following command:
+
+.. code-block:: console
+
+   kolla-ansible migrate-container-engine
+
+.. warning::
+   During the migration, all the container volumes will be migrated
+   under the new container engine. Old container engine system packages will be
+   removed from the system and all their resources and data will be deleted.

@@ -491,3 +491,16 @@ class Check(KollaAnsibleMixin, Command):
         playbooks = _choose_playbooks(parsed_args)
 
         self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
+
+
+class MigrateContainerEngine(KollaAnsibleMixin, Command):
+    """Migrate the container engine of the deployed OpenStack"""
+
+    def take_action(self, parsed_args):
+        self.app.LOG.info(
+            "Migrate the container engine of the deployed Openstack"
+        )
+
+        playbooks = _choose_playbooks(parsed_args, "migrate-container-engine")
+
+        self.run_playbooks(parsed_args, playbooks)
