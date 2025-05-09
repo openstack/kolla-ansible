@@ -57,6 +57,16 @@
     - enable_cinder_backend_lvm | bool
     - inventory_hostname in groups['cinder-volume']
 
+- name: Checking for coordination backend if Ceph backend is enabled
+  run_once: True
+  fail:
+    msg: "Please enable redis or etcd when using Cinder Ceph backend"
+  when:
+    - not skip_cinder_backend_check | bool
+    - cinder_backend_ceph | bool
+    - cinder_coordination_backend == ''
+    - groups['cinder-volume'] | length > 1
+
 - name: Check if S3 configurations are defined
   assert:
     that:
