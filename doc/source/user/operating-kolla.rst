@@ -198,23 +198,6 @@ After this command is complete, the containers will have been recreated from
 the new images and all database schema upgrades and similar actions performed
 for you.
 
-Cleanup the Keystone admin port (Zed only)
-------------------------------------------
-
-The Keystone admin port is no longer used in Zed. The admin interface points
-to the common port. However, during upgrade, the port is preserved for
-intermediate compatibility. To clean up the port, it is necessary to run
-the ``deploy`` action for Keystone. Additionally, the generated
-``admin-openrc.sh`` file may need regeneration as it used the admin
-port:
-
-.. code-block:: console
-
-   kolla-ansible deploy --tags keystone
-   kolla-ansible post-deploy
-
-After these commands are complete, there are no leftovers of the admin port.
-
 Tips and Tricks
 ~~~~~~~~~~~~~~~
 
