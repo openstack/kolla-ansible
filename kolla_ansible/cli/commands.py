@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+
 from cliff.command import Command
 
 from kolla_ansible import ansible
@@ -63,6 +65,14 @@ class KollaAnsibleMixin:
         return verbosity_args
 
     def run_playbooks(self, parsed_args, *args, **kwargs):
+        # If the user knows what they're doing and explicitly sets
+        # ansible_python_interpreter, respect their choice and avoid
+        # overriding it by kolla-ansible.
+        extra = kwargs.get("extra_vars", {})
+        for var in getattr(parsed_args, "extra_vars", []) or []:
+            if var.startswith("ansible_python_interpreter="):
+                extra.pop("ansible_python_interpreter", None)
+                break
         kwargs.update(self._get_verbosity_args())
         return ansible.run_playbooks(parsed_args, *args, **kwargs)
 
@@ -153,6 +163,7 @@ class BootstrapServers(KollaAnsibleMixin, Command):
 
         extra_vars = {}
         extra_vars["kolla_action"] = "bootstrap-servers"
+        extra_vars["ansible_python_interpreter"] = "auto_silent"
 
         playbooks = _choose_playbooks(parsed_args, "kolla-host")
 
@@ -199,7 +210,9 @@ class OctaviaCertificates(KollaAnsibleMixin, Command):
         return parser
 
     def take_action(self, parsed_args):
-        extra_vars = {}
+        extra_vars = {
+            "ansible_python_interpreter": sys.executable
+        }
 
         if hasattr(parsed_args, "check_expiry") \
                 and parsed_args.check_expiry is not None:

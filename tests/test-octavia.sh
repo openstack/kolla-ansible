@@ -11,8 +11,7 @@ export PYTHONUNBUFFERED=1
 function check_certificate_expiry {
     RAW_INVENTORY=/etc/kolla/inventory
     source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
-    # NOTE(mnasiadka): Use venv python here for cryptography package (Ansible fails otherwise)
-    kolla-ansible octavia-certificates -i ${RAW_INVENTORY} --check-expiry 7 -e ansible_python_interpreter=$KOLLA_ANSIBLE_VENV_PATH/bin/python
+    kolla-ansible octavia-certificates -i ${RAW_INVENTORY} --check-expiry 7
     deactivate
 }
 
