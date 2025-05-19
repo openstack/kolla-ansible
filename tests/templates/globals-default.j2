@@ -1,6 +1,14 @@
 ---
+# Upgrade, virtualenv exist
+{% if is_previous_release %}
 virtualenv: "{{ kolla_runtime_venv_path }}"
 ansible_python_interpreter: "{{ kolla_runtime_venv_path }}/bin/python"
+{% else %}
+# New deployment - test virtualenv creation in debian, ubuntu scenarios
+{% if base_distro in ["debian", "ubuntu"] %}
+virtualenv: "{{ kolla_runtime_venv_path }}"
+{% endif %}
+{% endif %}
 
 kolla_base_distro: "{{ base_distro }}"
 network_interface: "{{ api_interface_name }}"
