@@ -103,6 +103,21 @@
     - service | service_enabled_and_mapped_to_host
     - nova_wsgi_provider == "apache"
 
+- name: Copying over vendordata file for nova services
+  vars:
+    service: "{{ nova_services[item] }}"
+  copy:
+    src: "{{ vendordata_file_path }}"
+    dest: "{{ node_config_directory }}/{{ item }}/vendordata.json"
+    mode: "0660"
+  become: True
+  when:
+    - vendordata_file_path is defined
+    - service | service_enabled_and_mapped_to_host
+  loop:
+    - "nova-metadata"
+    - "nova-api"
+
 - name: "Configure uWSGI for Nova"
   include_role:
     name: service-uwsgi-config
@@ -123,15 +138,3 @@
   loop:
     - { name: "nova-api", port: "{{ nova_api_listen_port }}" }
     - { name: "nova-metadata", port: "{{ nova_metadata_listen_port }}" }
-
-- name: Copying over vendordata file
-  vars:
-    service: "{{ nova_services['nova-api'] }}"
-  copy:
-    src: "{{ vendordata_file_path }}"
-    dest: "{{ node_config_directory }}/nova-api/vendordata.json"
-    mode: "0660"
-  become: True
-  when:
-    - vendordata_file_path is defined
-    - service | service_enabled_and_mapped_to_host
