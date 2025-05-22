@@ -190,7 +190,7 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.dfw.client.containers.get.assert_called_once_with('my_container')
         self.assertIn('my_container', self.dfw.result['envs'])
-        self.assertEquals(self.dfw.result['envs']['my_container'], fake_env)
+        self.assertEqual(self.dfw.result['envs']['my_container'], fake_env)
 
     def test_get_containers_env_negative(self):
         self.dfw = get_DockerFactsWorker({'name': ['fake_container'],
