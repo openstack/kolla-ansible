@@ -46,48 +46,12 @@ Whiteboard (etherpad)
 Contacting the Core Team
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The list in alphabetical order (on first name):
+In general it is suggested to use the above mentioned public communication
+channels, but if you find that you need to contact someone from the Core team
+directly, you can find the lists in Gerrit:
 
-+-----------------------+---------------+------------------------------------+
-| Name                  | IRC nick      | Email address                      |
-+=======================+===============+====================================+
-| `Chason Chan`_        | chason        | chason.chan@foxmail.com            |
-+-----------------------+---------------+------------------------------------+
-| `Christian Berendt`_  | berendt       | berendt@betacloud-solutions.de     |
-+-----------------------+---------------+------------------------------------+
-| `Dincer Celik`_       | osmanlicilegi | hello@dincercelik.com              |
-+-----------------------+---------------+------------------------------------+
-| `Eduardo Gonzalez`_   | egonzalez     | dabarren@gmail.com                 |
-+-----------------------+---------------+------------------------------------+
-| `Jeffrey Zhang`_      | Jeffrey4l     | jeffrey.zhang@99cloud.net          |
-+-----------------------+---------------+------------------------------------+
-| `Marcin Juszkiewicz`_ | hrw           | marcin.juszkiewicz@linaro.org      |
-+-----------------------+---------------+------------------------------------+
-| `Mark Goddard`_       | mgoddard      | mark@stackhpc.com                  |
-+-----------------------+---------------+------------------------------------+
-| `Michał Nasiadka`_    | mnasiadka     | mnasiadka@gmail.com                |
-+-----------------------+---------------+------------------------------------+
-| `Radosław Piliszek`_  | yoctozepto    | radoslaw.piliszek@gmail.com        |
-+-----------------------+---------------+------------------------------------+
-| `Surya Prakash`_      | spsurya       | singh.surya64mnnit@gmail.com       |
-+-----------------------+---------------+------------------------------------+
-| `Cao Yuan`_           | caoyuan       | cao.yuan@99cloud.net               |
-+-----------------------+---------------+------------------------------------+
-
-.. _Chason Chan: https://launchpad.net/~chen-xing
-.. _Christian Berendt: https://launchpad.net/~berendt
-.. _Dincer Celik: https://launchpad.net/~osmanlicilegi
-.. _Eduardo Gonzalez: https://launchpad.net/~egonzalez90
-.. _Jeffrey Zhang: https://launchpad.net/~jeffrey4l
-.. _Marcin Juszkiewicz: https://launchpad.net/~hrw
-.. _Mark Goddard: https://launchpad.net/~mgoddard
-.. _Michał Nasiadka: https://launchpad.net/~mnasiadka
-.. _Radosław Piliszek: https://launchpad.net/~yoctozepto
-.. _Surya Prakash: https://launchpad.net/~confisurya
-.. _Cao Yuan: https://launchpad.net/~caoi-yuan
-
-The current effective list is also available from Gerrit:
-https://review.opendev.org/#/admin/groups/1637,members
+- kolla-core https://review.opendev.org/admin/groups/28d5dccfccc125b3963f76ab67e256501565d52b,members
+- kayobe-core https://review.opendev.org/admin/groups/361e28280e3a06be2997a5aa47a8a11d3a8fb9b9,members
 
 New Feature Planning
 ~~~~~~~~~~~~~~~~~~~~
