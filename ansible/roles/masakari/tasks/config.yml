@@ -96,7 +96,24 @@
     dest: "{{ node_config_directory }}/masakari-api/wsgi-masakari.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - masakari_wsgi_provider == "apache"
+
+- name: "Configure uWSGI for Masakari"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ masakari_services }}"
+    service: "{{ masakari_services['masakari-api'] }}"
+    service_name: "masakari-api"
+    service_uwsgi_config_http_port: "{{ masakari_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_uid: "masakari"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - masakari_wsgi_provider == "uwsgi"
 
 - name: Copying over masakari-api-paste.ini
   vars:
