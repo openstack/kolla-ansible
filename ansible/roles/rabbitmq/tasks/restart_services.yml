@@ -7,7 +7,7 @@
     name: "rabbitmq"
   register: container_info
 
-- name: Put RabbitMQ node into maintenance mode
+- name: Put RabbitMQ node into maintenance mode if in cluster
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
     module_name: "community.rabbitmq.rabbitmq_upgrade"
@@ -15,7 +15,16 @@
       action: "drain"
     user: root
   become: true
-  when: container_info.containers | length > 0
+  when:
+    - container_info.containers | length > 0
+    - groups['rabbitmq'] | length > 1
+
+- name: Stop the RabbitMQ application if not in cluster
+  become: true
+  command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl stop_app"
+  when:
+    - container_info.containers | length > 0
+    - groups['rabbitmq'] | length == 1
 
 - name: Restart rabbitmq container
   vars:
