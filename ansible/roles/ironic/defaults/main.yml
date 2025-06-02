@@ -125,17 +125,24 @@ ironic_inspector_database_address: "{{ database_address | put_address_in_context
 ####################
 ironic_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ ironic_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
 ironic_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+ironic_inspector_database_shard_id: "{{ ironic_database_shard_id | int }}"
 ironic_database_shard:
   users:
     - user: "{{ ironic_database_user }}"
       password: "{{ ironic_database_password }}"
+      shard_id: "{{ ironic_database_shard_id }}"
     - user: "{{ ironic_inspector_database_user }}"
       password: "{{ ironic_inspector_database_password }}"
+      shard_id: "{{ ironic_inspector_database_shard_id }}"
   rules:
     - schema: "{{ ironic_database_name }}"
       shard_id: "{{ ironic_database_shard_id }}"
-    - schema: "{{ ironic_inspector_database_name }}"
+    - user: "{{ ironic_database_user }}"
       shard_id: "{{ ironic_database_shard_id }}"
+    - schema: "{{ ironic_inspector_database_name }}"
+      shard_id: "{{ ironic_inspector_database_shard_id }}"
+    - user: "{{ ironic_inspector_database_user }}"
+      shard_id: "{{ ironic_inspector_database_shard_id }}"
 
 
 ####################

@@ -11,8 +11,16 @@
 mysql_query_rules:
 {% for rule in proxysql_project_database_shard['rules'] %}
 {% set WRITER_GROUP = rule['shard_id'] | int * 10 %}
+{% if rule['schema'] is defined %}
   - schemaname: "{{ rule['schema'] }}"
     destination_hostgroup: {{ WRITER_GROUP }}
     apply: 1
     active: 1
+{% endif %}
+{% if rule['user'] is defined %}
+  - username: "{{ rule['user'] }}"
+    destination_hostgroup: {{ WRITER_GROUP }}
+    apply: 1
+    active: 1
+{% endif %}
 {% endfor %}
