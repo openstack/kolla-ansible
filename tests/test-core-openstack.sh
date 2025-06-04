@@ -167,7 +167,7 @@ function create_instance {
         server_create_extra="${server_create_extra} --config-drive True"
     fi
 
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
+    openstack server create --wait --image cirros --flavor c1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
     # If the status is not ACTIVE, print info and exit 1
     if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
         echo "FAILED: Instance is not active"
@@ -179,7 +179,7 @@ function create_instance {
 function resize_instance {
     local name=$1
 
-    openstack server resize --flavor m2.tiny --wait ${name}
+    openstack server resize --flavor c2.tiny --wait ${name}
     # If the status is not VERIFY_RESIZE, print info and exit 1
     if [[ $(openstack server show ${name} -f value -c status) != "VERIFY_RESIZE" ]]; then
         echo "FAILED: Instance is not resized"
@@ -439,7 +439,7 @@ function test_internal_dns_integration {
         SERVER_NAME="my_vm"
         SERVER_NAME_SANITIZED=$(echo ${SERVER_NAME} | sed -e 's/_/-/g')
 
-        openstack server create --image cirros --flavor m1.tiny --network dns-test-network ${SERVER_NAME}
+        openstack server create --image cirros --flavor c1.tiny --network dns-test-network ${SERVER_NAME}
 
         SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
         attempt=0
