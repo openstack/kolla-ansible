@@ -19,7 +19,7 @@ function create_instance {
         server_create_extra="${server_create_extra} --config-drive True"
     fi
 
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
+    openstack server create --wait --image cirros --flavor c1.tiny --key-name mykey --network demo-net ${server_create_extra} ${name}
     # If the status is not ACTIVE, print info and exit 1
     if [[ $(openstack server show ${name} -f value -c status) != "ACTIVE" ]]; then
         echo "FAILED: Instance is not active"

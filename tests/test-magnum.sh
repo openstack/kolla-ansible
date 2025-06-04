@@ -58,7 +58,7 @@ function test_designate {
     openstack router set --external-gateway public1 router-dns-test
     openstack router add subnet router-dns-test tenant-dns-test
 
-    openstack server create --image cirros --flavor m1.tiny --network tenant-dns-test  ${SERVER_NAME}
+    openstack server create --image cirros --flavor c1.tiny --network tenant-dns-test  ${SERVER_NAME}
 
     SERVER_ID=$(openstack server show ${SERVER_NAME} -f value -c id)
     attempt=0
@@ -131,7 +131,7 @@ EOF
 
     DNS_DOMAIN="fixed.sink.example.org."
     SERVER_NAME="sink-server"
-    openstack server create --image cirros --flavor m1.tiny --network tenant-dns-test ${SERVER_NAME}
+    openstack server create --image cirros --flavor c1.tiny --network tenant-dns-test ${SERVER_NAME}
 
     check_if_resolvable "${DNS_DOMAIN}" "${SERVER_NAME}.${DNS_DOMAIN}" "A"
 
