@@ -158,7 +158,7 @@ nova_cell_database_admin_user: "{{ nova_cell_database_shard_root_user }}"
 nova_cell_database_admin_password: "{{ database_password }}"
 
 nova_cell_database_name: "{{ 'nova_' ~ nova_cell_name if nova_cell_name else 'nova' }}"
-nova_cell_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova{% endif %}"
+nova_cell_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% elif nova_cell_name %}nova_{{ nova_cell_name }}{% else %}nova{% endif %}"
 nova_cell_database_password: '{{ nova_database_password }}'
 nova_cell_database_address: "{% if nova_cell_database_group is defined %}{{ 'api' | kolla_address(groups[nova_cell_database_group][0]) }}{% else %}{{ database_address }}{% endif %}"
 nova_cell_database_port: '{{ database_port }}'
@@ -185,11 +185,41 @@ nova_api_database_address: "{{ database_address | put_address_in_context('url') 
 # through proxysql shards are same:
 #  - nova_cell_database_shard_id = nova_database_shard_id
 nova_cell_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ nova_cell_database_shard_id | default(nova_database_shard_id) }}{% else %}{{ database_user }}{% endif %}"
-nova_cell_database_shard:
+
+nova_cell0_and_default_cell_database_shard:
   users:
-    - user: "{{ nova_cell_database_user }}"
-      password: "{{ nova_cell_database_password }}"
-  rules: "{% set rules = [] %}{% for host in groups['nova-conductor'] %}{{ rules.append({'schema': 'nova_' ~ hostvars[host]['nova_cell_name'] if hostvars[host]['nova_cell_name'] is defined else 'nova', 'shard_id': hostvars[host]['nova_cell_database_shard_id'] if (hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined ) else nova_database_shard_id}) }}{% endfor %}{{ rules }}"
+    - user: "{{ nova_cell0_database_user }}"
+      password: "{{ nova_cell0_database_password }}"
+      shard_id: "{{ nova_cell0_database_shard_id }}"
+  rules:
+    - schema: "{{ nova_cell0_database_name }}"
+      shard_id: "{{ nova_cell0_database_shard_id }}"
+    - user: "{{ nova_cell0_database_user }}"
+      shard_id: "{{ nova_cell0_database_shard_id }}"
+
+nova_cell_dynamic_users: |
+  {% set result = [] %}
+  {% for host in groups['nova-conductor'] %}
+    {% if hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined %}
+      {% set _ = result.append({'user': 'nova_' ~ hostvars[host]['nova_cell_name'], 'password': nova_cell_database_password, 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
+    {% endif %}
+  {% endfor %}
+  {{ result }}
+
+nova_cell_dynamic_rules: |
+  {% set result = [] %}
+  {% for host in groups['nova-conductor'] %}
+    {% if hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined %}
+      {% set _ = result.append({'schema': 'nova_' ~ hostvars[host]['nova_cell_name'], 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
+      {% set _ = result.append({'user': 'nova_' ~ hostvars[host]['nova_cell_name'], 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
+    {% endif %}
+  {% endfor %}
+  {{ result }}
+
+nova_cell_database_shard:
+  users: "{{ nova_cell0_and_default_cell_database_shard.users + (nova_cell_dynamic_users | from_yaml | default([])) }}"
+  rules: "{{ nova_cell0_and_default_cell_database_shard.rules + (nova_cell_dynamic_rules | from_yaml | default([])) }}"
+
 
 ####################
 # RabbitMQ

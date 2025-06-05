@@ -1213,6 +1213,17 @@ nova_console: "novnc"
 # Nova Database
 #######################
 nova_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+nova_cell0_database_shard_id: "{{ nova_database_shard_id | int }}"
+
+# These are kept for backwards compatibility, as cell0 references them.
+nova_database_name: "nova"
+nova_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova{% endif %}"
+nova_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
+
+nova_cell0_database_name: "{{ nova_database_name }}_cell0"
+nova_cell0_database_user: "{{ nova_database_user }}"
+nova_cell0_database_address: "{{ nova_database_address }}"
+nova_cell0_database_password: "{{ nova_database_password }}"
 
 #######################
 # Horizon options

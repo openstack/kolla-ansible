@@ -86,16 +86,6 @@ nova_config_validation:
 ####################
 # Database
 ####################
-# These are kept for backwards compatibility, as cell0 references them.
-nova_database_name: "nova"
-nova_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova{% endif %}"
-nova_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
-
-nova_cell0_database_name: "{{ nova_database_name }}_cell0"
-nova_cell0_database_user: "{{ nova_database_user }}"
-nova_cell0_database_address: "{{ nova_database_address }}"
-nova_cell0_database_password: "{{ nova_database_password }}"
-
 nova_api_database_name: "nova_api"
 nova_api_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova_api{% endif %}"
 nova_api_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
@@ -106,16 +96,13 @@ nova_api_database_address: "{{ database_address | put_address_in_context('url') 
 nova_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ nova_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
 nova_database_shard:
   users:
-    - user: "{{ nova_database_user }}"
-      password: "{{ nova_database_password }}"
     - user: "{{ nova_api_database_user }}"
       password: "{{ nova_api_database_password }}"
+      shard_id: "{{ nova_database_shard_id }}"
   rules:
-    - schema: "{{ nova_database_name }}"
-      shard_id: "{{ nova_database_shard_id }}"
-    - schema: "{{ nova_cell0_database_name }}"
-      shard_id: "{{ nova_database_shard_id }}"
     - schema: "{{ nova_api_database_name }}"
+      shard_id: "{{ nova_database_shard_id }}"
+    - user: "{{ nova_api_database_user }}"
       shard_id: "{{ nova_database_shard_id }}"
 
 
