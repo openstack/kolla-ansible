@@ -21,56 +21,12 @@
         - "{{ node_custom_config }}/ironic/"
       skip: true
 
-- name: Check if Ironic Inspector policies shall be overwritten
-  stat:
-    path: "{{ item }}"
-  delegate_to: localhost
-  run_once: True
-  register: ironic_inspector_policy
-  with_first_found:
-    - files: "{{ supported_policy_format_list }}"
-      paths:
-        - "{{ node_custom_config }}/ironic/inspector/"
-      skip: true
-
 - name: Set ironic policy file
   set_fact:
     ironic_policy_file: "{{ ironic_policy.results.0.stat.path | basename }}"
     ironic_policy_file_path: "{{ ironic_policy.results.0.stat.path }}"
   when:
     - ironic_policy.results
-
-- name: Set ironic-inspector policy file
-  set_fact:
-    ironic_inspector_policy_file: "{{ ironic_inspector_policy.results.0.stat.path | basename }}"
-    ironic_inspector_policy_file_path: "{{ ironic_inspector_policy.results.0.stat.path }}"
-  when:
-    - ironic_inspector_policy.results
-
-- name: Check if Ironic Inspector known_devices.yaml shall be overwritten
-  stat:
-    path: "{{ node_custom_config }}/ironic-inspector/known_devices.yaml"
-  delegate_to: localhost
-  run_once: True
-  register: ironic_inspector_known_devices
-
-- name: Set known_devices file path
-  set_fact:
-    ironic_inspector_known_devices_file_path: "{{ ironic_inspector_known_devices.stat.path }}"
-  when:
-    - ironic_inspector_known_devices.stat.exists
-
-- name: Copying over known_devices.yaml
-  vars:
-    service: "{{ ironic_services['ironic-inspector'] }}"
-  template:
-    src: "{{ ironic_inspector_known_devices_file_path }}"
-    dest: "{{ node_config_directory }}/ironic-inspector/known_devices.yaml"
-    mode: "0660"
-  become: true
-  when:
-    - ironic_inspector_known_devices_file_path is defined
-    - service | service_enabled_and_mapped_to_host
 
 - include_tasks: copy-certs.yml
   when:
@@ -101,21 +57,6 @@
     - item.key in [ "ironic-api", "ironic-conductor", "ironic-prometheus-exporter" ]
   with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copying over inspector.conf
-  vars:
-    service: "{{ ironic_services['ironic-inspector'] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/ironic-inspector.conf.j2"
-      - "{{ node_custom_config }}/global.conf"
-      - "{{ node_custom_config }}/ironic-inspector.conf"
-      - "{{ node_custom_config }}/ironic-inspector/inspector.conf"
-      - "{{ node_custom_config }}/ironic-inspector/{{ inventory_hostname }}/inspector.conf"
-    dest: "{{ node_config_directory }}/ironic-inspector/inspector.conf"
-    mode: "0660"
-  become: true
-  when: service | service_enabled_and_mapped_to_host
-
 - name: Copying over dnsmasq.conf
   vars:
     service: "{{ ironic_services['ironic-dnsmasq'] }}"
@@ -143,8 +84,8 @@
     - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/pxelinux.default"
     - "pxelinux.default.j2"
   when:
-    # Only required when Ironic inspector is in use.
-    - groups['ironic-inspector'] | length > 0
+    # Only required when Ironic dnsmasq is in use.
+    - groups['ironic-dnsmasq'] | length > 0
     - service | service_enabled_and_mapped_to_host
     - not ironic_dnsmasq_serve_ipxe | bool
 
@@ -160,8 +101,8 @@
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
   when:
-    # Only required when Ironic inspector is in use.
-    - groups['ironic-inspector'] | length > 0
+    # Only required when Ironic dnsmasq is in use.
+    - groups['ironic-dnsmasq'] | length > 0
     - service | service_enabled_and_mapped_to_host
     - not ironic_dnsmasq_serve_ipxe | bool
 
@@ -177,25 +118,25 @@
     - "ironic-agent.kernel"
     - "ironic-agent.initramfs"
   when:
-    # Only required when Ironic inspector is in use.
-    - groups['ironic-inspector'] | length > 0
+    # Only required when Ironic dnsmasq is in use.
+    - groups['ironic-dnsmasq'] | length > 0
     - service | service_enabled_and_mapped_to_host
 
-- name: Copying inspector.ipxe
+- name: Copying ipa.ipxe
   vars:
     service: "{{ ironic_services['ironic-http'] }}"
   template:
     src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-http/inspector.ipxe"
+    dest: "{{ node_config_directory }}/ironic-http/ipa.ipxe"
     mode: "0660"
   become: true
   with_first_found:
-    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/inspector.ipxe"
-    - "{{ node_custom_config }}/ironic/inspector.ipxe"
-    - "inspector.ipxe.j2"
+    - "{{ node_custom_config }}/ironic/{{ inventory_hostname }}/ipa.ipxe"
+    - "{{ node_custom_config }}/ironic/ipa.ipxe"
+    - "ipa.ipxe.j2"
   when:
-    # Only required when Ironic inspector is in use.
-    - groups['ironic-inspector'] | length > 0
+    # Only required when Ironic dnsmasq is in use.
+    - groups['ironic-dnsmasq'] | length > 0
     - service | service_enabled_and_mapped_to_host
 
 - name: Copying ironic-http-httpd.conf
@@ -238,20 +179,6 @@
   when:
     - ironic_policy_file is defined
     - item.key in services_require_policy_json
-  with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
-
-- name: Copying over existing Ironic Inspector policy file
-  vars:
-    services_require_inspector_policy_json:
-      - ironic-inspector
-  template:
-    src: "{{ ironic_inspector_policy_file_path }}"
-    dest: "{{ node_config_directory }}/{{ item.key }}/{{ ironic_inspector_policy_file }}"
-    mode: "0660"
-  become: true
-  when:
-    - ironic_inspector_policy_file is defined
-    - item.key in services_require_inspector_policy_json
   with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over ironic-api-wsgi.conf

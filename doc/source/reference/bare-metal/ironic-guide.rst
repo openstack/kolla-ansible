@@ -26,7 +26,7 @@ define a network to be used for the Ironic cleaning network:
    ironic_dnsmasq_interface: "eth1"
    ironic_cleaning_network: "public1"
 
-Finally, define at least one DHCP range for Ironic inspector:
+Finally, define at least one DHCP range for Ironic inspection:
 
 .. code-block:: yaml
 
@@ -76,7 +76,7 @@ The default lease time for each range can be configured globally via
 ``ironic_dnsmasq_dhcp_default_lease_time`` variable or per range via
 ``lease_time`` parameter.
 
-In the same file, specify the PXE bootloader file for Ironic Inspector. The
+In the same file, specify the PXE bootloader file for Ironic inspection. The
 file is relative to the ``/var/lib/ironic/tftpboot`` directory. The default is
 ``pxelinux.0``, and should be correct for x86 systems. Other platforms may
 require a different value, for example aarch64 on Debian requires
@@ -86,7 +86,7 @@ require a different value, for example aarch64 on Debian requires
 
    ironic_dnsmasq_boot_file: pxelinux.0
 
-Ironic inspector also requires a deploy kernel and ramdisk to be placed in
+Ironic inspection also requires a deploy kernel and ramdisk to be placed in
 ``/etc/kolla/config/ironic/``. The following example uses coreos which is
 commonly used in Ironic deployments, though any compatible kernel/ramdisk may
 be used:
@@ -103,7 +103,7 @@ You may optionally pass extra kernel parameters to the inspection kernel using:
 
 .. code-block:: yaml
 
-   ironic_inspector_kernel_cmdline_extras: ['ipa-lldp-timeout=90.0', 'ipa-collect-lldp=1']
+   ironic_kernel_cmdline_extras: ['ipa-lldp-timeout=90.0', 'ipa-collect-lldp=1']
 
 in ``/etc/kolla/globals.yml``.
 
@@ -120,7 +120,7 @@ Revert to plain PXE (not recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Starting with Yoga, Ironic has changed the default PXE from plain PXE to iPXE.
 Kolla Ansible follows this upstream decision by choosing iPXE as the default
-for Ironic Inspector but allows users to revert to the previous default of
+for Ironic inspection but allows users to revert to the previous default of
 plain PXE by setting the following in
 ``/etc/kolla/globals.yml``:
 
@@ -215,7 +215,7 @@ Post-deployment configuration
 The :ironic-doc:`Ironic documentation <install/configure-glance-images>`
 describes how to create the deploy kernel and ramdisk and register them with
 Glance. In this example we're reusing the same images that were fetched for the
-Inspector:
+inspection:
 
 .. code-block:: console
 

@@ -64,15 +64,19 @@
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
 
-    - name: "{{ project_name }} | Creating users"
+    - name: "{{ project_name }} | Creating/deleting users"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.identity_user
         module_args:
           default_project: "{{ item.project }}"
           name: "{{ item.user }}"
-          password: "{{ item.password }}"
-          update_password: "{{ 'always' if update_keystone_service_user_passwords | bool else 'on_create' }}"
+          password: "{{ item.password | default(omit) }}"
+          update_password: >-
+            {{ 'always' if
+            update_keystone_service_user_passwords | bool and
+            item.password is defined
+            else 'on_create' }}
           domain: "{{ service_ks_register_domain }}"
           region_name: "{{ service_ks_register_region_name }}"
           auth: "{{ service_ks_register_auth }}"

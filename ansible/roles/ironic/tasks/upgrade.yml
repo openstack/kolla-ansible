@@ -1,6 +1,55 @@
 ---
+# TODO(mnasiadka): Remove this task in Gazpacho/2026.1 release
+- name: Remove ironic-inspector
+  become: true
+  kolla_container:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "ironic_inspector"
+    ignore_missing: true
+
+# TODO(mnasiadka): Remove this block in Gazpacho/2026.1 release
+- name: Handle volume migration for ironic_dnsmasq
+  when: enable_ironic_dnsmasq | bool
+  block:
+    - name: Stop ironic_dnsmasq container
+      become: true
+      kolla_container:
+        action: "stop_container"
+        common_options: "{{ docker_common_options }}"
+        name: "ironic_dnsmasq"
+        ignore_missing: true
+
+    - name: Create ironic_dhcp_hosts volume
+      become: true
+      command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
+
+    - name: Migrate data from ironic_inspector_dhcp_hosts volume
+      become: true
+      vars:
+        volumes_dir: >-
+          {{ '/var/lib/docker/volumes' if kolla_container_engine == 'docker'
+          else '/var/lib/containers/storage/volumes' }}
+      command: >-
+        mv {{ volumes_dir }}/ironic_inspector_dhcp_hosts/_data/
+        {{ volumes_dir }}/ironic_dhcp_hosts/_data
+
+- name: Get Ironic API container facts
+  become: true
+  vars:
+    container_name: "{{ ironic_services['ironic-api'].container_name }}"
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - "{{ container_name }}"
+  check_mode: false
+  register: container_facts
+
 - name: Wait for Ironic nodes not to wait
   become: true
+  vars:
+    container_name: "{{ ironic_services['ironic-api'].container_name }}"
   command: >
     {{ kolla_container_engine }} exec kolla_toolbox openstack
     --os-interface {{ openstack_interface }}
@@ -25,10 +74,18 @@
        select('search', '\\bwait\\b') |
        length) == 0
   run_once: true
-  when: not ironic_upgrade_skip_wait_check | bool
+  when:
+    - not ironic_upgrade_skip_wait_check | bool
+    - container_facts.containers[container_name] is defined
 
 - include_tasks: rolling_upgrade.yml
   when: ironic_enable_rolling_upgrade | bool
 
 - include_tasks: legacy_upgrade.yml
   when: not ironic_enable_rolling_upgrade | bool
+
+# TODO(mnasiadka): Remove this task in Gazpacho/2026.1 release
+- name: Remove ironic_inspector_dhcp_hosts volume
+  become: true
+  command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
+  when: enable_ironic_dnsmasq | bool

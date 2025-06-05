@@ -12,7 +12,6 @@
     container_engine: "{{ kolla_container_engine }}"
     name:
       - ironic_api
-      - ironic_inspector
       - ironic_http
       - ironic_prometheus_exporter
   check_mode: false
@@ -28,17 +27,6 @@
   when:
     - container_facts.containers['ironic_api'] is not defined
     - inventory_hostname in groups['ironic-api']
-
-- name: Checking free port for Ironic Inspector
-  wait_for:
-    host: "{{ api_interface_address }}"
-    port: "{{ ironic_inspector_listen_port }}"
-    connect_timeout: 1
-    timeout: 1
-    state: stopped
-  when:
-    - container_facts.containers['ironic_inspector'] is not defined
-    - inventory_hostname in groups['ironic-inspector']
 
 - name: Checking free port for Ironic HTTP server
   wait_for:
@@ -63,7 +51,7 @@
     - container_facts.containers['ironic_prometheus_exporter'] is not defined
     - inventory_hostname in groups['ironic-conductor']
 
-- name: Checking ironic-agent files exist for Ironic Inspector
+- name: Checking ironic-agent files exist for Ironic
   stat:
     path: "{{ ironic_agent_files_directory }}/ironic/{{ item }}"
   delegate_to: localhost
@@ -71,8 +59,8 @@
   register: result
   failed_when: not result.stat.exists
   when:
-    # Only required when Ironic inspector is in use.
-    - groups['ironic-inspector'] | length > 0
+    # Only required when Ironic dnsmasq is in use.
+    - groups['ironic-dnsmasq'] | length > 0
     - (not ironic_dnsmasq_serve_ipxe | bool and inventory_hostname in groups['ironic-tftp']) or
         (ironic_dnsmasq_serve_ipxe | bool and inventory_hostname in groups['ironic-http'])
   with_items:
