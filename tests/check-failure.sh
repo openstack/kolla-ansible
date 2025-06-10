@@ -32,6 +32,8 @@ check_podman_unhealthies() {
 
     for container in $unhealthy_containers; do
         echo "Discovered unhealthy container: $container"
+        echo "$container - podman inspect"
+        sudo podman inspect $container
         echo "$container - ps axwuf"
         sudo podman exec $container ps axwuf
         echo "$container - ss -an"
@@ -71,6 +73,8 @@ check_docker_unhealthies() {
 
     for container in $unhealthy_containers; do
         echo "Discovered unhealthy container: $container"
+        echo "$container - docker inspect"
+        sudo docker inspect $container
         echo "$container - ps axwuf"
         sudo docker exec $container ps axwuf
         echo "$container - ss -an"
