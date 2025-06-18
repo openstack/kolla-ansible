@@ -462,7 +462,7 @@ class MariaDBBackup(KollaAnsibleMixin, Command):
         extra_vars["kolla_action"] = "backup"
         extra_vars["mariadb_backup_type"] = parsed_args.mariadb_backup_type
 
-        playbooks = _choose_playbooks(parsed_args, "mariadb_backup")
+        playbooks = _choose_playbooks(parsed_args, "mariadb-backup")
 
         self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
@@ -476,7 +476,7 @@ class MariaDBRecovery(KollaAnsibleMixin, Command):
         extra_vars = {}
         extra_vars["kolla_action"] = "deploy"
 
-        playbooks = _choose_playbooks(parsed_args, "mariadb_recovery")
+        playbooks = _choose_playbooks(parsed_args, "mariadb-recovery")
 
         self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 

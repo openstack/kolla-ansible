@@ -22,7 +22,7 @@ an independent Galera cluster.
 
 This section explains how to configure multiple database shards. Currently,
 only one shard is accessible via the HAProxy load balancer and supported
-by the ``kolla-ansible mariadb_backup`` command. This will be improved
+by the ``kolla-ansible mariadb-backup`` command. This will be improved
 in future by using ProxySQL, allowing load balanced access to all shards.
 
 Deployment
