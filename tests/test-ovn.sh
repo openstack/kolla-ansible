@@ -47,7 +47,7 @@ function test_octavia {
     openstack loadbalancer list
 
     # Create a server to act as a backend
-    openstack server create --wait --image cirros --flavor m1.tiny --key-name mykey --network demo-net lb_member --wait
+    openstack server create --wait --image cirros --flavor c1.tiny --key-name mykey --network demo-net lb_member --wait
     member_fip=$(openstack floating ip create public1 -f value -c floating_ip_address)
     openstack server add floating ip lb_member ${member_fip}
     member_ip=$(openstack floating ip show ${member_fip} -f value -c fixed_ip_address)
