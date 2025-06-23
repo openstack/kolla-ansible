@@ -29,6 +29,75 @@ function check_fluentd_log_file_for_content {
     sudo egrep "$2" $1
 }
 
+function check_fluentd_missing_logs {
+    code=0
+    for file in $(sudo find /var/log/kolla/ -type f -name '*.log' | grep -v '^$'); do
+        case $file in
+        /var/log/kolla/ansible.log)
+            continue
+            ;;
+        /var/log/kolla/etcd/etcd.log)
+            continue
+            ;;
+        /var/log/kolla/fluentd/fluentd.log)
+            continue
+            ;;
+        /var/log/kolla/glance-tls-proxy/glance-tls-proxy.log)
+            continue
+            ;;
+        /var/log/kolla/grafana/grafana.log)
+            continue
+            ;;
+        /var/log/kolla/haproxy/*)
+            continue
+            ;;
+        /var/log/kolla/ironic/dnsmasq.log)
+            continue
+            ;;
+        /var/log/kolla/mariadb/mariadb-bootstrap.log)
+            continue
+            ;;
+        /var/log/kolla/mariadb/mariadb-clustercheck.log)
+            continue
+            ;;
+        /var/log/kolla/mariadb/mariadb-upgrade.log)
+            continue
+            ;;
+        /var/log/kolla/neutron/dnsmasq.log)
+            continue
+            ;;
+        /var/log/kolla/neutron-tls-proxy/neutron-tls-proxy.log)
+            continue
+            ;;
+        /var/log/kolla/opensearch/*)
+            continue
+            ;;
+        /var/log/kolla/opensearch-dashboards/*)
+            continue
+            ;;
+        /var/log/kolla/openvswitch/*)
+            continue
+            ;;
+        /var/log/kolla/proxysql/proxysql.log)
+            continue
+            ;;
+        /var/log/kolla/rabbitmq/*upgrade.log)
+            continue
+            ;;
+        /var/log/kolla/redis/*)
+            continue
+            ;;
+        /var/log/kolla/skyline/skyline.log)
+            continue
+            ;;
+        *)
+            sudo grep -q "following tail of $file" /var/log/kolla/fluentd/fluentd.log || echo "no match for $file" && code=1
+            ;;
+        esac
+    done
+    return $code
+}
+
 function check_docker_log_file_for_sigkill {
     sudo journalctl --no-pager -u ${CONTAINER_ENGINE}.service | grep "signal 9"
 }
@@ -82,26 +151,35 @@ for level in CRITICAL ERROR WARNING; do
     fi
 done
 
-# check fluentd errors (we consider them critical)
-fluentd_log_file=/var/log/kolla/fluentd/fluentd.log
-fluentd_error_summary_file=/tmp/logs/kolla/fluentd-error.log
-if check_fluentd_log_file_for_level $fluentd_log_file error >/dev/null; then
-    any_critical=1
-    echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_error_summary_file"
-    check_fluentd_log_file_for_level $fluentd_log_file error > $fluentd_error_summary_file
-    echo >> $fluentd_error_summary_file
-fi
-
-for string in "${fluentchecks[@]}"; do
-    fluentd_file=/tmp/logs/kolla/fluentd-errors.log
-    if check_fluentd_log_file_for_content $fluentd_log_file "$string" >/dev/null; then
+if [ -d /var/log/kolla ]; then
+    # check fluentd errors (we consider them critical)
+    fluentd_log_file=/var/log/kolla/fluentd/fluentd.log
+    fluentd_error_summary_file=/tmp/logs/kolla/fluentd-error.log
+    if check_fluentd_log_file_for_level $fluentd_log_file error >/dev/null; then
         any_critical=1
-        echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_file"
-        echo "Check: $string" >> $fluentd_file
-        check_fluentd_log_file_for_content $fluentd_log_file "$string" >> $fluentd_file
-        echo >> $fluentd_file
+        echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_error_summary_file"
+        check_fluentd_log_file_for_level $fluentd_log_file error > $fluentd_error_summary_file
+        echo >> $fluentd_error_summary_file
     fi
-done
+
+    for string in "${fluentchecks[@]}"; do
+        fluentd_file=/tmp/logs/kolla/fluentd-errors.log
+        if check_fluentd_log_file_for_content $fluentd_log_file "$string" >/dev/null; then
+            any_critical=1
+            echo "(critical) Found some error log messages in fluentd logs. Matches in $fluentd_file"
+            echo "Check: $string" >> $fluentd_file
+            check_fluentd_log_file_for_content $fluentd_log_file "$string" >> $fluentd_file
+            echo >> $fluentd_file
+        fi
+    done
+
+    if check_fluentd_missing_logs >/dev/null; then
+        any_critical=1
+        echo "(critical) Found some missing log files in fluentd logs. Matches in $fluentd_error_summary_file"
+        check_fluentd_missing_logs >> $fluentd_error_summary_file
+        echo >> $fluentd_error_summary_file
+    fi
+fi
 
 if check_docker_log_file_for_sigkill >/dev/null; then
     any_critical=1
