@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: False
 {
   "vhosts": [
     {"name": "/"}
@@ -10,5 +11,21 @@
     {"user": "{{ role_rabbitmq_user }}", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}{% if role_rabbitmq_monitoring_user is defined and role_rabbitmq_monitoring_user %},
     {"user": "{{ role_rabbitmq_monitoring_user }}", "vhost": "/", "configure": "^$", "write": "^$", "read": ".*"}{% endif %}
   ],
-  "policies":[]
+{% if om_enable_rabbitmq_stream_fanout | bool %}
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "stream-retention-policy",
+      "apply-to": "streams",
+      "pattern": ".+",
+      "definition": {
+        "stream-max-segment-size-bytes": {{ rabbitmq_stream_max_segment_size_bytes }},
+        "max-age": "{{ rabbitmq_stream_segment_max_age }}"
+      },
+      "priority": 1
+    }
+  ]
+{% else %}
+  "policies": []
+{% endif %}
 }
