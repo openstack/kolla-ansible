@@ -170,7 +170,6 @@ function test_prometheus {
 
 function test_prometheus_opensearch_logged {
     . /etc/kolla/admin-openrc.sh
-
     test_opensearch_dashboards
     test_opensearch
     test_grafana
