@@ -30,7 +30,7 @@ function check_fluentd_log_file_for_content {
 }
 
 function check_fluentd_missing_logs {
-    code=0
+    code=1
     for file in $(sudo find /var/log/kolla/ -type f -name '*.log' | grep -v '^$'); do
         case $file in
         /var/log/kolla/ansible.log)
@@ -91,7 +91,10 @@ function check_fluentd_missing_logs {
             continue
             ;;
         *)
-            sudo grep -q "following tail of $file" /var/log/kolla/fluentd/fluentd.log || echo "no match for $file" && code=1
+            if ! sudo grep -q "following tail of $file" $fluentd_log_file; then
+                echo "no match for $file"
+                code=0
+            fi
             ;;
         esac
     done
@@ -151,7 +154,7 @@ for level in CRITICAL ERROR WARNING; do
     fi
 done
 
-if [ -d /var/log/kolla ]; then
+if sudo test -d /var/log/kolla; then
     # check fluentd errors (we consider them critical)
     fluentd_log_file=/var/log/kolla/fluentd/fluentd.log
     fluentd_error_summary_file=/tmp/logs/kolla/fluentd-error.log
