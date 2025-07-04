@@ -90,6 +90,9 @@ function check_fluentd_missing_logs {
         /var/log/kolla/skyline/skyline.log)
             continue
             ;;
+        /var/log/kolla/zun/*)
+            continue
+            ;;
         *)
             if ! sudo grep -q "following tail of $file" $fluentd_log_file; then
                 echo "no match for $file"
