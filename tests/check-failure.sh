@@ -36,8 +36,8 @@ check_podman_unhealthies() {
         sudo podman inspect $container
         echo "$container - ps axwuf"
         sudo podman exec $container ps axwuf
-        echo "$container - ss -an"
-        sudo podman exec $container ss -an
+        echo "$container - ss -anp"
+        sudo podman exec $container ss -anp
     done
 }
 
@@ -77,8 +77,8 @@ check_docker_unhealthies() {
         sudo docker inspect $container
         echo "$container - ps axwuf"
         sudo docker exec $container ps axwuf
-        echo "$container - ss -an"
-        sudo docker exec $container ss -an
+        echo "$container - ss -anp"
+        sudo docker exec $container ss -anp
     done
 }
 
