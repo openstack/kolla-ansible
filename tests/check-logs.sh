@@ -45,6 +45,9 @@ function check_fluentd_missing_logs {
         /var/log/kolla/glance-tls-proxy/glance-tls-proxy.log)
             continue
             ;;
+        /var/log/kolla/gnocchi/*)
+            continue
+            ;;
         /var/log/kolla/grafana/grafana.log)
             continue
             ;;
