@@ -14,19 +14,19 @@ function check_openstack_log_file_for_level {
     # $1: file
     # $2: log level
     # Filter out false positives from logged config options.
-    sudo egrep " $2 " $1 | egrep -v "(logging_exception_prefix|rate_limit_except_level)"
+    sudo grep -E " $2 " $1 | grep -Ev "(logging_exception_prefix|rate_limit_except_level)"
 }
 
 function check_fluentd_log_file_for_level {
     # $1: file
     # $2: log level
-    sudo egrep "\[$2\]:" $1
+    sudo grep -E "\[$2\]:" $1
 }
 
 function check_fluentd_log_file_for_content {
     # $1: file
     # $2: content
-    sudo egrep "$2" $1
+    sudo grep -E "$2" $1
 }
 
 function check_fluentd_missing_logs {
