@@ -279,6 +279,13 @@ In order to deploy Neutron OVN Agent you need to set the following:
 
 Currently the agent is only needed for QoS for hardware offloaded ports.
 
+When in need of running `ovn-nbctl` or `ovn-sbctl` commands it's most
+convenient to run them from ``ovn_northd`` container:
+
+.. code-block:: console
+
+   docker exec ovn_northd ovn-nbctl show
+
 Mellanox Infiniband (ml2/mlnx)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -24,7 +24,9 @@
   become: true
   command: >-
     {{ kolla_container_engine }} exec ovn_nb_db
-    ovn-nbctl --inactivity-probe={{ ovn_nb_db_inactivity_probe }}
+    ovn-nbctl
+    --db unix:/var/run/ovn/ovnnb_db.sock
+    --inactivity-probe={{ ovn_nb_db_inactivity_probe }}
     set-connection ptcp:{{ ovn_nb_db_port }}:0.0.0.0
   register: ovn_nb_set_connection_result
   retries: 3
@@ -47,7 +49,9 @@
   become: true
   command: >-
     {{ kolla_container_engine }} exec ovn_sb_db
-    ovn-sbctl --inactivity-probe={{ ovn_sb_db_inactivity_probe }}
+    ovn-sbctl
+    --db unix:/var/run/ovn/ovnsb_db.sock
+    --inactivity-probe={{ ovn_sb_db_inactivity_probe }}
     set-connection ptcp:{{ ovn_sb_db_port }}:0.0.0.0
   register: ovn_sb_set_connection_result
   retries: 3

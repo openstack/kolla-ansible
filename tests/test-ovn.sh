@@ -15,10 +15,20 @@ function test_ovn {
 
     # List OVN NB/SB entries
     echo "OVN NB DB entries:"
-    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
+    # TODO(mnasiadka): Remove the first part of conditional in G cycle
+    if [ $IS_UPGRADE == "yes" ]; then
+        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
+    else
+        sudo ${container_engine} exec ovn_northd ovn-nbctl show
+    fi
 
     echo "OVN SB DB entries:"
-    sudo ${container_engine} exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
+    # TODO(mnasiadka): Remove the first part of conditional in G cycle
+    if [ $IS_UPGRADE == "yes" ]; then
+        sudo ${container_engine} exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
+    else
+        sudo ${container_engine} exec ovn_northd ovn-sbctl show
+    fi
 
     OVNNB_STATUS=$(sudo ${container_engine} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
     OVNSB_STATUS=$(sudo ${container_engine} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
@@ -92,9 +102,20 @@ function test_octavia {
     openstack floating ip set $lb_fip --port $lb_port_id
 
     echo "OVN NB entries for LB:"
-    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
+    # TODO(mnasiadka): Remove the first part of conditional in G cycle
+    if [ $IS_UPGRADE == "yes" ]; then
+        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
+    else
+        sudo ${container_engine} exec ovn_northd ovn-nbctl list load_balancer
+    fi
+
     echo "OVN NB entries for NAT:"
-    sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
+    # TODO(mnasiadka): Remove the first part of conditional in G cycle
+    if [ $IS_UPGRADE == "yes" ]; then
+        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
+    else
+        sudo ${container_engine} exec ovn_northd ovn-nbctl list nat
+    fi
 
     echo "Attempt to access the load balanced HTTP server."
     attempts=12
