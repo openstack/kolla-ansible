@@ -90,6 +90,9 @@ function check_fluentd_missing_logs {
         /var/log/kolla/skyline/skyline.log)
             continue
             ;;
+        /var/log/kolla/tenks/*)
+            continue
+            ;;
         /var/log/kolla/zun/*)
             continue
             ;;
