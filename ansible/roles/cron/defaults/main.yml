@@ -1,0 +1,38 @@
+---
+cron_services:
+  cron:
+    container_name: cron
+    group: cron
+    enabled: True
+    image: "{{ cron_image_full }}"
+    environment:
+      KOLLA_LOGROTATE_SCHEDULE: "{{ cron_logrotate_schedule }}"
+    volumes: "{{ cron_default_volumes + cron_extra_volumes }}"
+    dimensions: "{{ cron_dimensions }}"
+
+####################
+# Docker
+####################
+cron_dimensions: "{{ default_container_dimensions }}"
+
+cron_image: "{{ docker_image_url }}cron"
+cron_tag: "{{ openstack_tag }}"
+cron_image_full: "{{ cron_image }}:{{ cron_tag }}"
+
+cron_default_volumes:
+  - "{{ node_config_directory }}/cron/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+cron_extra_volumes: "{{ default_extra_volumes }}"
+
+cron_logrotate_log_maxsize: "100M"
+cron_logrotate_log_minsize: "30M"
+cron_logrotate_rotation_interval: "weekly"
+cron_logrotate_rotation_count: 6
+cron_logrotate_schedule: "daily"
+
+###################
+# Copy certificates
+###################
+cron_copy_certs: "{{ kolla_copy_ca_into_containers | bool }}"
