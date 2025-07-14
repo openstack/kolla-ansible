@@ -48,6 +48,9 @@ function check_fluentd_missing_logs {
         /var/log/kolla/grafana/grafana.log)
             continue
             ;;
+        /var/log/kolla/hacluster/*)
+            continue
+            ;;
         /var/log/kolla/haproxy/*)
             continue
             ;;
