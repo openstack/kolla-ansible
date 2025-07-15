@@ -2,6 +2,7 @@
 
 set -o errexit
 
+{% if not neutron_agents_wrappers | bool %}
 {% if enable_neutron_agent_ha | bool %}
 # NOTE(jeffrey4l): Remove all l3 related netns in case of multiple active routers in l3 high available mode.
 neutron-netns-cleanup \
@@ -11,6 +12,7 @@ neutron-netns-cleanup \
         --config-file /etc/neutron/fwaas_driver.ini \
 {% endif %}
         --force --agent-type l3
+{% endif %}
 {% endif %}
 
 neutron-l3-agent \
