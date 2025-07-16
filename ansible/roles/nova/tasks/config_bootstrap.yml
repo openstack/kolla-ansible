@@ -11,6 +11,18 @@
     mode: "0770"
   run_once: true
 
+- name: "Copy certificates and keys for {{ project_name }}"
+  import_role:
+    role: service-cert-copy
+  vars:
+    project_services:
+      nova-api-bootstrap:
+        group: "nova-api"
+        enabled: True
+  run_once: true
+  when:
+    - nova_copy_certs | bool
+
 - name: Copying over config.json files for nova-api-bootstrap
   become: true
   template:

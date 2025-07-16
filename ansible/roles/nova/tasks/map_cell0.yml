@@ -3,11 +3,11 @@
     - name: Create cell0 mappings
       vars:
         nova_api: "{{ nova_services['nova-api'] }}"
-        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}"  # noqa 204
+        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if nova_database_enable_tls_internal | bool }}"  # noqa 204
       become: true
       kolla_container:
         action: "start_container"
-        command: bash -c 'sudo -E kolla_set_configs && nova-manage cell_v2 map_cell0 --database_connection {{ nova_cell0_connection }}'
+        command: bash -c 'sudo -E kolla_set_configs && sudo -E kolla_copy_cacerts && nova-manage cell_v2 map_cell0 --database_connection {{ nova_cell0_connection }}'
         common_options: "{{ docker_common_options }}"
         detach: False
         image: "{{ nova_api.image }}"
@@ -33,13 +33,14 @@
       vars:
         nova_cell0_uuid: "00000000-0000-0000-0000-000000000000"
         nova_cell0_transport_url: "none:/"
-        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}"  # noqa 204
+        nova_cell0_connection: "mysql+pymysql://{{ nova_cell0_database_user }}:{{ nova_cell0_database_password }}@{{ nova_cell0_database_address }}/{{ nova_cell0_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if nova_database_enable_tls_internal | bool }}"  # noqa 204
         nova_api: "{{ nova_services['nova-api'] }}"
       become: true
       kolla_container:
         action: "start_container"
         command: >
           bash -c 'sudo -E kolla_set_configs &&
+          sudo -E kolla_copy_cacerts &&
           nova-manage cell_v2 update_cell
           --cell_uuid {{ nova_cell0_uuid }}
           --database_connection {{ nova_cell0_connection }}

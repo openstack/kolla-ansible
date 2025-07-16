@@ -22,7 +22,7 @@ auth_mode = keystone
 enable_proxy_headers_parsing = true
 
 [database]
-connection = mysql+pymysql://{{ gnocchi_database_user }}:{{ gnocchi_database_password }}@{{ gnocchi_database_address }}/{{ gnocchi_database_name }}
+connection = mysql+pymysql://{{ gnocchi_database_user }}:{{ gnocchi_database_password }}@{{ gnocchi_database_address }}/{{ gnocchi_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if gnocchi_database_enable_tls_internal | bool }}
 connection_recycle_time = {{ database_connection_recycle_time }}
 max_overflow = 1000
 max_pool_size = {{ database_max_pool_size }}
@@ -41,7 +41,7 @@ flush_delay = 10
 workers = {{ gnocchi_metricd_workers }}
 
 [indexer]
-url = mysql+pymysql://{{ gnocchi_database_user }}:{{ gnocchi_database_password }}@{{ gnocchi_database_address }}/{{ gnocchi_database_name }}
+url = mysql+pymysql://{{ gnocchi_database_user }}:{{ gnocchi_database_password }}@{{ gnocchi_database_address }}/{{ gnocchi_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if gnocchi_database_enable_tls_internal | bool }}
 
 [keystone_authtoken]
 service_type = metric

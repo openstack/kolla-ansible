@@ -188,3 +188,11 @@ tacker_ks_users:
 # HAProxy
 ####################
 tacker_haproxy_members: "{% for host in tacker_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ tacker_server_port }} check inter 2000 rise 2 fall 5;{% endfor %}"
+
+# Database
+tacker_database_enable_tls_internal: "{{ database_enable_tls_internal | bool }}"
+
+###################
+# Copy certificates
+###################
+tacker_copy_certs: "{{ kolla_copy_ca_into_containers | bool or tacker_database_enable_tls_internal | bool }}"
