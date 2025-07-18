@@ -338,6 +338,20 @@
         - enable_haproxy | bool
         - kolla_action in ['deploy', 'reconfigure', 'upgrade', 'config']
 
+- name: Apply role opensearch
+  gather_facts: false
+  hosts:
+    - opensearch
+    - '&enable_opensearch_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ opensearch_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  roles:
+    - { role: opensearch,
+        tags: opensearch }
+
 - name: Apply role letsencrypt
   gather_facts: false
   hosts:
@@ -502,20 +516,6 @@
   roles:
     - { role: keystone,
         tags: keystone }
-
-- name: Apply role opensearch
-  gather_facts: false
-  hosts:
-    - opensearch
-    - '&enable_opensearch_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ opensearch_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: opensearch,
-        tags: opensearch }
 
 - name: Apply role ceph-rgw
   gather_facts: false
