@@ -262,7 +262,7 @@ function test_ssh {
     local instance_name=$1
     local fip_addr=$2
     local attempts
-    attempts=12
+    attempts=30
     for i in $(seq 1 ${attempts}); do
         if ping -c1 -W1 ${fip_addr} && ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no cirros@${fip_addr} hostname; then
             break
