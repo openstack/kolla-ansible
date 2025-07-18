@@ -73,10 +73,15 @@
       become: true
       when: ansible_facts.os_family != 'RedHat'
 
+    # NOTE(kevko): Can be remove after [1] [2] will be merged in stable branches
+    #
+    # [1] https://review.opendev.org/c/openstack/kolla-ansible/+/949812
+    # [2] https://review.opendev.org/c/openstack/ansible-collection-kolla/+/949767
     - name: Create Kolla runtime venv
       command:
         cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_runtime_venv_path }}"
         creates: "{{ kolla_runtime_venv_path }}"
+      when: is_upgrade
 
 - hosts: primary
   any_errors_fatal: true
