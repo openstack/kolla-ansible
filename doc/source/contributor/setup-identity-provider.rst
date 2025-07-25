@@ -45,14 +45,14 @@ if you want to use any other realm name, you must to change 'new_realm' in the
 URIs used in the guide and replace the 'new_realm' with the realm name that you
 are using.
 
-- Access the admin console on http://localhost:8080/auth/ in the Administration Console option.
-- Authenticate using the credentials defined in the creation step.
-- Create a new realm in the http://localhost:8080/auth/admin/master/console/#/create/realm page.
-- After creating a realm, you will need to create a client to be used by Keystone; to do it, just access http://localhost:8080/auth/admin/master/console/#/create/client/new_realm.
-- To create a client, you will need to set the client_id (just choose anyone),
+* Access the admin console on http://localhost:8080/auth/ in the Administration Console option.
+* Authenticate using the credentials defined in the creation step.
+* Create a new realm in the http://localhost:8080/auth/admin/master/console/#/create/realm page.
+* After creating a realm, you will need to create a client to be used by Keystone; to do it, just access http://localhost:8080/auth/admin/master/console/#/create/client/new_realm.
+* To create a client, you will need to set the client_id (just choose anyone),
   the protocol (must be openid-connect) and the Root Url (you can leave it
   blank)
-- After creating the client, you will need to update some client's attributes
+* After creating the client, you will need to update some client's attributes
   like:
 
   - Enable the Implicit flow (this one allows you to use the OpenStack CLI with
@@ -72,12 +72,12 @@ are using.
       openstack-default-project            user attribute
       ==================================== ==============
 
-- After creating the client, you will need to create a user in that realm to
+* After creating the client, you will need to create a user in that realm to
   log in OpenStack via identity federation
-- To create a user, access http://localhost:8080/auth/admin/master/console/#/create/user/new_realm and fill the form with the user's data
-- After creating the user, you can access the tab "Credentials" to set the
+* To create a user, access http://localhost:8080/auth/admin/master/console/#/create/user/new_realm and fill the form with the user's data
+* After creating the user, you can access the tab "Credentials" to set the
   user's password
-- Then, in the tab "Attributes", you must set the authorization attributes to
+* Then, in the tab "Attributes", you must set the authorization attributes to
   be used by Keystone, these attributes are defined in the :ref:`attribute
   mapping <attribute_mapping>` in Keystone
 
@@ -90,10 +90,10 @@ Configuring Kolla Ansible to use the Identity Provider
 This section is about how one can get the data needed in
 :ref:`Setup OIDC via Kolla Ansible <setup-oidc-kolla-ansible>`.
 
-- name: The realm name, in this case it will be "new_realm"
-- identifier: http://localhost:8080/auth/realms/new_realm/ (again, the "new_realm" is the name of the realm)
-- certificate_file: This one can be downloaded from http://localhost:8080/auth/admin/master/console/#/realms/new_realm/keys
-- metadata_folder:
+* name: The realm name, in this case it will be "new_realm"
+* identifier: http://localhost:8080/auth/realms/new_realm/ (again, the "new_realm" is the name of the realm)
+* certificate_file: This one can be downloaded from http://localhost:8080/auth/admin/master/console/#/realms/new_realm/keys
+* metadata_folder:
 
   - localhost%3A8080%2Fauth%2Frealms%2Fnew_realm.client:
 

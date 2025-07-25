@@ -147,15 +147,15 @@ disk. you can customize this flavor by changing ``octavia_amp_flavor`` in
 See the ``os_nova_flavor`` Ansible module for details. Supported parameters
 are:
 
-- ``disk``
-- ``ephemeral`` (optional)
-- ``extra_specs`` (optional)
-- ``flavorid`` (optional)
-- ``is_public`` (optional)
-- ``name``
-- ``ram``
-- ``swap`` (optional)
-- ``vcpus``
+* ``disk``
+* ``ephemeral`` (optional)
+* ``extra_specs`` (optional)
+* ``flavorid`` (optional)
+* ``is_public`` (optional)
+* ``name``
+* ``ram``
+* ``swap`` (optional)
+* ``vcpus``
 
 The following defaults are used:
 
@@ -180,27 +180,27 @@ parameters:
 
 The network parameter has the following supported parameters:
 
-- ``external`` (optional)
-- ``mtu`` (optional)
-- ``name``
-- ``provider_network_type`` (optional)
-- ``provider_physical_network`` (optional)
-- ``provider_segmentation_id`` (optional)
-- ``shared`` (optional)
-- ``subnet``
+* ``external`` (optional)
+* ``mtu`` (optional)
+* ``name``
+* ``provider_network_type`` (optional)
+* ``provider_physical_network`` (optional)
+* ``provider_segmentation_id`` (optional)
+* ``shared`` (optional)
+* ``subnet``
 
 The subnet parameter has the following supported parameters:
 
-- ``allocation_pool_start`` (optional)
-- ``allocation_pool_end`` (optional)
-- ``cidr``
-- ``enable_dhcp`` (optional)
-- ``gateway_ip`` (optional)
-- ``name``
-- ``no_gateway_ip`` (optional)
-- ``ip_version`` (optional)
-- ``ipv6_address_mode`` (optional)
-- ``ipv6_ra_mode`` (optional)
+* ``allocation_pool_start`` (optional)
+* ``allocation_pool_end`` (optional)
+* ``cidr``
+* ``enable_dhcp`` (optional)
+* ``gateway_ip`` (optional)
+* ``name``
+* ``no_gateway_ip`` (optional)
+* ``ip_version`` (optional)
+* ``ipv6_address_mode`` (optional)
+* ``ipv6_ra_mode`` (optional)
 
 For example:
 

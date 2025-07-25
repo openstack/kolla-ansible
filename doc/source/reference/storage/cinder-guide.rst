@@ -21,11 +21,11 @@ HA
 When using cinder-volume in an HA configuration (more than one host in
 cinder-volume/storage group):
 
-- Make sure that the driver you are using supports `Active/Active High
+* Make sure that the driver you are using supports `Active/Active High
   Availability
   <https://docs.openstack.org/cinder/|OPENSTACK_RELEASE|/reference/support-matrix.html#operation_active_active_ha>`__
   configuration
-- Add ``cinder_cluster_name: example_cluster_name`` to your ``globals.yml`` (or
+* Add ``cinder_cluster_name: example_cluster_name`` to your ``globals.yml`` (or
   host_vars for advanced multi-cluster configuration)
 
 .. note::
@@ -173,15 +173,15 @@ not the case on debian/ubuntu. Since ``iscsid`` container runs on every nova
 compute node, the following steps must be completed on every Ubuntu server
 targeted for nova compute role.
 
-- Add configfs module to ``/etc/modules``
-- Rebuild initramfs using: ``update-initramfs -u`` command
-- Stop ``open-iscsi`` system service due to its conflicts
+* Add configfs module to ``/etc/modules``
+* Rebuild initramfs using: ``update-initramfs -u`` command
+* Stop ``open-iscsi`` system service due to its conflicts
   with iscsid container.
 
   Ubuntu 16.04 (systemd):
   ``systemctl stop open-iscsi; systemctl stop iscsid``
 
-- Make sure configfs gets mounted during a server boot up process. There are
+* Make sure configfs gets mounted during a server boot up process. There are
   multiple ways to accomplish it, one example:
 
   .. code-block:: console

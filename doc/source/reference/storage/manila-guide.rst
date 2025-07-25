@@ -323,13 +323,13 @@ Use the manila migration command, as shown in the following example:
      --new_share_type share_type --new_share_network share_network \
      shareID destinationHost
 
-- ``--force-host-copy``: Forces the generic host-based migration mechanism and
+* ``--force-host-copy``: Forces the generic host-based migration mechanism and
   bypasses any driver optimizations.
-- ``destinationHost``: Is in this format ``host#pool`` which includes
+* ``destinationHost``: Is in this format ``host#pool`` which includes
   destination host and pool.
-- ``--writable`` and ``--preserve-metadata``: Are only for driver assisted.
-- ``--new_share_network``: Only if driver supports shared network.
-- ``--new_share_type``: Choose share type compatible with destinationHost.
+* ``--writable`` and ``--preserve-metadata``: Are only for driver assisted.
+* ``--new_share_network``: Only if driver supports shared network.
+* ``--new_share_type``: Choose share type compatible with destinationHost.
 
 Checking share migration progress
 ---------------------------------
@@ -417,10 +417,10 @@ volumes in the system by adding the following in ``/etc/kolla/globals.yml``:
     manila_glusterfs_ssh_password: "<glusterfs ssh password>"
     manila_glusterfs_mount_point_base: "$state_path/mnt"
 
-- ``manila_glusterfs_target``: If it’s of the format
+* ``manila_glusterfs_target``: If it’s of the format
   <username>@<glustervolserver>:/<glustervolid>, then we ssh to
   <username>@<glustervolserver> to execute gluster (<username> is supposed to
   have administrative privileges on <glustervolserver>).
-- ``manila_glusterfs_ssh_password``: configuration options are only required
+* ``manila_glusterfs_ssh_password``: configuration options are only required
   when the GlusterFS server runs remotely rather than on the system running
   the Manila share service.

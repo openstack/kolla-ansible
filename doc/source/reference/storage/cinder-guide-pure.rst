@@ -58,8 +58,8 @@ FlashArray drivers in the same OpenStack cluster.
 
 Also set the values for the following parameters in ``/etc/kolla/globals.yml``:
 
-- ``pure_api_token``
-- ``pure_san_ip``
+* ``pure_api_token``
+* ``pure_san_ip``
 
 For details on how to use these parameters, refer to the
 `Pure Storage Cinder Reference Guide <https://docs.openstack.org/cinder/latest/configuration/block-storage/drivers/pure-storage-driver.html>`_.

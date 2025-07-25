@@ -82,8 +82,8 @@ your NSX-T environment.
 It also hosts the API server that processes API calls.
 The NSX Manager interface provides two modes for configuring resources:
 
-- Policy mode
-- Manager mode
+* Policy mode
+* Manager mode
 
 In Kolla you will have the choice between both with neutron plugin
 vmware_nsxv3 for Manager mode and vmware_nsxp for Policy Mode.

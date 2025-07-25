@@ -19,9 +19,9 @@ Host machine requirements
 
 The host machine must satisfy the following minimum requirements:
 
-- 2 network interfaces
-- 8GB main memory
-- 40GB disk space
+* 2 network interfaces
+* 8GB main memory
+* 40GB disk space
 
 See the :kolla-ansible-doc:`support matrix <user/support-matrix>` for details
 of supported host Operating Systems. Kolla Ansible supports the default Python

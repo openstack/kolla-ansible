@@ -44,9 +44,9 @@ retention policy is applied to all indices which match the
 and then eventually deletes them. It can be customised via the following
 variables:
 
-- ``opensearch_apply_log_retention_policy``
-- ``opensearch_soft_retention_period_days``
-- ``opensearch_hard_retention_period_days``
+* ``opensearch_apply_log_retention_policy``
+* ``opensearch_soft_retention_period_days``
+* ``opensearch_hard_retention_period_days``
 
 By default the soft and hard retention periods are 30 and 60 days
 respectively. If you are upgrading from ElasticSearch, and have previously
