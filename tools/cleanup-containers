@@ -24,12 +24,12 @@ fi
 if [ -n "$1" ]; then
     containers_to_kill=$(sudo $engine ps --filter "label=kolla_version" --format "{{.Names}}" -a | grep -E "$1" | awk '{print $1}')
     volumes_to_remove=$(sudo $engine inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' ${containers_to_kill} | \
-        egrep -v '(^\s*$)' | sort | uniq)
+        grep -Ev '(^\s*$)' | sort | uniq)
 else
     containers_to_kill=$(sudo $engine ps --filter "label=kolla_version" --format "{{.Names}}" -a)
 
     volumes_to_remove=$(sudo $engine inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' ${containers_to_kill} | \
-        egrep -v '(^\s*$)' | sort | uniq)
+        grep -Ev '(^\s*$)' | sort | uniq)
 fi
 
 if [[ "${containers_to_kill}" =~ "openvswitch_vswitchd" ]] && [[ "${containers_running}" =~ "neutron_openvswitch_agent" ]]; then

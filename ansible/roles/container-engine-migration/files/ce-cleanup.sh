@@ -21,7 +21,7 @@ images_to_remove=$(sudo $engine images --filter "label=kolla_version" -q -a)
 
 if [ -n "${containers_to_kill}" ]; then
     volumes_to_remove=$(sudo $engine inspect -f '{{range .Mounts}} {{printf "%s\n" .Name }}{{end}}' ${containers_to_kill} | \
-        egrep -v '(^\s*$)' | sort | uniq)
+        grep -Ev '(^\s*$)' | sort | uniq)
 
     echo "Stopping containers..."
     for container in ${containers_to_kill}; do
