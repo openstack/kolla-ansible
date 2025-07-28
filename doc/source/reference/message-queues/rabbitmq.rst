@@ -110,8 +110,24 @@ The ``+sbwt none +sbwtdcpu none +sbwtdio none`` arguments prevent busy waiting
 of the scheduler, for more details see:
 https://www.rabbitmq.com/runtime.html#busy-waiting.
 
+.. _high-availability:
+
 High Availability
 ~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   In the Epoxy release of Kolla, the version of RabbitMQ will be updated to
+   4.0. As a result, **all queues must be migrated to a durable type prior to
+   upgrading to Epoxy.** This can be done by setting the following options and
+   then following the migration procedure outlined below.
+
+   .. code-block:: yaml
+
+      om_enable_queue_manager: true
+      om_enable_rabbitmq_quorum_queues: true
+      om_enable_rabbitmq_transient_quorum_queue: true
+      om_enable_rabbitmq_stream_fanout: true
 
 With the release of RabbitMQ 4.0, all queues are highly available as they are
 configured to be quorum queues by default. RabbitMQ also offer queues called
@@ -161,54 +177,52 @@ different type, the follow procedure will be needed.
 
       kolla-ansible deploy --tags <service-tags>
 
-SLURP
-~~~~~
+RabbitMQ Versions
+-----------------
 
-.. note::
+Kolla ships multiple versions of RabbitMQ.
 
-   The version of RabbitMQ did not increase in Dalmatian, so this will not be
-   needed for a skip-level upgrade to Epoxy.
+.. list-table:: Supported RabbitMQ versions
+   :header-rows: 1
 
-RabbitMQ has two major version releases per year but does not support jumping
-two versions in one upgrade. So if you want to perform a skip-level upgrade,
-you must first upgrade RabbitMQ to an intermediary version. To do this, Kolla
-provides multiple RabbitMQ versions in the odd OpenStack releases. To use the
-upgrade from Antelope to Caracal as an example, we start on RabbitMQ version
-3.11. In Antelope, you should upgrade to RabbitMQ version 3.12 with the command
-below. You can then proceed with the usual SLURP upgrade to Caracal (and
-therefore RabbitMQ version 3.13).
+   * - OpenStack Release
+     - Default RabbitMQ version
+     - Additional RabbitMQ version
+   * - 2025.1 Epoxy
+     - 4.0
+     - 4.1
+   * - 2024.1 Caracal/2024.2 Dalmatian
+     - 3.13
+     - 4.1
 
-.. warning::
+Although Kolla-Ansible supports RabbitMQ upgrade when upgrading OpenStack from
+Caracal/Dalmatian to Epoxy, **it is highly recommended to upgrade RabbitMQ to
+4.1 (the latest RabbitMQ supported by Epoxy/Dalmatian/Caracal Kolla-Ansible)
+prior to OpenStack upgrade to Epoxy**
+You can upgrade RabbitMQ to 4.1 with following steps.
 
-   This command should be run from the Antelope release.
+1. Queue migration
 
-   Note that this command is NOT idempotent. See "RabbitMQ versions" below for
-   an alternative approach.
+   See :ref:`high-availability` section above
 
-.. code-block:: console
+2. Set ``rabbitmq_image`` in your configuration ``globals.yml`` to use later version of RabbitMQ
 
-   kolla-ansible rabbitmq-upgrade 3.12
+   .. warning::
 
-RabbitMQ versions
-~~~~~~~~~~~~~~~~~
+      It is recommended to set ``rabbitmq_image`` before running upgrade command to
+      maintain idempotency
 
-Alternatively, you can set ``rabbitmq_image`` in your configuration
-``globals.yml`` for idempotence in deployments. As an example, Kolla ships
-versions 3.11, 3.12 and 3.13 of RabbitMQ in Antelope. By default, Antelope
-Kolla-Ansible will deploy version 3.11. If you wish to deploy a later version,
-you must override the image. if you want to use version 3.12 change
-``rabbitmq_image`` in ``globals.yml`` as follows:
+      If you're upgrading the system from Caracal or Dalmatian and already
+      upgraded RabbitMQ to 4.1, ``rabbitmq_image`` must be overridden as
+      follows to prevent the downgrade of RabbitMQ while upgrading the system to
+      Epoxy.
 
-.. code-block:: yaml
+   .. code-block:: yaml
 
-   rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-3-12"
+      rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-4-1"
 
-You can then upgrade RabbitMQ with the usual command:
+3. Run upgrade command
 
-.. code-block:: console
+   .. code-block:: console
 
-   kolla-ansible upgrade --tags rabbitmq
-
-Note again that RabbitMQ does not support upgrades between more than one major
-version, so if you wish to upgrade to version 3.13 you must first upgrade to
-3.12.
+      kolla-ansible upgrade --tags rabbitmq
