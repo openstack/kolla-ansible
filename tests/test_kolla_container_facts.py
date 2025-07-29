@@ -148,6 +148,7 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.assertEqual(self.dfw.client.containers.list.call_count, 1)
         self.assertIn('my_container', self.dfw.result['containers'])
+        self.assertNotIn('my_container', self.dfw.result)
         self.assertDictEqual(
             self.fake_data['containers'][0],
             self.dfw.result['containers']['my_container'])
@@ -162,6 +163,7 @@ class TestContainerFacts(base.BaseTestCase):
 
         self.assertFalse(self.dfw.result['changed'])
         self.assertIn('my_container', self.dfw.result['containers'])
+        self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
 
     def test_get_container_all(self):
@@ -173,6 +175,7 @@ class TestContainerFacts(base.BaseTestCase):
 
         self.assertFalse(self.dfw.result['changed'])
         self.assertIn('my_container', self.dfw.result['containers'])
+        self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
 
     def test_get_containers_env(self):
@@ -190,6 +193,7 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.dfw.client.containers.get.assert_called_once_with('my_container')
         self.assertIn('my_container', self.dfw.result['envs'])
+        self.assertNotIn('my_container', self.dfw.result)
         self.assertEquals(self.dfw.result['envs']['my_container'], fake_env)
 
     def test_get_containers_env_negative(self):
@@ -222,6 +226,7 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.dfw.client.containers.get.assert_called_once_with('my_container')
         self.assertIn('my_container', self.dfw.result['states'])
+        self.assertNotIn('my_container', self.dfw.result)
 
     def test_get_containers_state_negative(self):
         self.dfw = get_DockerFactsWorker({'name': ['fake_container'],
@@ -248,6 +253,7 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.dfw.client.volumes.list.assert_called_once_with()
         self.assertIn('my_volume', self.dfw.result['volumes'])
+        self.assertNotIn('my_volume', self.dfw.result)
         self.assertNotIn('another_volume', self.dfw.result['volumes'])
         self.assertEqual(len(self.dfw.result['volumes']), 1)
         self.assertDictEqual(
@@ -268,6 +274,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.dfw.client.volumes.list.assert_called_once_with()
         self.assertIn('my_volume', self.dfw.result['volumes'])
         self.assertIn('another_volume', self.dfw.result['volumes'])
+        self.assertNotIn('my_volume', self.dfw.result)
+        self.assertNotIn('another_volume', self.dfw.result)
         self.assertEqual(len(self.dfw.result['volumes']), 2)
         self.assertDictEqual(
             self.dfw.result['volumes']['my_volume'],
@@ -289,6 +297,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.dfw.client.volumes.list.assert_called_once_with()
         self.assertIn('my_volume', self.dfw.result['volumes'])
         self.assertIn('another_volume', self.dfw.result['volumes'])
+        self.assertNotIn('my_volume', self.dfw.result)
+        self.assertNotIn('another_volume', self.dfw.result)
         self.assertDictEqual(
             self.dfw.result['volumes']['my_volume'],
             self.fake_data['volumes'][0])
