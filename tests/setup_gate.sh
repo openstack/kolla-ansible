@@ -96,7 +96,7 @@ EOF
     sudo mkdir -p /tmp/logs/build
     sudo mkdir -p /opt/kolla_registry
 
-    sudo $CONTAINER_ENGINE run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry quay.io/libpod/registry:2.8.2
+    sudo $CONTAINER_ENGINE run -d --net=host -e REGISTRY_HTTP_ADDR=0.0.0.0:4000 --restart=always -v /opt/kolla_registry/:/var/lib/registry --name registry quay.io/opendevmirror/registry:2
 
 
     python3 -m venv ~/kolla-venv
