@@ -340,7 +340,7 @@ Now deploy Octavia:
 Amphora image
 -------------
 
-It is necessary to build an Amphora image. On CentOS / Rocky 9:
+It is necessary to build an Amphora image. On CentOS / Rocky 10:
 
 .. code-block:: console
 

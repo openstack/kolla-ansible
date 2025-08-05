@@ -16,6 +16,16 @@
   when:
     - kolla_copy_ca_into_containers | bool
 
+- name: Ensure /var/log/journal exists on EL systems
+  become: true
+  file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: "2755"
+  when: kolla_base_distro in ['centos', 'rocky']
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"

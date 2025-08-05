@@ -177,7 +177,7 @@ There are a few options that are required to deploy Kolla Ansible:
   - Rocky (``rocky``)
   - Ubuntu (``ubuntu``)
 
-  For newcomers, we recommend to use Rocky Linux 9 or Ubuntu 24.04.
+  For newcomers, we recommend to use Rocky Linux 10 or Ubuntu 24.04.
 
   .. code-block:: console
 
