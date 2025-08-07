@@ -1,5 +1,5 @@
 {
-    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'ovn'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini --config-file /etc/neutron/neutron_vpnaas.conf {% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %}{% if enable_neutron_fwaas | bool %}--config-file /etc/neutron/fwaas_driver.ini{% endif %}",
+    "command": "neutron-server --config-file /etc/neutron/neutron.conf {% if neutron_plugin_agent in ['openvswitch', 'linuxbridge', 'ovn'] %} --config-file /etc/neutron/plugins/ml2/ml2_conf.ini {% if enable_neutron_vpnaas | bool %}--config-file /etc/neutron/neutron_vpnaas.conf{% endif %}{% elif neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs'] %} --config-file /etc/neutron/plugins/vmware/nsx.ini {% endif %}{% if enable_neutron_fwaas | bool %}--config-file /etc/neutron/fwaas_driver.ini{% endif %}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/neutron.conf",
@@ -15,12 +15,14 @@
             "perm": "0600"
         },
 {% endif %}
+{% if enable_neutron_vpnaas | bool %}
         {
             "source": "{{ container_config_directory }}/neutron_vpnaas.conf",
             "dest": "/etc/neutron/neutron_vpnaas.conf",
             "owner": "neutron",
             "perm": "0600"
         },
+{% endif %}
 {% if enable_neutron_taas | bool %}
         {
             "source": "{{ container_config_directory }}/neutron_taas.conf",
