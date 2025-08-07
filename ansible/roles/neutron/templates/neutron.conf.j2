@@ -2,16 +2,16 @@
 [DEFAULT]
 debug = {{ neutron_logging_debug }}
 
+{% if service_name == "neutron-server" %}
+log_file = /var/log/kolla/neutron/neutron-server.log
+{% else %}
 log_dir = /var/log/kolla/neutron
+{% endif %}
 
 # NOTE(elemoine): set use_stderr to false or the logs will also be sent to
 # stderr and collected by Docker
 use_stderr = false
-{% if neutron_enable_tls_backend | bool %}
-bind_host = 127.0.0.1
-{% else %}
 bind_host = {{ api_interface_address }}
-{% endif %}
 
 bind_port = {{ neutron_server_listen_port }}
 

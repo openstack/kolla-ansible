@@ -14,6 +14,51 @@
     privileged: "{{ service.privileged | default(False) }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
 
+- name: Restart neutron-rpc-server container
+  vars:
+    service_name: "neutron-rpc-server"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+
+- name: Restart neutron-periodic-worker container
+  vars:
+    service_name: "neutron-periodic-worker"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+
+- name: Restart neutron-ovn-maintenance-worker container
+  vars:
+    service_name: "neutron-ovn-maintenance-worker"
+    service: "{{ neutron_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+    privileged: "{{ service.privileged | default(False) }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+
 - name: Restart neutron-openvswitch-agent container
   vars:
     service_name: "neutron-openvswitch-agent"
@@ -191,20 +236,6 @@
     volumes: "{{ service.volumes | reject('equalto', '') | list }}"
     dimensions: "{{ service.dimensions }}"
     privileged: "{{ service.privileged | default(False) }}"
-
-- name: Restart neutron-tls-proxy container
-  vars:
-    service_name: "neutron-tls-proxy"
-    service: "{{ neutron_services[service_name] }}"
-  become: true
-  kolla_container:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
-    dimensions: "{{ service.dimensions }}"
-    healthcheck: "{{ service.healthcheck | default(omit) }}"
 
 - name: Restart neutron-metadata-agent container
   vars:

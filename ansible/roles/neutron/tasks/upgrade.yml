@@ -1,4 +1,21 @@
 ---
+# TODO(mnasiadka): Remove this task after Gazpacho release
+- name: Remove neutron-tls-proxy
+  become: true
+  kolla_container:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "neutron_tls_proxy"
+    ignore_missing: true
+  when: inventory_hostname in groups['neutron-server'] | default([])
+
+- name: Cleanup old neutron-tls-proxy config dir
+  become: true
+  file:
+    path: "{{ node_config_directory }}/neutron-tls-proxy"
+    state: absent
+  when: inventory_hostname in groups['neutron-server'] | default([])
+
 - import_tasks: neutron_plugin_agent_check.yml
 
 - include_tasks: rolling_upgrade.yml

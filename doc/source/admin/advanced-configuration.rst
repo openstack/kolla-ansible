@@ -275,10 +275,6 @@ If Glance TLS backend is enabled (``glance_enable_tls_backend``), the syslog
 facility for the ``glance_tls_proxy`` service uses ``local2`` by default. This
 can be set via ``syslog_glance_tls_proxy_facility``.
 
-If Neutron TLS backend is enabled (``neutron_enable_tls_backend``), the syslog
-facility for the ``neutron_tls_proxy`` service uses ``local4`` by default.
-This can be set via ``syslog_neutron_tls_proxy_facility``.
-
 Mount additional Docker volumes in containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
