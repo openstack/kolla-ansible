@@ -275,12 +275,6 @@ that appears in cinder.conf:
    * - Network File System (NFS)
      - cinder_backend_nfs_name
      - nfs-1
-   * - VMware Virtual Machine Disk File
-     - cinder_backend_vmwarevc_vmdk_name
-     - vmwarevc-vmdk
-   * - VMware VStorage (Object Storage)
-     - cinder_backend_vmware_vstorage_object_name
-     - vmware-vstorage-object
    * - Quobyte Storage for OpenStack
      - cinder_backend_quobyte_name
      - QuobyteHD

@@ -315,7 +315,7 @@ dpdk_tunnel_interface_address: "{{ 'dpdk_tunnel' | kolla_address }}"
 ironic_http_interface_address: "{{ 'ironic_http' | kolla_address }}"
 ironic_tftp_interface_address: "{{ 'ironic_tftp' | kolla_address }}"
 
-# Valid options are [ openvswitch, ovn, linuxbridge, vmware_nsxv, vmware_nsxv3, vmware_nsxp, vmware_dvs ]
+# Valid options are [ openvswitch, ovn, linuxbridge ]
 # Do note linuxbridge is *EXPERIMENTAL* in Neutron since Zed and it requires extra tweaks to config to be usable.
 # For details, see: https://docs.openstack.org/neutron/latest/admin/config-experimental-framework.html
 neutron_plugin_agent: "openvswitch"
@@ -1087,9 +1087,8 @@ openstack_auth:
 #######################
 # Glance options
 #######################
-glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool or glance_backend_vmware | bool) }}"
+glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool) }}"
 glance_backend_ceph: "no"
-glance_backend_vmware: "no"
 glance_backend_s3: "no"
 enable_glance_image_cache: "no"
 glance_file_datadir_volume: "glance"
@@ -1123,8 +1122,6 @@ gnocchi_metric_datadir_volume: "gnocchi"
 cinder_backend_ceph: "no"
 cinder_backend_huawei: "no"
 cinder_backend_huawei_xml_files: []
-cinder_backend_vmwarevc_vmdk: "no"
-cinder_backend_vmware_vstorage_object: "no"
 cinder_volume_group: "cinder-volumes"
 cinder_target_helper: "{{ 'lioadm' if ansible_facts.os_family == 'RedHat' else 'tgtadm' }}"
 # Valid options are [ '', redis, etcd ]
@@ -1164,7 +1161,7 @@ designate_notifications_topic_name: "notifications_designate"
 # Neutron options
 #######################
 neutron_bgp_router_id: "1.1.1.1"
-neutron_bridge_name: "{{ 'br-dvs' if neutron_plugin_agent == 'vmware_dvs' else 'br_dpdk' if enable_ovs_dpdk | bool else 'br-ex' }}"
+neutron_bridge_name: "{{ 'br_dpdk' if enable_ovs_dpdk | bool else 'br-ex' }}"
 neutron_physical_networks: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index }}{% if not loop.last %},{% endif %}{% endfor %}"
 # Comma-separated type of enabled ml2 type drivers
 neutron_type_drivers: "flat,vlan,vxlan{% if neutron_plugin_agent == 'ovn' %},geneve{% endif %}"
@@ -1202,7 +1199,7 @@ neutron_enable_ovn_agent: "no"
 #######################
 nova_backend_ceph: "no"
 nova_backend: "{{ 'rbd' if nova_backend_ceph | bool else 'default' }}"
-# Valid options are [ kvm, qemu, vmware ]
+# Valid options are [ kvm, qemu ]
 nova_compute_virt_type: "kvm"
 nova_instance_datadir_volume: "{{ 'nova_compute' if enable_nova_libvirt_container | bool else '/var/lib/nova' }}"
 nova_safety_upgrade: "no"
@@ -1266,14 +1263,6 @@ ceph_glance_user: "glance"
 ceph_gnocchi_user: "gnocchi"
 ceph_manila_user: "manila"
 ceph_nova_user: "{{ ceph_cinder_user }}"
-
-#####################
-# VMware support
-######################
-vmware_vcenter_host_ip: "127.0.0.1"
-vmware_vcenter_host_username: "username"
-vmware_vcenter_cluster_name: "cluster-1"
-vmware_vcenter_insecure: "True"
 
 #############################################
 # MariaDB component-specific database details

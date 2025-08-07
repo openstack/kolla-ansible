@@ -17,8 +17,6 @@ reserved_host_memory_mb = 0
 {% elif enable_nova_fake | bool %}
 host = {{ ansible_facts.hostname }}_{{ service_name }}
 compute_driver = fake.FakeDriver
-{% elif nova_compute_virt_type == 'vmware' %}
-compute_driver = vmwareapi.VMwareVCDriver
 {% else %}
 compute_driver = libvirt.LibvirtDriver
 {% endif %}
@@ -124,9 +122,6 @@ cafile = {{ openstack_cacert }}
 [neutron]
 metadata_proxy_shared_secret = {{ metadata_secret }}
 service_metadata_proxy = true
-{% if neutron_plugin_agent in ['vmware_nsxv3', 'vmware_nsxp'] %}
-ovs_bridge = {{ ovs_bridge }}
-{% endif %}
 auth_url = {{ keystone_internal_url }}
 auth_type = password
 cafile = {{ openstack_cacert }}
@@ -160,19 +155,6 @@ max_retries = -1
 {# must be an include because Ansible 2.8 (and earlier) does not like defined variables referencing undefined variables: migration_interface_address here #}
 {# see https://github.com/ansible/ansible/issues/58835 #}
 {% include 'nova.conf.d/libvirt.conf.j2' %}
-{% endif %}
-{% endif %}
-
-{% if nova_compute_virt_type == "vmware" %}
-[vmware]
-host_ip = {{ vmware_vcenter_host_ip }}
-host_username = {{ vmware_vcenter_host_username }}
-host_password = {{ vmware_vcenter_host_password }}
-cluster_name = {{ vmware_vcenter_cluster_name }}
-datastore_regex = {{ vmware_vcenter_datastore_regex }}
-insecure = {{ vmware_vcenter_insecure }}
-{% if not vmware_vcenter_insecure | bool %}
-ca_file = /etc/nova/vmware_ca
 {% endif %}
 {% endif %}
 

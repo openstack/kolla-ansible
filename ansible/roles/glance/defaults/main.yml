@@ -234,9 +234,6 @@ glance_backends:
   - name: http
     type: http
     enabled: true
-  - name: vmware
-    type: vmware
-    enabled: "{{ glance_backend_vmware | bool }}"
   - name: cinder
     type: cinder
     enabled: "{{ enable_cinder | bool }}"
@@ -250,7 +247,7 @@ glance_ceph_backends:
     enabled: "{{ glance_backend_ceph | bool }}"
 
 glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
-glance_default_backend: "{% if glance_backend_vmware | bool %}vmware{% elif glance_backend_ceph | bool %}{{ glance_ceph_backends[0].name }}{% elif glance_backend_s3 | bool %}s3{% else %}file{% endif %}"
+glance_default_backend: "{% if glance_backend_ceph | bool %}{{ glance_ceph_backends[0].name }}{% elif glance_backend_s3 | bool %}s3{% else %}file{% endif %}"
 
 ####################
 # OpenStack
@@ -269,12 +266,6 @@ glance_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 glance_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 glance_dev_mode: "{{ kolla_dev_mode }}"
 glance_source_version: "{{ kolla_source_version }}"
-
-################################################
-# VMware - OpenStack VMware support
-################################################
-vmware_vcenter_name:
-vmware_datastore_name:
 
 ###################
 # Glance cache

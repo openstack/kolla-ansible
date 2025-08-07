@@ -270,19 +270,6 @@
     - not ceilometer_pipeline_file.stat.exists
   with_dict: "{{ ceilometer_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copying VMware vCenter CA file
-  become: true
-  vars:
-    service: "{{ ceilometer_services['ceilometer-compute'] }}"
-  copy:
-    src: "{{ node_custom_config }}/vmware_ca"
-    dest: "{{ node_config_directory }}/ceilometer-compute/vmware_ca"
-    mode: "0660"
-  when:
-    - nova_compute_virt_type == "vmware"
-    - not vmware_vcenter_insecure | bool
-    - service | service_enabled_and_mapped_to_host
-
 - name: Copying over existing policy file
   template:
     src: "{{ ceilometer_policy_file_path }}"

@@ -362,22 +362,6 @@
     mode: "0660"
   when: service | service_enabled_and_mapped_to_host
 
-- name: Copying over nsx.ini
-  become: true
-  vars:
-    service_name: "neutron-server"
-    service: "{{ neutron_services[service_name] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/nsx.ini.j2"
-      - "{{ node_custom_config }}/neutron/nsx.ini"
-      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/nsx.ini"
-    dest: "{{ node_config_directory }}/{{ service_name }}/nsx.ini"
-    mode: "0660"
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - neutron_plugin_agent in ['vmware_nsxv', 'vmware_nsxv3', 'vmware_nsxp', 'vmware_dvs']
-
 - name: Copy neutron-l3-agent-wrapper script
   become: true
   vars:

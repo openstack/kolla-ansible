@@ -140,18 +140,6 @@
     - { src: "id_rsa.pub", dest: "id_rsa.pub" }
     - { src: "ssh_config.j2", dest: "ssh_config" }
 
-- name: Copying VMware vCenter CA file
-  vars:
-    service: "{{ nova_cell_services['nova-compute'] }}"
-  copy:
-    src: "{{ node_custom_config }}/vmware_ca"
-    dest: "{{ node_config_directory }}/nova-compute/vmware_ca"
-    mode: "0660"
-  when:
-    - nova_compute_virt_type == "vmware"
-    - not vmware_vcenter_insecure | bool
-    - service | service_enabled_and_mapped_to_host
-
 - name: Copying 'release' file for nova_compute
   vars:
     service: "{{ nova_cell_services['nova-compute'] }}"

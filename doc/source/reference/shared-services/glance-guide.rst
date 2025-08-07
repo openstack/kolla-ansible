@@ -15,7 +15,6 @@ backends:
 
 * file
 * ceph
-* vmware
 
 File backend
 ~~~~~~~~~~~~
@@ -48,19 +47,6 @@ To enable the ceph backend manually:
 .. code-block:: yaml
 
    glance_backend_ceph: "yes"
-
-VMware backend
-~~~~~~~~~~~~~~
-
-To make use of VMware datastores as a glance backend,
-enable `glance_backend_vmware` and refer to :doc:`../compute/vmware-guide` for
-further VMware configuration.
-
-To enable the vmware backend manually:
-
-.. code-block:: yaml
-
-   glance_backend_vmware: "yes"
 
 Glance with S3 Backend
 ~~~~~~~~~~~~~~~~~~~~~~

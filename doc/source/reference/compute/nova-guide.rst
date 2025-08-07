@@ -13,7 +13,7 @@ Virtualisation Drivers
 ======================
 
 The virtualisation driver may be selected via ``nova_compute_virt_type`` in
-``globals.yml``. Supported options are ``qemu``, ``kvm``, and ``vmware``.
+``globals.yml``. Supported options are ``qemu`` and ``kvm``.
 The default is ``kvm``.
 
 Libvirt
@@ -21,12 +21,6 @@ Libvirt
 
 Information on the libvirt-based drivers ``kvm`` and ``qemu`` can be found in
 :doc:`libvirt-guide`.
-
-VMware
-------
-
-Information on the VMware-based driver ``vmware`` can be found in
-:doc:`vmware-guide`.
 
 Bare Metal
 ----------
