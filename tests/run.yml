@@ -78,20 +78,19 @@
   vars:
     kolla_build_config:
       DEFAULT:
-        profile: gate
-        logs_dir: /tmp/logs/build
-        quiet: true
-        # NOTE(yoctozepto): we cannot build and push at the same time on debian
-        # buster see https://github.com/docker/for-linux/issues/711.
-        push: "{{ base_distro != 'debian' }}"
         base: "{{ base_distro }}"
-        registry: "primary:4000"
+        engine: "{{ container_engine }}"
+        logs_dir: /tmp/logs/build
         namespace: lokolla
+        network_mode: host
+        profile: gate
+        push: true
+        quiet: true
+        registry: "primary:4000"
         tag: "{{ build_image_tag }}"
         template_override: /etc/kolla/template_overrides.j2
-        # NOTE(yoctozepto): to avoid issues with IPv6 not enabled in the docker daemon
-        # and since we don't need isolated networks here, use host networking
-        network_mode: host
+      profiles:
+        gate: "{{ (scenario_images_core + (scenario_images_extra | default([]))) | select | join(',') }}"
   tasks:
     - name: Detect whether need build images
       set_fact:
@@ -101,6 +100,15 @@
         # change that impacts them.
         - item.project.short_name not in ["ansible-collection-kolla", "kayobe", "kolla-ansible", "tenks"]
       with_items: "{{ zuul['items'] }}"
+
+    - name: Use base_image from mirror on Debian/Ubuntu
+      vars:
+        base_image_append:
+          DEFAULT:
+            base_image: "quay.io/opendevmirror/{{ base_distro }}"
+      set_fact:
+        kolla_build_config: "{{ kolla_build_config | combine(base_image_append, recursive=True) }}"
+      when: ansible_facts.os_family == "Debian"
 
     # NOTE(yoctozepto): required to template template_overrides.j2 for Zuul
     - name: Include kolla Zuul vars if building new images
