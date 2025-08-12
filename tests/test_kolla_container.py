@@ -36,7 +36,8 @@ class ModuleArgsTest(base.BaseTestCase):
 
     def test_module_args(self):
         argument_spec = dict(
-            common_options=dict(required=False, type='dict', default=dict()),
+            common_options=dict(required=False, type='dict', default=dict(),
+                                no_log=True),
             action=dict(
                 required=True, type='str',
                 choices=['compare_container',

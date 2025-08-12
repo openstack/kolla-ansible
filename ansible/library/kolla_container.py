@@ -268,7 +268,8 @@ def generate_module():
     # NOTE(r-krcek): arguments_spec should also be reflected in the list of
     # arguments in service-check-containers role
     argument_spec = dict(
-        common_options=dict(required=False, type='dict', default=dict()),
+        common_options=dict(required=False, type='dict',
+                            default=dict(), no_log=True),
         action=dict(required=True, type='str',
                     choices=['compare_container',
                              'compare_image',

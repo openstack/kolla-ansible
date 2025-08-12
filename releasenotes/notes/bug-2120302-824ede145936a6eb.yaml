@@ -1,0 +1,13 @@
+---
+security:
+  - |
+    Added no_log=True to the ``common_options`` argument in generate_module()
+    to prevent the auth_password and other sensitive data from being printed
+    in Ansible logs during container operations when
+    ``docker_registry_password`` was set. This improves security by hiding
+    credentials from logs.
+
+    This change addresses the issue where auth_password was visible in log
+    despite already having no_log=True on the auth_password parameter itself,
+    because it was nested inside common_options dict without no_log protection.
+    `LP#2120302 <https://launchpad.net/bugs/2120302>`__
