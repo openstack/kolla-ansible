@@ -1,20 +1,27 @@
 {% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if ironic_wsgi_provider == 'apache' else 'uwsgi /etc/ironic/ironic-api-uwsgi.ini' %}
 {
-    "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/ironic.conf",
             "dest": "/etc/ironic/ironic.conf",
             "owner": "ironic",
             "perm": "0600"
-        },
+        }{% if ironic_wsgi_provider == "apache" %},
         {
             "source": "{{ container_config_directory }}/ironic-api-wsgi.conf",
             "dest": "/etc/{{ apache_conf_dir }}/ironic-api-wsgi.conf",
             "owner": "ironic",
             "perm": "0600"
-        }{% if ironic_policy_file is defined %},
+        }{% elif ironic_wsgi_provider == "uwsgi" %},
+        {
+            "source": "{{ container_config_directory }}/ironic-api-uwsgi.ini",
+            "dest": "/etc/ironic/ironic-api-uwsgi.ini",
+            "owner": "ironic",
+            "perm": "0600"
+        }{% endif %}{% if ironic_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ ironic_policy_file }}",
             "dest": "/etc/ironic/{{ ironic_policy_file }}",

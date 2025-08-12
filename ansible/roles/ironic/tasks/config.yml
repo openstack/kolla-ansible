@@ -262,4 +262,24 @@
     dest: "{{ node_config_directory }}/ironic-api/ironic-api-wsgi.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - ironic_wsgi_provider == "apache"
+
+- name: "Configure uWSGI for ironic-api"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ ironic_services }}"
+    service: "{{ ironic_services['ironic-api'] }}"
+    service_name: "ironic-api"
+    service_uwsgi_config_http_port: "{{ ironic_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ ironic_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/ironic/certs/ironic-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/ironic/certs/ironic-key.pem"
+    service_uwsgi_config_uid: "ironic"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - ironic_wsgi_provider == "uwsgi"
