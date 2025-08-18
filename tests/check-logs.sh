@@ -72,6 +72,7 @@ function check_fluentd_missing_logs {
         /var/log/kolla/neutron/dnsmasq.log)
             continue
             ;;
+        # TODO(mnasiadka): Remove me in Gazpacho release
         /var/log/kolla/neutron-tls-proxy/neutron-tls-proxy.log)
             continue
             ;;
@@ -123,7 +124,7 @@ function filter_out_expected_critical {
     # job.
 
     case $1 in
-    */neutron-server.log)
+    */neutron-*.log)
         # Sometimes we see this during shutdown (upgrade).
         # See: https://bugs.launchpad.net/neutron/+bug/1863579
         grep -v "Unhandled error: oslo_db.exception.DBConnectionError" |

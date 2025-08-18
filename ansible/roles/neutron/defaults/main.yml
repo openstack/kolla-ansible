@@ -9,17 +9,19 @@ neutron_services:
     volumes: "{{ neutron_server_default_volumes + neutron_server_extra_volumes }}"
     dimensions: "{{ neutron_server_dimensions }}"
     healthcheck: "{{ neutron_server_healthcheck }}"
+    wsgi: "neutron.wsgi.api:application"
     haproxy:
       neutron_server:
-        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool }}"
+        enabled: true
         mode: "http"
         external: false
         port: "{{ neutron_server_port }}"
         listen_port: "{{ neutron_server_listen_port }}"
         backend_http_extra:
           - "option httpchk"
+        tls_backend: "{{ neutron_enable_tls_backend | bool }}"
       neutron_server_external:
-        enabled: "{{ enable_neutron | bool and not neutron_enable_tls_backend | bool }}"
+        enabled: true
         mode: "http"
         external: true
         external_fqdn: "{{ neutron_external_fqdn }}"
@@ -27,6 +29,34 @@ neutron_services:
         listen_port: "{{ neutron_server_listen_port }}"
         backend_http_extra:
           - "option httpchk"
+        tls_backend: "{{ neutron_enable_tls_backend | bool }}"
+  neutron-rpc-server:
+    container_name: "neutron_rpc_server"
+    image: "{{ neutron_rpc_server_image_full }}"
+    enabled: "{{ neutron_plugin_agent in ['linuxbridge', 'openvswitch'] }}"
+    group: "neutron-rpc-server"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-rpc-server'] }}"
+    volumes: "{{ neutron_rpc_server_default_volumes + neutron_rpc_server_extra_volumes }}"
+    dimensions: "{{ neutron_rpc_server_dimensions }}"
+    healthcheck: "{{ neutron_rpc_server_healthcheck }}"
+  neutron-periodic-worker:
+    container_name: "neutron_periodic_worker"
+    image: "{{ neutron_periodic_worker_image_full }}"
+    enabled: true
+    group: "neutron-periodic-worker"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-periodic-worker'] }}"
+    volumes: "{{ neutron_periodic_worker_default_volumes + neutron_periodic_worker_extra_volumes }}"
+    dimensions: "{{ neutron_periodic_worker_dimensions }}"
+    healthcheck: "{{ neutron_periodic_worker_healthcheck }}"
+  neutron-ovn-maintenance-worker:
+    container_name: "neutron_ovn_maintenance_worker"
+    image: "{{ neutron_ovn_maintenance_worker_image_full }}"
+    enabled: "{{ neutron_plugin_agent == 'ovn' }}"
+    group: "neutron-ovn-maintenance-worker"
+    host_in_groups: "{{ inventory_hostname in groups['neutron-ovn-maintenance-worker'] }}"
+    volumes: "{{ neutron_ovn_maintenance_worker_default_volumes + neutron_ovn_maintenance_worker_extra_volumes }}"
+    dimensions: "{{ neutron_ovn_maintenance_worker_dimensions }}"
+    healthcheck: "{{ neutron_ovn_maintenance_worker_healthcheck }}"
   neutron-openvswitch-agent:
     container_name: "neutron_openvswitch_agent"
     image: "{{ neutron_openvswitch_agent_image_full }}"
@@ -190,31 +220,6 @@ neutron_services:
     volumes: "{{ ironic_neutron_agent_default_volumes + ironic_neutron_agent_extra_volumes }}"
     dimensions: "{{ ironic_neutron_agent_dimensions }}"
     healthcheck: "{{ ironic_neutron_agent_healthcheck }}"
-  neutron-tls-proxy:
-    container_name: neutron_tls_proxy
-    group: neutron-server
-    host_in_groups: "{{ inventory_hostname in groups['neutron-server'] }}"
-    enabled: "{{ neutron_enable_tls_backend }}"
-    image: "{{ neutron_tls_proxy_image_full }}"
-    volumes: "{{ neutron_tls_proxy_default_volumes + neutron_tls_proxy_extra_volumes }}"
-    dimensions: "{{ neutron_tls_proxy_dimensions }}"
-    healthcheck: "{{ neutron_tls_proxy_healthcheck }}"
-    haproxy:
-      neutron_tls_proxy:
-        enabled: "{{ enable_neutron | bool and neutron_enable_tls_backend | bool }}"
-        mode: "http"
-        external: false
-        port: "{{ neutron_server_port }}"
-        listen_port: "{{ neutron_server_listen_port }}"
-        tls_backend: "yes"
-      neutron_tls_proxy_external:
-        enabled: "{{ enable_neutron | bool and neutron_enable_tls_backend | bool }}"
-        mode: "http"
-        external: true
-        external_fqdn: "{{ neutron_external_fqdn }}"
-        port: "{{ neutron_server_port }}"
-        listen_port: "{{ neutron_server_listen_port }}"
-        tls_backend: "yes"
   neutron-ovn-agent:
     container_name: neutron_ovn_agent
     group: neutron-ovn-agent
@@ -310,6 +315,10 @@ neutron_metadata_agent_image: "{{ docker_image_url }}neutron-metadata-agent"
 neutron_metadata_agent_tag: "{{ neutron_tag }}"
 neutron_metadata_agent_image_full: "{{ neutron_metadata_agent_image }}:{{ neutron_metadata_agent_tag }}"
 
+neutron_ovn_maintenance_worker_image: "{{ neutron_server_image }}"
+neutron_ovn_maintenance_worker_tag: "{{ neutron_tag }}"
+neutron_ovn_maintenance_worker_image_full: "{{ neutron_ovn_maintenance_worker_image }}:{{ neutron_ovn_maintenance_worker_tag }}"
+
 neutron_ovn_metadata_agent_image: "{{ docker_image_url }}neutron-metadata-agent"
 neutron_ovn_metadata_agent_tag: "{{ neutron_tag }}"
 neutron_ovn_metadata_agent_image_full: "{{ neutron_ovn_metadata_agent_image }}:{{ neutron_ovn_metadata_agent_tag }}"
@@ -317,6 +326,14 @@ neutron_ovn_metadata_agent_image_full: "{{ neutron_ovn_metadata_agent_image }}:{
 neutron_openvswitch_agent_image: "{{ docker_image_url }}neutron-openvswitch-agent"
 neutron_openvswitch_agent_tag: "{{ neutron_tag }}"
 neutron_openvswitch_agent_image_full: "{{ neutron_openvswitch_agent_image }}:{{ neutron_openvswitch_agent_tag }}"
+
+neutron_periodic_worker_image: "{{ neutron_server_image }}"
+neutron_periodic_worker_tag: "{{ neutron_tag }}"
+neutron_periodic_worker_image_full: "{{ neutron_periodic_worker_image }}:{{ neutron_periodic_worker_tag }}"
+
+neutron_rpc_server_image: "{{ neutron_server_image }}"
+neutron_rpc_server_tag: "{{ neutron_tag }}"
+neutron_rpc_server_image_full: "{{ neutron_rpc_server_image }}:{{ neutron_rpc_server_tag }}"
 
 neutron_server_image: "{{ docker_image_url }}neutron-server"
 neutron_server_tag: "{{ neutron_tag }}"
@@ -338,10 +355,6 @@ ironic_neutron_agent_image: "{{ docker_image_url }}ironic-neutron-agent"
 ironic_neutron_agent_tag: "{{ neutron_tag }}"
 ironic_neutron_agent_image_full: "{{ ironic_neutron_agent_image }}:{{ ironic_neutron_agent_tag }}"
 
-neutron_tls_proxy_image: "{{ docker_image_url }}haproxy"
-neutron_tls_proxy_tag: "{{ haproxy_tag }}"
-neutron_tls_proxy_image_full: "{{ neutron_tls_proxy_image }}:{{ neutron_tls_proxy_tag }}"
-
 neutron_ovn_agent_image: "{{ docker_image_url }}neutron-ovn-agent"
 neutron_ovn_agent_tag: "{{ neutron_tag }}"
 neutron_ovn_agent_image_full: "{{ neutron_ovn_agent_image }}:{{ neutron_ovn_agent_tag }}"
@@ -362,8 +375,10 @@ neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
 neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
-neutron_tls_proxy_dimensions: "{{ default_container_dimensions }}"
 neutron_ovn_agent_dimensions: "{{ neutron_agent_dimensions }}"
+neutron_ovn_maintenance_worker_dimensions: "{{ default_container_dimensions }}"
+neutron_periodic_worker_dimensions: "{{ default_container_dimensions }}"
+neutron_rpc_server_dimensions: "{{ default_container_dimensions }}"
 
 neutron_dhcp_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_dhcp_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -460,7 +475,7 @@ neutron_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 neutron_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 neutron_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{% if neutron_enable_tls_backend | bool %}localhost{% else %}{{ api_interface_address | put_address_in_context('url') }}{% endif %}:{{ neutron_server_listen_port }}"]
+neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if neutron_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ neutron_server_listen_port }}"]
 neutron_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 neutron_server_healthcheck:
   interval: "{{ neutron_server_healthcheck_interval }}"
@@ -468,19 +483,6 @@ neutron_server_healthcheck:
   start_period: "{{ neutron_server_healthcheck_start_period }}"
   test: "{% if neutron_server_enable_healthchecks | bool %}{{ neutron_server_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_server_healthcheck_timeout }}"
-
-neutron_tls_proxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
-neutron_tls_proxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
-neutron_tls_proxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
-neutron_tls_proxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_tls_proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl -u {{ haproxy_user }}:{{ haproxy_password }} {{ api_interface_address | put_address_in_context('url') }}:{{ neutron_tls_proxy_stats_port }}"]
-neutron_tls_proxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
-neutron_tls_proxy_healthcheck:
-  interval: "{{ neutron_tls_proxy_healthcheck_interval }}"
-  retries: "{{ neutron_tls_proxy_healthcheck_retries }}"
-  start_period: "{{ neutron_tls_proxy_healthcheck_start_period }}"
-  test: "{% if neutron_tls_proxy_enable_healthchecks | bool %}{{ neutron_tls_proxy_healthcheck_test }}{% else %}NONE{% endif %}"
-  timeout: "{{ neutron_tls_proxy_healthcheck_timeout }}"
 
 neutron_sriov_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_sriov_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -520,6 +522,45 @@ ironic_neutron_agent_healthcheck:
   start_period: "{{ ironic_neutron_agent_healthcheck_start_period }}"
   test: "{% if ironic_neutron_agent_enable_healthchecks | bool %}{{ ironic_neutron_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ ironic_neutron_agent_healthcheck_timeout }}"
+
+neutron_ovn_maintenance_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_ovn_maintenance_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_ovn_maintenance_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_ovn_maintenance_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_ovn_maintenance_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-ovn-maintenance-worker {{ ovn_nb_db_port }}"]
+neutron_ovn_maintenance_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_ovn_maintenance_worker_healthcheck:
+  interval: "{{ neutron_ovn_maintenance_worker_healthcheck_interval }}"
+  retries: "{{ neutron_ovn_maintenance_worker_healthcheck_retries }}"
+  start_period: "{{ neutron_ovn_maintenance_worker_healthcheck_start_period }}"
+  test: "{% if neutron_ovn_maintenance_worker_enable_healthchecks | bool %}{{ neutron_ovn_maintenance_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_ovn_maintenance_worker_healthcheck_timeout }}"
+
+neutron_periodic_worker_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_periodic_worker_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_periodic_worker_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_periodic_worker_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_periodic_worker_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-periodic-workers {{ database_port }}"]
+neutron_periodic_worker_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_periodic_worker_healthcheck:
+  interval: "{{ neutron_periodic_worker_healthcheck_interval }}"
+  retries: "{{ neutron_periodic_worker_healthcheck_retries }}"
+  start_period: "{{ neutron_periodic_worker_healthcheck_start_period }}"
+  test: "{% if neutron_periodic_worker_enable_healthchecks | bool %}{{ neutron_periodic_worker_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_periodic_worker_healthcheck_timeout }}"
+
+neutron_rpc_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_rpc_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_rpc_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_rpc_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_rpc_server_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-rpc-server {{ om_rpc_port }}"]
+neutron_rpc_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_rpc_server_healthcheck:
+  interval: "{{ neutron_rpc_server_healthcheck_interval }}"
+  retries: "{{ neutron_rpc_server_healthcheck_retries }}"
+  start_period: "{{ neutron_rpc_server_healthcheck_start_period }}"
+  test: "{% if neutron_rpc_server_enable_healthchecks | bool %}{{ neutron_rpc_server_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_rpc_server_healthcheck_timeout }}"
 
 neutron_dhcp_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
@@ -634,14 +675,26 @@ ironic_neutron_agent_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
-neutron_tls_proxy_default_volumes:
-  - "{{ node_config_directory }}/neutron-tls-proxy/:{{ container_config_directory }}/:ro"
+neutron_ovn_agent_default_volumes:
+  - "{{ node_config_directory }}/neutron-ovn-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
-neutron_ovn_agent_default_volumes:
-  - "{{ node_config_directory }}/neutron-ovn-agent/:{{ container_config_directory }}/:ro"
+neutron_ovn_maintenance_worker_default_volumes:
+  - "{{ node_config_directory }}/neutron-ovn-maintenance-worker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' }}"
+neutron_periodic_worker_default_volumes:
+  - "{{ node_config_directory }}/neutron-periodic-worker/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' }}"
+neutron_rpc_server_default_volumes:
+  - "{{ node_config_directory }}/neutron-rpc-server/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
@@ -662,8 +715,10 @@ neutron_bgp_dragent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_infoblox_ipam_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metering_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 ironic_neutron_agent_extra_volumes: "{{ neutron_extra_volumes }}"
-neutron_tls_proxy_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_ovn_agent_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_ovn_maintenance_worker_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_periodic_worker_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_rpc_server_extra_volumes: "{{ neutron_extra_volumes }}"
 
 ####################
 # OpenStack
@@ -901,26 +956,6 @@ neutron_ks_user_roles:
 # SRIOV
 ####################
 neutron_sriov_physnets: "{{ neutron_sriov_physnet_mappings.items() | map('join', ':') | join(',') }}"
-
-####################
-# Backend TLS proxy
-####################
-syslog_server: "{{ api_interface_address }}"
-syslog_neutron_tls_proxy_facility: "local4"
-
-neutron_tls_proxy_max_connections: 40000
-neutron_tls_proxy_threads: 1
-neutron_tls_proxy_thread_cpu_map: "no"
-neutron_tls_proxy_defaults_max_connections: 10000
-neutron_tls_proxy_http_request_timeout: "10s"
-neutron_tls_proxy_http_keep_alive_timeout: "10s"
-neutron_tls_proxy_queue_timeout: "1m"
-neutron_tls_proxy_connect_timeout: "10s"
-neutron_tls_proxy_client_timeout: "1m"
-neutron_tls_proxy_server_timeout: "1m"
-neutron_tls_proxy_check_timeout: "10s"
-# Check http://www.haproxy.org/download/1.5/doc/configuration.txt for available options
-neutron_tls_proxy_defaults_balance: "roundrobin"
 
 ####################
 # DNS

@@ -21,18 +21,6 @@
   when:
     - neutron_copy_certs | bool
 
-- name: Creating TLS backend PEM File
-  vars:
-    service: "{{ neutron_services['neutron-tls-proxy'] }}"
-  assemble:
-    src: "{{ node_config_directory }}/neutron-tls-proxy/"
-    dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-cert-and-key.pem"
-    mode: "0660"
-    regexp: "^neutron-(cert|key)\\.pem$"
-    remote_src: true
-  become: true
-  when: service | service_enabled_and_mapped_to_host
-
 - name: Check if policies shall be overwritten
   stat:
     path: "{{ item }}"
@@ -76,20 +64,23 @@
     service_name: "{{ item.key }}"
     services_need_neutron_conf:
       - "ironic-neutron-agent"
+      - "neutron-bgp-dragent"
       - "neutron-dhcp-agent"
+      - "neutron-eswitchd"
+      - "neutron-infoblox-ipam-agent"
       - "neutron-l3-agent"
       - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
-      - "neutron-ovn-metadata-agent"
       - "neutron-metering-agent"
-      - "neutron-openvswitch-agent"
-      - "neutron-server"
-      - "neutron-bgp-dragent"
-      - "neutron-infoblox-ipam-agent"
-      - "neutron-sriov-agent"
       - "neutron-mlnx-agent"
-      - "neutron-eswitchd"
+      - "neutron-openvswitch-agent"
       - "neutron-ovn-agent"
+      - "neutron-ovn-maintenance-worker"
+      - "neutron-ovn-metadata-agent"
+      - "neutron-periodic-worker"
+      - "neutron-rpc-server"
+      - "neutron-server"
+      - "neutron-sriov-agent"
   merge_configs:
     sources:
       - "{{ role_path }}/templates/neutron.conf.j2"
@@ -138,6 +129,9 @@
     service_name: "{{ item.key }}"
     services_need_ml2_conf_ini:
       - "neutron-infoblox-ipam-agent"
+      - "neutron-ovn-maintenance-worker"
+      - "neutron-periodic-worker"
+      - "neutron-rpc-server"
       - "neutron-server"
   merge_configs:
     sources:
@@ -394,20 +388,6 @@
     - "{{ neutron_services | dictsort }}"
     - "{{ check_extra_ml2_plugins.files }}"
 
-- name: Copying over neutron-tls-proxy.cfg
-  vars:
-    service: "{{ neutron_services['neutron-tls-proxy'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/neutron-tls-proxy/neutron-tls-proxy.cfg"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/neutron-tls-proxy.cfg"
-    - "{{ node_custom_config }}/neutron/neutron-tls-proxy.cfg"
-    - "neutron-tls-proxy.cfg.j2"
-  when: service | service_enabled_and_mapped_to_host
-
 - name: Copying over neutron_taas.conf
   become: true
   vars:
@@ -426,3 +406,20 @@
     - enable_neutron_taas | bool
     - item.key in services_need_neutron_taas_conf
   with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: "Configure uWSGI for Neutron"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ neutron_services }}"
+    service: "{{ neutron_services['neutron-server'] }}"
+    service_name: "neutron-server"
+    service_uwsgi_config_http_port: "{{ neutron_server_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ neutron_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/neutron/certs/neutron-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/neutron/certs/neutron-key.pem"
+    service_uwsgi_config_uid: "neutron"
+  when:
+    - service | service_enabled_and_mapped_to_host
