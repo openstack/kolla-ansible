@@ -102,7 +102,7 @@ Install Kolla-ansible
 
    .. code-block:: console
 
-      pip install ./kolla-ansible
+      pip install -e ./kolla-ansible
 
 #. Create the ``/etc/kolla`` directory.
 
@@ -291,20 +291,19 @@ accordingly.
 
   .. code-block:: console
 
-     cd kolla-ansible/tools
-     ./kolla-ansible bootstrap-servers -i ../../all-in-one
+     kolla-ansible bootstrap-servers -i ../all-in-one
 
 #. Do pre-deployment checks for hosts:
 
   .. code-block:: console
 
-     kolla-ansible prechecks -i ../../all-in-one
+     kolla-ansible prechecks -i ../all-in-one
 
 #. Finally proceed to actual OpenStack deployment:
 
   .. code-block:: console
 
-     kolla-ansible deploy -i ../../all-in-one
+     kolla-ansible deploy -i ../all-in-one
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to
@@ -324,8 +323,7 @@ Using OpenStack
 
      .. code-block:: console
 
-        cd kolla-ansible/tools
-        ./kolla-ansible post-deploy
+        kolla-ansible post-deploy
 
    * The file will be generated in /etc/kolla/clouds.yaml, you can use it by
      copying it to /etc/openstack or ~/.config/openstack or setting
