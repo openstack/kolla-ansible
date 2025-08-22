@@ -22,6 +22,12 @@
       script: check-logs.sh
       failed_when: false
       when: not zuul_success | bool
+      register: check_logs_result
+
+    - name: Print check-logs output
+      debug:
+        msg: "{{ check_logs_result.stdout }}"
+      when: not check_logs_result.skipped | default(False)
 
     - name: Run diagnostics script
       environment:
