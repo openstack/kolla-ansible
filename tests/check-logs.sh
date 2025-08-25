@@ -118,6 +118,10 @@ function check_docker_log_file_for_sigkill {
     sudo journalctl --no-pager -u ${CONTAINER_ENGINE}.service | grep "signal 9"
 }
 
+function check_journal_for_oom {
+    sudo journalctl --no-pager | grep "Out of memory: Killed process"
+}
+
 function filter_out_expected_critical {
     # $1: file
     # Filter out expected critical log messages that we do not want to fail the
@@ -200,6 +204,12 @@ fi
 if check_docker_log_file_for_sigkill >/dev/null; then
     any_critical=1
     echo "(critical) Found containers killed using signal 9 (SIGKILL) in docker logs."
+fi
+
+if check_journal_for_oom >/dev/null; then
+    any_critical=1
+    echo "(critical) Found processes killed by oom-killer in syslog"
+    check_journal_for_oom
 fi
 
 if [[ $any_critical -eq 1 ]]; then
