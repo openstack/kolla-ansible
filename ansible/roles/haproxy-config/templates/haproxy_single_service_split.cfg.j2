@@ -50,7 +50,11 @@ frontend {{ service_name }}_front
     {{ "bind %s:%s %s"|e|format(vip_address, service_port, tls_option)|trim() }}
     {# Redirect mode sets a redirect scheme instead of a backend #}
     {% if service_mode == 'redirect' %}
+        {% if enable_letsencrypt == 'yes' %}
     redirect scheme https code 301 if !{ ssl_fc } !{ path_reg ^/.well-known/acme-challenge/.+ }
+        {% else %}
+    redirect scheme https code 301 if !{ ssl_fc }
+        {% endif %}
         {% for redirect_option in frontend_redirect_extra %}
     {{ redirect_option }}
         {% endfor %}

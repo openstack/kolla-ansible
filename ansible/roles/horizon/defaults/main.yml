@@ -35,7 +35,7 @@ horizon_services:
         port: "{% if kolla_enable_tls_internal | bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_http_extra:
-          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
+          - "{% if enable_letsencrypt == 'yes' %}use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }{% endif %}"
         backend_http_extra:
           - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
           - "option httpchk"
@@ -47,7 +47,7 @@ horizon_services:
         port: "{{ horizon_port }}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_redirect_extra:
-          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
+          - "{% if enable_letsencrypt == 'yes' %}use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }{% endif %}"
       horizon_external:
         enabled: "{{ enable_horizon }}"
         mode: "http"
@@ -56,7 +56,7 @@ horizon_services:
         port: "{% if kolla_enable_tls_external | bool %}{{ horizon_tls_port }}{% else %}{{ horizon_port }}{% endif %}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_http_extra:
-          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
+          - "{% if enable_letsencrypt == 'yes' %}use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }{% endif %}"
         backend_http_extra:
           - "balance {{ 'roundrobin' if enable_memcached | bool or horizon_backend_database | bool else 'source' }}"
           - "option httpchk"
@@ -69,9 +69,9 @@ horizon_services:
         port: "{{ horizon_port }}"
         listen_port: "{{ horizon_listen_port }}"
         frontend_redirect_extra:
-          - "use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }"
+          - "{% if enable_letsencrypt == 'yes' %}use_backend acme_client_back if { path_reg ^/.well-known/acme-challenge/.+ }{% endif %}"
       acme_client:
-        enabled: "{{ enable_horizon }}"
+        enabled: "{{ enable_letsencrypt }}"
         with_frontend: false
         custom_member_list: "{{ acme_client_servers }}"
 
