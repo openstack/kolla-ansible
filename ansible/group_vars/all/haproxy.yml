@@ -50,24 +50,32 @@ _ssl_intermediate_ciphersuites:
   - TLS_AES_256_GCM_SHA384
   - TLS_CHACHA20_POLY1305_SHA256
 
+_ssl_intermediate_options:
+  - ssl-min-ver TLSv1.2
+  - no-tls-tickets
+
 _ssl_modern_ciphersuites:
   - TLS_AES_128_GCM_SHA256
   - TLS_AES_256_GCM_SHA384
   - TLS_CHACHA20_POLY1305_SHA256
 
+_ssl_modern_options:
+  - ssl-min-ver TLSv1.3
+  - no-tls-tickets
+
 ssl_intermediate_settings: |
   ssl-default-bind-ciphers {{ _ssl_intermediate_ciphers | join(':') }}
   ssl-default-bind-ciphersuites {{ _ssl_intermediate_ciphersuites | join(':') }}
-  ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+  ssl-default-bind-options {{ (['prefer-client-ciphers'] + _ssl_intermediate_options) | join(' ') }}
   ssl-default-server-ciphers {{ _ssl_intermediate_ciphers | join(':') }}
   ssl-default-server-ciphersuites {{ _ssl_intermediate_ciphersuites | join(':') }}
-  ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+  ssl-default-server-options {{ _ssl_intermediate_options | join(' ') }}
 
 ssl_modern_settings: |
   ssl-default-bind-ciphersuites {{ _ssl_modern_ciphersuites | join(':') }}
-  ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+  ssl-default-bind-options {{ (['prefer-client-ciphers'] + _ssl_modern_options) | join(' ') }}
   ssl-default-server-ciphersuites {{ _ssl_modern_ciphersuites | join(':') }}
-  ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+  ssl-default-server-options {{ _ssl_modern_options | join(' ') }}
 
 haproxy_stats_port: "1984"
 haproxy_monitor_port: "61313"
