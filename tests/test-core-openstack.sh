@@ -416,9 +416,22 @@ function test_internal_dns_integration {
         openstack subnet create --network dns-test-network --subnet-range 192.168.88.0/24 dns-test-subnet
         openstack port create --network dns-test-network --dns-name ${DNS_NAME} ${PORT_NAME}
 
+        local attempt
+        while [[ $(openstack port show ${DNS_NAME} -f value -c dns_assignment) == "[]" ]]; do
+            echo "dns_assignment for port ${DNS_NAME} not available yet"
+            attempt=$((attempt+1))
+            if [[ $attempt -eq 20 ]]; then
+                echo "ERROR: dns_assignment for port ${DNS_NAME} failed to become available"
+                openstack port show ${DNS_NAME}
+                return 1
+            fi
+            sleep $attempt
+        done
+        set +e
         DNS_ASSIGNMENT=$(openstack port show ${DNS_NAME} -f json -c dns_assignment)
         FQDN=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["fqdn"]);')
         HOSTNAME=$(echo ${DNS_ASSIGNMENT} | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["dns_assignment"][0]["hostname"]);')
+        set -e
 
         if [ "${DNS_NAME}.${DNS_DOMAIN}" == "${FQDN}" ]; then
             echo "[i] Test neutron internal DNS integration FQDN check port - PASS"
