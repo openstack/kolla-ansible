@@ -14,6 +14,8 @@ Node types and services running on them
 A basic Kolla inventory consists of several types of nodes, known in Ansible as
 ``groups``.
 
+* Deployment - Host from which you're running kolla-ansible CLI
+
 * Control - Cloud controller nodes which host control services
   like APIs and databases. This group should have odd number of nodes for
   quorum.
@@ -28,6 +30,14 @@ A basic Kolla inventory consists of several types of nodes, known in Ansible as
 * Storage - Storage nodes for cinder-volume, LVM or Swift.
 
 * Monitoring - Monitor nodes which host monitoring services.
+
+.. warning::
+
+   All hosts should be hardened and access to them should be limited,
+   because Ansible can leak administrative passwords and other secrets to
+   system log. The same leaked passwords can be observed in OpenSearch if
+   you're pushing your system logs there.
+
 
 Network configuration
 ~~~~~~~~~~~~~~~~~~~~~
