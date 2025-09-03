@@ -138,6 +138,7 @@ cyborg_api_default_volumes:
   - "cyborg:/var/lib/cyborg/"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
+  - "{{ kolla_dev_repos_directory ~ '/cyborg:/dev-mode/cyborg' if cyborg_dev_mode | bool else '' }}"
 
 cyborg_agent_default_volumes:
   - "{{ node_config_directory }}/cyborg-agent/:{{ container_config_directory }}/:ro"
@@ -145,6 +146,7 @@ cyborg_agent_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
+  - "{{ kolla_dev_repos_directory ~ '/cyborg:/dev-mode/cyborg' if cyborg_dev_mode | bool else '' }}"
 
 cyborg_conductor_default_volumes:
   - "{{ node_config_directory }}/cyborg-conductor/:{{ container_config_directory }}/:ro"
@@ -152,6 +154,7 @@ cyborg_conductor_default_volumes:
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
+  - "{{ kolla_dev_repos_directory ~ '/cyborg:/dev-mode/cyborg' if cyborg_dev_mode | bool else '' }}"
 
 cyborg_extra_volumes: "{{ default_extra_volumes }}"
 cyborg_api_extra_volumes: "{{ cyborg_extra_volumes }}"
@@ -170,6 +173,13 @@ cyborg_keystone_user: "cyborg"
 
 openstack_cyborg_auth: "{{ openstack_auth }}"
 
+####################
+# Kolla
+####################
+cyborg_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
+cyborg_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
+cyborg_dev_mode: "{{ kolla_dev_mode }}"
+cyborg_source_version: "{{ kolla_source_version }}"
 
 ####################
 # Notifications
