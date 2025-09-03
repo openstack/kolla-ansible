@@ -9,6 +9,15 @@
   become: true
   with_dict: "{{ ovn_controller_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: Create /run/ovn directory on host
+  become: true
+  ansible.builtin.file:
+    path: /run/ovn
+    state: directory
+    mode: "0770"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+
 - name: Copying over config.json files for services
   ansible.builtin.template:
     src: "{{ item.key }}.json.j2"

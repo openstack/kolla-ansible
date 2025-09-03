@@ -212,6 +212,21 @@ scrape_configs:
 {%     endfor %}
 {% endif %}
 
+{% if enable_prometheus_openstack_network_exporter | bool %}
+  - job_name: network_exporter
+    scrape_interval: {{ prometheus_openstack_network_exporter_interval }}
+    honor_labels: true
+    static_configs:
+{%     for host in groups["prometheus-openstack-network-exporter"] %}
+      - targets:
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_openstack_network_exporter_port'] }}'
+{%         if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{%         endif %}
+{%     endfor %}
+{% endif %}
+
 {% if enable_prometheus_etcd_integration | bool %}
   - job_name: etcd
 {%     if etcd_enable_tls | bool %}

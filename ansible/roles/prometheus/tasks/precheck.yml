@@ -20,6 +20,7 @@
       - prometheus_elasticsearch_exporter
       - prometheus_blackbox_exporter
       - prometheus_libvirt_exporter
+      - prometheus_openstack_network_exporter
   check_mode: false
   register: container_facts
 
@@ -159,3 +160,17 @@
     - enable_prometheus_libvirt_exporter | bool
   with_items:
     - "{{ prometheus_libvirt_exporter_port }}"
+
+- name: Checking free ports for Prometheus network-exporter
+  ansible.builtin.wait_for:
+    host: "{{ 'api' | kolla_address }}"
+    port: "{{ item }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts.containers['prometheus_openstack_network_exporter'] is not defined
+    - inventory_hostname in groups['prometheus-openstack-network-exporter']
+    - enable_prometheus_openstack_network_exporter | bool
+  with_items:
+    - "{{ prometheus_openstack_network_exporter_port }}"

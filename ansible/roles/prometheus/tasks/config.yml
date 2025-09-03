@@ -176,6 +176,20 @@
     - "{{ node_custom_config }}/prometheus/prometheus-blackbox-exporter.yml"
     - "{{ role_path }}/templates/prometheus-blackbox-exporter.yml.j2"
 
+- name: Copying config file for openstack network exporter
+  become: true
+  vars:
+    service: "{{ prometheus_services['prometheus-openstack-network-exporter'] }}"
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/prometheus-openstack-network-exporter/openstack-network-exporter.yaml"
+    mode: "0660"
+  when: service | service_enabled_and_mapped_to_host
+  with_first_found:
+    - "{{ node_custom_config }}/prometheus-openstack-network-exporter/{{ inventory_hostname }}/openstack-network-exporter.yaml"
+    - "{{ node_custom_config }}/prometheus-openstack-network-exporter/openstack-network-exporter.yaml"
+    - "{{ role_path }}/templates/openstack-network-exporter.yaml.j2"
+
 - name: Copy extra prometheus server config files
   vars:
     base: "{{ node_custom_config }}/prometheus/"
