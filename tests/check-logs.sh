@@ -100,6 +100,9 @@ function check_fluentd_missing_logs {
         /var/log/kolla/tenks/*)
             continue
             ;;
+        /var/log/kolla/venus/*)
+            continue
+            ;;
         /var/log/kolla/zun/*)
             continue
             ;;
