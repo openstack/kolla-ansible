@@ -93,7 +93,7 @@ Kolla Ansible deploys containers for the following infrastructure components:
 - `Open vSwitch <https://www.openvswitch.org/>`__ for use with Neutron.
 - `RabbitMQ <https://www.rabbitmq.com/>`__ as a messaging backend for
   communication between services.
-- `Redis <https://redis.io/>`__ an in-memory data structure store.
+- `Valkey <https://valkey.io/>`__ an in-memory data structure store.
 
 Directories
 ===========

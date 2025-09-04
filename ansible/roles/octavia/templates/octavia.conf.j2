@@ -168,16 +168,15 @@ ca_certificates_file = {{ openstack_cacert }}
 {% if enable_octavia_jobboard | bool %}
 
 [task_flow]
-jobboard_backend_hosts = {% for host in groups['redis'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}{% if not loop.last %},{% endif %}{% endfor %}
-jobboard_backend_password = {{ redis_master_password }}
-jobboard_backend_port = {{ redis_sentinel_port }}
+jobboard_backend_hosts = {% for host in groups['valkey'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}{% if not loop.last %},{% endif %}{% endfor %}
+jobboard_backend_password = {{ valkey_master_password }}
+jobboard_backend_port = {{ valkey_sentinel_port }}
 jobboard_backend_username = default
 jobboard_enabled = true
 jobboard_redis_backend_ssl_options = ssl:False
-jobboard_redis_sentinel = kolla
+jobboard_redis_sentinel = {{ valkey_sentinel_monitor_name }}
 jobboard_redis_sentinel_ssl_options = ssl:False
 persistence_connection = mysql+pymysql://{{ octavia_persistence_database_user }}:{{ octavia_persistence_database_password }}@{{ octavia_persistence_database_address }}/{{ octavia_persistence_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if octavia_database_enable_tls_internal | bool }}
-jobboard_enabled = true
 {% endif %}
 
 [oslo_concurrency]

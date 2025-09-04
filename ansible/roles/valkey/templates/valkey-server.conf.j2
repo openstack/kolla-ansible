@@ -1,0 +1,29 @@
+appendonly yes
+bind {{ api_interface_address }}
+dir /var/lib/valkey
+logfile /var/log/kolla/valkey/valkey.log
+pidfile /var/run/valkey/valkey-server.pid
+port {{ valkey_server_port }}
+
+{# TODO(mnasiadka): Remove after Gazpacho/2026.1 #}
+{% if _valkey_migration | default(false) | bool %}
+protected-mode no
+{% if inventory_hostname == groups['valkey'][0] %}
+{# Migration mode: valkey[0] replicates from Redis #}
+replicaof {{ 'api' | kolla_address(groups['redis'][0]) }} {{ redis_port }}
+masterauth {{ redis_master_password }}
+{% elif not inventory_hostname == groups['valkey'][0] %}
+{# Secondary valkey nodes replicate from valkey[0] #}
+replicaof {{ 'api' | kolla_address(groups['valkey'][0]) }} {{ valkey_server_port }}
+masterauth {{ valkey_master_password }}
+{% endif %}
+{% else %}
+{# Normal mode: valkey[0] is master #}
+{# NOTE: Keep this part after removing the migration block above #}
+{% if not inventory_hostname == groups['valkey'][0] %}
+{# Secondary valkey nodes replicate from valkey[0] #}
+replicaof {{ 'api' | kolla_address(groups['valkey'][0]) }} {{ valkey_server_port }}
+{% endif %}
+requirepass {{ valkey_master_password }}
+masterauth {{ valkey_master_password }}
+{% endif %}

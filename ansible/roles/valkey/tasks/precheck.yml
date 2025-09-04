@@ -1,0 +1,45 @@
+---
+# TODO(gkoper) Remove redis checks after G/2026.1 release
+- name: Check if Redis is running
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - redis
+  check_mode: false
+  register: redis_container_facts
+
+- name: Set migration flag if Redis is present
+  set_fact:
+    valkey_is_migrating: "{{ redis_container_facts.containers['redis'] is defined }}"
+
+- import_role:
+    name: service-precheck
+  vars:
+    service_precheck_services: "{{ valkey_services }}"
+    service_name: "{{ project_name }}"
+
+- name: Get container facts
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - valkey_server
+  check_mode: false
+  register: container_facts
+
+- name: Checking free port for Valkey
+  vars:
+    service: "{{ valkey_services['valkey-server'] }}"
+  wait_for:
+    host: "{{ api_interface_address }}"
+    port: "{{ valkey_server_port }}"
+    connect_timeout: 1
+    timeout: 1
+    state: stopped
+  when:
+    - container_facts.containers['valkey_server'] is not defined
+    - service | service_enabled_and_mapped_to_host
+    - not (valkey_is_migrating | default(false) | bool)

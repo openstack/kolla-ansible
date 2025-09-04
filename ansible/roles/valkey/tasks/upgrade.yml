@@ -1,0 +1,134 @@
+---
+# TODO(bbezak): Remove in G/2026.1 release as Redis migration is no longer required
+- name: Check if Redis is running
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - redis
+  check_mode: false
+  register: redis_container_facts
+
+- name: Set migration flag if Redis is present
+  set_fact:
+    _valkey_migration: "{{ redis_container_facts.containers['redis'] is defined }}"
+
+- name: Perform Redis to Valkey migration steps
+  block:
+
+    - name: Set temporary Valkey migration vars
+      set_fact:
+        valkey_server_port: "6380"
+        valkey_sentinel_port: "26380"
+        valkey_sentinel_monitor_name: "kolla-temp"
+
+    - name: Set valkey master host to valkey[0]
+      set_fact:
+        valkey_master_host: "{{ groups['valkey'][0] }}"
+        redis_slave_hosts: "{{ groups['redis'][1:] }}"
+      run_once: true
+
+    - name: Start Valkey on temporary ports with temp sentinel monitor name
+      import_tasks: deploy.yml
+
+    - name: Wait for Valkey replication sync
+      become: true
+      delegate_to: "{{ valkey_master_host }}"
+      run_once: true
+      shell: >-
+        {{ kolla_container_engine }} exec valkey_server
+        valkey-cli -h {{ api_interface_address }} -p {{ valkey_server_port }} info replication
+      register: valkey_replication
+      until: "'master_link_status:up' in valkey_replication.stdout"
+      retries: 30
+      delay: 2
+
+    - name: Set replica-priority=10 on valkey[0] to ensure it becomes master
+      become: true
+      delegate_to: "{{ valkey_master_host }}"
+      run_once: true
+      command: >-
+        {{ kolla_container_engine }} exec valkey_server valkey-cli
+        -h {{ api_interface_address }} -p {{ valkey_server_port }}
+        CONFIG SET replica-priority 10
+
+    - name: Set replica-priority=0 on other valkey nodes to prevent promotion
+      become: true
+      command: >-
+        {{ kolla_container_engine }} exec valkey_server valkey-cli
+        -h {{ api_interface_address }} -p {{ valkey_server_port }} CONFIG SET replica-priority 0
+      when: inventory_hostname != valkey_master_host
+
+    - name: Stop redis slaves (so they don't get promoted during failover)
+      become: true
+      kolla_container:
+        name: redis
+        action: stop_container
+      when: inventory_hostname in redis_slave_hosts
+
+    - name: Trigger Sentinel failover (using one of redis-sentinels)
+      become: true
+      delegate_to: "{{ valkey_master_host }}"
+      run_once: true
+      command: >-
+        {{ kolla_container_engine }} exec redis_sentinel redis-cli
+        -h {{ api_interface_address }}
+        -p {{ redis_sentinel_port }}
+        SENTINEL failover kolla
+
+    - name: Wait until Valkey becomes master
+      become: true
+      delegate_to: "{{ valkey_master_host }}"
+      run_once: true
+      shell: >-
+        {{ kolla_container_engine }} exec valkey_server
+        valkey-cli -h {{ api_interface_address }} -p {{ valkey_server_port }} info replication
+      register: valkey_role
+      until: "'role:master' in valkey_role.stdout"
+      retries: 30
+      delay: 2
+
+    - name: Stop all Redis containers
+      become: true
+      kolla_container:
+        name: redis
+        action: stop_and_remove_container
+      when: inventory_hostname in groups['redis']
+
+    - name: Stop all Sentinel containers
+      become: true
+      kolla_container:
+        name: redis_sentinel
+        action: stop_and_remove_container
+      when: inventory_hostname in groups['redis']
+
+    - name: Remove Redis data volume
+      become: true
+      kolla_container:
+        action: remove_volume
+        name: redis
+      when: inventory_hostname in groups['redis']
+
+  when: redis_container_facts.containers['redis'] is defined
+
+# These tasks run always, regardless of Redis presence
+
+- name: Reset Valkey port to default (6379) after migration
+  set_fact:
+    valkey_server_port: "6379"
+    valkey_sentinel_port: "26379"
+    valkey_sentinel_monitor_name: "kolla"
+    _valkey_migration: false
+
+
+- name: Reconfigure/Redeploy Valkey on default ports
+  import_tasks: reconfigure.yml
+
+- name: Verify Valkey responds on port 6379
+  import_tasks: check.yml
+
+- import_tasks: check-containers.yml
+
+- name: Flush handlers
+  meta: flush_handlers

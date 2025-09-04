@@ -58,7 +58,7 @@ applied this way.
 * ``osprofiler_secret``
 * ``prometheus_alertmanager_password``
 * ``qdrouterd_password``
-* ``redis_master_password``
+* ``valkey_master_password``
 
 It is possible to change more secrets however some require manual steps. The
 manual steps vary depending on the secret. They are listed below in the order

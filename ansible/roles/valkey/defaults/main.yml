@@ -1,0 +1,78 @@
+---
+valkey_services:
+  valkey-server:
+    container_name: valkey_server
+    group: valkey
+    enabled: true
+    image: "{{ valkey_image_full }}"
+    volumes: "{{ valkey_default_volumes + valkey_extra_volumes }}"
+    dimensions: "{{ valkey_dimensions }}"
+    healthcheck: "{{ valkey_healthcheck }}"
+  valkey-sentinel:
+    container_name: valkey_sentinel
+    group: valkey
+    environment:
+      VALKEY_CONF: "{{ valkey_conf_path }}"
+      VALKEY_GEN_CONF: "{{ valkey_generated_conf_path }}"
+    enabled: true
+    image: "{{ valkey_sentinel_image_full }}"
+    volumes: "{{ valkey_sentinel_default_volumes + valkey_sentinel_extra_volumes }}"
+    dimensions: "{{ valkey_sentinel_dimensions }}"
+    healthcheck: "{{ valkey_sentinel_healthcheck }}"
+
+####################
+# Docker
+####################
+valkey_image: "{{ docker_image_url }}valkey-server"
+valkey_tag: "{{ openstack_tag }}"
+valkey_image_full: "{{ valkey_image }}:{{ valkey_tag }}"
+
+valkey_sentinel_image: "{{ docker_image_url }}valkey-sentinel"
+valkey_sentinel_tag: "{{ openstack_tag }}"
+valkey_sentinel_image_full: "{{ valkey_sentinel_image }}:{{ valkey_tag }}"
+valkey_dimensions: "{{ default_container_dimensions }}"
+valkey_sentinel_dimensions: "{{ default_container_dimensions }}"
+
+valkey_enable_healthchecks: "{{ enable_container_healthchecks }}"
+valkey_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+valkey_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+valkey_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+valkey_healthcheck_test: ["CMD-SHELL", "healthcheck_listen valkey-server {{ valkey_server_port }}"]
+valkey_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+valkey_healthcheck:
+  interval: "{{ valkey_healthcheck_interval }}"
+  retries: "{{ valkey_healthcheck_retries }}"
+  start_period: "{{ valkey_healthcheck_start_period }}"
+  test: "{% if valkey_enable_healthchecks | bool %}{{ valkey_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ valkey_healthcheck_timeout }}"
+
+valkey_sentinel_enable_healthchecks: "{{ enable_container_healthchecks }}"
+valkey_sentinel_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+valkey_sentinel_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+valkey_sentinel_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+valkey_sentinel_healthcheck_test: ["CMD-SHELL", "healthcheck_listen valkey-sentinel {{ valkey_sentinel_port }}"]
+valkey_sentinel_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+valkey_sentinel_healthcheck:
+  interval: "{{ valkey_sentinel_healthcheck_interval }}"
+  retries: "{{ valkey_sentinel_healthcheck_retries }}"
+  start_period: "{{ valkey_sentinel_healthcheck_start_period }}"
+  test: "{% if valkey_sentinel_enable_healthchecks | bool %}{{ valkey_sentinel_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ valkey_sentinel_healthcheck_timeout }}"
+
+valkey_default_volumes:
+  - "{{ node_config_directory }}/valkey-server/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "{{ project_name }}:/var/lib/valkey/"
+  - "kolla_logs:/var/log/kolla/"
+valkey_sentinel_default_volumes:
+  - "{{ node_config_directory }}/valkey-sentinel/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
+valkey_extra_volumes: "{{ default_extra_volumes }}"
+valkey_sentinel_extra_volumes: "{{ default_extra_volumes }}"
+
+valkey_conf_path: "/etc/valkey/valkey.conf"
+valkey_generated_conf_path: "/etc/valkey/valkey-regenerated-by-config-rewrite.conf"

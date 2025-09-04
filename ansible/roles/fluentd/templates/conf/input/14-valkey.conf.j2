@@ -1,0 +1,16 @@
+#jinja2: trim_blocks: False
+<source>
+  @type tail
+  path /var/log/kolla/valkey/valkey.log,/var/log/kolla/valkey/valkey-sentinel.log
+  pos_file /var/run/fluentd/kolla-valkey.pos
+  tag infra.valkey
+  ignore_repeated_permission_error true
+  enable_watch_timer {{ fluentd_enable_watch_timer }}
+  <parse>
+    @type regexp
+    expression /^(?<Pid>\d+):(?<Role>[A-Za-z-]+) (?:(?<Timestamp>\d+ \w+ \d+ \d+:\d+:\d+\.\d+) (?<LogLevel>.) )?(?<Payload>.*)$/
+    time_key Timestamp
+    keep_time_key true
+    time_format %c
+  </parse>
+</source>

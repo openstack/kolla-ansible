@@ -25,3 +25,11 @@
   when:
     - container_facts.containers['masakari_api'] is not defined
     - inventory_hostname in groups['masakari-api']
+
+- name: Checking for coordination backend if running in multinode setup
+  run_once: True
+  fail:
+    msg: "Please enable Valkey or etcd when running in multinode scenario."
+  when:
+    - masakari_coordination_backend == ''
+    - groups['masakari'] | length > 1

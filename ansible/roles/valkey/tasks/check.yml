@@ -1,0 +1,13 @@
+---
+- name: Checking valkey containers
+  import_role:
+    role: service-check
+
+- name: Valkey ping pong check
+  become: true
+  shell: >-
+    {{ kolla_container_engine }} exec valkey_server valkey-cli -h {{ api_interface_address }}
+    -a {{ valkey_master_password }} ping
+  register: valkey_check
+  changed_when: "'PONG' in valkey_check.stdout"
+  failed_when: "'PONG' not in valkey_check.stdout"

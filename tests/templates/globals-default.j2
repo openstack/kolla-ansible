@@ -118,11 +118,15 @@ enable_prometheus_openstack_exporter: "no"
 enable_tacker: "yes"
 enable_neutron_sfc: "yes"
 enable_mistral: "yes"
-enable_redis: "yes"
+enable_valkey: "yes"
 enable_barbican: "yes"
 enable_heat: "yes"
 # NOTE(yoctozepto): see https://bugs.launchpad.net/kolla-ansible/+bug/1906299
 enable_aodh: "yes"
+# TODO(gkoper): Remove after G/2026.1 release
+{% if is_previous_release %}
+enable_redis: "yes"
+{% endif %}
 {% endif %}
 
 {% if scenario == "ironic" %}
@@ -136,6 +140,7 @@ ironic_dnsmasq_dhcp_ranges:
 
 {% if scenario == "masakari" %}
 enable_masakari: "yes"
+enable_valkey: "yes"
 {% endif %}
 
 {% if scenario == "cells" %}
@@ -156,7 +161,7 @@ enable_mariabackup: "yes"
 # kolla-ansible vars
 enable_cinder: "yes"
 enable_neutron_agent_ha: "yes"
-enable_redis: "yes"
+enable_valkey: "yes"
 cinder_cluster_name: "kolla_ceph"
 # External Ceph
 glance_backend_ceph: "yes"
@@ -166,8 +171,10 @@ nova_backend_ceph: "yes"
 rabbitmq_cluster_partition_handling: "autoheal"
 rabbitmq_extra_config:
   cluster_keepalive_interval: 50000
-# Redis for coordination
+# TODO(gkoper): Remove after G/2026.1 release
+{% if is_previous_release %}
 enable_redis: "yes"
+{% endif %}
 
 enable_ceph_rgw: "yes"
 ceph_rgw_hosts:
@@ -201,8 +208,11 @@ neutron_enable_ovn_agent: "yes"
 enable_octavia: "yes"
 octavia_provider_drivers: "ovn:OVN provider"
 octavia_provider_agents: "ovn"
-enable_redis: "yes"
 neutron_dns_domain: "example.org."
+# TODO(gkoper): Remove after G/2026.1 release
+{% if is_previous_release %}
+enable_redis: "yes"
+{% endif %}
 {% endif %}
 
 {% if scenario == "prometheus-opensearch" %}
@@ -234,7 +244,11 @@ octavia_amp_flavor:
   ram: 1024
   disk: 5
 octavia_network_type: "tenant"
+enable_valkey: "yes"
+# TODO(gkoper): Remove after G/2026.1 release
+{% if is_previous_release %}
 enable_redis: "yes"
+{% endif %}
 {% endif %}
 
 {% if groups['all'] | length == 1 %}
@@ -281,6 +295,7 @@ skyline_enable_sso: "yes"
 enable_aodh: "yes"
 enable_ceilometer: "yes"
 enable_gnocchi: "yes"
+enable_valkey: "yes"
 {% endif %}
 
 mariadb_monitor_read_only_interval: "30000"

@@ -63,7 +63,7 @@
         - enable_placement_{{ enable_placement | bool }}
         - enable_prometheus_{{ enable_prometheus | bool }}
         - enable_rabbitmq_{{ enable_rabbitmq | bool }}
-        - enable_redis_{{ enable_redis | bool }}
+        - enable_valkey_{{ enable_valkey | bool }}
         - enable_skyline_{{ enable_skyline | bool }}
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
@@ -415,19 +415,19 @@
     - { role: telegraf,
         tags: telegraf }
 
-- name: Apply role redis
+- name: Apply role valkey
   gather_facts: false
   hosts:
-    - redis
-    - '&enable_redis_True'
+    - valkey
+    - '&enable_valkey_True'
   serial: '{{ kolla_serial|default("0") }}'
   max_fail_percentage: >-
-    {{ redis_max_fail_percentage |
+    {{ valkey_max_fail_percentage |
        default(kolla_max_fail_percentage) |
        default(100) }}
   roles:
-    - { role: redis,
-        tags: redis }
+    - { role: valkey,
+        tags: valkey }
 
 # MariaDB deployment is more complicated than other services, so is covered in
 # its own playbook.

@@ -1,0 +1,30 @@
+---
+enable_valkey: "no"
+
+valkey_connection_string: >-
+  redis://{%-
+  for host in groups['valkey'] -%}
+    {%- if host == groups['valkey'][0] -%}
+      default:{{- valkey_master_password -}}@{{-
+        'api' | kolla_address(host) | put_address_in_context('url')
+      -}}:{{- valkey_sentinel_port -}}?sentinel={{- valkey_sentinel_monitor_name -}}
+    {%- else -%}
+      &sentinel_fallback={{-
+        'api' | kolla_address(host) | put_address_in_context('url')
+      -}}:{{- valkey_sentinel_port -}}
+    {%- endif -%}
+  {%- endfor -%}
+  {{- valkey_connection_string_extras -}}
+
+valkey_connection_string_extras: "&db=0&socket_timeout=60&retry_on_timeout=yes"
+
+# TODO(mnasiadka): Remove in G/2026.1
+# NOTE(mnasiadka): These can't reference valkey_server_port or valkey_sentinel_port since these
+#                  are changed during migration
+redis_port: "6379"
+redis_sentinel_port: "26379"
+
+valkey_server_port: "6379"
+valkey_sentinel_port: "26379"
+valkey_sentinel_monitor_name: "kolla"
+valkey_sentinel_quorum: 2 # TODO (gkoper) Discuss and settle on some sane defaults here
