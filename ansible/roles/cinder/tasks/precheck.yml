@@ -43,6 +43,7 @@
     - not enable_cinder_backend_pure_roce | bool
     - not enable_cinder_backend_pure_nvme_tcp | bool
     - not enable_cinder_backend_lightbits | bool
+    - not enable_cinder_backend_vast | bool
 
 - name: Checking LVM volume group exists for Cinder
   become: true
@@ -87,6 +88,18 @@
     - lightos_api_address
     - lightos_jwt
   when: enable_cinder_backend_lightbits == "yes"
+
+- name: Check if VAST configurations are defined
+  ansible.builtin.assert:
+    that:
+      - vars[item] is defined
+    msg: "Cinder VAST backend is enabled, the {{ item }} variable must be defined."
+  with_items:
+    - cinder_vast_ip
+    - cinder_vast_password
+    - cinder_vast_vippool_name
+    - cinder_vast_subsystem
+  when: enable_cinder_backend_vast | bool
 
 - name: Check if cinder_cluster_name is configured for HA configurations
   ansible.builtin.assert:
