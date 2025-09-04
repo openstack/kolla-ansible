@@ -16,3 +16,4 @@ supported by kolla.
    manila-guide
    manila-hnas-guide
    manila-pure-guide
+   manila-vast-guide
