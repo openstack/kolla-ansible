@@ -19,7 +19,7 @@ function test_ironic_logged {
 
     # Smoke test ironic API.
     openstack --os-cloud kolla-admin-system-internal baremetal driver list
-    openstack baremetal node list
+    openstack --os-cloud kolla-admin-system-internal baremetal node list
     openstack baremetal port list
 
     openstack baremetal node show tk0
@@ -27,13 +27,42 @@ function test_ironic_logged {
     openstack baremetal node show tk0
     openstack baremetal node manage tk0
     openstack baremetal node show tk0
-    openstack baremetal node provide tk0
-    openstack baremetal node show tk0
     openstack baremetal node validate tk0
 
-    echo "TESTING: Server creation"
-    openstack server create --image cirros --flavor test-rc --key-name mykey --network public1 kolla_bm_boot_test
+    echo "TESTING: Server inspection"
+    openstack baremetal node inspect tk0
     local attempt
+    attempt=1
+    while [[ $(openstack baremetal node show tk0 -f value -c provision_state) != "manageable" ]]; do
+        echo "Server not yet manageable, check $attempt - retrying"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 16 ]]; then
+            echo "FAILED: Server did not finish inspection after $attempt checks"
+            openstack baremetal node show tk0
+            return 1
+        fi
+        sleep 60
+    done
+    openstack baremetal node inventory save tk0
+    echo ""
+    echo "SUCCESS: Server inspection"
+
+    echo "TESTING: Server creation"
+    openstack baremetal node provide tk0
+    attempt=1
+    while [[ $(openstack baremetal node show tk0 -f value -c provision_state) != "available" ]]; do
+        echo "Server not yet available, check $attempt - retrying"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 16 ]]; then
+            echo "FAILED: Server did not get to available state after $attempt checks"
+            openstack baremetal node show tk0
+            return 1
+        fi
+        sleep 60
+    done
+    # NOTE(mnasiadka): Wait for nova-compute-ironic to pick up the new node
+    sleep 60
+    openstack server create --image cirros --flavor test-rc --key-name mykey --network public1 kolla_bm_boot_test
     attempt=1
     while [[ $(openstack server show kolla_bm_boot_test -f value -c status) != "ACTIVE" ]]; do
         echo "Server not yet active, check $attempt - retrying"

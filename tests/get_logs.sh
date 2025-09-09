@@ -123,7 +123,7 @@ copy_logs() {
 
     # bifrost related logs
     if [[ $(${CONTAINER_ENGINE} ps --filter name=bifrost_deploy --format "{{.Names}}") ]]; then
-        for service in dnsmasq ironic ironic-api ironic-conductor ironic-inspector mariadb nginx; do
+        for service in dnsmasq ironic ironic-api ironic-conductor mariadb nginx; do
             mkdir -p ${LOG_DIR}/kolla/$service
             ${CONTAINER_ENGINE} exec bifrost_deploy systemctl status $service > ${LOG_DIR}/kolla/$service/systemd-status-$service.txt
         done
@@ -134,12 +134,6 @@ copy_logs() {
     if [[ $(${CONTAINER_ENGINE} ps --filter name=haproxy --format "{{.Names}}") ]]; then
         mkdir -p ${LOG_DIR}/kolla/haproxy
         ${CONTAINER_ENGINE} exec haproxy bash -c 'echo show stat | socat stdio /var/lib/kolla/haproxy/haproxy.sock' > ${LOG_DIR}/kolla/haproxy/stats.txt
-    fi
-
-    # FIXME: remove
-    if [[ $(${CONTAINER_ENGINE} ps -a --filter name=ironic_inspector --format "{{.Names}}") ]]; then
-        mkdir -p ${LOG_DIR}/kolla/ironic-inspector
-        ls -lR ${VOLUMES_DIR}/ironic_inspector_dhcp_hosts > ${LOG_DIR}/kolla/ironic-inspector/var-lib-ls.txt
     fi
 
     for container in $(${CONTAINER_ENGINE} ps -a --format "{{.Names}}"); do

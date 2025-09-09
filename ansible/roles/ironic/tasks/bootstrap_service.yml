@@ -24,29 +24,6 @@
   delegate_to: "{{ groups[ironic_api.group][0] }}"
   when: inventory_hostname in groups[ironic_api.group]
 
-- name: Running Ironic Inspector bootstrap container
-  vars:
-    ironic_inspector: "{{ ironic_services['ironic-inspector'] }}"
-  become: true
-  kolla_container:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    detach: False
-    environment:
-      KOLLA_BOOTSTRAP:
-      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
-    image: "{{ ironic_inspector.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "bootstrap_ironic_inspector"
-    restart_policy: oneshot
-    volumes: "{{ ironic_inspector.volumes | reject('equalto', '') | list }}"
-  run_once: True
-  delegate_to: "{{ groups[ironic_inspector.group][0] }}"
-  when:
-    - inventory_hostname in groups[ironic_inspector.group]
-    - enable_ironic_inspector | bool
-
 - name: Running ironic-tftp bootstrap container
   vars:
     service: "{{ ironic_services['ironic-tftp'] }}"

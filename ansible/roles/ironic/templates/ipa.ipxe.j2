@@ -1,0 +1,18 @@
+#!ipxe
+
+:retry_dhcp
+dhcp || goto retry_dhcp
+
+{# Standalone ironic: use ironic-configured PXE configs #}
+{% if not enable_neutron | bool %}
+# load the MAC-specific file or fail if it's not found
+:boot_system
+chain pxelinux.cfg/${mac:hexhyp} || goto ipa
+{% endif %}
+
+:ipa
+:retry_boot
+imgfree
+kernel --timeout 30000 {{ ironic_http_url }}/ironic-agent.kernel ipa-inspection-callback-url={{ ironic_internal_endpoint }}/v1/continue systemd.journald.forward_to_console=yes BOOTIF=${mac} initrd=ironic-agent.initramfs {{ ironic_kernel_cmdline_extras | join(' ') }} || goto retry_boot
+initrd --timeout 30000 {{ ironic_http_url }}/ironic-agent.initramfs || goto retry_boot
+boot
