@@ -20,9 +20,20 @@ import tempfile
 
 from ansible import constants
 from ansible.plugins import action
+# TODO(dougszu): From Ansible 12 onwards we must explicitly trust templates.
+# Since this feature is not supported in previous releases, we define a
+# noop method here for backwards compatibility. This can be removed in the
+# G cycle.
+try:
+    from ansible.template import trust_as_template
+except ImportError:
+    def trust_as_template(template):
+        return template
+
 from io import StringIO
 
 from oslo_config import iniparser
+
 
 _ORPHAN_SECTION = 'TEMPORARY_ORPHAN_VARIABLE_SECTION'
 
@@ -150,7 +161,7 @@ class ActionModule(action.ActionBase):
         # Only use config if present
         if os.access(source, os.R_OK):
             with open(source, 'r') as f:
-                template_data = f.read()
+                template_data = trust_as_template(f.read())
 
             # set search path to mimic 'template' module behavior
             searchpath = [

@@ -85,7 +85,7 @@ class PodmanWorker(ContainerWorker):
         #  functionality is broken
         mounts = []
         filtered_volumes = {}
-        volumes = self.params.get('volumes', [])
+        volumes = self.params.get('volumes')
         if volumes:
             self.parse_volumes(volumes, mounts, filtered_volumes)
             # we can delete original volumes so it won't raise error later
@@ -149,10 +149,10 @@ class PodmanWorker(ContainerWorker):
     # Therefore, we must parse them and set the permissions ourselves
     # and send them to API separately.
     def parse_volumes(self, volumes, mounts, filtered_volumes):
-        # we can ignore empty strings
-        volumes = [item for item in volumes if item.strip()]
-
         for item in volumes:
+            if not item or not item.strip():
+                # we can ignore empty strings or null volumes
+                continue
             # if it starts with / it is bind not volume
             if item[0] == '/':
                 mode = None
@@ -642,7 +642,11 @@ class PodmanWorker(ContainerWorker):
             self.result = vol.attrs
 
     def create_container_volumes(self):
-        volumes = self.params.get("volumes", []) or []
+        volumes = self.params.get('volumes')
+        if not volumes:
+            return
+        # Filter out null / empty string volumes
+        volumes = [v for v in volumes if v]
 
         for volume in volumes:
             volume_name = volume.split(":")[0]

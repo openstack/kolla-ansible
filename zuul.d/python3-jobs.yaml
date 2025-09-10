@@ -1,0 +1,23 @@
+- project-template:
+    name: openstack-python3-jobs-kolla-ansible
+    # NOTE(mnasiadka): Local definition to skip py310 jobs on Flamingo
+    description: |
+      Runs unit tests for an OpenStack Python project under the CPython
+      version 3 releases designated for testing the latest release.
+    check:
+      jobs:
+        - openstack-tox-pep8
+        # py3.12 testing is added as mandatory from 2025.1 release onwards.
+        # From 2026.1, we run it as periodic only(assuming py3.10 and py3.13
+        # will be enough coverage to run on every change)
+        - openstack-tox-py312
+    gate:
+      jobs:
+        - openstack-tox-pep8
+        # py3.12 testing is added as mandatory from 2025.1 release onwards.
+        # From 2026.1, we run it as periodic only(assuming py3.10 and py3.13
+        # will be enough coverage to run on every change)
+        - openstack-tox-py312
+    post:
+      jobs:
+        - publish-openstack-python-branch-tarball

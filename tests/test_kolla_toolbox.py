@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import builtins
+import contextlib
 import json
 import os
 import sys
@@ -20,6 +21,18 @@ import sys
 from ansible.module_utils import basic
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_bytes
+try:
+    from ansible.module_utils.testing import patch_module_args
+except ImportError:
+    # TODO(dougszu): Remove this exception handler when Python 3.10 support
+    # is not required. Python 3.10 isn't supported by Ansible Core 2.18 which
+    # provides patch_module_args
+    @contextlib.contextmanager
+    def patch_module_args(args):
+        serialized_args = to_bytes(json.dumps({'ANSIBLE_MODULE_ARGS': args}))
+        with mock.patch.object(basic, '_ANSIBLE_ARGS', serialized_args):
+            yield
+
 from importlib.machinery import SourceFileLoader
 from oslotest import base
 from unittest import mock
@@ -31,13 +44,6 @@ kolla_toolbox_file = os.path.join(ansible_dir, 'library', 'kolla_toolbox.py')
 
 kolla_toolbox = SourceFileLoader('kolla_toolbox',
                                  kolla_toolbox_file).load_module()
-
-
-def set_module_args(args):
-    """Prepare arguments so they will be picked up during module creation."""
-
-    args = json.dumps({'ANSIBLE_MODULE_ARGS': args})
-    basic._ANSIBLE_ARGS = to_bytes(args)
 
 
 class AnsibleExitJson(BaseException):
@@ -307,40 +313,40 @@ class TestModuleInteraction(TestKollaToolboxModule):
     """Class focused on testing user input data from playbook."""
 
     def test_create_ansible_module_missing_required_module_name(self):
-        set_module_args({
+        ansible_module_args = {
             'container_engine': 'docker'
-        })
-
-        error = self.assertRaises(AnsibleFailJson,
-                                  kolla_toolbox.create_ansible_module)
+        }
+        with patch_module_args(ansible_module_args):
+            error = self.assertRaises(AnsibleFailJson,
+                                      kolla_toolbox.create_ansible_module)
         self.assertIn('missing required arguments: module_name',
                       error.result['msg'])
 
     def test_create_ansible_module_missing_required_container_engine(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'url'
-        })
-
-        error = self.assertRaises(AnsibleFailJson,
-                                  kolla_toolbox.create_ansible_module)
+        }
+        with patch_module_args(ansible_module_args):
+            error = self.assertRaises(AnsibleFailJson,
+                                      kolla_toolbox.create_ansible_module)
         self.assertIn('missing required arguments: container_engine',
                       error.result['msg'])
 
     def test_create_ansible_module_invalid_container_engine(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'url',
             'container_engine': 'podmano'
-        })
-
-        error = self.assertRaises(AnsibleFailJson,
-                                  kolla_toolbox.create_ansible_module)
+        }
+        with patch_module_args(ansible_module_args):
+            error = self.assertRaises(AnsibleFailJson,
+                                      kolla_toolbox.create_ansible_module)
         self.assertIn(
             'value of container_engine must be one of: podman, docker',
             error.result['msg']
         )
 
     def test_create_ansible_module_success(self):
-        args = {
+        ansible_module_args = {
             'container_engine': 'docker',
             'module_name': 'file',
             'module_args': {
@@ -357,12 +363,10 @@ class TestModuleInteraction(TestKollaToolboxModule):
             'timeout': 180,
             'api_version': '1.5'
         }
-        set_module_args(args)
-
-        module = kolla_toolbox.create_ansible_module()
-
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
         self.assertIsInstance(module, AnsibleModule)
-        self.assertEqual(args, module.params)
+        self.assertEqual(ansible_module_args, module.params)
 
 
 class TestContainerEngineClientIntraction(TestKollaToolboxModule):
@@ -381,14 +385,14 @@ class TestContainerEngineClientIntraction(TestKollaToolboxModule):
         return self.original_import(name, globals, locals, fromlist, level)
 
     def test_podman_client_params(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'ping',
             'container_engine': 'podman',
             'api_version': '1.47',
             'timeout': 155
-        })
-
-        module = kolla_toolbox.create_ansible_module()
+        }
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
         mock_podman = mock.MagicMock()
         mock_podman_errors = mock.MagicMock()
         import_dict = {'podman': mock_podman,
@@ -403,14 +407,14 @@ class TestContainerEngineClientIntraction(TestKollaToolboxModule):
             )
 
     def test_docker_client_params(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'ping',
             'container_engine': 'docker',
             'api_version': '1.47',
             'timeout': 155
-        })
-
-        module = kolla_toolbox.create_ansible_module()
+        }
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
         mock_docker = mock.MagicMock()
         mock_docker_errors = mock.MagicMock()
         import_dict = {'docker': mock_docker,
@@ -425,14 +429,14 @@ class TestContainerEngineClientIntraction(TestKollaToolboxModule):
             )
 
     def test_create_container_client_podman_not_called_with_auto(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'ping',
             'container_engine': 'podman',
             'api_version': 'auto',
             'timeout': 90
-        })
-
-        module = kolla_toolbox.create_ansible_module()
+        }
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
         mock_podman = mock.MagicMock()
         mock_podman_errors = mock.MagicMock()
         import_dict = {'podman': mock_podman,
@@ -446,12 +450,13 @@ class TestContainerEngineClientIntraction(TestKollaToolboxModule):
             )
 
     def test_create_container_client_podman_importerror(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'ping',
             'container_engine': 'podman'
-        })
+        }
         self.module_to_mock_import = 'podman'
-        module = kolla_toolbox.create_ansible_module()
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
 
         with mock.patch('builtins.__import__',
                         side_effect=self.mock_import_error):
@@ -462,13 +467,13 @@ class TestContainerEngineClientIntraction(TestKollaToolboxModule):
                           error.result['msg'])
 
     def test_create_container_client_docker_importerror(self):
-        set_module_args({
+        ansible_module_args = {
             'module_name': 'ping',
             'container_engine': 'docker'
-        })
-
+        }
         self.module_to_mock_import = 'docker'
-        module = kolla_toolbox.create_ansible_module()
+        with patch_module_args(ansible_module_args):
+            module = kolla_toolbox.create_ansible_module()
 
         with mock.patch('builtins.__import__',
                         side_effect=self.mock_import_error):
