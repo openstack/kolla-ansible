@@ -65,6 +65,20 @@
   become: true
   with_dict: "{{ aodh_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: "Configure uWSGI for {{ project_name }}"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ aodh_services }}"
+    service: "{{ aodh_services[service_name] }}"
+    service_name: "aodh-api"
+    service_uwsgi_config_http_port: "{{ aodh_api_listen_port }}"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_uid: "aodh"
+  when:
+    - aodh_wsgi_provider == "uwsgi"
+    - service | service_enabled_and_mapped_to_host
+
 - name: Copying over wsgi-aodh files for services
   vars:
     service: "{{ aodh_services['aodh-api'] }}"
@@ -73,4 +87,6 @@
     dest: "{{ node_config_directory }}/aodh-api/wsgi-aodh.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - aodh_wsgi_provider == "apache"
+    - service | service_enabled_and_mapped_to_host
