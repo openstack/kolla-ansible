@@ -1,0 +1,60 @@
+---
+project_name: "prometheus"
+
+prometheus_services:
+  prometheus-node-exporter:
+    container_name: "prometheus_node_exporter"
+    group: "prometheus-node-exporter"
+    enabled: "{{ enable_prometheus_node_exporter | bool }}"
+    image: "{{ prometheus_node_exporter_image_full }}"
+    pid_mode: "host"
+    volumes: "{{ prometheus_node_exporter_default_volumes + prometheus_node_exporter_extra_volumes }}"
+    dimensions: "{{ prometheus_node_exporter_dimensions }}"
+  prometheus-cadvisor:
+    container_name: "prometheus_cadvisor"
+    group: "prometheus-cadvisor"
+    enabled: "{{ enable_prometheus_cadvisor | bool }}"
+    image: "{{ prometheus_cadvisor_image_full }}"
+    volumes: "{{ prometheus_cadvisor_default_volumes + prometheus_cadvisor_extra_volumes }}"
+    dimensions: "{{ prometheus_cadvisor_dimensions }}"
+
+####################
+# Docker
+####################
+prometheus_install_type: "{{ kolla_install_type }}"
+prometheus_tag: "{{ openstack_tag }}"
+
+prometheus_node_exporter_image: "{{ docker_image_url }}prometheus-node-exporter"
+prometheus_node_exporter_tag: "{{ prometheus_tag }}"
+prometheus_node_exporter_image_full: "{{ prometheus_node_exporter_image }}:{{ prometheus_node_exporter_tag }}"
+
+prometheus_cadvisor_image: "{{ docker_image_url }}prometheus-cadvisor"
+prometheus_cadvisor_tag: "{{ prometheus_tag }}"
+prometheus_cadvisor_image_full: "{{ prometheus_cadvisor_image }}:{{ prometheus_cadvisor_tag }}"
+
+prometheus_node_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
+
+prometheus_node_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "/:/host:ro,rslave"
+prometheus_cadvisor_default_volumes:
+  - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+  - "/:/rootfs:ro"
+  - "/var/run:/var/run:rw"
+  - "/sys:/sys:ro"
+  - "/var/lib/docker/:/var/lib/docker:ro"
+  - "/dev/disk/:/dev/disk:ro"
+
+prometheus_extra_volumes: "{{ default_extra_volumes }}"
+prometheus_node_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_cadvisor_extra_volumes: "{{ prometheus_extra_volumes }}"
+
+prometheus_cadvisor_cmdline_extras: "--docker_only --store_container_labels=false --disable_metrics=percpu,referenced_memory,cpu_topology,resctrl,udp,advtcp,sched,hugetlb,memory_numa,tcp,process --housekeeping_interval={{ prometheus_scrape_interval }}"
+prometheus_node_exporter_cmdline_extras: ""

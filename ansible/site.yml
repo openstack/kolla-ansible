@@ -444,10 +444,8 @@
   gather_facts: false
   hosts:
     - prometheus
-    - prometheus-node-exporter
     - prometheus-mysqld-exporter
     - prometheus-memcached-exporter
-    - prometheus-cadvisor
     - prometheus-alertmanager
     - prometheus-openstack-exporter
     - prometheus-elasticsearch-exporter
@@ -462,6 +460,22 @@
   roles:
     - { role: prometheus,
         tags: prometheus }
+
+- name: Apply role prometheus-node-exporters
+  gather_facts: false
+  hosts:
+    - prometheus-node-exporter
+    - prometheus-cadvisor
+    - '&enable_prometheus_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ prometheus_node_exporters_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  roles:
+    - { role: prometheus-node-exporters,
+        tags: [prometheus, prometheus-node-exporters],
+        when: enable_prometheus | bool }
 
 - name: Apply role iscsi
   gather_facts: false

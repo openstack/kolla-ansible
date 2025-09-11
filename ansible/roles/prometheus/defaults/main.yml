@@ -28,14 +28,6 @@ prometheus_services:
         backend_http_extra:
           - "option httpchk GET /-/ready HTTP/1.0"
           - "http-check send hdr Authorization 'Basic {{ (prometheus_haproxy_user + ':' + prometheus_haproxy_password) | b64encode }}'"
-  prometheus-node-exporter:
-    container_name: prometheus_node_exporter
-    group: prometheus-node-exporter
-    enabled: "{{ enable_prometheus_node_exporter | bool }}"
-    image: "{{ prometheus_node_exporter_image_full }}"
-    pid_mode: "host"
-    volumes: "{{ prometheus_node_exporter_default_volumes + prometheus_node_exporter_extra_volumes }}"
-    dimensions: "{{ prometheus_node_exporter_dimensions }}"
   prometheus-mysqld-exporter:
     container_name: prometheus_mysqld_exporter
     group: prometheus-mysqld-exporter
@@ -50,13 +42,6 @@ prometheus_services:
     image: "{{ prometheus_memcached_exporter_image_full }}"
     volumes: "{{ prometheus_memcached_exporter_default_volumes + prometheus_memcached_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_memcached_exporter_dimensions }}"
-  prometheus-cadvisor:
-    container_name: "prometheus_cadvisor"
-    group: "prometheus-cadvisor"
-    enabled: "{{ enable_prometheus_cadvisor | bool }}"
-    image: "{{ prometheus_cadvisor_image_full }}"
-    volumes: "{{ prometheus_cadvisor_default_volumes + prometheus_cadvisor_extra_volumes }}"
-    dimensions: "{{ prometheus_cadvisor_dimensions }}"
   prometheus-alertmanager:
     container_name: "prometheus_alertmanager"
     group: "prometheus-alertmanager"
@@ -356,17 +341,9 @@ prometheus_mysqld_exporter_image: "{{ docker_image_url }}prometheus-mysqld-expor
 prometheus_mysqld_exporter_tag: "{{ prometheus_tag }}"
 prometheus_mysqld_exporter_image_full: "{{ prometheus_mysqld_exporter_image }}:{{ prometheus_mysqld_exporter_tag }}"
 
-prometheus_node_exporter_image: "{{ docker_image_url }}prometheus-node-exporter"
-prometheus_node_exporter_tag: "{{ prometheus_tag }}"
-prometheus_node_exporter_image_full: "{{ prometheus_node_exporter_image }}:{{ prometheus_node_exporter_tag }}"
-
 prometheus_memcached_exporter_image: "{{ docker_image_url }}prometheus-memcached-exporter"
 prometheus_memcached_exporter_tag: "{{ prometheus_tag }}"
 prometheus_memcached_exporter_image_full: "{{ prometheus_memcached_exporter_image }}:{{ prometheus_memcached_exporter_tag }}"
-
-prometheus_cadvisor_image: "{{ docker_image_url }}prometheus-cadvisor"
-prometheus_cadvisor_tag: "{{ prometheus_tag }}"
-prometheus_cadvisor_image_full: "{{ prometheus_cadvisor_image }}:{{ prometheus_cadvisor_tag }}"
 
 prometheus_alertmanager_image: "{{ docker_image_url }}prometheus-alertmanager"
 prometheus_alertmanager_tag: "{{ prometheus_tag }}"
@@ -391,9 +368,7 @@ prometheus_libvirt_exporter_image_full: "{{ prometheus_libvirt_exporter_image }}
 
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
-prometheus_node_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_memcached_exporter_dimensions: "{{ default_container_dimensions }}"
-prometheus_cadvisor_dimensions: "{{ default_container_dimensions }}"
 prometheus_alertmanager_dimensions: "{{ default_container_dimensions }}"
 prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -411,27 +386,11 @@ prometheus_mysqld_exporter_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-prometheus_node_exporter_default_volumes:
-  - "{{ node_config_directory }}/prometheus-node-exporter/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla/"
-  - "/:/host:ro,rslave"
 prometheus_memcached_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-memcached-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
-prometheus_cadvisor_default_volumes:
-  - "{{ node_config_directory }}/prometheus-cadvisor/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla/"
-  - "/:/rootfs:ro"
-  - "/var/run:/var/run:rw"
-  - "/sys:/sys:ro"
-  - "/var/lib/docker/:/var/lib/docker:ro"
-  - "/dev/disk/:/dev/disk:ro"
 prometheus_alertmanager_default_volumes:
   - "{{ node_config_directory }}/prometheus-alertmanager/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -462,9 +421,7 @@ prometheus_libvirt_exporter_default_volumes:
 prometheus_extra_volumes: "{{ default_extra_volumes }}"
 prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_mysqld_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
-prometheus_node_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_memcached_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
-prometheus_cadvisor_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_alertmanager_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
@@ -483,11 +440,9 @@ prometheus_server_command: >-
   --storage.tsdb.path /var/lib/prometheus{% if prometheus_cmdline_extras %} {{ prometheus_cmdline_extras }}{% endif %}
 
 prometheus_blackbox_exporter_cmdline_extras: ""
-prometheus_cadvisor_cmdline_extras: "--docker_only --store_container_labels=false --disable_metrics=percpu,referenced_memory,cpu_topology,resctrl,udp,advtcp,sched,hugetlb,memory_numa,tcp,process --housekeeping_interval={{ prometheus_scrape_interval }}"
 prometheus_elasticsearch_exporter_cmdline_extras: ""
 prometheus_memcached_exporter_cmdline_extras: ""
 prometheus_mysqld_exporter_cmdline_extras: ""
-prometheus_node_exporter_cmdline_extras: ""
 prometheus_openstack_exporter_cmdline_extras: ""
 
 prometheus_alertmanager_external_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_alertmanager_port }}"

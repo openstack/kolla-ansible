@@ -1,0 +1,30 @@
+---
+- name: Ensuring config directories exist
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ prometheus_services }}"
+
+- include_tasks: copy-certs.yml
+  when:
+    - kolla_copy_ca_into_containers | bool
+
+- name: Copying over config.json files
+  become: true
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - item.value.enabled | bool
+  with_dict: "{{ prometheus_services }}"
+  notify:
+    - Restart {{ item.key }} container
