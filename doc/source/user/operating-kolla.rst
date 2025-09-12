@@ -222,9 +222,6 @@ Tips and Tricks
 Kolla Ansible CLI
 -----------------
 
-When running the ``kolla-ansible`` CLI, additional arguments may be passed to
-``ansible-playbook`` via the ``EXTRA_OPTS`` environment variable.
-
 ``kolla-ansible -i INVENTORY deploy`` is used to deploy and start all Kolla
 containers.
 
