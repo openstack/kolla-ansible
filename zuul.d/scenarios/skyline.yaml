@@ -1,0 +1,51 @@
+---
+- job:
+    name: kolla-ansible-skyline-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/skyline/
+      - ^tests/test-skyline.sh
+    vars:
+      scenario: skyline
+      scenario_images_extra:
+        - ^skyline
+
+- job:
+    name: kolla-ansible-skyline-sso-base
+    parent: kolla-ansible-skyline-base
+    files: !inherit
+      - ^tests/test-skyline-sso.sh
+    vars:
+      scenario: skyline-sso
+
+- job:
+    name: kolla-ansible-debian-bookworm-skyline
+    parent: kolla-ansible-skyline-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-debian-bookworm-skyline-sso
+    parent: kolla-ansible-skyline-sso-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-skyline
+    parent: kolla-ansible-skyline-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-skyline-sso
+    parent: kolla-ansible-skyline-sso-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-skyline
+    description: |
+      Runs Kolla-Ansible Skyline scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-skyline
+        - kolla-ansible-debian-bookworm-skyline-sso
+        - kolla-ansible-ubuntu-noble-skyline
+        - kolla-ansible-ubuntu-noble-skyline-sso

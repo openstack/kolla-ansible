@@ -1,0 +1,53 @@
+---
+- job:
+    name: kolla-ansible-ironic-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(ironic|neutron|nova|nova-cell)/
+      - ^tests/deploy-tenks\.sh$
+      - ^tests/templates/ironic-overrides\.j2$
+      - ^tests/templates/tenks-deploy-config\.yml\.j2$
+      - ^tests/test-dashboard\.sh$
+      - ^tests/test-ironic\.sh$
+    required-projects:
+      - openstack/tenks
+    vars:
+      scenario: ironic
+      scenario_images_extra:
+        - ^dnsmasq
+        - ^ironic
+        - ^iscsid
+        - ^prometheus
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-ironic
+    parent: kolla-ansible-ironic-base
+    nodeset: kolla-ansible-debian-bookworm-16GB
+
+- job:
+    name: kolla-ansible-debian-bookworm-ironic-upgrade
+    parent: kolla-ansible-debian-bookworm-ironic
+    nodeset: kolla-ansible-debian-bookworm-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-ironic
+    parent: kolla-ansible-ironic-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-ironic-upgrade
+    parent: kolla-ansible-ubuntu-noble-ironic
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-ironic
+    description: |
+      Runs Kolla-Ansible Ironic scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-ironic
+        - kolla-ansible-debian-bookworm-ironic-upgrade
+        - kolla-ansible-ubuntu-noble-ironic
+        - kolla-ansible-ubuntu-noble-ironic-upgrade

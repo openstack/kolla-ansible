@@ -1,0 +1,31 @@
+---
+- job:
+    name: kolla-ansible-bifrost-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/bifrost/
+      - ^tests/test-bifrost.sh
+    vars:
+      scenario: bifrost
+      scenario_images_core:
+        - ^bifrost
+
+- job:
+    name: kolla-ansible-debian-bookworm-bifrost
+    parent: kolla-ansible-bifrost-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-bifrost
+    parent: kolla-ansible-bifrost-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-bifrost
+    description: |
+      Runs Kolla-Ansible Bifrost scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-bifrost
+        - kolla-ansible-ubuntu-noble-bifrost

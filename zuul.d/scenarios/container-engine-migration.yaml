@@ -1,0 +1,42 @@
+---
+- job:
+    name: kolla-ansible-container-engine-migration-base
+    parent: kolla-ansible-base
+    voting: false
+    files:
+      - ^ansible/migrate-container-engine.yml
+      - ^ansible/roles/container-engine-migration/
+      - ^tests/test-container-engine-migration.sh
+    vars:
+      scenario: container-engine-migration
+
+- job:
+    name: kolla-ansible-debian-container-engine-migration
+    parent: kolla-ansible-container-engine-migration-base
+    nodeset: kolla-ansible-debian-bookworm-16GB
+
+- job:
+    name: kolla-ansible-debian-container-engine-migration-multinode
+    parent: kolla-ansible-container-engine-migration-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-container-engine-migration
+    parent: kolla-ansible-container-engine-migration-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-container-engine-migration-multinode
+    parent: kolla-ansible-container-engine-migration-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-container-engine-migration
+    description: |
+      Runs Kolla-Ansible container engine migration scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-container-engine-migration
+        - kolla-ansible-debian-container-engine-migration-multinode
+        - kolla-ansible-ubuntu-container-engine-migration
+        - kolla-ansible-ubuntu-container-engine-migration-multinode

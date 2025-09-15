@@ -1,0 +1,49 @@
+---
+- job:
+    name: kolla-ansible-ovn-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(neutron|octavia|openvswitch|ovn-controller|ovn-db)/
+      - ^tests/test-ovn.sh
+      - ^tests/test-core-openstack.sh
+      - ^tests/reconfigure.sh
+    vars:
+      scenario: ovn
+      scenario_images_extra:
+        - ^redis
+        - ^octavia
+        - ^ovn
+
+- job:
+    name: kolla-ansible-debian-bookworm-ovn
+    parent: kolla-ansible-ovn-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+
+- job:
+    name: kolla-ansible-debian-bookworm-ovn-upgrade
+    parent: kolla-ansible-debian-bookworm-ovn
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-ubuntu-noble-ovn
+    parent: kolla-ansible-ovn-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-ovn-upgrade
+    parent: kolla-ansible-ubuntu-noble-ovn
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+    timeout: 10800
+
+- project-template:
+    name: kolla-ansible-scenario-ovn
+    description: |
+      Runs Kolla-Ansible OVN scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-ovn
+        - kolla-ansible-debian-bookworm-ovn-upgrade
+        - kolla-ansible-ubuntu-noble-ovn
+        - kolla-ansible-ubuntu-noble-ovn-upgrade

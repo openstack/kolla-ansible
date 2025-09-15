@@ -1,0 +1,33 @@
+---
+- job:
+    name: kolla-ansible-telemetry-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files:
+      - ^ansible/roles/(aodh|ceilometer|gnocchi)/
+      - ^tests/test-telemetry.sh
+    vars:
+      scenario: telemetry
+      scenario_images_extra:
+        - ^aodh
+        - ^ceilometer
+        - ^gnocchi
+
+- job:
+    name: kolla-ansible-debian-bookworm-telemetry
+    parent: kolla-ansible-telemetry-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-telemetry
+    parent: kolla-ansible-telemetry-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-telemetry
+    description: |
+      Runs Kolla-Ansible Telemetry scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-telemetry
+        - kolla-ansible-ubuntu-noble-telemetry

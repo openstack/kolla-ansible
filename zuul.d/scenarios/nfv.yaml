@@ -1,0 +1,37 @@
+---
+- job:
+    name: kolla-ansible-scenario-nfv-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(aodh|barbican|heat|mistral|redis|tacker)/
+      - ^tests/test-scenario-nfv.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: nfv
+      scenario_images_extra:
+        - ^aodh
+        - ^tacker
+        - ^mistral
+        - ^redis
+        - ^barbican
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-nfv
+    parent: kolla-ansible-scenario-nfv-base
+    nodeset: kolla-ansible-debian-bookworm-multi-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-nfv
+    parent: kolla-ansible-scenario-nfv-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-nfv
+    description: |
+      Runs Kolla-Ansible NFV scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-nfv
+        - kolla-ansible-ubuntu-noble-nfv

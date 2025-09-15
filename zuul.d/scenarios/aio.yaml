@@ -1,0 +1,130 @@
+---
+# NOTE(mnasiadka): To be removed after update on kolla side
+- job:
+    name: kolla-ansible-centos10s
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-centos-10s-8GB
+    voting: false
+    vars:
+      base_distro: centos
+      kolla_build_images: true
+
+
+- job:
+    name: kolla-ansible-centos-10s
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-centos-10s-8GB
+    voting: false
+    vars:
+      kolla_build_images: true
+
+- job:
+    name: kolla-ansible-centos10s-aarch64
+    parent: kolla-ansible-centos10s
+    nodeset: kolla-ansible-centos-10s-aarch64-8GB
+
+- job:
+    name: kolla-ansible-centos-10s-aarch64
+    parent: kolla-ansible-centos-10s
+    nodeset: kolla-ansible-centos-10s-aarch64-8GB
+
+- job:
+    name: kolla-ansible-debian-bookworm
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-debian-bookworm-16GB
+
+- job:
+    name: kolla-ansible-debian-bookworm-aarch64
+    parent: kolla-ansible-debian-bookworm
+    nodeset: kolla-ansible-debian-bookworm-aarch64-8GB
+    timeout: 10800
+    vars:
+      kolla_build_images: true
+    voting: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-aarch64-podman
+    parent: kolla-ansible-debian-bookworm-aarch64
+    nodeset: kolla-ansible-debian-bookworm-aarch64-8GB
+    timeout: 10800
+    vars:
+      container_engine: podman
+      kolla_build_images: true
+    voting: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-podman
+    parent: kolla-ansible-debian-bookworm
+    nodeset: kolla-ansible-debian-bookworm-16GB
+    vars:
+      container_engine: podman
+
+- job:
+    name: kolla-ansible-debian-bookworm-upgrade
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-debian-bookworm-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-debian-bookworm-aarch64-upgrade
+    parent: kolla-ansible-debian-bookworm-upgrade
+    nodeset: kolla-ansible-debian-bookworm-aarch64-8GB
+    voting: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-upgrade-slurp
+    parent: kolla-ansible-debian-bookworm-upgrade
+    nodeset: kolla-ansible-debian-bookworm-16GB
+    timeout: 9000
+
+- job:
+    name: kolla-ansible-ubuntu-noble
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-ubuntu-noble-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-podman
+    parent: kolla-ansible-ubuntu-noble
+    nodeset: kolla-ansible-ubuntu-noble-16GB
+    vars:
+      container_engine: podman
+
+- job:
+    name: kolla-ansible-ubuntu-noble-upgrade
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-ubuntu-noble-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-ubuntu-noble-upgrade-slurp
+    parent: kolla-ansible-base
+    nodeset: kolla-ansible-ubuntu-noble-16GB
+    timeout: 9000
+
+- project-template:
+    name: kolla-ansible-scenario-aio
+    description: |
+      Runs Kolla-Ansible AIO scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-centos-10s
+        - kolla-ansible-debian-bookworm
+        - kolla-ansible-debian-bookworm-podman
+        - kolla-ansible-debian-bookworm-upgrade
+        - kolla-ansible-ubuntu-noble
+        - kolla-ansible-ubuntu-noble-podman
+        - kolla-ansible-ubuntu-noble-upgrade
+    check-arm64:
+      jobs:
+        - kolla-ansible-centos-10s-aarch64
+        - kolla-ansible-debian-bookworm-aarch64
+        - kolla-ansible-debian-bookworm-aarch64-podman
+        - kolla-ansible-debian-bookworm-aarch64-upgrade
+    gate:
+      jobs:
+        - kolla-ansible-debian-bookworm
+        - kolla-ansible-debian-bookworm-podman
+        - kolla-ansible-debian-bookworm-upgrade
+        - kolla-ansible-ubuntu-noble
+        - kolla-ansible-ubuntu-noble-upgrade
+        - kolla-ansible-ubuntu-noble-podman

@@ -1,0 +1,36 @@
+---
+- job:
+    name: kolla-ansible-magnum-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(designate|magnum|trove)/
+      - ^tests/test-dashboard.sh
+      - ^tests/test-magnum.sh
+    vars:
+      scenario: magnum
+      scenario_images_extra:
+        - ^designate
+        - ^magnum
+        - ^trove
+      # TODO: Remove after adding TLS support for Trove
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-magnum
+    parent: kolla-ansible-magnum-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-magnum
+    parent: kolla-ansible-magnum-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-magnum
+    description: |
+      Runs Kolla-Ansible Magnum scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-magnum
+        - kolla-ansible-ubuntu-noble-magnum

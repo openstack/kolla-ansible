@@ -1,0 +1,55 @@
+---
+- job:
+    name: kolla-ansible-prometheus-opensearch-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/site.yml
+      - ^ansible/roles/(common|opensearch|grafana|prometheus)/
+      - ^tests/test-prometheus-opensearch.sh
+    vars:
+      scenario: prometheus-opensearch
+      scenario_images_core:
+        - ^cron
+        - ^fluentd
+        - ^grafana
+        - ^haproxy
+        - ^keepalived
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^memcached
+        - ^opensearch
+        - ^prometheus
+        - ^proxysql
+        - ^rabbitmq
+
+- job:
+    name: kolla-ansible-debian-bookworm-prometheus-opensearch
+    parent: kolla-ansible-prometheus-opensearch-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-debian-bookworm-prometheus-opensearch-upgrade
+    parent: kolla-ansible-debian-bookworm-prometheus-opensearch
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-prometheus-opensearch
+    parent: kolla-ansible-prometheus-opensearch-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-prometheus-opensearch-upgrade
+    parent: kolla-ansible-ubuntu-noble-prometheus-opensearch
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-prometheus-opensearch
+    description: |
+      Runs Kolla-Ansible Prometheus OpenSearch scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-prometheus-opensearch
+        - kolla-ansible-debian-bookworm-prometheus-opensearch-upgrade
+        - kolla-ansible-ubuntu-noble-prometheus-opensearch
+        - kolla-ansible-ubuntu-noble-prometheus-opensearch-upgrade

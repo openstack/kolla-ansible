@@ -1,0 +1,35 @@
+---
+- job:
+    name: kolla-ansible-hashi-vault-base
+    parent: kolla-ansible-variables
+    run: tests/run-hashi-vault.yml
+    required-projects:
+      - openstack/kolla-ansible
+      - openstack/requirements
+    voting: false
+    files:
+      - ^requirements-core.yml
+      - ^tests/templates/(inventory|globals-default.j2)
+      - ^tests/(pre|run).yml
+      - ^kolla_ansible/
+      - ^tests/run-hashi-vault.yml
+      - ^tests/test-hashicorp-vault-passwords.sh
+
+- job:
+    name: kolla-ansible-debian-bookworm-hashi-vault
+    parent: kolla-ansible-hashi-vault-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-hashi-vault
+    parent: kolla-ansible-hashi-vault-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-hashi-vault
+    description: |
+      Runs Kolla-Ansible Hashicorp Vault scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-hashi-vault
+        - kolla-ansible-ubuntu-noble-hashi-vault

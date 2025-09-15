@@ -1,0 +1,59 @@
+---
+- job:
+    name: kolla-ansible-cephadm-base
+    parent: kolla-ansible-base
+    voting: false
+    vars:
+      scenario: cephadm
+      scenario_images_extra:
+        - ^cinder
+        - ^redis
+
+- job:
+    name: kolla-ansible-debian-bookworm-cephadm
+    parent: kolla-ansible-cephadm-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-debian-bookworm-cephadm-upgrade
+    parent: kolla-ansible-debian-bookworm-cephadm
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-debian-bookworm-cephadm-upgrade-slurp
+    parent: kolla-ansible-debian-bookworm-cephadm-upgrade
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    timeout: 9000
+
+- job:
+    name: kolla-ansible-ubuntu-noble-cephadm
+    parent: kolla-ansible-cephadm-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+    timeout: 10800
+    vars:
+      cephadm_use_package_from_distribution: true
+
+- job:
+    name: kolla-ansible-ubuntu-noble-cephadm-upgrade
+    parent: kolla-ansible-ubuntu-noble-cephadm
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+    timeout: 10800
+
+- job:
+    name: kolla-ansible-ubuntu-noble-cephadm-upgrade-slurp
+    parent: kolla-ansible-ubuntu-noble-cephadm-upgrade
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+    timeout: 9000
+
+- project-template:
+    name: kolla-ansible-scenario-cephadm
+    description: |
+      Runs Kolla-Ansible CephAdm scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-cephadm
+        - kolla-ansible-debian-bookworm-cephadm-upgrade
+        - kolla-ansible-ubuntu-noble-cephadm
+        - kolla-ansible-ubuntu-noble-cephadm-upgrade
