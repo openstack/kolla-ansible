@@ -76,6 +76,38 @@ use the following variables:
 
    All Glance S3 configurations use these options as default values.
 
+Cinder backends requiring privileged containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some Glance deployments use the ``cinder`` store driver. In such cases,
+Glance API containers need to run in ``privileged`` mode and have the
+``/dev`` directory bind-mounted from the host if the selected Cinder
+backend relies on os-brick to attach volumes.
+
+Historically this was only enabled automatically for iSCSI and Ceph
+backends. A new toggle has been added to simplify configuration:
+
+.. code-block:: yaml
+
+   enable_cinder_backend_privileged: true
+
+By default this option evaluates to ``true`` when
+``enable_cinder_backend_iscsi``, ``cinder_backend_ceph`` or
+``enable_cinder_backend_vast`` are enabled, and to ``false`` otherwise.
+Operators can override it manually if using other Cinder backends that
+also require privileged mode, such as PowerFlex (ScaleIO) or FibreChannel.
+
+Effect of setting this option:
+
+* Glance API container runs with ``privileged: true``.
+* The host's ``/dev`` directory is mounted into the container.
+
+Without this setting, image upload via Cinder store backends that rely
+on os-brick may fail with errors such as::
+
+   oslo_privsep.daemon.FailedToDropPrivileges: Privsep daemon failed to start
+   os_brick.exception.BrickException: ScaleIO volume <id> not found at expected path
+
 Upgrading glance
 ----------------
 
