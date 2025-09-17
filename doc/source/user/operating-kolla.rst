@@ -198,6 +198,36 @@ After this command is complete, the containers will have been recreated from
 the new images and all database schema upgrades and similar actions performed
 for you.
 
+
+CLI Command Completion
+~~~~~~~~~~~~~~~~~~~~~~
+
+Kolla Ansible supports shell command completion to make the CLI easier to use.
+
+To enable Bash completion, generate the completion script:
+
+.. code-block:: console
+
+   kolla-ansible complete --shell bash > ~/.kolla_ansible_completion.sh
+
+Then, add the following line to your ``~/.bashrc`` file:
+
+.. code-block:: console
+
+   source ~/.kolla_ansible_completion.sh
+
+Finally, reload your shell configuration:
+
+.. code-block:: console
+
+   source ~/.bashrc
+
+.. note::
+
+   If you're using a shell other than Bash, replace ``--shell bash`` with your shell type,
+   e.g., ``zsh``, and adapt your shell's configuration file accordingly.
+
+
 Tips and Tricks
 ~~~~~~~~~~~~~~~
 
