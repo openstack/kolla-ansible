@@ -174,6 +174,7 @@ neutron_services:
     dimensions: "{{ neutron_metadata_agent_dimensions }}"
     healthcheck: "{{ neutron_metadata_agent_healthcheck }}"
   neutron-ovn-metadata-agent:
+    cgroupns_mode: "{{ 'host' if neutron_agents_wrappers | bool else 'private' }}"
     container_name: "neutron_ovn_metadata_agent"
     image: "{{ neutron_ovn_metadata_agent_image_full }}"
     privileged: True
@@ -182,6 +183,11 @@ neutron_services:
     volumes: "{{ neutron_ovn_metadata_agent_default_volumes + neutron_ovn_metadata_agent_extra_volumes }}"
     dimensions: "{{ neutron_ovn_metadata_agent_dimensions }}"
     healthcheck: "{{ neutron_ovn_metadata_agent_healthcheck }}"
+    pid_mode: "{{ 'host' if neutron_agents_wrappers | bool else '' }}"
+    environment:
+      KOLLA_IMAGE: "{{ neutron_ovn_metadata_agent_image_full }}"
+      KOLLA_NAME: "neutron_ovn_metadata_agent"
+      KOLLA_NEUTRON_WRAPPERS: "{{ 'true' if neutron_agents_wrappers | bool else 'false' }}"
   neutron-bgp-dragent:
     container_name: "neutron_bgp_dragent"
     image: "{{ neutron_bgp_dragent_image_full }}"
@@ -634,6 +640,9 @@ neutron_ovn_metadata_agent_default_volumes:
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
   - "{{ kolla_dev_repos_directory ~ '/neutron:/dev-mode/neutron' if neutron_dev_mode | bool else '' }}"
+  - "{{ '/var/run/docker.sock:/var/run/docker.sock:ro' if neutron_agents_wrappers | bool and kolla_container_engine == 'docker' else '' }}"
+  - "{{ '/run/podman/podman.sock:/run/podman/podman.sock' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' else '' }}"
+  - "{{ '/var/lib/containers:/var/lib/containers' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' else '' }}"
 neutron_openvswitch_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-openvswitch-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
