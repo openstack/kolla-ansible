@@ -196,6 +196,22 @@ if sudo test -d /var/log/kolla; then
         fi
     done
 
+    # NOTE: Check if OpenSearch output plugin has connected in OpenSearch scenarios, otherwise
+    #       check_fluentd_missing_logs will fail because fluentd will only parse files when
+    #       output plugin is working.
+    retries=0
+    retries_max=10
+    until [[ $(sudo tail -n 5 /var/log/kolla/fluentd/fluentd.log | grep "Could not communicate to OpenSearch" | wc -l) -eq 0 ]]; do
+        echo "Found 'Could not communicate to OpenSearch' in last 5 lines of fluentd.log, sleeping 30 seconds"
+        retries=$((retries + 1))
+        if [[ $retries != $retries_max ]]; then
+            sleep 30
+        else
+            echo "Found 'Could not communicate to OpenSearch' in last 5 lines of fluentd.log after 10 retries." | tee -a $fluentd_error_summary_file
+            break
+        fi
+    done
+
     if check_fluentd_missing_logs >/dev/null; then
         any_critical=1
         echo "(critical) Found some missing log files in fluentd logs. Matches in $fluentd_error_summary_file"
