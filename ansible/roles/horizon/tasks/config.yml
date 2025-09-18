@@ -59,7 +59,26 @@
     - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/horizon.conf"
     - "{{ node_custom_config }}/horizon/horizon.conf"
     - "horizon.conf.j2"
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - horizon_wsgi_provider == "apache"
+
+- name: "Configure uWSGI for Horizon"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ horizon_services }}"
+    service: "{{ project_services[service_name] }}"
+    service_name: "horizon"
+    service_uwsgi_config_http_port: "{{ horizon_listen_port }}"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ horizon_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/horizon/certs/horizon-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/horizon/certs/horizon-key.pem"
+    service_uwsgi_config_uid: "{{ 'horizon' if enable_haproxy | bool else 'root' }}"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - horizon_wsgi_provider == "uwsgi"
 
 - name: Copying over kolla-settings.py
   become: true
