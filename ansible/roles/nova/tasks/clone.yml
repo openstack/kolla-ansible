@@ -6,3 +6,18 @@
     dest: "{{ kolla_dev_repos_directory }}/{{ project_name }}"
     update: "{{ nova_dev_repos_pull }}"
     version: "{{ nova_source_version }}"
+
+- name: Check if nova dist directory exists
+  become: true
+  stat:
+    path: "{{ kolla_dev_repos_directory }}/{{ project_name }}/dist"
+  register: nova_dist_check
+
+- name: build nova source
+  become: true
+  shell: |
+    cd {{ kolla_dev_repos_directory }}/{{ project_name }}
+    python3 setup.py sdist | tee /tmp/nova_build.log
+  register: nova_build_result
+  failed_when: nova_build_result.rc != 0
+  when: not nova_dist_check.stat.exists
