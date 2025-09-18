@@ -67,9 +67,25 @@
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-gnocchi.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - gnocchi_wsgi_provider == "apache"
+    - service | service_enabled_and_mapped_to_host
   with_items:
     - "gnocchi-api"
+
+- name: "Configure uWSGI for Gnocchi"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ gnocchi_services }}"
+    service: "{{ gnocchi_services['gnocchi-api'] }}"
+    service_name: "gnocchi-api"
+    service_uwsgi_config_http_port: "{{ gnocchi_api_listen_port }}"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_uid: "gnocchi"
+  when:
+    - gnocchi_wsgi_provider == "uwsgi"
+    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
   template:
