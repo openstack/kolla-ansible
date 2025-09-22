@@ -3,7 +3,7 @@ iscsi_services:
   iscsid:
     container_name: iscsid
     group: iscsid
-    enabled: "{{ enable_iscsid_for_cinder or enable_iscsid_for_ironic }}"
+    enabled: "{{ enable_iscsid_for_cinder or enable_iscsid_for_ironic or enable_iscsid_for_glance }}"
     image: "{{ iscsid_image_full }}"
     ipc_mode: "host"
     privileged: True
@@ -65,6 +65,8 @@ enable_iscsid_for_cinder: >-
       or inventory_hostname in groups['cinder-volume'])
      and enable_cinder | bool
      and enable_cinder_backend_iscsi | bool }}
+enable_iscsid_for_glance: >-
+  {{ inventory_hostname in groups['glance'] }}
 enable_iscsid_for_ironic: >-
   {{ inventory_hostname in groups['ironic-conductor'] and enable_ironic | bool }}
 enable_tgtd: >-
