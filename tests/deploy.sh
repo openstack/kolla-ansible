@@ -71,9 +71,9 @@ function deploy {
 
     if [[ $HAS_UPGRADE == 'no' ]]; then
         kolla-ansible validate-config -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/validate-config
-        #TODO(r-krcek) check can be moved out of the if statement in the flamingo cycle
-        kolla-ansible check -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/check
     fi
+
+    kolla-ansible check -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/check
 }
 
 
