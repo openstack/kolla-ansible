@@ -29,7 +29,7 @@ function upgrade {
     if [[ $SCENARIO == "zun" ]] || [[ $SCENARIO == "cephadm" ]]; then
         SERVICE_TAGS+=",cinder"
     fi
-    if [[ $SCENARIO == "scenario_nfv" ]]; then
+    if [[ $SCENARIO == "nfv" ]]; then
         SERVICE_TAGS+=",barbican"
     fi
     if [[ $SCENARIO == "ironic" ]]; then

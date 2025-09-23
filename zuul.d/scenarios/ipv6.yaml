@@ -1,0 +1,38 @@
+---
+- job:
+    name: kolla-ansible-ipv6-base
+    parent: kolla-ansible-base
+    voting: false
+    vars:
+      address_family: 'ipv6'
+      api_network_prefix: "fd::"
+      api_network_prefix_length: "64"
+      kolla_internal_vip_address: "fd::ff:0"
+      neutron_external_network_prefix: "fd:1::"
+      neutron_external_network_prefix_length: "64"
+      neutron_tenant_network_prefix: "fd:f0::"
+      neutron_tenant_network_prefix_length: "64"
+      neutron_tenant_network_dns_server: 2001:4860:4860::8888
+      scenario: ipv6
+      scenario_images_extra:
+        - ^prometheus
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-ipv6
+    parent: kolla-ansible-ipv6-base
+    nodeset: kolla-ansible-debian-bookworm-multi-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-ipv6
+    parent: kolla-ansible-ipv6-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-ipv6
+    description: |
+      Runs Kolla-Ansible ipv6 scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-ipv6
+        - kolla-ansible-ubuntu-noble-ipv6

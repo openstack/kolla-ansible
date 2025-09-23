@@ -1,0 +1,34 @@
+---
+- job:
+    name: kolla-ansible-cells-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/nova/
+      - ^ansible/roles/nova-cell/
+      - ^ansible/roles/loadbalancer/
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-proxysql.sh
+    vars:
+      scenario: cells
+      scenario_images_extra:
+        - ^proxysql
+
+- job:
+    name: kolla-ansible-debian-bookworm-cells
+    parent: kolla-ansible-cells-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-cells
+    parent: kolla-ansible-cells-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-16GB
+
+- project-template:
+    name: kolla-ansible-scenario-cells
+    description: |
+      Runs Kolla-Ansible Nova Cells scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-cells
+        - kolla-ansible-ubuntu-noble-cells

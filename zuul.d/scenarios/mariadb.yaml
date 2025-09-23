@@ -1,0 +1,41 @@
+---
+- job:
+    name: kolla-ansible-mariadb-base
+    parent: kolla-ansible-scenario-base
+    voting: true
+    files: !inherit
+      - ^ansible/roles/(loadbalancer|mariadb|proxysql-config)/
+      - ^tests/test-mariadb.sh
+    vars:
+      scenario: mariadb
+      scenario_images_core:
+        - ^cron
+        - ^fluentd
+        - ^haproxy
+        - ^keepalived
+        - ^kolla-toolbox
+        - ^mariadb
+        - ^proxysql
+
+- job:
+    name: kolla-ansible-debian-bookworm-mariadb
+    parent: kolla-ansible-mariadb-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-mariadb
+    parent: kolla-ansible-mariadb-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-mariadb
+    description: |
+      Runs Kolla-Ansible MariaDB scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-mariadb
+        - kolla-ansible-ubuntu-noble-mariadb
+    gate:
+      jobs:
+        - kolla-ansible-debian-bookworm-mariadb
+        - kolla-ansible-ubuntu-noble-mariadb

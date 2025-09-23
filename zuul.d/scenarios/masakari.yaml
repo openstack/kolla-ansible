@@ -1,0 +1,36 @@
+---
+- job:
+    name: kolla-ansible-masakari-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/masakari/
+      - ^ansible/roles/hacluster/
+      - ^tests/test-masakari.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: masakari
+      scenario_images_extra:
+        - ^masakari
+        - ^hacluster
+      # TODO: Remove once Masakari has TLS support
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-bookworm-masakari
+    parent: kolla-ansible-masakari-base
+    nodeset: kolla-ansible-debian-bookworm-masakari-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-masakari
+    parent: kolla-ansible-masakari-base
+    nodeset: kolla-ansible-ubuntu-noble-masakari-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-masakari
+    description: |
+      Runs Kolla-Ansible Masakari scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-masakari
+        - kolla-ansible-ubuntu-noble-masakari

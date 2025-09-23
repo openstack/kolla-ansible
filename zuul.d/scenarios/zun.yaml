@@ -1,0 +1,39 @@
+---
+- job:
+    name: kolla-ansible-zun-base
+    parent: kolla-ansible-scenario-base
+    voting: false
+    files: !inherit
+      - ^ansible/roles/(zun|kuryr|etcd|cinder|iscsi)/
+      - ^tests/setup_disks.sh
+      - ^tests/test-core-openstack.sh
+      - ^tests/test-zun.sh
+      - ^tests/test-dashboard.sh
+    vars:
+      scenario: zun
+      scenario_images_extra:
+        - ^zun
+        - ^kuryr
+        - ^etcd
+        - ^cinder
+        - ^iscsid
+        - ^tgtd
+
+- job:
+    name: kolla-ansible-debian-zun
+    parent: kolla-ansible-zun-base
+    nodeset: kolla-ansible-debian-bookworm-multi-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-zun
+    parent: kolla-ansible-zun-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-zun
+    description: |
+      Runs Kolla-Ansible Zun scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-zun
+        - kolla-ansible-ubuntu-zun
