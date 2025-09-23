@@ -147,15 +147,36 @@
     project_services: "{{ keystone_services }}"
     service: "{{ keystone_services['keystone'] }}"
     service_name: "keystone"
+    service_uwsgi_config_host: >-
+      {{ '127.0.0.1' if enable_keystone_federation | bool
+      else api_interface_address | put_address_in_context('url') }}
     service_uwsgi_config_http_port: "{{ keystone_listen_port }}"
     service_uwsgi_config_module: "{{ service.wsgi }}"
-    service_uwsgi_config_tls_backend: "{{ keystone_enable_tls_backend | bool }}"
+    service_uwsgi_config_socket_port: "{{ keystone_wsgi_socket_port if enable_keystone_federation | bool else '' }}"
+    service_uwsgi_config_tls_backend: >-
+      {{ keystone_enable_tls_backend | bool and (not enable_keystone_federation | bool) }}
     service_uwsgi_config_tls_cert: "/etc/keystone/certs/keystone-cert.pem"
     service_uwsgi_config_tls_key: "/etc/keystone/certs/keystone-key.pem"
     service_uwsgi_config_uid: "keystone"
   when:
     - service | service_enabled_and_mapped_to_host
     - keystone_wsgi_provider == "uwsgi"
+
+- name: Copying over httpd-keystone.conf
+  vars:
+    service: "{{ keystone_services['keystone-httpd'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/keystone-httpd/httpd-keystone.conf"
+    mode: "0660"
+  become: true
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - keystone_wsgi_provider == "uwsgi"
+  with_first_found:
+    - "{{ node_custom_config }}/keystone/{{ inventory_hostname }}/httpd-keystone.conf"
+    - "{{ node_custom_config }}/keystone/httpd-keystone.conf"
+    - "httpd-keystone.conf.j2"
 
 - name: Checking whether keystone-paste.ini file exists
   vars:

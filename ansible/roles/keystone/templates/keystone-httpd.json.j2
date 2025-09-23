@@ -1,0 +1,63 @@
+{% set apache_cmd = '/usr/sbin/apache2' if kolla_base_distro in ['ubuntu', 'debian'] else '/usr/sbin/httpd' %}
+{% set apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_user = 'www-data' if kolla_base_distro in ['ubuntu', 'debian'] else 'apache' %}
+
+{
+    "command": "{{ apache_cmd }} -DFOREGROUND",
+    "config_files": [
+        {
+            "source": "{{ container_config_directory }}/httpd-keystone.conf",
+            "dest": "/etc/{{ apache_dir }}/httpd-keystone.conf",
+            "owner": "root",
+            "perm": "0600"
+        }{% if keystone_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/keystone-cert.pem",
+            "dest": "/etc/keystone/certs/keystone-cert.pem",
+            "owner": "keystone",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/keystone-key.pem",
+            "dest": "/etc/keystone/certs/keystone-key.pem",
+            "owner": "keystone",
+            "perm": "0600"
+        }{% endif %}{% if keystone_enable_federation_openid | bool %},
+        {
+            "source": "{{ container_config_directory }}/federation/oidc/metadata",
+            "dest": "{{ keystone_container_federation_oidc_metadata_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0600",
+            "merge": true
+        },
+        {
+            "source": "{{ container_config_directory }}/federation/oidc/cert",
+            "dest": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0600",
+            "merge": true
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        {
+            "source": "{{ container_config_directory }}/ca-certificates",
+            "dest": "/var/lib/kolla/share/ca-certificates",
+            "owner": "root",
+            "perm": "0600"
+        }{% endif %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/keystone",
+            "owner": "keystone:kolla"
+        }{% if keystone_enable_federation_openid | bool %},
+        {
+            "path": "{{ keystone_container_federation_oidc_metadata_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0700"
+        },
+        {
+            "path": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
+            "owner": "{{ apache_user }}:{{ apache_user }}",
+            "perm": "0700"
+        }{% endif %}
+    ]
+}

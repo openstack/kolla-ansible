@@ -1,0 +1,113 @@
+{% set keystone_log_dir = '/var/log/kolla/keystone' %}
+{% set binary_path = '/var/lib/kolla/venv/bin' %}
+{% if keystone_enable_tls_backend | bool %}
+{% if kolla_base_distro in ['centos', 'rocky']  %}
+LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
+{% else %}
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+{% endif %}
+{% endif %}
+
+{% if kolla_base_distro in ['centos', 'rocky']  %}
+LoadModule proxy_module /usr/lib64/httpd/modules/mod_proxy.so
+LoadModule proxy_uwsgi_module /usr/lib64/httpd/modules/mod_proxy_uwsgi.so
+{% else %}
+LoadModule proxy_module /usr/lib/apache2/modules/mod_proxy.so
+LoadModule proxy_uwsgi_module /usr/lib/apache2/modules/mod_proxy_uwsgi.so
+{% endif %}
+
+Listen {{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
+
+ServerSignature Off
+ServerTokens Prod
+TraceEnable off
+TimeOut {{ kolla_httpd_timeout }}
+KeepAliveTimeout {{ kolla_httpd_keep_alive }}
+
+ErrorLog "{{ keystone_log_dir }}/apache-error.log"
+<IfModule log_config_module>
+    CustomLog "{{ keystone_log_dir }}/apache-access.log" common
+</IfModule>
+
+{% if keystone_logging_debug | bool %}
+LogLevel info
+{% endif %}
+
+<VirtualHost *:{{ keystone_public_listen_port }}>
+{# NOTE(darmach): with external tls enabled OIDC redirection fails, as TLS terminated on haproxy keystone is not aware that redirection should use https. -#}
+{# With missing ServerName Keystone Apache uses fqdn, with http. Adding ServerName pointing to keystone_public_url corrects this. -#}
+{% if kolla_enable_tls_external | bool %}
+    ServerName {{ keystone_public_url }}
+{% endif %}
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog "{{ keystone_log_dir }}/keystone-apache-public-error.log"
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
+    CustomLog "{{ keystone_log_dir }}/keystone-apache-public-access.log" logformat
+    ProxyPass / "uwsgi://localhost:{{ keystone_wsgi_socket_port }}/"
+
+{% if keystone_enable_tls_backend | bool %}
+    SSLEngine on
+    SSLCertificateFile /etc/keystone/certs/keystone-cert.pem
+    SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
+{% endif -%}
+
+{% if keystone_enable_federation_openid | bool %}
+{% if keystone_federation_oidc_forwarded_headers | length > 0 %}
+    OIDCXForwardedHeaders "{{ keystone_federation_oidc_forwarded_headers }}"
+{% endif %}
+    OIDCClaimPrefix "OIDC-"
+    OIDCClaimDelimiter "{{ keystone_federation_oidc_claim_delimiter }}"
+    OIDCResponseType "{{ keystone_federation_oidc_response_type }}"
+    OIDCScope "{{ keystone_federation_oidc_scopes }}"
+    OIDCMetadataDir {{ keystone_container_federation_oidc_metadata_folder }}
+{% if keystone_federation_oidc_jwks_uri | length > 0 %}
+    OIDCOAuthVerifyJwksUri {{ keystone_federation_oidc_jwks_uri }}
+{% endif %}
+{% if keystone_federation_openid_certificate_key_ids | length > 0 %}
+    OIDCOAuthVerifyCertFiles {{ keystone_federation_openid_certificate_key_ids | join(" ") }}
+{% endif %}
+    OIDCCryptoPassphrase {{ keystone_federation_openid_crypto_password }}
+    OIDCRedirectURI {{ keystone_public_url }}/redirect_uri
+{% if enable_memcached | bool and keystone_oidc_enable_memcached | bool %}
+    OIDCCacheType memcache
+    OIDCMemCacheServers "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %} {% endif %}{% endfor %}"
+{% endif %}
+{% for key, value in keystone_federation_oidc_additional_options.items() %}
+    {{ key }} {{ value }}
+{% endfor %}
+
+    <Location ~ "/redirect_uri">
+      Require valid-user
+      AuthType openid-connect
+    </Location>
+
+    {# WebSSO authentication endpoint -#}
+    <Location /v3/auth/OS-FEDERATION/websso/openid>
+      Require valid-user
+      AuthType openid-connect
+    </Location>
+
+{% for idp in keystone_identity_providers %}
+{% if idp.protocol == 'openid' %}
+    <LocationMatch /v3/auth/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/websso>
+      OIDCDiscoverURL {{ keystone_public_url }}/redirect_uri?iss={{ idp.identifier | urlencode }}
+      Require valid-user
+      AuthType openid-connect
+    </LocationMatch>
+{% endif %}
+{% endfor %}
+
+    {# CLI / API authentication endpoint -#}
+{% for idp in keystone_identity_providers %}
+{% if idp.protocol == 'openid' -%}
+    <LocationMatch /v3/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/auth>
+      Require valid-user
+      {# Note(jasonanderson): `auth-openidc` is a special auth type that can -#}
+      {# additionally handle verifying bearer tokens -#}
+      AuthType auth-openidc
+    </LocationMatch>
+{% endif %}
+{% endfor %}
+{% endif %}
+</VirtualHost>
+
