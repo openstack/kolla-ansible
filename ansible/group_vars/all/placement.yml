@@ -1,0 +1,13 @@
+---
+enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"
+
+placement_keystone_user: "placement"
+
+placement_internal_fqdn: "{{ kolla_internal_fqdn }}"
+placement_external_fqdn: "{{ kolla_external_fqdn }}"
+placement_internal_endpoint: "{{ placement_internal_fqdn | kolla_url(internal_protocol, placement_api_port) }}"
+placement_public_endpoint: "{{ placement_external_fqdn | kolla_url(public_protocol, placement_api_public_port) }}"
+# Default Placement API port of 8778 already in use
+placement_api_port: "8780"
+placement_api_listen_port: "{{ placement_api_port }}"
+placement_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else placement_api_port }}"

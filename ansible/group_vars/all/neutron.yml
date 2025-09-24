@@ -1,0 +1,75 @@
+---
+enable_neutron: "{{ enable_openstack_core | bool }}"
+
+enable_neutron_vpnaas: "no"
+enable_neutron_sriov: "no"
+enable_neutron_mlnx: "no"
+enable_neutron_dvr: "no"
+enable_neutron_fwaas: "no"
+enable_neutron_qos: "no"
+enable_neutron_agent_ha: "no"
+enable_neutron_bgp_dragent: "no"
+enable_neutron_provider_networks: "no"
+enable_neutron_segments: "no"
+enable_neutron_packet_logging: "no"
+enable_neutron_sfc: "no"
+enable_neutron_taas: "no"
+enable_neutron_trunk: "no"
+enable_neutron_metering: "no"
+enable_neutron_infoblox_ipam_agent: "no"
+enable_neutron_port_forwarding: "no"
+neutron_enable_ovn_agent: "no"
+
+neutron_keystone_user: "neutron"
+
+# Valid options are [ openvswitch, ovn, linuxbridge ]
+# Do note linuxbridge is *EXPERIMENTAL* in Neutron since Zed and it requires extra tweaks to config to be usable.
+# For details, see: https://docs.openstack.org/neutron/latest/admin/config-experimental-framework.html
+neutron_plugin_agent: "openvswitch"
+
+# Valid options are [ internal, infoblox ]
+neutron_ipam_driver: "internal"
+
+eutron_external_interface: "eth1"
+
+#######################
+# Neutron options
+#######################
+neutron_bgp_router_id: "1.1.1.1"
+neutron_bridge_name: "{{ 'br_dpdk' if enable_ovs_dpdk | bool else 'br-ex' }}"
+neutron_physical_networks: "{% for bridge in neutron_bridge_name.split(',') %}physnet{{ loop.index }}{% if not loop.last %},{% endif %}{% endfor %}"
+# Comma-separated type of enabled ml2 type drivers
+neutron_type_drivers: "flat,vlan,vxlan{% if neutron_plugin_agent == 'ovn' %},geneve{% endif %}"
+# Comma-separated types of tenant networks (should be listed in 'neutron_type_drivers')
+# NOTE: for ironic this list should also contain 'flat'
+neutron_tenant_network_types: "{% if neutron_plugin_agent == 'ovn' %}geneve{% else %}vxlan{% endif %}"
+
+# valid values: ["dvr", "dvr_no_external"]
+neutron_compute_dvr_mode: "dvr"
+computes_need_external_bridge: "{{ (enable_neutron_dvr | bool and neutron_compute_dvr_mode == 'dvr') or enable_neutron_provider_networks | bool or neutron_ovn_distributed_fip | bool }}"
+
+# Default DNS resolvers for virtual networks
+neutron_dnsmasq_dns_servers: "1.1.1.1,8.8.8.8,8.8.4.4"
+
+# Set legacy iptables to allow kernels not supporting iptables-nft
+neutron_legacy_iptables: "no"
+
+# Enable distributed floating ip for OVN deployments
+neutron_ovn_distributed_fip: "no"
+
+# SRIOV physnet:interface mappings when SRIOV is enabled
+# "sriovnet1" and tunnel_interface used here as placeholders
+neutron_sriov_physnet_mappings:
+  sriovnet1: "{{ tunnel_interface }}"
+neutron_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+# Set OVN network availability zones
+neutron_ovn_availability_zones: []
+
+neutron_internal_fqdn: "{{ kolla_internal_fqdn }}"
+neutron_external_fqdn: "{{ kolla_external_fqdn }}"
+neutron_internal_endpoint: "{{ neutron_internal_fqdn | kolla_url(internal_protocol, neutron_server_port) }}"
+neutron_public_endpoint: "{{ neutron_external_fqdn | kolla_url(public_protocol, neutron_server_public_port) }}"
+neutron_server_port: "9696"
+neutron_server_listen_port: "{{ neutron_server_port }}"
+neutron_server_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else neutron_server_port }}"

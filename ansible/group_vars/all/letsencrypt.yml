@@ -1,0 +1,13 @@
+---
+enable_letsencrypt: "no"
+
+#####################
+# ACME client options
+#####################
+acme_client_lego: "server lego {{ api_interface_address }}:{{ letsencrypt_webserver_port }}"
+acme_client_servers: "{% set arr = [] %}{% if enable_letsencrypt | bool %}{{ arr.append(acme_client_lego) }}{% endif %}{{ arr }}"
+
+letsencrypt_webserver_port: "8081"
+letsencrypt_managed_certs: "{{ '' if not enable_letsencrypt | bool else ('internal' if letsencrypt_internal_cert_server != '' and kolla_same_external_internal_vip | bool else ('internal,external' if letsencrypt_internal_cert_server != '' and letsencrypt_external_cert_server != '' else ('internal' if letsencrypt_internal_cert_server != '' else ('external' if letsencrypt_external_cert_server != '' and not kolla_same_external_internal_vip | bool else '')))) }}"
+letsencrypt_external_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
+letsencrypt_internal_cert_server: ""

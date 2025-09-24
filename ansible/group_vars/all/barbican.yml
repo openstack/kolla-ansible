@@ -1,0 +1,17 @@
+---
+enable_barbican: "no"
+
+#######################
+# Barbican options
+#######################
+# Valid options are [ simple_crypto, p11_crypto ]
+barbican_crypto_plugin: "simple_crypto"
+barbican_library_path: "/usr/lib/libCryptoki2_64.so"
+
+barbican_internal_fqdn: "{{ kolla_internal_fqdn }}"
+barbican_external_fqdn: "{{ kolla_external_fqdn }}"
+barbican_internal_endpoint: "{{ barbican_internal_fqdn | kolla_url(internal_protocol, barbican_api_port) }}"
+barbican_public_endpoint: "{{ barbican_external_fqdn | kolla_url(public_protocol, barbican_api_public_port) }}"
+barbican_api_port: "9311"
+barbican_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else barbican_api_port }}"
+barbican_api_listen_port: "{{ barbican_api_port }}"

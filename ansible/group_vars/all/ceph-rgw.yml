@@ -1,0 +1,10 @@
+---
+enable_ceph_rgw: "no"
+enable_ceph_rgw_loadbalancer: "{{ enable_ceph_rgw | bool }}"
+
+ceph_rgw_internal_fqdn: "{{ kolla_internal_fqdn }}"
+ceph_rgw_external_fqdn: "{{ kolla_external_fqdn }}"
+ceph_rgw_internal_base_endpoint: "{{ ceph_rgw_internal_fqdn | kolla_url(internal_protocol, ceph_rgw_port) }}"
+ceph_rgw_public_base_endpoint: "{{ ceph_rgw_external_fqdn | kolla_url(public_protocol, ceph_rgw_public_port) }}"
+ceph_rgw_port: "6780"
+ceph_rgw_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else ceph_rgw_port }}"

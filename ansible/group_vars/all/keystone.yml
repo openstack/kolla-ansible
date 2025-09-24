@@ -1,0 +1,86 @@
+---
+enable_keystone: "{{ enable_openstack_core | bool }}"
+enable_keystone_federation: "{{ (keystone_identity_providers | length > 0) and (keystone_identity_mappings | length > 0) }}"
+
+####################
+# Keystone options
+####################
+keystone_internal_fqdn: "{{ kolla_internal_fqdn }}"
+keystone_external_fqdn: "{{ kolla_external_fqdn }}"
+
+keystone_internal_url: "{{ keystone_internal_fqdn | kolla_url(internal_protocol, keystone_internal_port) }}"
+keystone_public_url: "{{ keystone_external_fqdn | kolla_url(public_protocol, keystone_public_port) }}"
+
+keystone_admin_user: "admin"
+keystone_admin_project: "admin"
+
+# Whether or not to apply changes to service user passwords when services are
+# reconfigured
+update_keystone_service_user_passwords: true
+
+default_project_domain_name: "Default"
+default_project_domain_id: "default"
+
+default_user_domain_name: "Default"
+default_user_domain_id: "default"
+
+# Keystone fernet token expiry in seconds. Default is 1 day.
+fernet_token_expiry: 86400
+# Keystone window to allow expired fernet tokens. Default is 2 days.
+fernet_token_allow_expired_window: 172800
+# Keystone fernet key rotation interval in seconds. Default is sum of token
+# expiry and allow expired window, 3 days. This ensures the minimum number
+# of keys are active. If this interval is lower than the sum of the token
+# expiry and allow expired window, multiple active keys will be necessary.
+fernet_key_rotation_interval: "{{ fernet_token_expiry + fernet_token_allow_expired_window }}"
+
+keystone_default_user_role: "member"
+
+###################################
+# Identity federation configuration
+###################################
+# Here we configure all of the IdPs meta information that will be required to implement identity federation with OpenStack Keystone.
+# We require the administrator to enter the following metadata:
+# * name (internal name of the IdP in Keystone);
+# * openstack_domain (the domain in Keystone that the IdP belongs to)
+# * protocol (the federated protocol used by the IdP; e.g. openid or saml);
+# * identifier (the IdP identifier; e.g. https://accounts.google.com);
+# * public_name (the public name that will be shown for users in Horizon);
+# * attribute_mapping (the attribute mapping to be used for this IdP. This mapping is configured in the "keystone_identity_mappings" configuration);
+# * metadata_folder (folder containing all the identity provider metadata as jsons named as the identifier without the protocol
+#   and with '/' escaped as %2F followed with '.provider' or '.client' or '.conf'; e.g. accounts.google.com.provider; PS, all .conf,
+#   .provider and .client jsons must be in the folder, even if you dont override any conf in the .conf json, you must leave it as an empty json '{}');
+# * certificate_file (the path to the Identity Provider certificate file, the file must be named as 'certificate-key-id.pem';
+#   e.g. LRVweuT51StjMdsna59jKfB3xw0r8Iz1d1J1HeAbmlw.pem; You can find the key-id in the Identity provider '.well-known/openid-configuration' jwks_uri as kid);
+#
+# The IdPs meta information are to be presented to Kolla-Ansible as the following example:
+# keystone_identity_providers:
+#   - name: "myidp1"
+#     openstack_domain: "my-domain"
+#     protocol: "openid"
+#     identifier: "https://accounts.google.com"
+#     public_name: "Authenticate via myidp1"
+#     attribute_mapping: "mappingId1"
+#     metadata_folder: "path/to/metadata/folder"
+#     certificate_file: "path/to/certificate/file.pem"
+#
+# We also need to configure the attribute mapping that is used by IdPs.
+# The configuration of attribute mappings is a list of objects, where each
+# object must have a 'name' (that mapps to the 'attribute_mapping' to the IdP
+# object in the IdPs set), and the 'file' with a full qualified path to a mapping file.
+# keystone_identity_mappings:
+#   - name: "mappingId1"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId1"
+#   - name: "mappingId2"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId2"
+#   - name: "mappingId3"
+#     file: "/full/qualified/path/to/mapping/json/file/to/mappingId3"
+keystone_identity_providers: []
+keystone_identity_mappings: []
+
+keystone_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else keystone_public_listen_port }}"
+keystone_public_listen_port: "5000"
+keystone_internal_port: "5000"
+keystone_internal_listen_port: "{{ keystone_internal_port }}"
+keystone_listen_port: "{{ keystone_internal_listen_port }}"
+keystone_ssh_port: "8023"

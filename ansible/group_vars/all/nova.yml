@@ -1,0 +1,69 @@
+---
+enable_cells: "no"
+enable_nova: "{{ enable_openstack_core | bool }}"
+enable_nova_libvirt_container: "{{ nova_compute_virt_type in ['kvm', 'qemu'] }}"
+enable_nova_serialconsole_proxy: "no"
+enable_nova_ssh: "yes"
+
+#######################
+# Nova options
+#######################
+nova_backend_ceph: "no"
+nova_backend: "{{ 'rbd' if nova_backend_ceph | bool else 'default' }}"
+# Valid options are [ kvm, qemu ]
+nova_compute_virt_type: "kvm"
+nova_instance_datadir_volume: "{{ 'nova_compute' if enable_nova_libvirt_container | bool else '/var/lib/nova' }}"
+nova_safety_upgrade: "no"
+# Valid options are [ none, novnc, spice ]
+nova_console: "novnc"
+
+#######################
+# Nova Database
+#######################
+nova_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
+nova_cell0_database_shard_id: "{{ nova_database_shard_id | int }}"
+
+# These are kept for backwards compatibility, as cell0 references them.
+nova_database_name: "nova"
+nova_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}nova{% endif %}"
+nova_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
+
+nova_cell0_database_name: "{{ nova_database_name }}_cell0"
+nova_cell0_database_user: "{{ nova_database_user }}"
+nova_cell0_database_address: "{{ nova_database_address }}"
+nova_cell0_database_password: "{{ nova_database_password }}"
+
+# Nova fake driver and the number of fake driver per compute node
+enable_nova_fake: "no"
+num_nova_fake_per_node: 5
+
+migration_interface: "{{ api_interface }}"
+migration_interface_address: "{{ 'migration' | kolla_address }}"
+migration_address_family: "{{ api_address_family }}"
+
+nova_keystone_user: "nova"
+
+nova_internal_fqdn: "{{ kolla_internal_fqdn }}"
+nova_external_fqdn: "{{ kolla_external_fqdn }}"
+nova_internal_base_endpoint: "{{ nova_internal_fqdn | kolla_url(internal_protocol, nova_api_port) }}"
+nova_public_base_endpoint: "{{ nova_external_fqdn | kolla_url(public_protocol, nova_api_public_port) }}"
+nova_api_port: "8774"
+nova_api_listen_port: "{{ nova_api_port }}"
+nova_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else nova_api_port }}"
+nova_metadata_internal_fqdn: "{{ kolla_internal_fqdn }}"
+nova_metadata_external_fqdn: "{{ kolla_external_fqdn }}"
+nova_metadata_port: "8775"
+nova_metadata_listen_port: "{{ nova_metadata_port }}"
+nova_novncproxy_fqdn: "{{ kolla_external_fqdn }}"
+nova_novncproxy_port: "6080"
+nova_novncproxy_listen_port: "{{ nova_novncproxy_port }}"
+nova_novncproxy_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else nova_novncproxy_port }}"
+nova_spicehtml5proxy_fqdn: "{{ kolla_external_fqdn }}"
+nova_spicehtml5proxy_port: "6082"
+nova_spicehtml5proxy_listen_port: "{{ nova_spicehtml5proxy_port }}"
+nova_spicehtml5proxy_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else nova_spicehtml5proxy_port }}"
+nova_serialproxy_fqdn: "{{ kolla_external_fqdn }}"
+nova_serialproxy_port: "6083"
+nova_serialproxy_listen_port: "{{ nova_serialproxy_port }}"
+nova_serialproxy_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else nova_serialproxy_port }}"
+nova_serialproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'ws' }}"

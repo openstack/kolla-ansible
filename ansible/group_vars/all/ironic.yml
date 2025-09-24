@@ -1,0 +1,33 @@
+---
+enable_ironic: "no"
+enable_ironic_dnsmasq: "{{ enable_ironic | bool }}"
+enable_ironic_neutron_agent: "no"
+enable_ironic_prometheus_exporter: "{{ enable_ironic | bool and enable_prometheus | bool }}"
+
+# Keystone user
+ironic_keystone_user: "ironic"
+
+# Coordination backend
+ironic_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
+
+# Network interfaces
+ironic_http_interface: "{{ api_interface }}"
+ironic_tftp_interface: "{{ api_interface }}"
+
+# Address family
+ironic_http_address_family: "{{ api_address_family }}"
+ironic_tftp_address_family: "{{ api_address_family }}"
+
+# Addresses
+ironic_http_interface_address: "{{ 'ironic_http' | kolla_address }}"
+ironic_tftp_interface_address: "{{ 'ironic_tftp' | kolla_address }}"
+
+ironic_internal_fqdn: "{{ kolla_internal_fqdn }}"
+ironic_external_fqdn: "{{ kolla_external_fqdn }}"
+ironic_internal_endpoint: "{{ ironic_internal_fqdn | kolla_url(internal_protocol, ironic_api_port) }}"
+ironic_public_endpoint: "{{ ironic_external_fqdn | kolla_url(public_protocol, ironic_api_public_port) }}"
+ironic_api_port: "6385"
+ironic_api_listen_port: "{{ ironic_api_port }}"
+ironic_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else ironic_api_port }}"
+ironic_http_port: "8089"
+ironic_prometheus_exporter_port: "9608"

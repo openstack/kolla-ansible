@@ -1,0 +1,19 @@
+---
+enable_rabbitmq: "{{ 'yes' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'no' }}"
+
+####################
+# RabbitMQ options
+####################
+rabbitmq_user: "openstack"
+rabbitmq_monitoring_user: ""
+# Whether to enable TLS encryption for RabbitMQ client-server communication.
+rabbitmq_enable_tls: "no"
+# CA certificate bundle in RabbitMQ container.
+rabbitmq_cacert: "/etc/ssl/certs/{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.crt' }}"
+rabbitmq_datadir_volume: "rabbitmq"
+
+rabbitmq_port: "{{ '5671' if rabbitmq_enable_tls | bool else '5672' }}"
+rabbitmq_management_port: "15672"
+rabbitmq_cluster_port: "25672"
+rabbitmq_epmd_port: "4369"
+rabbitmq_prometheus_port: "15692"

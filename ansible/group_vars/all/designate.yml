@@ -1,0 +1,33 @@
+---
+enable_designate: "no"
+
+designate_keystone_user: "designate"
+
+#######################
+# Designate options
+#######################
+# Valid options are [ bind9, infoblox ]
+designate_backend: "bind9"
+designate_ns_record:
+  - "ns1.example.org"
+designate_backend_external: "no"
+designate_backend_external_bind9_nameservers: ""
+# Valid options are [ '', redis ]
+designate_coordination_backend: "{{ 'redis' if enable_redis | bool else '' }}"
+
+designate_enable_notifications_sink: "no"
+designate_notifications_topic_name: "notifications_designate"
+
+dns_interface: "{{ network_interface }}"
+dns_address_family: "{{ network_address_family }}"
+
+designate_internal_fqdn: "{{ kolla_internal_fqdn }}"
+designate_external_fqdn: "{{ kolla_external_fqdn }}"
+designate_internal_endpoint: "{{ designate_internal_fqdn | kolla_url(internal_protocol, designate_api_port) }}"
+designate_public_endpoint: "{{ designate_external_fqdn | kolla_url(public_protocol, designate_api_public_port) }}"
+designate_api_port: "9001"
+designate_api_listen_port: "{{ designate_api_port }}"
+designate_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else designate_api_port }}"
+designate_bind_port: "53"
+designate_mdns_port: "{{ '53' if designate_backend == 'infoblox' else '5354' }}"
+designate_rndc_port: "953"

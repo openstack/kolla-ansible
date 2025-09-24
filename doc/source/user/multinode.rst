@@ -136,7 +136,7 @@ host or group variables:
 <https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#ansible-variable-precedence>`__
 are quite complex, but it is worth becoming familiar with them if using host
 and group variables. The playbook group variables in
-``ansible/group_vars/all.yml`` define global defaults, and these take
+``ansible/group_vars/all/`` define global defaults, and these take
 precedence over variables defined in an inventory file and inventory
 ``group_vars/all``, but not over inventory ``group_vars/*``. Variables in
 'extra' files (``globals.yml``) have the highest precedence, so any variables

@@ -1,0 +1,40 @@
+---
+enable_cinder: "no"
+enable_cinder_backup: "yes"
+enable_cinder_backend_iscsi: "{{ enable_cinder_backend_lvm | bool }}"
+enable_cinder_backend_lvm: "no"
+enable_cinder_backend_nfs: "no"
+enable_cinder_backend_quobyte: "no"
+enable_cinder_backend_pure_iscsi: "no"
+enable_cinder_backend_pure_fc: "no"
+enable_cinder_backend_pure_roce: "no"
+enable_cinder_backend_pure_nvme_tcp: "no"
+enable_cinder_backend_lightbits: "no"
+
+#################################
+# Cinder options
+#################################
+cinder_backend_ceph: "no"
+cinder_backend_huawei: "no"
+cinder_backend_huawei_xml_files: []
+cinder_volume_group: "cinder-volumes"
+cinder_target_helper: "{{ 'lioadm' if ansible_facts.os_family == 'RedHat' else 'tgtadm' }}"
+# Valid options are [ '', redis, etcd ]
+cinder_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
+
+# Valid options are [ nfs, ceph, s3 ]
+cinder_backup_driver: "ceph"
+cinder_backup_share: ""
+cinder_backup_mount_options_nfs: ""
+
+storage_address_family: "{{ network_address_family }}"
+
+cinder_keystone_user: "cinder"
+
+cinder_internal_fqdn: "{{ kolla_internal_fqdn }}"
+cinder_external_fqdn: "{{ kolla_external_fqdn }}"
+cinder_internal_base_endpoint: "{{ cinder_internal_fqdn | kolla_url(internal_protocol, cinder_api_port) }}"
+cinder_public_base_endpoint: "{{ cinder_external_fqdn | kolla_url(public_protocol, cinder_api_public_port) }}"
+cinder_api_port: "8776"
+cinder_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else cinder_api_port }}"
+cinder_api_listen_port: "{{ cinder_api_port }}"

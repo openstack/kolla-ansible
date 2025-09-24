@@ -1,0 +1,33 @@
+---
+enable_octavia: "no"
+enable_octavia_driver_agent: "{{ enable_octavia | bool and neutron_plugin_agent == 'ovn' }}"
+enable_octavia_jobboard: "{{ enable_octavia | bool and 'amphora' in octavia_provider_drivers }}"
+
+##########
+# Octavia
+##########
+# Whether to run Kolla-Ansible's automatic configuration for Octavia.
+# NOTE: if you upgrade from Ussuri, you must set `octavia_auto_configure` to `no`
+# and keep your other Octavia config like before.
+octavia_auto_configure: "{{ 'amphora' in octavia_provider_drivers }}"
+
+# Octavia network type options are [ tenant, provider ]
+# * tenant indicates that we will create a tenant network and a network
+#   interface on the Octavia worker nodes for communication with amphorae.
+# * provider indicates that we will create a flat or vlan provider network.
+#   In this case octavia_network_interface should be set to a network interface
+#   on the Octavia worker nodes on the same provider network.
+octavia_network_type: "provider"
+
+octavia_network_interface: "{{ 'o-hm0' if octavia_network_type == 'tenant' else api_interface }}"
+octavia_network_address_family: "{{ api_address_family }}"
+octavia_network_interface_address: "{{ 'octavia_network' | kolla_address }}"
+
+octavia_internal_fqdn: "{{ kolla_internal_fqdn }}"
+octavia_external_fqdn: "{{ kolla_external_fqdn }}"
+octavia_internal_endpoint: "{{ octavia_internal_fqdn | kolla_url(internal_protocol, octavia_api_port) }}"
+octavia_public_endpoint: "{{ octavia_external_fqdn | kolla_url(public_protocol, octavia_api_public_port) }}"
+octavia_api_port: "9876"
+octavia_api_listen_port: "{{ octavia_api_port }}"
+octavia_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else octavia_api_port }}"
+octavia_health_manager_port: "5555"

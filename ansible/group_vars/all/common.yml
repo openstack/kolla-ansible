@@ -1,0 +1,366 @@
+---
+###################
+# Ansible options
+###################
+
+# This variable is used as the "filter" argument for the setup module.  For
+# instance, if one wants to remove/ignore all Neutron interface facts:
+# kolla_ansible_setup_filter: "ansible_[!qt]*"
+# By default, we do not provide a filter.
+kolla_ansible_setup_filter: "{{ omit }}"
+
+# This variable is used as the "gather_subset" argument for the setup module.
+# For instance, if one wants to avoid collecting facts via facter:
+# kolla_ansible_setup_gather_subset: "all,!facter"
+# By default, we do not provide a gather subset.
+kolla_ansible_setup_gather_subset: "{{ omit }}"
+
+# This variable determines which hosts require facts when using --limit. Facts
+# will be gathered using delegation for hosts in this list that are not
+# included in the limit.
+# By default, this list includes all hosts.
+kolla_ansible_delegate_facts_hosts: "{{ groups['all'] }}"
+
+####################
+# Docker options
+####################
+docker_registry_email:
+docker_registry: "quay.io"
+docker_namespace: "openstack.kolla"
+docker_image_name_prefix: ""
+docker_image_url: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}"
+docker_registry_username:
+# Please read the docs carefully before applying docker_registry_insecure.
+docker_registry_insecure: "no"
+docker_runtime_directory: ""
+# Docker client timeout in seconds.
+docker_client_timeout: 120
+
+# Docker networking options
+docker_disable_default_iptables_rules: "yes"
+docker_disable_default_network: "{{ docker_disable_default_iptables_rules }}"
+docker_disable_ip_forward: "{{ docker_disable_default_iptables_rules }}"
+
+# Retention settings for Docker logs
+docker_log_max_file: "5"
+docker_log_max_size: "50m"
+
+# Valid options are [ no, on-failure, always, unless-stopped ]
+docker_restart_policy: "unless-stopped"
+
+# '0' means unlimited retries (applies only to 'on-failure' policy)
+docker_restart_policy_retry: "10"
+
+# Timeout after Docker sends SIGTERM before sending SIGKILL.
+docker_graceful_timeout: 60
+
+# Common options used throughout Docker
+docker_common_options:
+  auth_email: "{{ docker_registry_email }}"
+  auth_password: "{{ docker_registry_password }}"
+  auth_registry: "{{ docker_registry }}"
+  auth_username: "{{ docker_registry_username }}"
+  environment:
+    KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+  restart_policy: "{{ docker_restart_policy }}"
+  restart_retries: "{{ docker_restart_policy_retry }}"
+  graceful_timeout: "{{ docker_graceful_timeout }}"
+  client_timeout: "{{ docker_client_timeout }}"
+  container_engine: "{{ kolla_container_engine }}"
+
+# Container engine specific volume paths
+docker_volumes_path: "{{ docker_runtime_directory or '/var/lib/docker' }}/volumes"
+podman_volumes_path: "{{ docker_runtime_directory or '/var/lib/containers' }}/storage/volumes"
+container_engine_volumes_path: "{{ docker_volumes_path if kolla_container_engine == 'docker' else podman_volumes_path }}"
+
+#####################
+# Volumes under /run
+#####################
+# Podman has problem with mounting whole /run directory
+# described here: https://github.com/containers/podman/issues/16305
+run_default_volumes_podman:
+  - '/run/netns:/run/netns:shared'
+  - '/run/lock/nova:/run/lock/nova:shared'
+  - "/run/libvirt:/run/libvirt:shared"
+  - "/run/nova:/run/nova:shared"
+  - "/run/openvswitch:/run/openvswitch:shared"
+
+run_default_volumes_docker: []
+
+run_default_subdirectories:
+  - '/run/netns'
+  - '/run/lock/nova'
+  - "/run/libvirt"
+  - "/run/nova"
+  - "/run/openvswitch"
+
+####################
+# Dimensions options
+####################
+# Dimension options for Docker Containers
+# NOTE(mnasiadka): Lower 1073741816 nofile limit on EL9 (RHEL9/CentOS Stream 9/Rocky Linux 9)
+#                  fixes at least rabbitmq and mariadb
+default_container_dimensions: "{{ default_container_dimensions_el9 if ansible_facts.os_family == 'RedHat' else '{}' }}"
+default_container_dimensions_el9: "{{ default_docker_dimensions_el9 if kolla_container_engine == 'docker' else default_podman_dimensions_el9 }}"
+default_docker_dimensions_el9:
+  ulimits:
+    nofile:
+      soft: 1048576
+      hard: 1048576
+default_podman_dimensions_el9:
+  ulimits:
+    RLIMIT_NOFILE:
+      soft: 1048576
+      hard: 1048576
+    RLIMIT_NPROC:
+      soft: 1048576
+      hard: 1048576
+
+#####################
+# Healthcheck options
+#####################
+enable_container_healthchecks: "yes"
+# Healthcheck options for Docker containers
+# interval/timeout/start_period are in seconds
+default_container_healthcheck_interval: 30
+default_container_healthcheck_timeout: 30
+default_container_healthcheck_retries: 3
+default_container_healthcheck_start_period: 5
+
+#######################
+# Extra volumes options
+#######################
+# Extra volumes for Docker Containers
+default_extra_volumes: []
+
+##################
+# Firewall options
+##################
+enable_external_api_firewalld: "false"
+external_api_firewalld_zone: "public"
+
+##################
+# Backend options
+##################
+kolla_httpd_keep_alive: "60"
+kolla_httpd_timeout: "60"
+
+# The "temp" files that are created before merge need to stay persistent due
+# to the fact that ansible will register a "change" if it has to create them
+# again. Persistent files allow for idempotency
+container_config_directory: "/var/lib/kolla/config_files"
+
+# The directory on the deploy host containing globals.yml.
+node_config: "{{ CONFIG_DIR | default('/etc/kolla') }}"
+
+# The directory to merge custom config files the kolla's config files
+node_custom_config: "{{ node_config }}/config"
+
+# The directory to store the config files on the destination node
+node_config_directory: "/etc/kolla"
+
+# The group which own node_config_directory, you can use a non-root
+# user to deploy kolla
+config_owner_user: "root"
+config_owner_group: "root"
+
+###################
+# Kolla options
+###################
+# Valid options are [ COPY_ONCE, COPY_ALWAYS ]
+config_strategy: "COPY_ALWAYS"
+
+# Valid options are ['centos', 'debian', 'rocky', 'ubuntu']
+kolla_base_distro: "rocky"
+
+kolla_internal_vip_address: "{{ kolla_internal_address | default('') }}"
+kolla_internal_fqdn: "{{ kolla_internal_vip_address }}"
+kolla_external_vip_address: "{{ kolla_internal_vip_address }}"
+kolla_same_external_internal_vip: "{{ kolla_external_vip_address | ansible.utils.ipaddr('address') == kolla_internal_vip_address | ansible.utils.ipaddr('address') }}"
+kolla_external_fqdn: "{{ kolla_internal_fqdn if kolla_same_external_internal_vip | bool else kolla_external_vip_address }}"
+
+kolla_dev_repos_directory: "/opt/stack/"
+kolla_dev_repos_git: "https://opendev.org/openstack"
+kolla_dev_repos_pull: "no"
+kolla_dev_mode: "no"
+kolla_source_version: "{% if openstack_release == 'master' %}master{% else %}stable/{{ openstack_release }}{% endif %}"
+
+# Proxy settings for containers such as magnum that need internet access
+container_http_proxy: ""
+container_https_proxy: ""
+container_no_proxy: "localhost,127.0.0.1"
+
+container_proxy_no_proxy_entries:
+  - "{{ container_no_proxy }}"
+  - "{{ api_interface_address }}"
+  - "{{ kolla_internal_vip_address | default('') }}"
+
+container_proxy:
+  http_proxy: "{{ container_http_proxy }}"
+  https_proxy: "{{ container_https_proxy }}"
+  no_proxy: "{{ container_proxy_no_proxy_entries | select | join(',') }}"
+
+# By default, Kolla API services bind to the network address assigned
+# to the api_interface.  Allow the bind address to be an override.
+api_interface_address: "{{ 'api' | kolla_address }}"
+
+####################
+# Container engine options
+####################
+kolla_container_engine: "docker"
+
+
+#########################
+# Internal Image options
+#########################
+kolla_base_distro_version_default_map: {
+  "centos": "stream9",
+  "debian": "bookworm",
+  "rocky": "9",
+  "ubuntu": "noble",
+}
+
+distro_python_version: "3"
+
+kolla_base_distro_version: "{{ kolla_base_distro_version_default_map[kolla_base_distro] }}"
+
+####################
+# Networking options
+####################
+network_interface: "eth0"
+kolla_external_vip_interface: "{{ network_interface }}"
+api_interface: "{{ network_interface }}"
+
+# Configure the address family (AF) per network.
+# Valid options are [ ipv4, ipv6 ]
+network_address_family: "ipv4"
+api_address_family: "{{ network_address_family }}"
+
+public_protocol: "{{ 'https' if kolla_enable_tls_external | bool else 'http' }}"
+internal_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
+
+# Additional optional OpenStack features and services are specified here
+enable_central_logging: "no"
+
+# Clean images options are specified here
+enable_destroy_images: "no"
+
+####################
+# Global Options
+####################
+# List of containers to skip during stop command in YAML list format
+# skip_stop_containers:
+#   - container1
+#   - container2
+skip_stop_containers: []
+
+###################
+# Messaging options
+###################
+# oslo.messaging rpc transport valid options are [ rabbit, amqp ]
+om_rpc_transport: "rabbit"
+om_rpc_user: "{{ rabbitmq_user }}"
+om_rpc_password: "{{ rabbitmq_password }}"
+om_rpc_port: "{{ rabbitmq_port }}"
+om_rpc_group: "rabbitmq"
+om_rpc_vhost: "/"
+
+rpc_transport_url: "{{ om_rpc_transport }}://{% for host in groups[om_rpc_group] %}{{ om_rpc_user }}:{{ om_rpc_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ om_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_rpc_vhost }}"
+
+# oslo.messaging notify transport valid options are [ rabbit ]
+om_notify_transport: "rabbit"
+om_notify_user: "{{ rabbitmq_user }}"
+om_notify_password: "{{ rabbitmq_password }}"
+om_notify_port: "{{ rabbitmq_port }}"
+om_notify_group: "rabbitmq"
+om_notify_vhost: "/"
+
+notify_transport_url: "{{ om_notify_transport }}://{% for host in groups[om_notify_group] %}{{ om_notify_user }}:{{ om_notify_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ om_notify_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ om_notify_vhost }}"
+
+# Whether to enable TLS for oslo.messaging communication with RabbitMQ.
+om_enable_rabbitmq_tls: "{{ rabbitmq_enable_tls | bool }}"
+# CA certificate bundle in containers using oslo.messaging with RabbitMQ TLS.
+om_rabbitmq_cacert: "{{ rabbitmq_cacert }}"
+om_rabbitmq_qos_prefetch_count: "1"
+
+om_enable_rabbitmq_stream_fanout: true
+
+# OpenStack authentication string. You should only need to override these if you
+# are changing the admin tenant/project or user.
+openstack_auth:
+  auth_url: "{{ keystone_internal_url }}"
+  username: "{{ keystone_admin_user }}"
+  password: "{{ keystone_admin_password }}"
+  project_name: "{{ keystone_admin_project }}"
+  domain_name: "default"
+  user_domain_name: "default"
+
+####################
+# OpenStack options
+####################
+openstack_release: "master"
+# Docker image tag used by default.
+openstack_tag: "{{ openstack_release }}-{{ kolla_base_distro }}-{{ kolla_base_distro_version }}{{ openstack_tag_suffix }}"
+openstack_tag_suffix: ""
+openstack_logging_debug: "False"
+
+openstack_region_name: "RegionOne"
+
+# A list of policy file formats that are supported by Oslo.policy
+supported_policy_format_list:
+  - policy.yaml
+  - policy.json
+
+# In the context of multi-regions, list here the name of all your regions.
+multiple_regions_names:
+  - "{{ openstack_region_name }}"
+
+openstack_service_workers: "{{ [ansible_facts.processor_vcpus, 5] | min }}"
+openstack_service_rpc_workers: "{{ [ansible_facts.processor_vcpus, 3] | min }}"
+
+# Endpoint type used to connect with OpenStack services with ansible modules.
+# Valid options are [ public, internal ]
+openstack_interface: "internal"
+
+# Openstack CA certificate bundle file
+# CA bundle file must be added to both the Horizon and Kolla Toolbox containers
+openstack_cacert: ""
+
+# Enable core OpenStack services. This includes:
+# glance, keystone, neutron, nova, heat, and horizon.
+enable_openstack_core: "yes"
+
+enable_osprofiler: "no"
+
+####################
+# Osprofiler options
+####################
+# valid values: ["elasticsearch", "redis"]
+osprofiler_backend: "elasticsearch"
+opensearch_connection_string: "elasticsearch://{{ opensearch_address | put_address_in_context('url') }}:{{ opensearch_port }}"
+osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else opensearch_connection_string }}"
+
+######################
+# Backend TLS options
+######################
+kolla_enable_tls_backend: "no"
+kolla_verify_tls_backend: "yes"
+kolla_tls_backend_cert: "{{ kolla_certificates_dir }}/backend-cert.pem"
+kolla_tls_backend_key: "{{ kolla_certificates_dir }}/backend-key.pem"
+
+####################
+# Database options
+####################
+database_address: "{{ kolla_internal_fqdn }}"
+database_user: "root"
+database_port: "3306"
+database_connection_recycle_time: 10
+database_max_pool_size: 1
+database_enable_tls_backend: "{{ 'yes' if ((kolla_enable_tls_backend | bool ) and ( enable_proxysql | bool)) else 'no' }}"
+database_enable_tls_internal: "{{ 'yes' if ((kolla_enable_tls_internal | bool ) and ( enable_proxysql | bool)) else 'no' }}"
+
+# Optionally allow Kolla to set sysctl values
+set_sysctl: "yes"
+
+# Optionally change the path to sysctl.conf modified by Kolla Ansible plays.
+kolla_sysctl_conf_path: /etc/sysctl.conf

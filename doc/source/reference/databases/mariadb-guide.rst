@@ -52,9 +52,9 @@ inventory file in the way described below:
 .. note::
 
    If ``mariadb_shard_id`` is not defined for host in inventory file it will be set automatically
-   to ``mariadb_default_database_shard_id`` (default 0) from ``group_vars/all.yml`` and can be
-   overwritten in ``/etc/kolla/globals.yml``. Shard which is marked as default is special in case
-   of backup or loadbalance, as it is described below.
+   to ``mariadb_default_database_shard_id`` (default 0) from ``group_vars/all/mariadb.yml`` and
+   can be overwritten in ``/etc/kolla/globals.yml``. Shard which is marked as default is
+   special in case of backup or loadbalance, as it is described below.
 
 Loadbalancer
 ------------

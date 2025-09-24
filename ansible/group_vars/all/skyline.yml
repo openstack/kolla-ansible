@@ -1,0 +1,18 @@
+---
+enable_skyline: "no"
+
+skyline_apiserver_internal_fqdn: "{{ kolla_internal_fqdn }}"
+skyline_apiserver_external_fqdn: "{{ kolla_external_fqdn }}"
+skyline_apiserver_internal_endpoint: "{{ skyline_apiserver_internal_fqdn | kolla_url(internal_protocol, skyline_apiserver_port) }}"
+skyline_apiserver_public_endpoint: "{{ skyline_apiserver_external_fqdn | kolla_url(public_protocol, skyline_apiserver_public_port) }}"
+skyline_console_internal_fqdn: "{{ kolla_internal_fqdn }}"
+skyline_console_external_fqdn: "{{ kolla_external_fqdn }}"
+skyline_console_internal_endpoint: "{{ skyline_console_internal_fqdn | kolla_url(internal_protocol, skyline_console_port) }}"
+skyline_console_public_endpoint: "{{ skyline_console_external_fqdn | kolla_url(public_protocol, skyline_console_public_port) }}"
+skyline_apiserver_port: "9998"
+skyline_apiserver_listen_port: "{{ skyline_apiserver_port }}"
+skyline_apiserver_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_apiserver_port }}"
+skyline_console_port: "9999"
+skyline_console_listen_port: "{{ skyline_console_port }}"
+skyline_console_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else skyline_console_port }}"
+skyline_enable_sso: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"

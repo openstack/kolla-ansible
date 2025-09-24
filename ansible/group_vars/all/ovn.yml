@@ -1,0 +1,16 @@
+---
+enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
+enable_ovn_sb_db_relay: "{{ enable_ovn | bool }}"
+
+ovn_nb_db_port: "6641"
+ovn_sb_db_port: "6642"
+# OVN SB Relay related variables
+ovn_sb_db_relay_count: "{{ ((groups['ovn-controller'] | length) / ovn_sb_db_relay_compute_per_relay | int) | round(0, 'ceil') | int }}"
+ovn_sb_db_relay_compute_per_relay: "50"
+ovn_sb_db_relay_port_prefix: "1664"
+ovn_sb_db_relay_port: "{{ ovn_sb_db_relay_port_prefix ~ ovn_sb_db_relay_client_group_id }}"
+ovn_sb_db_relay_client_group_id: "{{ range(1, ovn_sb_db_relay_count | int + 1) | random(seed=inventory_hostname) }}"
+ovn_nb_connection: "{% for host in groups['ovn-nb-db'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_nb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+ovn_sb_connection: "{{ ovn_sb_connection_relay if enable_ovn_sb_db_relay | bool else ovn_sb_connection_no_relay }}"
+ovn_sb_connection_no_relay: "{% for host in groups['ovn-sb-db'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_sb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+ovn_sb_connection_relay: "{% for host in groups['ovn-sb-db-relay'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_sb_db_relay_port }}{% if not loop.last %},{% endif %}{% endfor %}"

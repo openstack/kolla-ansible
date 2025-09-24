@@ -1,0 +1,33 @@
+---
+####################
+# Logging options
+####################
+
+# NOTE: If an external ElasticSearch cluster address is configured, all
+# services with ElasticSearch endpoints should be configured to log
+# to the external cluster by default. This is for backwards compatibility.
+opensearch_address: "{{ elasticsearch_address if elasticsearch_address is defined else kolla_internal_fqdn }}"
+enable_opensearch: "{{ enable_central_logging | bool or enable_osprofiler | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'opensearch') }}"
+enable_opensearch_dashboards: "{{ enable_opensearch | bool }}"
+enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }}"
+
+#######################
+## Opensearch Options
+########################
+opensearch_datadir_volume: "opensearch"
+
+opensearch_internal_endpoint: "{{ opensearch_address | kolla_url(internal_protocol, opensearch_port) }}"
+opensearch_dashboards_internal_fqdn: "{{ kolla_internal_fqdn }}"
+opensearch_dashboards_external_fqdn: "{{ kolla_external_fqdn }}"
+opensearch_dashboards_internal_endpoint: "{{ opensearch_dashboards_internal_fqdn | kolla_url(internal_protocol, opensearch_dashboards_port) }}"
+opensearch_dashboards_external_endpoint: "{{ opensearch_dashboards_external_fqdn | kolla_url(public_protocol, opensearch_dashboards_port_external) }}"
+opensearch_dashboards_user: "opensearch"
+opensearch_log_index_prefix: "{{ kibana_log_prefix if kibana_log_prefix is defined else 'flog' }}"
+
+# NOTE: If an external ElasticSearch cluster port is specified,
+# we default to using that port in services with ElasticSearch
+# endpoints. This is for backwards compatibility.
+opensearch_port: "{{ elasticsearch_port | default('9200') }}"
+opensearch_dashboards_port: "5601"
+opensearch_dashboards_port_external: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else opensearch_dashboards_port }}"
+opensearch_dashboards_listen_port: "{{ opensearch_dashboards_port }}"

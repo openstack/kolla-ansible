@@ -1,0 +1,31 @@
+---
+enable_zun: "no"
+
+# Extra docker options for Zun
+docker_configure_for_zun: "no"
+docker_zun_options: -H tcp://{{ api_interface_address | put_address_in_context('url') }}:2375
+docker_zun_config: {}
+
+# Extra containerd options for Zun
+containerd_configure_for_zun: "no"
+
+# Enable Ceph backed Cinder Volumes for zun
+zun_configure_for_cinder_ceph: "no"
+
+# 42463 is the static group id of the zun user in the Zun image.
+# If users customize this value on building the Zun images,
+# they need to change this config accordingly.
+containerd_grpc_gid: 42463
+
+zun_api_port: "9517"
+zun_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else zun_api_port }}"
+zun_api_listen_port: "{{ zun_api_port }}"
+zun_wsproxy_internal_fqdn: "{{ kolla_internal_fqdn }}"
+zun_wsproxy_external_fqdn: "{{ kolla_external_fqdn }}"
+zun_wsproxy_port: "6784"
+zun_wsproxy_protocol: "{{ 'wss' if kolla_enable_tls_external | bool else 'ws' }}"
+zun_cni_daemon_port: "9036"
+zun_internal_fqdn: "{{ kolla_internal_fqdn }}"
+zun_external_fqdn: "{{ kolla_external_fqdn }}"
+zun_internal_base_endpoint: "{{ zun_internal_fqdn | kolla_url(internal_protocol, zun_api_port) }}"
+zun_public_base_endpoint: "{{ zun_external_fqdn | kolla_url(public_protocol, zun_api_public_port) }}"

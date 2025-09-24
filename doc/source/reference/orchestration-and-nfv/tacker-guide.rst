@@ -30,7 +30,7 @@ Preparation and Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default tacker and required services are disabled in
-the ``group_vars/all.yml`` file.
+the ``group_vars/all/tacker.yml`` file.
 In order to enable them, you need to edit the file
 ``/etc/kolla/globals.yml`` and set the following variables:
 

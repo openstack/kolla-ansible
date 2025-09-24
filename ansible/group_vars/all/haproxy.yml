@@ -1,0 +1,48 @@
+---
+enable_haproxy: "yes"
+
+####################
+# HAProxy options
+####################
+haproxy_user: "openstack"
+haproxy_enable_external_vip: "{{ 'no' if kolla_same_external_internal_vip | bool else 'yes' }}"
+haproxy_enable_http2: "yes"
+haproxy_http2_protocol: "alpn h2,http/1.1"
+kolla_enable_tls_internal: "no"
+kolla_enable_tls_external: "{{ kolla_enable_tls_internal if kolla_same_external_internal_vip | bool else 'no' }}"
+kolla_certificates_dir: "{{ node_config }}/certificates"
+kolla_external_fqdn_cert: "{{ kolla_certificates_dir }}/haproxy.pem"
+kolla_internal_fqdn_cert: "{{ kolla_certificates_dir }}/haproxy-internal.pem"
+kolla_admin_openrc_cacert: ""
+kolla_copy_ca_into_containers: "no"
+haproxy_backend_cacert: "{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.crt' }}"
+haproxy_backend_cacert_dir: "/etc/ssl/certs"
+haproxy_single_external_frontend: false
+haproxy_single_external_frontend_public_port: "{{ '443' if kolla_enable_tls_external | bool else '80' }}"
+
+# configure SSL/TLS settings for haproxy config, one of [modern, intermediate, legacy]:
+kolla_haproxy_ssl_settings: "modern"
+
+haproxy_ssl_settings: "{{ ssl_legacy_settings if kolla_haproxy_ssl_settings == 'legacy' else ssl_intermediate_settings if kolla_haproxy_ssl_settings == 'intermediate' else ssl_modern_settings | default(ssl_modern_settings) }}"
+
+ssl_legacy_settings: |
+    ssl-default-bind-ciphers DEFAULT:!MEDIUM:!3DES
+    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+
+ssl_intermediate_settings: |
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+    ssl-default-server-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
+    ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+
+ssl_modern_settings: |
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+    ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12 no-tls-tickets
+
+haproxy_stats_port: "1984"
+haproxy_monitor_port: "61313"
+haproxy_ssh_port: "2985"

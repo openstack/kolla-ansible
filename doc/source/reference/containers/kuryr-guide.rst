@@ -26,7 +26,8 @@ The IP address is host running the etcd service. ```2375``` is port that
 allows Docker daemon to be accessed remotely. ```2379``` is the etcd listening
 port.
 
-By default etcd and kuryr are disabled in the ``group_vars/all.yml``.
+By default etcd and kuryr are disabled in the ``group_vars/all/etcd.yml`` and
+``group_vars/all/kuryr.yml`` files.
 In order to enable them, you need to edit the file globals.yml and set the
 following variables
 

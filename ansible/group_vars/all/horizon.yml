@@ -1,0 +1,49 @@
+---
+enable_horizon: "{{ enable_openstack_core | bool }}"
+enable_horizon_blazar: "{{ enable_blazar | bool }}"
+enable_horizon_cloudkitty: "{{ enable_cloudkitty | bool }}"
+enable_horizon_designate: "{{ enable_designate | bool }}"
+enable_horizon_fwaas: "{{ enable_neutron_fwaas | bool }}"
+enable_horizon_heat: "{{ enable_heat | bool }}"
+enable_horizon_ironic: "{{ enable_ironic | bool }}"
+enable_horizon_magnum: "{{ enable_magnum | bool }}"
+enable_horizon_manila: "{{ enable_manila | bool }}"
+enable_horizon_masakari: "{{ enable_masakari | bool }}"
+enable_horizon_mistral: "{{ enable_mistral | bool }}"
+enable_horizon_neutron_vpnaas: "{{ enable_neutron_vpnaas | bool }}"
+enable_horizon_octavia: "{{ enable_octavia | bool }}"
+enable_horizon_tacker: "{{ enable_tacker | bool }}"
+enable_horizon_trove: "{{ enable_trove | bool }}"
+enable_horizon_venus: "{{ enable_venus | bool }}"
+enable_horizon_watcher: "{{ enable_watcher | bool }}"
+enable_horizon_zun: "{{ enable_zun | bool }}"
+
+#######################
+# Horizon options
+#######################
+horizon_backend_database: false
+horizon_keystone_multidomain: false
+
+# Enable deploying custom horizon policy files for services that don't have a
+# horizon plugin but have a policy file. Override these when you have services
+# not deployed by kolla-ansible but want custom policy files deployed for them
+# in horizon.
+enable_ceilometer_horizon_policy_file: "{{ enable_ceilometer }}"
+enable_cinder_horizon_policy_file: "{{ enable_cinder }}"
+enable_glance_horizon_policy_file: "{{ enable_glance }}"
+enable_heat_horizon_policy_file: "{{ enable_heat }}"
+enable_keystone_horizon_policy_file: "{{ enable_keystone }}"
+enable_neutron_horizon_policy_file: "{{ enable_neutron }}"
+enable_nova_horizon_policy_file: "{{ enable_nova }}"
+
+# TLS
+horizon_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+# Ports
+horizon_internal_fqdn: "{{ kolla_internal_fqdn }}"
+horizon_external_fqdn: "{{ kolla_external_fqdn }}"
+horizon_internal_endpoint: "{{ kolla_internal_fqdn | kolla_url(internal_protocol, horizon_tls_port if kolla_enable_tls_internal | bool else horizon_port) }}"
+horizon_public_endpoint: "{{ kolla_external_fqdn | kolla_url(public_protocol, horizon_tls_port if kolla_enable_tls_external | bool else horizon_port) }}"
+horizon_port: "80"
+horizon_tls_port: "443"
+horizon_listen_port: "{{ horizon_tls_port if horizon_enable_tls_backend | bool else horizon_port }}"

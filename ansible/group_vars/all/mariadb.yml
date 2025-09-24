@@ -1,0 +1,37 @@
+---
+enable_mariadb: "yes"
+enable_mariabackup: "no"
+
+#############################################
+# MariaDB component-specific database details
+#############################################
+# Whether to configure haproxy to load balance
+# the external MariaDB server(s)
+enable_external_mariadb_load_balancer: "no"
+# Whether to use pre-configured databases / users
+use_preconfigured_databases: "no"
+# whether to use a common, preconfigured user
+# for all component databases
+use_common_mariadb_user: "no"
+
+mariadb_port: "{{ database_port }}"
+mariadb_wsrep_port: "4567"
+mariadb_ist_port: "4568"
+mariadb_sst_port: "4444"
+mariadb_clustercheck_port: "4569"
+mariadb_enable_tls_backend: "{{ database_enable_tls_backend }}"
+
+mariadb_monitor_user: "{{ 'monitor' if enable_proxysql | bool else 'haproxy' }}"
+
+mariadb_datadir_volume: "mariadb"
+
+mariadb_default_database_shard_id: 0
+mariadb_default_database_shard_hosts: "{% set default_shard = [] %}{% for host in groups['mariadb'] %}{% if hostvars[host]['mariadb_shard_id'] is not defined or hostvars[host]['mariadb_shard_id'] == mariadb_default_database_shard_id %}{{ default_shard.append(host) }}{% endif %}{% endfor %}{{ default_shard }}"
+mariadb_shard_id: "{{ mariadb_default_database_shard_id }}"
+mariadb_shard_name: "shard_{{ mariadb_shard_id }}"
+mariadb_shard_group: "mariadb_{{ mariadb_shard_name }}"
+mariadb_loadbalancer: "{{ 'proxysql' if enable_proxysql | bool else 'haproxy' }}"
+mariadb_backup_target: "{{ 'active' if mariadb_loadbalancer == 'haproxy' else 'replica' }}"
+mariadb_shard_root_user_prefix: "root_shard_"
+mariadb_shard_backup_user_prefix: "backup_shard_"
+mariadb_shards_info: "{{ groups['mariadb'] | database_shards_info() }}"

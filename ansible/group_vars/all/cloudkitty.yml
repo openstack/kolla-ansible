@@ -1,0 +1,20 @@
+---
+enable_cloudkitty: "no"
+
+#######################
+# Cloudkitty options
+#######################
+# Valid options are 'sqlalchemy' or 'influxdb'. The default value is
+# 'influxdb', which matches the default in Cloudkitty since the Stein release.
+# When the backend is "influxdb", we also enable Influxdb.
+# Also, when using 'influxdb' as the backend, we trigger the configuration/use
+# of Cloudkitty storage backend version 2.
+cloudkitty_storage_backend: "influxdb"
+
+cloudkitty_internal_fqdn: "{{ kolla_internal_fqdn }}"
+cloudkitty_external_fqdn: "{{ kolla_external_fqdn }}"
+cloudkitty_internal_endpoint: "{{ cloudkitty_internal_fqdn | kolla_url(internal_protocol, cloudkitty_api_port) }}"
+cloudkitty_public_endpoint: "{{ cloudkitty_external_fqdn | kolla_url(public_protocol, cloudkitty_api_public_port) }}"
+cloudkitty_api_port: "8889"
+cloudkitty_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else cloudkitty_api_port }}"
+cloudkitty_api_listen_port: "{{ cloudkitty_api_port }}"

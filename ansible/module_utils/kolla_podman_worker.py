@@ -220,7 +220,7 @@ class PodmanWorker(ContainerWorker):
             # NOTE(m.hiner): default ulimits have to be filtered out because
             # Podman would treat them as new ulimits and break the container
             # as a result. Names are a copy of
-            # default_podman_dimensions_el9 in /ansible/group_vars/all.yml
+            # default_podman_dimensions_el9 in group_vars
             for name in ['RLIMIT_NOFILE', 'RLIMIT_NPROC']:
                 ulimits.pop(name, None)
 

@@ -1,0 +1,11 @@
+---
+enable_redis: "no"
+
+####################
+# Redis options
+####################
+redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}default:{{ redis_master_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}{{ redis_connection_string_extras }}"
+redis_connection_string_extras: "&db=0&socket_timeout=60&retry_on_timeout=yes"
+
+redis_port: "6379"
+redis_sentinel_port: "26379"

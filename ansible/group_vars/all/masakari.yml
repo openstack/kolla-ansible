@@ -1,0 +1,13 @@
+---
+enable_masakari: "no"
+enable_masakari_instancemonitor: "{{ enable_masakari | bool }}"
+enable_masakari_hostmonitor: "{{ enable_masakari | bool }}"
+
+masakari_internal_fqdn: "{{ kolla_internal_fqdn }}"
+masakari_external_fqdn: "{{ kolla_external_fqdn }}"
+masakari_internal_endpoint: "{{ masakari_internal_fqdn | kolla_url(internal_protocol, masakari_api_port) }}"
+masakari_public_endpoint: "{{ masakari_external_fqdn | kolla_url(public_protocol, masakari_api_public_port) }}"
+masakari_api_port: "15868"
+masakari_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else masakari_api_port }}"
+masakari_api_listen_port: "{{ masakari_api_port }}"
+masakari_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"

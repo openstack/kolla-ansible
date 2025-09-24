@@ -1,0 +1,28 @@
+---
+enable_glance: "{{ enable_openstack_core | bool }}"
+
+glance_keystone_user: "glance"
+
+#######################
+# Glance options
+#######################
+glance_backend_file: "{{ not (glance_backend_ceph | bool or glance_backend_s3 | bool) }}"
+glance_backend_ceph: "no"
+glance_backend_s3: "no"
+enable_glance_image_cache: "no"
+glance_file_datadir_volume: "glance"
+glance_enable_rolling_upgrade: "no"
+glance_enable_property_protection: "no"
+glance_enable_interoperable_image_import: "no"
+glance_api_hosts: "{{ [groups['glance-api'] | first] if glance_backend_file | bool and glance_file_datadir_volume == 'glance' else groups['glance-api'] }}"
+# NOTE(mnasiadka): For use in common role
+glance_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
+
+glance_internal_fqdn: "{{ kolla_internal_fqdn }}"
+glance_external_fqdn: "{{ kolla_external_fqdn }}"
+glance_internal_endpoint: "{{ glance_internal_fqdn | kolla_url(internal_protocol, glance_api_port) }}"
+glance_public_endpoint: "{{ glance_external_fqdn | kolla_url(public_protocol, glance_api_public_port) }}"
+glance_api_port: "9292"
+glance_api_listen_port: "{{ glance_api_port }}"
+glance_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else glance_api_port }}"
+glance_tls_proxy_stats_port: "9293"
