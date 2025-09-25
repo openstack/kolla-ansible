@@ -69,7 +69,6 @@
       - "neutron-eswitchd"
       - "neutron-infoblox-ipam-agent"
       - "neutron-l3-agent"
-      - "neutron-linuxbridge-agent"
       - "neutron-metadata-agent"
       - "neutron-metering-agent"
       - "neutron-mlnx-agent"
@@ -143,20 +142,6 @@
   when:
     - item.key in services_need_ml2_conf_ini
   with_dict: "{{ neutron_services | select_services_enabled_and_mapped_to_host }}"
-
-- name: Copying over linuxbridge_agent.ini
-  become: true
-  vars:
-    service_name: "neutron-linuxbridge-agent"
-    service: "{{ neutron_services[service_name] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/linuxbridge_agent.ini.j2"
-      - "{{ node_custom_config }}/neutron/linuxbridge_agent.ini"
-      - "{{ node_custom_config }}/neutron/{{ inventory_hostname }}/linuxbridge_agent.ini"
-    dest: "{{ node_config_directory }}/{{ service_name }}/linuxbridge_agent.ini"
-    mode: "0660"
-  when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over openvswitch_agent.ini
   become: true
@@ -372,7 +357,6 @@
   vars:
     service_name: "{{ item.0 }}"
     services_need_ml2_conf_ini:
-      - "neutron-linuxbridge-agent"
       - "neutron-openvswitch-agent"
       - "neutron-server"
   template:

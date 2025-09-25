@@ -91,22 +91,6 @@
     healthcheck: "{{ service.healthcheck | default(omit) }}"
   with_sequence: "start=1 end={{ num_nova_fake_per_node }}"
 
-- name: Restart neutron-linuxbridge-agent container
-  vars:
-    service_name: "neutron-linuxbridge-agent"
-    service: "{{ neutron_services[service_name] }}"
-  become: true
-  kolla_container:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    name: "{{ service.container_name }}"
-    image: "{{ service.image }}"
-    environment: "{{ service.environment | default(omit) }}"
-    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
-    dimensions: "{{ service.dimensions }}"
-    privileged: "{{ service.privileged | default(False) }}"
-    healthcheck: "{{ service.healthcheck | default(omit) }}"
-
 - name: Restart neutron-dhcp-agent container
   vars:
     service_name: "neutron-dhcp-agent"
