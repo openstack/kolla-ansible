@@ -51,24 +51,6 @@ neutron_services:
     volumes: "{{ neutron_openvswitch_agent_default_volumes + neutron_openvswitch_agent_extra_volumes }}"
     dimensions: "{{ neutron_openvswitch_agent_dimensions }}"
     healthcheck: "{{ neutron_openvswitch_agent_healthcheck }}"
-  neutron-linuxbridge-agent:
-    container_name: "neutron_linuxbridge_agent"
-    image: "{{ neutron_linuxbridge_agent_image_full }}"
-    privileged: True
-    enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
-    environment:
-      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
-    host_in_groups: >-
-      {{
-      inventory_hostname in groups['compute']
-      or (enable_manila | bool and inventory_hostname in groups['manila-share'])
-      or inventory_hostname in groups['neutron-dhcp-agent']
-      or inventory_hostname in groups['neutron-l3-agent']
-      or inventory_hostname in groups['neutron-metadata-agent']
-      }}
-    volumes: "{{ neutron_linuxbridge_agent_default_volumes + neutron_linuxbridge_agent_extra_volumes }}"
-    dimensions: "{{ neutron_linuxbridge_agent_dimensions }}"
-    healthcheck: "{{ neutron_linuxbridge_agent_healthcheck }}"
   neutron-dhcp-agent:
     cgroupns_mode: "{{ 'host' if neutron_agents_wrappers | bool else 'private' }}"
     container_name: "neutron_dhcp_agent"
@@ -249,8 +231,6 @@ neutron_config_validation:
     config: "/etc/neutron/l3_agent.ini"
   - generator: "/neutron/etc/oslo-config-generator/dhcp_agent.ini"
     config: "/etc/neutron/dhcp_agent.ini"
-  - generator: "/neutron/etc/oslo-config-generator/linuxbridge_agent.ini"
-    config: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini"
 
 ####################
 # Database
@@ -299,10 +279,6 @@ neutron_eswitchd_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{
 neutron_eswitchd_tag: "{{ neutron_mlnx_agent_tag }}"
 neutron_eswitchd_image_full: "{{ neutron_eswitchd_image }}:{{ neutron_eswitchd_tag }}"
 
-neutron_linuxbridge_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}neutron-linuxbridge-agent"
-neutron_linuxbridge_agent_tag: "{{ neutron_tag }}"
-neutron_linuxbridge_agent_image_full: "{{ neutron_linuxbridge_agent_image }}:{{ neutron_linuxbridge_agent_tag }}"
-
 neutron_metadata_agent_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}neutron-metadata-agent"
 neutron_metadata_agent_tag: "{{ neutron_tag }}"
 neutron_metadata_agent_image_full: "{{ neutron_metadata_agent_image }}:{{ neutron_metadata_agent_tag }}"
@@ -350,7 +326,6 @@ neutron_l3_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_sriov_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_mlnx_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_eswitchd_dimensions: "{{ neutron_agent_dimensions }}"
-neutron_linuxbridge_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_ovn_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_openvswitch_agent_dimensions: "{{ neutron_agent_dimensions }}"
@@ -387,19 +362,6 @@ neutron_l3_agent_healthcheck:
   start_period: "{{ neutron_l3_agent_healthcheck_start_period }}"
   test: "{% if neutron_l3_agent_enable_healthchecks | bool %}{{ neutron_l3_agent_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_l3_agent_healthcheck_timeout }}"
-
-neutron_linuxbridge_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
-neutron_linuxbridge_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
-neutron_linuxbridge_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
-neutron_linuxbridge_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_linuxbridge_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-linuxbridge-agent {{ om_rpc_port }}"]
-neutron_linuxbridge_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
-neutron_linuxbridge_agent_healthcheck:
-  interval: "{{ neutron_linuxbridge_agent_healthcheck_interval }}"
-  retries: "{{ neutron_linuxbridge_agent_healthcheck_retries }}"
-  start_period: "{{ neutron_linuxbridge_agent_healthcheck_start_period }}"
-  test: "{% if neutron_linuxbridge_agent_enable_healthchecks | bool %}{{ neutron_linuxbridge_agent_healthcheck_test }}{% else %}NONE{% endif %}"
-  timeout: "{{ neutron_linuxbridge_agent_healthcheck_timeout }}"
 
 neutron_metadata_agent_enable_healthchecks: "no"
 neutron_metadata_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -565,14 +527,6 @@ neutron_eswitchd_default_volumes:
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
   - "{{ kolla_dev_repos_directory ~ '/neutron:/dev-mode/neutron' if neutron_dev_mode | bool else '' }}"
-neutron_linuxbridge_agent_default_volumes:
-  - "{{ node_config_directory }}/neutron-linuxbridge-agent/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "/lib/modules:/lib/modules:ro"
-  - "kolla_logs:/var/log/kolla/"
-  - "{{ '/dev/shm:/dev/shm' }}"
-  - "{{ kolla_dev_repos_directory ~ '/neutron:/dev-mode/neutron' if neutron_dev_mode | bool else '' }}"
 neutron_metadata_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-metadata-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -650,7 +604,6 @@ neutron_l3_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_sriov_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_mlnx_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_eswitchd_extra_volumes: "{{ neutron_extra_volumes }}"
-neutron_linuxbridge_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_ovn_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_openvswitch_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -713,8 +666,6 @@ neutron_subprojects:
 # Mechanism drivers
 ####################
 mechanism_drivers:
-  - name: "linuxbridge"
-    enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
   - name: "openvswitch"
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
   - name: "mlnx_infiniband"
