@@ -1,2 +1,13 @@
 ---
 - import_tasks: deploy.yml
+
+# TODO(seunghun1ee): Remove this task after 2026.1
+- name: "Stop and remove mariadb_clustercheck containers"
+  become: true
+  kolla_container:
+    action: "stop_and_remove_container"
+    common_options: "{{ docker_common_options }}"
+    name: "mariadb_clustercheck"
+    ignore_missing: true
+  when:
+    - "'mariadb_clustercheck' not in skip_stop_containers"

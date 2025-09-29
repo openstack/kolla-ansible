@@ -70,6 +70,22 @@
   become: true
   when: service | service_enabled_and_mapped_to_host
 
+- name: Copying over healthcheck.cnf
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/healthcheck.cnf.j2"
+      - "{{ node_custom_config }}/healthcheck.cnf"
+      - "{{ node_custom_config }}/mariadb/{{ inventory_hostname }}/healthcheck.cnf"
+    dest: "{{ node_config_directory }}/{{ service_name }}/healthcheck.cnf"
+    mode: "0660"
+  become: true
+  when:
+    - mariadb_enable_healthchecks | bool
+    - service | service_enabled_and_mapped_to_host
+
 - include_tasks: copy-certs.yml
   when:
     - mariadb_copy_certs | bool
