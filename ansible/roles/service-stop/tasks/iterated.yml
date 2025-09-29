@@ -1,0 +1,14 @@
+---
+- name: "Stopping containers (iterated) for {{ service_name }}"
+  become: true
+  vars:
+    service: "{{ outer_item.value }}"
+    service_name: "{{ outer_item.key }}"
+  kolla_container:
+    action: "stop_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}_{{ item }}"
+    ignore_missing: "{{ kolla_action_stop_ignore_missing | bool }}"
+  when:
+    - service.container_name not in skip_stop_containers
+  loop: "{{ range(1, (service.iterate_var | int) + 1) | list }}"
