@@ -1,6 +1,47 @@
 ---
 - job:
-    name: kolla-ansible-variables
+    name: kolla-ansible-base
+    pre-run: tests/pre.yml
+    run: tests/run.yml
+    post-run: tests/post.yml
+    timeout: 9000
+    post-timeout: 1800
+    required-projects:
+      - openstack/ansible-collection-kolla
+      - openstack/kolla
+      - openstack/kolla-ansible
+      - openstack/requirements
+    files:
+      - ^ansible/group_vars/all/common.yml
+      - ^requirements-core.yml
+      - ^tests/check-(config|failure|logs).sh
+      - ^tests/get_logs.sh
+      - ^tests/init-core-openstack.sh
+      - ^tests/(run|pre|post).yml
+      - ^tests/setup_gate.sh
+      - ^tests/templates/(inventory|globals-default).j2
+      - ^tests/test-(core-openstack|dashboard|proxysql).sh
+      - ^tests/upgrade.sh
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^bindep.txt$
+      - ^doc/.*
+      - ^releasenotes/.*$
+      - ^deploy-guide/.*$
+      - ^test-requirements.txt$
+      - ^lint-requirements.txt$
+      - ^etc/kolla/globals.yml$
+      - ^tox.ini$
+      - ^\..+
+      - ^LICENSE$
+      - ^contrib/
+      - ^specs/
+      - ^kolla_ansible/tests/
+      - ^tools/validate-.*$
+      - ^zuul.d/
+    roles:
+      - zuul: zuul/zuul-jobs
+      - zuul: openstack/kolla
     vars:
       address_family: 'ipv4'
       # Test latest ansible-core version on Ubuntu, minimum supported on others.
@@ -53,48 +94,3 @@
         - ^rabbitmq
       tls_enabled: true
       virt_type: qemu
-
-- job:
-    parent: kolla-ansible-variables
-    name: kolla-ansible-base
-    pre-run: tests/pre.yml
-    run: tests/run.yml
-    post-run: tests/post.yml
-    timeout: 9000
-    post-timeout: 1800
-    required-projects:
-      - openstack/ansible-collection-kolla
-      - openstack/kolla
-      - openstack/kolla-ansible
-      - openstack/requirements
-    irrelevant-files:
-      - ^.*\.rst$
-      - ^bindep.txt$
-      - ^doc/.*
-      - ^releasenotes/.*$
-      - ^deploy-guide/.*$
-      - ^test-requirements.txt$
-      - ^lint-requirements.txt$
-      - ^etc/kolla/globals.yml$
-      - ^tox.ini$
-      - ^\..+
-      - ^LICENSE$
-      - ^contrib/
-      - ^specs/
-      - ^kolla_ansible/tests/
-      - ^tools/validate-.*$
-    roles:
-      - zuul: zuul/zuul-jobs
-      - zuul: openstack/kolla
-
-- job:
-    parent: kolla-ansible-base
-    name: kolla-ansible-scenario-base
-    files:
-      - ^ansible/group_vars/all/(baremetal|common|fluentd|glance|heat|horizon|keepalived|keystone|loadbalancer|neutron|nova|openvswitch|placement|proxysql|rabbitmq).yml
-      - ^ansible/roles/common/
-      - ^requirements-core.yml
-      - ^tests/check-logs.sh
-      - ^tests/get_logs.sh
-      - ^tests/(pre|run).yml
-      - ^tests/templates/(inventory|globals-default.j2)

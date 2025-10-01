@@ -1,7 +1,15 @@
 ---
 - job:
-    name: kolla-ansible-centos-10s
     parent: kolla-ansible-base
+    name: kolla-ansible-aio-base
+    files: !inherit
+      - ^ansible/group_vars/all/(common|fluentd|glance|haproxy|heat|horizon|keepalived|keystone|loadbalancer|neutron|nova|openvswitch|placement|proxysql|rabbitmq).yml
+      - ^ansible/group_vars/baremetal/ansible-python-interpreter.yml
+      - ^ansible/roles/(common|fluentd|glance|haproxy-config|heat|horizon|keystone|loadbalancer|loadbalancer-config|neutron|nova|openvswitch|placement|proxysql|rabbitmq)/
+
+- job:
+    name: kolla-ansible-centos-10s
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-centos-10s-8GB
     voting: false
     vars:
@@ -14,7 +22,7 @@
 
 - job:
     name: kolla-ansible-debian-bookworm
-    parent: kolla-ansible-base
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-debian-bookworm-16GB
 
 - job:
@@ -45,7 +53,7 @@
 
 - job:
     name: kolla-ansible-debian-bookworm-upgrade
-    parent: kolla-ansible-base
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-debian-bookworm-16GB
     timeout: 10800
 
@@ -63,7 +71,7 @@
 
 - job:
     name: kolla-ansible-ubuntu-noble
-    parent: kolla-ansible-base
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-ubuntu-noble-16GB
 
 - job:
@@ -75,13 +83,13 @@
 
 - job:
     name: kolla-ansible-ubuntu-noble-upgrade
-    parent: kolla-ansible-base
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-ubuntu-noble-16GB
     timeout: 10800
 
 - job:
     name: kolla-ansible-ubuntu-noble-upgrade-slurp
-    parent: kolla-ansible-base
+    parent: kolla-ansible-aio-base
     nodeset: kolla-ansible-ubuntu-noble-16GB
     timeout: 9000
 
