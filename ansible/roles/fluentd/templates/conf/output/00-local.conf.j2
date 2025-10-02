@@ -51,7 +51,7 @@
 {% elif log_direct_to_opensearch %}
   <store>
        @type opensearch
-       host {{ opensearch_address }}
+       hosts {% for host in groups['opensearch'] %}{{ 'api' | kolla_address(host) }}{% if not loop.last %},{% endif %}{% endfor %}
        port {{ opensearch_port }}
        scheme {{ fluentd_opensearch_scheme }}
 {% if fluentd_opensearch_path != '' %}
