@@ -87,7 +87,6 @@
 - name: Apply role common
   gather_facts: false
   hosts:
-    - cron
     - kolla-logs
     - kolla-toolbox
   serial: '{{ kolla_serial|default("0") }}'
@@ -99,6 +98,20 @@
     - common
   roles:
     - role: common
+
+- name: Apply role cron
+  gather_facts: false
+  hosts:
+    - cron
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ cron_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - cron
+  roles:
+    - role: cron
 
 - name: Apply role fluentd
   gather_facts: false

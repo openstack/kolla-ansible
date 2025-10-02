@@ -42,10 +42,10 @@ which Kolla uses throughout and which should be followed.
 * Log rotation
 
   - For OpenStack services there should be a ``cron-logrotate-PROJECT.conf.j2``
-    template file in ``ansible/roles/common/templates`` with the following
+    template file in ``ansible/roles/cron/templates`` with the following
     content:
 
-    .. path ansible/roles/common/templates/cron-logrotate-PROJECT.conf.j2
+    .. path ansible/roles/cron/templates/cron-logrotate-PROJECT.conf.j2
     .. code-block:: console
 
        "/var/log/kolla/PROJECT/*.log"
@@ -53,7 +53,7 @@ which Kolla uses throughout and which should be followed.
        }
 
   - For OpenStack services there should be an entry in the ``services`` list
-    in the ``cron.json.j2`` template file in ``ansible/roles/common/templates``.
+    in the ``cron.json.j2`` template file in ``ansible/roles/cron/templates``.
 
 * Log delivery
 

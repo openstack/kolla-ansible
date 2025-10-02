@@ -1,0 +1,101 @@
+---
+- name: Ensuring config directories exist
+  vars:
+    service_name: "{{ 'cron' }}"
+    service: "{{ cron_services[service_name] }}"
+  file:
+    path: "{{ node_config_directory }}/{{ service_name }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  when: service | service_enabled_and_mapped_to_host
+
+- include_tasks: copy-certs.yml
+  when:
+    - cron_copy_certs | bool
+
+- name: Copying over config.json files for services
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  with_dict: "{{ cron_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over cron logrotate config file
+  vars:
+    cron_logrotate_enabled_services: >-
+      {{ cron_logrotate_services |
+         selectattr('enabled') |
+         map(attribute='name') |
+         list }}
+    cron_logrotate_services:
+      - { name: "ansible", enabled: "yes" }
+      - { name: "aodh", enabled: "{{ enable_aodh | bool }}" }
+      - { name: "barbican", enabled: "{{ enable_barbican | bool }}" }
+      - { name: "blazar", enabled: "{{ enable_blazar | bool }}" }
+      - { name: "ceilometer", enabled: "{{ enable_ceilometer | bool }}" }
+      - { name: "cinder", enabled: "{{ enable_cinder | bool }}" }
+      - { name: "cloudkitty", enabled: "{{ enable_cloudkitty | bool }}" }
+      - { name: "collectd", enabled: "{{ enable_collectd | bool }}" }
+      - { name: "cyborg", enabled: "{{ enable_cyborg | bool }}" }
+      - { name: "designate", enabled: "{{ enable_designate | bool }}" }
+      - { name: "etcd", enabled: "{{ enable_etcd | bool }}" }
+      - { name: "fluentd", enabled: "{{ enable_fluentd | bool }}" }
+      - { name: "glance", enabled: "{{ enable_glance | bool }}" }
+      - { name: "glance-tls-proxy", enabled: "{{ glance_enable_tls_backend | bool }}" }
+      - { name: "gnocchi", enabled: "{{ enable_gnocchi | bool }}" }
+      - { name: "grafana", enabled: "{{ enable_grafana | bool }}" }
+      - { name: "hacluster", enabled: "{{ enable_hacluster | bool }}" }
+      - { name: "haproxy", enabled: "{{ enable_haproxy | bool }}" }
+      - { name: "heat", enabled: "{{ enable_heat | bool }}" }
+      - { name: "horizon", enabled: "{{ enable_horizon | bool }}" }
+      - { name: "influxdb", enabled: "{{ enable_influxdb | bool }}" }
+      - { name: "ironic", enabled: "{{ enable_ironic | bool }}" }
+      - { name: "keystone", enabled: "{{ enable_keystone | bool }}" }
+      - { name: "kuryr", enabled: "{{ enable_kuryr | bool }}" }
+      - { name: "magnum", enabled: "{{ enable_magnum | bool }}" }
+      - { name: "manila", enabled: "{{ enable_manila | bool }}" }
+      - { name: "mariadb", enabled: "{{ enable_mariadb | bool }}" }
+      - { name: "masakari", enabled: "{{ enable_masakari | bool }}" }
+      - { name: "mistral", enabled: "{{ enable_mistral | bool }}" }
+      - { name: "neutron", enabled: "{{ enable_neutron | bool }}" }
+      - { name: "nova", enabled: "{{ enable_nova | bool }}" }
+      - { name: "nova-libvirt", enabled: "{{ enable_nova | bool and enable_nova_libvirt_container | bool }}" }
+      - { name: "octavia", enabled: "{{ enable_octavia | bool }}" }
+      - { name: "opensearch", enabled: "{{ enable_opensearch | bool or enable_opensearch_dashboards | bool }}" }
+      - { name: "openvswitch", enabled: "{{ enable_openvswitch | bool }}" }
+      - { name: "placement", enabled: "{{ enable_placement | bool }}" }
+      - { name: "prometheus", enabled: "{{ enable_prometheus | bool }}" }
+      - { name: "proxysql", enabled: "{{ enable_proxysql | bool }}" }
+      - { name: "rabbitmq", enabled: "{{ enable_rabbitmq | bool }}" }
+      - { name: "redis", enabled: "{{ enable_redis | bool }}" }
+      - { name: "skyline", enabled: "{{ enable_skyline | bool }}" }
+      - { name: "tacker", enabled: "{{ enable_tacker | bool }}" }
+      - { name: "trove", enabled: "{{ enable_trove | bool }}" }
+      - { name: "venus", enabled: "{{ enable_venus | bool }}" }
+      - { name: "watcher", enabled: "{{ enable_watcher | bool }}" }
+      - { name: "zun", enabled: "{{ enable_zun | bool }}" }
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/cron/logrotate.conf"
+    mode: "0660"
+  become: true
+  when:
+    - cron_services.cron | service_enabled_and_mapped_to_host
+  with_first_found:
+    - "{{ node_custom_config }}/cron/{{ inventory_hostname }}/cron-logrotate-global.conf"
+    - "{{ node_custom_config }}/cron/cron-logrotate-global.conf"
+    - "cron-logrotate-global.conf.j2"
+
+- name: Ensuring config directories have correct owner and permission
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  ignore_errors: "{{ ansible_check_mode }}"
+  with_dict: "{{ cron_services | select_services_enabled_and_mapped_to_host }}"
