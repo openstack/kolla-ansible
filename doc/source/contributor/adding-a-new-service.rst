@@ -59,8 +59,8 @@ which Kolla uses throughout and which should be followed.
 
   - For OpenStack services the service should add a new ``rewriterule`` in the
     ``match`` element in the ``01-rewrite.conf.j2`` template file in
-    ``ansible/roles/common/templates/conf/filter`` to deliver log messages to
-    Elasticsearch.
+    ``ansible/roles/fluentd/templates/conf/filter`` to deliver log messages to
+    Opensearch.
 
 * Documentation
 
