@@ -9,13 +9,13 @@ Kolla Ansible supports the following host Operating Systems (OS):
 
 .. note::
 
-   CentOS Stream 9 is supported as a host OS while Kolla does not publish CS9
+   CentOS Stream 10 is supported as a host OS while Kolla does not publish CS10
    based images. Users can build them on their own. We recommend using Rocky
-   Linux 9 images instead.
+   Linux 10 images instead.
 
-* CentOS Stream 9
+* CentOS Stream 10
 * Debian Bookworm (12)
-* Rocky Linux 9
+* Rocky Linux 10
 * Ubuntu Noble (24.04)
 
 Supported container images
