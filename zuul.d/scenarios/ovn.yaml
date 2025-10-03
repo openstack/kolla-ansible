@@ -2,7 +2,6 @@
 - job:
     name: kolla-ansible-ovn-base
     parent: kolla-ansible-base
-    voting: false
     files: !inherit
       - ^ansible/group_vars/all/(neutron|octavia|openvswitch|ovn).yml
       - ^ansible/roles/(neutron|octavia|openvswitch|ovn-controller|ovn-db)/
@@ -18,6 +17,8 @@
     name: kolla-ansible-debian-bookworm-ovn
     parent: kolla-ansible-ovn-base
     nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    # NOTE(mnasiadka): Often cirros boot is crashing on cannot open root device
+    voting: false
 
 - job:
     name: kolla-ansible-debian-bookworm-ovn-upgrade
@@ -44,5 +45,9 @@
       jobs:
         - kolla-ansible-debian-bookworm-ovn
         - kolla-ansible-debian-bookworm-ovn-upgrade
+        - kolla-ansible-ubuntu-noble-ovn
+        - kolla-ansible-ubuntu-noble-ovn-upgrade
+    gate:
+      jobs:
         - kolla-ansible-ubuntu-noble-ovn
         - kolla-ansible-ubuntu-noble-ovn-upgrade
