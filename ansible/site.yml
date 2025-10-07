@@ -83,10 +83,23 @@
   roles:
     - role: prechecks
 
+- name: Apply role logs
+  gather_facts: false
+  hosts: kolla_logs
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ logs_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  tags:
+    - common
+    - logs
+  roles:
+    - logs
+
 - name: Apply role common
   gather_facts: false
   hosts:
-    - kolla-logs
     - kolla-toolbox
   serial: '{{ kolla_serial|default("0") }}'
   max_fail_percentage: >-
