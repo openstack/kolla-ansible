@@ -20,10 +20,10 @@ from traceback import format_exc
 DOCUMENTATION = '''
 ---
 module: kolla_container_facts
-short_description: Module for collecting Docker container facts
+short_description: Module for collecting container facts
 description:
-  - A module targeting at collecting Docker container facts. It is used for
-    detecting whether the container is running on host in Kolla.
+  - A module targeted at collecting container facts. It is used for
+    retrieving data about containers like their environment or state.
 options:
   container_engine:
     description:
@@ -32,7 +32,7 @@ options:
     type: str
   api_version:
     description:
-      - The version of the api for docker-py to use when contacting docker
+      - The version of the API for container SDK to use
     required: False
     type: str
     default: auto
@@ -44,18 +44,45 @@ options:
   action:
     description:
       - The action to perform
+      - The action "get_containers" only returns running containers, unless
+        argument get_all_containers is True
     required: True
     type: str
-author: Jeffrey Zhang, Michal Nasiadka, Ivan Halomi
+    choices:
+      - get_containers
+      - get_container_env
+      - get_container_state
+  args:
+    description:
+      - Additional arguments for actions
+    required: False
+    type: dict
+    elements: dict
+    suboptions:
+      get_all_containers:
+        description:
+          - Get all containers, even stopped containers when
+            performing action "get_containers"
+        type: bool
+        required: False
+        default: False
+author: Jeffrey Zhang, Michal Nasiadka, Roman Krček, Ivan Halomi
 '''
 
 EXAMPLES = '''
 - hosts: all
   tasks:
-    - name: Gather docker facts
+    - name: Gather docker facts for running containers
       kolla_container_facts:
         container_engine: docker
-      action: get_containers
+        action: get_containers
+
+    - name: Gather docker facts for all containers
+      kolla_container_facts:
+        container_engine: docker
+        action: get_containers
+        args:
+          get_all_containers: true
 
     - name: Gather glance container facts
       kolla_container_facts:
@@ -136,9 +163,11 @@ class ContainerFactsWorker():
     def get_containers(self):
         """Handle when module is called with action get_containers"""
         names = self.params.get('name')
+        args = self.params.get('args', {})
+        get_all_containers = args.get('get_all_containers', False)
         self.result['containers'] = dict()
 
-        containers = self.client.containers.list()
+        containers = self.client.containers.list(all=get_all_containers)
         for container in containers:
             container.reload()
             container_name = container.name
@@ -226,9 +255,19 @@ def main():
         action=dict(required=True, type='str',
                     choices=['get_containers',
                              'get_containers_env',
-                             'get_containers_state',
+                             'get_volumes',
                              'get_containers_names',
-                             'get_volumes']),
+                             'get_containers_state']),
+        args=dict(
+            type='dict',
+            required=False,
+            default={},
+            options=dict(
+                get_all_containers=dict(required=False,
+                                        type='bool',
+                                        default=False)
+            )
+        )
     )
 
     required_if = [
