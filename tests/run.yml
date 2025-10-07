@@ -391,16 +391,8 @@
 
     # Deploy control plane. For upgrade jobs this is the previous release.
     - block:
-        - name: Run deploy.sh script
-          script:
-            cmd: deploy.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            TLS_ENABLED: "{{ tls_enabled }}"
-            LE_ENABLED: "{{ le_enabled }}"
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-            HAS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
+        - import_role:
+            name: kolla-ansible-deploy
 
         # NOTE(yoctozepto): this is nice as the first step after the deployment
         # because it waits for the services to stabilize well enough so that

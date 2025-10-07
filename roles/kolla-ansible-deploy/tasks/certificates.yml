@@ -1,0 +1,39 @@
+---
+- name: Generate self-signed certificates for the optional internal TLS tests
+  ansible.builtin.shell:
+    cmd: >
+     . {{ kolla_ansible_venv_path }}/bin/activate &&
+     kolla-ansible certificates
+     -i /etc/kolla/inventory
+     -vvv
+     >/tmp/logs/ansible/certificates 2>&1
+
+- name: Init pebble when Lets Encrypt is enabled
+  when: (le_enabled | default(False)) | bool
+  block:
+    - name: "Run pebble container"
+      become: true
+      community.docker.docker_container:
+        name: pebble
+        image: "ghcr.io/letsencrypt/pebble:latest"
+        env:
+          PEBBLE_VA_NOSLEEP: "1"
+          PEBBLE_VA_ALWAYS_VALID: "1"
+        network_mode: host
+
+    - name: "Wait for pebble to start"
+      ansible.builtin.wait_for:
+        port: 15000
+        delay: 3
+
+    - name: "Copy pebble miniCA to /etc/kolla/certificates"
+      become: true
+      ansible.builtin.command:
+        cmd: "docker cp pebble:/test/certs/pebble.minica.pem /etc/kolla/certificates/ca/pebble-root.crt"
+
+    - name: "Fetch pebble.crt and store it in /etc/kolla/certificates/ca/"
+      become: true
+      ansible.builtin.get_url:
+        url: "https://127.0.0.1:15000/roots/0"
+        dest: "/etc/kolla/certificates/ca/pebble.crt"
+        validate_certs: false
