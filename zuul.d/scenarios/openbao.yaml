@@ -1,0 +1,40 @@
+---
+- job:
+    name: kolla-ansible-openbao-base
+    parent: kolla-ansible-base
+    run: tests/run-openbao.yml
+    required-projects:
+      - openstack/kolla-ansible
+      - openstack/requirements
+    voting: false
+    files: !override
+      - ^kolla_ansible/
+      - ^requirements-core.yml
+      - ^tests/(pre|run|run-openbao).yml
+      - ^tests/templates/(inventory|globals-default).j2
+      - ^tests/test-openbao-passwords.sh
+
+- job:
+    name: kolla-ansible-debian-bookworm-openbao
+    parent: kolla-ansible-openbao-base
+    nodeset: kolla-ansible-debian-bookworm-8GB
+
+- job:
+    name: kolla-ansible-rocky-10-openbao
+    parent: kolla-ansible-openbao-base
+    nodeset: kolla-ansible-rocky-10-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-openbao
+    parent: kolla-ansible-openbao-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-openbao
+    description: |
+      Runs Kolla-Ansible OpenBao scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-openbao
+        - kolla-ansible-rocky-10-openbao
+        - kolla-ansible-ubuntu-noble-openbao
