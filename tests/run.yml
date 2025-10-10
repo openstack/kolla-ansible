@@ -781,31 +781,17 @@
       when: is_upgrade
 
     # Bifrost testing.
-    - block:
-        - name: Run deploy-bifrost.sh script
-          shell:
-            cmd: tests/deploy-bifrost.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-
-        - name: Run test-bifrost.sh script
-          shell:
-            cmd: tests/test-bifrost.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            CONTAINER_ENGINE: "{{ container_engine }}"
-
-        - name: Run upgrade-bifrost.sh script
-          shell:
-            cmd: tests/upgrade-bifrost.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
+    - name: Bifrost testing
       when: scenario == "bifrost"
+      block:
+        - import_role:
+            name: kolla-ansible-deploy-bifrost
+
+        - import_role:
+            name: kolla-ansible-test-bifrost
+
+        - import_role:
+            name: kolla-ansible-upgrade-bifrost
 
 # NOTE(yoctozepto): each host checks itself
 - hosts: all

@@ -1,0 +1,35 @@
+---
+- name: Check baremetal driver list
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      {{ container_engine }} exec bifrost_deploy
+      bash -c 'OS_CLOUD=bifrost baremetal driver list'
+  register: bdl
+  until: bdl.rc == 0
+  retries: 5
+  delay: 10
+
+- name: Check baremetal node list
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      {{ container_engine }} exec bifrost_deploy
+      bash -c 'OS_CLOUD=bifrost baremetal node list'
+
+- name: Create baremetal node
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      {{ container_engine }} exec bifrost_deploy
+      bash -c 'OS_CLOUD=bifrost baremetal node create
+      --driver redfish --name test-node'
+
+- name: Delete baremetal node
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      {{ container_engine }} exec bifrost_deploy
+      bash -c 'OS_CLOUD=bifrost baremetal node delete
+      test-node'
+
