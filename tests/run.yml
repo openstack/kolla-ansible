@@ -425,16 +425,8 @@
             CONTAINER_ENGINE: "{{ container_engine }}"
             IS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
 
-        - name: Run test-core-openstack.sh script
-          script:
-            cmd: test-core-openstack.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            SCENARIO: "{{ scenario }}"
-            HAS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
-            PHASE: deploy
-            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
+        - import_role:
+            name: kolla-ansible-tempest
           when: openstack_core_tested
 
         - name: Run test-zun.sh script
@@ -729,22 +721,10 @@
             name: kolla-ansible-test-dashboard
           when: dashboard_enabled
 
-        # NOTE(yoctozepto): We need the script module here to avoid
-        # a bug in Glance OSC [1][2] which results in a failure when a volume
-        # is given as a source. The stdin works differently in shell/command
-        # than script.
-        # [1] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L114-L120
-        # [2] https://opendev.org/openstack/python-openstackclient/src/commit/6810414e45a32dd44263dff47fec161989508ef0/openstackclient/image/v2/image.py#L414
-        - name: Run test-core-openstack.sh script (post upgrade)
-          script:
-            cmd: test-core-openstack.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            SCENARIO: "{{ scenario }}"
-            HAS_UPGRADE: 'yes'
-            PHASE: upgrade
-            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
+        - import_role:
+            name: kolla-ansible-tempest
+          vars:
+            post_upgrade: true
           when: openstack_core_tested
 
         - name: Run test-prometheus-opensearch.sh script (post-upgrade)
