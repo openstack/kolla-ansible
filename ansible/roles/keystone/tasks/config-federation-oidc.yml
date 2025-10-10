@@ -85,3 +85,21 @@
     keystone_federation_openid_certificate_key_ids: "{{ certificates_path.files | map(attribute='path') | map('regex_replace', '^.*/(.*)\\.pem$', '\\1#' + keystone_container_federation_oidc_idp_certificate_folder + '/\\1.pem') | list }}"  # noqa 204
   when:
     - inventory_hostname in groups[keystone.group]
+
+- name: Copying modOIDC error page template
+  vars:
+    keystone: "{{ keystone_services.keystone }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ keystone_host_federation_base_folder }}/modoidc-error-page.html"
+    mode: "0660"
+  become: true
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone.enabled | bool
+    - keystone_enable_federation_openid | bool
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/keystone/federation/modoidc-error-page.html"
+        - "modoidc-error-page.html.j2"
+      skip: true

@@ -104,6 +104,20 @@ Example for Keycloak shown below:
     keystone_federation_oidc_additional_options:
       OIDCTokenBindingPolicy: disabled
 
+When using OIDC, operators can also use the following variable
+to customize the delay to retry authenticating in the IdP if the
+authentication has timeout:
+
+``keystone_federation_oidc_error_page_retry_login_delay_milliseconds``
+    Default is 5000 milliseconds (5 seconds).
+
+It is also possible to override the ``OIDCHTMLErrorTemplate``,
+the custom error template page via:
+
+.. code-block:: yaml
+
+  {{ node_custom_config }}/keystone/federation/modoidc-error-page.html
+
 Identity providers configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
