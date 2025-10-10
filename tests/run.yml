@@ -397,14 +397,8 @@
         # NOTE(yoctozepto): this is nice as the first step after the deployment
         # because it waits for the services to stabilize well enough so that
         # the dashboard is able to show the login prompt
-        - name: Run test-dashboard.sh script
-          script:
-            cmd: test-dashboard.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            TLS_ENABLED: "{{ tls_enabled }}"
-            LE_ENABLED: "{{ le_enabled }}"
+        - import_role:
+            name: kolla-ansible-test-dashboard
           when: dashboard_enabled
 
         - name: Run init-core-openstack.sh script
@@ -740,16 +734,8 @@
             KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
             SCENARIO: "{{ scenario }}"
 
-        # NOTE(yoctozepto): this is nice as the first step after the upgrade
-        # because it waits for the services to stabilize well enough so that
-        # the dashboard is able to show the login prompt
-        - name: Run test-dashboard.sh script (post upgrade)
-          shell:
-            cmd: tests/test-dashboard.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            TLS_ENABLED: "{{ tls_enabled }}"
+        - import_role:
+            name: kolla-ansible-test-dashboard
           when: dashboard_enabled
 
         # NOTE(yoctozepto): We need the script module here to avoid
