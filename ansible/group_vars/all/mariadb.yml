@@ -18,10 +18,9 @@ mariadb_port: "{{ database_port }}"
 mariadb_wsrep_port: "4567"
 mariadb_ist_port: "4568"
 mariadb_sst_port: "4444"
-mariadb_clustercheck_port: "4569"
 mariadb_enable_tls_backend: "{{ database_enable_tls_backend }}"
 
-mariadb_monitor_user: "{{ 'monitor' if enable_proxysql | bool else 'haproxy' }}"
+mariadb_monitor_user: "monitor"
 
 mariadb_datadir_volume: "mariadb"
 
@@ -30,8 +29,8 @@ mariadb_default_database_shard_hosts: "{% set default_shard = [] %}{% for host i
 mariadb_shard_id: "{{ mariadb_default_database_shard_id }}"
 mariadb_shard_name: "shard_{{ mariadb_shard_id }}"
 mariadb_shard_group: "mariadb_{{ mariadb_shard_name }}"
-mariadb_loadbalancer: "{{ 'proxysql' if enable_proxysql | bool else 'haproxy' }}"
-mariadb_backup_target: "{{ 'active' if mariadb_loadbalancer == 'haproxy' else 'replica' }}"
+mariadb_loadbalancer: proxysql
+mariadb_backup_target: replica
 mariadb_shard_root_user_prefix: "root_shard_"
 mariadb_shard_backup_user_prefix: "backup_shard_"
 mariadb_shards_info: "{{ groups['mariadb'] | database_shards_info() }}"

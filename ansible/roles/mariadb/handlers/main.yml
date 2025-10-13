@@ -72,19 +72,3 @@
     - groups[mariadb_shard_group + '_port_alive_False'] is defined
     - inventory_hostname in groups[mariadb_shard_group + '_port_alive_False']
   listen: Restart mariadb container
-
-- name: Restart mariadb-clustercheck container
-  vars:
-    service_name: "mariadb-clustercheck"
-    service: "{{ mariadb_services[service_name] }}"
-  become: true
-  kolla_container:
-    action: "recreate_or_restart_container"
-    common_options: "{{ docker_common_options }}"
-    image: "{{ service.image }}"
-    name: "{{ service.container_name }}"
-    volumes: "{{ service.volumes }}"
-    dimensions: "{{ service.dimensions }}"
-    environment: "{{ service.environment }}"
-  when:
-    - service | service_enabled_and_mapped_to_host

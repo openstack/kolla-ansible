@@ -63,9 +63,6 @@ function check_fluentd_missing_logs {
         /var/log/kolla/mariadb/mariadb-bootstrap.log)
             continue
             ;;
-        /var/log/kolla/mariadb/mariadb-clustercheck.log)
-            continue
-            ;;
         /var/log/kolla/mariadb/mariadb-upgrade.log)
             continue
             ;;
