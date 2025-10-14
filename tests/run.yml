@@ -807,15 +807,8 @@
 - hosts: primary
   any_errors_fatal: true
   tasks:
-    - name: Run reconfigure.sh script
-      script:
-        cmd: reconfigure.sh
-        executable: /bin/bash
-        chdir: "{{ kolla_ansible_src_dir }}"
-      environment:
-        KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-        SCENARIO: "{{ scenario }}"
-        CONTAINER_ENGINE: "{{ container_engine }}"
+    - import_role:
+        name: kolla-ansible-reconfigure
       when:
         - not is_upgrade
         - scenario != "bifrost"
