@@ -35,12 +35,9 @@
         name: "{{ 'bind-utils' if ansible_os_family == 'RedHat' else 'dnsutils' }}"
       when: scenario == 'magnum'
 
-    - name: Prepare disks for a storage service
-      script: "setup_disks.sh {{ disk_type }}"
+    - import_role:
+        name: kolla-ansible-setup-disks
       when: scenario in ['cephadm', 'zun']
-      become: true
-      vars:
-        disk_type: "{{ 'ceph-lvm' if scenario in ['cephadm'] else scenario }}"
 
     - name: Update /etc/hosts with internal API FQDN
       blockinfile:

@@ -1,0 +1,42 @@
+---
+- name: Check if kolla_ansible_setup_disks_file_path is set
+  ansible.builtin.assert:
+    that: kolla_ansible_setup_disks_file_path is defined
+
+- name: Check if kolla_ansible_setup_disks_vg_name is set
+  ansible.builtin.assert:
+    that: kolla_ansible_setup_disks_vg_name is defined
+
+- name: Allocate file for disk backing
+  become: true
+  community.general.filesize:
+    path: "{{ kolla_ansible_setup_disks_file_path }}"
+    size: "{{ kolla_ansible_setup_disks_file_size | default('5G') }}"
+
+- name: Get free loop device
+  become: true
+  ansible.builtin.shell:
+    cmd: "losetup -f"
+  register: _loop_device
+
+- name: Mount file on loop device
+  become: true
+  ansible.builtin.shell:
+    cmd: >
+      losetup {{ _loop_device.stdout }}
+      {{ kolla_ansible_setup_disks_file_path }}
+
+- name: Create LVM extents on loop device
+  become: true
+  community.general.lvg:
+    vg: "{{ kolla_ansible_setup_disks_vg_name }}"
+    pvs: "{{ _loop_device.stdout }}"
+
+- name: Create LV
+  become: true
+  community.general.lvol:
+    vg: "{{ kolla_ansible_setup_disks_vg_name }}"
+    lv: "{{ kolla_ansible_setup_disks_lv_name }}"
+    size: "100%FREE"
+  when:
+    - kolla_ansible_setup_disks_lv_name is defined
