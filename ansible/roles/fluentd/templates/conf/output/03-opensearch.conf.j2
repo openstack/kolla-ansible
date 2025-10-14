@@ -6,26 +6,26 @@
        hosts {% for host in groups['opensearch'] %}{{ 'api' | kolla_address(host) }}{% if not loop.last %},{% endif %}{% endfor %}
        port {{ opensearch_port }}
        scheme {{ fluentd_opensearch_scheme }}
-{% if fluentd_opensearch_user != '' and fluentd_opensearch_password != '' -%}
+{%     if fluentd_opensearch_user != '' and fluentd_opensearch_password != '' %}
        user {{ fluentd_opensearch_user }}
        password {{ fluentd_opensearch_password }}
-{%- endif %}
+{%     endif %}
        logstash_format true
        logstash_prefix {{ opensearch_log_index_prefix }}
        reconnect_on_error true
-{% if match_pattern != 'retry_os' -%}
+{%     if match_pattern != 'retry_os' %}
        retry_tag retry_os
-{%- endif %}
+{%     endif %}
        request_timeout {{ fluentd_opensearch_request_timeout }}
        suppress_type_name true
        bulk_message_request_threshold {{ fluentd_bulk_message_request_threshold }}
        <buffer>
          @type file
-{% if match_pattern == 'retry_os' -%}
+{%     if match_pattern == 'retry_os' %}
          path /var/lib/fluentd/data/opensearch.buffer/openstack_retry.*
-{% else %}
+{%     else %}
          path /var/lib/fluentd/data/opensearch.buffer/openstack.*
-{%- endif %}
+{%     endif %}
          flush_interval 15s
          chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
        </buffer>

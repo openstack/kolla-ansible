@@ -6,12 +6,12 @@ interface={{ ironic_dnsmasq_interface }}
 bind-interfaces
 
 {% for item in ironic_dnsmasq_dhcp_ranges %}
-{% set tag = item.tag | default('range_' ~ loop.index) %}
-{% set lease_time = item.lease_time | default(ironic_dnsmasq_dhcp_default_lease_time) %}
+{%     set tag = item.tag | default('range_' ~ loop.index) %}
+{%     set lease_time = item.lease_time | default(ironic_dnsmasq_dhcp_default_lease_time) %}
 dhcp-range=set:{{ tag }},{{ item.range }},{{ lease_time }}
-{% if item.routers is defined %}dhcp-option=tag:{{ tag }},option:router,{{ item.routers }}{% endif %}
-{% if item.ntp_server is defined %}dhcp-option=tag:{{ tag }},option:ntp-server,{{ item.ntp_server }}{% endif %}
-{% if item.dns_servers is defined %}dhcp-option=tag:{{ tag }},option:dns-server,{{ item.dns_servers }}{% endif %}
+{%     if item.routers is defined %}dhcp-option=tag:{{ tag }},option:router,{{ item.routers }}{%     endif %}
+{%     if item.ntp_server is defined %}dhcp-option=tag:{{ tag }},option:ntp-server,{{ item.ntp_server }}{%     endif %}
+{%     if item.dns_servers is defined %}dhcp-option=tag:{{ tag }},option:dns-server,{{ item.dns_servers }}{%     endif %}
 {% endfor %}
 
 {% if api_address_family == 'ipv6' %}
@@ -21,7 +21,7 @@ dhcp-range=set:{{ tag }},{{ item.range }},{{ lease_time }}
 dhcp-option=option:tftp-server,{{ ironic_tftp_listen_address }}
 dhcp-option=option:server-ip-address,{{ ironic_tftp_listen_address }}
 dhcp-option=210,/var/lib/ironic/tftpboot/
-{% if ironic_dnsmasq_serve_ipxe | bool %}
+{%     if ironic_dnsmasq_serve_ipxe | bool %}
 dhcp-match=ipxe,175
 dhcp-match=set:efi,option:client-arch,7
 dhcp-match=set:efi,option:client-arch,9
@@ -30,7 +30,7 @@ dhcp-option=tag:ipxe,option:bootfile-name,{{ ironic_http_url }}/ipa.ipxe
 # Client is PXE booting over EFI without iPXE ROM,
 # send EFI version of iPXE chainloader
 dhcp-option=tag:efi,tag:!ipxe,option:bootfile-name,{{ ironic_dnsmasq_uefi_ipxe_boot_file }}
-{% endif %}
+{%     endif %}
 dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
 {% endif %}{# ipv6/ipv4 #}
 

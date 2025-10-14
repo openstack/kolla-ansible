@@ -4,61 +4,61 @@
   description: Default BIND9 Pool
   attributes: {}
   ns_records:
-{% if designate_ns_record is string %}
+{%     if designate_ns_record is string %}
     - hostname: {{ designate_ns_record }}.
       priority: 1
-{% else %}
-{% for host in designate_ns_record %}
+{%     else %}
+{%         for host in designate_ns_record %}
     - hostname: {{ host }}.
       priority: 1
-{% endfor %}
-{% endif %}
+{%         endfor %}
+{%     endif %}
   nameservers:
-{% if designate_backend == 'bind9' %}
-{% for host in groups['designate-backend-bind9'] %}
+{%     if designate_backend == 'bind9' %}
+{%         for host in groups['designate-backend-bind9'] %}
     - host: {{ 'api' | kolla_address(host) }}
       port: {{ designate_bind_port }}
-{% endfor %}
-{% elif designate_backend_external == 'bind9' %}
-{% for host in designate_backend_external_bind9_nameservers.replace(" ", "").split(',') %}
+{%         endfor %}
+{%     elif designate_backend_external == 'bind9' %}
+{%         for host in designate_backend_external_bind9_nameservers.replace(" ", "").split(',') %}
     - host: {{ host }}
       port: {{ designate_bind_port }}
-{% endfor %}
-{% endif %}
+{%         endfor %}
+{%     endif %}
   targets:
-{% if designate_backend == 'bind9' %}
-{% for bind_host in groups['designate-backend-bind9'] %}
+{%     if designate_backend == 'bind9' %}
+{%         for bind_host in groups['designate-backend-bind9'] %}
     - type: bind9
       description: BIND9 Server {{ 'api' | kolla_address(bind_host) }}
       masters:
-{% for mdns_host in groups['designate-mdns'] %}
+{%             for mdns_host in groups['designate-mdns'] %}
         - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
-{% endfor %}
+{%             endfor %}
       options:
         host: {{ 'api' | kolla_address(bind_host) }}
         port: {{ designate_bind_port }}
         rndc_host: {{ 'api' | kolla_address(bind_host) }}
         rndc_port: {{ designate_rndc_port }}
         rndc_key_file: /etc/designate/rndc.key
-{% endfor %}
-{% elif designate_backend_external == 'bind9' %}
-{% for bind_host in designate_backend_external_bind9_nameservers.replace(" ", "").split(',') %}
+{%         endfor %}
+{%     elif designate_backend_external == 'bind9' %}
+{%         for bind_host in designate_backend_external_bind9_nameservers.replace(" ", "").split(',') %}
     - type: bind9
       description: BIND9 Server {{ bind_host }}
       masters:
-{% for mdns_host in groups['designate-mdns'] %}
+{%             for mdns_host in groups['designate-mdns'] %}
         - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
-{% endfor %}
+{%             endfor %}
       options:
         host: {{ bind_host }}
         port: {{ designate_bind_port }}
         rndc_host: {{ bind_host }}
         rndc_port: {{ designate_rndc_port }}
         rndc_key_file: /etc/designate/rndc.key
-{% endfor %}
-{% endif %}
+{%         endfor %}
+{%     endif %}
 {% elif designate_backend == 'infoblox' %}
 - name: infoblox
   id: {{ designate_pool_id }}
@@ -69,23 +69,23 @@
     - hostname: {{ designate_ns_record }}.
       priority: 1
   nameservers:
-{% for host in designate_backend_infoblox_nameservers.replace(" ", "").split(',') %}
+{%     for host in designate_backend_infoblox_nameservers.replace(" ", "").split(',') %}
     - host: {{ host }}
       port: {{ designate_bind_port }}
-{% endfor %}
+{%     endfor %}
   also_notifies:
-{% for host in designate_backend_infoblox_nameservers.replace(" ", "").split(',') %}
+{%     for host in designate_backend_infoblox_nameservers.replace(" ", "").split(',') %}
     - host: {{ host }}
       port: {{ designate_bind_port }}
-{% endfor %}
+{%     endfor %}
   targets:
     - type: infoblox
       description: Default Infoblox Pool
       masters:
-{% for mdns_host in groups['designate-mdns'] %}
+{%     for mdns_host in groups['designate-mdns'] %}
         - host: {{ 'dns' | kolla_address(mdns_host) }}
           port: {{ designate_mdns_port }}
-{% endfor %}
+{%     endfor %}
       options:
         host: {{ designate_infoblox_host }}
         port: 53

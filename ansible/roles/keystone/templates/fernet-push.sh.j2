@@ -5,21 +5,21 @@ set -o pipefail
 
 if [ ! -z "$1" ] && [ "$1" == "--check" ]; then
 {% if groups['keystone'] | length > 1 %}
-{% for host in groups['keystone'] %}
-{% if inventory_hostname != host %}
+{%     for host in groups['keystone'] %}
+{%         if inventory_hostname != host %}
 /usr/bin/rsync --dry-run -az -e 'ssh -i /var/lib/keystone/.ssh/id_rsa -p {{ hostvars[host]['keystone_ssh_port'] }} -F /var/lib/keystone/.ssh/config' --delete /etc/keystone/fernet-keys/ keystone@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:/etc/keystone/fernet-keys
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% else %}
 echo "No additional keystone-server where fernet keys could be rsynced."
 {% endif %}
 else
 {% if groups['keystone'] | length > 1 %}
-{% for host in groups['keystone'] %}
-{% if inventory_hostname != host %}
+{%     for host in groups['keystone'] %}
+{%         if inventory_hostname != host %}
 /usr/bin/rsync -az -e 'ssh -i /var/lib/keystone/.ssh/id_rsa -p {{ hostvars[host]['keystone_ssh_port'] }} -F /var/lib/keystone/.ssh/config' --delete /etc/keystone/fernet-keys/ keystone@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:/etc/keystone/fernet-keys
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% else %}
 echo "No additional keystone-server where fernet keys could be rsynced."
 {% endif %}

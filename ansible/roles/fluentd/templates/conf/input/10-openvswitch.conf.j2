@@ -29,7 +29,7 @@
 </source>
 
 {% if enable_ovn | bool %}
-{% if inventory_hostname in groups.get('ovn-controller', []) %}
+{%     if inventory_hostname in groups.get('ovn-controller', []) %}
 <source>
   @type tail
   path /var/log/kolla/openvswitch/ovn-controller.log
@@ -44,9 +44,9 @@
     time_format %FT%T.%L
   </parse>
 </source>
-{% endif %}
-{% for ovn_service in ['ovn-nb-db', 'ovn-northd', 'ovn-sb-db'] %}
-{% if inventory_hostname in groups.get(ovn_service, []) %}
+{%     endif %}
+{%     for ovn_service in ['ovn-nb-db', 'ovn-northd', 'ovn-sb-db'] %}
+{%         if inventory_hostname in groups.get(ovn_service, []) %}
 <source>
   @type tail
   path /var/log/kolla/openvswitch/{{ ovn_service }}.log
@@ -61,10 +61,10 @@
     time_format %FT%T.%L
   </parse>
 </source>
-{% endif %}
-{% endfor %}
-{% for relay_id in range(1, ovn_sb_db_relay_count | int + 1) %}
-{% if inventory_hostname in groups.get('ovn-sb-db-relay', []) %}
+{%         endif %}
+{%     endfor %}
+{%     for relay_id in range(1, ovn_sb_db_relay_count | int + 1) %}
+{%         if inventory_hostname in groups.get('ovn-sb-db-relay', []) %}
 <source>
   @type tail
   path /var/log/kolla/openvswitch/ovn-sb-relay-{{ relay_id }}.log
@@ -79,6 +79,6 @@
     time_format %FT%T.%L
   </parse>
 </source>
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% endif %}

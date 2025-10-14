@@ -1,6 +1,6 @@
 [DEFAULT]
 {% if manila_enabled_backends %}
-enabled_share_backends = {{ manila_enabled_backends|map(attribute='name')|join(',') }}
+enabled_share_backends = {{ manila_enabled_backends | map(attribute='name') | join(',') }}
 {% endif %}
 
 default_share_type = default_share_type
@@ -72,9 +72,9 @@ memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_addres
 {% if enable_manila_backend_generic | bool %}
 [generic]
 share_driver = manila.share.drivers.generic.GenericShareDriver
-{% if neutron_plugin_agent == "openvswitch" %}
+{%     if neutron_plugin_agent == "openvswitch" %}
 interface_driver = manila.network.linux.interface.OVSInterfaceDriver
-{% endif %}
+{%     endif %}
 
 driver_handles_share_servers = true
 
@@ -114,8 +114,8 @@ hitachi_hnas_file_system_name = {{ hnas_file_system_name }}
 {% endif %}
 
 {% if enable_manila_backend_cephfs_native | bool %}
-{% for backend in manila_ceph_backends %}
-{% if backend.driver == 'cephfsnative' %}
+{%     for backend in manila_ceph_backends %}
+{%         if backend.driver == 'cephfsnative' %}
 [{{ backend.name }}]
 driver_handles_share_servers = false
 share_backend_name = {{ backend.share_name }}
@@ -123,16 +123,16 @@ share_driver = manila.share.drivers.cephfs.driver.CephFSDriver
 cephfs_conf_path = /etc/ceph/{{ backend.cluster }}.conf
 cephfs_auth_id = {{ ceph_manila_user }}
 cephfs_cluster_name = {{ backend.cluster }}
-{% if manila_cephfs_filesystem_name | length %}
+{%             if manila_cephfs_filesystem_name | length %}
 cephfs_filesystem_name = {{ manila_cephfs_filesystem_name }}
-{% endif %}
-{% endif %}
-{% endfor %}
+{%             endif %}
+{%         endif %}
+{%     endfor %}
 {% endif %}
 
 {% if enable_manila_backend_cephfs_nfs | bool %}
-{% for backend in manila_ceph_backends %}
-{% if backend.driver == 'cephfsnfs' %}
+{%     for backend in manila_ceph_backends %}
+{%         if backend.driver == 'cephfsnfs' %}
 [{{ backend.name }}]
 driver_handles_share_servers = false
 share_backend_name = {{ backend.share_name }}
@@ -141,13 +141,13 @@ cephfs_protocol_helper_type = NFS
 cephfs_conf_path = /etc/ceph/{{ backend.cluster }}.conf
 cephfs_auth_id = {{ ceph_manila_user }}
 cephfs_cluster_name = {{ backend.cluster }}
-{% if manila_cephfs_filesystem_name | length %}
+{%             if manila_cephfs_filesystem_name | length %}
 cephfs_filesystem_name = {{ manila_cephfs_filesystem_name }}
-{% endif %}
+{%             endif %}
 cephfs_ganesha_server_is_remote= false
 cephfs_ganesha_server_ip = {{ api_interface_address }}
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% endif %}
 
 {% if enable_manila_backend_glusterfs_nfs | bool %}
@@ -157,17 +157,23 @@ share_backend_name = GLUSTERFSNFS1
 share_driver = manila.share.drivers.glusterfs.GlusterfsShareDriver
 glusterfs_share_layout = {{ manila_glusterfs_share_layout }}
 glusterfs_nfs_server_type = {{ manila_glusterfs_nfs_server_type }}
-{% if manila_glusterfs_servers is defined  %}
+{%     if manila_glusterfs_servers is defined  %}
 glusterfs_servers = {% for ip in manila_glusterfs_servers %}{% if manila_glusterfs_ssh_user is defined %}{{ manila_glusterfs_ssh_user }}@{% endif %}{{ ip }}{% if not loop.last %},{% endif %}{% endfor %}
 
-{% endif %}
-{% if manila_glusterfs_volume_pattern is defined %}glusterfs_volume_pattern = {{ manila_glusterfs_volume_pattern }}{% endif %}
+{%     endif %}
+{%     if manila_glusterfs_volume_pattern is defined %}
+glusterfs_volume_pattern = {{ manila_glusterfs_volume_pattern }}
+{%     endif %}
+{%     if manila_glusterfs_target is defined %}
+glusterfs_target = {{ manila_glusterfs_target }}
+{%     endif %}
+{%     if manila_glusterfs_mount_point_base is defined %}
+glusterfs_mount_point_base = {{ manila_glusterfs_mount_point_base }}
+{%     endif %}
 
-{% if manila_glusterfs_target is defined %}glusterfs_target = {{ manila_glusterfs_target }}{% endif %}
-
-{% if manila_glusterfs_mount_point_base is defined %}glusterfs_mount_point_base = {{ manila_glusterfs_mount_point_base }}{% endif %}
-
-{% if manila_glusterfs_ssh_password is defined %}glusterfs_server_password = {{ manila_glusterfs_ssh_password }}{% endif %}
+{%     if manila_glusterfs_ssh_password is defined %}
+glusterfs_server_password = {{ manila_glusterfs_ssh_password }}
+{%     endif %}
 {% endif %}
 
 [oslo_concurrency]

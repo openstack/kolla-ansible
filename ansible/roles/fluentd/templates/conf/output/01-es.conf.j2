@@ -6,36 +6,36 @@
        host {{ elasticsearch_address }}
        port {{ elasticsearch_port | default('9200') }}
        scheme {{ fluentd_elasticsearch_scheme }}
-{% if fluentd_elasticsearch_path != '' %}
+{%     if fluentd_elasticsearch_path != '' %}
        path {{ fluentd_elasticsearch_path }}
-{% endif %}
-{% if fluentd_elasticsearch_scheme == 'https' %}
+{%     endif %}
+{%     if fluentd_elasticsearch_scheme == 'https' %}
        ssl_version {{ fluentd_elasticsearch_ssl_version }}
        ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
-{% if fluentd_elasticsearch_cacert | length > 0 %}
+{%         if fluentd_elasticsearch_cacert | length > 0 %}
        ca_file {{ fluentd_elasticsearch_cacert }}
-{% endif %}
-{% endif %}
-{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
+{%         endif %}
+{%     endif %}
+{%     if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != '' %}
        user {{ fluentd_elasticsearch_user }}
        password {{ fluentd_elasticsearch_password }}
-{% endif %}
+{%     endif %}
        logstash_format true
        logstash_prefix {{ opensearch_log_index_prefix }}
        reconnect_on_error true
-{% if match_pattern != 'retry_es' %}
+{%     if match_pattern != 'retry_es' %}
        retry_tag retry_es
-{% endif %}
+{%     endif %}
        request_timeout {{ fluentd_elasticsearch_request_timeout }}
        suppress_type_name true
        bulk_message_request_threshold {{ fluentd_bulk_message_request_threshold }}
        <buffer>
          @type file
-{% if match_pattern == 'retry_es' %}
+{%     if match_pattern == 'retry_es' %}
          path /var/lib/fluentd/data/elasticsearch.buffer/openstack_retry.*
-{% else %}
+{%     else %}
          path /var/lib/fluentd/data/elasticsearch.buffer/openstack.*
-{% endif %}
+{%     endif %}
          flush_interval 15s
          chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
        </buffer>

@@ -25,13 +25,13 @@ cluster = {{ cinder_cluster_name }}
 {% endif %}
 
 {% if cinder_enabled_backends %}
-{% if service_name == 'cinder-volume' %}
-enabled_backends = {{ cinder_enabled_backends|map(attribute='name')|join(',') }}
-{% endif %}
+{%     if service_name == 'cinder-volume' %}
+enabled_backends = {{ cinder_enabled_backends | map(attribute='name') | join(',') }}
+{%     endif %}
 {% endif %}
 
 {% if service_name == "cinder-backup" and enable_cinder_backup | bool %}
-{% if cinder_backup_driver == "ceph" %}
+{%     if cinder_backup_driver == "ceph" %}
 backup_driver = cinder.backup.drivers.ceph.CephBackupDriver
 backup_ceph_conf = /etc/ceph/{{ cinder_backup_ceph_backend['cluster'] }}.conf
 backup_ceph_user = {{ cinder_backup_ceph_backend['user'] }}
@@ -40,19 +40,19 @@ backup_ceph_pool = {{ cinder_backup_ceph_backend['pool'] }}
 backup_ceph_stripe_unit = 0
 backup_ceph_stripe_count = 0
 restore_discard_excess_bytes = true
-{% elif cinder_backup_driver == "nfs" %}
+{%     elif cinder_backup_driver == "nfs" %}
 backup_driver = cinder.backup.drivers.nfs.NFSBackupDriver
 backup_mount_options = {{ cinder_backup_mount_options_nfs }}
 backup_mount_point_base = /var/lib/cinder/backup
 backup_share = {{ cinder_backup_share }}
 backup_file_size = 327680000
-{% elif cinder_backup_driver == "s3" %}
+{%     elif cinder_backup_driver == "s3" %}
 backup_driver = cinder.backup.drivers.s3.S3BackupDriver
 backup_s3_endpoint_url = {{ cinder_backup_s3_url }}
 backup_s3_store_bucket = {{ cinder_backup_s3_bucket }}
 backup_s3_store_access_key = {{ cinder_backup_s3_access_key }}
 backup_s3_store_secret_key = {{ cinder_backup_s3_secret_key }}
-{% endif %}
+{%     endif %}
 {% endif %}
 
 api_paste_config = /etc/cinder/api-paste.ini
@@ -148,8 +148,8 @@ target_protocol = iscsi
 {% endif %}
 
 {% if cinder_backend_ceph | bool %}
-{% if service_name == 'cinder-volume' %}
-{% for backend in cinder_ceph_backends %}
+{%     if service_name == 'cinder-volume' %}
+{%         for backend in cinder_ceph_backends %}
 [{{ backend.name }}]
 volume_driver = cinder.volume.drivers.rbd.RBDDriver
 volume_backend_name = {{ backend.backend_name | default(backend.name) }}
@@ -161,11 +161,11 @@ rbd_cluster_name = {{ backend.cluster }}
 rbd_keyring_conf = /etc/ceph/{{ backend.cluster }}.client.{{ backend.user }}.keyring
 rbd_secret_uuid = {{ cinder_rbd_secret_uuid }}
 report_discard_supported = true
-{% if backend.availability_zone is defined %}
+{%             if backend.availability_zone is defined %}
 backend_availability_zone = {{ backend.availability_zone }}
-{% endif %}
-{% endfor %}
-{% endif %}
+{%             endif %}
+{%         endfor %}
+{%     endif %}
 {% endif %}
 
 {% if enable_cinder_backend_nfs | bool %}
@@ -225,7 +225,7 @@ lightos_api_address = {{ lightbits_target_ips }}
 lightos_api_port = {{ lightbits_api_port }}
 lightos_default_num_replicas = {{ lightbits_default_num_replicas }}
 lightos_skip_ssl_verify = {{ lightbits_skip_ssl_verify | bool }}
-lightos_jwt = {{ lightbits_JWT }}
+lightos_jwt = {{ lightbits_jwt }}
 {% endif %}
 
 [privsep_entrypoint]

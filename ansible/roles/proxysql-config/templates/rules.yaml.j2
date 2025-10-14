@@ -10,17 +10,17 @@
 # https://proxysql.com/documentation/main-runtime/#mysql_query_rules
 mysql_query_rules:
 {% for rule in proxysql_project_database_shard['rules'] %}
-{% set WRITER_GROUP = rule['shard_id'] | int * 10 %}
-{% if rule['schema'] is defined %}
+{%     set _writer_group = rule['shard_id'] | int * 10 %}
+{%     if rule['schema'] is defined %}
   - schemaname: "{{ rule['schema'] }}"
-    destination_hostgroup: {{ WRITER_GROUP }}
+    destination_hostgroup: {{ _writer_group }}
     apply: 1
     active: 1
-{% endif %}
-{% if rule['user'] is defined %}
+{%     endif %}
+{%     if rule['user'] is defined %}
   - username: "{{ rule['user'] }}"
-    destination_hostgroup: {{ WRITER_GROUP }}
+    destination_hostgroup: {{ _writer_group }}
     apply: 1
     active: 1
-{% endif %}
+{%     endif %}
 {% endfor %}

@@ -1,11 +1,11 @@
 {% set keystone_log_dir = '/var/log/kolla/keystone' %}
 {% set binary_path = '/var/lib/kolla/venv/bin' %}
 {% if keystone_enable_tls_backend | bool %}
-{% if kolla_base_distro in ['centos', 'rocky']  %}
+{%     if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
-{% else %}
+{%     else %}
 LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
-{% endif %}
+{%     endif %}
 {% endif %}
 
 {% if kolla_base_distro in ['centos', 'rocky']  %}
@@ -49,32 +49,32 @@ LogLevel info
     SSLEngine on
     SSLCertificateFile /etc/keystone/certs/keystone-cert.pem
     SSLCertificateKeyFile /etc/keystone/certs/keystone-key.pem
-{% endif -%}
+{% endif %}
 
 {% if keystone_enable_federation_openid | bool %}
-{% if keystone_federation_oidc_forwarded_headers | length > 0 %}
+{%     if keystone_federation_oidc_forwarded_headers | length > 0 %}
     OIDCXForwardedHeaders "{{ keystone_federation_oidc_forwarded_headers }}"
-{% endif %}
+{%     endif %}
     OIDCClaimPrefix "OIDC-"
     OIDCClaimDelimiter "{{ keystone_federation_oidc_claim_delimiter }}"
     OIDCResponseType "{{ keystone_federation_oidc_response_type }}"
     OIDCScope "{{ keystone_federation_oidc_scopes }}"
     OIDCMetadataDir {{ keystone_container_federation_oidc_metadata_folder }}
-{% if keystone_federation_oidc_jwks_uri | length > 0 %}
+{%     if keystone_federation_oidc_jwks_uri | length > 0 %}
     OIDCOAuthVerifyJwksUri {{ keystone_federation_oidc_jwks_uri }}
-{% endif %}
-{% if keystone_federation_openid_certificate_key_ids | length > 0 %}
+{%     endif %}
+{%     if keystone_federation_openid_certificate_key_ids | length > 0 %}
     OIDCOAuthVerifyCertFiles {{ keystone_federation_openid_certificate_key_ids | join(" ") }}
-{% endif %}
+{%     endif %}
     OIDCCryptoPassphrase {{ keystone_federation_openid_crypto_password }}
     OIDCRedirectURI {{ keystone_public_url }}/redirect_uri
-{% if enable_memcached | bool and keystone_oidc_enable_memcached | bool %}
+{%     if enable_memcached | bool and keystone_oidc_enable_memcached | bool %}
     OIDCCacheType memcache
     OIDCMemCacheServers "{% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %} {% endif %}{% endfor %}"
-{% endif %}
-{% for key, value in keystone_federation_oidc_additional_options.items() %}
+{%     endif %}
+{%     for key, value in keystone_federation_oidc_additional_options.items() %}
     {{ key }} {{ value }}
-{% endfor %}
+{%     endfor %}
 
     <Location ~ "/redirect_uri">
       Require valid-user
@@ -87,27 +87,27 @@ LogLevel info
       AuthType openid-connect
     </Location>
 
-{% for idp in keystone_identity_providers %}
-{% if idp.protocol == 'openid' %}
+{%     for idp in keystone_identity_providers %}
+{%         if idp.protocol == 'openid' %}
     <LocationMatch /v3/auth/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/websso>
       OIDCDiscoverURL {{ keystone_public_url }}/redirect_uri?iss={{ idp.identifier | urlencode }}
       Require valid-user
       AuthType openid-connect
     </LocationMatch>
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 
     {# CLI / API authentication endpoint -#}
-{% for idp in keystone_identity_providers %}
-{% if idp.protocol == 'openid' -%}
+{%     for idp in keystone_identity_providers %}
+{%         if idp.protocol == 'openid' %}
     <LocationMatch /v3/OS-FEDERATION/identity_providers/{{ idp.name }}/protocols/{{ idp.protocol }}/auth>
       Require valid-user
       {# Note(jasonanderson): `auth-openidc` is a special auth type that can -#}
       {# additionally handle verifying bearer tokens -#}
       AuthType auth-openidc
     </LocationMatch>
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% endif %}
 </VirtualHost>
 

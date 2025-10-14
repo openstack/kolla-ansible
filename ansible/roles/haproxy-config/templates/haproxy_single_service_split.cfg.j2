@@ -1,165 +1,165 @@
 #jinja2: lstrip_blocks: True
-{%- set external_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy.pem' if kolla_enable_tls_external|bool else '' %}
-{%- set external_tls_bind_info = "%s %s" % (external_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_external|bool and haproxy_enable_http2|bool else external_tls_bind_info %}
-{%- set internal_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy-internal.pem' if kolla_enable_tls_internal|bool else '' %}
-{%- set internal_tls_bind_info = "%s %s" % (internal_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_internal|bool and haproxy_enable_http2|bool else internal_tls_bind_info %}
+{% set external_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy.pem' if kolla_enable_tls_external | bool else '' %}
+{% set external_tls_bind_info = "%s %s" % (external_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_external | bool and haproxy_enable_http2 | bool else external_tls_bind_info %}
+{% set internal_tls_bind_info = 'ssl crt /etc/haproxy/certificates/haproxy-internal.pem' if kolla_enable_tls_internal | bool else '' %}
+{% set internal_tls_bind_info = "%s %s" % (internal_tls_bind_info, haproxy_http2_protocol) if kolla_enable_tls_internal | bool and haproxy_enable_http2 | bool else internal_tls_bind_info %}
 
-{%- macro userlist_macro(service_name, auth_user, auth_pass) %}
+{% macro userlist_macro(service_name, auth_user, auth_pass) %}
 userlist {{ service_name }}-user
   user {{ auth_user }} insecure-password {{ auth_pass }}
 {% endmacro %}
 
-{%- macro frontend_macro(service_name, service_port, service_mode, external,
+{% macro frontend_macro(service_name, service_port, service_mode, external,
                          frontend_http_extra, frontend_redirect_extra, frontend_tcp_extra) %}
 frontend {{ service_name }}_front
-    {% if service_mode == 'redirect' %}
+{%     if service_mode == 'redirect' %}
     mode http
-    {% else %}
+{%     else %}
     mode {{ service_mode }}
-    {% endif %}
-    {% if service_mode == 'http' %}
-    {% if external|bool %}
+{%     endif %}
+{%     if service_mode == 'http' %}
+{%         if external | bool %}
     http-request deny if { path -i -m beg /server-status }
-    {% endif %}
-    {# Delete any pre-populated XFP header #}
+{%         endif %}
+{#         Delete any pre-populated XFP header #}
     http-request del-header X-Forwarded-Proto
-        {% for http_option in frontend_http_extra %}
+{%         for http_option in frontend_http_extra %}
     {{ http_option }}
-        {% endfor %}
-    {% elif service_mode == 'tcp' %}
-        {% for tcp_option in frontend_tcp_extra %}
+{%         endfor %}
+{%     elif service_mode == 'tcp' %}
+{%         for tcp_option in frontend_tcp_extra %}
     {{ tcp_option }}
-        {% endfor %}
-    {% endif %}
-    {% set tls_option = '' %}
-    {% if external|bool %}
-        {% set vip_address = kolla_external_vip_address %}
-        {% if service_mode == 'http' %}
-            {% set tls_option = external_tls_bind_info %}
-    {# Replace the XFP header for external https requests #}
+{%         endfor %}
+{%     endif %}
+{%     set tls_option = '' %}
+{%     if external | bool %}
+{%         set vip_address = kolla_external_vip_address %}
+{%         if service_mode == 'http' %}
+{%             set tls_option = external_tls_bind_info %}
+{#             Replace the XFP header for external https requests #}
     http-request set-header X-Forwarded-Proto https if { ssl_fc }
-        {% endif %}
-    {% else %}
-        {% set vip_address = kolla_internal_vip_address %}
-        {% if service_mode == 'http' %}
-            {% set tls_option = internal_tls_bind_info %}
-    {# Replace the XFP header for internal https requests #}
+{%         endif %}
+{%     else %}
+{%         set vip_address = kolla_internal_vip_address %}
+{%         if service_mode == 'http' %}
+{%             set tls_option = internal_tls_bind_info %}
+{#             Replace the XFP header for internal https requests #}
     http-request set-header X-Forwarded-Proto https if { ssl_fc }
-        {% endif %}
-    {% endif %}
-    {{ "bind %s:%s %s"|e|format(vip_address, service_port, tls_option)|trim() }}
-    {# Redirect mode sets a redirect scheme instead of a backend #}
-    {% if service_mode == 'redirect' %}
-        {% if enable_letsencrypt == 'yes' %}
+{%         endif %}
+{%     endif %}
+    {{ "bind %s:%s %s" | e | format(vip_address, service_port, tls_option) | trim() }}
+{#     Redirect mode sets a redirect scheme instead of a backend #}
+{%     if service_mode == 'redirect' %}
+{%         if enable_letsencrypt == 'yes' %}
     redirect scheme https code 301 if !{ ssl_fc } !{ path_reg ^/.well-known/acme-challenge/.+ }
-        {% else %}
+{%         else %}
     redirect scheme https code 301 if !{ ssl_fc }
-        {% endif %}
-        {% for redirect_option in frontend_redirect_extra %}
+{%         endif %}
+{%         for redirect_option in frontend_redirect_extra %}
     {{ redirect_option }}
-        {% endfor %}
-    {% else %}
+{%         endfor %}
+{%     else %}
     default_backend {{ service_name }}_back
-    {% endif %}
+{%     endif %}
 {% endmacro %}
 
-{%- macro backend_macro(service_name, listen_port, service_mode, host_group,
+{% macro backend_macro(service_name, listen_port, service_mode, host_group,
                         active_passive, custom_member_list, backend_http_extra,
                         backend_tcp_extra, auth_user, auth_pass, tls_backend) %}
 backend {{ service_name }}_back
-    {% if service_mode == 'redirect' %}
+{%     if service_mode == 'redirect' %}
     mode http
-    {% else %}
+{%     else %}
     mode {{ service_mode }}
-    {% endif %}
-    {% if service_mode == 'http' %}
-        {# Set up auth if required #}
-        {% if auth_user and auth_pass %}
+{%     endif %}
+{%     if service_mode == 'http' %}
+{#         Set up auth if required #}
+{%         if auth_user and auth_pass %}
     acl auth_acl http_auth({{ service_name }}-user)
     http-request auth realm basicauth unless auth_acl
-        {% endif %}
-        {% for http_option in backend_http_extra %}
+{%         endif %}
+{%         for http_option in backend_http_extra %}
     {{ http_option }}
-        {% endfor %}
-    {% elif service_mode == 'tcp' %}
-        {% for tcp_option in backend_tcp_extra %}
+{%         endfor %}
+{%     elif service_mode == 'tcp' %}
+{%         for tcp_option in backend_tcp_extra %}
     {{ tcp_option }}
-        {% endfor %}
-    {% endif %}
-    {% if custom_member_list is not none %}
-        {% for custom_member in custom_member_list %}
+{%         endfor %}
+{%     endif %}
+{%     if custom_member_list is not none %}
+{%         for custom_member in custom_member_list %}
     {{ custom_member }}
-        {% endfor %}
-    {% else %}
-        {% set backend_tls_info = '' %}
-        {% if tls_backend|bool %}
-            {% set haproxy_health_check_final = haproxy_health_check_ssl %}
-            {% if kolla_verify_tls_backend|bool %}
-                {% set backend_tls_info = 'ssl verify required ca-file %s'|format(haproxy_backend_cacert) %}
-            {% else %}
-                {% set backend_tls_info = 'ssl verify none' %}
-            {% endif %}
-        {% else %}
-            {% set haproxy_health_check_final = haproxy_health_check %}
-        {% endif %}
-        {% for host in groups[host_group] %}
-            {% set host_name = hostvars[host].ansible_facts.hostname %}
-            {% set host_ip = 'api' | kolla_address(host) %}
-    {% set service_weight = 'haproxy_' + service_name + '_weight' %}
-    {% set backend_weight_info = '' %}
-    {% if hostvars[host][service_weight] is defined and hostvars[host][service_weight] | int != 0 and hostvars[host][service_weight] | int <= 256 %}
-        {% set backend_weight_info = 'weight %s'|format(hostvars[host][service_weight]) %}
-    {% endif %}
+{%         endfor %}
+{%     else %}
+{%         set backend_tls_info = '' %}
+{%         if tls_backend | bool %}
+{%             set haproxy_health_check_final = haproxy_health_check_ssl %}
+{%             if kolla_verify_tls_backend | bool %}
+{%                 set backend_tls_info = 'ssl verify required ca-file %s' | format(haproxy_backend_cacert) %}
+{%             else %}
+{%                 set backend_tls_info = 'ssl verify none' %}
+{%             endif %}
+{%         else %}
+{%             set haproxy_health_check_final = haproxy_health_check %}
+{%         endif %}
+{%         for host in groups[host_group] %}
+{%             set host_name = hostvars[host].ansible_facts.hostname %}
+{%             set host_ip = 'api' | kolla_address(host) %}
+{%             set service_weight = 'haproxy_' + service_name + '_weight' %}
+{%             set backend_weight_info = '' %}
+{%             if hostvars[host][service_weight] is defined and hostvars[host][service_weight] | int != 0 and hostvars[host][service_weight] | int <= 256 %}
+{%                 set backend_weight_info = 'weight %s' | format(hostvars[host][service_weight]) %}
+{%             endif %}
     server {{ host_name }} {{ host_ip }}:{{ listen_port }} {{ haproxy_health_check_final }}{% if active_passive and not loop.first %} backup{% endif %} {{ backend_tls_info }} {{ backend_weight_info }}
-        {% endfor %}
-    {% endif %}
+{%         endfor %}
+{%     endif %}
 {% endmacro %}
 
-{%- set haproxy = service.haproxy|default({}) %}
-{%- for haproxy_name, haproxy_service in haproxy.items() %}
-    {# External defaults to false #}
-    {% set external = haproxy_service.external|default(false)|bool %}
-    {# Active/passive defaults to false #}
-    {% set active_passive = haproxy_service.active_passive|default(false)|bool %}
-    {# Skip anything that is external when the external vip is not enabled #}
-    {% if haproxy_service.enabled|bool and (not external or haproxy_enable_external_vip|bool)%}
-        {# Here we define variables and their defaults #}
-        {# services can be listening on a different port than haproxy #}
-        {% set listen_port = haproxy_service.listen_port|default(haproxy_service.port) %}
-        {# Custom member list can use jinja to generate a semicolon separated list #}
-        {% set custom_member_list = haproxy_service.custom_member_list|default(none) %}
-        {# Mode defaults to http #}
-        {% set mode = haproxy_service.mode|default('http') %}
-        {# By default each service has its own frontend (hence with_frontend is true by default) #}
-        {% set with_frontend = haproxy_service.with_frontend|default(true)|bool %}
-        {# By default each service has its own backend (hence with_backend is true by default) #}
-        {% set with_backend = haproxy_service.with_backend|default(true)|bool %}
-        {# Use the parent host group but allow it to be overridden #}
-        {% set host_group = haproxy_service.host_group|default(service.group) %}
-        {# Additional options can be defined in config, and are additive to the global extras #}
-        {% set frontend_tcp_extra = haproxy_service.frontend_tcp_extra|default([]) + haproxy_frontend_tcp_extra %}
-        {% set backend_tcp_extra = haproxy_service.backend_tcp_extra|default([]) + haproxy_backend_tcp_extra %}
-        {% set frontend_http_extra = haproxy_service.frontend_http_extra|default([]) + haproxy_frontend_http_extra %}
-        {% set frontend_redirect_extra = haproxy_service.frontend_redirect_extra|default([]) + haproxy_frontend_redirect_extra %}
-        {% set backend_http_extra = haproxy_service.backend_http_extra|default([]) + haproxy_backend_http_extra %}
-        {% set tls_backend = haproxy_service.tls_backend|default(false) %}
-        {# Allow for basic auth #}
-        {% set auth_user = haproxy_service.auth_user|default() %}
-        {% set auth_pass = haproxy_service.auth_pass|default() %}
-        {% if auth_user and auth_pass %}
+{% set haproxy = service.haproxy | default({}) %}
+{% for haproxy_name, haproxy_service in haproxy.items() %}
+{#     External defaults to false #}
+{%     set external = haproxy_service.external | default(false) | bool %}
+{#     Active/passive defaults to false #}
+{%     set active_passive = haproxy_service.active_passive | default(false) | bool %}
+{#     Skip anything that is external when the external vip is not enabled #}
+{%     if haproxy_service.enabled | bool and (not external or haproxy_enable_external_vip | bool) %}
+{#         Here we define variables and their defaults #}
+{#         services can be listening on a different port than haproxy #}
+{%         set listen_port = haproxy_service.listen_port | default(haproxy_service.port) %}
+{#         Custom member list can use jinja to generate a semicolon separated list #}
+{%         set custom_member_list = haproxy_service.custom_member_list | default(none) %}
+{#         Mode defaults to http #}
+{%         set mode = haproxy_service.mode | default('http') %}
+{#         By default each service has its own frontend (hence with_frontend is true by default) #}
+{%         set with_frontend = haproxy_service.with_frontend | default(true) | bool %}
+{#         By default each service has its own backend (hence with_backend is true by default) #}
+{%         set with_backend = haproxy_service.with_backend | default(true) | bool %}
+{#         Use the parent host group but allow it to be overridden #}
+{%         set host_group = haproxy_service.host_group | default(service.group) %}
+{#         Additional options can be defined in config, and are additive to the global extras #}
+{%         set frontend_tcp_extra = haproxy_service.frontend_tcp_extra | default([]) + haproxy_frontend_tcp_extra %}
+{%         set backend_tcp_extra = haproxy_service.backend_tcp_extra | default([]) + haproxy_backend_tcp_extra %}
+{%         set frontend_http_extra = haproxy_service.frontend_http_extra | default([]) + haproxy_frontend_http_extra %}
+{%         set frontend_redirect_extra = haproxy_service.frontend_redirect_extra | default([]) + haproxy_frontend_redirect_extra %}
+{%         set backend_http_extra = haproxy_service.backend_http_extra | default([]) + haproxy_backend_http_extra %}
+{%         set tls_backend = haproxy_service.tls_backend | default(false) %}
+{#         Allow for basic auth #}
+{%         set auth_user = haproxy_service.auth_user | default() %}
+{%         set auth_pass = haproxy_service.auth_pass | default() %}
+{%         if auth_user and auth_pass %}
 {{ userlist_macro(haproxy_name, auth_user, auth_pass) }}
-        {% endif %}
-        {% if with_frontend %}
-            {% if not (external|bool and haproxy_single_external_frontend|bool and mode == 'http') %}
+{%         endif %}
+{%         if with_frontend %}
+{%             if not (external | bool and haproxy_single_external_frontend | bool and mode == 'http') %}
 {{ frontend_macro(haproxy_name, haproxy_service.port, mode, external,
                   frontend_http_extra, frontend_redirect_extra, frontend_tcp_extra) }}
-            {% endif %}
-        {% endif %}
-        {# Redirect (to https) is a special case, as it does not include a backend #}
-        {% if with_backend and mode != 'redirect' %}
+{%             endif %}
+{%         endif %}
+{#         Redirect (to https) is a special case, as it does not include a backend #}
+{%         if with_backend and mode != 'redirect' %}
 {{ backend_macro(haproxy_name, listen_port, mode, host_group, active_passive,
                  custom_member_list, backend_http_extra, backend_tcp_extra,
                  auth_user, auth_pass, tls_backend) }}
-        {% endif %}
-    {% endif %}
-{%- endfor -%}
+{%         endif %}
+{%     endif %}
+{% endfor %}

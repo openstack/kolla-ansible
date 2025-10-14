@@ -27,9 +27,9 @@ my_ip = {{ api_interface_address }}
 {% if enable_ceilometer | bool %}
 instance_usage_audit = true
 instance_usage_audit_period = hour
-{% if enable_watcher | bool %}
+{%     if enable_watcher | bool %}
 compute_monitors=nova.compute.monitors.cpu.virt_driver
-{% endif %}
+{%     endif %}
 {% endif %}
 
 transport_url = {{ nova_cell_rpc_transport_url }}
@@ -44,17 +44,17 @@ workers = {{ nova_cell_conductor_workers }}
 
 {% if nova_console == 'novnc' %}
 [vnc]
-{% if service_name == "nova-compute-ironic" %}
+{%     if service_name == "nova-compute-ironic" %}
 enabled = false
-{% else %}
+{%     else %}
 novncproxy_host = {{ api_interface_address }}
 novncproxy_port = {{ nova_novncproxy_listen_port }}
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups[nova_cell_compute_group] %}
+{%         if inventory_hostname in groups[nova_cell_compute_group] %}
 novncproxy_base_url = {{ nova_novncproxy_fqdn | kolla_url(public_protocol,  nova_novncproxy_public_port, '/vnc_lite.html') }}
-{% endif %}
-{% endif %}
+{%         endif %}
+{%     endif %}
 {% elif nova_console == 'spice' %}
 [vnc]
 # We have to turn off vnc to use spice
@@ -63,9 +63,9 @@ enabled = false
 enabled = true
 server_listen = {{ api_interface_address }}
 server_proxyclient_address = {{ api_interface_address }}
-{% if inventory_hostname in groups[nova_cell_compute_group] %}
+{%     if inventory_hostname in groups[nova_cell_compute_group] %}
 html5proxy_base_url = {{ nova_spicehtml5proxy_fqdn | kolla_url(public_protocol, nova_spicehtml5proxy_public_port, '/spice_auto.html') }}
-{% endif %}
+{%     endif %}
 html5proxy_host = {{ api_interface_address }}
 html5proxy_port = {{ nova_spicehtml5proxy_listen_port }}
 {% elif nova_console == 'none' %}
@@ -141,21 +141,21 @@ max_overflow = 1000
 max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
 
-{% if service_name == 'nova-cell-bootstrap' or (service_name == 'nova-conductor' and nova_cell_conductor_has_api_database | bool) %}
+{%     if service_name == 'nova-cell-bootstrap' or (service_name == 'nova-conductor' and nova_cell_conductor_has_api_database | bool) %}
 [api_database]
 connection = mysql+pymysql://{{ nova_api_database_user }}:{{ nova_api_database_password }}@{{ nova_api_database_address }}/{{ nova_api_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if nova_cell_database_enable_tls_internal | bool }}
 connection_recycle_time = {{ database_connection_recycle_time }}
 max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
-{% endif %}
+{%     endif %}
 {% endif %}
 
 {% if service_name == 'nova-compute' %}
-{% if nova_compute_virt_type in ['kvm', 'qemu'] %}
+{%     if nova_compute_virt_type in ['kvm', 'qemu'] %}
 {# must be an include because Ansible 2.8 (and earlier) does not like defined variables referencing undefined variables: migration_interface_address here #}
 {# see https://github.com/ansible/ansible/issues/58835 #}
-{% include 'nova.conf.d/libvirt.conf.j2' %}
-{% endif %}
+{%         include 'nova.conf.d/libvirt.conf.j2' %}
+{%     endif %}
 {% endif %}
 
 [upgrade_levels]

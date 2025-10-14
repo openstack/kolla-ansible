@@ -79,36 +79,36 @@ mysql_variables:
 
 mysql_servers:
 {% for shard_id, shard in mariadb_shards_info.shards.items() %}
-{% set WRITER_GROUP = shard_id | int * 10 %}
-{% for host in shard.hosts %}
-{% if loop.first %}
-{% set WEIGHT = 100 %}
-{% else %}
-{% set WEIGHT = 10 %}
-{% endif %}
+{%     set _writer_group = shard_id | int * 10 %}
+{%     for host in shard.hosts %}
+{%         if loop.first %}
+{%             set _weight = 100 %}
+{%         else %}
+{%             set _weight = 10 %}
+{%         endif %}
   - address: "{{ 'api' | kolla_address(host) }}"
     port :  {{ mariadb_port }}
-    hostgroup :  {{ WRITER_GROUP }}
+    hostgroup :  {{ _writer_group }}
     max_connections: {{ proxysql_backend_max_connections }}
     max_replication_lag: {{ proxysql_backend_max_replication_lag }}
-    weight :  {{ WEIGHT }}
+    weight :  {{ _weight }}
     comment :  "Writer {{ host }}"
-{% if database_enable_tls_backend | bool %}
+{%         if database_enable_tls_backend | bool %}
     use_ssl: 1
-{% endif %}
-{% endfor %}
+{%         endif %}
+{%     endfor %}
 {% endfor %}
 
 mysql_galera_hostgroups:
 {% for shard_id, shard in mariadb_shards_info.shards.items() %}
-{% set WRITER_GROUP = shard_id | int * 10 %}
-{% set BACKUP_WRITER_GROUP = WRITER_GROUP | int + 1 %}
-{% set READER_GROUP = BACKUP_WRITER_GROUP | int + 1 %}
-{% set OFFLINE_GROUP = READER_GROUP | int + 1 %}
-  - writer_hostgroup: {{ WRITER_GROUP }}
-    backup_writer_hostgroup: {{ BACKUP_WRITER_GROUP }}
-    reader_hostgroup: {{ READER_GROUP }}
-    offline_hostgroup: {{ OFFLINE_GROUP }}
+{%     set _writer_group = shard_id | int * 10 %}
+{%     set _backup_writer_group = _writer_group | int + 1 %}
+{%     set _reader_group = _backup_writer_group | int + 1 %}
+{%     set _offline_group = _reader_group | int + 1 %}
+  - writer_hostgroup: {{ _writer_group }}
+    backup_writer_hostgroup: {{ _backup_writer_group }}
+    reader_hostgroup: {{ _reader_group }}
+    offline_hostgroup: {{ _offline_group }}
     max_connections: {{ proxysql_backend_max_connections }}
     max_writers: 1
     writer_is_also_reader: 0

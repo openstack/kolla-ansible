@@ -33,7 +33,7 @@ OPENSTACK_API_VERSIONS = {
 }
 
 OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = {{ horizon_keystone_multidomain | bool }}
-OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN = {{ 'True' if horizon_keystone_domain_choices|length > 1 else 'False' }}
+OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN = {{ 'True' if horizon_keystone_domain_choices | length > 1 else 'False' }}
 OPENSTACK_KEYSTONE_DOMAIN_CHOICES = (
 {% for key, value in horizon_keystone_domain_choices.items() %}
     ('{{ key }}', '{{ value }}'),
@@ -45,11 +45,11 @@ SECRET_KEY='{{ horizon_secret_key }}'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-{% if multiple_regions_names|length > 1 %}
+{% if multiple_regions_names | length > 1 %}
 AVAILABLE_REGIONS = [
-{% for region_name in multiple_regions_names %}
+{%     for region_name in multiple_regions_names %}
     ('{{ keystone_internal_url }}', '{{ region_name }}'),
-{% endfor %}
+{%     endfor %}
 ]
 {% endif %}
 
@@ -63,14 +63,14 @@ WEBSSO_ENABLED = True
 WEBSSO_KEYSTONE_URL = "{{ keystone_public_url }}/v3"
 WEBSSO_CHOICES = (
     ("credentials", _("Keystone Credentials")),
-    {% for idp in keystone_identity_providers %}
+    {%     for idp in keystone_identity_providers %}
     ("{{ idp.name }}_{{ idp.protocol }}", "{{ idp.public_name }}"),
-    {% endfor %}
+    {%     endfor %}
 )
 WEBSSO_IDP_MAPPING = {
-{% for idp in keystone_identity_providers %}
+{%     for idp in keystone_identity_providers %}
     "{{ idp.name }}_{{ idp.protocol }}": ("{{ idp.name }}", "{{ idp.protocol }}"),
-{% endfor %}
+{%     endfor %}
 }
 {% endif %}
 
@@ -139,9 +139,9 @@ POLICY_FILES_PATH = '/etc/openstack-dashboard'
 AVAILABLE_THEMES = [
      ('default', 'Default', 'themes/default'),
      ('material', 'Material', 'themes/material'),
-{% for theme in horizon_custom_themes %}
+{%     for theme in horizon_custom_themes %}
      ('{{ theme.name|e }}', '{{ theme.label|e }}', '/etc/openstack-dashboard/themes/{{ theme.name|e }}'),
-{% endfor %}
+{%     endfor %}
 ]
 {% endif %}
 

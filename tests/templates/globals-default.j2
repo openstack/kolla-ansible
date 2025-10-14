@@ -18,10 +18,10 @@ docker_yum_url: "http://{{ zuul_site_mirror_fqdn }}:8080/docker/centos"
 podman_debug: true
 podman_registry_mirrors:
   - {{ infra_dockerhub_mirror }}
-{% if need_build_image and is_previous_release %}
+{%     if need_build_image and is_previous_release %}
 podman_registry: "primary:4000"
 podman_registry_insecure: true
-{% endif %}
+{%     endif %}
 {% else %}
 docker_debug: true
 docker_apt_package_pin: "5:28.*"
@@ -33,11 +33,11 @@ docker_registry_mirrors:
 # as docker_registry var is being used both for docker daemon config
 # - for kolla images build, and kolla-ansible container images sources.
 # docker_custom_config gets precedence in docker daemon configuration.
-{% if need_build_image and is_previous_release %}
+{%     if need_build_image and is_previous_release %}
 docker_custom_config:
   insecure-registries:
     - primary:4000
-{% endif %}
+{%     endif %}
 {% endif %}
 
 # MariaDB/Galera - fine tune timeouts
@@ -78,16 +78,16 @@ docker_namespace: "lokolla"
 # see: https://github.com/moby/moby/issues/39033
 docker_registry: "primary:4000"
 docker_registry_insecure: yes
-{% if container_engine == 'podman' %}
+{%     if container_engine == 'podman' %}
 podman_registry: "primary:4000"
 podman_registry_insecure: yes
-{% endif %}
+{%     endif %}
 openstack_tag: "{{ build_image_tag }}"
 {% else %}
 docker_namespace: openstack.kolla
-{% if docker_image_tag_suffix %}
+{%     if docker_image_tag_suffix %}
 openstack_tag_suffix: "{{ docker_image_tag_suffix }}"
-{% endif %}
+{%     endif %}
 {% endif %}
 
 {% if scenario == "zun" %}
@@ -163,17 +163,17 @@ rabbitmq_cluster_partition_handling: "autoheal"
 rabbitmq_extra_config:
   cluster_keepalive_interval: 50000
 # TODO(bbezak): Remove in H/2026.2 cycle
-{% if is_slurp and is_previous_release %}
+{%     if is_slurp and is_previous_release %}
 enable_redis: "yes"
-{% endif %}
+{%     endif %}
 
 enable_ceph_rgw: "yes"
 ceph_rgw_hosts:
-{% for host in hostvars | reject('equalto', 'localhost') %}
+{%     for host in hostvars | reject('equalto', 'localhost') %}
   - host: {{ host }}
     ip: {{ hostvars[host]['ansible_host'] }}
     port: 6780
-{% endfor %}
+{%     endfor %}
 {% endif %}
 
 {% if tls_enabled %}
@@ -181,12 +181,12 @@ kolla_enable_tls_external: "yes"
 kolla_enable_tls_internal: "yes"
 kolla_copy_ca_into_containers: "yes"
 kolla_enable_tls_backend: "yes"
-{% if base_distro in ["debian", "ubuntu"] %}
+{%     if base_distro in ["debian", "ubuntu"] %}
 openstack_cacert: "/etc/ssl/certs/ca-certificates.crt"
-{% endif %}
-{% if base_distro in ["centos", "rocky"] %}
+{%     endif %}
+{%     if base_distro in ["centos", "rocky"] %}
 openstack_cacert: "/etc/pki/tls/certs/ca-bundle.crt"
-{% endif %}
+{%     endif %}
 kolla_admin_openrc_cacert: "{% raw %}{{ kolla_certificates_dir }}{% endraw %}/ca/root.crt"
 rabbitmq_enable_tls: "yes"
 libvirt_tls: "yes"

@@ -14,26 +14,26 @@
       output_time {{ item.output_time | default(false) | lower }}
     </format>
   </store>
-{% if log_direct_to_elasticsearch %}
+{%     if log_direct_to_elasticsearch %}
   <store>
        @type elasticsearch
        host {{ elasticsearch_address }}
        port {{ elasticsearch_port | default('9200') }}
        scheme {{ fluentd_elasticsearch_scheme }}
-{% if fluentd_elasticsearch_path != '' %}
+{%         if fluentd_elasticsearch_path != '' %}
        path {{ fluentd_elasticsearch_path }}
-{% endif %}
-{% if fluentd_elasticsearch_scheme == 'https' %}
+{%         endif %}
+{%         if fluentd_elasticsearch_scheme == 'https' %}
        ssl_version {{ fluentd_elasticsearch_ssl_version }}
        ssl_verify {{ fluentd_elasticsearch_ssl_verify }}
-{% if fluentd_elasticsearch_cacert | length > 0 %}
+{%             if fluentd_elasticsearch_cacert | length > 0 %}
        ca_file {{ fluentd_elasticsearch_cacert }}
-{% endif %}
-{% endif %}
-{% if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != ''%}
+{%             endif %}
+{%         endif %}
+{%         if fluentd_elasticsearch_user != '' and fluentd_elasticsearch_password != '' %}
        user {{ fluentd_elasticsearch_user }}
        password {{ fluentd_elasticsearch_password }}
-{% endif %}
+{%         endif %}
        logstash_format true
        logstash_prefix {{ opensearch_log_index_prefix }}
        reconnect_on_error true
@@ -48,26 +48,26 @@
          chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
        </buffer>
   </store>
-{% elif log_direct_to_opensearch %}
+{%     elif log_direct_to_opensearch %}
   <store>
        @type opensearch
        hosts {% for host in groups['opensearch'] %}{{ 'api' | kolla_address(host) }}{% if not loop.last %},{% endif %}{% endfor %}
        port {{ opensearch_port }}
        scheme {{ fluentd_opensearch_scheme }}
-{% if fluentd_opensearch_path != '' %}
+{%         if fluentd_opensearch_path != '' %}
        path {{ fluentd_opensearch_path }}
-{% endif %}
-{% if fluentd_opensearch_scheme == 'https' %}
+{%         endif %}
+{%         if fluentd_opensearch_scheme == 'https' %}
        ssl_version {{ fluentd_opensearch_ssl_version }}
        ssl_verify {{ fluentd_opensearch_ssl_verify }}
-{% if fluentd_opensearch_cacert | length > 0 %}
+{%             if fluentd_opensearch_cacert | length > 0 %}
        ca_file {{ fluentd_opensearch_cacert }}
-{% endif %}
-{% endif %}
-{% if fluentd_opensearch_user != '' and fluentd_opensearch_password != ''%}
+{%             endif %}
+{%         endif %}
+{%         if fluentd_opensearch_user != '' and fluentd_opensearch_password != '' %}
        user {{ fluentd_opensearch_user }}
        password {{ fluentd_opensearch_password }}
-{% endif %}
+{%         endif %}
        logstash_format true
        logstash_prefix {{ opensearch_log_index_prefix }}
        reconnect_on_error true
@@ -82,6 +82,6 @@
          chunk_limit_size {{ fluentd_buffer_chunk_limit_size }}
        </buffer>
     </store>
-{% endif %}
+{%     endif %}
 </match>
 {% endfor %}

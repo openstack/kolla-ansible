@@ -15,14 +15,14 @@
 
 mysql_users:
 {% for user in proxysql_project_database_shard['users'] %}
-{% if user['shard_id'] is defined %}
-{% set WRITER_GROUP = user['shard_id'] | int * 10 %}
-{% endif %}
+{%     if user['shard_id'] is defined %}
+{%         set _writer_group = user['shard_id'] | int * 10 %}
+{%     endif %}
   - username: "{{ user['user'] }}"
     password: "{{ user['password'] }}"
-{% if user['shard_id'] is defined %}
-    default_hostgroup: {{ WRITER_GROUP }}
-{% endif %}
+{%     if user['shard_id'] is defined %}
+    default_hostgroup: {{ _writer_group }}
+{%     endif %}
     transaction_persistent: 1
     active: 1
 {% endfor %}
