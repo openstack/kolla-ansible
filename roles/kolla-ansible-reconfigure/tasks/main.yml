@@ -1,0 +1,63 @@
+---
+- name: Run kolla-ansible prechecks
+  ansible.builtin.shell:
+    cmd: >
+      . {{ kolla_ansible_venv_path }}/bin/activate &&
+      kolla-ansible prechecks
+      -i /etc/kolla/inventory
+      -vvv
+      >/tmp/logs/ansible/reconfigure-prechecks 2>&1
+
+- name: Remove OVN DB containers and volumes on primary to test recreation (docker)
+  become: true
+  when:
+    - scenario == 'ovn'
+    - container_engine == 'docker'
+  vars:
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  block:
+    - name: Remove OVN DB containers
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ ovn_db_services }}"
+
+    - name: Remove OVN DB volumes
+      community.docker.docker_volume:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ ovn_db_services }}"
+
+- name: Remove OVN DB containers and volumes on primary to test recreation (podman)
+  become: true
+  when:
+    - scenario == 'ovn'
+    - container_engine == 'podman'
+  vars:
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  block:
+    - name: Remove OVN DB containers
+      containers.podman.podman_container:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ ovn_db_services }}"
+
+    - name: Remove OVN DB volumes
+      containers.podman.podman_volume:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ ovn_db_services }}"
+
+- name: Run kolla-ansible reconfigure
+  ansible.builtin.shell:
+    cmd: >
+      . {{ kolla_ansible_venv_path }}/bin/activate &&
+      kolla-ansible reconfigure
+      -i /etc/kolla/inventory
+      -vvv
+      >/tmp/logs/ansible/reconfigure 2>&1
+
