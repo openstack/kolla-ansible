@@ -10,6 +10,11 @@ cluster_partition_handling = {{ rabbitmq_cluster_partition_handling }}
 
 management.listener.ip = {{ api_interface_address }}
 management.listener.port = {{ role_rabbitmq_management_port }}
+{% if rabbitmq_enable_tls | bool %}
+management.listener.ssl = true
+management.ssl.certfile = /etc/rabbitmq/certs/{{ project_name }}-cert.pem
+management.ssl.keyfile = /etc/rabbitmq/certs/{{ project_name }}-key.pem
+{% endif %}
 management.load_definitions = /etc/rabbitmq/definitions.json
 {% for key, value in rabbitmq_extra_config.items() %}
 {{ key }} = {{ value }}

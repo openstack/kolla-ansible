@@ -23,7 +23,6 @@ Encryption of the following channels is not currently supported:
 
 * RabbitMQ cluster traffic between RabbitMQ server nodes
 * RabbitMQ CLI communication with RabbitMQ server nodes
-* RabbitMQ Management API and UI (backend connection from HAProxy to RabbitMQ)
 
 Client-server
 -------------
