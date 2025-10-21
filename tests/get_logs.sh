@@ -15,7 +15,7 @@ copy_logs() {
         echo "Invalid container engine: ${CONTAINER_ENGINE}"
         exit 1
     fi
-
+    cp -rL /home/zuul/tempest ${LOG_DIR}/
     [ -d ${VOLUMES_DIR}/kolla_logs/_data ] && cp -rnL ${VOLUMES_DIR}/kolla_logs/_data/* ${LOG_DIR}/kolla/
     [ -d /etc/kolla ] && cp -rnL /etc/kolla/* ${LOG_DIR}/kolla_configs/
     # Don't save the IPA images.
