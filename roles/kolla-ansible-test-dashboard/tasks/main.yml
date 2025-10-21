@@ -19,3 +19,62 @@
   until: dashboard_output.content.find('Login') != -1
   retries: 30
   delay: 10
+
+- name: Check if testinfra subdirectory exists
+  ansible.builtin.stat:
+    path: "{{ zuul.project.src_dir }}/tests/testinfra"
+  register: testinfra_dir
+
+- name: Run testinfra tests
+  when: testinfra_dir.stat.exists
+  block:
+    - name: Ensure testinfra subdirectory exists
+      ansible.builtin.file:
+        path: "/home/zuul/testinfra"
+        state: directory
+
+    - name: Ensure screenshots directory exists
+      ansible.builtin.file:
+        path: "/home/zuul/testinfra/screenshots"
+        state: directory
+
+    - name: Ensure required packages are installed
+      ansible.builtin.pip:
+        name:
+          - pytest-html
+          - pytest-testinfra
+          - selenium
+        virtualenv: "{{ kolla_ansible_venv_path }}"
+        virtualenv_command: "python3 -m venv"
+
+    - name: Run Selenium Firefox container (Docker)
+      become: true
+      when: container_engine == 'docker'
+      community.docker.docker_container:
+        name: "selenium"
+        detach: true
+        image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
+        network_mode: host
+
+    - name: Run Selenium Firefox container (Podman)
+      become: true
+      when: container_engine == 'podman'
+      containers.podman.podman_container:
+        name: "selenium"
+        detach: true
+        image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
+        network_mode: host
+
+    - name: Wait for port 444 to be up
+      ansible.builtin.wait_for:
+        port: 4444
+
+    - name: Run testinfra tests
+      ansible.builtin.shell:
+        cmd: >
+          . {{ kolla_ansible_venv_path }}/bin/activate &&
+          py.test
+          --junit-xml /home/zuul/testinfra/testinfra-junit.xml -o junit_family=xunit1
+          --html=/home/zuul/testinfra/test-results-testinfra.html --self-contained-html
+          -v tests/testinfra
+        chdir: "{{ zuul.project.src_dir }}"
