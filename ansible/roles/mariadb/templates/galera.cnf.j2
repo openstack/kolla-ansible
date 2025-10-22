@@ -32,7 +32,7 @@ datadir=/var/lib/mysql/
 
 wsrep_cluster_address=gcomm://{% if (groups[mariadb_shard_group] | length) > 1 %}{% for host in groups[mariadb_shard_group] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
 
-wsrep_provider_options=gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
+wsrep_provider_options={% if primary_host_on_recovery is defined and primary_host_on_recovery %}pc.bootstrap=yes;{% endif %}gmcast.listen_addr=tcp://{{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_ist_port }};{% for option in mariadb_wsrep_extra_provider_options %}{{ option }}{% if not loop.last %};{% endif %}{% endfor %}
 
 wsrep_node_address={{ api_interface_address | put_address_in_context('url') }}:{{ mariadb_wsrep_port }}
 
