@@ -1,5 +1,4 @@
 {%- set wsrep_driver = '/usr/lib/galera/libgalera_smm.so' if kolla_base_distro in ['debian', 'ubuntu'] else '/usr/lib64/galera/libgalera_smm.so' %}
-{% set sst_method = 'mariabackup' %}
 
 [client]
 default-character-set=utf8
@@ -41,7 +40,7 @@ wsrep_sst_receive_address={{ api_interface_address | put_address_in_context('url
 wsrep_provider={{ wsrep_driver }}
 wsrep_cluster_name="{{ database_cluster_name }}"
 wsrep_node_name={{ ansible_facts.hostname }}
-wsrep_sst_method={{ sst_method }}
+wsrep_sst_method={{ mariadb_wsrep_sst_method }}
 wsrep_sst_auth={{ database_user }}:{{ database_password }}
 wsrep_slave_threads=4
 wsrep_on = ON
@@ -62,7 +61,7 @@ innodb_buffer_pool_size = '8192M'
 pid-file=/var/lib/mysql/mariadb.pid
 
 [sst]
-{% if sst_method == 'mariabackup' and api_address_family == 'ipv6' %}
+{% if mariadb_wsrep_sst_method == 'mariabackup' and api_address_family == 'ipv6' %}
 # NOTE(yoctozepto): for IPv6 we need to tweak sockopt for socat (mariabackup sst backend)
 # see: https://mariadb.com/kb/en/library/xtrabackup-v2-sst-method/#performing-ssts-with-ipv6-addresses
 # and: https://jira.mariadb.org/browse/MDEV-18797
