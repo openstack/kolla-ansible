@@ -62,8 +62,6 @@ neutron_services:
     image: "{{ neutron_openvswitch_agent_image_full }}"
     enabled: "{{ neutron_plugin_agent == 'openvswitch' }}"
     privileged: True
-    environment:
-      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
       (inventory_hostname in groups['compute']
@@ -86,8 +84,6 @@ neutron_services:
     image: "{{ neutron_linuxbridge_agent_image_full }}"
     privileged: True
     enabled: "{{ neutron_plugin_agent == 'linuxbridge' }}"
-    environment:
-      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
     host_in_groups: >-
       {{
       inventory_hostname in groups['compute']
@@ -123,7 +119,6 @@ neutron_services:
     enabled: "{{ neutron_plugin_agent != 'ovn' }}"
     environment:
       KOLLA_IMAGE: "{{ neutron_l3_agent_image_full }}"
-      KOLLA_LEGACY_IPTABLES: "{{ neutron_legacy_iptables | bool | lower }}"
       KOLLA_NAME: "neutron_l3_agent"
       KOLLA_NEUTRON_WRAPPERS: "{{ 'true' if neutron_agents_wrappers | bool else 'false' }}"
     host_in_groups: >-
