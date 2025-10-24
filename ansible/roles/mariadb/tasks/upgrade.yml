@@ -1,11 +1,11 @@
 ---
 - name: Set wsrep_sst_method to rsync for upgrade
   become: true
+  no_log: true
   shell: >
     {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
     mysql -uroot -p{{ database_password }}
-    -e \"SET GLOBAL wsrep_sst_method='rsync';\"
-  no_log: true
+    -e "SET GLOBAL wsrep_sst_method='rsync';"
 
 - import_tasks: deploy.yml
   vars:
@@ -13,11 +13,11 @@
 
 - name: Set wsrep_sst_method to mariabackup after upgrade
   become: true
+  no_log: true
   shell: >
     {{ kolla_container_engine }} exec {{ mariadb_service.container_name }}
     mysql -uroot -p{{ database_password }}
-    -e \"SET GLOBAL wsrep_sst_method='mariabackup';\"
-  no_log: true
+    -e "SET GLOBAL wsrep_sst_method='mariabackup';"
 
 - import_tasks: deploy.yml
 

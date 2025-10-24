@@ -24,6 +24,13 @@
     nodeset: kolla-ansible-debian-bookworm-multi-16GB
 
 - job:
+    name: kolla-ansible-debian-bookworm-mariadb-upgrade
+    parent: kolla-ansible-mariadb-base
+    nodeset: kolla-ansible-debian-bookworm-multi-16GB
+    vars:
+      is_upgrade: true
+
+- job:
     name: kolla-ansible-rocky-10-mariadb
     parent: kolla-ansible-mariadb-base
     nodeset: kolla-ansible-rocky-10-multi-16GB
@@ -33,6 +40,13 @@
     parent: kolla-ansible-mariadb-base
     nodeset: kolla-ansible-ubuntu-noble-multi-8GB
 
+- job:
+    name: kolla-ansible-ubuntu-noble-mariadb-upgrade
+    parent: kolla-ansible-mariadb-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+    vars:
+      is_upgrade: true
+
 - project-template:
     name: kolla-ansible-scenario-mariadb
     description: |
@@ -40,10 +54,14 @@
     check:
       jobs:
         - kolla-ansible-debian-bookworm-mariadb
+        - kolla-ansible-debian-bookworm-mariadb-upgrade
         - kolla-ansible-rocky-10-mariadb
         - kolla-ansible-ubuntu-noble-mariadb
+        - kolla-ansible-ubuntu-noble-mariadb-upgrade
     gate:
       jobs:
         - kolla-ansible-debian-bookworm-mariadb
+        - kolla-ansible-debian-bookworm-mariadb-upgrade
         - kolla-ansible-rocky-10-mariadb
         - kolla-ansible-ubuntu-noble-mariadb
+        - kolla-ansible-ubuntu-noble-mariadb-upgrade
