@@ -68,7 +68,6 @@
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
         - enable_trove_{{ enable_trove | bool }}
-        - enable_venus_{{ enable_venus | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
         - enable_zun_{{ enable_zun | bool }}
   tags: always
@@ -326,11 +325,6 @@
             tasks_from: loadbalancer
           tags: trove
           when: enable_trove | bool
-        - include_role:
-            name: venus
-            tasks_from: loadbalancer
-          tags: venus
-          when: enable_venus | bool
         - include_role:
             name: watcher
             tasks_from: loadbalancer
@@ -1065,21 +1059,6 @@
   roles:
     - { role: masakari,
         tags: masakari }
-
-- name: Apply role venus
-  gather_facts: false
-  hosts:
-    - venus-api
-    - venus-manager
-    - '&enable_venus_True'
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ venus_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: venus,
-        tags: venus }
 
 - name: Apply role skyline
   gather_facts: false
