@@ -21,24 +21,6 @@
   when:
     - common_copy_certs | bool
 
-- name: Copying over /run subdirectories conf
-  become: true
-  template:
-    src: kolla-directories.conf.j2
-    dest: /etc/tmpfiles.d/kolla.conf
-  when: kolla_container_engine == 'podman'
-
-- name: Restart systemd-tmpfiles
-  become: true
-  command: systemd-tmpfiles --create
-  when: kolla_container_engine == 'podman'
-
-- name: Copying over kolla.target
-  become: true
-  template:
-    src: kolla.target.j2
-    dest: /etc/systemd/system/kolla.target
-
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
