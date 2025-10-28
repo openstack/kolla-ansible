@@ -10,7 +10,7 @@
     - name: Set facts for commonly used variables
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
-        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-opensearch', 'venus'] }}"
+        openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-opensearch'] }}"
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -525,13 +525,6 @@
             TLS_ENABLED: "{{ tls_enabled }}"
           when:
             - scenario == "prometheus-opensearch"
-
-        - name: Run test-venus.sh script
-          script:
-            cmd: test-venus.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "venus"
 
         - name: Run test-skyline.sh script
           script:
