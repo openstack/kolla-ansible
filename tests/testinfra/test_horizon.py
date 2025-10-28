@@ -38,7 +38,8 @@ def test_horizon_screenshot(host):
         command_executor='http://localhost:4444/wd/hub',
         options=firefox_options)
 
-    horizon_url = "https://192.0.2.10"
+    horizon_proto = host.environment().get('HORIZON_PROTO')
+    horizon_url = horizon_proto + "://192.0.2.10"
 
     try:
         driver.get(horizon_url)
@@ -77,7 +78,8 @@ def test_horizon_login(host):
         command_executor='http://localhost:4444/wd/hub',
         options=firefox_options)
 
-    horizon_url = "https://192.0.2.10"
+    horizon_proto = host.environment().get('HORIZON_PROTO')
+    horizon_url = horizon_proto + "://192.0.2.10"
     logout_url = '/'.join((
                  horizon_url,
                  'auth',
