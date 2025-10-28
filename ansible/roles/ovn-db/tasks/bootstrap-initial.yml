@@ -20,7 +20,7 @@
       changed_when: false
       register: ovn_nb_db_cluster_status
       when: groups['ovn-nb-db_leader'] is defined and inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '')
-      delegate_to: "{{ groups['ovn-nb-db_leader'][0] }}"
+      delegate_to: "{{ groups['ovn-nb-db_leader'][0] if groups['ovn-nb-db_leader'] is defined else omit }}"
 
     - name: Check SB cluster status
       command: >
@@ -30,7 +30,7 @@
       changed_when: false
       register: ovn_sb_db_cluster_status
       when: groups['ovn-sb-db_leader'] is defined and inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '')
-      delegate_to: "{{ groups['ovn-sb-db_leader'][0] }}"
+      delegate_to: "{{ groups['ovn-sb-db_leader'][0] if groups['ovn-sb-db_leader'] is defined else omit }}"
 
     - name: Remove an old node with the same ip address as the new node in NB DB
       vars:
@@ -42,7 +42,7 @@
       when:
         - ovn_nb_db_cluster_status.stdout is defined
         - (ovn_nb_db_cluster_status.stdout is search('at tcp:' + api_interface_address)) and inventory_hostname in groups.get('ovn-nb-db_had_volume_False', '')
-      delegate_to: "{{ groups['ovn-nb-db_leader'][0] }}"
+      delegate_to: "{{ groups['ovn-nb-db_leader'][0] if groups['ovn-nb-db_leader'] is defined else omit }}"
 
     - name: Remove an old node with the same ip address as the new node in SB DB
       vars:
@@ -54,7 +54,7 @@
       when:
         - ovn_sb_db_cluster_status.stdout is defined
         - (ovn_sb_db_cluster_status.stdout is search('at tcp:' + api_interface_address)) and inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '')
-      delegate_to: "{{ groups['ovn-sb-db_leader'][0] }}"
+      delegate_to: "{{ groups['ovn-sb-db_leader'][0] if groups['ovn-sb-db_leader'] is defined else omit }}"
 
     - name: Set bootstrap args fact for NB (new member)
       set_fact:

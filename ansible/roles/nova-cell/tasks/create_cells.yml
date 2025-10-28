@@ -26,7 +26,7 @@
     - '"already exists" not in nova_cell_create.stdout'
   when:
     - inventory_hostname == groups[nova_conductor.group][0] | default(None)
-    - nova_cell_settings | length == 0
+    - not nova_cell_settings | bool
 
 - name: Update cell
   vars:
@@ -51,5 +51,5 @@
     - nova_cell_updated.rc != 0
   when:
     - inventory_hostname == groups[nova_conductor.group][0] | default(None)
-    - nova_cell_settings | length > 0
+    - nova_cell_settings | bool
     - nova_cell_settings.cell_message_queue != nova_cell_rpc_transport_url or nova_cell_settings.cell_database != nova_cell_database_url

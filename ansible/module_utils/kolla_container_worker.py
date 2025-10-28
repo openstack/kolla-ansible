@@ -410,7 +410,7 @@ class ContainerWorker(ABC):
         vol_dict = dict()
 
         for vol in volumes:
-            if len(vol) == 0:
+            if not vol:
                 continue
 
             if ':' not in vol:

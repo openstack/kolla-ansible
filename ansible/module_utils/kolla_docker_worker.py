@@ -469,8 +469,11 @@ class DockerWorker(ContainerWorker):
                                   labels={'kolla_managed': 'true'})
 
     def create_container_volumes(self):
-        volumes = self.params.get("volumes", [])
-
+        volumes = self.params.get('volumes')
+        if not volumes:
+            return
+        # Filter out null / empty string volumes
+        volumes = [v for v in volumes if v]
         for volume in volumes:
             volume_name = volume.split(":")[0]
             if "/" in volume_name:
