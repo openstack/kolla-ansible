@@ -452,15 +452,53 @@ class PodmanWorker(ContainerWorker):
                 failed=True, msg=repr("Unsupported dimensions"),
                 unsupported_dimensions=unsupported)
         current_dimensions = container_info['HostConfig']
+
+        # NOTE(blanson): We normalize ulimits names because the podman api
+        # returns them as RLIMIT_<UPPER_STRING>
+        def normalize_ulimit_name(name):
+            name = name.upper()
+            if not name.startswith('RLIMIT_'):
+                return 'RLIMIT_' + name
+            return name
+
         for key1, key2 in dimension_map.items():
-            # NOTE(mgoddard): If a resource has been explicitly requested,
-            # check for a match. Otherwise, ensure it is set to the default.
-            if key1 in new_dimensions:
-                if key1 == 'ulimits':
-                    if self.compare_ulimits(new_dimensions[key1],
-                                            current_dimensions[key2]):
-                        return True
-                elif new_dimensions[key1] != current_dimensions[key2]:
+            if key1 == 'ulimits':
+                current_ulimits = current_dimensions.get(key2, [])
+
+                # NOTE(blanson): We strip podman default ulimits
+                # because they are not settable by users anyways
+                # and break idempotency.
+                filtered_current_ulimits = [
+                    u for u in current_ulimits
+                    if u.get('Name') not in ('RLIMIT_NOFILE', 'RLIMIT_NPROC')
+                ]
+
+                desired_ulimits = new_dimensions.get('ulimits', {})
+
+                desired_ulimits = {
+                    normalize_ulimit_name(name): limits
+                    for name, limits in desired_ulimits.items()
+                    if normalize_ulimit_name(name) not in (
+                        'RLIMIT_NOFILE', 'RLIMIT_NPROC')
+                }
+
+                normalized_current = [
+                    {
+                        'Name': normalize_ulimit_name(u['Name']),
+                        'Soft': u.get('Soft'),
+                        'Hard': u.get('Hard')
+                    }
+                    for u in filtered_current_ulimits
+                ]
+
+                if self.compare_ulimits(
+                    desired_ulimits,
+                    normalized_current
+                ):
+                    return True
+
+            elif key1 in new_dimensions:
+                if new_dimensions[key1] != current_dimensions.get(key2):
                     return True
             elif current_dimensions[key2]:
                 # The default values of all (except ulimits) currently
