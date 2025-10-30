@@ -68,6 +68,17 @@ ironic_services:
     image: "{{ ironic_dnsmasq_image_full }}"
     volumes: "{{ ironic_dnsmasq_default_volumes + ironic_dnsmasq_extra_volumes }}"
     dimensions: "{{ ironic_dnsmasq_dimensions }}"
+    pid_mode: host
+  ironic-pxe-filter:
+    container_name: ironic_pxe_filter
+    group: ironic-dnsmasq
+    enabled: "{{ enable_ironic_pxe_filter }}"
+    image: "{{ ironic_pxe_filter_image_full }}"
+    volumes: "{{ ironic_pxe_filter_default_volumes + ironic_pxe_filter_extra_volumes }}"
+    dimensions: "{{ ironic_pxe_filter_dimensions }}"
+    # TODO: --pid container:ironic_dnsmasq but this is more complicated since we need to
+    # declare dependency in systemd too.
+    pid_mode: host
   ironic-prometheus-exporter:
     container_name: ironic_prometheus_exporter
     group: ironic-conductor
@@ -127,6 +138,10 @@ ironic_dnsmasq_image: "{{ docker_image_url }}dnsmasq"
 ironic_dnsmasq_tag: "{{ ironic_tag }}"
 ironic_dnsmasq_image_full: "{{ ironic_dnsmasq_image }}:{{ ironic_dnsmasq_tag }}"
 
+ironic_pxe_filter_image: "{{ docker_image_url }}ironic-pxe-filter"
+ironic_pxe_filter_tag: "{{ ironic_tag }}"
+ironic_pxe_filter_image_full: "{{ ironic_pxe_filter_image }}:{{ ironic_pxe_filter_tag }}"
+
 ironic_prometheus_exporter_image: "{{ docker_image_url }}ironic-prometheus-exporter"
 ironic_prometheus_exporter_tag: "{{ ironic_tag }}"
 ironic_prometheus_exporter_image_full: "{{ ironic_prometheus_exporter_image }}:{{ ironic_prometheus_exporter_tag }}"
@@ -136,6 +151,7 @@ ironic_conductor_dimensions: "{{ default_container_dimensions }}"
 ironic_tftp_dimensions: "{{ default_container_dimensions }}"
 ironic_http_dimensions: "{{ default_container_dimensions }}"
 ironic_dnsmasq_dimensions: "{{ default_container_dimensions }}"
+ironic_pxe_filter_dimensions: "{{ default_container_dimensions }}"
 ironic_prometheus_exporter_dimensions: "{{ default_container_dimensions }}"
 
 ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
@@ -212,8 +228,16 @@ ironic_dnsmasq_default_volumes:
   - "{{ node_config_directory }}/ironic-dnsmasq/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-  - "kolla_logs:/var/log/kolla"
   - "ironic_dhcp_hosts:/etc/dnsmasq/dhcp-hostsdir:ro"
+  - "kolla_logs:/var/log/kolla"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
+ironic_pxe_filter_default_volumes:
+  - "{{ node_config_directory }}/ironic-pxe-filter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla"
+  - "ironic_dhcp_hosts:/etc/dnsmasq/dhcp-hostsdir"
+  - "/run:/run{{ ':shared' if kolla_container_engine == 'docker' else '' }}"
 ironic_prometheus_exporter_default_volumes:
   - "{{ node_config_directory }}/ironic-prometheus-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -227,6 +251,7 @@ ironic_conductor_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_tftp_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_http_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_dnsmasq_extra_volumes: "{{ ironic_extra_volumes }}"
+ironic_pxe_filter_extra_volumes: "{{ ironic_extra_volumes }}"
 ironic_prometheus_exporter_extra_volumes: "{{ ironic_extra_volumes }}"
 
 ####################
