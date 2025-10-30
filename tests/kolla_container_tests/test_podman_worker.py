@@ -1290,19 +1290,149 @@ class TestAttrComp(base.BaseTestCase):
     def test_compare_volumes_neg(self):
         container_info = {
             'Config': dict(Volumes=['/var/log/kolla/']),
-            'HostConfig': dict(Binds=['kolla_logs:/var/log/kolla/:rw'])}
-        self.pw = get_PodmanWorker(
-            {'volumes': ['kolla_logs:/var/log/kolla/:rw']})
-
+            'HostConfig': dict(Binds=[
+                'kolla_logs:/var/log/kolla/:rw,rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['kolla_logs:/var/log/kolla/']
+        })
         self.assertFalse(self.pw.compare_volumes(container_info))
 
     def test_compare_volumes_pos(self):
         container_info = {
             'Config': dict(Volumes=['/var/log/kolla/']),
-            'HostConfig': dict(Binds=['kolla_logs:/var/log/kolla/:rw'])}
-        self.pw = get_PodmanWorker(
-            {'volumes': ['/dev/:/dev/:rw']})
+            'HostConfig': dict(Binds=[
+                'kolla_logs:/var/log/kolla/:ro,rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['kolla_logs:/var/log/kolla/']
+        })
+        self.assertTrue(self.pw.compare_volumes(container_info))
 
+    def test_compare_volumes_empty_add(self):
+        container_info = {
+            'Config': dict(Volumes=[]),
+            'HostConfig': dict(Binds=[])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['kolla_logs:/var/log/kolla/']
+        })
+        self.assertTrue(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_empty_del(self):
+        container_info = {
+            'Config': dict(Volumes=['/var/log/kolla/']),
+            'HostConfig': dict(Binds=[
+                'kolla_logs:/var/log/kolla/:ro,rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': []
+        })
+        self.assertTrue(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_noexec_default(self):
+        container_info = {
+            'Config': dict(Volumes=['/proc/', '/run/libvirt', '/sys/']),
+            'HostConfig': dict(Binds=[
+                '/proc/:/proc/:rw,shared,rprivate,nosuid,nodev,noexec,rbind',
+                '/run/libvirt:/run/libvirt:rw,nosuid,nodev,noexec,rbind',
+                '/sys/:/sys/:rw,rprivate,nosuid,nodev,noexec,rbind',
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': [
+                '/proc/:/proc/:shared',
+                '/run/libvirt:/run/libvirt:rprivate',
+                '/sys/:/sys/:rprivate'
+            ]
+        })
+        self.assertFalse(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_shared_vs_rw(self):
+        container_info = {
+            'Config': dict(Volumes=['/run/libvirt/']),
+            'HostConfig': dict(Binds=[
+                '/run/libvirt:/run/libvirt:rw,rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['/run/libvirt:/run/libvirt:shared']
+        })
+        self.assertTrue(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_implicit_rw_both_sides(self):
+        container_info = {
+            'Config': dict(Volumes=['/dev/shm/']),  # nosec
+            'HostConfig': dict(Binds=[
+                '/dev/shm:/dev/shm:rprivate,nosuid,nodev,rbind'  # nosec
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['/dev/shm:/dev/shm']  # nosec
+        })
+        self.assertFalse(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_explicit_rw_vs_implicit(self):
+        container_info = {
+            'Config': dict(Volumes=['/data/']),
+            'HostConfig': dict(Binds=[
+                '/host/data:/data:rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['/host/data:/data:rw']
+        })
+        self.assertFalse(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_var_run_noexec(self):
+        container_info = {
+            'Config': dict(Volumes=['/var/run/libvirt/']),
+            'HostConfig': dict(Binds=[
+                '/var/run/libvirt:/var/run/libvirt:'
+                'rw,rprivate,nosuid,nodev,noexec,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': ['/var/run/libvirt:/var/run/libvirt']
+        })
+        self.assertFalse(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_multiple_binds(self):
+        container_info = {
+            'Config': dict(Volumes=[  # nosec
+                '/var/log/kolla/', '/etc/kolla/', '/dev/shm/']),
+            'HostConfig': dict(Binds=[
+                'kolla_logs:/var/log/kolla/:rw,rprivate,nosuid,nodev,rbind',
+                '/etc/kolla:/etc/kolla:ro,rprivate,nosuid,nodev,rbind',
+                '/dev/shm:/dev/shm:rprivate,nosuid,nodev,rbind'  # nosec
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': [
+                'kolla_logs:/var/log/kolla/',
+                '/etc/kolla:/etc/kolla:ro',
+                '/dev/shm:/dev/shm'  # nosec
+            ]
+        })
+        self.assertFalse(self.pw.compare_volumes(container_info))
+
+    def test_compare_volumes_multiple_binds_one_diff(self):
+        container_info = {
+            'Config': dict(Volumes=['/var/log/kolla/', '/etc/kolla/']),
+            'HostConfig': dict(Binds=[
+                'kolla_logs:/var/log/kolla/:rw,rprivate,nosuid,nodev,rbind',
+                '/etc/kolla:/etc/kolla:ro,rprivate,nosuid,nodev,rbind'
+            ])
+        }
+        self.pw = get_PodmanWorker({
+            'volumes': [
+                'kolla_logs:/var/log/kolla/',
+                '/etc/kolla:/etc/kolla:rw'
+            ]
+        })
         self.assertTrue(self.pw.compare_volumes(container_info))
 
     def test_compare_environment_neg(self):
