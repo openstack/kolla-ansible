@@ -46,40 +46,57 @@
           failed_when: false
           check_mode: false
 
-        # As an example, when the new RabbitMQ version is 3.13.6:
-        # new_major_version = 3
-        # new_minor_version = 13
-        # new_version = 3.13
-        # And if the current RabbitMQ version is 3.11.28:
-        # upgrade_version = 3.12
-        - name: Check if running RabbitMQ is at most one version behind
+        - name: Parse RabbitMQ versions
+          ansible.builtin.set_fact:
+            ver_curr_raw: "{{ rabbitmq_version_current.stdout | trim }}"
+            ver_new_raw: "{{ rabbitmq_version_new.stdout | trim }}"
+
+        - name: Calculate Major and Minor components
+          ansible.builtin.set_fact:
+            curr_major: "{{ ver_curr_raw.split('.')[0] }}"
+            curr_minor: "{{ ver_curr_raw.split('.')[1] }}"
+            new_major: "{{ ver_new_raw.split('.')[0] }}"
+            new_minor: "{{ ver_new_raw.split('.')[1] }}"
+
+        - name: Determine Short Versions (X.Y)
+          ansible.builtin.set_fact:
+            ver_curr_short: "{{ curr_major }}.{{ curr_minor }}"
+            ver_new_short: "{{ new_major }}.{{ new_minor }}"
+
+        - name: Check version upgrade validity
           vars:
-            current_version_major: "{{ rabbitmq_version_current.stdout | regex_search('^[0-9]+') }}"
-            current_version_minor: "{{ rabbitmq_version_current.stdout | regex_search('(?<=.)[^.].') }}"
-            current_version: "{{ rabbitmq_version_current.stdout | regex_replace('.[^.]+$', '') }}"
-            new_version_major: "{{ rabbitmq_version_new.stdout | regex_search('^[0-9]+') }}"
-            new_version_minor: "{{ rabbitmq_version_new.stdout | regex_search('(?<=.)[^.].') }}"
-            new_version: "{{ rabbitmq_version_new.stdout | regex_replace('.[^.]+$', '') }}"
-            # Note: 3.13 is the last release before 4.0.
-            upgrade_version: "{{ '4.0 or 4.1' if current_version == '3.13' else current_version_major + '.' + (current_version_minor | int + 1) | string }}"
+            is_standard_upgrade: >-
+              {{ (curr_major == new_major) and (new_minor | int == curr_minor | int + 1) }}
+            is_allowed_path: >-
+              {{
+                 ver_curr_short in rabbitmq_allowed_upgrades and
+                 ver_new_short in rabbitmq_allowed_upgrades[ver_curr_short]
+              }}
+            suggested_next_version: >-
+              {{ curr_major }}.{{ curr_minor | int + 1 }}
+
           ansible.builtin.assert:
-            that: (current_version_major == new_version_major and
-              new_version_minor | int - current_version_minor | int <= 1) or
-              (new_version | float == 4.0 and current_version | float == 3.13) or
-              (new_version | float == 4.1 and current_version | float == 3.13)
+            that:
+              - is_standard_upgrade or is_allowed_path or (ver_curr_short == ver_new_short)
             fail_msg: >
-              Looks like you're trying to run a skip-release upgrade!
-              RabbitMQ must be at most one version behind the target release version ({{ rabbitmq_version_new.stdout | trim }}) to run this upgrade.
-              You are running {{ rabbitmq_version_current.stdout }}.
-              Please first upgrade to {{ upgrade_version }} with the command ``kolla-ansible rabbitmq-upgrade {{ upgrade_version }}``.
-              See these docs for more details: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#slurp
+              Invalid upgrade path detected!
+
+              You are trying to go from RabbitMQ {{ ver_curr_short }} ({{ ver_curr_raw }}) to {{ ver_new_short }} ({{ ver_new_raw }}).
+
+              Allowed paths logic:
+              1. Standard minor version upgrade (Current + 1). Example: {{ suggested_next_version }}.
+              2. Explicit paths defined in role defaults.
+                 {% if ver_curr_short in rabbitmq_allowed_upgrades %}
+                 Allowed jumps for your version: {{ rabbitmq_allowed_upgrades[ver_curr_short] }}.
+                 {% else %}
+                 No explicit jumps defined for your version.
+                 {% endif %}
+
+              Please upgrade to an intermediate version first.
 
         - name: Catch when RabbitMQ is being downgraded
           ansible.builtin.assert:
-            that: rabbitmq_version_current.stdout is version(rabbitmq_version_new.stdout | trim, 'le', version_type='semver')
+            that: ver_curr_raw is version(ver_new_raw, 'le', version_type='semver')
             fail_msg: >
-              Looks like you're about to downgrade RabbitMQ
-              from version {{ rabbitmq_version_current.stdout }} to version {{ rabbitmq_version_new.stdout | trim }}.
+              Looks like you're about to downgrade RabbitMQ from version {{ ver_curr_raw }} to version {{ ver_new_raw }}.
               If you're absolutely certain you want to do this, please skip the tag `rabbitmq-version-check`.
-              Otherwise, see these docs for how to pin the version of RabbitMQ:
-              https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#rabbitmq-versions

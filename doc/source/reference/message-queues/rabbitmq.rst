@@ -160,6 +160,37 @@ different type, the follow procedure will be needed.
 
       kolla-ansible deploy --tags <service-tags>
 
+
+Upgrading RabbitMQ
+~~~~~~~~~~~~~~~~~~
+
+RabbitMQ upgrades in Kolla Ansible are typically restricted to a single minor
+version increment at a time (e.g., from 4.0.x to 4.1.x). This is a safety
+measure to ensure that RabbitMQ's internal data migrations and feature flags
+are processed correctly.
+
+In some cases, specific multi-version upgrade paths are supported (for example,
+jumping from 3.13 directly to 4.2). These allowed paths are defined
+using the ``rabbitmq_allowed_upgrades`` variable in the RabbitMQ role defaults.
+
+Operators can customize or extend these allowed upgrade paths by overriding
+this variable in ``globals.yml``.
+
+.. code-block:: yaml
+
+   rabbitmq_allowed_upgrades:
+     "3.13":
+       - "4.0"
+       - "4.1"
+       - "4.2"
+     "4.0":
+       - "4.1"
+       - "4.2"
+
+If an invalid upgrade path is detected, the deployment will fail with a
+descriptive error message during the ``rabbitmq-version-check`` task,
+suggesting the next appropriate intermediate version.
+
 Handling Stream Replicas
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
