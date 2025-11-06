@@ -52,6 +52,12 @@
           - "veth-{{ neutron_external_bridge_name }}-ext"
         bridge_name: "{{ neutron_external_bridge_name }}"
   tasks:
+    - name: Set Rockylinux mirror to download.rockylinux.org
+      become: true
+      ansible.builtin.shell:
+        cmd: sed -i 's/mirrorlist/#mirrorlist/g; s/#baseurl/baseurl/g' /etc/yum.repos.d/rocky.repo
+      when: ansible_facts.distribution == "Rocky"
+
     # NOTE(yoctozepto): we use gawk to add time to each logged line
     # outside of Ansible (e.g. for init-runonce)
     - name: Install gawk and required Python modules
