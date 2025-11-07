@@ -31,19 +31,6 @@ keystone_services:
         backend_http_extra:
           - "balance {{ 'source' if enable_keystone_federation | bool else 'roundrobin' }}"
           - "option httpchk"
-  keystone-ssh:
-    container_name: "keystone_ssh"
-    group: "keystone"
-    enabled: true
-    image: "{{ keystone_ssh_image_full }}"
-    volumes:
-      - "{{ node_config_directory }}/keystone-ssh/:{{ container_config_directory }}/:ro"
-      - "/etc/localtime:/etc/localtime:ro"
-      - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
-      - "kolla_logs:/var/log/kolla/"
-      - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
-    dimensions: "{{ keystone_ssh_dimensions }}"
-    healthcheck: "{{ keystone_ssh_healthcheck }}"
   keystone-fernet:
     container_name: "keystone_fernet"
     group: "keystone"
@@ -57,6 +44,27 @@ keystone_services:
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
     dimensions: "{{ keystone_fernet_dimensions }}"
     healthcheck: "{{ keystone_fernet_healthcheck }}"
+  keystone-httpd:
+    container_name: "keystone_httpd"
+    group: "keystone"
+    enabled: "{{ enable_keystone_federation | bool }}"
+    image: "{{ keystone_httpd_image_full }}"
+    volumes: "{{ keystone_httpd_default_volumes + keystone_httpd_extra_volumes }}"
+    dimensions: "{{ keystone_httpd_dimensions }}"
+    healthcheck: "{{ keystone_httpd_healthcheck }}"
+  keystone-ssh:
+    container_name: "keystone_ssh"
+    group: "keystone"
+    enabled: true
+    image: "{{ keystone_ssh_image_full }}"
+    volumes:
+      - "{{ node_config_directory }}/keystone-ssh/:{{ container_config_directory }}/:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+      - "kolla_logs:/var/log/kolla/"
+      - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
+    dimensions: "{{ keystone_ssh_dimensions }}"
+    healthcheck: "{{ keystone_ssh_healthcheck }}"
 
 ####################
 # Config Validate
@@ -105,6 +113,10 @@ keystone_image: "{{ docker_image_url }}keystone"
 keystone_service_tag: "{{ keystone_tag }}"
 keystone_image_full: "{{ keystone_image }}:{{ keystone_service_tag }}"
 
+keystone_httpd_image: "{{ docker_image_url }}httpd"
+keystone_httpd_tag: "{{ keystone_tag }}"
+keystone_httpd_image_full: "{{ keystone_httpd_image }}:{{ keystone_httpd_tag }}"
+
 keystone_fernet_image: "{{ docker_image_url }}keystone-fernet"
 keystone_fernet_tag: "{{ keystone_tag }}"
 keystone_fernet_image_full: "{{ keystone_fernet_image }}:{{ keystone_fernet_tag }}"
@@ -114,6 +126,7 @@ keystone_ssh_tag: "{{ keystone_tag }}"
 keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 
 keystone_dimensions: "{{ default_container_dimensions }}"
+keystone_httpd_dimensions: "{{ default_container_dimensions }}"
 keystone_fernet_dimensions: "{{ default_container_dimensions }}"
 keystone_ssh_dimensions: "{{ default_container_dimensions }}"
 
@@ -130,18 +143,18 @@ keystone_healthcheck:
   test: "{% if keystone_enable_healthchecks | bool %}{{ keystone_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ keystone_healthcheck_timeout }}"
 
-keystone_ssh_enable_healthchecks: "{{ enable_container_healthchecks }}"
-keystone_ssh_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
-keystone_ssh_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
-keystone_ssh_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-keystone_ssh_healthcheck_test: ["CMD-SHELL", "healthcheck_listen sshd {{ keystone_ssh_port }}"]
-keystone_ssh_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
-keystone_ssh_healthcheck:
-  interval: "{{ keystone_ssh_healthcheck_interval }}"
-  retries: "{{ keystone_ssh_healthcheck_retries }}"
-  start_period: "{{ keystone_ssh_healthcheck_start_period }}"
-  test: "{% if keystone_ssh_enable_healthchecks | bool %}{{ keystone_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
-  timeout: "{{ keystone_ssh_healthcheck_timeout }}"
+keystone_httpd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+keystone_httpd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+keystone_httpd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+keystone_httpd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+keystone_httpd_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}"]
+keystone_httpd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+keystone_httpd_healthcheck:
+  interval: "{{ keystone_httpd_healthcheck_interval }}"
+  retries: "{{ keystone_httpd_healthcheck_retries }}"
+  start_period: "{{ keystone_httpd_healthcheck_start_period }}"
+  test: "{% if keystone_httpd_enable_healthchecks | bool %}{{ keystone_httpd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ keystone_httpd_healthcheck_timeout }}"
 
 keystone_fernet_enable_healthchecks: "{{ enable_container_healthchecks }}"
 keystone_fernet_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -156,6 +169,19 @@ keystone_fernet_healthcheck:
   test: "{% if keystone_fernet_enable_healthchecks | bool %}{{ keystone_fernet_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ keystone_fernet_healthcheck_timeout }}"
 
+keystone_ssh_enable_healthchecks: "{{ enable_container_healthchecks }}"
+keystone_ssh_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+keystone_ssh_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+keystone_ssh_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+keystone_ssh_healthcheck_test: ["CMD-SHELL", "healthcheck_listen sshd {{ keystone_ssh_port }}"]
+keystone_ssh_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+keystone_ssh_healthcheck:
+  interval: "{{ keystone_ssh_healthcheck_interval }}"
+  retries: "{{ keystone_ssh_healthcheck_retries }}"
+  start_period: "{{ keystone_ssh_healthcheck_start_period }}"
+  test: "{% if keystone_ssh_enable_healthchecks | bool %}{{ keystone_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ keystone_ssh_healthcheck_timeout }}"
+
 keystone_default_volumes:
   - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -165,7 +191,14 @@ keystone_default_volumes:
   - "{{ '/dev/shm:/dev/shm' }}"
   - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
 
+keystone_httpd_default_volumes:
+  - "{{ node_config_directory }}/keystone-httpd/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
+
 keystone_extra_volumes: "{{ default_extra_volumes }}"
+keystone_httpd_extra_volumes: "{{ keystone_extra_volumes }}"
 
 ####################
 # OpenStack
@@ -266,3 +299,4 @@ keystone_copy_certs: "{{ kolla_copy_ca_into_containers | bool or keystone_enable
 # WSGI
 ############
 keystone_wsgi_provider: "uwsgi"
+keystone_wsgi_socket_port: "5001"

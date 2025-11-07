@@ -68,6 +68,20 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
 
+- name: Restart keystone-httpd container
+  vars:
+    service_name: "keystone-httpd"
+    service: "{{ keystone_services[service_name] }}"
+  become: true
+  kolla_container:
+    action: "recreate_or_restart_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ service.container_name }}"
+    image: "{{ service.image }}"
+    volumes: "{{ service.volumes | reject('equalto', '') | list }}"
+    dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
+
 - name: Finish keystone database upgrade
   vars:
     service_name: "keystone"

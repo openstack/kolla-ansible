@@ -1,0 +1,37 @@
+---
+- job:
+    name: kolla-ansible-federation-base
+    parent: kolla-ansible-base
+    voting: false
+    files: !inherit
+      - ^ansible/group_vars/all/keystone.yml
+      - ^ansible/roles/keystone/
+    vars:
+      scenario: federation
+      scenario_images_extra:
+        - ^httpd
+
+- job:
+    name: kolla-ansible-debian-bookworm-federation
+    parent: kolla-ansible-federation-base
+    nodeset: kolla-ansible-debian-bookworm-multi-8GB
+
+- job:
+    name: kolla-ansible-rocky-10-federation
+    parent: kolla-ansible-federation-base
+    nodeset: kolla-ansible-rocky-10-multi-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-federation
+    parent: kolla-ansible-federation-base
+    nodeset: kolla-ansible-ubuntu-noble-multi-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-federation
+    description: |
+      Runs Kolla-Ansible Keystone federation scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-bookworm-federation
+        - kolla-ansible-rocky-10-federation
+        - kolla-ansible-ubuntu-noble-federation
