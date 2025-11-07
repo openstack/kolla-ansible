@@ -55,6 +55,10 @@
         detach: true
         image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
         network_mode: host
+      register: docker_result
+      retries: 5
+      delay: 3
+      until: docker_result is succeeded
 
     - name: Run Selenium Firefox container (Podman)
       become: true
@@ -64,6 +68,10 @@
         detach: true
         image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
         network_mode: host
+      register: podman_result
+      retries: 5
+      delay: 3
+      until: podman_result is succeeded
 
     - name: Wait for port 444 to be up
       ansible.builtin.wait_for:
