@@ -215,10 +215,21 @@ nova_cell_dynamic_users: |
 
 nova_cell_dynamic_rules: |
   {% set result = [] %}
+  {% set added = [] %}
   {% for host in groups['nova-conductor'] %}
-    {% if hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined %}
-      {% set _ = result.append({'schema': 'nova_' ~ hostvars[host]['nova_cell_name'], 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
-      {% set _ = result.append({'user': 'nova_' ~ hostvars[host]['nova_cell_name'], 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
+    {% set name = None %}
+    {% set cell_name = hostvars[host].get('nova_cell_name') %}
+    {% set shard_id = hostvars[host].get('nova_cell_database_shard_id') %}
+    {% if cell_name and shard_id %}
+      {% set name = 'nova_' ~ cell_name %}
+    {% elif not cell_name and 'nova' not in added %}
+      {% set name = 'nova' %}
+      {% set shard_id = hostvars[host].get('nova_database_shard_id') %}
+    {% endif %}
+    {% if name and name not in added and shard_id is defined %}
+      {% set _ = result.append({'schema': name, 'shard_id': shard_id}) %}
+      {% set _ = result.append({'user': name, 'shard_id': shard_id}) %}
+      {% set _ = added.append(name) %}
     {% endif %}
   {% endfor %}
   {{ result }}
