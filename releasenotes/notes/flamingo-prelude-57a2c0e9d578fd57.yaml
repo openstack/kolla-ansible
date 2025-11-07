@@ -1,0 +1,29 @@
+---
+prelude: |
+  The Kolla Ansible ``21.0.0`` (Flamingo) release focuses on tightening
+  operations for the control plane, database layer, and observability stack
+  while following upstream service retirements. Highlights include:
+
+  * Database services now use ``ProxySQL`` by default with ``MariaDB`` adopting
+    the upstream ``healthcheck.sh`` script, TLS enabled for all ``MariaDB``
+    connections through ``ProxySQL``, and ``Valkey`` replacing ``Redis``. The
+    legacy ``HAProxy``/``clustercheck`` path and containers have been removed.
+  * Logging and monitoring were overhauled: ``Fluentd`` moved into its own role
+    and sends logs directly to ``OpenSearch`` nodes, ``Prometheus``
+    node-exporters run from a dedicated role, and ``OpenSearch Dashboards``
+    connects to the data nodes without an intermediate ``HAProxy`` hop.
+  * Control-plane services gained multiple lifecycle improvements. ``Neutron``
+    now mirrors the upstream layout with new maintenance/RPC workers, wrapper
+    containers manage the OVN metadata-agent HAProxy processes,
+    ``nova-metadata`` runs in its own container, ``Horizon`` uses port ``8080``
+    when fronted by ``HAProxy``, and the default ``uWSGI`` provider now covers
+    more services.
+  * Tooling and reliability improvements: the supported ``ansible`` window is
+    11–12, host bootstrap tasks moved into ``ansible-collection-kolla``, CA
+    bundle trust paths were aligned on Enterprise Linux hosts, ``mod_oidc``
+    gained templated error pages, and several HA fixes landed (Let’s Encrypt
+    ACME cleanup, Horizon memcached resilience, RabbitMQ single-node upgrades,
+    and ``ProxySQL`` routing improvements).
+  * With ``ironic-inspector`` retired upstream, Kolla Ansible now provides the
+    ``ironic-pxe-filter`` service to cover bare-metal PXE filtering and removes
+    other unused integrations such as ``Venus`` and ``VMware`` drivers.
