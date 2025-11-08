@@ -295,7 +295,7 @@ prometheus_blackbox_exporter_endpoints_default:
       - "{{ ('zun_internal:os_endpoint:' + zun_internal_base_endpoint) if not kolla_same_external_internal_vip | bool }}"
     enabled: "{{ enable_zun | bool }}"
   # Additional service endpoints
-  - endpoints: "{% set etcd_endpoints = [] %}{% for host in groups.get('etcd', []) %}{{ etcd_endpoints.append('etcd_' + host + ':http_2xx:' + hostvars[host]['etcd_protocol'] + '://' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['etcd_client_port'] + '/metrics')}}{% endfor %}{{ etcd_endpoints }}"
+  - endpoints: "{% set etcd_endpoints = [] %}{% for host in groups.get('etcd', []) %}{{ etcd_endpoints.append('etcd_' + host + ':http_2xx:' + hostvars[host]['etcd_protocol'] + '://' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['etcd_client_port'] + '/metrics') }}{% endfor %}{{ etcd_endpoints }}"
     enabled: "{{ enable_etcd | bool }}"
   - endpoints:
       - "grafana:http_2xx:{{ grafana_public_endpoint }}"
@@ -316,7 +316,7 @@ prometheus_blackbox_exporter_endpoints_default:
   - endpoints:
       - "prometheus_alertmanager:http_2xx_alertmanager:{{ prometheus_alertmanager_public_endpoint if enable_prometheus_alertmanager_external else prometheus_alertmanager_internal_endpoint }}"
     enabled: "{{ enable_prometheus_alertmanager | bool }}"
-  - endpoints: "{% set rabbitmq_endpoints = [] %}{% for host in groups.get('rabbitmq', []) %}{{ rabbitmq_endpoints.append('rabbitmq_' + host + (':tls_connect:' if rabbitmq_enable_tls | bool else ':tcp_connect:') + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['rabbitmq_port'] ) }}{% endfor %}{{ rabbitmq_endpoints }}"
+  - endpoints: "{% set rabbitmq_endpoints = [] %}{% for host in groups.get('rabbitmq', []) %}{{ rabbitmq_endpoints.append('rabbitmq_' + host + (':tls_connect:' if rabbitmq_enable_tls | bool else ':tcp_connect:') + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['rabbitmq_port']) }}{% endfor %}{{ rabbitmq_endpoints }}"
     enabled: "{{ enable_rabbitmq | bool }}"
   - endpoints: "{% set valkey_endpoints = [] %}{% for host in groups.get('valkey', []) %}{{ valkey_endpoints.append('valkey_' + host + ':tcp_connect:' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['valkey_server_port']) }}{% endfor %}{{ valkey_endpoints }}"
     enabled: "{{ enable_valkey | bool }}"
