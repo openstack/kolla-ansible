@@ -28,8 +28,9 @@
     ovn_sb_db_cluster_exists: "{{ groups['ovn-sb-db' + '_had_volume_True'] is defined }}"
 
 - name: OVN NB checks
+  any_errors_fatal: true
+  when: inventory_hostname in groups.get('ovn-nb-db_had_volume_True', '')
   block:
-
     - name: Check if running on all OVN NB DB hosts
       fail:
         msg: >
@@ -77,12 +78,10 @@
       when:
         - groups['ovn-nb-db_leader'] is not defined and groups['ovn-nb-db_follower'] is defined
 
-  any_errors_fatal: true
-  when: inventory_hostname in groups.get('ovn-nb-db_had_volume_True', '')
-
 - name: OVN SB checks
+  any_errors_fatal: true
+  when: inventory_hostname in groups.get('ovn-sb-db_had_volume_True', '')
   block:
-
     - name: Check if running on all OVN SB DB hosts
       fail:
         msg: >
@@ -129,6 +128,3 @@
         msg: OVN SB cluster exists but there is no leader - please check cluster status.
       when:
         - groups['ovn-sb-db_leader'] is not defined and groups['ovn-sb-db_follower'] is defined
-
-  any_errors_fatal: true
-  when: inventory_hostname in groups.get('ovn-sb-db_had_volume_True', '')

@@ -1,5 +1,11 @@
 ---
-- block:
+- become: true
+  delegate_to: "{{ service_rabbitmq_delegate_host }}"
+  run_once: "{{ service_rabbitmq_run_once }}"
+  when: service_rabbitmq_when | bool
+  tags:
+    - service-rabbitmq
+  block:
     - name: "{{ project_name }} | Ensure RabbitMQ vhosts exist"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
@@ -36,10 +42,3 @@
       retries: "{{ service_rabbitmq_retries }}"
       delay: "{{ service_rabbitmq_delay }}"
       no_log: True
-
-  become: true
-  when: service_rabbitmq_when | bool
-  delegate_to: "{{ service_rabbitmq_delegate_host }}"
-  run_once: "{{ service_rabbitmq_run_once }}"
-  tags:
-    - service-rabbitmq

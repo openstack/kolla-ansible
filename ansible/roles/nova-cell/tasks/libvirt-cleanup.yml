@@ -15,7 +15,8 @@
       - nova_libvirt
   register: container_facts
 
-- block:
+- when: container_facts.containers['nova_libvirt'] is defined
+  block:
     # NOTE(mgoddard): pgrep exit status 1 means no match.
     - name: Check if there are any running VMs
       become: true
@@ -41,7 +42,6 @@
         common_options: "{{ docker_common_options }}"
         action: "stop_and_remove_container"
         name: nova_libvirt
-  when: container_facts.containers['nova_libvirt'] is defined
 
 - name: Remove nova_libvirt Docker volumes
   become: true
@@ -62,7 +62,9 @@
     state: "absent"
 
 # Revert the changes applied in config-host.yml.
-- block:
+- when:
+    - nova_compute_virt_type == 'kvm'
+  block:
     - name: Remove udev kolla kvm rules
       become: true
       file:
@@ -82,5 +84,3 @@
         masked: false
       when:
         - ansible_facts.distribution == 'Ubuntu'
-  when:
-    - nova_compute_virt_type == 'kvm'

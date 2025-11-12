@@ -102,8 +102,14 @@
   become: true
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
-- block:
-
+- when: "'amphora' in octavia_provider_drivers"
+  vars:
+    octavia_amphora_keys:
+      - client.cert-and-key.pem
+      - client_ca.cert.pem
+      - server_ca.cert.pem
+      - server_ca.key.pem
+  block:
     - name: Copying over Octavia SSH key
       template:
         src: "octavia-ssh-key.j2"
@@ -148,11 +154,3 @@
       become: true
       when: service | service_enabled_and_mapped_to_host
       with_items: "{{ octavia_amphora_keys }}"
-
-  when: "'amphora' in octavia_provider_drivers"
-  vars:
-    octavia_amphora_keys:
-      - client.cert-and-key.pem
-      - client_ca.cert.pem
-      - server_ca.cert.pem
-      - server_ca.key.pem

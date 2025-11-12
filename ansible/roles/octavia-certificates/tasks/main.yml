@@ -11,7 +11,8 @@
   include_tasks: check_expiry.yml
   when: octavia_certs_check_expiry | bool
 
-- block:
+- when: not octavia_certs_check_expiry | bool
+  block:
     - name: Ensure server_ca and client_ca directories exist
       file:
         path: "{{ octavia_certs_work_dir }}/{{ item }}"
@@ -47,5 +48,3 @@
         - { src: "server_ca/server_ca.key.pem", dest: "server_ca.key.pem" }
         - { src: "client_ca/client_ca.cert.pem", dest: "client_ca.cert.pem" }
         - { src: "client_ca/client.cert-and-key.pem", dest: "client.cert-and-key.pem" }
-
-  when: not octavia_certs_check_expiry | bool

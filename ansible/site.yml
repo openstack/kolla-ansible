@@ -143,7 +143,10 @@
   roles:
     - { role: loadbalancer }
   tasks:
-    - block:
+    - when:
+        - enable_haproxy | bool
+        - kolla_action in ['deploy', 'reconfigure', 'upgrade', 'config']
+      block:
         - include_role:
             name: aodh
             tasks_from: loadbalancer
@@ -341,9 +344,6 @@
             name: loadbalancer
             tasks_from: check-containers
           when: kolla_action != 'config'
-      when:
-        - enable_haproxy | bool
-        - kolla_action in ['deploy', 'reconfigure', 'upgrade', 'config']
 
 - name: Apply role opensearch
   gather_facts: false

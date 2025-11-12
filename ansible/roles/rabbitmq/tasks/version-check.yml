@@ -1,5 +1,11 @@
 ---
-- block:
+- delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
+  run_once: true
+  tags: rabbitmq-version-check
+  vars:
+    service_name: "rabbitmq"
+    service: "{{ rabbitmq_services[service_name] }}"
+  block:
     - name: Get container facts
       become: true
       kolla_container_facts:
@@ -9,7 +15,8 @@
           - "{{ service.container_name }}"
       register: container_facts
 
-    - block:
+    - when: container_facts.containers[service.container_name] is defined
+      block:
         - name: Get current RabbitMQ version
           become: true
           command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl --version"
@@ -73,12 +80,3 @@
               If you're absolutely certain you want to do this, please skip the tag `rabbitmq-version-check`.
               Otherwise, see these docs for how to pin the version of RabbitMQ:
               https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#rabbitmq-versions
-
-      when: container_facts.containers[service.container_name] is defined
-
-  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
-  run_once: true
-  tags: rabbitmq-version-check
-  vars:
-    service_name: "rabbitmq"
-    service: "{{ rabbitmq_services[service_name] }}"

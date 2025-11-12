@@ -55,7 +55,11 @@
     haproxy_vip_prechecks: "{{ all_hosts_in_batch and groups['haproxy_running_True'] is not defined }}"
     proxysql_vip_prechecks: "{{ all_hosts_in_batch and groups['proxysql_running_True'] is not defined }}"
 
-- block:
+- when:
+    - not kolla_externally_managed_cert | bool
+    - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_external | bool
+  block:
     - name: Checking if external haproxy certificate exists
       run_once: true
       stat:
@@ -69,12 +73,12 @@
       assert:
         that: haproxy_cert_file.stat.exists
         fail_msg: "External haproxy certificate file is not found. It is configured via 'kolla_external_fqdn_cert'"
-  when:
-    - not kolla_externally_managed_cert | bool
-    - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
-    - kolla_enable_tls_external | bool
 
-- block:
+- when:
+    - not kolla_externally_managed_cert | bool
+    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
+    - kolla_enable_tls_internal | bool
+  block:
     - name: Checking if internal haproxy certificate exists
       run_once: true
       stat:
@@ -88,10 +92,6 @@
       assert:
         that: haproxy_internal_cert_file.stat.exists
         fail_msg: "Internal haproxy certificate file is not found. It is configured via 'kolla_internal_fqdn_cert'"
-  when:
-    - not kolla_externally_managed_cert | bool
-    - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
-    - kolla_enable_tls_internal | bool
 
 - name: Checking the kolla_external_vip_interface is present
   assert:
@@ -726,6 +726,8 @@
     - haproxy_vip_prechecks
 
 - name: Firewalld checks
+  when:
+    - enable_external_api_firewalld | bool
   block:
     - name: Check if firewalld is running  # noqa command-instead-of-module
       become: true
@@ -743,5 +745,3 @@
           Please install and configure firewalld.
       when:
         - firewalld_is_active.rc != 0
-  when:
-    - enable_external_api_firewalld | bool

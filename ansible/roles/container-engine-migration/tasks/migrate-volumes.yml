@@ -36,7 +36,8 @@
 # NOTE(r-krcek): The following block is workaround for problem where podman
 # changes directory permissions after starting a container from any UID:GID
 # to root after migration.
-- block:
+- when: container_volumes.matched > 0
+  block:
     - name: Pre-create volumes in target engine
       become: true
       kolla_container:
@@ -58,7 +59,6 @@
         path: "{{ item.path }}"
         state: absent
       with_items: "{{ container_volumes.files }}"
-  when: container_volumes.matched > 0
 
 # NOTE(mhiner): this prevents RabbitMQ failing to establish connection
 # to other instances in multinode deployment

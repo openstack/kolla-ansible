@@ -1,6 +1,9 @@
 ---
 # Create RabbitMQ users and vhosts.
-- block:
+- when:
+    - nova_cell_rpc_transport == 'rabbit'
+    - enable_rabbitmq | bool
+  block:
     - import_role:
         name: service-rabbitmq
       vars:
@@ -23,7 +26,3 @@
       when:
         - nova_cell_rpc_group_name != nova_cell_notify_group_name or
           nova_cell_rpc_rabbitmq_users != nova_cell_notify_rabbitmq_users
-
-  when:
-    - nova_cell_rpc_transport == 'rabbit'
-    - enable_rabbitmq | bool

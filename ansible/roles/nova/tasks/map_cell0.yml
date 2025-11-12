@@ -1,5 +1,7 @@
 ---
-- block:
+- run_once: True
+  delegate_to: "{{ groups[nova_api.group][0] }}"
+  block:
     - name: Create cell0 mappings
       vars:
         nova_api: "{{ nova_services['nova-api'] }}"
@@ -61,8 +63,6 @@
       when:
         - nova_cell_settings | bool
         - nova_cell_settings.cell_database != nova_cell0_connection
-  run_once: True
-  delegate_to: "{{ groups[nova_api.group][0] }}"
 
 - include_tasks: bootstrap_service.yml
   when: map_cell0.changed

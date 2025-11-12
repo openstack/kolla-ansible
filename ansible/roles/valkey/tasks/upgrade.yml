@@ -15,6 +15,7 @@
     _valkey_migration: "{{ redis_container_facts.containers['redis'] is defined }}"
 
 - name: Perform Redis to Valkey migration steps
+  when: redis_container_facts.containers['redis'] is defined
   block:
 
     - name: Set temporary Valkey migration vars
@@ -109,8 +110,6 @@
         action: remove_volume
         name: redis
       when: inventory_hostname in groups['redis']
-
-  when: redis_container_facts.containers['redis'] is defined
 
 # These tasks run always, regardless of Redis presence
 

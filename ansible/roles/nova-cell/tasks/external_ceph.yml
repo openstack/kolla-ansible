@@ -97,7 +97,11 @@
     - service | service_enabled_and_mapped_to_host
     - nova_backend == "rbd"
 
-- block:
+- when:
+    - not enable_nova_libvirt_container | bool
+    - inventory_hostname in groups[nova_cell_compute_group]
+    - nova_backend == "rbd"
+  block:
     - name: Ensure /etc/ceph directory exists (host libvirt)
       vars:
         paths:
@@ -123,12 +127,21 @@
         group: "root"
         mode: "0644"
       become: true
-  when:
-    - not enable_nova_libvirt_container | bool
-    - inventory_hostname in groups[nova_cell_compute_group]
-    - nova_backend == "rbd"
 
-- block:
+- vars:
+    libvirt_secrets_dir: >-
+      {{ (node_config_directory ~ '/nova-libvirt/secrets')
+         if enable_nova_libvirt_container | bool
+         else '/etc/libvirt/secrets' }}
+    # NOTE(mgoddard): When running libvirt as a host daemon, on CentOS it
+    # appears to pick up secrets automatically, while on Ubuntu it requires a
+    # reload. This may be due to differences in tested versions of libvirt
+    # (8.0.0 vs 6.0.0). Reload should be low overhead, so do it always.
+    libvirt_restart_handlers: >-
+      {{ ['Reload libvirtd']
+         if not enable_nova_libvirt_container | bool else
+         [] }}
+  block:
     - name: Ensuring libvirt secrets directory exists
       vars:
         service: "{{ nova_cell_services['nova-libvirt'] }}"
@@ -190,16 +203,3 @@
           enabled: "{{ cinder_backend_ceph }}"
       notify: "{{ libvirt_restart_handlers }}"
       no_log: True
-  vars:
-    libvirt_secrets_dir: >-
-      {{ (node_config_directory ~ '/nova-libvirt/secrets')
-         if enable_nova_libvirt_container | bool
-         else '/etc/libvirt/secrets' }}
-    # NOTE(mgoddard): When running libvirt as a host daemon, on CentOS it
-    # appears to pick up secrets automatically, while on Ubuntu it requires a
-    # reload. This may be due to differences in tested versions of libvirt
-    # (8.0.0 vs 6.0.0). Reload should be low overhead, so do it always.
-    libvirt_restart_handlers: >-
-      {{ ['Reload libvirtd']
-         if not enable_nova_libvirt_container | bool else
-         [] }}
