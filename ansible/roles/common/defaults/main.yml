@@ -3,13 +3,13 @@ common_services:
   kolla-toolbox:
     container_name: kolla_toolbox
     group: kolla-toolbox
-    enabled: True
+    enabled: true
     image: "{{ kolla_toolbox_image_full }}"
     environment:
       ANSIBLE_NOCOLOR: "1"
       ANSIBLE_LIBRARY: "/usr/share/ansible"
       REQUESTS_CA_BUNDLE: "{{ openstack_cacert }}"
-    privileged: True
+    privileged: true
     volumes: "{{ kolla_toolbox_default_volumes + kolla_toolbox_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ kolla_toolbox_dimensions }}"
 
@@ -29,7 +29,7 @@ kolla_toolbox_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/dev/:/dev/"
-  - "/run/:/run/{{ ':shared' if kolla_container_engine == 'docker' else '' }}"   # see: https://github.com/containers/podman/issues/16305
+  - "/run/:/run/{{ ':shared' if kolla_container_engine == 'docker' else '' }}" # see: https://github.com/containers/podman/issues/16305
   - "kolla_logs:/var/log/kolla/"
 kolla_toolbox_extra_volumes: "{{ default_extra_volumes }}"
 

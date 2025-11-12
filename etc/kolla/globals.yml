@@ -6,7 +6,7 @@
 # the parameter and change its value.
 
 # Dummy variable to allow Ansible to accept this file.
-workaround_ansible_issue_8743: yes
+workaround_ansible_issue_8743: true
 
 ###################
 # Ansible options
@@ -99,7 +99,7 @@ workaround_ansible_issue_8743: yes
 # Custom docker registry settings:
 #docker_registry:
 # Please read the docs carefully before applying docker_registry_insecure.
-#docker_registry_insecure: "no"
+#docker_registry_insecure: false
 #docker_registry_username:
 # docker_registry_password is set in the passwords.yml file.
 
@@ -109,15 +109,15 @@ workaround_ansible_issue_8743: yes
 # Docker client timeout in seconds.
 #docker_client_timeout: 120
 
-#docker_configure_for_zun: "no"
-#containerd_configure_for_zun: "no"
+#docker_configure_for_zun: false
+#containerd_configure_for_zun: false
 #containerd_grpc_gid: 42463
 
 ###################
 # Messaging options
 ###################
 # Whether to enable TLS for oslo.messaging communication with RabbitMQ.
-#om_enable_rabbitmq_tls: "{{ rabbitmq_enable_tls | bool }}"
+# om_enable_rabbitmq_tls: "{{ rabbitmq_enable_tls | bool }}"
 # CA certificate bundle in containers using oslo.messaging with RabbitMQ TLS.
 #om_rabbitmq_cacert: "{{ rabbitmq_cacert }}"
 
@@ -168,18 +168,18 @@ workaround_ansible_issue_8743: yes
 
 # Configure Neutron upgrade option, currently Kolla support
 # two upgrade ways for Neutron: legacy_upgrade and rolling_upgrade
-# The variable "neutron_enable_rolling_upgrade: yes" is meaning rolling_upgrade
+# The variable "neutron_enable_rolling_upgrade: true" is meaning rolling_upgrade
 # were enabled and opposite
 # Neutron rolling upgrade were enable by default
-#neutron_enable_rolling_upgrade: "yes"
+#neutron_enable_rolling_upgrade: true
 
 # Enable wrapper containers to keep Neutron agent restarts isolated from the main service containers
-#neutron_agents_wrappers: "yes"
+#neutron_agents_wrappers: true
 
 # Configure neutron logging framework to log ingress/egress connections to instances
 # for security groups rules. More information can be found here:
 # https://docs.openstack.org/neutron/latest/admin/config-logging.html
-#enable_neutron_packet_logging: "no"
+#enable_neutron_packet_logging: false
 
 ####################
 # keepalived options
@@ -215,7 +215,7 @@ workaround_ansible_issue_8743: yes
 #####################
 # Healthcheck options
 #####################
-#enable_container_healthchecks: "yes"
+#enable_container_healthchecks: true
 # Healthcheck options for Docker containers
 # interval/timeout/start_period are in seconds
 #default_container_healthcheck_interval: 30
@@ -229,9 +229,9 @@ workaround_ansible_issue_8743: yes
 # Configures firewalld on both ubuntu and centos systems
 # for enabled services.
 # firewalld should be installed beforehand.
-# disable_firewall: "true"
-# enable_external_api_firewalld: "false"
-# external_api_firewalld_zone: "public"
+#disable_firewall: "true"
+#enable_external_api_firewalld: "false"
+#external_api_firewalld_zone: "public"
 
 #############
 # TLS options
@@ -239,16 +239,16 @@ workaround_ansible_issue_8743: yes
 # To provide encryption and authentication on the kolla_external_vip_interface,
 # TLS can be enabled.  When TLS is enabled, certificates must be provided to
 # allow clients to perform authentication.
-#kolla_enable_tls_internal: "no"
+#kolla_enable_tls_internal: false
 #kolla_enable_tls_external: "{{ kolla_enable_tls_internal if kolla_same_external_internal_vip | bool else 'no' }}"
 #kolla_certificates_dir: "{{ node_config }}/certificates"
 #kolla_external_fqdn_cert: "{{ kolla_certificates_dir }}/haproxy.pem"
 #kolla_internal_fqdn_cert: "{{ kolla_certificates_dir }}/haproxy-internal.pem"
 #kolla_admin_openrc_cacert: ""
-#kolla_copy_ca_into_containers: "no"
+#kolla_copy_ca_into_containers: false
 #haproxy_backend_cacert: "{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.trust.crt' }}"
 #haproxy_backend_cacert_dir: "/etc/ssl/certs"
-#database_enable_tls_backend: "{{ 'yes' if kolla_enable_tls_backend | bool and enable_proxysql | bool else 'no' }}"
+#database_enable_tls_backend: "{{ 'true' if kolla_enable_tls_backend | bool and enable_proxysql | bool else 'false' }}"
 ##################
 # Backend options
 ##################
@@ -258,8 +258,8 @@ workaround_ansible_issue_8743: yes
 #####################
 # Backend TLS options
 #####################
-#kolla_enable_tls_backend: "no"
-#kolla_verify_tls_backend: "yes"
+#kolla_enable_tls_backend: false
+#kolla_verify_tls_backend: true
 #kolla_tls_backend_cert: "{{ kolla_certificates_dir }}/backend-cert.pem"
 #kolla_tls_backend_key: "{{ kolla_certificates_dir }}/backend-key.pem"
 
@@ -286,13 +286,13 @@ workaround_ansible_issue_8743: yes
 # LetsEncrypt certificate server options
 ####################
 #letsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
-# attempt to renew Let's Encrypt certificate every 12 hours
+# Attempt to renew Let's Encrypt certificate every 12 hours
 #letsencrypt_cron_renew_schedule:  "0   */12   *   *   *"
 
 ####################
 # LetsEncrypt external account binding options
 ####################
-#letsencrypt_external_account_binding: "no"
+#letsencrypt_external_account_binding: false
 #letsencrypt_eab_hmac: ""
 #letsencrypt_eab_key_id: ""
 
@@ -315,53 +315,53 @@ workaround_ansible_issue_8743: yes
 
 # Enable core OpenStack services. This includes:
 # glance, keystone, neutron, nova, heat, and horizon.
-#enable_openstack_core: "yes"
+#enable_openstack_core: true
 
 # These roles are required for Kolla to be operation, however a savvy deployer
 # could disable some of these required roles and run their own services.
 #enable_glance: "{{ enable_openstack_core | bool }}"
-#enable_hacluster: "no"
-#enable_haproxy: "yes"
+#enable_hacluster: false
+#enable_haproxy: true
 #enable_keepalived: "{{ enable_haproxy | bool }}"
 #enable_keystone: "{{ enable_openstack_core | bool }}"
-#enable_mariadb: "yes"
-#enable_memcached: "yes"
+#enable_mariadb: true
+#enable_memcached: true
 #enable_neutron: "{{ enable_openstack_core | bool }}"
 #enable_nova: "{{ enable_openstack_core | bool }}"
-#enable_rabbitmq: "{{ 'yes' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'no' }}"
+#enable_rabbitmq: "{{ 'true' if om_rpc_transport == 'rabbit' or om_notify_transport == 'rabbit' else 'false' }}"
 
 # OpenStack services can be enabled or disabled with these options
-#enable_aodh: "no"
-#enable_barbican: "no"
-#enable_blazar: "no"
-#enable_ceilometer: "no"
-#enable_ceilometer_ipmi: "no"
-#enable_cells: "no"
-#enable_central_logging: "no"
-#enable_ceph_rgw: "no"
+#enable_aodh: false
+#enable_barbican: false
+#enable_blazar: false
+#enable_ceilometer: false
+#enable_ceilometer_ipmi: false
+#enable_cells: false
+#enable_central_logging: false
+#enable_ceph_rgw: false
 #enable_ceph_rgw_loadbalancer: "{{ enable_ceph_rgw | bool }}"
-#enable_cinder: "no"
-#enable_cinder_backup: "yes"
+#enable_cinder: false
+#enable_cinder_backup: true
 #enable_cinder_backend_iscsi: "{{ enable_cinder_backend_lvm | bool }}"
-#enable_cinder_backend_lvm: "no"
-#enable_cinder_backend_nfs: "no"
-#enable_cinder_backend_quobyte: "no"
-#enable_cinder_backend_pure_iscsi: "no"
-#enable_cinder_backend_pure_fc: "no"
-#enable_cinder_backend_pure_roce: "no"
-#enable_cinder_backend_pure_nvme_tcp: "no"
-#enable_cinder_backend_lightbits: "no"
-#enable_cloudkitty: "no"
-#enable_collectd: "no"
-#enable_cyborg: "no"
-#enable_designate: "no"
-#enable_destroy_images: "no"
-#enable_etcd: "no"
-#enable_fluentd: "yes"
+#enable_cinder_backend_lvm: false
+#enable_cinder_backend_nfs: false
+#enable_cinder_backend_quobyte: false
+#enable_cinder_backend_pure_iscsi: false
+#enable_cinder_backend_pure_fc: false
+#enable_cinder_backend_pure_roce: false
+#enable_cinder_backend_pure_nvme_tcp: false
+#enable_cinder_backend_lightbits: false
+#enable_cloudkitty: false
+#enable_collectd: false
+#enable_cyborg: false
+#enable_designate: false
+#enable_destroy_images: false
+#enable_etcd: false
+#enable_fluentd: true
 #enable_fluentd_systemd: "{{ (enable_fluentd | bool) and (enable_central_logging | bool) }}"
-#enable_gnocchi: "no"
-#enable_gnocchi_statsd: "no"
-#enable_grafana: "no"
+#enable_gnocchi: false
+#enable_gnocchi_statsd: false
+#enable_grafana: false
 #enable_grafana_external: "{{ enable_grafana | bool }}"
 #enable_heat: "{{ enable_openstack_core | bool }}"
 #enable_horizon: "{{ enable_openstack_core | bool }}"
@@ -382,41 +382,41 @@ workaround_ansible_issue_8743: yes
 #enable_horizon_watcher: "{{ enable_watcher | bool }}"
 #enable_horizon_zun: "{{ enable_zun | bool }}"
 #enable_influxdb: "{{ enable_cloudkitty | bool and cloudkitty_storage_backend == 'influxdb' }}"
-#enable_ironic: "no"
-#enable_ironic_neutron_agent: "no"
+#enable_ironic: false
+#enable_ironic_neutron_agent: false
 #enable_ironic_prometheus_exporter: "{{ enable_ironic | bool and enable_prometheus | bool }}"
-#enable_ironic_pxe_filter: "no"
+#enable_ironic_pxe_filter: false
 #enable_iscsid: "{{ enable_cinder | bool and enable_cinder_backend_iscsi | bool }}"
-#enable_kuryr: "no"
-#enable_magnum: "no"
-#enable_manila: "no"
-#enable_manila_backend_generic: "no"
-#enable_manila_backend_hnas: "no"
-#enable_manila_backend_cephfs_native: "no"
-#enable_manila_backend_cephfs_nfs: "no"
-#enable_manila_backend_glusterfs_nfs: "no"
-#enable_manila_backend_flashblade: "no"
-#enable_mariabackup: "no"
-#enable_masakari: "no"
-#enable_mistral: "no"
-#enable_multipathd: "no"
-#enable_neutron_vpnaas: "no"
-#enable_neutron_sriov: "no"
-#enable_neutron_dvr: "no"
-#enable_neutron_fwaas: "no"
-#enable_neutron_qos: "no"
-#enable_neutron_agent_ha: "no"
-#enable_neutron_bgp_dragent: "no"
-#enable_neutron_provider_networks: "no"
-#enable_neutron_segments: "no"
-#enable_neutron_sfc: "no"
-#enable_neutron_trunk: "no"
-#enable_neutron_metering: "no"
-#enable_neutron_infoblox_ipam_agent: "no"
-#enable_neutron_port_forwarding: "no"
-#enable_nova_serialconsole_proxy: "no"
-#enable_nova_ssh: "yes"
-#enable_octavia: "no"
+#enable_kuryr: false
+#enable_magnum: false
+#enable_manila: false
+#enable_manila_backend_generic: false
+#enable_manila_backend_hnas: false
+#enable_manila_backend_cephfs_native: false
+#enable_manila_backend_cephfs_nfs: false
+#enable_manila_backend_glusterfs_nfs: false
+#enable_manila_backend_flashblade: false
+#enable_mariabackup: false
+#enable_masakari: false
+#enable_mistral: false
+#enable_multipathd: false
+#enable_neutron_vpnaas: false
+#enable_neutron_sriov: false
+#enable_neutron_dvr: false
+#enable_neutron_fwaas: false
+#enable_neutron_qos: false
+#enable_neutron_agent_ha: false
+#enable_neutron_bgp_dragent: false
+#enable_neutron_provider_networks: false
+#enable_neutron_segments: false
+#enable_neutron_sfc: false
+#enable_neutron_trunk: false
+#enable_neutron_metering: false
+#enable_neutron_infoblox_ipam_agent: false
+#enable_neutron_port_forwarding: false
+#enable_nova_serialconsole_proxy: false
+#enable_nova_ssh: true
+#enable_octavia: false
 #enable_octavia_driver_agent: "{{ enable_octavia | bool and neutron_plugin_agent == 'ovn' }}"
 #enable_octavia_jobboard: "{{ enable_octavia | bool and 'amphora' in octavia_provider_drivers }}"
 #enable_opensearch: "{{ enable_central_logging | bool or enable_osprofiler | bool or (enable_cloudkitty | bool and cloudkitty_storage_backend == 'opensearch') }}"
@@ -424,19 +424,19 @@ workaround_ansible_issue_8743: yes
 #enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }}"
 #enable_openvswitch: "{{ enable_neutron }}"
 #enable_ovn: "{{ enable_neutron | bool and neutron_plugin_agent == 'ovn' }}"
-#enable_ovs_dpdk: "no"
-#enable_osprofiler: "no"
+#enable_ovs_dpdk: false
+#enable_osprofiler: false
 #enable_placement: "{{ enable_nova | bool or enable_zun | bool }}"
-#enable_prometheus: "no"
-#enable_proxysql: "yes"
-#enable_valkey: "no"
-#enable_skyline: "no"
-#enable_tacker: "no"
-#enable_telegraf: "no"
-#enable_trove: "no"
-#enable_trove_singletenant: "no"
-#enable_watcher: "no"
-#enable_zun: "no"
+#enable_prometheus: false
+#enable_proxysql: true
+#enable_valkey: false
+#enable_skyline: false
+#enable_tacker: false
+#enable_telegraf: false
+#enable_trove: false
+#enable_trove_singletenant: false
+#enable_watcher: false
+#enable_zun: false
 
 #############
 # S3 options
@@ -462,7 +462,7 @@ workaround_ansible_issue_8743: yes
 # and not to busy wait (+sbwt none +sbwtdcpu none +sbwtdio none):
 #rabbitmq_server_additional_erl_args: "+S 2:2 +sbwt none +sbwtdcpu none +sbwtdio none"
 # Whether to enable TLS encryption for RabbitMQ client-server communication.
-#rabbitmq_enable_tls: "no"
+#rabbitmq_enable_tls: false
 # CA certificate bundle in RabbitMQ container.
 #rabbitmq_cacert: "/etc/ssl/certs/{{ 'ca-certificates.crt' if kolla_base_distro in ['debian', 'ubuntu'] else 'ca-bundle.trust.crt' }}"
 
@@ -476,7 +476,7 @@ workaround_ansible_issue_8743: yes
 # External Ceph options
 #######################
 # External Ceph - cephx auth enabled (this is the standard nowadays, defaults to yes)
-#external_ceph_cephx_enabled: "yes"
+#external_ceph_cephx_enabled: true
 
 # Glance
 #ceph_glance_user: "glance"
@@ -518,16 +518,16 @@ workaround_ansible_issue_8743: yes
 # Glance - Image Options
 ########################
 # Configure image backend.
-#glance_backend_ceph: "no"
-#glance_backend_file: "yes"
-#glance_backend_s3: "no"
-#enable_glance_image_cache: "no"
-#glance_enable_property_protection: "no"
-#glance_enable_interoperable_image_import: "no"
+#glance_backend_ceph: false
+#glance_backend_file: true
+#glance_backend_s3: false
+#enable_glance_image_cache: false
+#glance_enable_property_protection: false
+#glance_enable_interoperable_image_import: false
 # Configure glance upgrade option.
 # Due to this feature being experimental in glance,
-# the default value is "no".
-#glance_enable_rolling_upgrade: "no"
+# the default value is false.
+#glance_enable_rolling_upgrade: false
 
 ####################
 # Glance S3 Backend
@@ -563,7 +563,7 @@ workaround_ansible_issue_8743: yes
 # Cinder - Block Storage Options
 ################################
 # Enable / disable Cinder backends
-#cinder_backend_ceph: "no"
+#cinder_backend_ceph: false
 #cinder_volume_group: "cinder-volumes"
 # Valid options are [ '', valkey, etcd ]
 #cinder_coordination_backend: "{{ 'valkey' if enable_valkey | bool else 'etcd' if enable_etcd | bool else '' }}"
@@ -604,7 +604,7 @@ workaround_ansible_issue_8743: yes
 ########################
 # Nova - Compute Options
 ########################
-#nova_backend_ceph: "no"
+#nova_backend_ceph: false
 
 # Valid options are [ qemu, kvm ]
 #nova_compute_virt_type: "kvm"
@@ -614,10 +614,10 @@ workaround_ansible_issue_8743: yes
 
 # The "nova_safety_upgrade" controls whether the nova services
 # are all stopped before rolling upgrade to the new version,
-# for the safety and availability. If "nova_safety_upgrade" is "yes",
+# for the safety and availability. If "nova_safety_upgrade" is true,
 # that will stop all nova services (except nova-compute) for no failed
 # API operations before upgrade to the new version. And opposite.
-#nova_safety_upgrade: "no"
+#nova_safety_upgrade: false
 
 # Valid options are [ none, novnc, spice ]
 #nova_console: "novnc"
@@ -626,10 +626,10 @@ workaround_ansible_issue_8743: yes
 # Neutron - networking options
 ##############################
 # Enable distributed floating ip for OVN deployments
-#neutron_ovn_distributed_fip: "no"
+#neutron_ovn_distributed_fip: false
 
 # Enable DHCP agent(s) to use with OVN
-#neutron_ovn_dhcp_agent: "no"
+#neutron_ovn_dhcp_agent: false
 
 #############################
 # Horizon - Dashboard Options
@@ -645,7 +645,7 @@ workaround_ansible_issue_8743: yes
 # list of ranges - at least one must be configured, for example:
 # - range: 192.168.0.10,192.168.0.100
 # See Kolla Ansible docs on Ironic for details.
-#ironic_dnsmasq_dhcp_ranges:
+# ironic_dnsmasq_dhcp_ranges:
 # PXE bootloader file for Ironic inspection, relative to /var/lib/ironic/tftpboot.
 #ironic_dnsmasq_boot_file: "pxelinux.0"
 
@@ -654,7 +654,7 @@ workaround_ansible_issue_8743: yes
 # The variable "ironic_enable_rolling_upgrade: yes" is meaning rolling_upgrade
 # were enabled and opposite
 # Rolling upgrade were enable by default
-#ironic_enable_rolling_upgrade: "yes"
+#ironic_enable_rolling_upgrade: true
 
 # List of extra kernel parameters passed to the kernel used during inspection
 #ironic_kernel_cmdline_extras: []
@@ -726,7 +726,7 @@ workaround_ansible_issue_8743: yes
 #enable_prometheus_memcached_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager: "{{ enable_prometheus | bool }}"
 #enable_prometheus_alertmanager_external: "{{ enable_prometheus_alertmanager | bool }}"
-#enable_prometheus_ceph_mgr_exporter: "no"
+#enable_prometheus_ceph_mgr_exporter: false
 #enable_prometheus_openstack_exporter: "{{ enable_prometheus | bool }}"
 #enable_prometheus_elasticsearch_exporter: "{{ enable_prometheus | bool and enable_elasticsearch | bool }}"
 #enable_prometheus_blackbox_exporter: "{{ enable_prometheus | bool }}"
@@ -765,7 +765,7 @@ workaround_ansible_issue_8743: yes
 ##########
 # Configure telegraf to use the docker daemon itself as an input for
 # telemetry data.
-#telegraf_enable_docker_input: "no"
+#telegraf_enable_docker_input: false
 
 ##########################################
 # Octavia - openstack loadbalancer Options
@@ -795,16 +795,16 @@ workaround_ansible_issue_8743: yes
 
 # Octavia security groups. lb-mgmt-sec-grp is for amphorae.
 #octavia_amp_security_groups:
-#    mgmt-sec-grp:
-#      name: "lb-mgmt-sec-grp"
-#      rules:
-#        - protocol: icmp
-#        - protocol: tcp
-#          src_port: 22
-#          dst_port: 22
-#        - protocol: tcp
-#          src_port: "{{ octavia_amp_listen_port }}"
-#          dst_port: "{{ octavia_amp_listen_port }}"
+#  mgmt-sec-grp:
+#    name: "lb-mgmt-sec-grp"
+#    rules:
+#      - protocol: icmp
+#      - protocol: tcp
+#        src_port: 22
+#        dst_port: 22
+#      - protocol: tcp
+#        src_port: "{{ octavia_amp_listen_port }}"
+#        dst_port: "{{ octavia_amp_listen_port }}"
 
 # Octavia management network.
 # See os_network and os_subnet for details. Supported parameters:
@@ -862,4 +862,4 @@ workaround_ansible_issue_8743: yes
 ##############
 # If `etcd_remove_deleted_members` is enabled, Kolla Ansible will automatically
 # remove etcd members from the cluster that are no longer in the inventory.
-#etcd_remove_deleted_members: "no"
+#etcd_remove_deleted_members: false

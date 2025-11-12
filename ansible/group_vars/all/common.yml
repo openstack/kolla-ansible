@@ -31,13 +31,13 @@ docker_image_name_prefix: ""
 docker_image_url: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/{{ docker_image_name_prefix }}"
 docker_registry_username:
 # Please read the docs carefully before applying docker_registry_insecure.
-docker_registry_insecure: "no"
+docker_registry_insecure: false
 docker_runtime_directory: ""
 # Docker client timeout in seconds.
 docker_client_timeout: 120
 
 # Docker networking options
-docker_disable_default_iptables_rules: "yes"
+docker_disable_default_iptables_rules: true
 docker_disable_default_network: "{{ docker_disable_default_iptables_rules }}"
 docker_disable_ip_forward: "{{ docker_disable_default_iptables_rules }}"
 
@@ -79,14 +79,13 @@ container_engine_volumes_path: "{{ docker_volumes_path if kolla_container_engine
 # Podman has problem with mounting whole /run directory
 # described here: https://github.com/containers/podman/issues/16305
 run_default_volumes_podman:
-  - '/run/netns:/run/netns:shared'
-  - '/run/lock/nova:/run/lock/nova:shared'
+  - "/run/netns:/run/netns:shared"
+  - "/run/lock/nova:/run/lock/nova:shared"
   - "/run/libvirt:/run/libvirt:shared"
   - "/run/nova:/run/nova:shared"
   - "/run/openvswitch:/run/openvswitch:shared"
 
 run_default_volumes_docker: []
-
 ####################
 # Dimensions options
 ####################
@@ -112,7 +111,7 @@ default_podman_dimensions_el9:
 #####################
 # Healthcheck options
 #####################
-enable_container_healthchecks: "yes"
+enable_container_healthchecks: true
 # Healthcheck options for Docker containers
 # interval/timeout/start_period are in seconds
 default_container_healthcheck_interval: 30
@@ -125,7 +124,6 @@ default_container_healthcheck_start_period: 5
 #######################
 # Extra volumes for Docker Containers
 default_extra_volumes: []
-
 ##################
 # Firewall options
 ##################
@@ -174,8 +172,8 @@ kolla_external_fqdn: "{{ kolla_internal_fqdn if kolla_same_external_internal_vip
 
 kolla_dev_repos_directory: "/opt/stack/"
 kolla_dev_repos_git: "https://opendev.org/openstack"
-kolla_dev_repos_pull: "no"
-kolla_dev_mode: "no"
+kolla_dev_repos_pull: false
+kolla_dev_mode: false
 kolla_source_version: "{% if openstack_release == 'master' %}master{% else %}stable/{{ openstack_release }}{% endif %}"
 
 # Proxy settings for containers such as magnum that need internet access
@@ -201,7 +199,6 @@ api_interface_address: "{{ 'api' | kolla_address }}"
 # Container engine options
 ####################
 kolla_container_engine: "docker"
-
 
 #########################
 # Internal Image options
@@ -231,10 +228,10 @@ public_protocol: "{{ 'https' if kolla_enable_tls_external | bool else 'http' }}"
 internal_protocol: "{{ 'https' if kolla_enable_tls_internal | bool else 'http' }}"
 
 # Additional optional OpenStack features and services are specified here
-enable_central_logging: "no"
+enable_central_logging: false
 
 # Clean images options are specified here
-enable_destroy_images: "no"
+enable_destroy_images: false
 
 ####################
 # Global Options
@@ -244,7 +241,6 @@ enable_destroy_images: "no"
 #   - container1
 #   - container2
 skip_stop_containers: []
-
 ###################
 # Messaging options
 ###################
@@ -319,9 +315,9 @@ openstack_cacert: ""
 
 # Enable core OpenStack services. This includes:
 # glance, keystone, neutron, nova, heat, and horizon.
-enable_openstack_core: "yes"
+enable_openstack_core: true
 
-enable_osprofiler: "no"
+enable_osprofiler: false
 
 ####################
 # Osprofiler options
@@ -334,8 +330,8 @@ osprofiler_backend_connection_string: "{{ valkey_connection_string if osprofiler
 ######################
 # Backend TLS options
 ######################
-kolla_enable_tls_backend: "no"
-kolla_verify_tls_backend: "yes"
+kolla_enable_tls_backend: false
+kolla_verify_tls_backend: true
 kolla_tls_backend_cert: "{{ kolla_certificates_dir }}/backend-cert.pem"
 kolla_tls_backend_key: "{{ kolla_certificates_dir }}/backend-key.pem"
 
@@ -351,7 +347,7 @@ database_enable_tls_backend: "{{ 'yes' if ((kolla_enable_tls_backend | bool) and
 database_enable_tls_internal: "{{ 'yes' if ((kolla_enable_tls_internal | bool) and (enable_proxysql | bool)) else 'no' }}"
 
 # Optionally allow Kolla to set sysctl values
-set_sysctl: "yes"
+set_sysctl: true
 
 # Optionally change the path to sysctl.conf modified by Kolla Ansible plays.
 kolla_sysctl_conf_path: /etc/sysctl.conf
