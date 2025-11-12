@@ -1,13 +1,16 @@
 ---
 - name: Checking the api_interface is present
-  fail: "msg='Please check the api_interface property - interface {{ api_interface }} not found'"
-  when: api_interface not in ansible_facts.interfaces
+  ansible.builtin.assert:
+    that: api_interface in ansible_facts.interfaces
+    fail_msg: "Please check the api_interface property - interface {{ api_interface }} not found"
 
 - name: Checking the api_interface is active
-  fail: "msg='Please check the api_interface settings - interface {{ api_interface }} is not active'"
-  when: not hostvars[inventory_hostname].ansible_facts[api_interface | replace('-', '_')]['active']
+  ansible.builtin.assert:
+    that: hostvars[inventory_hostname].ansible_facts[api_interface | replace('-', '_')]['active']
+    fail_msg: "Please check the api_interface settings - interface {{ api_interface }} is not active"
 
 # kolla_address handles relevant address check
 - name: Checking the api_interface ip address configuration
-  fail: "msg='Please check the api_interface settings - interface {{ api_interface }} ip address problem'"
-  when: api_interface_address is not defined
+  ansible.builtin.assert:
+    that: api_interface_address is defined
+    fail_msg: "Please check the api_interface settings - interface {{ api_interface }} ip address problem"
