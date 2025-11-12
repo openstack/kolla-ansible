@@ -12,9 +12,9 @@
       --os-region-name={{ openstack_region_name }}
       {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping list -c ID --format value
-  run_once: True
-  changed_when: False
-  become: True
+  run_once: true
+  changed_when: false
+  become: true
   register: existing_mappings_register
 
 - name: Register existing mappings
@@ -34,7 +34,7 @@
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping delete {{ item }}
-  run_once: True
+  run_once: true
   become: true
   with_items: "{{ existing_mappings }}"
   when:
@@ -52,7 +52,7 @@
       endpoint_type: "{{ openstack_interface }}"
       cacert: "{{ openstack_cacert }}"
       region_name: "{{ openstack_region_name }}"
-  run_once: True
+  run_once: true
   with_items: "{{ keystone_identity_providers }}"
 
 - name: Register attribute mappings in OpenStack
@@ -71,7 +71,7 @@
     mapping create
     --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     {{ item.name }}
-  run_once: True
+  run_once: true
   when:
     - item.name not in existing_mappings
   with_items: "{{ keystone_identity_mappings }}"
@@ -92,7 +92,7 @@
     mapping set
     --rules="{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     {{ item.name }}
-  run_once: True
+  run_once: true
   when:
     - item.name in existing_mappings
   with_items: "{{ keystone_identity_mappings }}"
@@ -111,8 +111,8 @@
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     identity provider list -c ID --format value
-  run_once: True
-  changed_when: False
+  run_once: true
+  changed_when: false
   register: existing_idps_register
 
 - name: Register existing idps
@@ -133,7 +133,7 @@
     --os-region-name={ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     identity provider delete {{ item }}
-  run_once: True
+  run_once: true
   with_items: "{{ existing_idps }}"
   when:
     - item not in (keystone_identity_providers | map(attribute='name') | list)
@@ -157,7 +157,7 @@
     --remote-id "{{ item.identifier }}"
     --domain "{{ item.openstack_domain }}"
     {{ item.name }}
-  run_once: True
+  run_once: true
   when:
     - item.name not in existing_idps
   with_items: "{{ keystone_identity_providers }}"
@@ -179,7 +179,7 @@
     --description "{{ item.public_name }}"
     --remote-id "{{ item.identifier }}"
     "{{ item.name }}"
-  run_once: True
+  run_once: true
   when:
     - item.name in existing_idps
   with_items: "{{ keystone_identity_providers }}"
@@ -201,7 +201,7 @@
     --mapping {{ item.attribute_mapping }}
     --identity-provider {{ item.name }}
     {{ item.protocol }}
-  run_once: True
+  run_once: true
   when:
     - item.name not in existing_idps
   with_items: "{{ keystone_identity_providers }}"
@@ -223,9 +223,9 @@
     --identity-provider {{ item.name }}
     --mapping {{ item.attribute_mapping }}
     {{ item.protocol }}
-  run_once: True
+  run_once: true
   register: result
-  failed_when: result.rc not in [0, 1]  # This command returns RC 1 on success, so we need to add this to avoid fails.
+  failed_when: result.rc not in [0, 1] # This command returns RC 1 on success, so we need to add this to avoid fails.
   when:
     - item.name in existing_idps
   with_items: "{{ keystone_identity_providers }}"
