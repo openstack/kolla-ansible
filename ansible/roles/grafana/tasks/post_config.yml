@@ -33,13 +33,12 @@
       password: "{{ grafana_admin_password }}"
       body: "{{ item.value.data | to_json }}"
       body_format: json
-      force_basic_auth: yes
+      force_basic_auth: true
       status_code: 200, 409
   register: response
-  run_once: True
+  run_once: true
   changed_when: response.status == 200
-  failed_when: response.status not in [200, 409] or
-               response.status == 409 and ("name already exists" not in response.json.message | default(""))
+  failed_when: response.status not in [200, 409] or response.status == 409 and ("name already exists" not in response.json.message | default(""))
   with_dict: "{{ grafana_data_sources }}"
   when: item.value.enabled | bool
 
@@ -53,7 +52,7 @@
       method: PUT
       user: "{{ grafana_admin_username }}"
       password: "{{ grafana_admin_password }}"
-      force_basic_auth: yes
+      force_basic_auth: true
       status_code: 200
   register: grafana_response
   changed_when: grafana_response.status == 200
