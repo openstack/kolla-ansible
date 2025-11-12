@@ -18,14 +18,13 @@
 - include_tasks: external_ceph.yml
   when:
     - cinder_backend_ceph | bool
-    - inventory_hostname in groups['cinder-volume'] or
-      inventory_hostname in groups['cinder-backup']
+    - inventory_hostname in groups['cinder-volume'] or inventory_hostname in groups['cinder-backup']
 
 - name: Check if policies shall be overwritten
   stat:
     path: "{{ item }}"
   delegate_to: localhost
-  run_once: True
+  run_once: true
   register: cinder_policy
   with_first_found:
     - files: "{{ supported_policy_format_list }}"
