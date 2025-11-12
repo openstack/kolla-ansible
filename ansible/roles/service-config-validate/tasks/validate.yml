@@ -1,6 +1,6 @@
 ---
 - name: "{{ project_name }} : {{ service.container_name }} | Get info on container"
-  become: True
+  become: true
   kolla_container_facts:
     action: get_containers
     container_engine: "{{ kolla_container_engine }}"
@@ -9,7 +9,7 @@
   register: container_info
 
 - name: "{{ project_name }} : {{ service.container_name }} | Validate configurations"
-  become: True
+  become: true
   command: >
     {{ kolla_container_engine }} exec {{ service.container_name }}
     bash -c "[[ -f {{ inner_item['config'] }} ]] && oslo-config-validator --config-file {{ inner_item['generator'] }} --input-file {{ inner_item['config'] }}"
@@ -21,10 +21,10 @@
   loop_control:
     label: "{{ inner_item['config'] | basename }}"
     loop_var: inner_item
-  changed_when: False
+  changed_when: false
 
 - name: "{{ project_name }} : {{ service.container_name }} | Ensure log directory exists"
-  become: True
+  become: true
   file:
     path: "{{ output_dir }}"
     state: directory
@@ -34,7 +34,7 @@
   delegate_to: localhost
 
 - name: "{{ project_name }} : {{ service.container_name }} | Log configuration errors"
-  become: True
+  become: true
   copy:
     content: "{{ inner_item.stderr }}"
     dest: "{{ output_dir }}/{{ inner_item.inner_item.config | basename }}.err"
