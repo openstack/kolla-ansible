@@ -1,7 +1,7 @@
 ---
 - name: Start Glance upgrade
   set_fact:
-    glance_upgrading: True
+    glance_upgrading: true
 
 # Upgrade first node (NEW NODE in the Glance documentation)
 - include_tasks: config.yml
@@ -23,7 +23,7 @@
       login_password: "{{ database_password }}"
       variable: log_bin_trust_function_creators
       value: 1
-  run_once: True
+  run_once: true
   delegate_to: "{{ glance_api_hosts[0] }}"
   when:
     - not use_preconfigured_databases | bool
@@ -35,7 +35,7 @@
   kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    detach: False
+    detach: false
     environment:
       KOLLA_UPGRADE:
       GLANCE_DB_EXPAND:
@@ -46,7 +46,7 @@
     name: "bootstrap_glance"
     restart_policy: oneshot
     volumes: "{{ glance_api.volumes | reject('equalto', '') | list }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ glance_api_hosts[0] }}"
 
 - name: Running Glance database migrate container
@@ -56,7 +56,7 @@
   kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    detach: False
+    detach: false
     environment:
       KOLLA_UPGRADE:
       GLANCE_DB_MIGRATE:
@@ -67,7 +67,7 @@
     name: "bootstrap_glance"
     restart_policy: oneshot
     volumes: "{{ glance_api.volumes | reject('equalto', '') | list }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ glance_api_hosts[0] }}"
   notify:
     - Restart glance-api container
@@ -88,7 +88,7 @@
   kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    detach: False
+    detach: false
     environment:
       KOLLA_UPGRADE:
       GLANCE_DB_CONTRACT:
@@ -99,7 +99,7 @@
     name: "bootstrap_glance"
     restart_policy: oneshot
     volumes: "{{ glance_api.volumes | reject('equalto', '') | list }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ glance_api_hosts[0] }}"
 
 - name: Disable log_bin_trust_function_creators function
@@ -115,11 +115,11 @@
       login_password: "{{ database_password }}"
       variable: log_bin_trust_function_creators
       value: 0
-  run_once: True
+  run_once: true
   delegate_to: "{{ glance_api_hosts[0] }}"
   when:
     - not use_preconfigured_databases | bool
 
 - name: Finish Glance upgrade
   set_fact:
-    glance_upgrading: False
+    glance_upgrading: false
