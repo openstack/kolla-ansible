@@ -7,8 +7,8 @@ ovn_sb_db_port: "6642"
 # OVN SB Relay related variables
 ovn_sb_db_relay_count: "{{ ((groups['ovn-controller'] | length) / ovn_sb_db_relay_compute_per_relay | int) | round(0, 'ceil') | int }}"
 ovn_sb_db_relay_compute_per_relay: "50"
-ovn_sb_db_relay_port_prefix: 16640
-ovn_sb_db_relay_port: "{{ ovn_sb_db_relay_port_prefix + (groups['ovn-sb-db-relay'].index(inventory_hostname) | default(0)) + 1 }}"
+ovn_sb_db_relay_port_prefix: "1664"
+ovn_sb_db_relay_port: "{{ (ovn_sb_db_relay_port_prefix ~ '0' | int) + (groups['ovn-sb-db-relay'] | sort).index(inventory_hostname) }}"
 ovn_sb_db_relay_client_group_id: "{{ range(1, ovn_sb_db_relay_count | int + 1) | random(seed=inventory_hostname) }}"
 ovn_nb_connection: "{% for host in groups['ovn-nb-db'] %}tcp:{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ ovn_nb_db_port }}{% if not loop.last %},{% endif %}{% endfor %}"
 ovn_sb_connection: "{{ ovn_sb_connection_relay if enable_ovn_sb_db_relay | bool else ovn_sb_connection_no_relay }}"
