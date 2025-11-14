@@ -1,10 +1,19 @@
 ---
+- name: Install python3.12 on Rocky
+  become: true
+  when: ansible_os_family == 'RedHat'
+  ansible.builtin.package:
+    name: python3.12
+    state: present
+
 - name: Setup OpenStack clients
+  vars:
+    pythoncmd: "{{ 'python3.12' if ansible_facts.distribution == 'Rocky' else 'python3' }}"
   ansible.builtin.pip:
     extra_args: "-c {{ openstack_clients_upper_constraints_file }}"
     name: "{{ item.package }}"
     virtualenv: "{{ openstack_clients_venv_path }}"
-    virtualenv_command: "python3 -m venv"
+    virtualenv_command: "{{ pythoncmd }} -m venv"
   become: true
   when: item.enabled
   loop: "{{ openstack_clients_pip_packages }}"
