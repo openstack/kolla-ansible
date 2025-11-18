@@ -56,9 +56,13 @@ directly, you can find the lists in Gerrit:
 New Feature Planning
 ~~~~~~~~~~~~~~~~~~~~
 
-New features are discussed via IRC or mailing list (with [kolla] prefix).
-Kolla project keeps blueprints in `Launchpad <https://blueprints.launchpad.net/kolla-ansible>`__.
-Specs are welcome but not strictly required.
+New features are discussed via IRC or on the openstack-discuss mailing list
+(please include the [kolla] prefix to your subject line).
+
+Kolla has previously used Launchpad blueprints, but now simply uses tracking
+bugs for new feature work. Please tag any such bugs with a "[RFE]" prefix,
+which indicates the bug is a Request For Enhancement. Bugs are discussed in
+more detail in the next section.
 
 Task Tracking
 ~~~~~~~~~~~~~
