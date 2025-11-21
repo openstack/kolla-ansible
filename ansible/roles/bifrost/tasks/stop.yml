@@ -1,5 +1,8 @@
 ---
-- block:
+- when:
+    - inventory_hostname in groups['bifrost']
+    - "'bifrost_deploy' not in skip_stop_containers"
+  block:
     - name: Check if bifrost_deploy container is running
       become: true
       kolla_container_facts:
@@ -9,7 +12,8 @@
           - bifrost_deploy
       register: container_facts
 
-    - block:
+    - when: container_facts.containers['bifrost_deploy'] is defined
+      block:
         # Ensure that all services are stopped gracefully, and in a sensible
         # order.
         - name: Stop services gracefully
@@ -26,9 +30,3 @@
             action: "stop_container"
             common_options: "{{ docker_common_options }}"
             name: "bifrost_deploy"
-
-      when: "container_facts.containers['bifrost_deploy'] is defined"
-
-  when:
-    - inventory_hostname in groups['bifrost']
-    - "'bifrost_deploy' not in skip_stop_containers"

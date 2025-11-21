@@ -1,5 +1,10 @@
 ---
-- block:
+- when: enable_nova_libvirt_container | bool and (groups[service.group] | length) > 0
+  vars:
+    service_name: "nova-libvirt"
+    service: "{{ nova_cell_services[service_name] }}"
+  tags: nova-libvirt-version-check
+  block:
     - name: Get new Libvirt version
       become: true
       kolla_container:
@@ -80,9 +85,3 @@
       loop_control:
         label: "{{ item.item }}"
       when: item.stdout is defined
-
-  tags: nova-libvirt-version-check
-  when: enable_nova_libvirt_container | bool and (groups[service.group] | length) > 0
-  vars:
-    service_name: "nova-libvirt"
-    service: "{{ nova_cell_services[service_name] }}"

@@ -11,7 +11,8 @@
       settings and Kolla Ansible needs this file for mounting it to containers.
   when: not etc_localtime.stat.exists
 
-- block:
+- when: ansible_facts.os_family == 'Debian'
+  block:
     - name: Ensure /etc/timezone exist
       stat:
         path: /etc/timezone
@@ -23,4 +24,3 @@
           /etc/timezone is not found. This file is used for system-wide timezone
           settings and Kolla Ansible needs this file for mounting it to containers.
       when: not etc_timezone.stat.exists
-  when: ansible_facts.os_family == 'Debian'

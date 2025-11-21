@@ -15,7 +15,9 @@
   run_once: true
   with_fileglob: "/tmp/kolla_mariadb_recover_inventory_name_*"
 
-- block:
+- when:
+    - mariadb_recover_inventory_name is not defined
+  block:
     - name: Stop MariaDB containers
       become: true
       kolla_container:
@@ -92,8 +94,6 @@
       connection: local
       set_fact:
         mariadb_recover_inventory_name: "{{ lookup('file', mariadb_recover_tmp_file_path) }}"
-  when:
-    - mariadb_recover_inventory_name is not defined
 
 - name: Store bootstrap and master hostnames into facts
   set_fact:

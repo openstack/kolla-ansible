@@ -175,7 +175,11 @@
     - "{{ node_custom_config }}/prometheus/prometheus-blackbox-exporter.yml"
     - "{{ role_path }}/templates/prometheus-blackbox-exporter.yml.j2"
 
-- block:
+- vars:
+    base: "{{ node_custom_config }}/prometheus/"
+    service: "{{ prometheus_services['prometheus-server'] }}"
+  when: service | service_enabled_and_mapped_to_host
+  block:
     - name: Find extra prometheus server config files
       find:
         paths: "{{ node_custom_config }}/prometheus/extras/"
@@ -210,7 +214,3 @@
         dest: "{{ node_config_directory }}/prometheus-server/{{ relpath }}"
         mode: "0660"
       with_items: "{{ prometheus_config_extras_result.files | default([]) | map(attribute='path') | list }}"
-  vars:
-    base: "{{ node_custom_config }}/prometheus/"
-    service: "{{ prometheus_services['prometheus-server'] }}"
-  when: service | service_enabled_and_mapped_to_host

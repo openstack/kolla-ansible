@@ -105,7 +105,11 @@
     - not kolla_externally_managed_cert | bool
     - rabbitmq_enable_tls | bool
 
-- block:
+- run_once: true
+  when:
+    - container_facts.containers['rabbitmq'] is defined
+  tags: rabbitmq-ha-precheck
+  block:
     - name: List RabbitMQ queues
       become: true
       command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
@@ -155,8 +159,3 @@
       when:
         - item.name is search('_fanout')
         - om_enable_rabbitmq_stream_fanout | bool
-
-  run_once: true
-  when:
-    - container_facts.containers['rabbitmq'] is defined
-  tags: rabbitmq-ha-precheck

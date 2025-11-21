@@ -17,7 +17,8 @@
   set_fact:
     mariadb_cluster_exists: "{{ groups[mariadb_shard_group + '_had_volume_True'] is defined }}"
 
-- block:
+- when: not mariadb_recover | default(False)
+  block:
     - name: Check MariaDB service port liveness
       wait_for:
         host: "{{ api_interface_address }}"
@@ -42,7 +43,10 @@
         - mariadb_cluster_exists
         - groups[mariadb_shard_group + '_port_alive_True'] is not defined
 
-    - block:
+    - when:
+        - groups[mariadb_shard_group + '_port_alive_True'] is defined
+        - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
+      block:
         - name: Check MariaDB service WSREP sync status
           become: true
           kolla_toolbox:
@@ -61,9 +65,6 @@
         - name: Extract MariaDB service WSREP sync status
           set_fact:
             mariadb_sync_status: "{{ check_mariadb_sync_status.query_result[0][0]['Value'] }}"
-      when:
-        - groups[mariadb_shard_group + '_port_alive_True'] is defined
-        - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
 
     - name: Divide hosts by their MariaDB service WSREP sync status
       group_by:
@@ -77,5 +78,3 @@
         - groups[mariadb_shard_group + '_port_alive_True'] is defined
         - groups[mariadb_shard_group + '_sync_status_Synced'] is not defined or
           groups[mariadb_shard_group + '_port_alive_True'] | sort != groups[mariadb_shard_group + '_sync_status_Synced'] | sort
-
-  when: not mariadb_recover | default(False)

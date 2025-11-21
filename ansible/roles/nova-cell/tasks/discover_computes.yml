@@ -1,7 +1,11 @@
 ---
 # Discover compute hosts for a cell.
 
-- block:
+- # Delegate to a cell conductor.
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  # Fail all hosts if any of these once-per-cell tasks fail.
+  any_errors_fatal: true
+  block:
     - import_tasks: get_cell_settings.yml
 
     - name: Fail if cell settings not found
@@ -16,8 +20,3 @@
       command: >
         {{ kolla_container_engine }} exec -t nova_conductor nova-manage cell_v2 discover_hosts --by-service --cell_uuid {{ nova_cell_settings.cell_uuid }}
       changed_when: False
-
-  # Delegate to a cell conductor.
-  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
-  # Fail all hosts if any of these once-per-cell tasks fail.
-  any_errors_fatal: true

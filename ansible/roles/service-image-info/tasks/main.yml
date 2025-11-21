@@ -1,5 +1,8 @@
 ---
 - name: Get target image info (docker)
+  become: true
+  delegate_to: "{{ service_image_info_delegate_host }}"
+  when: kolla_container_engine == 'docker'
   block:
     - community.docker.docker_image_info:
         name: "{{ service.image }}"
@@ -8,11 +11,11 @@
     - set_fact:
         service_image_info: "{{ docker_image_info }}"
       delegate_facts: true
-  become: true
-  delegate_to: "{{ service_image_info_delegate_host }}"
-  when: kolla_container_engine == 'docker'
 
 - name: Get target image info (podman)
+  become: true
+  delegate_to: "{{ service_image_info_delegate_host }}"
+  when: kolla_container_engine == 'podman'
   block:
     - containers.podman.podman_image_info:
         name: "{{ service.image }}"
@@ -21,6 +24,3 @@
     - set_fact:
         service_image_info: "{{ podman_image_info }}"
       delegate_facts: true
-  become: true
-  delegate_to: "{{ service_image_info_delegate_host }}"
-  when: kolla_container_engine == 'podman'
