@@ -12,7 +12,7 @@
       state: present
       network: "{{ octavia_amp_network['name'] }}"
       security_groups: "{{ octavia_amp_security_groups['health-mgr-sec-grp']['name'] }}"
-      device_owner: 'Octavia:health-mgr'
+      device_owner: "Octavia:health-mgr"
       name: "octavia-listen-port-{{ ansible_facts.nodename }}"
   register: port_info
 
@@ -20,7 +20,7 @@
 # value to {{ ansible_facts.nodename }}, once os_port support this parameter, remove the task below
 # https://docs.ansible.com/ansible/latest/modules/os_port_module.html#parameters
 - name: Update Octavia health manager port host_id
-  become: True
+  become: true
   vars:
     port_id: "{{ port_info.port.id }}"
   command: >
@@ -42,7 +42,7 @@
   vars:
     port_mac: "{{ port_info.port.mac_address }}"
     port_id: "{{ port_info.port.id }}"
-  become: True
+  become: true
   command: >
     {{ kolla_container_engine }} exec openvswitch_vswitchd ovs-vsctl --may-exist \
     add-port br-int {{ octavia_network_interface }} \
@@ -62,25 +62,25 @@
     mode: "0664"
 
 - name: Create octavia-interface service
-  become: True
+  become: true
   template:
     src: octavia-interface.service.j2
     dest: /etc/systemd/system/octavia-interface.service
   register: octavia_interface
 
 - name: Restart octavia-interface.service if required
-  become: True
+  become: true
   systemd:
     name: octavia-interface
-    daemon_reload: yes
+    daemon_reload: true
     state: restarted
   when: octavia_interface.changed
 
 - name: Enable and start octavia-interface.service
-  become: True
+  become: true
   service:
     name: octavia-interface
-    enabled: yes
+    enabled: true
     state: started
 
 - name: Wait for interface {{ octavia_network_interface }} ip appear

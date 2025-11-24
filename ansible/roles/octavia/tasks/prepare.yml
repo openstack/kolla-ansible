@@ -19,12 +19,12 @@
       ephemeral: "{{ octavia_amp_flavor.ephemeral | default(omit, true) }}"
       swap: "{{ octavia_amp_flavor.swap | default(omit, true) }}"
       extra_specs: "{{ octavia_amp_flavor.extra_specs | default(omit, true) }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
   register: amphora_flavor_info
 
 - name: Create nova keypair for amphora
-  become: True
+  become: true
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
     module_name: openstack.cloud.keypair
@@ -36,11 +36,11 @@
       state: present
       name: "{{ octavia_amp_ssh_key_name }}"
       public_key: "{{ octavia_amp_ssh_key.public_key }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
 
 - name: Get {{ octavia_service_auth_project }} project id
-  become: True
+  become: true
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
     module_name: openstack.cloud.project_info
@@ -50,7 +50,7 @@
       endpoint_type: "{{ openstack_interface }}"
       region_name: "{{ openstack_region_name }}"
       name: "{{ octavia_service_auth_project }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
   register: project_info
 
@@ -70,7 +70,7 @@
   loop_control:
     label: "{{ item.name }}"
   when: item.enabled | bool
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
   register: sec_grp_info
 
@@ -93,7 +93,7 @@
     - "{{ octavia_amp_security_groups }}"
     - rules
   when: item.0.enabled | bool
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
 
 - name: Create loadbalancer management network
@@ -115,7 +115,7 @@
       external: "{{ octavia_amp_network['external'] | default(omit) }}"
       shared: "{{ octavia_amp_network['shared'] | default(omit) }}"
   register: network_info
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
 
 - name: Create loadbalancer management subnet
@@ -140,7 +140,7 @@
       ip_version: "{{ octavia_amp_network['subnet']['ip_version'] | default(omit) }}"
       ipv6_address_mode: "{{ octavia_amp_network['subnet']['ipv6_address_mode'] | default(omit) }}"
       ipv6_ra_mode: "{{ octavia_amp_network['subnet']['ipv6_ra_mode'] | default(omit) }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['octavia-api'][0] }}"
 
 - name: Create loadbalancer management router for IPv6
@@ -156,6 +156,6 @@
       state: present
       name: "{{ octavia_amp_router['name'] }}"
       interfaces: "{{ octavia_amp_router['subnet'] }}"
-  run_once: True
+  run_once: true
   when: octavia_network_address_family == "ipv6"
   delegate_to: "{{ groups['octavia-api'][0] }}"
