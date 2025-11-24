@@ -9,7 +9,7 @@ nova_cell_services:
     image: "{{ nova_libvirt_image_full }}"
     pid_mode: "host"
     cgroupns_mode: "host"
-    privileged: True
+    privileged: true
     volumes: "{{ nova_libvirt_default_volumes + nova_libvirt_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
     dimensions: "{{ nova_libvirt_dimensions }}"
     healthcheck: "{{ nova_libvirt_healthcheck }}"
@@ -47,7 +47,7 @@ nova_cell_services:
   nova-conductor:
     container_name: "nova_conductor"
     group: "{{ nova_cell_conductor_group }}"
-    enabled: True
+    enabled: true
     image: "{{ nova_conductor_image_full }}"
     volumes: "{{ nova_conductor_default_volumes + nova_conductor_extra_volumes }}"
     dimensions: "{{ nova_conductor_dimensions }}"
@@ -58,7 +58,7 @@ nova_cell_services:
     image: "{{ nova_compute_image_full }}"
     environment:
       LIBGUESTFS_BACKEND: "direct"
-    privileged: True
+    privileged: true
     enabled: "{{ not enable_nova_fake | bool }}"
     ipc_mode: "host"
     volumes: "{{ nova_compute_default_volumes + nova_compute_extra_volumes + lookup('vars', 'run_default_volumes_' + kolla_container_engine) }}"
@@ -307,7 +307,7 @@ nova_libvirt_default_dimensions:
       soft: 67108864  # 64 MiB
       hard: 67108864  # 64 MiB
 
-nova_libvirt_dimensions: "{{ default_container_dimensions | combine(nova_libvirt_default_dimensions, recursive=True) }}"
+nova_libvirt_dimensions: "{{ default_container_dimensions | combine(nova_libvirt_default_dimensions, recursive=true) }}"
 nova_ssh_dimensions: "{{ default_container_dimensions }}"
 nova_novncproxy_dimensions: "{{ default_container_dimensions }}"
 nova_spicehtml5proxy_dimensions: "{{ default_container_dimensions }}"
@@ -583,7 +583,7 @@ qemu_max_files: 32768
 qemu_max_processes: 131072
 # Use TLS for libvirt connections and live migration
 libvirt_tls: false
-# Should kolla-ansible manage/copy the certs.  False, assumes the deployer is
+# Should kolla-ansible manage/copy the certs. False, assumes the deployer is
 # responsible for making the TLS certs show up in the config directories
 # also means the deployer is responsible for restarting the nova_compute and
 # nova_libvirt containers when the key changes, as we can't know when to do that
