@@ -11,7 +11,7 @@
   delegate_to: localhost
   connection: local
   changed_when: false
-  check_mode: no
+  check_mode: false
   run_once: true
   with_fileglob: "/tmp/kolla_mariadb_recover_inventory_name_*"
 
@@ -61,7 +61,7 @@
         path: /tmp/mariadb_tmp.log
         state: absent
       changed_when: false
-      check_mode: no
+      check_mode: false
 
     - name: Registering MariaDB seqno variable
       set_fact:
@@ -102,10 +102,10 @@
 - name: Set grastate.dat file from MariaDB container in bootstrap host
   become: true
   lineinfile:
-    create: yes
+    create: true
     dest: "{{ container_engine_volumes_path }}/mariadb/_data/grastate.dat"
-    regexp: 'safe_to_bootstrap:(.*)$'
-    line: 'safe_to_bootstrap: 1'
+    regexp: "safe_to_bootstrap:(.*)$"
+    line: "safe_to_bootstrap: 1"
     state: present
   when:
     - bootstrap_host is defined
