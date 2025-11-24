@@ -17,7 +17,7 @@
   kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    detach: False
+    detach: false
     environment:
       KOLLA_UPGRADE:
       NEUTRON_DB_EXPAND:
@@ -29,7 +29,7 @@
     name: "bootstrap_neutron"
     restart_policy: oneshot
     volumes: "{{ neutron_server.volumes }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['neutron-server'][0] }}"
 
 - name: Flush Handlers
@@ -39,7 +39,7 @@
   become: true
   command: "{{ kolla_container_engine }} exec -t neutron_server neutron-db-manage --subproject {{ item }} has_offline_migrations"
   register: neutron_check_contract_db_stdout
-  ignore_errors: yes
+  ignore_errors: true
   with_items: "{{ neutron_rolling_upgrade_services }}"
   when: inventory_hostname == groups['neutron-server'][0]
 
@@ -69,7 +69,7 @@
   kolla_container:
     action: "start_container"
     common_options: "{{ docker_common_options }}"
-    detach: False
+    detach: false
     environment:
       KOLLA_UPGRADE:
       NEUTRON_DB_CONTRACT:
@@ -81,7 +81,7 @@
     name: "bootstrap_neutron"
     restart_policy: oneshot
     volumes: "{{ neutron_server.volumes }}"
-  run_once: True
+  run_once: true
   delegate_to: "{{ groups['neutron-server'][0] }}"
 
 # Flush handlers here to ensure neutron-server containers are started
