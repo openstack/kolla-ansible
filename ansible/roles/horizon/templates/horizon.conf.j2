@@ -1,5 +1,3 @@
-{% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
-
 {% if horizon_enable_tls_backend | bool %}
 {% if kolla_base_distro in ['centos', 'rocky']  %}
 LoadModule ssl_module /usr/lib64/httpd/modules/mod_ssl.so
@@ -23,7 +21,7 @@ TraceEnable off
     WSGIScriptReloading On
     WSGIDaemonProcess horizon-http processes={{ horizon_wsgi_processes }} threads={{ horizon_wsgi_threads }} user=horizon group=horizon display-name=horizon
     WSGIProcessGroup horizon-http
-    WSGIScriptAlias / {{ python_path }}/openstack_dashboard/wsgi.py
+    WSGIScriptAlias / /var/lib/kolla/venv/lib/python3/site-packages/openstack_dashboard/wsgi.py
     WSGIPassAuthorization On
     WSGIApplicationGroup %{GLOBAL}
 
@@ -35,7 +33,7 @@ TraceEnable off
         Require local
     </Location>
 
-    Alias /static {{ python_path }}/static
+    Alias /static /var/lib/kolla/venv/lib/python3/site-packages/static
     <Location "/static">
         SetHandler None
     </Location>

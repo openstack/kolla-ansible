@@ -1,12 +1,11 @@
 {% set ironic_log_dir = '/var/log/kolla/ironic' %}
-{% set python_path = '/var/lib/kolla/venv/lib/python' + distro_python_version + '/site-packages' %}
 Listen {{ api_interface_address | put_address_in_context('url') }}:{{ ironic_prometheus_exporter_port }}
 
 ServerSignature Off
 ServerTokens Prod
 TraceEnable off
 
-<Directory "{{ python_path }}/ironic_prometheus_exporter/app">
+<Directory "/var/lib/kolla/venv/lib/python3/site-packages/ironic_prometheus_exporter/app">
     <FilesMatch "^wsgi$">
         AllowOverride None
         Options None
@@ -28,9 +27,9 @@ LogLevel info
     LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" logformat
     CustomLog "{{ ironic_log_dir }}/ironic-prometheus-exporter-wsgi-access.log" logformat
 
-    WSGIDaemonProcess ironic-prometheus-exporter processes={{ openstack_service_workers }} threads=1 user=ironic display-name=%{GROUP} python-path={{ python_path }}
+    WSGIDaemonProcess ironic-prometheus-exporter processes={{ openstack_service_workers }} threads=1 user=ironic display-name=%{GROUP} python-path=/var/lib/kolla/venv/lib/python3/site-packages
     WSGIProcessGroup ironic-prometheus-exporter
-    WSGIScriptAlias / {{ python_path }}/ironic_prometheus_exporter/app/wsgi.py
+    WSGIScriptAlias / /var/lib/kolla/venv/lib/python3/site-packages/ironic_prometheus_exporter/app/wsgi.py
     WSGIApplicationGroup %{GLOBAL}
     <Location "/">
         Require all granted
