@@ -37,7 +37,7 @@
     {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
     port set --host {{ ansible_facts.nodename }} {{ port_id }}
   when:
-    - port_info.changed
+    - port_info.changed  # noqa no-handler
 
 - name: Add Octavia port to openvswitch br-int
   vars:
@@ -77,7 +77,7 @@
     name: octavia-interface
     daemon_reload: true
     state: restarted
-  when: octavia_interface.changed
+  when: octavia_interface.changed  # noqa no-handler
 
 - name: Enable and start octavia-interface.service
   become: true
@@ -100,4 +100,4 @@
 # network device(o-hm0) which is not collected, so we need gather facts again
 - name: Gather facts
   setup:
-  when: octavia_interface.changed
+  when: octavia_interface.changed  # noqa no-handler
