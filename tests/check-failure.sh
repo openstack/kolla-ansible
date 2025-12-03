@@ -96,7 +96,18 @@ check_failure() {
     fi
 
     if [[ -n "$unhealthy_containers" ]]; then
-        exit 1;
+        # NOTE(mnasiadka): try checking them again, because usually they are healthy now
+        ech "Discovered unhealthy containers - sleeping 60 seconds and retrying check"
+        sleep 60
+        if [ "$CONTAINER_ENGINE" = "docker" ]; then
+            check_docker_unhealthies
+        elif [ "$CONTAINER_ENGINE" = "podman" ]; then
+            check_podman_unhealthies
+        fi
+        # NOTE(mnasiadka): If they're unhealthy again - let's fail
+        if [[ -n "$unhealthy_containers" ]]; then
+            exit 1;
+        fi
     fi
 
     if [[ -n "$failed_containers" ]]; then
