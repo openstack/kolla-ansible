@@ -46,12 +46,14 @@
 
     - name: Copying MariaDB log file to /tmp
       become: true
+      changed_when: true
       command: "cp {{ container_engine_volumes_path }}/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
     # Look for sequence number in logs. Format is:
     # WSREP: Recovered position: <UUID>:<seqno>.
     - name: Get MariaDB wsrep recovery seqno
       become: true
+      changed_when: false
       shell: awk -F" " '/Recovered position/{seqno=$NF} END{split(seqno, a, ":"); print a[2]}' /tmp/mariadb_tmp.log
       register: wsrep_recovery_seqno
 

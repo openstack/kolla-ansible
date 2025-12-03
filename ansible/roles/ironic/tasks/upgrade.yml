@@ -22,10 +22,12 @@
 
     - name: Create ironic_dhcp_hosts volume
       become: true
+      changed_when: true
       command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
 
     - name: Migrate data from ironic_inspector_dhcp_hosts volume
       become: true
+      changed_when: true
       vars:
         volumes_dir: >-
           {{ '/var/lib/docker/volumes' if kolla_container_engine == 'docker'
@@ -87,5 +89,6 @@
 # TODO(mnasiadka): Remove this task in Gazpacho/2026.1 release
 - name: Remove ironic_inspector_dhcp_hosts volume
   become: true
+  changed_when: true
   command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
   when: enable_ironic_dnsmasq | bool
