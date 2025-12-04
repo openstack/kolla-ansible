@@ -69,8 +69,9 @@
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
+    mode: "0600"
     remote_src: true
-  with_items:
+  loop:
     - src: "{{ kolla_tls_backend_cert }}"
       dest: "{{ kolla_certificates_dir }}/rabbitmq-cert.pem"
     - src: "{{ kolla_tls_backend_key }}"
@@ -82,11 +83,12 @@
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    mode: "0660"
+    mode: "{{ item.mode | default('0600') }}"
     remote_src: true
   with_items:
     - src: "{{ kolla_tls_backend_cert }}"
       dest: "{{ kolla_certificates_dir }}/mariadb-cert.pem"
+      mode: "0644"
     - src: "{{ kolla_tls_backend_key }}"
       dest: "{{ kolla_certificates_dir }}/mariadb-key.pem"
   when:
