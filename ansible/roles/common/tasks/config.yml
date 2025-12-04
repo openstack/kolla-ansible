@@ -27,6 +27,18 @@
   when:
     - kolla_copy_ca_into_containers | bool
 
+- name: Ensure /var/log/journal exists on EL10 systems
+  become: true
+  file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: "2755"
+  when: >
+    (kolla_base_distro == 'centos' and kolla_base_distro_version == 'stream10') or
+    (kolla_base_distro == 'rocky' and kolla_base_distro_version == '10')
+
 - name: Copying over /run subdirectories conf
   become: true
   template:

@@ -1,5 +1,6 @@
+{% set remoted = '/usr/sbin/pacemaker-remoted' if kolla_base_distro in ['centos', 'rocky'] and kolla_base_distro_version in ['10', 'stream10'] else '/usr/sbin/pacemaker_remoted' %}
 {
-    "command": "/usr/sbin/pacemaker_remoted -l /var/log/kolla/hacluster/pacemaker-remoted.log{% if openstack_logging_debug | bool %} -VV{% endif %} -p {{ hacluster_pacemaker_remote_port }}",
+    "command": "{{ remoted }} -l /var/log/kolla/hacluster/pacemaker-remoted.log{% if openstack_logging_debug | bool %} -VV{% endif %} -p {{ hacluster_pacemaker_remote_port }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/authkey",
