@@ -34,6 +34,7 @@
 
     - name: Wait for Valkey replication sync
       become: true
+      changed_when: false
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
       command: >-
@@ -46,6 +47,7 @@
 
     - name: Set replica-priority=10 on valkey[0] to ensure it becomes master
       become: true
+      changed_when: true
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
       command: >-
@@ -55,6 +57,7 @@
 
     - name: Set replica-priority=0 on other valkey nodes to prevent promotion
       become: true
+      changed_when: true
       command: >-
         {{ kolla_container_engine }} exec valkey_server valkey-cli
         -h {{ api_interface_address }} -p {{ valkey_server_port }} CONFIG SET replica-priority 0
@@ -69,6 +72,7 @@
 
     - name: Trigger Sentinel failover (using one of redis-sentinels)
       become: true
+      changed_when: true
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
       command: >-
@@ -79,6 +83,7 @@
 
     - name: Wait until Valkey becomes master
       become: true
+      changed_when: false
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
       command: >-

@@ -2,6 +2,7 @@
 - name: Ensure stonith is disabled
   vars:
     service: "{{ hacluster_services['hacluster-pacemaker'] }}"
+  changed_when: true
   command: "{{ kolla_container_engine }} exec {{ service.container_name }} crm_attribute --type crm_config --name stonith-enabled --update false"
   run_once: true
   become: true
@@ -11,6 +12,7 @@
   vars:
     pacemaker_service: "{{ hacluster_services['hacluster-pacemaker'] }}"
     service: "{{ hacluster_services['hacluster-pacemaker-remote'] }}"
+  changed_when: true
   shell: >
     {{ kolla_container_engine }} exec {{ pacemaker_service.container_name }}
     cibadmin --modify --scope resources -X '
