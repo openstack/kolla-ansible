@@ -1,5 +1,6 @@
 ---
-- import_playbook: gather-facts.yml
+- name: Gather facts
+  import_playbook: gather-facts.yml
 
 - name: Group hosts based on configuration (RabbitMQ Only)
   hosts: all
@@ -15,7 +16,8 @@
       changed_when: false
   tags: always
 
-- import_playbook: rabbitmq.yml
+- name: Run RabbitMQ upgrade
+  import_playbook: rabbitmq.yml
   vars:
     kolla_action: upgrade
     rabbitmq_image: "{{ docker_registry ~ '/' if docker_registry else '' }}{{ docker_namespace }}/rabbitmq-{{ rabbitmq_version_suffix | regex_replace('\\.', '-') }}"
