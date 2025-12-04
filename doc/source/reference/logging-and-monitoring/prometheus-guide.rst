@@ -239,7 +239,7 @@ For example:
   :caption: ``/etc/kolla/globals.yml``
 
   prometheus_node_exporter_targets_extra:
-    - target: http://10.0.0.1:1234
+    - target: 10.0.0.1:1234
       labels:
         instance: host1
 
