@@ -63,6 +63,24 @@
   become: true
   with_dict: "{{ magnum_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: Configure uWSGI for Magnum
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ magnum_services }}"
+    service: "{{ magnum_services['magnum-api'] }}"
+    service_name: "magnum-api"
+    service_uwsgi_config_http_port: "{{ magnum_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ magnum_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/magnum/certs/magnum-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/magnum/certs/magnum-key.pem"
+    service_uwsgi_config_workers: "{{ magnum_api_workers }}"
+    service_uwsgi_config_uid: "magnum"
+  when:
+    - service | service_enabled_and_mapped_to_host
+
 - name: Copying over magnum.conf
   vars:
     service_name: "{{ item.key }}"
