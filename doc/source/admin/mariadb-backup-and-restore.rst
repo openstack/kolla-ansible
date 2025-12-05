@@ -127,7 +127,7 @@ pointing to the first node of the cluster:
 
 .. code-block:: console
 
-   kolla-ansible mariadb_recovery -i multinode -e mariadb_recover_inventory_name=controller1
+   kolla-ansible mariadb-recovery -i multinode -e mariadb_recover_inventory_name=controller1
 
 The above procedure is valid also for a disaster recovery scenario. In such
 case, first copy MariaDB backup file from the external source into
