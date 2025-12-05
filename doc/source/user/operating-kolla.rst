@@ -240,7 +240,7 @@ containers.
 ``kolla-ansible destroy -i INVENTORY`` is used to clean up containers and
 volumes in the cluster.
 
-``kolla-ansible mariadb_recovery -i INVENTORY`` is used to recover a
+``kolla-ansible mariadb-recovery -i INVENTORY`` is used to recover a
 completely stopped mariadb cluster.
 
 ``kolla-ansible prechecks -i INVENTORY`` is used to check if all requirements
