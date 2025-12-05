@@ -116,28 +116,24 @@ haproxy_ssh_healthcheck:
 haproxy_default_volumes:
   - "{{ node_config_directory }}/haproxy/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
   - "letsencrypt_certificates:/etc/haproxy/certificates"
 
 proxysql_default_volumes:
   - "{{ node_config_directory }}/proxysql/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "proxysql:/var/lib/proxysql/"
   - "proxysql_socket:/var/lib/kolla/proxysql/"
 keepalived_default_volumes:
   - "{{ node_config_directory }}/keepalived/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "/lib/modules:/lib/modules:ro"
   - "{{ 'haproxy_socket:/var/lib/kolla/haproxy/' if enable_haproxy | bool else '' }}"
   - "{{ 'proxysql_socket:/var/lib/kolla/proxysql/' if enable_proxysql | bool else '' }}"
 haproxy_ssh_default_volumes:
   - "{{ node_config_directory }}/haproxy-ssh/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "haproxy_socket:/var/lib/kolla/haproxy/"
   - "{{ 'letsencrypt:/etc/letsencrypt' if enable_letsencrypt | bool else omit }}"
   - "{{ 'letsencrypt_certificates:/etc/haproxy/certificates' if enable_letsencrypt | bool else omit }}"
