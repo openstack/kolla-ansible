@@ -1,4 +1,5 @@
 basic_auth_users:
 {% for user in prometheus_basic_auth_users | selectattr('enabled') | list %}
-    {{ user.username }}: {{ user.password | password_hash('bcrypt', salt=prometheus_bcrypt_salt) }}
+{# TODO(mnasiadka): Migrate me to libcrypt/libxcrypt in Ansible once it's available #}
+    {{ user.username }}: {{ user.password | bcrypt_hash(salt=prometheus_bcrypt_salt) }}
 {% endfor %}

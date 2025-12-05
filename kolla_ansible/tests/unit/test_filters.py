@@ -37,6 +37,26 @@ class TestFilters(unittest.TestCase):
         return self.env.context_class(
             self.env, parent=parent, name='dummy', blocks={})
 
+    def test_bcrypt_without_salt(self):
+        password = 'test'  # nosec B105
+        result = filters.bcrypt_hash(self.context, password)
+        self.assertIsInstance(result, bytes)
+
+    def test_bcrypt_with_salt(self):
+        password = 'test'  # nosec B105
+        salt = '$2a$12$w40nlebw3XyoZ5Cqke14M.'
+        result = filters.bcrypt_hash(self.context, password, salt)
+        self.assertIsInstance(result, bytes)
+
+    def test_bcrypt_with_salt_idempotent(self):
+        password = 'test'  # nosec B105
+        salt = '$2a$12$w40nlebw3XyoZ5Cqke14M.'
+        first = filters.bcrypt_hash(self.context, password, salt)
+        second = filters.bcrypt_hash(self.context, password, salt)
+        self.assertIsInstance(first, bytes)
+        self.assertIsInstance(second, bytes)
+        self.assertEqual(first, second)
+
     def test_service_enabled_true(self):
         service = {
             'enabled': True
