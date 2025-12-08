@@ -8,6 +8,7 @@ designate_services:
     volumes: "{{ designate_api_default_volumes + designate_api_extra_volumes }}"
     dimensions: "{{ designate_api_dimensions }}"
     healthcheck: "{{ designate_api_healthcheck }}"
+    wsgi: "designate.wsgi.api:application"
     haproxy:
       designate_api:
         enabled: "{{ enable_designate }}"
@@ -17,6 +18,7 @@ designate_services:
         listen_port: "{{ designate_api_listen_port }}"
         backend_http_extra:
           - "option httpchk"
+        tls_backend: "{{ designate_enable_tls_backend | bool }}"
       designate_api_external:
         enabled: "{{ enable_designate }}"
         mode: "http"
@@ -26,6 +28,7 @@ designate_services:
         listen_port: "{{ designate_api_listen_port }}"
         backend_http_extra:
           - "option httpchk"
+        tls_backend: "{{ designate_enable_tls_backend | bool }}"
   designate-backend-bind9:
     container_name: designate_backend_bind9
     group: designate-backend-bind9
@@ -151,7 +154,7 @@ designate_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 designate_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 designate_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 designate_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
+designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if designate_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
 designate_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 designate_api_healthcheck:
   interval: "{{ designate_api_healthcheck_interval }}"
@@ -368,10 +371,17 @@ designate_ks_users:
     password: "{{ designate_keystone_password }}"
     role: "admin"
 
+###################
 # Database
+###################
 designate_database_enable_tls_internal: "{{ database_enable_tls_internal | bool }}"
 
 ###################
 # Copy certificates
 ###################
-designate_copy_certs: "{{ kolla_copy_ca_into_containers | bool or designate_database_enable_tls_internal | bool }}"
+designate_copy_certs: "{{ kolla_copy_ca_into_containers | bool or designate_database_enable_tls_internal | bool or designate_enable_tls_backend | bool }}"
+
+###################
+# TLS
+###################
+designate_enable_tls_backend: "{{ kolla_enable_tls_backend }}"
