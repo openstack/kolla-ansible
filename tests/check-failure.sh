@@ -97,7 +97,7 @@ check_failure() {
 
     if [[ -n "$unhealthy_containers" ]]; then
         # NOTE(mnasiadka): try checking them again, because usually they are healthy now
-        ech "Discovered unhealthy containers - sleeping 60 seconds and retrying check"
+        echo "Discovered unhealthy containers - sleeping 60 seconds and retrying check"
         sleep 60
         if [ "$CONTAINER_ENGINE" = "docker" ]; then
             check_docker_unhealthies
