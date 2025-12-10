@@ -40,7 +40,7 @@
   when: not (service.iterate | default(False)) | bool
   notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
 
-- name: Include tasks
+- name: "{{ kolla_role_name | default(project_name) }} | Check containers that require iteration"
   vars:
     service: "{{ outer_item.value }}"
   include_tasks: iterated.yml
