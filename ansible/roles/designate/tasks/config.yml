@@ -40,6 +40,24 @@
   become: true
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: Configure uWSGI for Designate
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ designate_services }}"
+    service: "{{ designate_services['designate-api'] }}"
+    service_name: "designate-api"
+    service_uwsgi_config_http_port: "{{ designate_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ designate_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/designate/certs/designate-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/designate/certs/designate-key.pem"
+    service_uwsgi_config_workers: "{{ designate_api_workers }}"
+    service_uwsgi_config_uid: "designate"
+  when:
+    - service | service_enabled_and_mapped_to_host
+
 - name: Copying over designate.conf
   vars:
     service_name: "{{ item.key }}"

@@ -1,12 +1,30 @@
 {
-    "command": "designate-api --config-file /etc/designate/designate.conf",
+    "command": "uwsgi /etc/designate/designate-api-uwsgi.ini",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/designate.conf",
             "dest": "/etc/designate/designate.conf",
             "owner": "designate",
             "perm": "0600"
-        }{% if designate_policy_file is defined %},
+        },
+        {
+            "source": "{{ container_config_directory }}/designate-api-uwsgi.ini",
+            "dest": "/etc/designate/designate-api-uwsgi.ini",
+            "owner": "designate",
+            "perm": "0600"
+        }{% if designate_enable_tls_backend | bool %},
+        {
+            "source": "{{ container_config_directory }}/designate-cert.pem",
+            "dest": "/etc/designate/certs/designate-cert.pem",
+            "owner": "designate",
+            "perm": "0600"
+        },
+        {
+            "source": "{{ container_config_directory }}/designate-key.pem",
+            "dest": "/etc/designate/certs/designate-key.pem",
+            "owner": "designate",
+            "perm": "0600"
+        }{% endif %}{% if designate_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ designate_policy_file }}",
             "dest": "/etc/designate/{{ designate_policy_file }}",
