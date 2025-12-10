@@ -1,5 +1,6 @@
 ---
-- include_tasks: get_resources_info.yml
+- name: Include tasks from get_resources_info.yml
+  include_tasks: get_resources_info.yml
   when: octavia_auto_configure | bool
 
 - name: Ensuring config directories exist
@@ -41,7 +42,8 @@
     - octavia_policy_file is defined
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
-- include_tasks: copy-certs.yml
+- name: Copying over TLS certificates
+  include_tasks: copy-certs.yml
   when:
     - octavia_copy_certs | bool
 
@@ -102,7 +104,8 @@
   become: true
   with_dict: "{{ octavia_services | select_services_enabled_and_mapped_to_host }}"
 
-- when: "'amphora' in octavia_provider_drivers"
+- name: Copy Amphora SSH key and certificates
+  when: "'amphora' in octavia_provider_drivers"
   vars:
     octavia_amphora_keys:
       - client.cert-and-key.pem
