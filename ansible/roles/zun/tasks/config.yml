@@ -9,7 +9,8 @@
   become: true
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
 
-- include_tasks: external_ceph.yml
+- name: Include tasks from external_ceph.yml
+  include_tasks: external_ceph.yml
   when:
     - zun_configure_for_cinder_ceph | bool
     - inventory_hostname in groups['zun-compute']
@@ -33,7 +34,8 @@
   when:
     - zun_policy.results | length > 0
 
-- include_tasks: copy-certs.yml
+- name: Copying over TLS certificates
+  include_tasks: copy-certs.yml
   when:
     - zun_copy_certs | bool
 
