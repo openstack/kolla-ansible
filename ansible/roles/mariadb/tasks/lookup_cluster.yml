@@ -17,7 +17,8 @@
   set_fact:
     mariadb_cluster_exists: "{{ groups[mariadb_shard_group + '_had_volume_True'] is defined }}"
 
-- when: not mariadb_recover | default(False)
+- name: Check MariaDB port liveness and cluster status
+  when: not mariadb_recover | default(False)
   block:
     - name: Check MariaDB service port liveness
       wait_for:
@@ -43,7 +44,8 @@
         - mariadb_cluster_exists
         - groups[mariadb_shard_group + '_port_alive_True'] is not defined
 
-    - when:
+    - name: Check MariaDB WSREP sync status
+      when:
         - groups[mariadb_shard_group + '_port_alive_True'] is defined
         - inventory_hostname in groups[mariadb_shard_group + '_port_alive_True']
       block:
