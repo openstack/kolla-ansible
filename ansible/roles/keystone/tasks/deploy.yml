@@ -1,21 +1,28 @@
 ---
-- import_tasks: config.yml
+- name: Configure keystone
+  import_tasks: config.yml
 
-- import_tasks: check-containers.yml
+- name: Check keystone containers
+  import_tasks: check-containers.yml
 
-- include_tasks: clone.yml
+- name: Clone keystone repository
+  include_tasks: clone.yml
   when:
     - keystone_dev_mode | bool
 
-- import_tasks: bootstrap.yml
+- name: Bootstrap keystone service
+  import_tasks: bootstrap.yml
 
 - name: Flush handlers
   meta: flush_handlers
 
-- include_tasks: distribute_fernet.yml
+- name: Include tasks from distribute_fernet.yml
+  include_tasks: distribute_fernet.yml
 
-- import_tasks: register.yml
+- name: Register keystone in Keystone
+  import_tasks: register.yml
 
-- include_tasks: register_identity_providers.yml
+- name: Include tasks from register_identity_providers.yml
+  include_tasks: register_identity_providers.yml
   when:
     - enable_keystone_federation | bool
