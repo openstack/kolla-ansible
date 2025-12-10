@@ -6,7 +6,8 @@
     container_engine: "{{ current_engine }}"
   register: containers
 
-- import_tasks: ovs-cleanup.yml
+- name: Import tasks from ovs-cleanup.yml
+  import_tasks: ovs-cleanup.yml
   when:
     - "'openvswitch_vswitchd' in containers.container_names"
     - neutron_plugin_agent == 'openvswitch'
@@ -36,7 +37,8 @@
 # NOTE(r-krcek): The following block is workaround for problem where podman
 # changes directory permissions after starting a container from any UID:GID
 # to root after migration.
-- when: container_volumes.matched > 0
+- name: Migrate container volumes to target engine
+  when: container_volumes.matched > 0
   block:
     - name: Pre-create volumes in target engine
       become: true
