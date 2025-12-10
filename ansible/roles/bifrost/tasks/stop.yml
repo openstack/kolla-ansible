@@ -1,5 +1,6 @@
 ---
-- when:
+- name: Stop bifrost containers
+  when:
     - inventory_hostname in groups['bifrost']
     - "'bifrost_deploy' not in skip_stop_containers"
   block:
@@ -12,7 +13,8 @@
           - bifrost_deploy
       register: container_facts
 
-    - when: container_facts.containers['bifrost_deploy'] is defined
+    - name: Stop bifrost services
+      when: container_facts.containers['bifrost_deploy'] is defined
       block:
         # Ensure that all services are stopped gracefully, and in a sensible
         # order.
