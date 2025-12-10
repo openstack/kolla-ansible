@@ -97,7 +97,8 @@
     - service | service_enabled_and_mapped_to_host
     - nova_backend == "rbd"
 
-- when:
+- name: Copy ceph.conf for host libvirt
+  when:
     - not enable_nova_libvirt_container | bool
     - inventory_hostname in groups[nova_cell_compute_group]
     - nova_backend == "rbd"
@@ -128,7 +129,8 @@
         mode: "0644"
       become: true
 
-- vars:
+- name: Configure libvirt secrets for external Ceph
+  vars:
     libvirt_secrets_dir: >-
       {{ (node_config_directory ~ '/nova-libvirt/secrets')
          if enable_nova_libvirt_container | bool

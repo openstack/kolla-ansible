@@ -9,11 +9,13 @@
     mode: "0770"
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
 
-- include_tasks: copy-certs.yml
+- name: Copying over TLS certificates
+  include_tasks: copy-certs.yml
   when:
     - nova_cell_copy_certs | bool
 
-- include_tasks: external_ceph.yml
+- name: Include tasks from external_ceph.yml
+  include_tasks: external_ceph.yml
   when:
     - (nova_backend == "rbd" or cinder_backend_ceph | bool)
     - inventory_hostname in groups[nova_cell_compute_group]
