@@ -1,5 +1,6 @@
 ---
-- delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
+- name: Remove RabbitMQ HA all policy
+  delegate_to: "{{ groups[role_rabbitmq_groups] | first }}"
   run_once: true
   vars:
     service_name: "rabbitmq"
@@ -14,7 +15,8 @@
           - "{{ service.container_name }}"
       register: container_facts
 
-    - when: container_facts.containers[service.container_name] is defined
+    - name: Remove RabbitMQ HA all policy
+      when: container_facts.containers[service.container_name] is defined
       block:
         - name: List RabbitMQ policies
           become: true

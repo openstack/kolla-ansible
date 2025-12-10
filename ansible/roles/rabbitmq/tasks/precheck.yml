@@ -1,5 +1,6 @@
 ---
-- import_role:
+- name: Precheck rabbitmq configuration
+  import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ rabbitmq_services }}"
@@ -105,7 +106,8 @@
     - not kolla_externally_managed_cert | bool
     - rabbitmq_enable_tls | bool
 
-- run_once: true
+- name: Check RabbitMQ HA compatibility
+  run_once: true
   when:
     - container_facts.containers['rabbitmq'] is defined
   tags: rabbitmq-ha-precheck
