@@ -9,13 +9,15 @@
   become: true
   with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
 
-- include_tasks: external_huawei.yml
+- name: Configure external Huawei backend
+  include_tasks: external_huawei.yml
   when:
     - cinder_backend_huawei | bool
     - cinder_backend_huawei_xml_files | length > 0
     - inventory_hostname in groups['cinder-volume']
 
-- include_tasks: external_ceph.yml
+- name: Configure external Ceph backend
+  include_tasks: external_ceph.yml
   when:
     - cinder_backend_ceph | bool
     - inventory_hostname in groups['cinder-volume'] or inventory_hostname in groups['cinder-backup']
@@ -39,7 +41,8 @@
   when:
     - cinder_policy.results | length > 0
 
-- include_tasks: copy-certs.yml
+- name: Copying over TLS certificates
+  include_tasks: copy-certs.yml
   when:
     - cinder_copy_certs | bool
 

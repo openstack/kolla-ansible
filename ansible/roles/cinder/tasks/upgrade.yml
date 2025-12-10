@@ -1,19 +1,24 @@
 ---
 # NOTE (duonghq): I break config into 2 phases to prevent new version
 # of service start if node or process in node crash accidentally.
-- include_tasks: config.yml
+- name: Configure cinder
+  include_tasks: config.yml
   when: inventory_hostname == groups["cinder-api"][0]
 
-- import_tasks: bootstrap_service.yml
+- name: Run cinder bootstrap container
+  import_tasks: bootstrap_service.yml
 
-- import_tasks: config.yml
+- name: Configure cinder
+  import_tasks: config.yml
 
-- import_tasks: check-containers.yml
+- name: Check cinder containers
+  import_tasks: check-containers.yml
 
 - name: Flush handlers
   meta: flush_handlers
 
-- import_tasks: reload.yml
+- name: Reload cinder services
+  import_tasks: reload.yml
 
 - name: Running Cinder online schema migration
   vars:
