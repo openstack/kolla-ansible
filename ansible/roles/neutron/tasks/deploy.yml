@@ -1,23 +1,31 @@
 ---
-- import_tasks: neutron_plugin_agent_check.yml
+- name: Import tasks from neutron_plugin_agent_check.yml
+  import_tasks: neutron_plugin_agent_check.yml
 
-- import_tasks: register.yml
+- name: Register neutron in Keystone
+  import_tasks: register.yml
 
-- include_tasks: clone.yml
+- name: Clone neutron repository
+  include_tasks: clone.yml
   when: neutron_dev_mode | bool
 
-- import_tasks: config-host.yml
+- name: Import tasks from config-host.yml
+  import_tasks: config-host.yml
 
-- import_tasks: config.yml
+- name: Configure neutron
+  import_tasks: config.yml
 
-- import_tasks: check-containers.yml
+- name: Check neutron containers
+  import_tasks: check-containers.yml
 
-- include_tasks: config-neutron-fake.yml
+- name: Include tasks from config-neutron-fake.yml
+  include_tasks: config-neutron-fake.yml
   when:
     - enable_nova_fake | bool
     - inventory_hostname in groups['compute']
 
-- import_tasks: bootstrap.yml
+- name: Bootstrap neutron service
+  import_tasks: bootstrap.yml
 
 - name: Flush Handlers
   meta: flush_handlers
