@@ -28,7 +28,8 @@
   when:
     - designate_policy.results | length > 0
 
-- include_tasks: copy-certs.yml
+- name: Copying over TLS certificates
+  include_tasks: copy-certs.yml
   when:
     - designate_copy_certs | bool
 
@@ -125,7 +126,8 @@
     - item.key in [ "designate-backend-bind9", "designate-worker" ]
   with_dict: "{{ designate_services | select_services_enabled_and_mapped_to_host }}"
 
-- include_tasks: backend_external.yml
+- name: Include tasks from backend_external.yml
+  include_tasks: backend_external.yml
   when: designate_backend_external == 'bind9'
 
 - name: Copying over existing policy file
