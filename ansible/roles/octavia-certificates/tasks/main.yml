@@ -11,7 +11,8 @@
   include_tasks: check_expiry.yml
   when: octavia_certs_check_expiry | bool
 
-- when: not octavia_certs_check_expiry | bool
+- name: Generate Octavia certificates
+  when: not octavia_certs_check_expiry | bool
   block:
     - name: Ensure server_ca and client_ca directories exist
       file:
@@ -28,11 +29,14 @@
         dest: "{{ octavia_certs_work_dir }}/openssl.cnf"
         mode: "0600"
 
-    - import_tasks: server_ca.yml
+    - name: Import tasks from server_ca.yml
+      import_tasks: server_ca.yml
 
-    - import_tasks: client_ca.yml
+    - name: Import tasks from client_ca.yml
+      import_tasks: client_ca.yml
 
-    - import_tasks: client_cert.yml
+    - name: Import tasks from client_cert.yml
+      import_tasks: client_cert.yml
 
     - name: Ensure octavia directory exists under {{ node_custom_config }}
       file:
