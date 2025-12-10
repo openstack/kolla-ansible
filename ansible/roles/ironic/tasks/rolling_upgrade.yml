@@ -1,5 +1,6 @@
 ---
-- import_tasks: config-host.yml
+- name: Import tasks from config-host.yml
+  import_tasks: config-host.yml
 
 # Pin release version for rolling upgrades
 # This is only needed when performing a slow rolling upgrade process
@@ -8,23 +9,29 @@
 - name: Pin release version for rolling upgrades
   when: ironic_pin_release_version | length > 0
   block:
-    - import_tasks: config.yml
+    - name: Import tasks from config.yml
+      import_tasks: config.yml
       vars:
         pin_release_version: "{{ ironic_pin_release_version }}"
 
-    - import_tasks: check-containers.yml
+    - name: Import tasks from check-containers.yml
+      import_tasks: check-containers.yml
 
-    - import_tasks: bootstrap_service.yml
+    - name: Import tasks from bootstrap_service.yml
+      import_tasks: bootstrap_service.yml
 
     # Restart ironic services with pinned release version
     - name: Flush handlers
       meta: flush_handlers
 
-- import_tasks: config.yml
+- name: Import tasks from config.yml
+  import_tasks: config.yml
 
-- import_tasks: check-containers.yml
+- name: Import tasks from check-containers.yml
+  import_tasks: check-containers.yml
 
-- import_tasks: bootstrap_service.yml
+- name: Import tasks from bootstrap_service.yml
+  import_tasks: bootstrap_service.yml
 
 - name: Flush handlers
   meta: flush_handlers
