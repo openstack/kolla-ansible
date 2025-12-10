@@ -1,5 +1,6 @@
 ---
-- import_role:
+- name: Precheck loadbalancer configuration
+  import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ loadbalancer_services }}"
@@ -55,7 +56,8 @@
     haproxy_vip_prechecks: "{{ all_hosts_in_batch and groups['haproxy_running_True'] is not defined }}"
     proxysql_vip_prechecks: "{{ all_hosts_in_batch and groups['proxysql_running_True'] is not defined }}"
 
-- when:
+- name: Check external haproxy certificate existence
+  when:
     - not kolla_externally_managed_cert | bool
     - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
     - kolla_enable_tls_external | bool
@@ -74,7 +76,8 @@
         that: haproxy_cert_file.stat.exists
         fail_msg: "External haproxy certificate file is not found. It is configured via 'kolla_external_fqdn_cert'"
 
-- when:
+- name: Check internal haproxy certificate existence
+  when:
     - not kolla_externally_managed_cert | bool
     - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
     - kolla_enable_tls_internal | bool
