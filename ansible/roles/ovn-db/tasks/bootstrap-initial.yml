@@ -68,14 +68,17 @@
         ovn_sb_db_bootstrap_args: "--db-sb-cluster-remote-addr={{ 'api' | kolla_address(groups.get('ovn-sb-db_leader', groups['ovn-sb-db'])[0] | default()) | put_address_in_context('url') }}"
       when: inventory_hostname in groups.get('ovn-sb-db_had_volume_False', '') and groups['ovn-sb-db_leader'] is defined
 
-    - import_tasks: config.yml
+    - name: Import tasks from config.yml
+      import_tasks: config.yml
 
-    - import_tasks: check-containers.yml
+    - name: Import tasks from check-containers.yml
+      import_tasks: check-containers.yml
 
     - name: Flush handlers
       meta: flush_handlers
 
-    - import_tasks: bootstrap-db.yml
+    - name: Import tasks from bootstrap-db.yml
+      import_tasks: bootstrap-db.yml
 
     - name: Unset bootstrap args fact
       set_fact:
