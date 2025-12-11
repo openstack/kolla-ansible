@@ -1,0 +1,39 @@
+---
+- job:
+    name: kolla-ansible-cloudkitty-base
+    parent: kolla-ansible-base
+    voting: false
+    files: !inherit
+      - ^ansible/group_vars/all/cloudkitty.yml
+      - ^ansible/roles/cloudkitty/
+      - ^roles/kolla-ansible-test-cloudkitty/
+    vars:
+      scenario: cloudkitty
+      scenario_images_extra:
+        - ^cloudkitty
+      tls_enabled: false
+
+- job:
+    name: kolla-ansible-debian-trixie-cloudkitty
+    parent: kolla-ansible-cloudkitty-base
+    nodeset: kolla-ansible-debian-trixie-8GB
+
+- job:
+    name: kolla-ansible-rocky-10-cloudkitty
+    parent: kolla-ansible-cloudkitty-base
+    nodeset: kolla-ansible-rocky-10-8GB
+
+- job:
+    name: kolla-ansible-ubuntu-noble-cloudkitty
+    parent: kolla-ansible-cloudkitty-base
+    nodeset: kolla-ansible-ubuntu-noble-8GB
+
+- project-template:
+    name: kolla-ansible-scenario-cloudkitty
+    description: |
+      Runs Kolla-Ansible CloudKitty scenario jobs.
+    check:
+      jobs:
+        - kolla-ansible-debian-trixie-cloudkitty
+        - kolla-ansible-rocky-10-cloudkitty
+        - kolla-ansible-ubuntu-noble-cloudkitty
