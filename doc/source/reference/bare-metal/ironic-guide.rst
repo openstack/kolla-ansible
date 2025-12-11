@@ -52,6 +52,16 @@ For example it can be the same address as default router for the range:
        routers: "192.168.5.1"
        ntp_server: "192.168.5.1"
 
+Provide a DNS server if the inspection ramdisk (IPA) needs to resolve
+Fully Qualified Domain Names (FQDNs) for API access. To specify multiple
+servers, use a comma-separated list.
+
+.. code-block:: yaml
+
+  ironic_dnsmasq_dhcp_ranges:
+    - range: "192.168.5.100,192.168.5.110"
+      dns_servers: "192.168.5.10,192.168.5.11"
+
 To support DHCP relay, it is also possible to define a netmask in the range.
 It is advisable to also provide a router to allow the traffic to reach the
 Ironic server.
