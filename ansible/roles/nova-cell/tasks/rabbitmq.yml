@@ -1,10 +1,12 @@
 ---
 # Create RabbitMQ users and vhosts.
-- when:
+- name: Create RabbitMQ users and vhosts for nova-cell
+  when:
     - nova_cell_rpc_transport == 'rabbit'
     - enable_rabbitmq | bool
   block:
-    - import_role:
+    - name: Create RabbitMQ RPC users for nova-cell
+      import_role:
         name: service-rabbitmq
       vars:
         service_rabbitmq_users: "{{ nova_cell_rpc_rabbitmq_users }}"
@@ -14,7 +16,8 @@
         # Delegate to a host in the RPC group.
         service_rabbitmq_delegate_host: "{{ groups[nova_cell_rpc_group_name][0] | default }}"
 
-    - import_role:
+    - name: Create RabbitMQ notify users for nova-cell
+      import_role:
         name: service-rabbitmq
       vars:
         service_rabbitmq_users: "{{ nova_cell_notify_rabbitmq_users }}"
