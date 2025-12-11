@@ -1,5 +1,6 @@
 ---
-- run_once: true
+- name: Create and update cell0 mappings
+  run_once: true
   delegate_to: "{{ groups[nova_api.group][0] }}"
   block:
     - name: Create cell0 mappings
@@ -23,7 +24,8 @@
         - map_cell0 is success
         - '"Cell0 is already setup" not in map_cell0.stdout'
 
-    - import_role:
+    - name: Import role for nova-cell
+      import_role:
         name: nova-cell
         tasks_from: get_cell_settings.yml
       vars:
@@ -64,5 +66,6 @@
         - nova_cell_settings | bool
         - nova_cell_settings.cell_database != nova_cell0_connection
 
-- include_tasks: bootstrap_service.yml
+- name: Include tasks from bootstrap_service.yml
+  include_tasks: bootstrap_service.yml
   when: map_cell0.changed  # noqa no-handler
