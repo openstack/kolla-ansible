@@ -28,3 +28,21 @@ consumes a large amount of logging resources.
 
 Please note that git usually strips lines beginning with `#` from the commit
 message. This can be avoided by preceding the string with a space.
+
+CI coverage matrix
+~~~~~~~~~~~~~~~~~~
+
+Zuul job templates live in ``zuul.d`` and are applied in
+``zuul.d/project.yaml``. Pipelines always run tox/python style+unit checks,
+docs/release builds, and requirements checks; the matrix below shows the
+scenario jobs in ``check``/``gate``.
+
+.. csv-table:: Scenario matrix
+   :header-rows: 1
+   :file: ci-matrix.csv
+   :widths: 12 7 7 7 7 7 7 7 7 7 7 7 7 12
+   :delim: ;
+
+Legend: ✅ = covered, ❌ = disabled, – = not covered. ``Core`` means the standard
+Keystone/Glance/Neutron/Nova/Heat stack is deployed; ``Tempest`` indicates
+smoke tests run; ``SLURP`` = Skip Level Upgrade Release Process.
