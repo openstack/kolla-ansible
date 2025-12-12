@@ -4,12 +4,12 @@
   gather_facts: false
   tasks:
     - name: Get stats of {{ node_config }}
-      stat:
+      ansible.builtin.stat:
         path: "{{ node_config }}"
       register: st
 
     - name: Set become fact
-      set_fact:
+      ansible.builtin.set_fact:
         needs_root: "{{ not (st.stat.writeable | bool) }}"
 
 - name: Creating clouds.yaml file on the deploy node
@@ -17,7 +17,7 @@
   tasks:
     - name: Template out clouds.yaml
       become: "{{ needs_root }}"
-      template:
+      ansible.builtin.template:
         src: "roles/common/templates/clouds.yaml.j2"
         dest: "{{ node_config }}/clouds.yaml"
         owner: "{{ ansible_facts.user_uid }}"
@@ -29,7 +29,7 @@
   tasks:
     - name: Template out admin-openrc.sh
       become: "{{ needs_root }}"
-      template:
+      ansible.builtin.template:
         src: "roles/common/templates/admin-openrc.sh.j2"
         dest: "{{ node_config }}/admin-openrc.sh"
         owner: "{{ ansible_facts.user_uid }}"
@@ -38,7 +38,7 @@
 
     - name: Template out admin-openrc-system.sh
       become: "{{ needs_root }}"
-      template:
+      ansible.builtin.template:
         src: "roles/common/templates/admin-openrc-system.sh.j2"
         dest: "{{ node_config }}/admin-openrc-system.sh"
         owner: "{{ ansible_facts.user_uid }}"
@@ -47,7 +47,7 @@
 
     - name: Template out public-openrc.sh
       become: "{{ needs_root }}"
-      template:
+      ansible.builtin.template:
         src: "roles/common/templates/public-openrc.sh.j2"
         dest: "{{ node_config }}/public-openrc.sh"
         owner: "{{ ansible_facts.user_uid }}"
@@ -56,7 +56,7 @@
 
     - name: Template out public-openrc-system.sh
       become: "{{ needs_root }}"
-      template:
+      ansible.builtin.template:
         src: "roles/common/templates/public-openrc-system.sh.j2"
         dest: "{{ node_config }}/public-openrc-system.sh"
         owner: "{{ ansible_facts.user_uid }}"
@@ -64,7 +64,7 @@
         mode: "0600"
 
     - name: Template out octavia-openrc.sh
-      import_role:
+      ansible.builtin.import_role:
         name: octavia
         tasks_from: openrc.yml
       vars:

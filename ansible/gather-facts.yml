@@ -12,12 +12,12 @@
   gather_facts: false
   tasks:
     - name: Group hosts to determine when using --limit
-      group_by:
+      ansible.builtin.group_by:
         key: "all_using_limit_{{ (ansible_play_batch | length) != (groups['all'] | length) }}"
       changed_when: false
 
     - name: Gather facts
-      setup:
+      ansible.builtin.setup:
         filter: "{{ kolla_ansible_setup_filter }}"
         gather_subset: "{{ kolla_ansible_setup_gather_subset }}"
       when:
@@ -47,7 +47,7 @@
     delegate_hosts: "{{ kolla_ansible_delegate_facts_hosts[batch_index | int::batch_size | int] }}"
   tasks:
     - name: Gather facts
-      setup:
+      ansible.builtin.setup:
         filter: "{{ kolla_ansible_setup_filter }}"
         gather_subset: "{{ kolla_ansible_setup_gather_subset }}"
       delegate_facts: true
