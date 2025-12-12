@@ -101,7 +101,12 @@ barbican_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 barbican_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 barbican_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 barbican_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-barbican_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if barbican_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}"]
+barbican_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{
+    'https' if barbican_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}
 barbican_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 barbican_api_healthcheck:
   interval: "{{ barbican_api_healthcheck_interval }}"
