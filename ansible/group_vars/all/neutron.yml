@@ -44,8 +44,12 @@ neutron_tenant_network_types: "{% if neutron_plugin_agent == 'ovn' %}geneve{% el
 
 # valid values: ["dvr", "dvr_no_external"]
 neutron_compute_dvr_mode: "dvr"
-computes_need_external_bridge: "{{ (enable_neutron_dvr | bool and neutron_compute_dvr_mode == 'dvr') or enable_neutron_provider_networks | bool or neutron_ovn_distributed_fip | bool }}"
-
+computes_need_external_bridge: >-
+  {{
+    (enable_neutron_dvr | bool and neutron_compute_dvr_mode == 'dvr') or
+    enable_neutron_provider_networks | bool or
+    neutron_ovn_distributed_fip | bool
+  }}
 # Default DNS resolvers for virtual networks
 neutron_dnsmasq_dns_servers: "1.1.1.1,8.8.8.8,8.8.4.4"
 
