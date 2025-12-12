@@ -117,7 +117,11 @@ horizon_enable_healthchecks: "{{ enable_container_healthchecks }}"
 horizon_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 horizon_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 horizon_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-horizon_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if horizon_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ horizon_listen_port }}"]
+horizon_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if horizon_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ horizon_listen_port }}
 horizon_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 horizon_healthcheck:
   interval: "{{ horizon_healthcheck_interval }}"
