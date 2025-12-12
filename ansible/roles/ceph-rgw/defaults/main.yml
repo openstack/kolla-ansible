@@ -58,7 +58,8 @@ ceph_rgw_swift_compatibility: false
 # RadosGW.
 ceph_rgw_swift_account_in_url: false
 
-ceph_rgw_endpoint_path: "{{ '/' if ceph_rgw_swift_compatibility | bool else '/swift/' }}v1{% if ceph_rgw_swift_account_in_url | bool %}/AUTH_%(project_id)s{% endif %}"
+ceph_rgw_endpoint_path: >-
+  {{ ('/' if ceph_rgw_swift_compatibility | bool else '/swift/') + 'v1' + ('/AUTH_%(project_id)s' if ceph_rgw_swift_account_in_url | bool else '') }}
 
 ceph_rgw_internal_endpoint: "{{ ceph_rgw_internal_base_endpoint + ceph_rgw_endpoint_path }}"
 ceph_rgw_public_endpoint: "{{ ceph_rgw_public_base_endpoint + ceph_rgw_endpoint_path }}"
