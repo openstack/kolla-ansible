@@ -158,9 +158,12 @@ nova_cell_database_admin_user: "{{ nova_cell_database_shard_root_user }}"
 nova_cell_database_admin_password: "{{ database_password }}"
 
 nova_cell_database_name: "{{ 'nova_' ~ nova_cell_name if nova_cell_name else 'nova' }}"
-nova_cell_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% elif nova_cell_name %}nova_{{ nova_cell_name }}{% else %}nova{% endif %}"
+nova_cell_database_user: >-
+  {% if use_preconfigured_databases | bool
+  and use_common_mariadb_user | bool %}{{ database_user }}{% elif nova_cell_name %}nova_{{ nova_cell_name }}{% else %}nova{% endif %}
 nova_cell_database_password: '{{ nova_database_password }}'
-nova_cell_database_address: "{% if nova_cell_database_group is defined %}{{ 'api' | kolla_address(groups[nova_cell_database_group][0]) }}{% else %}{{ database_address }}{% endif %}"
+nova_cell_database_address: >-
+  {% if nova_cell_database_group is defined %}{{ 'api' | kolla_address(groups[nova_cell_database_group][0]) }}{% else %}{{ database_address }}{% endif %}
 nova_cell_database_port: '{{ database_port }}'
 
 # Ideally, the cell conductors would not have access to the API database.
@@ -184,7 +187,8 @@ nova_api_database_address: "{{ database_address | put_address_in_context('url') 
 # If nova-cell is not used and DBs are proxied
 # through proxysql shards are same:
 #  - nova_cell_database_shard_id = nova_database_shard_id
-nova_cell_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ nova_cell_database_shard_id | default(nova_database_shard_id) }}{% else %}{{ database_user }}{% endif %}"
+nova_cell_database_shard_root_user: >-
+  {% if enable_proxysql | bool %}root_shard_{{ nova_cell_database_shard_id | default(nova_database_shard_id) }}{% else %}{{ database_user }}{% endif %}
 
 nova_cell0_and_default_cell_database_shard:
   users:
@@ -201,7 +205,10 @@ nova_cell_dynamic_users: |
   {% set result = [] %}
   {% for host in groups['nova-conductor'] %}
     {% if hostvars[host]['nova_cell_name'] is defined and hostvars[host]['nova_cell_database_shard_id'] is defined %}
-      {% set _ = result.append({'user': 'nova_' ~ hostvars[host]['nova_cell_name'], 'password': nova_cell_database_password, 'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
+      {% set _ = result.append({
+        'user': 'nova_' ~ hostvars[host]['nova_cell_name'],
+        'password': nova_cell_database_password,
+        'shard_id': hostvars[host]['nova_cell_database_shard_id']}) %}
     {% endif %}
   {% endfor %}
   {{ result }}
@@ -244,8 +251,22 @@ nova_cell_notify_vhost: "{{ nova_cell_rpc_vhost }}"
 nova_cell_notify_tags: "{{ nova_cell_rpc_tags }}"
 
 # External Rabbit users should override these
-nova_cell_rpc_transport_url: "{{ nova_cell_rpc_transport }}://{% for host in groups[nova_cell_rpc_group_name] %}{{ nova_cell_rpc_user }}:{{ nova_cell_rpc_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ nova_cell_rpc_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ nova_cell_rpc_vhost }}"
-nova_cell_notify_transport_url: "{{ nova_cell_notify_transport }}://{% for host in groups[nova_cell_notify_group_name] %}{{ nova_cell_notify_user }}:{{ nova_cell_notify_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ nova_cell_notify_port }}{% if not loop.last %},{% endif %}{% endfor %}/{{ nova_cell_notify_vhost }}"
+nova_cell_rpc_transport_url: >-
+  {%- set ns = namespace(hosts=[]) -%}
+  {%- for host in groups[nova_cell_rpc_group_name] -%}
+    {%- set host_url = nova_cell_rpc_user ~ ':' ~ nova_cell_rpc_password ~ '@' ~
+        ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~ nova_cell_rpc_port -%}
+    {%- set ns.hosts = ns.hosts + [host_url] -%}
+  {%- endfor -%}
+  {{ nova_cell_rpc_transport }}://{{ ns.hosts | join(',') }}/{{ nova_cell_rpc_vhost }}
+nova_cell_notify_transport_url: >-
+  {%- set ns = namespace(hosts=[]) -%}
+  {%- for host in groups[nova_cell_notify_group_name] -%}
+    {%- set host_url = nova_cell_notify_user ~ ':' ~ nova_cell_notify_password ~ '@' ~
+        ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~ nova_cell_notify_port -%}
+    {%- set ns.hosts = ns.hosts + [host_url] -%}
+  {%- endfor -%}
+  {{ nova_cell_notify_transport }}://{{ ns.hosts | join(',') }}/{{ nova_cell_notify_vhost }}
 
 # These vhosts and users will be created.
 nova_cell_rpc_rabbitmq_users:
@@ -346,7 +367,9 @@ nova_novncproxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
 nova_novncproxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 nova_novncproxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 nova_novncproxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-nova_novncproxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ nova_novncproxy_listen_port }}/vnc_lite.html"]
+nova_novncproxy_healthcheck_test:
+  - "CMD-SHELL"
+  - "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ nova_novncproxy_listen_port }}/vnc_lite.html"
 nova_novncproxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 nova_novncproxy_healthcheck:
   interval: "{{ nova_novncproxy_healthcheck_interval }}"
@@ -359,7 +382,9 @@ nova_spicehtml5proxy_enable_healthchecks: "{{ enable_container_healthchecks }}"
 nova_spicehtml5proxy_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 nova_spicehtml5proxy_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 nova_spicehtml5proxy_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-nova_spicehtml5proxy_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_listen_port }}/spice_auto.html"]
+nova_spicehtml5proxy_healthcheck_test:
+  - "CMD-SHELL"
+  - "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ nova_spicehtml5proxy_listen_port }}/spice_auto.html"
 nova_spicehtml5proxy_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 nova_spicehtml5proxy_healthcheck:
   interval: "{{ nova_spicehtml5proxy_healthcheck_interval }}"
@@ -619,7 +644,11 @@ enable_shared_var_lib_nova_mnt: "{{ enable_cinder_backend_nfs | bool or enable_c
 # PCI passthrough whitelist
 ###################################
 
-nova_pci_passthrough_whitelist: "{{ enable_neutron_sriov | bool | ternary(neutron_sriov_physnet_mappings | dict2items(key_name='physical_network', value_name='devname'), []) }}"
+nova_pci_passthrough_whitelist: >-
+  {{
+    enable_neutron_sriov | bool |
+    ternary(neutron_sriov_physnet_mappings | dict2items(key_name='physical_network', value_name='devname'), [])
+  }}
 
 ##################
 # Libvirt cleanup

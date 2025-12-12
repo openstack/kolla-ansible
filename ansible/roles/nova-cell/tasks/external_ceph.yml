@@ -31,8 +31,11 @@
 
 - name: Extract nova key from file
   set_fact:
-    nova_cephx_raw_key:
-      "{{ lookup('template', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
+    nova_cephx_raw_key: >-
+      {{
+        lookup('template', nova_cephx_keyring_file.stat.path) |
+        regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1')
+      }}
   changed_when: false
   when:
     - nova_backend == "rbd"
@@ -40,8 +43,11 @@
 
 - name: Extract cinder key from file
   set_fact:
-    cinder_cephx_raw_key:
-      "{{ lookup('template', cinder_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
+    cinder_cephx_raw_key: >-
+      {{
+        lookup('template', cinder_cephx_keyring_file.stat.path) |
+        regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1')
+      }}
   changed_when: false
   when:
     - cinder_backend_ceph | bool
