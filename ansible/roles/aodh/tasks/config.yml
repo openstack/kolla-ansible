@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ aodh_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   run_once: true
   delegate_to: localhost
@@ -22,14 +22,14 @@
       skip: true
 
 - name: Set aodh policy file
-  set_fact:
+  ansible.builtin.set_fact:
     aodh_policy_file: "{{ aodh_policy.results.0.stat.path | basename }}"
     aodh_policy_file_path: "{{ aodh_policy.results.0.stat.path }}"
   when:
     - aodh_policy.results | length > 0
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ aodh_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ aodh_policy_file }}"
     mode: "0660"
@@ -39,12 +39,12 @@
   with_dict: "{{ aodh_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - aodh_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -67,7 +67,7 @@
   with_dict: "{{ aodh_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: "Configure uWSGI for {{ project_name }}"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ aodh_services }}"
@@ -84,7 +84,7 @@
 - name: Copying over wsgi-aodh files for services
   vars:
     service: "{{ aodh_services['aodh-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "wsgi-aodh.conf.j2"
     dest: "{{ node_config_directory }}/aodh-api/wsgi-aodh.conf"
     mode: "0660"
