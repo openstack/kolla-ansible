@@ -101,7 +101,11 @@ magnum_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 magnum_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 magnum_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 magnum_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-magnum_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if magnum_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ magnum_api_listen_port }}"]
+magnum_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if magnum_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ magnum_api_listen_port }}
 magnum_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 magnum_api_healthcheck:
   interval: "{{ magnum_api_healthcheck_interval }}"
