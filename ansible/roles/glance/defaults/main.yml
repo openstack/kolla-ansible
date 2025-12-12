@@ -55,7 +55,12 @@ glance_config_validation:
 ####################
 # HAProxy
 ####################
-haproxy_members: "{% for host in glance_api_hosts %}server {{ hostvars[host].ansible_facts.hostname }} {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }} check inter 2000 rise 2 fall 5{% if glance_enable_tls_backend | bool %} ssl verify required ca-file {{ haproxy_backend_cacert }}{% endif %};{% endfor %}"
+haproxy_members: >-
+  {% for host in glance_api_hosts %}server {{ hostvars[host].ansible_facts.hostname }}
+  {{ 'api' | kolla_address(host) }}:{{ glance_api_listen_port }}
+  check inter 2000 rise 2 fall 5
+  {% if glance_enable_tls_backend | bool %}
+  ssl verify required ca-file {{ haproxy_backend_cacert }}{% endif %};{% endfor %}
 
 ####################
 # Keystone
@@ -137,7 +142,11 @@ glance_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 glance_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 glance_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 glance_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-glance_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if glance_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ glance_api_listen_port }}"]
+glance_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if glance_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ glance_api_listen_port }}
 glance_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 glance_api_healthcheck:
   interval: "{{ glance_api_healthcheck_interval }}"
@@ -187,7 +196,11 @@ glance_ceph_backends:
     user: "{{ ceph_glance_user }}"
     enabled: "{{ glance_backend_ceph | bool }}"
 
-glance_store_backends: "{{ glance_backends | selectattr('enabled', 'equalto', true) | list + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
+glance_store_backends: >-
+  {{
+    glance_backends | selectattr('enabled', 'equalto', true) | list
+    + glance_ceph_backends | selectattr('enabled', 'equalto', true) | list
+  }}
 glance_default_backend: "{% if glance_backend_ceph | bool %}{{ glance_ceph_backends[0].name }}{% elif glance_backend_s3 | bool %}s3{% else %}file{% endif %}"
 
 ####################
