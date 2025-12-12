@@ -158,7 +158,11 @@ ironic_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 ironic_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 ironic_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-ironic_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if ironic_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ ironic_api_listen_port }}"]
+ironic_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if ironic_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ ironic_api_listen_port }}
 ironic_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 ironic_api_healthcheck:
   interval: "{{ ironic_api_healthcheck_interval }}"
@@ -184,7 +188,9 @@ ironic_http_enable_healthchecks: "{{ enable_container_healthchecks }}"
 ironic_http_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 ironic_http_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 ironic_http_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-ironic_http_healthcheck_test: ["CMD-SHELL", "healthcheck_listen {% if kolla_base_distro in ['debian', 'ubuntu'] %}apache2{% else %}httpd{% endif %} {{ ironic_http_port }}"]
+ironic_http_healthcheck_test:
+  - "CMD-SHELL"
+  - "healthcheck_listen {% if kolla_base_distro in ['debian', 'ubuntu'] %}apache2{% else %}httpd{% endif %} {{ ironic_http_port }}"
 ironic_http_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 ironic_http_healthcheck:
   interval: "{{ ironic_http_healthcheck_interval }}"
