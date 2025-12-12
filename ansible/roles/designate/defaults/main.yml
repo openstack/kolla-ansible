@@ -154,7 +154,12 @@ designate_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 designate_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 designate_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 designate_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-designate_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if designate_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}"]
+designate_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{
+    'https' if designate_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}
 designate_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 designate_api_healthcheck:
   interval: "{{ designate_api_healthcheck_interval }}"
