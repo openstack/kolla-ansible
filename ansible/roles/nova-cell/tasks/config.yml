@@ -90,18 +90,37 @@
     - service | service_enabled_and_mapped_to_host
     - nova_cell_compute_provider_config is defined
 
+- name: Copying over qemu configuration
+  become: true
+  vars:
+    service: "{{ nova_cell_services['nova-libvirt'] }}"
+  template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/nova-libvirt/qemu.conf"
+    mode: "0660"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/qemu.conf.j2"
+        - "{{ node_custom_config }}/nova/qemu.conf.j2"
+        - "{{ role_path }}/templates/qemu.conf.j2"
+      skip: false
+  when: service | service_enabled_and_mapped_to_host
+
 - name: Copying over libvirt configuration
   become: true
   vars:
     service: "{{ nova_cell_services['nova-libvirt'] }}"
   template:
-    src: "{{ item.src }}"
-    dest: "{{ node_config_directory }}/nova-libvirt/{{ item.dest }}"
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/nova-libvirt/libvirtd.conf"
     mode: "0660"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/libvirtd.conf.j2"
+        - "{{ node_custom_config }}/nova/libvirtd.conf.j2"
+        - "{{ role_path }}/templates/libvirtd.conf.j2"
+      skip: false
   when: service | service_enabled_and_mapped_to_host
-  with_items:
-    - { src: "qemu.conf.j2", dest: "qemu.conf" }
-    - { src: "libvirtd.conf.j2", dest: "libvirtd.conf" }
 
 - name: Copying over libvirt TLS keys
   include_tasks: config-libvirt-tls.yml
