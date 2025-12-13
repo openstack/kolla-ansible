@@ -46,14 +46,36 @@ etcd_bootstrap_service_environment:
   ETCD_INITIAL_CLUSTER_STATE: "existing"
   ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
   ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
-  ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd_had_volume_True'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }},{% endfor %}{{ ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(inventory_hostname) | put_address_in_context('url') }}:{{ etcd_peer_port }}"
+  ETCD_INITIAL_CLUSTER: >-
+    {%- set ns = namespace(cluster_members=[]) -%}
+    {%- for host in groups['etcd_had_volume_True'] -%}
+    {%-   set member = hostvars[host].ansible_facts.hostname ~ '=' ~
+          etcd_protocol ~ '://' ~
+          ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+          etcd_peer_port -%}
+    {%-   set ns.cluster_members = ns.cluster_members + [member] -%}
+    {%- endfor -%}
+    {%- set current_member = ansible_facts.hostname ~ '=' ~
+        etcd_protocol ~ '://' ~
+        ('api' | kolla_address(inventory_hostname) | put_address_in_context('url')) ~ ':' ~
+        etcd_peer_port -%}
+    {%- set ns.cluster_members = ns.cluster_members + [current_member] -%}
+    {{ ns.cluster_members | join(',') }}
 etcd_bootstrap_cluster_environment:
   KOLLA_BOOTSTRAP_STATUS: "bootstrap cluster"
   ETCD_INITIAL_CLUSTER_STATE: "new"
   ETCD_INITIAL_ADVERTISE_PEER_URLS: "{{ etcd_peer_internal_endpoint }}"
   ETCD_INITIAL_CLUSTER_TOKEN: "{{ etcd_cluster_token }}"
-  ETCD_INITIAL_CLUSTER: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
-
+  ETCD_INITIAL_CLUSTER: >-
+    {%- set ns = namespace(cluster_members=[]) -%}
+    {%- for host in groups['etcd'] -%}
+    {%-   set member = hostvars[host].ansible_facts.hostname ~ '=' ~
+          etcd_protocol ~ '://' ~
+          ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+          etcd_peer_port -%}
+    {%-   set ns.cluster_members = ns.cluster_members + [member] -%}
+    {%- endfor -%}
+    {{ ns.cluster_members | join(',') }}
 ####################
 # Docker
 ####################

@@ -9,14 +9,32 @@
 
 - name: Determine whether a new cluster needs bootstrapping
   set_fact:
-    etcd_bootstrap_cluster: "{% for host in groups['etcd'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+    etcd_bootstrap_cluster: >-
+      {%- set ns = namespace(cluster_members=[]) -%}
+      {%- for host in groups['etcd'] -%}
+      {%-   set member = hostvars[host].ansible_facts.hostname ~ '=' ~
+            etcd_protocol ~ '://' ~
+            ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+            etcd_peer_port -%}
+      {%-   set ns.cluster_members = ns.cluster_members + [member] -%}
+      {%- endfor -%}
+      {{ ns.cluster_members | join(',') }}
   when: not (etcd_cluster_exists | bool)
   changed_when: not (etcd_cluster_exists | bool)
   notify: Bootstrap etcd cluster
 
 - name: Determine when new services need bootstrapping
   set_fact:
-    etcd_bootstrap_services: "{% for host in groups['etcd_had_volume_False'] %}{{ hostvars[host].ansible_facts.hostname }}={{ etcd_protocol }}://{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+    etcd_bootstrap_services: >-
+      {%- set ns = namespace(cluster_members=[]) -%}
+      {%- for host in groups['etcd_had_volume_False'] -%}
+      {%-   set member = hostvars[host].ansible_facts.hostname ~ '=' ~
+            etcd_protocol ~ '://' ~
+            ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+            etcd_peer_port -%}
+      {%-   set ns.cluster_members = ns.cluster_members + [member] -%}
+      {%- endfor -%}
+      {{ ns.cluster_members | join(',') }}
   when:
     - etcd_cluster_exists | bool
     - groups.etcd_had_volume_False is defined
