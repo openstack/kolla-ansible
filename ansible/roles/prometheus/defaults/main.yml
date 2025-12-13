@@ -156,7 +156,8 @@ prometheus_basic_auth_users_extra: []
 ####################
 # Database
 ####################
-prometheus_mysql_exporter_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}prometheus{% endif %}"
+prometheus_mysql_exporter_database_user: >-
+  {% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}prometheus{% endif %}
 
 ####################
 # HAProxy
@@ -182,7 +183,14 @@ prometheus_node_exporter_targets_extra: []
 # For a list of default endpoints see
 # prometheus_blackbox_exporter_endpoints_default.
 # For a list of modules see the alertmanager config.
-prometheus_blackbox_exporter_endpoints: "{{ prometheus_blackbox_exporter_endpoints_default | selectattr('enabled', 'true') | map(attribute='endpoints') | flatten | union(prometheus_blackbox_exporter_endpoints_custom) | unique | select | list | sort }}"
+prometheus_blackbox_exporter_endpoints: >-
+  {{
+    prometheus_blackbox_exporter_endpoints_default |
+    selectattr('enabled', 'true') |
+    map(attribute='endpoints') |
+    flatten | union(prometheus_blackbox_exporter_endpoints_custom) |
+    unique | select | list | sort
+  }}
 
 prometheus_blackbox_exporter_endpoints_default:
   # OpenStack endpoints
@@ -295,7 +303,16 @@ prometheus_blackbox_exporter_endpoints_default:
       - "{{ ('zun_internal:os_endpoint:' + zun_internal_base_endpoint) if not kolla_same_external_internal_vip | bool }}"
     enabled: "{{ enable_zun | bool }}"
   # Additional service endpoints
-  - endpoints: "{% set etcd_endpoints = [] %}{% for host in groups.get('etcd', []) %}{{ etcd_endpoints.append('etcd_' + host + ':http_2xx:' + hostvars[host]['etcd_protocol'] + '://' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['etcd_client_port'] + '/metrics') }}{% endfor %}{{ etcd_endpoints }}"
+  - endpoints: >-
+      {%- set ns = namespace(etcd_endpoints=[]) -%}
+      {%- for host in groups.get('etcd', []) -%}
+      {%- set endpoint = 'etcd_' ~ host ~ ':http_2xx:' ~
+          hostvars[host]['etcd_protocol'] ~ '://' ~
+          ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+          hostvars[host]['etcd_client_port'] ~ '/metrics' -%}
+      {%- set ns.etcd_endpoints = ns.etcd_endpoints + [endpoint] -%}
+      {%- endfor -%}
+      {{ ns.etcd_endpoints }}
     enabled: "{{ enable_etcd | bool }}"
   - endpoints:
       - "grafana:http_2xx:{{ grafana_public_endpoint }}"
@@ -314,11 +331,30 @@ prometheus_blackbox_exporter_endpoints_default:
       - "prometheus:http_2xx_prometheus:{{ prometheus_public_endpoint if enable_prometheus_server_external else prometheus_internal_endpoint }}/-/healthy"
     enabled: "{{ enable_prometheus | bool }}"
   - endpoints:
-      - "prometheus_alertmanager:http_2xx_alertmanager:{{ prometheus_alertmanager_public_endpoint if enable_prometheus_alertmanager_external else prometheus_alertmanager_internal_endpoint }}"
+      - >-
+        prometheus_alertmanager:http_2xx_alertmanager:{{ prometheus_alertmanager_public_endpoint if enable_prometheus_alertmanager_external
+        else prometheus_alertmanager_internal_endpoint }}
     enabled: "{{ enable_prometheus_alertmanager | bool }}"
-  - endpoints: "{% set rabbitmq_endpoints = [] %}{% for host in groups.get('rabbitmq', []) %}{{ rabbitmq_endpoints.append('rabbitmq_' + host + (':tls_connect:' if rabbitmq_enable_tls | bool else ':tcp_connect:') + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['rabbitmq_port']) }}{% endfor %}{{ rabbitmq_endpoints }}"
+  - endpoints: >-
+      {%- set ns = namespace(rabbitmq_endpoints=[]) -%}
+      {%- for host in groups.get('rabbitmq', []) -%}
+      {%- set protocol = ':tls_connect:' if rabbitmq_enable_tls | bool else ':tcp_connect:' -%}
+      {%- set endpoint = 'rabbitmq_' ~ host ~ protocol ~
+          ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+          hostvars[host]['rabbitmq_port'] -%}
+      {%- set ns.rabbitmq_endpoints = ns.rabbitmq_endpoints + [endpoint] -%}
+      {%- endfor -%}
+      {{ ns.rabbitmq_endpoints }}
     enabled: "{{ enable_rabbitmq | bool }}"
-  - endpoints: "{% set valkey_endpoints = [] %}{% for host in groups.get('valkey', []) %}{{ valkey_endpoints.append('valkey_' + host + ':tcp_connect:' + ('api' | kolla_address(host) | put_address_in_context('url')) + ':' + hostvars[host]['valkey_server_port']) }}{% endfor %}{{ valkey_endpoints }}"
+  - endpoints: >-
+      {%- set ns = namespace(valkey_endpoints=[]) -%}
+      {%- for host in groups.get('valkey', []) -%}
+      {%- set endpoint = 'valkey_' ~ host ~ ':tcp_connect:' ~
+          ('api' | kolla_address(host) | put_address_in_context('url')) ~ ':' ~
+          hostvars[host]['valkey_server_port'] -%}
+      {%- set ns.valkey_endpoints = ns.valkey_endpoints + [endpoint] -%}
+      {%- endfor -%}
+      {{ ns.valkey_endpoints }}
     enabled: "{{ enable_valkey | bool }}"
 
 prometheus_blackbox_exporter_endpoints_custom: []
@@ -418,8 +454,16 @@ prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 
 prometheus_openstack_exporter_disabled_volume: "{{ '--disable-service.volume' if not enable_cinder | bool else '' }}"
 prometheus_openstack_exporter_disabled_dns: "{{ '--disable-service.dns' if not enable_designate | bool else '' }}"
-prometheus_openstack_exporter_disabled_lb: "{{ '--disable-service.load-balancer --disable-metric=neutron-loadbalancers --disable-metric=neutron-loadbalancers_not_active' if not enable_octavia | bool else '' }}"
-prometheus_openstack_exporter_disabled_items: "{{ [prometheus_openstack_exporter_disabled_volume, prometheus_openstack_exporter_disabled_dns, prometheus_openstack_exporter_disabled_lb | trim] | join(' ') | trim }}"
+prometheus_openstack_exporter_disabled_lb: >-
+  {{
+    '--disable-service.load-balancer --disable-metric=neutron-loadbalancers --disable-metric=neutron-loadbalancers_not_active' if not enable_octavia | bool
+    else ''
+  }}
+prometheus_openstack_exporter_disabled_items: >-
+  {{
+    [prometheus_openstack_exporter_disabled_volume, prometheus_openstack_exporter_disabled_dns, prometheus_openstack_exporter_disabled_lb | trim] |
+    join(' ') | trim
+  }}
 
 prometheus_server_command: >-
   /opt/prometheus/prometheus --web.config.file=/etc/prometheus/web.yml --config.file /etc/prometheus/prometheus.yml
