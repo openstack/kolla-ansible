@@ -79,7 +79,8 @@ octavia_database_user: "{% if use_preconfigured_databases | bool and use_common_
 octavia_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
 
 octavia_persistence_database_name: "octavia_persistence"
-octavia_persistence_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia_persistence{% endif %}"
+octavia_persistence_database_user: >-
+  {% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}octavia_persistence{% endif %}
 octavia_persistence_database_address: "{{ octavia_database_address }}"
 
 ####################
@@ -87,7 +88,8 @@ octavia_persistence_database_address: "{{ octavia_database_address }}"
 ####################
 octavia_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
 octavia_database_shard_id: "{{ mariadb_default_database_shard_id | int }}"
-octavia_persistence_database_shard_root_user: "{% if enable_proxysql | bool %}root_shard_{{ octavia_persistence_database_shard_id }}{% else %}{{ database_user }}{% endif %}"
+octavia_persistence_database_shard_root_user: >-
+  {% if enable_proxysql | bool %}root_shard_{{ octavia_persistence_database_shard_id }}{% else %}{{ database_user }}{% endif %}
 octavia_persistence_database_shard_id: "{{ octavia_database_shard_id | int }}"
 octavia_database_shard:
   users:
@@ -143,7 +145,11 @@ octavia_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 octavia_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 octavia_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 octavia_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-octavia_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if octavia_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ octavia_api_listen_port }}"]
+octavia_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if octavia_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ octavia_api_listen_port }}
 octavia_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 octavia_api_healthcheck:
   interval: "{{ octavia_api_healthcheck_interval }}"
