@@ -1,5 +1,5 @@
 ---
-# TODO(mnasiadka): Remove this task in Gazpacho/2026.1 release
+# TODO(mnasiadka): Remove this task after Gazpacho/2026.1 release
 - name: Remove ironic-inspector
   become: true
   kolla_container:
@@ -8,9 +8,21 @@
     name: "ironic_inspector"
     ignore_missing: true
 
-# TODO(mnasiadka): Remove this block in Gazpacho/2026.1 release
+- name: Get container volume facts
+  become: true
+  kolla_container_facts:
+    container_engine: "{{ kolla_container_engine }}"
+    action: get_volumes
+    name:
+      - ironic_dhcp_hosts
+      - ironic_inspector_dhcp_hosts
+  check_mode: false
+  register: container_volume_facts
+
+# TODO(mnasiadka): Remove this block after Gazpacho/2026.1 release
 - name: Handle volume migration for ironic_dnsmasq
-  when: enable_ironic_dnsmasq | bool
+  when:
+    - enable_ironic_dnsmasq | bool
   block:
     - name: Stop ironic_dnsmasq container
       become: true
@@ -24,6 +36,7 @@
       become: true
       changed_when: true
       command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
+      when: container_volume_facts.volumes['ironic_dhcp_hosts'] is not defined
 
     - name: Migrate data from ironic_inspector_dhcp_hosts volume
       become: true
@@ -35,6 +48,7 @@
       command: >-
         mv {{ volumes_dir }}/ironic_inspector_dhcp_hosts/_data/
         {{ volumes_dir }}/ironic_dhcp_hosts/_data
+      when: container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
 
 - name: Get Ironic API container facts
   become: true
@@ -93,4 +107,6 @@
   become: true
   changed_when: true
   command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
-  when: enable_ironic_dnsmasq | bool
+  when:
+    - enable_ironic_dnsmasq | bool
+    - container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
