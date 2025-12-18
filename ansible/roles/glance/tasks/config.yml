@@ -38,18 +38,6 @@
   when:
     - glance_copy_certs | bool
 
-- name: Creating TLS backend PEM File
-  vars:
-    service: "{{ glance_services['glance-tls-proxy'] }}"
-  assemble:
-    src: "{{ node_config_directory }}/glance-tls-proxy/"
-    dest: "{{ node_config_directory }}/glance-tls-proxy/glance-cert-and-key.pem"
-    mode: "0660"
-    regexp: "^glance-(cert|key)\\.pem$"
-    remote_src: true
-  become: true
-  when: service | service_enabled_and_mapped_to_host
-
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -57,6 +45,24 @@
     mode: "0660"
   become: true
   with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: "Configure uWSGI for Glance"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ glance_services }}"
+    service: "{{ glance_services['glance-api'] }}"
+    service_name: "glance-api"
+    service_uwsgi_config_http_port: "{{ glance_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ glance_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/glance/certs/glance-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/glance/certs/glance-key.pem"
+    service_uwsgi_config_workers: "{{ glance_api_workers }}"
+    service_uwsgi_config_uid: "glance"
+  when:
+    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over glance-api.conf
   vars:
@@ -124,17 +130,3 @@
   when:
     - glance_policy_file is defined
     - service | service_enabled_and_mapped_to_host
-
-- name: Copying over glance-haproxy-tls.cfg
-  vars:
-    service: "{{ glance_services['glance-tls-proxy'] }}"
-  template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/glance-tls-proxy/glance-tls-proxy.cfg"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_custom_config }}/glance/{{ inventory_hostname }}/glance-tls-proxy.cfg"
-    - "{{ node_custom_config }}/glance/glance-tls-proxy.cfg"
-    - "glance-tls-proxy.cfg.j2"
-  when: service | service_enabled_and_mapped_to_host

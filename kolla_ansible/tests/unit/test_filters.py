@@ -306,69 +306,6 @@ class TestFilters(unittest.TestCase):
                     "",
                     ""
                 ]
-            },
-            "glance-tls-proxy": {
-                "container_name": "glance_tls_proxy",
-                "dimensions": {},
-                "enabled": True,
-                "group": "glance-api",
-                "haproxy": {
-                    "glance_tls_proxy": {
-                        "backend_http_extra": [
-                            "timeout server 6h"
-                        ],
-                        "custom_member_list": [
-                            "server someserver 1.2.3.4:9292 "
-                            "check inter 2000 rise 2 fall 5 ssl verify "
-                            "required ca-file ca-bundle.trust.crt",
-                            ""
-                        ],
-                        "enabled": True,
-                        "external": False,
-                        "frontend_http_extra": [
-                            "timeout client 6h"
-                        ],
-                        "mode": "http",
-                        "port": "9292",
-                        "tls_backend": "yes"
-                    },
-                    "glance_tls_proxy_external": {
-                        "backend_http_extra": [
-                            "timeout server 6h"
-                        ],
-                        "custom_member_list": [
-                            "server someserver 1.2.3.4:9292 "
-                            "check inter 2000 rise 2 fall 5 ssl verify "
-                            "required ca-file ca-bundle.trust.crt",
-                            ""
-                        ],
-                        "enabled": True,
-                        "external": True,
-                        "frontend_http_extra": [
-                            "timeout client 6h"
-                        ],
-                        "mode": "http",
-                        "port": "9292",
-                        "tls_backend": "yes"
-                    }
-                },
-                "healthcheck": {
-                    "interval": "30",
-                    "retries": "3",
-                    "start_period": "5",
-                    "test": [
-                        "CMD-SHELL",
-                        "healthcheck_curl -u openstack:asdf 1.2.3.4:9293"
-                    ],
-                    "timeout": "30"
-                },
-                "host_in_groups": True,
-                "image": "centos-source-haproxy:latest",
-                "volumes": [
-                    "/etc/localtime:/etc/localtime:ro",
-                    "",
-                    "kolla_logs:/var/log/kolla/"
-                ]
             }
         }
         expected = {
@@ -403,43 +340,6 @@ class TestFilters(unittest.TestCase):
                 ],
                 "mode": "http",
                 "port": "9292"
-            },
-            "glance_tls_proxy": {
-                "backend_http_extra": [
-                    "timeout server 6h"
-                ],
-                'custom_member_list': ['server someserver 1.2.3.4:9292 '
-                                       'check inter 2000 rise 2 fall 5 '
-                                       'ssl verify required ca-file '
-                                       'ca-bundle.trust.crt',
-                                       ''],
-                "enabled": True,
-                "external": False,
-                "frontend_http_extra": [
-                    "timeout client 6h"
-                ],
-                "mode": "http",
-                "port": "9292",
-                "tls_backend": "yes"
-            },
-            "glance_tls_proxy_external": {
-                "backend_http_extra": [
-                    "timeout server 6h"
-                ],
-                'custom_member_list': ['server someserver 1.2.3.4:9292 '
-                                       'check inter 2000 rise 2 fall 5 '
-                                       'ssl verify required ca-file '
-                                       'ca-bundle.trust.crt',
-                                       ''],
-
-                "enabled": True,
-                "external": True,
-                "frontend_http_extra": [
-                    "timeout client 6h"
-                ],
-                "mode": "http",
-                "port": "9292",
-                "tls_backend": "yes"
             }
         }
         actual = filters.extract_haproxy_services(self.context,
