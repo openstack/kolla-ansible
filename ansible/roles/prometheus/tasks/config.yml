@@ -71,8 +71,8 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-    common_overrides: "{{ prometheus_common_config_overrides_result.files | map(attribute='path') | list }}"
-    host_overrides: "{{ prometheus_host_config_overrides_result.files | map(attribute='path') | list }}"
+    common_overrides: "{{ prometheus_common_config_overrides_result.files | map(attribute='path') | list | sort }}"
+    host_overrides: "{{ prometheus_host_config_overrides_result.files | map(attribute='path') | list | sort }}"
   merge_yaml:
     sources: "{{ [item] + common_overrides + host_overrides }}"
     dest: "{{ node_config_directory }}/prometheus-server/prometheus.yml"
