@@ -1,55 +1,47 @@
 ---
 - name: Ensuring private libvirt directory exist
   file:
-    path: "{{ libvirt_dir }}"
-    state: "directory"
+    path: "{{ certificates_libvirt_dir }}"
     mode: "0770"
-
-- name: Creating libvirt SSL configuration file
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ kolla_certificates_dir }}/{{ item }}"
-    mode: "0660"
-  with_items:
-    - "openssl-kolla-libvirt.cnf"
+    state: "directory"
 
 - name: Creating libvirt certificate key
-  command: >
-    openssl genrsa
-    -out "{{ libvirt_dir }}/libvirt.key" 2048
-  args:
-    creates: "{{ libvirt_dir }}/libvirt.key"
+  community.crypto.openssl_privatekey:
+    path: "{{ certificates_libvirt_dir }}/libvirt.key"
+    mode: "0660"
+    size: 2048
+    type: RSA
 
 - name: Creating libvirt certificate signing request
-  command: >
-    openssl req
-    -new
-    -key "{{ libvirt_dir }}/libvirt.key"
-    -out "{{ libvirt_dir }}/libvirt.csr"
-    -config "{{ kolla_certificates_dir }}/openssl-kolla-libvirt.cnf"
-    -sha256
-  args:
-    creates: "{{ libvirt_dir }}/libvirt.csr"
+  community.crypto.openssl_csr:
+    path: "{{ certificates_libvirt_dir }}/libvirt.csr"
+    country_name: "US"
+    digest: "sha256"
+    locality_name: "RTP"
+    organizational_unit_name: "kolla"
+    privatekey_path: "{{ certificates_libvirt_dir }}/libvirt.key"
+    state_or_province_name: "NC"
+    subject_alt_name: >-
+      {%- set _san = [] -%}
+      {%- for host in groups['compute'] -%}
+      {{ _san.append('DNS:' ~ (hostvars[host].migration_hostname | default(hostvars[host].ansible_facts.nodename))) }}
+      {%- endfor -%}
+      {{ _san }}
 
-- name: Creating libvirt certificate
-  command: >
-    openssl x509
-    -req
-    -in "{{ libvirt_dir }}/libvirt.csr"
-    -CA "{{ root_dir }}/root.crt"
-    -CAkey "{{ root_dir }}/root.key"
-    -CAcreateserial
-    -extensions v3_req
-    -extfile "{{ kolla_certificates_dir }}/openssl-kolla-libvirt.cnf"
-    -out "{{ libvirt_dir }}/libvirt.crt"
-    -days 500
-    -sha256
-  args:
-    creates: "{{ libvirt_dir }}/libvirt.crt"
+- name: Creating libvirt certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{ certificates_libvirt_dir }}/libvirt.crt"
+    csr_path: "{{ certificates_libvirt_dir }}/libvirt.csr"
+    ownca_digest: "sha256"
+    ownca_not_after: "+500d"
+    ownca_path: "{{ certificates_root_dir }}/root.crt"
+    ownca_privatekey_path: "{{ certificates_root_dir }}/root.key"
+    privatekey_path: "{{ certificates_libvirt_dir }}/libvirt.key"
+    provider: ownca
 
 - name: Setting permissions on libvirt key
   file:
-    path: "{{ libvirt_dir }}/libvirt.key"
+    path: "{{ certificates_libvirt_dir }}/libvirt.key"
     mode: "0660"
     state: file
 
@@ -61,13 +53,13 @@
 
 - name: Copy libvirt root CA to default configuration location
   copy:
-    src: "{{ root_dir }}/root.crt"
+    src: "{{ certificates_root_dir }}/root.crt"
     dest: "{{ certificates_libvirt_output_dir }}/cacert.pem"
     mode: "0660"
 
 - name: Copy libvirt cert to default configuration locations
   copy:
-    src: "{{ libvirt_dir }}/libvirt.crt"
+    src: "{{ certificates_libvirt_dir }}/libvirt.crt"
     dest: "{{ certificates_libvirt_output_dir }}/{{ item }}cert.pem"
     mode: "0660"
   loop:
@@ -76,7 +68,7 @@
 
 - name: Copy libvirt key to default configuration locations
   copy:
-    src: "{{ libvirt_dir }}/libvirt.key"
+    src: "{{ certificates_libvirt_dir }}/libvirt.key"
     dest: "{{ certificates_libvirt_output_dir }}/{{ item }}key.pem"
     mode: "0660"
   loop:

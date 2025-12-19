@@ -7,39 +7,41 @@
 
 - name: Ensuring private root directory exist
   file:
-    path: "{{ root_dir }}"
+    path: "{{ certificates_root_dir }}"
     state: "directory"
     mode: "0770"
 
-- name: Creating root Certificate key
-  command: >
-    openssl genrsa
-    -out "{{ root_dir }}/root.key"
-    4096
-  args:
-    creates: "{{ root_dir }}/root.key"
-
-- name: Creating and sign root Certificate
-  command: >
-    openssl req
-    -x509
-    -new -nodes
-    -key "{{ root_dir }}/root.key"
-    -sha256
-    -days 1024
-    -out "{{ root_dir }}/root.crt"
-    -subj "/CN=KollaTestCA/"
-  args:
-    creates: "{{ root_dir }}/root.crt"
-
-- name: Setting permissions on root key
-  file:
-    path: "{{ root_dir }}/root.key"
+- name: Creating root certificate key
+  community.crypto.openssl_privatekey:
+    path: "{{ certificates_root_dir }}/root.key"
     mode: "0660"
-    state: file
+    size: 4096
+    type: RSA
 
-- name: Creating root Certificate file to be included in container trusted ca-certificates
+- name: Create certificate signing request (CSR) for new certificate
+  community.crypto.openssl_csr:
+    path: "{{ certificates_root_dir }}/root.csr"
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    common_name: "KollaTestCA"
+    key_usage:
+      - digitalSignature
+      - keyCertSign
+    key_usage_critical: true
+    privatekey_path: "{{ certificates_root_dir }}/root.key"
+    use_common_name_for_san: false
+
+- name: Create self-signed CA certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{ certificates_root_dir }}/root.crt"
+    csr_path: "{{ certificates_root_dir }}/root.csr"
+    privatekey_path: "{{ certificates_root_dir }}/root.key"
+    provider: selfsigned
+    selfsigned_not_after: "+1024d"
+
+- name: Copy root certificate file to be included in container trusted ca-certificates
   copy:
-    src: "{{ root_dir }}/root.crt"
+    src: "{{ certificates_root_dir }}/root.crt"
     dest: "{{ kolla_certificates_dir }}/ca/root.crt"
     mode: "0660"

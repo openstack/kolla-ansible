@@ -1,13 +1,13 @@
 ---
 - name: Ensuring private internal directory exist
   file:
-    path: "{{ internal_dir }}"
+    path: "{{ certificates_internal_dir }}"
     state: "directory"
     mode: "0770"
 
 - name: Ensuring private external directory exist
   file:
-    path: "{{ external_dir }}"
+    path: "{{ certificates_external_dir }}"
     state: "directory"
     mode: "0770"
 
@@ -16,58 +16,43 @@
     - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == '' or database_enable_tls_internal | bool
     - kolla_enable_tls_external | bool or database_enable_tls_internal | bool
   block:
-    - name: Creating external SSL configuration file
-      template:
-        src: "{{ item }}.j2"
-        dest: "{{ kolla_certificates_dir }}/{{ item }}"
-        mode: "0660"
-      with_items:
-        - "openssl-kolla.cnf"
-
     - name: Creating external Server Certificate key
-      command: >
-        openssl genrsa
-        -out "{{ external_dir }}/external.key" 2048
-      args:
-        creates: "{{ external_dir }}/external.key"
+      community.crypto.openssl_privatekey:
+        path: "{{ certificates_external_dir }}/external.key"
+        mode: "0660"
+        size: 2048
+        type: RSA
 
     - name: Creating external Server Certificate signing request
-      command: >
-        openssl req
-        -new
-        -key "{{ external_dir }}/external.key"
-        -out "{{ external_dir }}/external.csr"
-        -config "{{ kolla_certificates_dir }}/openssl-kolla.cnf"
-        -sha256
-      args:
-        creates: "{{ external_dir }}/external.csr"
+      vars:
+        _san:
+          - "{{ ('DNS:' ~ kolla_external_fqdn) if kolla_external_fqdn != kolla_external_vip_address }}"
+          - "IP:{{ kolla_external_vip_address }}"
+      community.crypto.openssl_csr:
+        path: "{{ certificates_external_dir }}/external.csr"
+        country_name: "US"
+        digest: "sha256"
+        locality_name: "RTP"
+        organizational_unit_name: "kolla"
+        privatekey_path: "{{ certificates_external_dir }}/external.key"
+        state_or_province_name: "NC"
+        subject_alt_name: "{{ _san | select() }}"
 
-    - name: Creating external Server Certificate
-      command: >
-        openssl x509
-        -req
-        -in "{{ external_dir }}/external.csr"
-        -CA "{{ root_dir }}/root.crt"
-        -CAkey "{{ root_dir }}/root.key"
-        -CAcreateserial
-        -extensions v3_req
-        -extfile "{{ kolla_certificates_dir }}/openssl-kolla.cnf"
-        -out "{{ external_dir }}/external.crt"
-        -days 365
-        -sha256
-      args:
-        creates: "{{ external_dir }}/external.crt"
-
-    - name: Setting permissions on external key
-      file:
-        path: "{{ external_dir }}/external.key"
-        mode: "0660"
-        state: file
+    - name: Create external Server Certificate from CSR
+      community.crypto.x509_certificate:
+        path: "{{ certificates_external_dir }}/external.crt"
+        csr_path: "{{ certificates_external_dir }}/external.csr"
+        ownca_digest: "sha256"
+        ownca_not_after: "+365d"
+        ownca_path: "{{ certificates_root_dir }}/root.crt"
+        ownca_privatekey_path: "{{ certificates_root_dir }}/root.key"
+        privatekey_path: "{{ certificates_external_dir }}/external.key"
+        provider: ownca
 
 - name: Creating external Server PEM File
   assemble:
     regexp: \.(crt|key)$
-    src: "{{ external_dir }}"
+    src: "{{ certificates_external_dir }}"
     dest: "{{ kolla_external_fqdn_cert }}"
     mode: "0660"
   when:
@@ -81,13 +66,13 @@
   block:
     - name: Copy Certificate for ProxySQL
       copy:
-        src: "{{ external_dir }}/external.crt"
+        src: "{{ certificates_external_dir }}/external.crt"
         dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
         mode: "0660"
 
     - name: Copy Key for ProxySQL
       copy:
-        src: "{{ external_dir }}/external.key"
+        src: "{{ certificates_external_dir }}/external.key"
         dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"
 
@@ -95,8 +80,8 @@
   copy:
     src: "{{ kolla_external_fqdn_cert }}"
     dest: "{{ kolla_internal_fqdn_cert }}"
-    remote_src: true
     mode: "0660"
+    remote_src: true
   when:
     - letsencrypt_managed_certs == 'external' or letsencrypt_managed_certs == ''
     - kolla_enable_tls_external | bool
@@ -109,58 +94,43 @@
     - kolla_enable_tls_internal | bool or database_enable_tls_internal | bool
     - not kolla_same_external_internal_vip | bool
   block:
-    - name: Creating internal SSL configuration file
-      template:
-        src: "{{ item }}.j2"
-        dest: "{{ kolla_certificates_dir }}/{{ item }}"
-        mode: "0660"
-      with_items:
-        - "openssl-kolla-internal.cnf"
-
     - name: Creating internal Server Certificate key
-      command: >
-        openssl genrsa
-        -out "{{ internal_dir }}/internal.key" 2048
-      args:
-        creates: "{{ internal_dir }}/internal.key"
+      community.crypto.openssl_privatekey:
+        path: "{{ certificates_internal_dir }}/internal.key"
+        mode: "0660"
+        size: 2048
+        type: RSA
 
     - name: Creating internal Server Certificate signing request
-      command: >
-        openssl req
-        -new
-        -key "{{ internal_dir }}/internal.key"
-        -out "{{ internal_dir }}/internal.csr"
-        -config "{{ kolla_certificates_dir }}/openssl-kolla-internal.cnf"
-        -sha256
-      args:
-        creates: "{{ internal_dir }}/internal.csr"
+      vars:
+        _san:
+          - "{{ ('DNS:' ~ kolla_internal_fqdn) if kolla_internal_fqdn != kolla_internal_vip_address }}"
+          - "IP:{{ kolla_internal_vip_address }}"
+      community.crypto.openssl_csr:
+        path: "{{ certificates_internal_dir }}/internal.csr"
+        country_name: "US"
+        digest: "sha256"
+        locality_name: "RTP"
+        organizational_unit_name: "kolla"
+        privatekey_path: "{{ certificates_internal_dir }}/internal.key"
+        state_or_province_name: "NC"
+        subject_alt_name: "{{ _san | select() }}"
 
-    - name: Creating internal Server Certificate
-      command: >
-        openssl x509
-        -req
-        -in "{{ internal_dir }}/internal.csr"
-        -CA "{{ root_dir }}/root.crt"
-        -CAkey "{{ root_dir }}/root.key"
-        -CAcreateserial
-        -extensions v3_req
-        -extfile "{{ kolla_certificates_dir }}/openssl-kolla-internal.cnf"
-        -out "{{ internal_dir }}/internal.crt"
-        -days 365
-        -sha256
-      args:
-        creates: "{{ internal_dir }}/internal.crt"
-
-    - name: Setting permissions on internal key
-      file:
-        path: "{{ internal_dir }}/internal.key"
-        mode: "0660"
-        state: file
+    - name: Create internal Server Certificate from CSR
+      community.crypto.x509_certificate:
+        path: "{{ certificates_internal_dir }}/internal.crt"
+        csr_path: "{{ certificates_internal_dir }}/internal.csr"
+        ownca_digest: "sha256"
+        ownca_not_after: "+365d"
+        ownca_path: "{{ certificates_root_dir }}/root.crt"
+        ownca_privatekey_path: "{{ certificates_root_dir }}/root.key"
+        privatekey_path: "{{ certificates_internal_dir }}/internal.key"
+        provider: ownca
 
 - name: Creating internal Server PEM File
   assemble:
     regexp: \.(crt|key)$
-    src: "{{ internal_dir }}"
+    src: "{{ certificates_internal_dir }}"
     dest: "{{ kolla_internal_fqdn_cert }}"
     mode: "0660"
   when:
@@ -175,12 +145,12 @@
   block:
     - name: Copy Certificate for ProxySQL
       copy:
-        src: "{{ internal_dir }}/internal.crt"
+        src: "{{ certificates_internal_dir }}/internal.crt"
         dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
         mode: "0660"
 
     - name: Copy Key for ProxySQL
       copy:
-        src: "{{ internal_dir }}/internal.key"
+        src: "{{ certificates_internal_dir }}/internal.key"
         dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"
