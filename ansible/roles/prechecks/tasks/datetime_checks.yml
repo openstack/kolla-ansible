@@ -10,18 +10,3 @@
       /etc/localtime is not found. This file is used for system-wide time
       settings and Kolla Ansible needs this file for mounting it to containers.
   when: not etc_localtime.stat.exists
-
-- name: Check Debian timezone configuration
-  when: ansible_facts.os_family == 'Debian'
-  block:
-    - name: Ensure /etc/timezone exist
-      stat:
-        path: /etc/timezone
-      register: etc_timezone
-
-    - name: Fail if /etc/timezone is absent
-      fail:
-        msg: >-
-          /etc/timezone is not found. This file is used for system-wide timezone
-          settings and Kolla Ansible needs this file for mounting it to containers.
-      when: not etc_timezone.stat.exists

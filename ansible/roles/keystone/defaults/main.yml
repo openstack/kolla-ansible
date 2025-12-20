@@ -39,7 +39,6 @@ keystone_services:
     volumes:
       - "{{ node_config_directory }}/keystone-fernet/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
     dimensions: "{{ keystone_fernet_dimensions }}"
@@ -60,7 +59,6 @@ keystone_services:
     volumes:
       - "{{ node_config_directory }}/keystone-ssh/:{{ container_config_directory }}/:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
       - "kolla_logs:/var/log/kolla/"
       - "keystone_fernet_tokens:/etc/keystone/fernet-keys"
     dimensions: "{{ keystone_ssh_dimensions }}"
@@ -185,7 +183,6 @@ keystone_ssh_healthcheck:
 keystone_default_volumes:
   - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "{{ kolla_dev_repos_directory ~ '/keystone:/dev-mode/keystone' if keystone_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
@@ -194,7 +191,6 @@ keystone_default_volumes:
 keystone_httpd_default_volumes:
   - "{{ node_config_directory }}/keystone-httpd/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
-  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
   - "kolla_logs:/var/log/kolla/"
 
 keystone_extra_volumes: "{{ default_extra_volumes }}"
