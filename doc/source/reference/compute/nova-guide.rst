@@ -121,3 +121,13 @@ effectively remove the configuration when the Nova Compute service is restarted.
 If you choose to undefine `nova_cell_compute_provider_config` on a host, you must
 manually remove the generated config from inside the container, or recreate the
 container.
+
+Emulated virtual Trusted Platform Module (vTPM)
+===============================================
+
+Nova supports adding an emulated virtual Trusted Platform Module (vTPM) to
+instances. This feature is implemented with the SWTPM (Software TPM Emulator)
+package. To enable this feature, set ``enable_nova_swtpm`` to ``true``.
+Beware of `limitations`__ that come with this solution.
+
+  __ https://docs.openstack.org/nova/latest/admin/emulated-tpm.html#limitations
