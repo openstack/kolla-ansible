@@ -42,6 +42,7 @@ function check_fluentd_missing_logs {
         /var/log/kolla/fluentd/fluentd.log)
             continue
             ;;
+        # TODO(mnasiadka): Remove me after G/2026.1 release
         /var/log/kolla/glance-tls-proxy/glance-tls-proxy.log)
             continue
             ;;
@@ -69,7 +70,7 @@ function check_fluentd_missing_logs {
         /var/log/kolla/neutron/dnsmasq.log)
             continue
             ;;
-        # TODO(mnasiadka): Remove me in Gazpacho release
+        # TODO(mnasiadka): Remove me after G/2026.1 release
         /var/log/kolla/neutron-tls-proxy/neutron-tls-proxy.log)
             continue
             ;;
