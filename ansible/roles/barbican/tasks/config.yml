@@ -9,20 +9,6 @@
   become: true
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Ensuring vassals config directories exist
-  vars:
-    service: "{{ barbican_services['barbican-api'] }}"
-  file:
-    path: "{{ node_config_directory }}/{{ item }}"
-    state: "directory"
-    owner: "{{ config_owner_user }}"
-    group: "{{ config_owner_group }}"
-    mode: "0770"
-  become: true
-  when: service | service_enabled_and_mapped_to_host
-  with_items:
-    - "barbican-api/vassals"
-
 - name: Check if policies shall be overwritten
   stat:
     path: "{{ item }}"
@@ -47,6 +33,25 @@
   when:
     - barbican_copy_certs | bool
 
+- name: "Configure uWSGI for barbican-api"
+  include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ barbican_services }}"
+    service: "{{ barbican_services['barbican-api'] }}"
+    service_name: "barbican-api"
+    service_uwsgi_config_http_port: "{{ barbican_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_tls_backend: "{{ barbican_enable_tls_backend | bool }}"
+    service_uwsgi_config_tls_cert: "/etc/barbican/certs/barbican-cert.pem"
+    service_uwsgi_config_tls_key: "/etc/barbican/certs/barbican-key.pem"
+    service_uwsgi_config_uid: "barbican"
+    service_uwsgi_config_workers: "{{ barbican_api_workers }}"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - barbican_wsgi_provider == "uwsgi"
+
 - name: Copying over config.json files for services
   template:
     src: "{{ item.key }}.json.j2"
@@ -54,19 +59,6 @@
     mode: "0660"
   become: true
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
-
-- name: Copying over barbican-api.ini
-  vars:
-    service: "{{ barbican_services['barbican-api'] }}"
-  merge_configs:
-    sources:
-      - "{{ role_path }}/templates/barbican-api.ini.j2"
-      - "{{ node_custom_config }}/barbican-api/barbican-api.ini"
-      - "{{ node_custom_config }}/barbican-api/{{ inventory_hostname }}/barbican-api.ini"
-    dest: "{{ node_config_directory }}/barbican-api/vassals/barbican-api.ini"
-    mode: "0660"
-  become: true
-  when: service | service_enabled_and_mapped_to_host
 
 - name: Checking whether barbican-api-paste.ini file exists
   vars:
