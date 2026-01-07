@@ -74,8 +74,8 @@
           {{ expected_compute_service_hosts | difference(nova_compute_service_hosts) | list }}
         # Whether any compute services failed on this host.
         any_failed_services: >-
-          {{ ansible_facts.nodename in failed_compute_service_hosts or
-             (ansible_facts.hostname ~ "-ironic") in failed_compute_service_hosts }}
+          {{ (ansible_facts.nodename | default()) in failed_compute_service_hosts or
+             ((ansible_facts.hostname | default()) ~ "-ironic") in failed_compute_service_hosts }}
       fail:
         msg: >-
           The Nova compute service failed to register itself on the following
