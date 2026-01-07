@@ -1,5 +1,5 @@
 ---
-- name: "{{ project_name }} : {{ service.container_name }} | Get info on container"
+- name: "Get info on container for {{ service.container_name }}"
   become: true
   kolla_container_facts:
     action: get_containers
@@ -8,7 +8,7 @@
       - "{{ service.container_name }}"
   register: container_info
 
-- name: "{{ project_name }} : {{ service.container_name }} | Validate configurations"
+- name: "Validate configurations for {{ service.container_name }}"
   become: true
   command: >
     {{ kolla_container_engine }} exec {{ service.container_name }}
@@ -23,21 +23,23 @@
     loop_var: inner_item
   changed_when: false
 
-- name: "{{ project_name }} : {{ service.container_name }} | Ensure log directory exists"
+- name: "Ensure log directory exists for {{ service.container_name }}"
   become: true
   file:
     path: "{{ output_dir }}"
     state: directory
+    mode: "0755"
   when:
     - result.results | map(attribute='rc', default=0) | select('equalto', 1) | list | length > 0
     - result.results | map(attribute='stderr', default="") | select('ne', "") | list | length > 0
   delegate_to: localhost
 
-- name: "{{ project_name }} : {{ service.container_name }} | Log configuration errors"
+- name: "Log configuration errors for {{ service.container_name }}"
   become: true
   copy:
     content: "{{ inner_item.stderr }}"
     dest: "{{ output_dir }}/{{ inner_item.inner_item.config | basename }}.err"
+    mode: "0644"
   when:
     - container_info.containers | length > 0
     - inner_item.rc is defined

@@ -15,8 +15,9 @@
 
 - name: Get free loop device
   become: true
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: "losetup -f"
+  changed_when: false
   register: _loop_device
 
 - name: Mount file on loop device
@@ -25,6 +26,7 @@
     cmd: >
       losetup {{ _loop_device.stdout }}
       {{ kolla_ansible_setup_disks_file_path }}
+  changed_when: true
 
 - name: Create LVM extents on loop device
   become: true

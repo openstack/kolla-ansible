@@ -1,5 +1,5 @@
 ---
-- name: "{{ project_name }} | Copying over extra CA certificates"
+- name: "Copying over extra CA certificates for {{ project_name }}"
   become: true
   copy:
     src: "{{ kolla_certificates_dir }}/ca/"
@@ -9,7 +9,7 @@
     - kolla_copy_ca_into_containers | bool
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: "{{ project_name }} | Copying over backend internal TLS certificate"
+- name: "Copying over backend internal TLS certificate for {{ project_name }}"
   vars:
     certs:
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-cert.pem"
@@ -27,7 +27,7 @@
     - inventory_hostname is in groups["tls-backend"]
   with_dict: "{{ project_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: "{{ project_name }} | Copying over backend internal TLS key"
+- name: "Copying over backend internal TLS key for {{ project_name }}"
   vars:
     keys:
       - "{{ kolla_certificates_dir }}/{{ inventory_hostname }}/{{ project_name }}-key.pem"

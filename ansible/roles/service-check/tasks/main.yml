@@ -1,6 +1,6 @@
 ---
 # Check whether all necessary containers are running.
-- name: "{{ kolla_role_name | default(project_name) }} | Get container facts"
+- name: "Get container facts for {{ kolla_role_name | default(project_name) }}"
   become: true
   kolla_container_facts:
     action: get_containers
@@ -9,7 +9,7 @@
   register: container_facts
   when: service_check_enabled_container_names | length > 0
 
-- name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are missing or not running"
+- name: "Fail if containers are missing or not running for {{ kolla_role_name | default(project_name) }}"
   vars:
     missing_containers: >-
       {{ service_check_enabled_container_names |
@@ -23,7 +23,7 @@
     - container_facts.containers is defined
     - missing_containers | length > 0
 
-- name: "{{ kolla_role_name | default(project_name) }} | Fail if containers are unhealthy"
+- name: "Fail if containers are unhealthy for {{ kolla_role_name | default(project_name) }}"
   vars:
     unhealthy_containers: >-
       {{ container_facts.containers |

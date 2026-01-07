@@ -1,6 +1,9 @@
 ---
-- block:
-    - name: "{{ project_name }} | Creating/deleting services"
+- name: "Create/delete services/endpoints/projects/users/roles for {{ project_name }}"
+  become: true
+  run_once: true
+  block:
+    - name: "Creating/deleting services for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.catalog_service
@@ -22,7 +25,7 @@
       delay: "{{ service_ks_register_delay }}"
       when: item.enabled | default(True) | bool
 
-    - name: "{{ project_name }} | Creating/deleting endpoints"
+    - name: "Creating/deleting endpoints for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.endpoint
@@ -47,7 +50,7 @@
       delay: "{{ service_ks_register_delay }}"
       when: item.0.enabled | default(True) | bool
 
-    - name: "{{ project_name }} | Creating projects"
+    - name: "Creating projects for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.project
@@ -64,7 +67,7 @@
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
 
-    - name: "{{ project_name }} | Creating/deleting users"
+    - name: "Creating/deleting users for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.identity_user
@@ -90,7 +93,7 @@
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
 
-    - name: "{{ project_name }} | Creating roles"
+    - name: "Creating roles for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.identity_role
@@ -106,7 +109,7 @@
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
 
-    - name: "{{ project_name }} | Granting/revoking user roles"
+    - name: "Granting/revoking user roles for {{ project_name }}"
       kolla_toolbox:
         container_engine: "{{ kolla_container_engine }}"
         module_name: openstack.cloud.role_assignment
@@ -128,6 +131,3 @@
       until: service_ks_register_result is success
       retries: "{{ service_ks_register_retries }}"
       delay: "{{ service_ks_register_delay }}"
-
-  become: true
-  run_once: True

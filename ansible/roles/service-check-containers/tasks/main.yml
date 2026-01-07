@@ -1,7 +1,7 @@
 ---
 # NOTE(r-krcek): List of arguments should follow argument_spec in
 # kolla_container module
-- name: "{{ kolla_role_name | default(project_name) }} | Check containers"
+- name: "Check containers for {{ kolla_role_name | default(project_name) }}"
   become: true
   vars:
     service: "{{ item.value }}"
@@ -31,7 +31,7 @@
 # NOTE(yoctozepto): Must be a separate task because one cannot see the whole
 # result in the previous task and Ansible has a quirk regarding notifiers.
 # For details see https://github.com/ansible/ansible/issues/22579
-- name: "{{ kolla_role_name | default(project_name) }} | Notify handlers to restart containers"
+- name: "Notify handlers to restart containers for {{ kolla_role_name | default(project_name) }}"
   vars:
     service: "{{ item.value }}"
   debug:
@@ -40,7 +40,7 @@
   when: not (service.iterate | default(False)) | bool
   notify: "{{ container_check.results | select('changed') | map(attribute='item.key') | map('regex_replace', '^(.*)$', 'Restart \\1 container') | list }}"
 
-- name: "{{ kolla_role_name | default(project_name) }} | Check containers that require iteration"
+- name: "Check containers that require iteration for {{ kolla_role_name | default(project_name) }}"
   vars:
     service: "{{ outer_item.value }}"
   include_tasks: iterated.yml

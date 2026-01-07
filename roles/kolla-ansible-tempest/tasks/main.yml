@@ -14,6 +14,8 @@
     creates: "/home/zuul/tempest"
 
 - name: Discover tempest config
+  environment:
+    OS_CLIENT_CONFIG_FILE: "/etc/kolla/clouds.yaml"
   vars:
     ver: "{{ kolla_ansible_tempest_cirros_ver }}"
     image: "https://download.cirros-cloud.net/{{ ver }}/cirros-{{ ver }}-x86_64-disk.img"
@@ -26,8 +28,7 @@
       --os-cloud kolla-admin
       compute.build_timeout {{ kolla_ansible_tempest_build_timeout }}
       >/tmp/logs/ansible/test-init-tempest-discover 2>&1
-  environment:
-    OS_CLIENT_CONFIG_FILE: "/etc/kolla/clouds.yaml"
+  changed_when: false
 
 - name: Run tempest tests
   environment:
@@ -49,3 +50,4 @@
       --exclude-regex '{{ kolla_ansible_tempest_exclude_regex | join("|") }}'
       {% endif %}
       >/tmp/logs/ansible/{{ tempest_log_file }} 2>&1
+  changed_when: true

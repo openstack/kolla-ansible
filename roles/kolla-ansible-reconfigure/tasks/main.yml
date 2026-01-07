@@ -7,6 +7,7 @@
       -i /etc/kolla/inventory
       -vvv
       >/tmp/logs/ansible/reconfigure-prechecks 2>&1
+  changed_when: false
 
 - name: Remove OVN DB containers and volumes on primary to test recreation (docker)
   become: true
@@ -42,8 +43,9 @@
     # NOTE(blanson): there is apparently no module to do that (!?)
     - name: List docker containers
       ansible.builtin.command:
-        cmd: "docker ps --format '{{'{{'}}.Names{{'}}'}}'"
+        cmd: "docker ps --format '{{ '{{' }}.Names{{ '}}' }}'"
       register: _deploy_docker_ps_raw
+      changed_when: false
 
     - name: Get details of all containers on host
       community.docker.docker_container_info:
@@ -137,6 +139,7 @@
       -i /etc/kolla/inventory
       -vvv
       >/tmp/logs/ansible/reconfigure 2>&1
+  changed_when: true
 
 - name: "Capture state of containers post reconfigure (docker)"
   become: true
@@ -149,8 +152,9 @@
   block:
     - name: List docker containers
       ansible.builtin.command:
-        cmd: "docker ps --format '{{'{{'}}.Names{{'}}'}}'"
+        cmd: "docker ps --format '{{ '{{' }}.Names{{ '}}' }}'"
       register: _reconfigure_docker_ps_raw
+      changed_when: false
 
     - name: Get details of all containers on host
       community.docker.docker_container_info:

@@ -1,39 +1,43 @@
 ---
-- include_tasks: pkg_{{ ansible_os_family | lower }}.yml
+- name: Include package installation
+  include_tasks: pkg_{{ ansible_os_family | lower }}.yml
 
 - name: Ensure /etc/ceph exists
   file:
     path: /etc/ceph
     state: directory
-  become: True
+    mode: "0755"
+  become: true
 
 - name: Generate ssh key for cephadm
   openssh_keypair:
     path: "/etc/ceph/cephadm.id"
+    mode: "0600"
     size: 4096
     comment: "cephadm"
-  become: True
+  become: true
   register: cephadm_ssh_key
 
 - name: Save public key
   copy:
     content: "{{ cephadm_ssh_key.public_key }}"
     dest: /etc/ceph/cephadm.pub
-  become: True
+    mode: "0644"
+  become: true
 
 - name: Copy cephadm public key to all hosts
   authorized_key:
     user: root
     state: present
     key: "{{ cephadm_ssh_key.public_key }}"
-  become: True
+  become: true
   with_inventory_hostnames:
     - all
   delegate_to: "{{ item }}"
 
 - name: Bootstrap cephadm
   vars:
-    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }}"
+    mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name | replace('-', '_')].ipv4.address }}"
   command:
     cmd: >
          cephadm
@@ -46,7 +50,8 @@
          --skip-firewalld
          --log-to-file
          --mon-ip {{ mon_ip }}
-  become: True
+  become: true
+  changed_when: true
   register: cephadm_bootstrap_output
 
 - name: Get ceph fsid
@@ -59,20 +64,23 @@
   template:
     src: templates/cephadm.yml.j2
     dest: "/var/run/ceph/{{ ceph_fsid }}/cluster.yml"
-  become: True
+    mode: "0600"
+  become: true
 
 - name: Template out command spec
   template:
     src: templates/commands.sh.j2
     dest: "/var/run/ceph/{{ ceph_fsid }}/commands.sh"
-  become: True
+    mode: "0600"
+  become: true
 
 - name: Run commands
   command:
     cmd: >
          cephadm shell --
          bash -x /var/run/ceph/commands.sh
-  become: True
+  become: true
+  changed_when: true
 
 # TODO(mnasiadka): Fix merge_configs to support tabs
 - name: Generate ceph.conf without tabs
@@ -80,8 +88,9 @@
     ceph_conf_fixed: |
       [global]
       fsid = {{ ceph_fsid }}
-      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name | replace('-','_')].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name | replace('-', '_')].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
   copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"
-  become: True
+    mode: "0644"
+  become: true

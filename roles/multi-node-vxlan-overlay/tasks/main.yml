@@ -21,7 +21,9 @@
 
 - name: Create VXLAN interface
   become: true
-  command: ip link add {{ vxlan_interface_name }} type vxlan id {{ vxlan_vni }} local {{ tunnel_local_address }} dstport {{ vxlan_dstport }}
+  ansible.builtin.command:
+    cmd: ip link add {{ vxlan_interface_name }} type vxlan id {{ vxlan_vni }} local {{ tunnel_local_address }} dstport {{ vxlan_dstport }}
+  changed_when: true
 
 - name: Set VXLAN interface MTU
   become: true
@@ -35,17 +37,23 @@
           first }}
     # Allow 50 bytes overhead for VXLAN headers.
     mtu: "{{ parent_interface.mtu | int - 50 }}"
-  command: ip link set {{ vxlan_interface_name }} mtu {{ mtu }}
+  ansible.builtin.command:
+    cmd: ip link set {{ vxlan_interface_name }} mtu {{ mtu }}
+  changed_when: true
 
 # emulate BUM by multiplicating traffic to unicast targets
 - name: Add fdb entries for BUM traffic
   become: true
   vars:
     dest_ip: "{{ hostvars[item].tunnel_local_address }}"
-  command: bridge fdb append 00:00:00:00:00:00 dev {{ vxlan_interface_name }} dst {{ dest_ip }}
+  ansible.builtin.command:
+    cmd: bridge fdb append 00:00:00:00:00:00 dev {{ vxlan_interface_name }} dst {{ dest_ip }}
+  changed_when: true
   with_inventory_hostnames: all
   when: item != inventory_hostname
 
 - name: Bring VXLAN interface up
   become: true
-  command: ip link set {{ vxlan_interface_name }} up
+  ansible.builtin.command:
+    cmd: ip link set {{ vxlan_interface_name }} up
+  changed_when: true

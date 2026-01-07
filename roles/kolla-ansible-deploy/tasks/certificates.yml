@@ -7,6 +7,7 @@
      -i /etc/kolla/inventory
      -vvv
      >/tmp/logs/ansible/certificates 2>&1
+  changed_when: true
 
 - name: Init pebble when Lets Encrypt is enabled
   when: (le_enabled | default(False)) | bool
@@ -30,10 +31,12 @@
       become: true
       ansible.builtin.command:
         cmd: "docker cp pebble:/test/certs/pebble.minica.pem /etc/kolla/certificates/ca/pebble-root.crt"
+      changed_when: true
 
     - name: "Fetch pebble.crt and store it in /etc/kolla/certificates/ca/"
       become: true
       ansible.builtin.get_url:
         url: "https://127.0.0.1:15000/roots/0"
         dest: "/etc/kolla/certificates/ca/pebble.crt"
+        mode: "0644"
         validate_certs: false
