@@ -261,7 +261,7 @@ There are a few options that are required to deploy Kolla Ansible:
 * Virtual environment
 
   It is recommended to use a virtual environment to execute tasks on the remote
-  hosts.  This is covered
+  hosts.  This is covered in
   :kolla-ansible-doc:`Virtual Environments <user/virtual-environments.html>`.
 
 Deployment
