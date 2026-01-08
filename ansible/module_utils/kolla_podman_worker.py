@@ -192,6 +192,7 @@ class PodmanWorker(ContainerWorker):
                     )
                 if src == 'devpts':
                     mount_item = dict(
+                        source=src,
                         target=dest,
                         type='devpts'
                     )
@@ -385,50 +386,65 @@ class PodmanWorker(ContainerWorker):
             else:
                 return string
 
+        # NOTE(blanson): Podman automatically appends default flags
+        # such as rprivate, nosuid, nodev, rbind to all mounts.
+        # For special paths like /proc, /run, /sys, and /var/run,
+        # noexec is also added by default. We remove these defaults
+        # because they do not reflect a meaningful difference
+        # between the requested and current container configuration.
+        # Additionally, if neither 'ro' nor 'rw' is specified,
+        # we implicitly assume 'rw' (Podman's default behavior).
+        def normalize_mode(path, mode):
+            default_flags = {'rprivate', 'nosuid', 'nodev', 'rbind'}
+            special_paths_noexec = {'/proc', '/run', '/sys', '/var/run'}
+
+            flags = set(mode.split(',')) if mode else set()
+            flags -= default_flags
+
+            if any(path.startswith(p) for p in special_paths_noexec):
+                flags.discard('noexec')
+            if not (flags & {'ro', 'rw'}):
+                flags.add('rw')
+            return flags
+
+        # NOTE(blanson): Convert a binds dict into a list of
+        # (src, dst, normalized_flags) tuples. Normalization ignores
+        # default Podman flags and noexec for special paths to allow
+        # consistent comparison.
+        def build_bind_list(binds_dict):
+            lst = []
+            for src, info in (binds_dict or {}).items():
+                src_path = check_slash(src)
+                dst_path = check_slash(info['bind'])
+                mode_flags = normalize_mode(
+                    dst_path,
+                    info['mode'],
+                )
+                lst.append((src_path, dst_path, mode_flags))
+            return lst
+
+        binds_input = container_info['HostConfig'].get('Binds')
         raw_volumes, binds = self.generate_volumes()
-        raw_vols, current_binds = self.generate_volumes(
-            container_info['HostConfig'].get('Binds'))
+        raw_vols, current_binds = (
+            [], {}
+        ) if not binds_input else self.generate_volumes(binds_input)
 
-        current_vols = [check_slash(vol) for vol in raw_vols if vol]
-        volumes = [check_slash(vol) for vol in raw_volumes if vol]
+        volumes = [check_slash(v) for v in raw_volumes or [] if v]
+        current_vols = [check_slash(v) for v in raw_vols or [] if v]
 
-        if not volumes:
-            volumes = list()
-        if not current_vols:
-            current_vols = list()
-        if not current_binds:
-            current_binds = list()
-
-        volumes.sort()
-        current_vols.sort()
-
-        if set(volumes).symmetric_difference(set(current_vols)):
+        if set(volumes) != set(current_vols):
             return True
 
-        new_binds = list()
-        new_current_binds = list()
-        if binds:
-            for k, v in binds.items():
-                k = check_slash(k)
-                v['bind'] = check_slash(v['bind'])
-                new_binds.append(
-                    "{}:{}:{}".format(k, v['bind'], v['mode']))
+        req_bind_list = [
+            (src, dst, frozenset(flags))
+            for src, dst, flags in build_bind_list(binds)
+        ]
+        cur_bind_list = [
+            (src, dst, frozenset(flags))
+            for src, dst, flags in build_bind_list(current_binds)
+        ]
 
-        if current_binds:
-            for k, v in current_binds.items():
-                k = check_slash(k)
-                v['bind'] = check_slash(v['bind'])
-                if 'ro' in v['mode']:
-                    v['mode'] = 'ro'
-                else:
-                    v['mode'] = 'rw'
-                new_current_binds.append(
-                    "{}:{}:{}".format(k, v['bind'], v['mode'][0:2]))
-
-        new_binds.sort()
-        new_current_binds.sort()
-
-        if set(new_binds).symmetric_difference(set(new_current_binds)):
+        if set(req_bind_list) != set(cur_bind_list):
             return True
 
     def compare_dimensions(self, container_info):
