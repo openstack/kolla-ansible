@@ -430,7 +430,8 @@ class TestContainer(base.BaseTestCase):
                                          'auth_username': 'fake_user',
                                          'auth_password': 'fake_psw',
                                          'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+                                         'auth_email': 'fake_mail@foogle.com'}
+                                        )
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -1424,27 +1425,93 @@ class TestAttrComp(base.BaseTestCase):
 
     def test_compare_ulimits_pos(self):
         self.fake_data['params']['dimensions'] = {
-            'ulimits': {'nofile': {'soft': 131072, 'hard': 131072}}}
+            'ulimits': {
+                'memlock': {'soft': 67108864, 'hard': 67108864}}
+        }
         container_info = dict()
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
             'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
-            'Ulimits': []}
+            'Ulimits': [
+                {'Name': 'RLIMIT_NOFILE', 'Soft': 1024, 'Hard': 4096},
+                {'Name': 'RLIMIT_NPROC', 'Soft': 4096, 'Hard': 4096}
+            ]}
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.assertTrue(self.pw.compare_dimensions(container_info))
 
     def test_compare_ulimits_neg(self):
         self.fake_data['params']['dimensions'] = {
-            'ulimits': {'nofile': {'soft': 131072, 'hard': 131072}}}
-        ulimits_nofile = {'Name': 'nofile',
-                          'Soft': 131072, 'Hard': 131072}
+            'ulimits': {
+                'memlock': {'soft': 67108864, 'hard': 67108864}}
+        }
         container_info = dict()
         container_info['HostConfig'] = {
             'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
             'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
             'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
-            'Ulimits': [ulimits_nofile]}
+            'Ulimits': [
+                {'Name': 'RLIMIT_NOFILE', 'Soft': 1024, 'Hard': 4096},
+                {'Name': 'RLIMIT_NPROC', 'Soft': 4096, 'Hard': 4096},
+                {'Name': 'RLIMIT_MEMLOCK', 'Soft': 67108864, 'Hard': 67108864}
+            ]}
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+        self.assertFalse(self.pw.compare_dimensions(container_info))
+
+    def test_compare_ulimits_ignore_podman_defaults(self):
+        self.fake_data['params']['dimensions'] = {'ulimits': {}}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': [
+                # These ulimits are not settable by the user and
+                # are set by default on every podman container.
+                # We should ignore them on dimensions check.
+                {'Name': 'RLIMIT_NOFILE', 'Soft': 1024, 'Hard': 4096},
+                {'Name': 'RLIMIT_NPROC', 'Soft': 4096, 'Hard': 4096}
+            ]}
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+        self.assertFalse(self.pw.compare_dimensions(container_info))
+
+    def test_compare_ulimits_filter_defaults_both_sides(self):
+        self.fake_data['params']['dimensions'] = {
+            'ulimits': {
+                'RLIMIT_NOFILE': {'soft': 1048576, 'hard': 1048576},
+                'RLIMIT_NPROC': {'soft': 1048576, 'hard': 1048576}
+            }
+        }
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': [
+                {'Name': 'RLIMIT_NOFILE', 'Soft': 1048576, 'Hard': 1048576},
+                {'Name': 'RLIMIT_NPROC', 'Soft': 1048576, 'Hard': 1048576}
+            ]}
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+        self.assertFalse(self.pw.compare_dimensions(container_info))
+
+    def test_compare_ulimits_with_other_limits_and_defaults(self):
+        self.fake_data['params']['dimensions'] = {
+            'ulimits': {
+                'RLIMIT_NOFILE': {'soft': 1048576, 'hard': 1048576},
+                'RLIMIT_NPROC': {'soft': 1048576, 'hard': 1048576},
+                'memlock': {'soft': 67108864, 'hard': 67108864}
+            }
+        }
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpuPeriod': 0, 'KernelMemory': 0, 'Memory': 0, 'CpuQuota': 0,
+            'CpusetCpus': '', 'CpuShares': 0, 'BlkioWeight': 0,
+            'CpusetMems': '', 'MemorySwap': 0, 'MemoryReservation': 0,
+            'Ulimits': [
+                {'Name': 'RLIMIT_NOFILE', 'Soft': 1048576, 'Hard': 1048576},
+                {'Name': 'RLIMIT_NPROC', 'Soft': 1048576, 'Hard': 1048576},
+                {'Name': 'RLIMIT_MEMLOCK', 'Soft': 67108864, 'Hard': 67108864}
+            ]}
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.assertFalse(self.pw.compare_dimensions(container_info))
 
