@@ -8,7 +8,7 @@ ovn_sb_db_port: "6642"
 ovn_sb_db_relay_count: "{{ ((groups['ovn-controller'] | length) / ovn_sb_db_relay_compute_per_relay | int) | round(0, 'ceil') | int }}"
 ovn_sb_db_relay_compute_per_relay: "50"
 ovn_sb_db_relay_port_prefix: "1664"
-ovn_sb_db_relay_port: "{{ ovn_sb_db_relay_port_prefix ~ ovn_sb_db_relay_client_group_id }}"
+ovn_sb_db_relay_port: "{{ (ovn_sb_db_relay_port_prefix | int) * 10 + (ovn_sb_db_relay_client_group_id | int) }}"
 ovn_sb_db_relay_client_group_id: "{{ range(1, ovn_sb_db_relay_count | int + 1) | random(seed=inventory_hostname) }}"
 ovn_nb_connection:
   "{% for host in groups['ovn-nb-db'] %}\
