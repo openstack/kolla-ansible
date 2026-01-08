@@ -1094,15 +1094,71 @@ class TestAttrComp(base.BaseTestCase):
         super(TestAttrComp, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
 
-    def test_compare_cap_add_neg(self):
-        container_info = {'HostConfig': dict(CapAdd=['data'])}
-        self.pw = get_PodmanWorker({'cap_add': ['data']})
+    def test_compare_cap_add_unprivileged_no_user_caps(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_AUDIT_WRITE'],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': []})
         self.assertFalse(self.pw.compare_cap_add(container_info))
 
-    def test_compare_cap_add_pos(self):
-        container_info = {'HostConfig': dict(CapAdd=['data1'])}
-        self.pw = get_PodmanWorker({'cap_add': ['data2']})
+    def test_compare_cap_add_unprivileged_with_user_caps(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_NET_ADMIN', 'CAP_AUDIT_WRITE'],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': ['net_admin']})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_privileged_no_audit_write(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_NET_ADMIN'],
+            Privileged=True
+        )}
+        self.pw = get_PodmanWorker(
+            {'cap_add': ['net_admin'], 'privileged': True})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_format_normalization(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_SYS_ADMIN', 'CAP_AUDIT_WRITE'],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': ['sys_admin']})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_podman_bug_workaround(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=[],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': []})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_difference_detected(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_NET_ADMIN', 'CAP_AUDIT_WRITE'],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': ['sys_admin']})
         self.assertTrue(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_mixed_case_formats(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=['CAP_SYS_ADMIN', 'CAP_NET_ADMIN', 'CAP_AUDIT_WRITE'],
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker(
+            {'cap_add': ['SYS_ADMIN', 'cap_net_admin']})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
+
+    def test_compare_cap_add_empty_current(self):
+        container_info = {'HostConfig': dict(
+            CapAdd=None,
+            Privileged=False
+        )}
+        self.pw = get_PodmanWorker({'cap_add': []})
+        self.assertFalse(self.pw.compare_cap_add(container_info))
 
     def test_compare_ipc_mode_neg(self):
         container_info = {'HostConfig': dict(IpcMode='data')}
