@@ -25,7 +25,16 @@ mariadb_monitor_user: "monitor"
 mariadb_datadir_volume: "mariadb"
 
 mariadb_default_database_shard_id: 0
-mariadb_default_database_shard_hosts: "{% set default_shard = [] %}{% for host in groups['mariadb'] %}{% if hostvars[host]['mariadb_shard_id'] is not defined or hostvars[host]['mariadb_shard_id'] == mariadb_default_database_shard_id %}{{ default_shard.append(host) }}{% endif %}{% endfor %}{{ default_shard }}"
+#  NOTE(blanson) this little trick is made to work in ansible 2.19 and up
+# in multiline scalar that need to return a non-string object
+mariadb_default_database_shard_hosts: >-
+  {%- set ns = namespace(default_shard=[]) -%}
+  {%- for host in groups['mariadb'] -%}
+    {%- if hostvars[host]['mariadb_shard_id'] is not defined or hostvars[host]['mariadb_shard_id'] == mariadb_default_database_shard_id -%}
+      {%- set ns.default_shard = ns.default_shard + [host] -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ ns.default_shard }}
 mariadb_shard_id: "{{ mariadb_default_database_shard_id }}"
 mariadb_shard_name: "shard_{{ mariadb_shard_id }}"
 mariadb_shard_group: "mariadb_{{ mariadb_shard_name }}"

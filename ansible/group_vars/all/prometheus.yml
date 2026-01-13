@@ -64,7 +64,12 @@ prometheus_alertmanager_internal_endpoint: "{{ prometheus_alertmanager_internal_
 prometheus_alertmanager_public_endpoint: "{{ prometheus_alertmanager_external_fqdn | kolla_url(public_protocol, prometheus_alertmanager_public_port) }}"
 prometheus_alertmanager_port: "9093"
 prometheus_alertmanager_cluster_port: "9094"
-prometheus_alertmanager_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else prometheus_alertmanager_port }}"
+prometheus_alertmanager_public_port: >-
+  {{
+    haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool
+    else prometheus_alertmanager_port
+  }}
+
 prometheus_alertmanager_listen_port: "{{ prometheus_alertmanager_port }}"
 
 # Prometheus openstack-exporter ports
