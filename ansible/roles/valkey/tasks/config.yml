@@ -1,0 +1,26 @@
+---
+- name: Ensuring config directories exist
+  file:
+    path: "{{ node_config_directory }}/{{ item.key }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+  with_dict: "{{ valkey_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over default config.json files
+  template:
+    src: "{{ item.key }}.json.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
+    mode: "0660"
+  become: true
+  with_dict: "{{ valkey_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over valkey config files
+  template:
+    src: "{{ item.key }}.conf.j2"
+    dest: "{{ node_config_directory }}/{{ item.key }}/valkey.conf"
+    mode: "0660"
+  become: true
+  with_dict: "{{ valkey_services | select_services_enabled_and_mapped_to_host }}"

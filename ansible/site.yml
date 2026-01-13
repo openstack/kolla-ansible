@@ -68,6 +68,7 @@
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_telegraf_{{ enable_telegraf | bool }}
         - enable_trove_{{ enable_trove | bool }}
+        - enable_valkey_{{ enable_valkey | bool }}
         - enable_venus_{{ enable_venus | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
         - enable_zun_{{ enable_zun | bool }}
@@ -394,6 +395,20 @@
   roles:
     - { role: redis,
         tags: redis }
+
+- name: Apply role valkey
+  gather_facts: false
+  hosts:
+    - valkey
+    - '&enable_valkey_True'
+  serial: '{{ kolla_serial|default("0") }}'
+  max_fail_percentage: >-
+    {{ valkey_max_fail_percentage |
+       default(kolla_max_fail_percentage) |
+       default(100) }}
+  roles:
+    - { role: valkey,
+        tags: valkey }
 
 # MariaDB deployment is more complicated than other services, so is covered in
 # its own playbook.
