@@ -263,6 +263,53 @@ class TestKollaToolboxMethods(TestKollaToolboxModule):
         self.assertIn('Ansible JSON output has unexpected format',
                       error.result['msg'])
 
+    def test_process_container_output_deprecation(self):
+        container_output_deprecation = "[DEPRECATION WARNING] Some deprecation"
+        container_output_json = {
+            'custom_stats': {},
+            'global_custom_stats': {},
+            'plays': [
+                {
+                    'tasks': [
+                        {
+                            'hosts': {
+                                'localhost': {
+                                    '_ansible_no_log': False,
+                                    'action': 'ping',
+                                    'changed': False,
+                                    'invocation': {
+                                        'module_args': {
+                                            'data': 'pong'
+                                        }
+                                    },
+                                    'ping': 'pong'
+                                }
+                            },
+                        }
+                    ]
+                }
+            ],
+        }
+        container_encoded_json = json.dumps(container_output_json)
+        container_output = (str(container_output_deprecation) +
+                            str(container_encoded_json)).encode('utf-8')
+
+        expected_output = {
+            'action': 'ping',
+            'changed': False,
+            'invocation': {
+                'module_args': {
+                    'data': 'pong'
+                }
+            },
+            'ping': 'pong'
+        }
+        generated_module_output = self.fake_ktbw._process_container_output(
+            container_output)
+
+        self.assertNotIn('_ansible_no_log', generated_module_output)
+        self.assertEqual(expected_output, generated_module_output)
+
     def test_process_container_output_success(self):
         container_output_json = {
             'custom_stats': {},

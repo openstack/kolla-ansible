@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import re
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule
@@ -165,7 +166,22 @@ class KollaToolboxWorker():
     def _process_container_output(self, output_raw: bytes) -> dict:
         """Convert raw bytes output from container.exec_run into dictionary."""
         try:
-            output_json = json.loads(output_raw.decode('utf-8'))
+            # Extract deprecation warning (if any)
+            warning_match = re.search(rb'\[DEPRECATION WARNING\].*',
+                                      output_raw)
+            if warning_match:
+                self.module.warn(warning_match.group(0).decode('utf-8'))
+
+            # Extract JSON block (including curly braces and content)
+            json_match = re.search(rb'\{.*\}', output_raw, re.DOTALL)
+            if json_match:
+                output_json = json.loads(json_match.group(0))
+            else:
+                self.module.fail_json(
+                    msg=('Parsing kolla_toolbox JSON output failed - '
+                         'no JSON block in output')
+                )
+
         except json.JSONDecodeError as e:
             self.module.fail_json(
                 msg=f'Parsing kolla_toolbox JSON output failed: {e}'
