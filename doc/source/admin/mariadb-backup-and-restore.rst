@@ -41,11 +41,11 @@ Backup Procedure
 
 To perform a full backup, run the following command:
 
-``kolla-ansible mariadb_backup -i INVENTORY``
+``kolla-ansible mariadb-backup -i INVENTORY``
 
 Or to perform an incremental backup:
 
-``kolla-ansible mariadb_backup  -i INVENTORY --incremental``
+``kolla-ansible mariadb-backup  -i INVENTORY --incremental``
 
 Kolla doesn't currently manage the scheduling of these backups, so you'll
 need to configure an appropriate scheduler (i.e cron) to run these commands
