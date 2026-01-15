@@ -132,7 +132,11 @@ keystone_enable_healthchecks: "{{ enable_container_healthchecks }}"
 keystone_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 keystone_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 keystone_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-keystone_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}"]
+keystone_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
 keystone_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 keystone_healthcheck:
   interval: "{{ keystone_healthcheck_interval }}"
@@ -145,7 +149,11 @@ keystone_httpd_enable_healthchecks: "{{ enable_container_healthchecks }}"
 keystone_httpd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 keystone_httpd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 keystone_httpd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-keystone_httpd_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}"]
+keystone_httpd_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}
 keystone_httpd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 keystone_httpd_healthcheck:
   interval: "{{ keystone_httpd_healthcheck_interval }}"
@@ -265,11 +273,26 @@ keystone_federation_oidc_additional_options: {}
 keystone_federation_oidc_error_page_retry_login_delay_milliseconds: 5000
 
 # These variables are used to define multiple trusted Horizon dashboards.
-# keystone_trusted_dashboards: ['<https://dashboardServerOne/auth/websso/>', '<https://dashboardServerTwo/auth/websso/>', '<https://dashboardServerN/auth/websso/>']
-horizon_trusted_dashboards: "{{ ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool else [] }}"
-skyline_trusted_dashboards: "{{ ['%s/api/openstack/skyline/api/v1/websso' % (skyline_console_public_endpoint)] if enable_skyline | bool else [] }}"
+# keystone_trusted_dashboards:
+#   - '<https://dashboardServerOne/auth/websso/>'
+#   - '<https://dashboardServerTwo/auth/websso/>'
+#   - '<https://dashboardServerN/auth/websso/>'
+horizon_trusted_dashboards: >-
+  {{
+    ['%s://%s/auth/websso/' % (public_protocol, kolla_external_fqdn), '%s/auth/websso/' % (horizon_public_endpoint)] if enable_horizon | bool
+    else []
+  }}
+skyline_trusted_dashboards: >-
+  {{
+    ['%s/api/openstack/skyline/api/v1/websso' % (skyline_console_public_endpoint)] if enable_skyline | bool
+    else []
+  }}
 keystone_trusted_dashboards: "{{ horizon_trusted_dashboards + skyline_trusted_dashboards }}"
-keystone_enable_federation_openid: "{{ enable_keystone_federation | bool and keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0 }}"
+keystone_enable_federation_openid: >-
+  {{
+    enable_keystone_federation | bool and
+    keystone_identity_providers | selectattr('protocol', 'equalto', 'openid') | list | count > 0
+  }}
 keystone_should_remove_attribute_mappings: false
 keystone_should_remove_identity_providers: false
 keystone_federation_oidc_response_type: "id_token"

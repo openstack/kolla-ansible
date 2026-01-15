@@ -82,7 +82,12 @@
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   set_fact:
-    keystone_federation_openid_certificate_key_ids: "{{ certificates_path.files | map(attribute='path') | map('regex_replace', '^.*/(.*)\\.pem$', '\\1#' + keystone_container_federation_oidc_idp_certificate_folder + '/\\1.pem') | list }}"  # noqa 204
+    keystone_federation_openid_certificate_key_ids: >-
+      {{
+        certificates_path.files |
+        map(attribute='path') |
+        map('regex_replace', '^.*/(.*)\\.pem$', '\\1#' + keystone_container_federation_oidc_idp_certificate_folder + '/\\1.pem') | list
+      }}
   when:
     - inventory_hostname in groups[keystone.group]
 
