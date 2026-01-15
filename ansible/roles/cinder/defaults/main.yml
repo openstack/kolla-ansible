@@ -119,7 +119,12 @@ cinder_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 cinder_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 cinder_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 cinder_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-cinder_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if cinder_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ cinder_api_listen_port }}"]
+cinder_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{
+    'https' if cinder_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ cinder_api_listen_port }}
 cinder_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 cinder_api_healthcheck:
   interval: "{{ cinder_api_healthcheck_interval }}"
@@ -276,11 +281,20 @@ cinder_ceph_backends:
     enabled: "{{ cinder_backend_ceph | bool }}"
 
 cinder_backup_backend_ceph_name: "rbd-1"
-cinder_backup_ceph_backend: "{{ cinder_ceph_backends | selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first | combine({'pool': ceph_cinder_backup_pool_name, 'user': ceph_cinder_backup_user}) }}"
+cinder_backup_ceph_backend: >-
+  {{
+    cinder_ceph_backends |
+    selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first |
+    combine({'pool': ceph_cinder_backup_pool_name, 'user': ceph_cinder_backup_user})
+  }}
 
 skip_cinder_backend_check: false
 
-cinder_enabled_backends: "{{ cinder_backends | selectattr('enabled', 'equalto', true) | list + cinder_ceph_backends | selectattr('enabled', 'equalto', true) | list }}"
+cinder_enabled_backends: >-
+  {{
+    cinder_backends | selectattr('enabled', 'equalto', true) | list
+    + cinder_ceph_backends | selectattr('enabled', 'equalto', true) | list
+  }}
 
 ####################
 # Notification
