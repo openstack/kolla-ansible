@@ -439,7 +439,11 @@ neutron_server_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_server_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 neutron_server_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 neutron_server_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-neutron_server_healthcheck_test: ["CMD-SHELL", "healthcheck_curl {{ 'https' if neutron_enable_tls_backend | bool else 'http' }}://{{ api_interface_address | put_address_in_context('url') }}:{{ neutron_server_listen_port }}"]
+neutron_server_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl {{ 'https' if neutron_enable_tls_backend | bool else 'http' }}://{{
+    api_interface_address | put_address_in_context('url') }}:{{ neutron_server_listen_port }}
 neutron_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 neutron_server_healthcheck:
   interval: "{{ neutron_server_healthcheck_interval }}"
