@@ -31,7 +31,9 @@ database_max_timeout: 120
 ####################
 # HAProxy
 ####################
-external_haproxy_members: "{% for host in mariadb_default_database_shard_hosts %} server {{ host }} {{ host }}:{{ mariadb_port }} check port {{ mariadb_port }} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}"
+external_haproxy_members: >-
+  {% for host in mariadb_default_database_shard_hosts %} server {{ host }} {{ host }}:{{ mariadb_port }}
+  check port {{ mariadb_port }} inter 2000 rise 2 fall 5{% if not loop.first %} backup{% endif %};{% endfor %}
 
 ####################
 # Docker
@@ -54,7 +56,11 @@ mariadb_enable_healthchecks: "{{ enable_container_healthchecks }}"
 mariadb_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 mariadb_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 mariadb_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-mariadb_healthcheck_test: ["CMD-SHELL", "/usr/bin/healthcheck.sh --defaults-file /etc/{{ 'mysql/' if kolla_base_distro in ['ubuntu', 'debian'] else '' }}healthcheck.cnf --connect --galera_online"]
+mariadb_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    /usr/bin/healthcheck.sh --defaults-file
+    /etc/{{ 'mysql/' if kolla_base_distro in ['ubuntu', 'debian'] else '' }}healthcheck.cnf --connect --galera_online
 
 mariadb_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 mariadb_healthcheck:
