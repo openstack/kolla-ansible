@@ -40,17 +40,15 @@
   when:
     - container_engine == 'docker'
   block:
-    # NOTE(blanson): there is apparently no module to do that (!?)
     - name: List docker containers
-      ansible.builtin.command:
-        cmd: "docker ps --format '{{ '{{' }}.Names{{ '}}' }}'"
-      register: _deploy_docker_ps_raw
-      changed_when: false
+      community.docker.docker_host_info:
+        containers: true
+      register: _docker_host_info
 
     - name: Get details of all containers on host
       community.docker.docker_container_info:
         name: "{{ item }}"
-      loop: "{{ _deploy_docker_ps_raw.stdout_lines }}"
+      loop: "{{ _docker_host_info.containers | map(attribute='Names') | map('first') | map('regex_replace', '^/', '') | list }}"
       register: _deploy_docker_info
 
     - name: Build container timestamps dict post-deploy
@@ -105,7 +103,6 @@
           if ansible_facts.distribution | lower == 'debian'
             and ansible_facts.distribution_major_version | int == 12
           else []) }}
-
     ovn_db_services:
       - "ovn_nb_db"
       - "ovn_sb_db"
@@ -151,15 +148,15 @@
     - container_engine == 'docker'
   block:
     - name: List docker containers
-      ansible.builtin.command:
-        cmd: "docker ps --format '{{ '{{' }}.Names{{ '}}' }}'"
-      register: _reconfigure_docker_ps_raw
+      community.docker.docker_host_info:
+        containers: true
+      register: _docker_host_info
       changed_when: false
 
     - name: Get details of all containers on host
       community.docker.docker_container_info:
         name: "{{ item }}"
-      loop: "{{ _reconfigure_docker_ps_raw.stdout_lines }}"
+      loop: "{{ _docker_host_info.containers | map(attribute='Names') | map('first') | map('regex_replace', '^/', '') | list }}"
       register: _reconfigure_docker_info
 
     - name: Build container timestamps dict post-reconfigure
