@@ -42,7 +42,7 @@ FAKE_DATA = {
         'container_engine': 'docker',
         'api_version': None,
         'auth_username': None,
-        'auth_password': None,
+        'auth_password': None,  # nosec B105
         'auth_registry': None,
         'restart_policy': None,
         'auth_email': None,
@@ -125,7 +125,7 @@ FAKE_DATA = {
 
 FAKE_DATA_COMMON_OPTS = {
     'auth_username': 'kevko',
-    'auth_password': 'SECRET',
+    'auth_password': 'SECRET',  # nosec B105
     'auth_registry': 'Quay.io/kolla',
     'restart_policy': 'unless-stopped',
     'auth_email': 'kevko@kevko.org',
@@ -144,7 +144,7 @@ def get_DockerWorker(mod_param, docker_api_version='1.40'):
 
     common_options_defaults = {
         'auth_email': None,
-        'auth_password': None,
+        'auth_password': None,  # nosec B105
         'auth_registry': None,
         'auth_username': None,
         'environment': None,
@@ -371,10 +371,13 @@ class TestContainer(base.BaseTestCase):
         self.assertFalse(self.dw.dc.create_host_config.call_args[1]['tmpfs'])
 
     def test_start_container_without_pull(self):
-        self.fake_data['params'].update({'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -391,11 +394,14 @@ class TestContainer(base.BaseTestCase):
         self.dw.create_container.assert_called_once_with()
 
     def test_start_container_with_duplicate_name(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'name': 'my_container',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -419,11 +425,14 @@ class TestContainer(base.BaseTestCase):
         self.dw.create_container.assert_called_once_with()
 
     def test_start_container(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'name': 'my_container',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -463,12 +472,15 @@ class TestContainer(base.BaseTestCase):
         self.assertEqual(expected, self.dw.result)
 
     def test_start_container_no_systemd(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'restart_policy': 'oneshot',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'name': 'my_container',
+            'restart_policy': 'oneshot',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -486,11 +498,14 @@ class TestContainer(base.BaseTestCase):
         self.dw.systemd.start.assert_not_called()
 
     def test_start_container_systemd_start_fail(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'name': 'my_container',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.dw = get_DockerWorker(self.fake_data['params'])
         self.dw.dc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -966,7 +981,7 @@ class TestImage(base.BaseTestCase):
         self.dw = get_DockerWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
              'auth_username': 'fake_user',
-             'auth_password': 'fake_psw',
+             'auth_password': 'fake_psw',  # nosec B105
              'auth_registry': 'myrepo/myapp',
              'auth_email': 'fake_mail@foogle.com'
              })
