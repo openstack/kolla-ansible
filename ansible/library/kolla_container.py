@@ -360,7 +360,7 @@ def generate_module():
 
     common_options_defaults = {
         'auth_email': None,
-        'auth_password': None,
+        'auth_password': None,  # nosec B105
         'auth_registry': None,
         'auth_username': None,
         'environment': None,
