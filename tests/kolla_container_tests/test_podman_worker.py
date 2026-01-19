@@ -299,10 +299,13 @@ class TestContainer(base.BaseTestCase):
         self.assertEqual(self.pw.create_volume.call_count, 2)
 
     def test_start_container_without_pull(self):
-        self.fake_data['params'].update({'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        auth_params = {
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(auth_params)
         self.pw = get_PodmanWorker(self.fake_data['params'].copy())
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -322,11 +325,14 @@ class TestContainer(base.BaseTestCase):
         self.pw.create_container.assert_called_once_with()
 
     def test_start_container_with_duplicate_name(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        auth_params = {
+            'name': 'my_container',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(auth_params)
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -348,11 +354,13 @@ class TestContainer(base.BaseTestCase):
         self.pw.create_container.assert_called_once_with()
 
     def test_start_container(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        auth_params = {
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(auth_params)
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -403,12 +411,15 @@ class TestContainer(base.BaseTestCase):
         self.assertEqual(expected, self.pw.result)
 
     def test_start_container_no_systemd(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'restart_policy': 'oneshot',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        auth_params = {
+            'name': 'my_container',
+            'restart_policy': 'oneshot',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(auth_params)
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -426,11 +437,14 @@ class TestContainer(base.BaseTestCase):
         self.pw.systemd.start.assert_not_called()
 
     def test_start_container_systemd_start_fail(self):
-        self.fake_data['params'].update({'name': 'my_container',
-                                         'auth_username': 'fake_user',
-                                         'auth_password': 'fake_psw',
-                                         'auth_registry': 'myrepo/myapp',
-                                         'auth_email': 'fake_mail@foogle.com'})
+        params = {
+            'name': 'my_container',
+            'auth_username': 'fake_user',
+            'auth_password': 'fake_psw',  # nosec B105
+            'auth_registry': 'myrepo/myapp',
+            'auth_email': 'fake_mail@foogle.com'
+        }
+        self.fake_data['params'].update(params)
         self.pw = get_PodmanWorker(self.fake_data['params'])
         self.pw.pc.images = mock.MagicMock(
             return_value=self.fake_data['images'])
@@ -817,7 +831,7 @@ class TestImage(base.BaseTestCase):
         self.pw = get_PodmanWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
              'auth_username': 'fake_user',
-             'auth_password': 'fake_psw',
+             'auth_password': 'fake_psw',  # nosec B105
              'auth_registry': 'myrepo/myapp',
              'auth_email': 'fake_mail@foogle.com'
              })
@@ -831,7 +845,8 @@ class TestImage(base.BaseTestCase):
             tag='16.04',
             tls_verify=False,
             stream=False,
-            auth_config={'username': 'fake_user', 'password': 'fake_psw'}
+            auth_config={'username': 'fake_user',
+                         'password': 'fake_psw'}  # nosec B105
         )
         self.assertTrue(self.pw.changed)
 
@@ -839,7 +854,7 @@ class TestImage(base.BaseTestCase):
         self.pw = get_PodmanWorker(
             {'image': 'myregistrydomain.com:5000/ubuntu:16.04',
              'auth_username': 'fake_user',
-             'auth_password': 'fake_psw',
+             'auth_password': 'fake_psw',  # nosec B105
              'auth_registry': 'myrepo/myapp',
              'auth_email': 'fake_mail@foogle.com'
              })
@@ -853,7 +868,8 @@ class TestImage(base.BaseTestCase):
             tag='16.04',
             tls_verify=False,
             stream=False,
-            auth_config={'username': 'fake_user', 'password': 'fake_psw'}
+            auth_config={'username': 'fake_user',
+                         'password': 'fake_psw'}  # nosec B105
         )
         self.assertFalse(self.pw.changed)
 
