@@ -33,9 +33,11 @@ with open("/etc/kolla/passwords.yml", 'r') as file:
 def test_horizon_screenshot(host):
 
     firefox_options = webdriver.FirefoxOptions()
+    selenium_url = host.environment().get(
+        'SELENIUM_REMOTE_URL', 'http://localhost:4500/wd/hub')
 
     driver = webdriver.Remote(
-        command_executor='http://localhost:4444/wd/hub',
+        command_executor=selenium_url,
         options=firefox_options)
 
     horizon_proto = host.environment().get('HORIZON_PROTO')
@@ -73,9 +75,11 @@ def test_horizon_screenshot(host):
 def test_horizon_login(host):
 
     firefox_options = webdriver.FirefoxOptions()
+    selenium_url = host.environment().get(
+        'SELENIUM_REMOTE_URL', 'http://localhost:4500/wd/hub')
 
     driver = webdriver.Remote(
-        command_executor='http://localhost:4444/wd/hub',
+        command_executor=selenium_url,
         options=firefox_options)
 
     horizon_proto = host.environment().get('HORIZON_PROTO')
