@@ -57,6 +57,9 @@
         detach: true
         image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
         network_mode: host
+        env:
+          SE_NODE_PORT: "4500"
+          SE_OPTS: "--port 4500"
       register: docker_result
       retries: 5
       delay: 3
@@ -70,14 +73,17 @@
         detach: true
         image: "quay.io/opendevmirror/selenium-standalone-firefox:latest"
         network_mode: host
+        env:
+          SE_NODE_PORT: "4500"
+          SE_OPTS: "--port 4500"
       register: podman_result
       retries: 5
       delay: 3
       until: podman_result is succeeded
 
-    - name: Wait for port 444 to be up
+    - name: Wait for port 4500 to be up
       ansible.builtin.wait_for:
-        port: 4444
+        port: 4500
 
     - name: Run testinfra tests
       environment:
@@ -85,6 +91,7 @@
       ansible.builtin.shell:
         cmd: >
           . {{ kolla_ansible_venv_path }}/bin/activate &&
+          export SELENIUM_REMOTE_URL="http://localhost:4500/wd/hub" &&
           py.test
           --junit-xml /home/zuul/testinfra/testinfra-junit.xml -o junit_family=xunit1
           --html=/home/zuul/testinfra/test-results-testinfra.html --self-contained-html
