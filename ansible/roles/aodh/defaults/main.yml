@@ -17,7 +17,8 @@ aodh_services:
         port: "{{ aodh_api_port }}"
         listen_port: "{{ aodh_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       aodh_api_external:
         enabled: "{{ enable_aodh }}"
         mode: "http"
@@ -26,7 +27,8 @@ aodh_services:
         port: "{{ aodh_api_public_port }}"
         listen_port: "{{ aodh_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   aodh-evaluator:
     container_name: aodh_evaluator
     group: aodh-evaluator
@@ -131,7 +133,11 @@ aodh_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 aodh_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 aodh_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 aodh_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-aodh_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ aodh_api_listen_port }}"]
+aodh_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl http://{{
+    api_interface_address | put_address_in_context('url') }}:{{ aodh_api_listen_port }}/healthcheck
 aodh_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 aodh_api_healthcheck:
   interval: "{{ aodh_api_healthcheck_interval }}"

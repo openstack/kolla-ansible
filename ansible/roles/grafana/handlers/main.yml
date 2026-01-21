@@ -12,6 +12,7 @@
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
     - inventory_hostname == groups[service.group] | first
 
@@ -25,7 +26,7 @@
     container_engine: "{{ kolla_container_engine }}"
     module_name: uri
     module_args:
-      url: "http://{{ api_interface_address | put_address_in_context('url') }}:{{ grafana_server_port }}/login"
+      url: "http://{{ api_interface_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/health"
       status_code: 200
   register: result
   until: result.get('status') == 200
@@ -47,5 +48,6 @@
     image: "{{ service.image }}"
     volumes: "{{ service.volumes }}"
     dimensions: "{{ service.dimensions }}"
+    healthcheck: "{{ service.healthcheck | default(omit) }}"
   when:
     - inventory_hostname != groups[service.group] | first

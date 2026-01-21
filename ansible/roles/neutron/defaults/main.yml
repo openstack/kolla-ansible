@@ -18,7 +18,8 @@ neutron_services:
         port: "{{ neutron_server_port }}"
         listen_port: "{{ neutron_server_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
         tls_backend: "{{ neutron_enable_tls_backend | bool }}"
       neutron_server_external:
         enabled: true
@@ -28,7 +29,8 @@ neutron_services:
         port: "{{ neutron_server_public_port }}"
         listen_port: "{{ neutron_server_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
         tls_backend: "{{ neutron_enable_tls_backend | bool }}"
   neutron-rpc-server:
     container_name: "neutron_rpc_server"
@@ -443,7 +445,7 @@ neutron_server_healthcheck_test:
   - "CMD-SHELL"
   - >-
     healthcheck_curl {{ 'https' if neutron_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ neutron_server_listen_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ neutron_server_listen_port }}/healthcheck
 neutron_server_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 neutron_server_healthcheck:
   interval: "{{ neutron_server_healthcheck_interval }}"

@@ -18,7 +18,8 @@ trove_services:
         listen_port: "{{ trove_api_listen_port }}"
         tls_backend: "{{ trove_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       trove_api_external:
         enabled: "{{ enable_trove }}"
         mode: "http"
@@ -28,7 +29,8 @@ trove_services:
         external_fqdn: "{{ trove_external_fqdn }}"
         port: "{{ trove_api_public_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   trove-conductor:
     container_name: trove_conductor
     group: trove-conductor
@@ -106,7 +108,7 @@ trove_api_healthcheck_test:
   - "CMD-SHELL"
   - >-
     healthcheck_curl {{ 'https' if trove_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ trove_api_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ trove_api_port }}/healthcheck
 trove_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 trove_api_healthcheck:
   interval: "{{ trove_api_healthcheck_interval }}"

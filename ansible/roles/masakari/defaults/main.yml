@@ -7,6 +7,7 @@ masakari_services:
     image: "{{ masakari_api_image_full }}"
     volumes: "{{ masakari_api_default_volumes + masakari_api_extra_volumes }}"
     dimensions: "{{ masakari_api_dimensions }}"
+    healthcheck: "{{ masakari_api_healthcheck }}"
     wsgi: "masakari.wsgi.api:application"
     haproxy:
       masakari_api:
@@ -16,7 +17,8 @@ masakari_services:
         port: "{{ masakari_api_port }}"
         listen_port: "{{ masakari_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /"
+          - "http-check expect status 200"
       masakari_api_external:
         enabled: "{{ enable_masakari }}"
         mode: "http"
@@ -25,7 +27,8 @@ masakari_services:
         port: "{{ masakari_api_public_port }}"
         listen_port: "{{ masakari_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /"
+          - "http-check expect status 200"
   masakari-engine:
     container_name: masakari_engine
     group: masakari-engine
@@ -104,6 +107,23 @@ masakari_engine_dimensions: "{{ default_container_dimensions }}"
 # compatibility.
 masakari_instancemonitor_dimensions: "{{ masakari_monitors_dimensions | default(default_container_dimensions) }}"
 masakari_hostmonitor_dimensions: "{{ default_container_dimensions }}"
+
+masakari_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+masakari_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+masakari_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+masakari_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+masakari_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl http://{{
+    api_interface_address | put_address_in_context('url') }}:{{ masakari_api_port }}/healthcheck
+masakari_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+masakari_api_healthcheck:
+  interval: "{{ masakari_api_healthcheck_interval }}"
+  retries: "{{ masakari_api_healthcheck_retries }}"
+  start_period: "{{ masakari_api_healthcheck_start_period }}"
+  test: "{% if masakari_api_enable_healthchecks | bool %}{{ masakari_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ masakari_api_healthcheck_timeout }}"
 
 masakari_extra_volumes: "{{ default_extra_volumes }}"
 masakari_api_extra_volumes: "{{ masakari_extra_volumes }}"

@@ -7,6 +7,7 @@ grafana_services:
     image: "{{ grafana_image_full }}"
     volumes: "{{ grafana_default_volumes + grafana_extra_volumes }}"
     dimensions: "{{ grafana_dimensions }}"
+    healthcheck: "{{ grafana_healthcheck }}"
     haproxy:
       grafana_server:
         enabled: "{{ enable_grafana }}"
@@ -15,7 +16,8 @@ grafana_services:
         port: "{{ grafana_server_port }}"
         listen_port: "{{ grafana_server_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /api/health"
+          - "http-check expect status 200"
       grafana_server_external:
         enabled: "{{ enable_grafana_external | bool }}"
         mode: "http"
@@ -24,7 +26,8 @@ grafana_services:
         port: "{{ grafana_server_public_port }}"
         listen_port: "{{ grafana_server_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /api/health"
+          - "http-check expect status 200"
 
 ####################
 # Database
@@ -89,6 +92,23 @@ grafana_image: "{{ docker_image_url }}grafana"
 grafana_tag: "{{ openstack_tag }}"
 grafana_image_full: "{{ grafana_image }}:{{ grafana_tag }}"
 grafana_admin_username: "admin"
+
+grafana_enable_healthchecks: "{{ enable_container_healthchecks }}"
+grafana_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+grafana_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+grafana_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+grafana_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl http://{{
+    api_interface_address | put_address_in_context('url') }}:{{ grafana_server_port }}/api/health
+grafana_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+grafana_healthcheck:
+  interval: "{{ grafana_healthcheck_interval }}"
+  retries: "{{ grafana_healthcheck_retries }}"
+  start_period: "{{ grafana_healthcheck_start_period }}"
+  test: "{% if grafana_enable_healthchecks | bool %}{{ grafana_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ grafana_healthcheck_timeout }}"
 
 grafana_dimensions: "{{ default_container_dimensions }}"
 grafana_default_volumes:

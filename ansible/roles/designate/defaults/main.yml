@@ -17,7 +17,8 @@ designate_services:
         port: "{{ designate_api_port }}"
         listen_port: "{{ designate_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
         tls_backend: "{{ designate_enable_tls_backend | bool }}"
       designate_api_external:
         enabled: "{{ enable_designate }}"
@@ -27,7 +28,8 @@ designate_services:
         port: "{{ designate_api_public_port }}"
         listen_port: "{{ designate_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
         tls_backend: "{{ designate_enable_tls_backend | bool }}"
   designate-backend-bind9:
     container_name: designate_backend_bind9
@@ -159,7 +161,7 @@ designate_api_healthcheck_test:
   - >-
     healthcheck_curl {{
     'https' if designate_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ designate_api_listen_port }}/healthcheck
 designate_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 designate_api_healthcheck:
   interval: "{{ designate_api_healthcheck_interval }}"

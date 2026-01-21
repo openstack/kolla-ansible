@@ -17,7 +17,8 @@ zun_services:
         port: "{{ zun_api_port }}"
         listen_port: "{{ zun_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       zun_api_external:
         enabled: "{{ enable_zun }}"
         mode: "http"
@@ -26,7 +27,8 @@ zun_services:
         port: "{{ zun_api_public_port }}"
         listen_port: "{{ zun_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   zun-wsproxy:
     container_name: zun_wsproxy
     group: zun-wsproxy
@@ -127,7 +129,7 @@ zun_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 zun_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 zun_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 zun_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-zun_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ zun_api_port }}"]
+zun_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ zun_api_port }}/healthcheck"]
 zun_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 zun_api_healthcheck:
   interval: "{{ zun_api_healthcheck_interval }}"

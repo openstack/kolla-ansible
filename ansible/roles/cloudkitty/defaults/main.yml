@@ -17,7 +17,8 @@ cloudkitty_services:
         port: "{{ cloudkitty_api_port }}"
         listen_port: "{{ cloudkitty_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       cloudkitty_api_external:
         enabled: "{{ enable_cloudkitty }}"
         mode: "http"
@@ -26,7 +27,8 @@ cloudkitty_services:
         port: "{{ cloudkitty_api_public_port }}"
         listen_port: "{{ cloudkitty_api_listen_port }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   cloudkitty-processor:
     container_name: "cloudkitty_processor"
     group: "cloudkitty-processor"
@@ -100,7 +102,11 @@ cloudkitty_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
 cloudkitty_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 cloudkitty_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 cloudkitty_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-cloudkitty_api_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ cloudkitty_api_port }}"]
+cloudkitty_api_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl http://{{
+    api_interface_address | put_address_in_context('url') }}:{{ cloudkitty_api_port }}/healthcheck
 cloudkitty_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 cloudkitty_api_healthcheck:
   interval: "{{ cloudkitty_api_healthcheck_interval }}"

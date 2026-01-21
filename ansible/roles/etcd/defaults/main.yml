@@ -8,12 +8,16 @@ etcd_services:
     image: "{{ etcd_image_full }}"
     volumes: "{{ etcd_default_volumes + etcd_extra_volumes }}"
     dimensions: "{{ etcd_dimensions }}"
+    healthcheck: "{{ etcd_healthcheck }}"
     haproxy:
       etcd:
         enabled: true
         mode: "http"
         external: false
         port: "{{ etcd_client_port }}"
+        backend_http_extra:
+          - "option httpchk GET /health"
+          - "http-check expect status 200"
         tls_backend: "{{ etcd_enable_tls | bool }}"
 
 ####################
@@ -83,6 +87,19 @@ etcd_image: "{{ docker_image_url }}etcd"
 etcd_tag: "{{ openstack_tag }}"
 etcd_image_full: "{{ etcd_image }}:{{ etcd_tag }}"
 etcd_dimensions: "{{ default_container_dimensions }}"
+
+etcd_enable_healthchecks: "{{ enable_container_healthchecks }}"
+etcd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+etcd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+etcd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+etcd_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}/health"]
+etcd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+etcd_healthcheck:
+  interval: "{{ etcd_healthcheck_interval }}"
+  retries: "{{ etcd_healthcheck_retries }}"
+  start_period: "{{ etcd_healthcheck_start_period }}"
+  test: "{% if etcd_enable_healthchecks | bool %}{{ etcd_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ etcd_healthcheck_timeout }}"
 
 etcd_default_volumes:
   - "{{ node_config_directory }}/etcd/:{{ container_config_directory }}/:ro"

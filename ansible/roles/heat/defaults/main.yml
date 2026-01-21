@@ -18,7 +18,8 @@ heat_services:
         listen_port: "{{ heat_api_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       heat_api_external:
         enabled: "{{ enable_heat }}"
         mode: "http"
@@ -28,7 +29,8 @@ heat_services:
         listen_port: "{{ heat_api_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   heat-api-cfn:
     container_name: heat_api_cfn
     group: heat-api-cfn
@@ -47,7 +49,8 @@ heat_services:
         listen_port: "{{ heat_api_cfn_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       heat_api_cfn_external:
         enabled: "{{ enable_heat }}"
         mode: "http"
@@ -57,7 +60,8 @@ heat_services:
         listen_port: "{{ heat_api_cfn_listen_port }}"
         tls_backend: "{{ heat_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   heat-engine:
     container_name: heat_engine
     group: heat-engine
@@ -127,7 +131,7 @@ heat_api_healthcheck_test:
   - "CMD-SHELL"
   - >-
     healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ heat_api_listen_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ heat_api_listen_port }}/healthcheck
 heat_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 heat_api_healthcheck:
   interval: "{{ heat_api_healthcheck_interval }}"
@@ -144,7 +148,7 @@ heat_api_cfn_healthcheck_test:
   - "CMD-SHELL"
   - >-
     healthcheck_curl {{ 'https' if heat_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ heat_api_cfn_listen_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ heat_api_cfn_listen_port }}/healthcheck
 heat_api_cfn_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 heat_api_cfn_healthcheck:
   interval: "{{ heat_api_cfn_healthcheck_interval }}"

@@ -18,7 +18,8 @@ barbican_services:
         listen_port: "{{ barbican_api_listen_port }}"
         tls_backend: "{{ barbican_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
       barbican_api_external:
         enabled: "{{ enable_barbican }}"
         mode: "http"
@@ -28,7 +29,8 @@ barbican_services:
         listen_port: "{{ barbican_api_listen_port }}"
         tls_backend: "{{ barbican_enable_tls_backend }}"
         backend_http_extra:
-          - "option httpchk"
+          - "option httpchk GET /healthcheck"
+          - "http-check expect status 200"
   barbican-keystone-listener:
     container_name: barbican_keystone_listener
     group: barbican-keystone-listener
@@ -107,7 +109,7 @@ barbican_api_healthcheck_test:
   - >-
     healthcheck_curl {{
     'https' if barbican_enable_tls_backend | bool else 'http' }}://{{
-    api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}
+    api_interface_address | put_address_in_context('url') }}:{{ barbican_api_listen_port }}/healthcheck"
 barbican_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 barbican_api_healthcheck:
   interval: "{{ barbican_api_healthcheck_interval }}"
