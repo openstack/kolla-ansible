@@ -9,7 +9,19 @@
       for service {{ service_name }} in {{ project_name }}.
   loop: "{{ query('dict', service_precheck_services) }}"
   when:
+    - not (service.iterate | default(False)) | bool
     - "'group' in service"
     - service.group not in groups
   loop_control:
     label: "{{ service_name }}"
+
+- name: Include tasks
+  vars:
+    service: "{{ outer_item.value }}"
+  ansible.builtin.include_tasks: iterated.yml
+  loop: "{{ query('dict', service_precheck_services) }}"
+  loop_control:
+    loop_var: outer_item
+  when:
+    - (service.iterate | default(False)) | bool
+    - "'group' in service"

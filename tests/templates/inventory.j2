@@ -6,7 +6,7 @@
 # primary and secondary while the parent group (control) uses only primary.
 
 [control]
-{% if scenario == 'masakari' %}
+{% if scenario in ['masakari', 'multi-compute-ironic'] %}
 {%     for host in hostvars if host in ['primary'] %}
 {{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
 {%     endfor %}
@@ -299,8 +299,25 @@ nova
 [nova-spicehtml5proxy:children]
 nova
 
+{% if scenario == 'multi-compute-ironic' %}
+[nova-compute-ironic-1]
+primary
+[nova-compute-ironic-2]
+secondary1
+[nova-compute-ironic-3]
+secondary2
+[nova-compute-ironic-4]
+secondary2
+
+[nova-compute-ironic:children]
+nova-compute-ironic-1
+nova-compute-ironic-2
+nova-compute-ironic-3
+nova-compute-ironic-4
+{% else %}
 [nova-compute-ironic:children]
 nova
+{% endif %}
 
 [nova-serialproxy:children]
 nova

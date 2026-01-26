@@ -178,6 +178,113 @@ operator needs to create ``/etc/kolla/config/global.conf`` with content:
    [database]
    max_pool_size = 100
 
+Large baremetal deployments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Out of the box, a typical Kolla Ansible deployment can support managing a few
+hundred baremetal nodes. Beyond this number, it becomes necessary to configure
+scaling mechanisms built into Nova and Ironic.
+
+There are two mechanisms to consider:
+  - shards
+  - conductor groups
+
+Please see the Ironic documentation for further `information
+<https://docs.openstack.org/ironic/latest/admin/availability-zones.html#common-deployment-patterns>`_.
+
+As an example, consider a deployment of 700 baremetal nodes spread over two
+distinct locations. Location 1 consists of 500 baremetal nodes, and location 2
+consists of 200 baremetal nodes.
+
+For location 1, all 500 nodes are placed into the same Ironic conductor
+group. Ironic conductors configured to use this group are deployed on each
+of the three nodes in the control plane. A single Nova Compute Ironic service
+would struggle to manage this many nodes, so two shards are created. Due to
+HA limitations with Nova Compute Ironic, a single instance is created for
+each shard, and the instances may be deployed to any node in the control
+plane.
+
+For location 2, no shards are required due to the smaller number of baremetal
+nodes. A single conductor group is configured. The result is that three Ironic
+conductors are deployed (one on each node in the control plane), and a single
+instance of Nova Compute Ironic configured to use this conductor group.
+Furthermore, for this location ``custom_host`` is used to override the
+automatically generated host field in the configuration. This is useful for
+migrating to the multi-instance configuration described here.
+
+Finally, Ironic and Nova services are deployed with no configured shards or
+conductor groups as a catch all.
+
+.. code-block:: yaml
+
+  nova_multi_compute_ironic_config:
+    - "shard_key": "shard_1"
+      "conductor_group": "location_1"
+    - "shard_key": "shard_2"
+      "conductor_group": "location_1"
+    - "conductor_group": "location_2"
+      "custom_host": "some_custom_host_field"
+    - {}
+
+.. note::
+
+   ``nova_multi_compute_ironic_config`` must be defined as a global variable
+   and not customised via hostvars.
+
+.. note::
+
+   If you currently have the ``nova-compute-ironic`` service deployed,
+   you must manually remove it from the controllers before migrating to the
+   new mode. You will need to ensure that you configure a compatible service
+   in ``nova_multi_compute_ironic_config`` to replace the old one. This will
+   likely involve setting the ``custom_host`` field at the very minimum.
+
+The placement of the above services is managed via the inventory. This
+allows flexible placement, should a controller fail.
+
+.. code-block:: yaml
+
+  [nova-compute-ironic-1]
+  controller-01
+  [nova-compute-ironic-2]
+  controller-02
+  [nova-compute-ironic-3]
+  controller-03
+  [nova-compute-ironic-4]
+  controller-03
+
+  [nova-compute-ironic:children]
+  nova-compute-ironic-1
+  nova-compute-ironic-2
+  nova-compute-ironic-3
+  nova-compute-ironic-4
+
+.. note::
+
+   The number of ``nova-compute-ironic-N`` groups must equal the length of
+   ``nova_multi_compute_ironic_config``. This variable is an ordered list,
+   where the first item maps to ``nova-compute-ironic-1``, the second item
+   to ``nova-compute-ironic-2`` and so forth.
+
+.. note::
+
+   A 'cleanup' function is provided which assists in 'failing over'
+   service instances to other hosts. For example, if ``controller-01``
+   was to be taken down for maintenance, replacing it with ``controller-02``
+   in the ``nova-compute-ironic-1`` group and re-deploying the ``nova``
+   service would result in the service being removed from ``controller-01``
+   and re-deployed on ``controller-02``. The cleanup function cannot
+   currently handle downsizing the number of service instances. In this case
+   the redundant service instances must be cleaned up manually. For obvious
+   reasons the cleanup function cannot remove a service from a failed node,
+   and in such a case, you must be careful not to allow a second identical
+   service instance to start when the failed node is recovered.
+
+The ``nova-compute-ironic`` service instances may be configured
+individually via the existing override mechanism. For example, the
+creation of ``nova/nova-compute-ironic-1.conf`` will allow variables
+for that specific service to be overridden.
+
 OpenStack policy customisation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

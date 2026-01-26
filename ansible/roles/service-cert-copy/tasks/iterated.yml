@@ -1,0 +1,10 @@
+---
+- name: "Copying over extra CA certificates for {{ project_name }}"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ kolla_certificates_dir }}/ca/"
+    dest: "{{ node_config_directory }}/{{ outer_item.key }}-{{ item }}/ca-certificates"
+    mode: "0644"
+  loop: "{{ range(1, (service.iterate_var | int) + 1) | list }}"
+  when:
+    - inventory_hostname in groups[service.group ~ '-' ~ item]

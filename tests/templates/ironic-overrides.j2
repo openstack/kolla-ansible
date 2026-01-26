@@ -2,6 +2,16 @@
 enabled_inspect_interfaces = no-inspect, agent
 default_inspect_interface = agent
 
+{% if scenario == "multi-compute-ironic" %}
+{%     raw %}
+{%     set cg = 'location_1' if inventory_hostname == 'secondary1' else 'location_2' if inventory_hostname == 'secondary2' %}
+{%     if cg %}
+[conductor]
+conductor_group = {{ cg }}
+{%     endif %}
+{%     endraw %}
+{% endif %}
+
 [neutron]
 cleaning_network = public1
 inspection_network = public1

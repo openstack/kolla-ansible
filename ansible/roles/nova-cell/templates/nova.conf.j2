@@ -8,9 +8,27 @@ state_path = /var/lib/nova
 
 allow_resize_to_same_host = true
 
+{% set nova_compute_shard_key = nova_compute_shard_key | default("") %}
+{% set nova_compute_conductor_group = nova_compute_conductor_group | default("") %}
+{% set nova_compute_ironic_custom_host = nova_compute_ironic_custom_host | default("") %}
 {% if service_name == "nova-compute-ironic" %}
-host={{ nova_compute_ironic_custom_host | default(ansible_facts.hostname) }}-ironic
+{%     if nova_compute_ironic_custom_host | length > 0 %}
+{#         NOTE(dougszu): This is provided for backwards compatibility #}
+{%         set host_value = nova_compute_ironic_custom_host ~ "-ironic" %}
+{%     elif nova_compute_conductor_group | length > 0 or nova_compute_shard_key | length > 0 %}
+{%         set host_value = (nova_compute_conductor_group ~ "-" ~ nova_compute_shard_key) ~ "-ironic" %}
+{%     else %}
+{#         NOTE(dougszu): This is to support legacy behaviour #}
+{%         set host_value = ansible_facts.hostname ~ "-ironic" %}
+{%     endif %}
+host = {{ host_value }}
+
+{%     if nova_compute_ironic_id is defined %}
+log_file = /var/log/kolla/nova/nova-compute-ironic-{{ nova_compute_ironic_id }}.log
+{%     else %}
 log_file = /var/log/kolla/nova/nova-compute-ironic.log
+{%     endif %}
+
 compute_driver = ironic.IronicDriver
 ram_allocation_ratio = 1.0
 reserved_host_memory_mb = 0
@@ -101,6 +119,19 @@ project_name = service
 user_domain_name = {{ default_user_domain_name }}
 project_domain_name = {{ default_project_domain_name }}
 endpoint_override = {{ ironic_internal_endpoint }}/v1
+
+{%     if nova_compute_shard_key is not in ['default', ''] %}
+shard = {{ nova_compute_shard_key }}
+{%     endif %}
+{%     if nova_compute_conductor_group is not in ['default', ''] %}
+conductor_group = {{ nova_compute_conductor_group }}
+{%     endif %}
+{%     if nova_compute_conductor_group is not in ['default', ''] and nova_compute_shard_key is in ['default', ''] %}
+{# NOTE(dougszu): In this case only, Nova Compute Ironic won't start unless the peer_list #}
+{# is populated. peer_list is a deprecated config option and should never have more than #}
+{# one host in it. This appears to be a bug. #}
+peer_list = {{ host_value }}
+{%     endif %}
 {% endif %}
 
 [oslo_concurrency]
@@ -180,7 +211,7 @@ driver = noop
 [oslo_messaging_rabbit]
 use_queue_manager = true
 {% if service_name == "nova-compute-ironic" %}
-hostname = {{ nova_compute_ironic_custom_host | default(ansible_facts.hostname) }}-ironic
+hostname = {{ host_value }}
 {% endif %}
 heartbeat_in_pthread = false
 {% if om_enable_rabbitmq_tls | bool %}

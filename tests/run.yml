@@ -208,10 +208,10 @@
         # ironic.conf
         - src: "tests/templates/ironic-overrides.j2"
           dest: /etc/kolla/config/ironic.conf
-          when: "{{ scenario == 'ironic' }}"
+          when: "{{ scenario == 'ironic' or scenario == 'multi-compute-ironic' }}"
         - src: "tests/templates/tenks-deploy-config.yml.j2"
           dest: "{{ ansible_env.HOME }}/tenks.yml"
-          when: "{{ scenario == 'ironic' }}"
+          when: "{{ scenario == 'ironic' or scenario == 'multi-compute-ironic' }}"
         # keystone-federation config
         - src: "tests/templates/keystone-federation/idp.example.org%2Frealms%2Fexample.conf.j2"
           dest: "/etc/kolla/config/keystone-httpd/federation/oidc/metadata/idp.example.org%2Frealms%2Fexample.conf"
@@ -243,7 +243,7 @@
               dest: ironic-agent.initramfs
             - src: "ipa-centos9-{{ zuul.branch | replace('/', '-') }}.kernel"
               dest: ironic-agent.kernel
-      when: scenario == "ironic"
+      when: scenario == "ironic" or scenario == "multi-compute-ironic"
 
     - block:
         - name: Slurp requirements.yml
@@ -427,7 +427,7 @@
             EXT_NET_GATEWAY: "{{ neutron_external_network_prefix }}1"
             EXT_NET_DEMO_ROUTER_ADDR: "{{ neutron_external_network_prefix }}10"
             SCENARIO: "{{ scenario }}"
-          when: openstack_core_tested or scenario in ['ironic', 'magnum', 'nfv', 'zun', 'octavia']
+          when: openstack_core_tested or scenario in ['ironic', 'multi-compute-ironic' ,'magnum', 'nfv', 'zun', 'octavia']
 
         - name: Test OVN VPNaaS
           import_role:
@@ -494,7 +494,8 @@
                 chdir: "{{ kolla_ansible_src_dir }}"
               environment:
                 TLS_ENABLED: "{{ tls_enabled }}"
-          when: scenario == "ironic"
+                MULTI_COMPUTE_IRONIC: "{{ scenario == 'multi-compute-ironic' }}"
+          when: scenario == "ironic" or scenario == "multi-compute-ironic"
 
         - name: Run test-magnum.sh script
           script:

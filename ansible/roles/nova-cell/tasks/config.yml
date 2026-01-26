@@ -7,6 +7,8 @@
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
     mode: "0770"
+  when:
+    - item.key != "nova-compute-ironic" or nova_multi_compute_ironic_config | length == 0
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over TLS certificates
@@ -58,6 +60,8 @@
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
+  when:
+    - item.key != "nova-compute-ironic" or nova_multi_compute_ironic_config | length == 0
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over nova.conf
@@ -76,7 +80,17 @@
     mode: "0660"
   when:
     - item.key in nova_cell_services_require_nova_conf
+    - item.key != "nova-compute-ironic" or nova_multi_compute_ironic_config | length == 0
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
+
+- name: Copying over config for Nova compute Ironic multi-instance
+  vars:
+    service: "{{ nova_cell_services['nova-compute-ironic'] }}"
+  ansible.builtin.include_tasks: config-compute-ironic.yml
+  loop: "{{ range(1, nova_multi_compute_ironic_config | length + 1) | list }}"
+  when:
+    - nova_multi_compute_ironic_config | length > 0
+    - inventory_hostname in groups[service.group ~ '-' ~ item]
 
 - name: Copying over Nova compute provider config
   become: true
@@ -196,6 +210,7 @@
   when:
     - nova_policy_file is defined
     - item.key in nova_cell_services_require_policy_json
+    - item.key != "nova-compute-ironic" or nova_multi_compute_ironic_config | length == 0
   with_dict: "{{ nova_cell_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over vendordata file to containers
@@ -209,6 +224,7 @@
   when:
     - vendordata_file_path is defined
     - service | service_enabled_and_mapped_to_host
+    - item != "nova-compute-ironic" or nova_multi_compute_ironic_config | length == 0
   with_items:
     - nova-compute
     - nova-compute-ironic
