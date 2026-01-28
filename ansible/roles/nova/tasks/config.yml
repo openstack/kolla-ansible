@@ -133,9 +133,10 @@
     service_uwsgi_config_tls_cert: "/etc/nova/certs/nova-cert.pem"
     service_uwsgi_config_tls_key: "/etc/nova/certs/nova-key.pem"
     service_uwsgi_config_uid: "nova"
+    service_uwsgi_config_workers: "{{ item.workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
     - nova_wsgi_provider == "uwsgi"
   loop:
-    - { name: "nova-api", port: "{{ nova_api_listen_port }}" }
-    - { name: "nova-metadata", port: "{{ nova_metadata_listen_port }}" }
+    - { name: "nova-api", port: "{{ nova_api_listen_port }}", workers: "{{ nova_api_workers }}" }
+    - { name: "nova-metadata", port: "{{ nova_metadata_listen_port }}", workers: "{{ nova_metadata_api_workers }}" }
