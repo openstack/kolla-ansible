@@ -10,9 +10,7 @@
   become: true
   kolla_container:
     action: "start_container"
-    command: >-
-      bash -c 'sudo -E kolla_set_configs &&
-      sudo kolla_copy_cacerts && nova-manage cell_v2 create_cell{% if nova_cell_name %} --name {{ nova_cell_name }}{% endif %}'
+    command: bash -c 'sudo -E kolla_set_configs && sudo kolla_copy_cacerts && nova-manage cell_v2 create_cell{% if nova_cell_name %} --name {{ nova_cell_name }}{% endif %}'
     common_options: "{{ docker_common_options }}"
     detach: false
     image: "{{ nova_conductor.image }}"
@@ -33,9 +31,7 @@
 
 - name: Update cell
   vars:
-    nova_cell_database_url: >-
-      mysql+pymysql://{{ nova_cell_database_user }}:{{ nova_cell_database_password }}@{{
-      nova_cell_database_address | put_address_in_context('url') }}:{{ nova_cell_database_port }}/{{ nova_cell_database_name }}
+    nova_cell_database_url: "mysql+pymysql://{{ nova_cell_database_user }}:{{ nova_cell_database_password }}@{{ nova_cell_database_address | put_address_in_context('url') }}:{{ nova_cell_database_port }}/{{ nova_cell_database_name }}"  # noqa 204
     nova_conductor: "{{ nova_cell_services['nova-conductor'] }}"
   become: true
   kolla_container:
