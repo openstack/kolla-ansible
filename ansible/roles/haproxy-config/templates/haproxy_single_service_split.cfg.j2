@@ -121,8 +121,8 @@ backend {{ service_name }}_back
 {%     set external = haproxy_service.external | default(false) | bool %}
 {#     Active/passive defaults to false #}
 {%     set active_passive = haproxy_service.active_passive | default(false) | bool %}
-{#     Skip anything that is external when the external vip is not enabled #}
-{%     if haproxy_service.enabled | bool and (not external or haproxy_enable_external_vip | bool) %}
+{#     Skip anything that is external, unless the external vip is enabled or single external frontend mode is set. #}
+{%     if haproxy_service.enabled | bool and (not external or haproxy_enable_external_vip | bool or haproxy_single_external_frontend | bool) %}
 {#         Here we define variables and their defaults #}
 {#         services can be listening on a different port than haproxy #}
 {%         set listen_port = haproxy_service.listen_port | default(haproxy_service.port) %}
@@ -150,7 +150,18 @@ backend {{ service_name }}_back
 {{ userlist_macro(haproxy_name, auth_user, auth_pass) }}
 {%         endif %}
 {%         if with_frontend %}
-{%             if not (external | bool and haproxy_single_external_frontend | bool and mode == 'http') %}
+{#             In single external frontend mode, skip frontends that conflict with or are subsumed
+               by the external_frontend:
+               - External http services are handled by the SNI/map frontend.
+               - External redirect services with no separate VIP duplicate the internal redirect
+                 on the same IP:port.
+               - Internal http services on the same port as the SNI frontend conflict with it
+                 when there is no separate external VIP (single VIP means same bind address). #}
+{%             if not (haproxy_single_external_frontend | bool and (
+                   (external | bool and mode == 'http') or
+                   (external | bool and mode == 'redirect' and not haproxy_enable_external_vip | bool) or
+                   (not external | bool and not haproxy_enable_external_vip | bool and mode == 'http' and haproxy_service.port | string == haproxy_single_external_frontend_public_port | string)
+               )) %}
 {{ frontend_macro(haproxy_name, haproxy_service.port, mode, external,
                   frontend_http_extra, frontend_redirect_extra, frontend_tcp_extra) }}
 {%             endif %}
