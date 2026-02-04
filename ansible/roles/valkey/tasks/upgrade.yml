@@ -1,5 +1,5 @@
 ---
-# TODO(bbezak): Remove in G/2026.1 release as Redis migration is no longer required
+# TODO(bbezak): Remove after G/2026.1 release as Redis migration is no longer required
 - name: Check if Redis is running
   become: true
   kolla_container_facts:
@@ -10,8 +10,10 @@
   check_mode: false
   register: redis_container_facts
 
-- name: Set migration flag if Redis is present
+- name: Set valkey master host variables
   set_fact:
+    valkey_master_host: "{{ groups['valkey'][0] }}"
+    redis_slave_hosts: "{{ groups.get('redis', [])[1:] }}"
     _valkey_migration: "{{ redis_container_facts.containers['redis'] is defined }}"
 
 - name: Perform Redis to Valkey migration steps
@@ -22,12 +24,6 @@
         valkey_server_port: "6380"
         valkey_sentinel_port: "26380"
         valkey_sentinel_monitor_name: "kolla-temp"
-
-    - name: Set valkey master host to valkey[0]
-      set_fact:
-        valkey_master_host: "{{ groups['valkey'][0] }}"
-        redis_slave_hosts: "{{ groups['redis'][1:] }}"
-      run_once: true
 
     - name: Start Valkey on temporary ports with temp sentinel monitor name
       import_tasks: deploy.yml
