@@ -142,7 +142,7 @@ manually.
 
    .. code:: bash
 
-      mysql --batch -uroot -p
+      mariadb --batch -uroot -p
 
 #. Check the current state of the ``root`` user:
 
