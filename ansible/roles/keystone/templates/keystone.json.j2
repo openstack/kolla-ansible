@@ -58,7 +58,7 @@
             "dest": "/etc/keystone/certs/keystone-key.pem",
             "owner": "keystone",
             "perm": "0600"
-        }{% endif %}{% if keystone_enable_federation_openid | bool %},
+        }{% endif %}{% if keystone_enable_federation_openid | bool and keystone_wsgi_provider == 'apache' %},
         {
             "source": "{{ container_config_directory }}/federation/oidc/metadata",
             "dest": "{{ keystone_container_federation_oidc_metadata_folder }}",
@@ -95,7 +95,7 @@
         {
             "path": "/var/log/kolla/keystone/keystone.log",
             "owner": "keystone:keystone"
-        },{% if keystone_enable_federation_openid | bool %}
+        },{% if keystone_enable_federation_openid | bool and keystone_wsgi_provider == 'apache' %}
         {
             "path": "{{ keystone_container_federation_oidc_metadata_folder }}",
             "owner": "{{ apache_user }}:{{ apache_user }}",

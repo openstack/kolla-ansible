@@ -131,6 +131,11 @@ openstack_domain
 
 The OpenStack domain that the Identity Provider belongs.
 
+.. note::
+   Kolla-Ansible does not support duplicate openstack_domain names,
+   where the ID of the domain is different, but the name is the same.
+   This is an edge case that is hard to take into account.
+
 protocol
 ********
 

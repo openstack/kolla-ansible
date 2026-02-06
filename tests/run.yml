@@ -164,6 +164,8 @@
         - neutron
         - nova
         - bifrost
+        - keystone-httpd/federation/oidc/metadata
+        - keystone-httpd/federation/oidc/attribute_maps
 
     - name: Generate configuration files
       template:
@@ -210,6 +212,19 @@
         - src: "tests/templates/tenks-deploy-config.yml.j2"
           dest: "{{ ansible_env.HOME }}/tenks.yml"
           when: "{{ scenario == 'ironic' }}"
+        # keystone-federation config
+        - src: "tests/templates/keystone-federation/idp.example.org%2Frealms%2Fexample.conf.j2"
+          dest: "/etc/kolla/config/keystone-httpd/federation/oidc/metadata/idp.example.org%2Frealms%2Fexample.conf"
+          when: "{{ scenario == 'federation' }}"
+        - src: "tests/templates/keystone-federation/idp.example.org%2Frealms%2Fexample.provider.j2"
+          dest: "/etc/kolla/config/keystone-httpd/federation/oidc/metadata/idp.example.org%2Frealms%2Fexample.provider"
+          when: "{{ scenario == 'federation' }}"
+        - src: "tests/templates/keystone-federation/idp.example.org%2Frealms%2Fexample.client.j2"
+          dest: "/etc/kolla/config/keystone-httpd/federation/oidc/metadata/idp.example.org%2Frealms%2Fexample.client"
+          when: "{{ scenario == 'federation' }}"
+        - src: "tests/templates/keystone-federation/attribute_mapping.json"
+          dest: "/etc/kolla/config/keystone-httpd/federation/oidc/attribute_maps/attribute_mapping.json"
+          when: "{{ scenario == 'federation' }}"
       when: item.when | default(true)
 
     - block:
