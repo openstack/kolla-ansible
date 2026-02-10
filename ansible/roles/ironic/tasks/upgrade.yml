@@ -94,13 +94,38 @@
     - not ironic_upgrade_skip_wait_check | bool
     - container_facts.containers[container_name] is defined
 
-- name: Include tasks from rolling_upgrade.yml
-  include_tasks: rolling_upgrade.yml
-  when: ironic_enable_rolling_upgrade | bool
+- name: Import tasks from config.yml
+  import_tasks: config.yml
 
-- name: Include tasks from legacy_upgrade.yml
-  include_tasks: legacy_upgrade.yml
-  when: not ironic_enable_rolling_upgrade | bool
+- name: Import tasks from check-containers.yml
+  import_tasks: check-containers.yml
+
+- name: Import tasks from bootstrap_service.yml
+  import_tasks: bootstrap_service.yml
+
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Running Ironic online data migration
+  vars:
+    ironic_api: "{{ ironic_services['ironic-api'] }}"
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    detach: false
+    environment:
+      KOLLA_OSM:
+      KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+    image: "{{ ironic_api.image }}"
+    labels:
+      BOOTSTRAP:
+    name: "bootstrap_ironic"
+    restart_policy: oneshot
+    volumes: "{{ ironic_api.volumes }}"
+  run_once: true
+  delegate_to: "{{ groups[ironic_api.group][0] }}"
+  when: inventory_hostname in groups[ironic_api.group]
 
 # TODO(mnasiadka): Remove this task in Gazpacho/2026.1 release
 - name: Remove ironic_inspector_dhcp_hosts volume
