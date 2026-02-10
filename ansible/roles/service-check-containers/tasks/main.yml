@@ -42,9 +42,10 @@
 
 - name: Include tasks
   vars:
-    service: "{{ outer_item.value }}"
+    service_name: "{{ outer_item.key }}"
+    iterate_count: "{{ outer_item.value.iterate_var | int }}"
   include_tasks: iterated.yml
   loop: "{{ lookup('vars', (kolla_role_name | default(project_name)) + '_services') | select_services_enabled_and_mapped_to_host | dict2items }}"
   loop_control:
     loop_var: outer_item
-  when: (service.iterate | default(False)) | bool
+  when: (outer_item.value.iterate | default(False)) | bool
