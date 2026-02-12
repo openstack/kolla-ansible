@@ -121,6 +121,13 @@ prometheus_services:
     image: "{{ prometheus_libvirt_exporter_image_full }}"
     volumes: "{{ prometheus_libvirt_exporter_default_volumes + prometheus_libvirt_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_libvirt_exporter_dimensions }}"
+  prometheus-valkey-exporter:
+    container_name: "prometheus_valkey_exporter"
+    group: "prometheus-valkey-exporter"
+    enabled: "{{ enable_prometheus_valkey_exporter | bool }}"
+    image: "{{ prometheus_valkey_exporter_image_full }}"
+    volumes: "{{ prometheus_valkey_exporter_default_volumes + prometheus_valkey_exporter_extra_volumes }}"
+    dimensions: "{{ prometheus_valkey_exporter_dimensions }}"
 
 ####################
 # Prometheus Server
@@ -398,6 +405,10 @@ prometheus_libvirt_exporter_image: "{{ docker_image_url }}prometheus-libvirt-exp
 prometheus_libvirt_exporter_tag: "{{ prometheus_tag }}"
 prometheus_libvirt_exporter_image_full: "{{ prometheus_libvirt_exporter_image }}:{{ prometheus_libvirt_exporter_tag }}"
 
+prometheus_valkey_exporter_image: "{{ docker_image_url }}prometheus-valkey-exporter"
+prometheus_valkey_exporter_tag: "{{ prometheus_tag }}"
+prometheus_valkey_exporter_image_full: "{{ prometheus_valkey_exporter_image }}:{{ prometheus_valkey_exporter_tag }}"
+
 prometheus_server_dimensions: "{{ default_container_dimensions }}"
 prometheus_mysqld_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_memcached_exporter_dimensions: "{{ default_container_dimensions }}"
@@ -406,6 +417,7 @@ prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_libvirt_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_valkey_exporter_dimensions: "{{ default_container_dimensions }}"
 
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
@@ -441,6 +453,10 @@ prometheus_libvirt_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-libvirt-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "/run/libvirt:/run/libvirt:ro"
+prometheus_valkey_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-valkey-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
 
 prometheus_extra_volumes: "{{ default_extra_volumes }}"
 prometheus_server_extra_volumes: "{{ prometheus_extra_volumes }}"
@@ -451,6 +467,7 @@ prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_blackbox_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_valkey_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 
 prometheus_openstack_exporter_disabled_volume: "{{ '--disable-service.volume' if not enable_cinder | bool else '' }}"
 prometheus_openstack_exporter_disabled_dns: "{{ '--disable-service.dns' if not enable_designate | bool else '' }}"
