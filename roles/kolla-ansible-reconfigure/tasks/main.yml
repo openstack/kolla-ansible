@@ -219,7 +219,13 @@
   ansible.builtin.assert:
     that:
       - _deploy_docker_container_times == _reconfigure_docker_container_times
-    fail_msg: Some containers were restarted or replaced during reconfigure!
+    fail_msg: |-
+      Some containers were restarted or replaced during reconfigure:
+      {% for name in _deploy_docker_container_times %}
+      {% if _deploy_docker_container_times[name] != _reconfigure_docker_container_times.get(name, {}) %}
+        - {{ name }}: {{ _deploy_docker_container_times[name].started_at }} -> {{ _reconfigure_docker_container_times.get(name, {}).get('started_at', 'MISSING') }}
+      {% endif %}
+      {% endfor %}
     success_msg: "All containers stayed the same after reconfigure."
   when:
     - container_engine == 'docker'
@@ -228,7 +234,13 @@
   ansible.builtin.assert:
     that:
       - _deploy_podman_container_times == _reconfigure_podman_container_times
-    fail_msg: Some containers were restarted or replaced during reconfigure!
+    fail_msg: |-
+      Some containers were restarted or replaced during reconfigure:
+      {% for name in _deploy_podman_container_times %}
+      {% if _deploy_podman_container_times[name] != _reconfigure_podman_container_times.get(name, {}) %}
+        - {{ name }}: {{ _deploy_podman_container_times[name].started_at }} -> {{ _reconfigure_podman_container_times.get(name, {}).get('started_at', 'MISSING') }}
+      {% endif %}
+      {% endfor %}
     success_msg: "All containers stayed the same after reconfigure."
   when:
     - container_engine == 'podman'
