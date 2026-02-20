@@ -286,6 +286,15 @@ convenient to run them from ``ovn_northd`` container:
 
    docker exec ovn_northd ovn-nbctl show
 
+Additional command-line arguments can be passed to the ``ovn-northd`` daemon
+using the ``ovn_northd_cmdline_extras`` variable. This can be useful for
+tuning performance parameters:
+
+.. path /etc/kolla/globals.yml
+.. code-block:: yaml
+
+   ovn_northd_cmdline_extras: "--n-threads=8 --use-parallel-build --inactivity-probe=10000"
+
 Mellanox Infiniband (ml2/mlnx)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
