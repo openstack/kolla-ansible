@@ -36,6 +36,15 @@
         cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_ansible_venv_path }}"
         creates: "{{ kolla_ansible_venv_path }}"
 
+    # TODO(bbezak): Drop this workaround once kolla-ansible supports bcrypt 5.
+    - name: Pin bcrypt to <5 in upper-constraints in CI
+      lineinfile:
+        path: "{{ upper_constraints_file }}"
+        regexp: '^bcrypt==='
+        line: 'bcrypt===4.3.0'
+        state: present
+      when: zuul.branch == 'master'
+
     - name: Ensure the latest tested pip
       pip:
         name: "pip==23.*"

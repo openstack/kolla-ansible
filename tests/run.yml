@@ -17,6 +17,7 @@
         ansible_collection_kolla_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/ansible-collection-kolla"
         kolla_ansible_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
         kolla_ansible_local_src_dir: "{{ zuul.executor.work_root }}/src/{{ zuul.project.canonical_hostname }}/openstack/kolla-ansible"
+        tempest_src_dir: "{{ ansible_env.PWD }}/src/{{ zuul.project.canonical_hostname }}/openstack/tempest"
         infra_dockerhub_mirror: "http://{{ zuul_site_mirror_fqdn }}:8082/"
         need_build_image: "{{ kolla_build_images | default(false) }}"
         build_image_tag: "change_{{ zuul.change | default('none') }}"
@@ -253,6 +254,15 @@
         state: directory
       become: true
 
+    # TODO(bbezak): Drop this workaround once kolla-ansible supports bcrypt 5.
+    - name: Pin bcrypt to <5 in upper-constraints in CI
+      lineinfile:
+        path: "{{ upper_constraints_file }}"
+        regexp: '^bcrypt==='
+        line: 'bcrypt===4.3.0'
+        state: present
+      when: zuul.branch == 'master'
+
     - name: Create Kolla Ansible venv
       command:
         cmd: "{{ 'python3.12' if ansible_facts.os_family == 'RedHat' else 'python3' }} -m venv {{ kolla_ansible_venv_path }}"
@@ -416,6 +426,10 @@
 
         - import_role:
             name: kolla-ansible-tempest
+          vars:
+            kolla_ansible_tempest_packages:
+              - python-tempestconf
+              - "{{ tempest_src_dir if (zuul.branch == 'master' and not is_upgrade) else 'tempest' }}"
           when: openstack_core_tested
 
         - name: Run test-zun.sh script
@@ -610,6 +624,15 @@
               git log --pretty=oneline  -1
             chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
 
+        # TODO(bbezak): Drop this workaround once kolla-ansible supports bcrypt 5.
+        - name: Pin bcrypt to <5 in upper-constraints in CI
+          lineinfile:
+            path: "{{ upper_constraints_file }}"
+            regexp: '^bcrypt==='
+            line: 'bcrypt===4.3.0'
+            state: present
+          when: zuul.branch == 'master'
+
         - name: Generate configuration files
           template:
             src: "{{ kolla_ansible_local_src_dir }}/{{ item.src }}"
@@ -706,6 +729,9 @@
             name: kolla-ansible-tempest
           vars:
             post_upgrade: true
+            kolla_ansible_tempest_packages:
+              - python-tempestconf
+              - "{{ tempest_src_dir if (zuul.branch == 'master' and not is_upgrade) else 'tempest' }}"
           when: openstack_core_tested
 
         - name: Run test-prometheus-opensearch.sh script (post-upgrade)
