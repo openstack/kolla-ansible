@@ -158,6 +158,7 @@ class DockerWorker(ContainerWorker):
             # in the mean time) - assume config is stale = return True.
             # Else, propagate the server error back.
             if e.is_client_error():
+                self._config_diff = 'container unavailable for config check'
                 return True
             else:
                 raise
@@ -169,11 +170,14 @@ class DockerWorker(ContainerWorker):
         if exec_inspect['ExitCode'] == 0:
             return False
         elif exec_inspect['ExitCode'] == 1:
+            self._config_diff = (output.decode('utf-8') if
+                                 isinstance(output, bytes) else output)
             return True
         elif exec_inspect['ExitCode'] == 137:
             # NOTE(yoctozepto): This is Docker's command exit due to container
             # exit. It means the container is unstable so we are better off
             # marking it as requiring a restart due to config update.
+            self._config_diff = 'container exited abruptly during config check'
             return True
         else:
             raise Exception('Failed to compare container configuration: '
