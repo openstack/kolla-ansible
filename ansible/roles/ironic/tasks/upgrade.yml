@@ -50,49 +50,36 @@
         {{ volumes_dir }}/ironic_dhcp_hosts/_data
       when: container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
 
-- name: Get Ironic API container facts
-  become: true
-  vars:
-    container_name: "{{ ironic_services['ironic-api'].container_name }}"
-  kolla_container_facts:
-    action: get_containers
-    container_engine: "{{ kolla_container_engine }}"
-    name:
-      - "{{ container_name }}"
-  check_mode: false
-  register: container_facts
-
 - name: Wait for Ironic nodes not to wait
   become: true
   vars:
-    container_name: "{{ ironic_services['ironic-api'].container_name }}"
-  command: >
-    {{ kolla_container_engine }} exec kolla_toolbox openstack
-    --os-interface {{ openstack_interface }}
-    --os-auth-url {{ openstack_auth.auth_url }}
-    --os-username {{ openstack_auth.username }}
-    --os-password {{ openstack_auth.password }}
-    --os-identity-api-version 3
-    --os-user-domain-name {{ openstack_auth.user_domain_name }}
-    --os-system-scope "all"
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }}{% endif %}
-    baremetal node list --format json --column "Provisioning State"
+    ironic_auth:
+      auth_url: "{{ openstack_auth.auth_url }}"
+      username: "{{ openstack_auth.username }}"
+      password: "{{ openstack_auth.password }}"
+      user_domain_name: "{{ openstack_auth.user_domain_name }}"
+      system_scope: "all"
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: "openstack.cloud.baremetal_node_info"
+    module_args:
+      region_name: "{{ openstack_region_name }}"
+      auth: "{{ ironic_auth }}"
+      interface: "{{ openstack_interface }}"
+      cacert: "{{ openstack_cacert }}"
   register: ironic_nodes
   changed_when: false
   retries: 10
   delay: 30
   until:
     - ironic_nodes is success
-    - (ironic_nodes.stdout |
-       from_json |
-       map(attribute='Provisioning State') |
+    - (ironic_nodes.nodes |
+       map(attribute='provision_state') |
        select('search', '\\bwait\\b') |
        length) == 0
   run_once: true
   when:
     - not ironic_upgrade_skip_wait_check | bool
-    - container_facts.containers[container_name] is defined
 
 - name: Import tasks from config.yml
   import_tasks: config.yml
