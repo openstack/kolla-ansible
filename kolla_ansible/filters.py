@@ -12,10 +12,28 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import base64
+import hashlib
+import string
+
+import bcrypt
 import jinja2
 
 from kolla_ansible import exception
 from kolla_ansible.helpers import _call_bool_filter
+
+
+# bcrypt uses a non-standard base64 encoding
+BASE64_ENCODING = (string.ascii_uppercase + string.ascii_lowercase +
+                   string.digits + '+/')
+BCRYPT_ENCODING = ('./' + string.ascii_uppercase + string.ascii_lowercase +
+                   string.digits)
+
+
+def _bcrypt_b64encode(s):
+    b64_s = base64.b64encode(s)
+    return b64_s.translate(bytes.maketrans(BASE64_ENCODING.encode('utf-8'),
+                                           BCRYPT_ENCODING.encode('utf-8')))
 
 
 @jinja2.pass_context
@@ -109,8 +127,31 @@ def select_services_enabled_and_mapped_to_host(context, services):
             if service_enabled_and_mapped_to_host(context, service)}
 
 
+@jinja2.pass_context
+def bcrypt_hash(context, password, salt=None):
+    """Provide bcrypt hash.
+
+    :param context: Jinja2 Context object.
+    :param password: Cleartext password to encode
+    :param salt: Salt, optional.
+    :returns: A byte string containing password hash
+    """
+    if salt:
+        # Generate a 16-byte salt from your string using SHA256
+        salt_bytes = hashlib.sha256(salt.encode('utf-8')).digest()[:16]
+
+        # bcrypt requires salt in a specific format, so encode it properly
+        # bcrypt expects special-encoded base64 characters + cost factor prefix
+        salt_encoded = b'$2b$12$' + _bcrypt_b64encode(salt_bytes)
+
+        return bcrypt.hashpw(password.encode(), salt_encoded)
+    else:
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+
 def get_filters():
     return {
+        "bcrypt_hash": bcrypt_hash,
         "extract_haproxy_services": extract_haproxy_services,
         "service_enabled": service_enabled,
         "service_mapped_to_host": service_mapped_to_host,
