@@ -30,6 +30,44 @@
         state: absent
       loop: "{{ ovn_db_services }}"
 
+- name: "Capture state of containers prior to reconfigure (docker)"
+  become: true
+  vars:
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  when:
+    - container_engine == 'docker'
+  block:
+    # NOTE(blanson): there is apparently no module to do that (!?)
+    - name: List docker containers
+      ansible.builtin.command:
+        cmd: "docker ps --format '{{'{{'}}.Names{{'}}'}}'"
+      register: _deploy_docker_ps_raw
+
+    - name: Get details of all containers on host
+      community.docker.docker_container_info:
+        name: "{{ item }}"
+      loop: "{{ _deploy_docker_ps_raw.stdout_lines }}"
+      register: _deploy_docker_info
+
+    - name: Build container timestamps dict post-deploy
+      ansible.builtin.set_fact:
+        _deploy_docker_container_times: >-
+          {{
+            _deploy_docker_container_times | default({}) |
+            combine({
+              item.item: {
+                'started_at': item.container.State.StartedAt,
+                'finished_at': item.container.State.FinishedAt
+              }
+            })
+          }}
+      loop: "{{ _deploy_docker_info.results }}"
+      when:
+        - item.exists
+        - item.item not in ovn_db_services
+
 - name: Remove OVN DB containers and volumes on primary to test recreation (podman)
   become: true
   when:
@@ -52,6 +90,45 @@
         state: absent
       loop: "{{ ovn_db_services }}"
 
+- name: "Capture state of containers prior to reconfigure (podman)"
+  become: true
+  vars:
+    # NOTE(blanson): There is a bug in podman 4.3.1 (debian-bookworm version)
+    # which prevents nova_compute from being idempotent.
+    # this isn't a big issues, but we can't just install a newer podman version.
+    # https://github.com/containers/podman/issues/17189
+    ignored_services: >-
+      {{ ovn_db_services
+        + (['nova_compute']
+          if ansible_facts.distribution | lower == 'debian'
+            and ansible_facts.distribution_major_version | int == 12
+          else []) }}
+
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  when:
+    - container_engine == 'podman'
+  block:
+    - name: "Get podman containers info post-deploy"
+      containers.podman.podman_container_info:
+      register: _deploy_podman_facts
+
+    - name: "Build podman container timestamps dict post-deploy"
+      ansible.builtin.set_fact:
+        _deploy_podman_container_times: >-
+          {{
+            _deploy_podman_container_times | default({}) |
+            combine({
+              item.Name: {
+                'started_at': item.State.StartedAt,
+                'finished_at': item.State.FinishedAt
+              }
+            })
+          }}
+      loop: "{{ _deploy_podman_facts.containers }}"
+      when: item.Name not in ignored_services
+
 - name: Run kolla-ansible reconfigure
   ansible.builtin.shell:
     cmd: >
@@ -61,3 +138,96 @@
       -vvv
       >/tmp/logs/ansible/reconfigure 2>&1
 
+- name: "Capture state of containers post reconfigure (docker)"
+  become: true
+  vars:
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  when:
+    - container_engine == 'docker'
+  block:
+    - name: List docker containers
+      ansible.builtin.command:
+        cmd: "docker ps --format '{{'{{'}}.Names{{'}}'}}'"
+      register: _reconfigure_docker_ps_raw
+
+    - name: Get details of all containers on host
+      community.docker.docker_container_info:
+        name: "{{ item }}"
+      loop: "{{ _reconfigure_docker_ps_raw.stdout_lines }}"
+      register: _reconfigure_docker_info
+
+    - name: Build container timestamps dict post-reconfigure
+      ansible.builtin.set_fact:
+        _reconfigure_docker_container_times: >-
+          {{
+            _reconfigure_docker_container_times | default({}) |
+            combine({
+              item.item: {
+                'started_at': item.container.State.StartedAt,
+                'finished_at': item.container.State.FinishedAt
+              }
+            })
+          }}
+      loop: "{{ _reconfigure_docker_info.results }}"
+      when:
+        - item.exists
+        - item.item not in ovn_db_services
+
+- name: "Capture state of containers post reconfigure (podman)"
+  become: true
+  vars:
+    # NOTE(blanson): There is a bug in podman 4.3.1 (debian-bookworm version)
+    # which prevents nova_compute from being idempotent.
+    # this isn't a big issues, but we can't just install a newer podman version.
+    # https://github.com/containers/podman/issues/17189
+    ignored_services: >-
+      {{ ovn_db_services
+        + (['nova_compute']
+          if ansible_facts.distribution | lower == 'debian'
+            and ansible_facts.distribution_major_version | int == 12
+          else []) }}
+
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+  when:
+    - container_engine == 'podman'
+  block:
+    - name: "Get podman containers info post-reconfigure"
+      containers.podman.podman_container_info:
+      register: _reconfigure_podman_facts
+
+    - name: "Build podman container timestamps dict post-reconfigure"
+      ansible.builtin.set_fact:
+        _reconfigure_podman_container_times: >-
+          {{
+            _reconfigure_podman_container_times | default({}) |
+            combine({
+              item.Name: {
+                'started_at': item.State.StartedAt,
+                'finished_at': item.State.FinishedAt
+              }
+            })
+          }}
+      loop: "{{ _reconfigure_podman_facts.containers }}"
+      when: item.Name not in ignored_services
+
+- name: Assert that containers were not restarted during reconfigure (docker)
+  ansible.builtin.assert:
+    that:
+      - _deploy_docker_container_times == _reconfigure_docker_container_times
+    fail_msg: Some containers were restarted or replaced during reconfigure!
+    success_msg: "All containers stayed the same after reconfigure."
+  when:
+    - container_engine == 'docker'
+
+- name: Assert that containers were not restarted during reconfigure (podman)
+  ansible.builtin.assert:
+    that:
+      - _deploy_podman_container_times == _reconfigure_podman_container_times
+    fail_msg: Some containers were restarted or replaced during reconfigure!
+    success_msg: "All containers stayed the same after reconfigure."
+  when:
+    - container_engine == 'podman'
