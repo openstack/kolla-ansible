@@ -76,6 +76,21 @@ grafana_data_sources:
         version: "2.11.1"
         timeField: "@timestamp"
         logLevelField: "log_level"
+  alertmanager:
+    enabled: "{{ enable_prometheus_alertmanager | bool }}"
+    data:
+      name: "Alertmanager"
+      type: "alertmanager"
+      access: "proxy"
+      url: "{{ prometheus_alertmanager_internal_endpoint }}"
+      jsonData:
+        implementation: "prometheus"
+        alertmanager: true
+        timeInterval: "30s"
+      basicAuth: true
+      basicAuthUser: "{{ prometheus_alertmanager_user }}"
+      secureJsonData:
+        basicAuthPassword: "{{ prometheus_alertmanager_password }}"
 
 ##########
 # Grafana
