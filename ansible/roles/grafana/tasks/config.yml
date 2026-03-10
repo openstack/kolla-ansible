@@ -46,6 +46,15 @@
   become: true
   with_dict: "{{ grafana_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: Copying over ldap.toml
+  template:
+    src: "{{ node_custom_config }}/grafana/ldap.toml"
+    dest: "{{ node_config_directory }}/grafana/ldap.toml"
+    mode: "0660"
+  become: true
+  when:
+    - grafana_ldap_enabled | bool
+
 - name: Copying over extra configuration file
   become: true
   template:

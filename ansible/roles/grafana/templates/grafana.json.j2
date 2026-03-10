@@ -42,7 +42,14 @@
             "owner": "grafana",
             "perm": "0755",
             "optional": true
-        }{% if kolla_copy_ca_into_containers | bool %},
+        }{% if grafana_ldap_enabled | bool %},
+        {
+            "source": "{{ container_config_directory }}/ldap.toml",
+            "dest": "/etc/grafana/ldap.toml",
+            "owner": "grafana",
+            "perm": "0600"
+        }{% endif %}
+        {% if kolla_copy_ca_into_containers | bool %},
         {
             "source": "{{ container_config_directory }}/ca-certificates",
             "dest": "/var/lib/kolla/share/ca-certificates",
