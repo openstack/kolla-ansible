@@ -85,10 +85,17 @@
 # TODO(mnasiadka): Fix merge_configs to support tabs
 - name: Generate ceph.conf without tabs
   vars:
+    _mon_host: >-
+      {%- set ns = namespace(mon_host=[]) -%}
+      {%- for host in groups['all'] -%}
+      {%- set current_mon_host = hostvars[host]['ansible_' + api_interface_name | replace('-', '_')].ipv4.address -%}
+      {%- set ns.mon_host = ns.mon_host + [current_mon_host] -%}
+      {%- endfor -%}
+      {{ ns.mon_host }}
     ceph_conf_fixed: |
       [global]
       fsid = {{ ceph_fsid }}
-      mon_host = {% for host in groups['all'] %} {{ hostvars[host]['ansible_' + api_interface_name | replace('-', '_')].ipv4.address }} {% if not loop.last %},{% endif %} {% endfor %}
+      mon_host = {{ _mon_host | join(", ") }}
   copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"
