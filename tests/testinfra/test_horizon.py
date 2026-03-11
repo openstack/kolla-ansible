@@ -84,13 +84,13 @@ def test_horizon_login(host):
 
     horizon_proto = host.environment().get('HORIZON_PROTO')
     horizon_url = horizon_proto + "://192.0.2.10"
-    logout_url = '/'.join((
-                 horizon_url,
-                 'auth',
-                 'logout'))
+    login_url = '/'.join((
+                horizon_url,
+                'auth',
+                'login'))
 
     try:
-        driver.get(logout_url)
+        driver.get(login_url)
         user_field = driver.find_element(By.ID, 'id_username')
         user_field.send_keys('admin')
         pass_field = driver.find_element(By.ID, 'id_password')
