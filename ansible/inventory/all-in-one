@@ -267,12 +267,26 @@ network
 cinder
 
 [cinder-backup:children]
+cinder
+
+[cinder-backup-lvm:children]
+storage
+
+[cinder-backup-multiple:children]
+cinder
 storage
 
 [cinder-scheduler:children]
 cinder
 
 [cinder-volume:children]
+cinder
+
+[cinder-volume-lvm:children]
+storage
+
+[cinder-volume-multiple:children]
+cinder
 storage
 
 # Cloudkitty
@@ -283,11 +297,12 @@ cloudkitty
 cloudkitty
 
 # iSCSI
+# NOTE(mnasiadka): We need iscsid on cinder-volume hosts and clients
 [iscsid:children]
 compute
 storage
-ironic
 
+# NOTE(mnasiadka): We need tgtd on storage nodes for Cinder LVM
 [tgtd:children]
 storage
 

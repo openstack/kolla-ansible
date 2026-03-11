@@ -54,7 +54,7 @@
   when:
     - enable_cinder | bool
     - enable_cinder_backend_lvm | bool
-    - inventory_hostname in groups['cinder-volume']
+    - inventory_hostname in groups['cinder-volume-multiple'] if cinder_enabled_backends | length > 1 else inventory_hostname in groups['cinder-volume-lvm']
 
 - name: Checking for coordination backend if Ceph backend is enabled
   run_once: true
@@ -64,7 +64,7 @@
     - not skip_cinder_backend_check | bool
     - cinder_backend_ceph | bool
     - cinder_coordination_backend == ''
-    - groups['cinder-volume'] | length > 1
+    - groups['cinder-volume-multiple'] | length > 1 if enable_cinder_backend_lvm | bool else groups['cinder-volume'] | length > 1
 
 - name: Check if S3 configurations are defined
   ansible.builtin.assert:

@@ -57,10 +57,18 @@ tgtd_default_volumes:
 iscsid_extra_volumes: "{{ default_extra_volumes }}"
 tgtd_extra_volumes: "{{ default_extra_volumes }}"
 
+iscsid_cinder_backup_group: >-
+  {{ 'cinder-backup-multiple' if (cinder_enabled_backends | length > 1 and enable_cinder_backend_lvm | bool) else
+     'cinder-backup-lvm' if enable_cinder_backend_lvm | bool else
+     'cinder-backup' }}
+iscsid_cinder_volume_group: >-
+  {{ 'cinder-volume-multiple' if (cinder_enabled_backends | length > 1 and enable_cinder_backend_lvm | bool) else
+     'cinder-volume-lvm' if enable_cinder_backend_lvm | bool else
+     'cinder-volume' }}
 enable_iscsid_for_cinder: >-
   {{ (inventory_hostname in groups['compute']
-      or inventory_hostname in groups['cinder-backup']
-      or inventory_hostname in groups['cinder-volume'])
+      or inventory_hostname in groups[iscsid_cinder_backup_group] if enable_cinder_backend_lvm | bool
+      or inventory_hostname in groups[iscsid_cinder_volume_group] if enable_cinder_backend_lvm | bool)
      and enable_cinder | bool
      and enable_cinder_backend_iscsi | bool }}
 enable_iscsid_for_ironic: >-
