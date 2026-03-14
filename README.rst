@@ -73,8 +73,6 @@ Infrastructure components
 Kolla Ansible deploys containers for the following infrastructure components:
 
 - `Collectd <https://collectd.org/>`__,
-  `Telegraf <https://docs.influxdata.com/telegraf/>`__,
-  `InfluxDB <https://www.influxdata.com/products/influxdb-overview/>`__,
   `Prometheus <https://prometheus.io/>`__, and
   `Grafana <https://grafana.com/>`__ for performance monitoring.
 - `OpenSearch <https://opensearch.org/docs/latest/>`__ and

@@ -9,7 +9,7 @@ Overview
 
 `Grafana <https://grafana.com>`_ is open and composable observability and
 data visualization platform. Visualize metrics, logs, and traces from
-multiple sources like Prometheus, Loki, Elasticsearch, InfluxDB,
+multiple sources like Prometheus, Loki, Elasticsearch,
 Postgres and many more..
 
 Preparation and deployment

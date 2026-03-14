@@ -10,6 +10,5 @@ logging and monitoring services available in kolla.
 
    central-logging-guide
    grafana-guide
-   influxdb-guide
    osprofiler-guide
    prometheus-guide
