@@ -362,3 +362,23 @@ ironic_copy_certs: "{{ kolla_copy_ca_into_containers | bool or ironic_enable_tls
 # WSGI
 ############
 ironic_wsgi_provider: "uwsgi"
+
+############
+# NTP
+############
+# If set, pass this NTP server via the kernel command line to IPA
+ironic_ntp_server: ""
+
+####################
+# Kernel Parameters
+####################
+ironic_kernel_append_params_default:
+  - "nofb"
+  - "nomodeset"
+  - "vga=normal"
+  - "console=tty0"
+  - "console=ttyS0,{{ ironic_console_serial_speed }}"
+  - "{% if ironic_ntp_server is not none and ironic_ntp_server | length > 0 %}ipa-ntp-server={{ ironic_ntp_server }}{% endif %}"
+
+ironic_kernel_append_params_extras: []
+ironic_kernel_append_params: "{{ (ironic_kernel_append_params_default + ironic_kernel_append_params_extras) | select() | join(' ') }}"

@@ -146,6 +146,22 @@ The port used for conductor's HTTP server is controlled via
 
     ironic_http_port: "8089"
 
+Configure Ironic Python Agent NTP server (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Ironic Python Agent requires that the system clock is set correctly for
+the heartbeat mechanism to work. One way of achieving this is to pass
+the address of an NTP server via the kernel commandline, which is then
+used to set the system clock when IPA first starts. This is not a hard
+requirement, and you may use other methods. For example DHCP, or functionality
+built into the BMC.
+
+If you wish to use this option you can set ``ironic_ntp_server`` in
+``/etc/kolla/globals.yml``. Eg.
+
+.. code-block:: yaml
+
+    ironic_ntp_server: "192.168.33.3"
+
 Revert to plain PXE (not recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Starting with Yoga, Ironic has changed the default PXE from plain PXE to iPXE.
