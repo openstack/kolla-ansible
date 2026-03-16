@@ -8,18 +8,54 @@ ALLOWED_HOSTS = ['*']
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DATABASES = {
     'default': {
-    'ENGINE': 'django.db.backends.mysql',
-    'NAME': '{{ horizon_database_name }}',
-    'USER': '{{ horizon_database_user }}',
-    'PASSWORD': '{{ horizon_database_password }}',
-    'HOST': '{{ database_address }}',
-    'PORT': '{{ database_port }}'
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '{{ horizon_database_name }}',
+        'USER': '{{ horizon_database_user }}',
+        'PASSWORD': '{{ horizon_database_password }}',
+        'HOST': '{{ database_address }}',
+        'PORT': '{{ database_port }}'
     }
 }
-{% elif groups['memcached'] | length > 0 and not horizon_backend_database | bool %}
+{% elif horizon_session_cache_backend == 'valkey' %}
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-CACHES['default']['LOCATION'] = [{% for host in groups['memcached'] %}'{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}{% endfor %}]
-CACHES['default']['OPTIONS'] = {'ignore_exc': True}
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://{{ valkey_sentinel_monitor_name }}/0',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.SentinelClient',
+            'CONNECTION_FACTORY': 'django_redis.pool.SentinelConnectionFactory',
+            'SENTINELS': [
+{%     for host in groups['valkey'] %}
+                ('{{ 'api' | kolla_address(host) | put_address_in_context('url') }}', {{ valkey_sentinel_port }}),
+{%     endfor %}
+            ],
+            'SENTINEL_KWARGS': {
+                'password': '{{ valkey_master_password }}',
+            },
+            'PASSWORD': '{{ valkey_master_password }}',
+            'CONNECTION_POOL_KWARGS': {
+                'retry_on_timeout': True,
+            },
+            'IGNORE_EXCEPTIONS': False,
+        }
+    }
+}
+{% elif horizon_session_cache_backend == 'memcached' %}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': [
+{%     for host in groups['memcached'] %}
+            '{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ memcached_port }}'{% if not loop.last %},{% endif %}
+{%     endfor %}
+        ],
+        'OPTIONS': {
+            'ignore_exc': True,
+        }
+    }
+}
 {% endif %}
 
 {% if kolla_enable_tls_external | bool or kolla_enable_tls_internal | bool %}
@@ -35,9 +71,9 @@ OPENSTACK_API_VERSIONS = {
 OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = {{ horizon_keystone_multidomain | bool }}
 OPENSTACK_KEYSTONE_DOMAIN_DROPDOWN = {{ 'True' if horizon_keystone_domain_choices | length > 1 else 'False' }}
 OPENSTACK_KEYSTONE_DOMAIN_CHOICES = (
-{% for key, value in horizon_keystone_domain_choices.items() %}
+    {% for key, value in horizon_keystone_domain_choices.items() %}
     ('{{ key }}', '{{ value }}'),
-{% endfor %}
+    {% endfor %}
 )
 
 LOCAL_PATH = '/tmp'
