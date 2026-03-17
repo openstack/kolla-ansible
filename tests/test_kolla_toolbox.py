@@ -14,9 +14,11 @@
 
 import builtins
 import contextlib
+import io
 import json
 import os
 import sys
+import tarfile
 
 from ansible.module_utils import basic
 from ansible.module_utils.basic import AnsibleModule
@@ -103,6 +105,28 @@ class TestKollaToolboxModule(base.BaseTestCase):
         raise AnsibleFailJson(kwargs)
 
 
+def _tar_contents(tar_bytes):
+    """Return {member_name: bytes} for all files in a tar stream."""
+    result = {}
+    with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode='r') as tf:
+        for member in tf.getmembers():
+            if member.isfile():
+                result[member.name] = tf.extractfile(member).read()
+    return result
+
+
+def _make_exec_result(exit_code, output, as_tuple=False):
+    """Return an exec result compatible with _exec_run normalisation.
+
+    Use as_tuple=True to simulate the Podman SDK plain-tuple return.
+    """
+    raw = (output if isinstance(output, bytes)
+           else output.encode('utf-8'))
+    if as_tuple:
+        return (exit_code, raw)
+    return kolla_toolbox._ExecResult(exit_code, raw)
+
+
 class TestKollaToolboxMethods(TestKollaToolboxModule):
     """Class focused on testing the methods of KollaToolboxWorker."""
 
@@ -118,6 +142,7 @@ class TestKollaToolboxMethods(TestKollaToolboxModule):
         self.mock_ansible_module = mock.MagicMock()
         self.mock_ansible_module.fail_json.side_effect = self.fail_json
         self.mock_ansible_module.exit_json.side_effect = self.exit_json
+        self.mock_ansible_module.check_mode = False
 
         # Fake Kolla Toolbox Worker
         self.fake_ktbw = kolla_toolbox.KollaToolboxWorker(
@@ -143,217 +168,486 @@ class TestKollaToolboxMethods(TestKollaToolboxModule):
 
         self.assertEqual(ktb_container, ktb_container_returned)
 
-    def test_format_module_args(self):
-        module_args = [
-            {
-                'module_args': {},
-                'expected_output': []
-            },
-            {
-                'module_args': {
-                    'path': '/some/folder',
-                    'state': 'absent'},
-                'expected_output': ["path='/some/folder'", "state='absent'"]
-            }
-        ]
+    def test_exec_run_normalises_docker_namedtuple(self):
+        """Docker SDK returns namedtuple — _exec_run must pass it through."""
+        container = mock.MagicMock()
+        container.exec_run.return_value = kolla_toolbox._ExecResult(0, b'ok')
 
-        for args in module_args:
-            formatted_args = self.fake_ktbw._format_module_args(
-                args['module_args'])
+        result = kolla_toolbox._exec_run(container, ['echo'])
 
-            self.assertEqual(args['expected_output'], formatted_args)
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual(b'ok', result.output)
 
-    @mock.patch('kolla_toolbox.KollaToolboxWorker._format_module_args')
-    def test_generate_correct_ktb_command(self, mock_formatter):
-        fake_module_params = {
-            'module_args': {
-                'path': '/some/folder',
-                'state': 'absent'
-            },
-            'module_extra_vars': {
-                'variable': {
-                    'key': 'pair',
-                    'list': ['item1', 'item2']
-                }
-            },
-            'user': 'root',
-            'module_name': 'file'
+    def test_exec_run_normalises_podman_tuple(self):
+        """Podman SDK returns plain tuple — _exec_run must normalise it."""
+        container = mock.MagicMock()
+        container.exec_run.return_value = (0, b'ok')
+
+        result = kolla_toolbox._exec_run(container, ['echo'])
+
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual(b'ok', result.output)
+
+
+class TestBuildPlaybook(base.BaseTestCase):
+    """Tests for the _build_playbook helper."""
+
+    def test_module_args_embedded_as_dict_not_string(self):
+        """args must be a dict in the playbook, not in proc argv"""
+        module_args = {'password': 'S3cr3t', 'user': 'admin'}  # nosec B105
+        result = json.loads(
+            kolla_toolbox._build_playbook(
+                'community.mysql.mysql_user', module_args, {}, False))
+
+        task = result[0]['tasks'][0]
+        task_args = task['community.mysql.mysql_user']
+        # Must be a dict, not a string
+        self.assertIsInstance(task_args, dict)
+        self.assertEqual(module_args, task_args)
+        # The password must not appear as a bare string anywhere in the
+        # serialised playbook outside of the JSON-encoded dict value
+        playbook_str = json.dumps(result)
+        # It appears once, inside the dict — not as a CLI token
+        self.assertNotIn("password='S3cr3t'", playbook_str)
+
+    def test_extra_vars_under_play_vars(self):
+        extra_vars = {'db_host': 'localhost', 'db_port': 3306}
+        result = json.loads(
+            kolla_toolbox._build_playbook('ping', {}, extra_vars, False))
+
+        self.assertEqual(extra_vars, result[0]['vars'])
+
+    def test_empty_extra_vars_not_in_play(self):
+        result = json.loads(
+            kolla_toolbox._build_playbook('ping', {}, {}, False))
+
+        self.assertNotIn('vars', result[0])
+
+    def test_check_mode_sets_play_check_mode(self):
+        result = json.loads(
+            kolla_toolbox._build_playbook('ping', {}, {}, True))
+
+        self.assertTrue(result[0]['check_mode'])
+
+    def test_check_mode_false_not_in_play(self):
+        result = json.loads(
+            kolla_toolbox._build_playbook('ping', {}, {}, False))
+
+        self.assertNotIn('check_mode', result[0])
+
+    def test_module_name_is_task_key(self):
+        result = json.loads(
+            kolla_toolbox._build_playbook(
+                'community.mysql.mysql_db', {}, {}, False))
+
+        task = result[0]['tasks'][0]
+        self.assertIn('community.mysql.mysql_db', task)
+
+
+class TestMakeTar(base.BaseTestCase):
+    """Tests for the _make_tar helper."""
+
+    def test_files_present_with_correct_content(self):
+        files = {
+            'inventory/hosts': 'localhost\n',
+            'project/main.json': '{"play": 1}',
         }
+        tar_bytes = kolla_toolbox._make_tar(files).read()
+        contents = _tar_contents(tar_bytes)
 
-        mock_params = mock.MagicMock()
-        mock_params.get.side_effect = lambda key: fake_module_params.get(key)
-        self.mock_ansible_module.params = mock_params
+        self.assertEqual(b'localhost\n', contents['inventory/hosts'])
+        self.assertEqual(b'{"play": 1}', contents['project/main.json'])
 
-        mock_formatter.side_effect = [
-            ["path='/some/folder'", "state='absent'"],
-            ['variable=\'{"key": "pair", "list": ["item1", "item2"]}\'']
-        ]
+    def test_parent_directories_created(self):
+        files = {'a/b/c/file.txt': 'data'}
+        tar_bytes = kolla_toolbox._make_tar(files).read()
 
-        expected_command = ['ansible', 'localhost', '-m', 'file',
-                            '-a', "path='/some/folder' state='absent'",
-                            '-e', 'variable=\'{"key": "pair", '
-                            '"list": ["item1", "item2"]}\'',
-                            '--check']
+        with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode='r') as tf:
+            names = tf.getnames()
 
-        generated_command = self.fake_ktbw._generate_command()
+        self.assertIn('a', names)
+        self.assertIn('a/b', names)
+        self.assertIn('a/b/c', names)
+        self.assertIn('a/b/c/file.txt', names)
 
-        self.assertEqual(expected_command, generated_command)
-        mock_formatter.assert_has_calls([
-            mock.call(fake_module_params['module_args']),
-            mock.call(fake_module_params['module_extra_vars'])
-        ])
+    def test_bytes_content_not_double_encoded(self):
+        files = {'file.bin': b'\x00\x01\x02'}
+        tar_bytes = kolla_toolbox._make_tar(files).read()
+        contents = _tar_contents(tar_bytes)
 
-    def test_run_command_raises_apierror(self):
-        ktb_container = mock.MagicMock()
-        api_error = self.mock_container_errors.APIError(
-            'API error occurred', explanation='Error explanation')
-        ktb_container.exec_run.side_effect = api_error
+        self.assertEqual(b'\x00\x01\x02', contents['file.bin'])
 
-        error = self.assertRaises(AnsibleFailJson,
-                                  self.fake_ktbw._run_command,
-                                  ktb_container,
-                                  'some_command')
-        self.assertIn('Container engine client encountered API error',
+    def test_returned_bytesio_at_position_zero(self):
+        buf = kolla_toolbox._make_tar({'f': 'x'})
+        self.assertEqual(0, buf.tell())
+
+
+class TestPushPrivateDataDir(TestKollaToolboxModule):
+    """Tests for KollaToolboxWorker._push_private_data_dir."""
+
+    def setUp(self):
+        super().setUp()
+        self.mock_ansible_module = mock.MagicMock()
+        self.mock_ansible_module.fail_json.side_effect = self.fail_json
+        self.mock_ansible_module.check_mode = False
+        self.mock_ansible_module.params = {
+            'module_name': 'community.mysql.mysql_user',
+            'module_args': {'user': 'admin',
+                            'password': 'S3cr3t'},  # nosec B105
+            'module_extra_vars': {},
+        }
+        self.mock_container_errors = mock.MagicMock()
+        self.fake_ktbw = kolla_toolbox.KollaToolboxWorker(
+            self.mock_ansible_module,
+            mock.MagicMock(),
+            self.mock_container_errors)
+
+        self.mock_container = mock.MagicMock()
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, b'')  # makedirs
+        self.pdd = '/var/lib/ansible/kolla_runner.test1'
+
+    def _get_put_archive_tar(self):
+        """Return the tar bytes passed to put_archive."""
+        call_args = self.mock_container.put_archive.call_args
+        tar_arg = call_args.args[1]  # second positional arg
+        return tar_arg.read()
+
+    def test_secrets_not_in_exec_argv(self):
+        """module_args values must not appear in any exec_run argv."""
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, None)
+
+        for call in self.mock_container.exec_run.call_args_list:
+            argv = call[0][0]  # first positional arg is the command list
+            argv_str = ' '.join(str(a) for a in argv)
+            self.assertNotIn('S3cr3t', argv_str)
+            self.assertNotIn('admin', argv_str)
+
+    def test_module_args_in_tar_as_dict(self):
+        """module_args must be a dict in the pushed playbook, not a string."""
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, None)
+
+        tar_bytes = self._get_put_archive_tar()
+        contents = _tar_contents(tar_bytes)
+        playbook = json.loads(contents['project/main.json'])
+        task_args = playbook[0]['tasks'][0]['community.mysql.mysql_user']
+
+        self.assertIsInstance(task_args, dict)
+        self.assertEqual('S3cr3t', task_args['password'])
+
+    def test_inventory_contains_required_vars(self):
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, None)
+
+        tar_bytes = self._get_put_archive_tar()
+        contents = _tar_contents(tar_bytes)
+        inventory = contents['inventory/hosts'].decode()
+
+        self.assertIn('ansible_connection=local', inventory)
+        self.assertIn('ansible_remote_tmp=', inventory)
+        self.assertIn('ansible_local_tmp=', inventory)
+        self.assertIn('ansible_python_interpreter=', inventory)
+        self.assertIn(kolla_toolbox._PYTHON, inventory)
+
+    def test_setup_exec_chown_to_ansible_when_user_is_none(self):
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, None)
+
+        setup_call = self.mock_container.exec_run.call_args_list[0]
+        script = setup_call[0][0][2]  # python3 -c <script>
+        self.assertIn('chown', script)
+        self.assertIn('ansible', script)
+
+    def test_setup_exec_no_chown_when_user_is_root(self):
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, 'root')
+
+        setup_call = self.mock_container.exec_run.call_args_list[0]
+        script = setup_call[0][0][2]
+        self.assertNotIn('chown', script)
+
+    def test_setup_exec_chown_for_non_root_user(self):
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, 'rabbitmq')
+
+        setup_call = self.mock_container.exec_run.call_args_list[0]
+        script = setup_call[0][0][2]
+        self.assertIn('chown', script)
+        self.assertIn('rabbitmq', script)
+
+    def test_fail_json_when_setup_exec_fails(self):
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            1, b'Permission denied')  # makedirs
+
+        error = self.assertRaises(
+            AnsibleFailJson,
+            self.fake_ktbw._push_private_data_dir,
+            self.mock_container, self.pdd, None)
+
+        self.assertIn('Failed to create pdd', error.result['msg'])
+        # put_archive must not be called after setup failure
+        self.mock_container.put_archive.assert_not_called()
+
+    def test_put_archive_called_with_pdd(self):
+        self.fake_ktbw._push_private_data_dir(
+            self.mock_container, self.pdd, None)
+
+        self.mock_container.put_archive.assert_called_once()
+        call_path = self.mock_container.put_archive.call_args.args[0]
+        self.assertEqual(self.pdd, call_path)
+
+
+class TestParseRunnerResult(TestKollaToolboxModule):
+    """Tests for KollaToolboxWorker._parse_runner_result."""
+
+    def setUp(self):
+        super().setUp()
+        self.mock_ansible_module = mock.MagicMock()
+        self.mock_ansible_module.fail_json.side_effect = self.fail_json
+        self.fake_ktbw = kolla_toolbox.KollaToolboxWorker(
+            self.mock_ansible_module,
+            mock.MagicMock(),
+            mock.MagicMock())
+        self.mock_container = mock.MagicMock()
+        self.pdd = '/var/lib/ansible/kolla_runner.test1'
+
+    def _result_output(self, event_type, res):
+        res['_runner_status'] = event_type
+        return json.dumps(res).encode('utf-8')
+
+    def test_returns_result_on_runner_on_ok(self):
+        expected = {'changed': False, 'ping': 'pong'}
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            # _PARSE_SCRIPT
+            0, self._result_output('runner_on_ok', expected.copy()))
+
+        result = self.fake_ktbw._parse_runner_result(
+            self.mock_container, self.pdd, None)
+
+        self.assertEqual(expected, result)
+
+    def test_fail_json_on_runner_on_failed(self):
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, self._result_output(
+                'runner_on_failed', {'msg': 'Access denied'}))  # _PARSE_SCRIPT
+
+        error = self.assertRaises(
+            AnsibleFailJson,
+            self.fake_ktbw._parse_runner_result,
+            self.mock_container, self.pdd, None)
+
+        self.assertIn('Access denied', error.result['msg'])
+
+    def test_fail_json_on_runner_on_unreachable(self):
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, self._result_output(
+                'runner_on_unreachable',
+                {'msg': 'Host unreachable'}))  # _PARSE_SCRIPT
+
+        error = self.assertRaises(
+            AnsibleFailJson,
+            self.fake_ktbw._parse_runner_result,
+            self.mock_container, self.pdd, None)
+
+        self.assertIn('Host unreachable', error.result['msg'])
+
+    def test_ansible_no_log_stripped(self):
+        res = {'changed': True, '_ansible_no_log': True, 'key': 'val'}
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, self._result_output('runner_on_ok', res))  # _PARSE_SCRIPT
+
+        result = self.fake_ktbw._parse_runner_result(
+            self.mock_container, self.pdd, None)
+
+        self.assertNotIn('_ansible_no_log', result)
+        self.assertEqual('val', result['key'])
+
+    def test_fail_json_on_nonzero_exit_code(self):
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            1, b'something went wrong')  # _PARSE_SCRIPT
+
+        error = self.assertRaises(
+            AnsibleFailJson,
+            self.fake_ktbw._parse_runner_result,
+            self.mock_container, self.pdd, None)
+
+        self.assertIn('Failed to read ansible-runner result',
                       error.result['msg'])
 
-    def test_run_command_success(self):
-        exec_return_value = (0, b'data')
-        ktb_container = mock.MagicMock()
-        ktb_container.exec_run.return_value = exec_return_value
+    def test_fail_json_on_invalid_json_output(self):
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, b'not valid json')  # _PARSE_SCRIPT
+
+        error = self.assertRaises(
+            AnsibleFailJson,
+            self.fake_ktbw._parse_runner_result,
+            self.mock_container, self.pdd, None)
+
+        self.assertIn('Could not parse ansible-runner result output',
+                      error.result['msg'])
+
+    def test_user_passed_to_exec_run_when_specified(self):
+        res = {'changed': False}
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, self._result_output('runner_on_ok', res))  # _PARSE_SCRIPT
+
+        self.fake_ktbw._parse_runner_result(
+            self.mock_container, self.pdd, 'rabbitmq')
+
+        call_kwargs = self.mock_container.exec_run.call_args.kwargs
+        self.assertEqual('rabbitmq', call_kwargs.get('user'))
+
+    def test_user_not_passed_to_exec_run_when_none(self):
+        res = {'changed': False}
+        self.mock_container.exec_run.return_value = _make_exec_result(
+            0, self._result_output('runner_on_ok', res))  # _PARSE_SCRIPT
+
+        self.fake_ktbw._parse_runner_result(
+            self.mock_container, self.pdd, None)
+
+        call_kwargs = self.mock_container.exec_run.call_args.kwargs
+        self.assertNotIn('user', call_kwargs)
+
+
+class TestKollaToolboxWorkerMain(TestKollaToolboxModule):
+    """Tests for KollaToolboxWorker.main."""
+
+    def setUp(self):
+        super().setUp()
+        self.mock_ansible_module = mock.MagicMock()
+        self.mock_ansible_module.fail_json.side_effect = self.fail_json
+        self.mock_ansible_module.check_mode = False
+        self.mock_ansible_module.params = {
+            'module_name': 'ping',
+            'module_args': {},
+            'module_extra_vars': {},
+            'user': None,
+        }
+        self.mock_container_client = mock.MagicMock()
+        self.mock_container_errors = mock.MagicMock()
+        self.fake_ktbw = kolla_toolbox.KollaToolboxWorker(
+            self.mock_ansible_module,
+            self.mock_container_client,
+            self.mock_container_errors)
+
+        self.mock_container = mock.MagicMock()
         self.mock_container_client.containers.list.return_value = [
-            ktb_container]
+            self.mock_container]
+        # Default: setup exec succeeds, runner exits 0, parse returns ok
+        ok_result = json.dumps(
+            {'changed': False, '_runner_status': 'runner_on_ok'}
+        ).encode()
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(0, b''),   # test -x ansible-runner
+            _make_exec_result(0, b''),   # makedirs
+            _make_exec_result(0, b''),   # ansible-runner
+            _make_exec_result(0, ok_result),  # _PARSE_SCRIPT
+            _make_exec_result(0, b''),   # cleanup
+        ]
 
-        command_output = self.fake_ktbw._run_command(
-            ktb_container, 'some_command')
+    def test_pdd_under_pdd_basedir(self):
+        """pdd must be under _PDD_BASEDIR, not /tmp."""
+        pdd_used = []
 
-        self.assertEqual(exec_return_value[1], command_output)
-        self.assertIsInstance(command_output, bytes)
-        ktb_container.exec_run.assert_called_once_with('some_command')
+        def capture_push(container, pdd, user):
+            pdd_used.append(pdd)
+            # Simulate success without real put_archive
+            container.put_archive = mock.MagicMock()
 
-    def test_process_container_output_invalid_json(self):
-        invalid_json = b'this is no json'
+        with mock.patch.object(self.fake_ktbw,
+                               '_push_private_data_dir',
+                               side_effect=capture_push), \
+             mock.patch.object(self.fake_ktbw,
+                               '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
 
-        error = self.assertRaises(AnsibleFailJson,
-                                  self.fake_ktbw._process_container_output,
-                                  invalid_json)
-        self.assertIn('Parsing kolla_toolbox JSON output failed',
+        self.assertTrue(
+            pdd_used[0].startswith('/var/lib/ansible'))
+
+    def test_cleanup_called_on_success(self):
+        ok_result = json.dumps(
+            {'changed': False, '_runner_status': 'runner_on_ok'}
+        ).encode()
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(0, b''),  # test -x ansible-runner
+            _make_exec_result(0, b''),  # makedirs
+            _make_exec_result(0, b''),  # ansible-runner
+            _make_exec_result(0, ok_result),  # _PARSE_SCRIPT
+            _make_exec_result(0, b''),  # cleanup
+        ]
+
+        with mock.patch.object(self.fake_ktbw,
+                               '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
+
+        # Last exec_run call must be the shutil.rmtree cleanup
+        last_call = self.mock_container.exec_run.call_args_list[-1]
+        last_cmd = last_call[0][0]
+        self.assertIn('shutil', last_cmd[-1])
+        self.assertIn('rmtree', last_cmd[-1])
+
+    def test_cleanup_called_on_failure(self):
+        """finally block must run cleanup even when ansible-runner fails."""
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(0, b''),  # test -x ansible-runner
+            _make_exec_result(0, b''),   # makedirs
+            _make_exec_result(1, b'runner crashed'),  # ansible-runner
+            _make_exec_result(0, b''),   # cleanup
+        ]
+
+        self.assertRaises(AnsibleFailJson, self.fake_ktbw.main)
+
+        last_call = self.mock_container.exec_run.call_args_list[-1]
+        last_cmd = last_call[0][0]
+        self.assertIn('rmtree', last_cmd[-1])
+
+    def test_fail_json_on_runner_exit_code_other_than_0_or_2(self):
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(0, b''),  # test -x ansible-runner
+            _make_exec_result(0, b''),  # makedirs
+            _make_exec_result(4, b'runner internal error'),  # ansible-runner
+            _make_exec_result(0, b''),  # cleanup
+        ]
+
+        error = self.assertRaises(AnsibleFailJson, self.fake_ktbw.main)
+        self.assertIn('ansible-runner exited with code 4',
                       error.result['msg'])
 
-    def test_process_container_output_invalid_structure(self):
-        wrong_output_json = {
-            'plays': [
-                {
-                    'tasks': [
-                        {
-                            'wrong': {
-                                'control_node': {
-                                    'pong': 'ping'
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-        encoded_json = json.dumps(wrong_output_json).encode('utf-8')
+    def test_runner_exit_code_2_is_not_fatal(self):
+        """Exit code 2 means task failed — we handle it via the event."""
+        failed_result = json.dumps(
+            {'changed': False, 'msg': 'task failed',
+             '_runner_status': 'runner_on_failed'}
+        ).encode()
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(0, b''),  # test -x ansible-runner
+            _make_exec_result(0, b''),  # makedirs
+            _make_exec_result(2, b''),  # ansible-runner
+            _make_exec_result(0, failed_result),  # _PARSE_SCRIPT
+            _make_exec_result(0, b''),  # cleanup
+        ]
+
+        with mock.patch.object(
+                self.fake_ktbw,
+                '_parse_runner_result',
+                side_effect=AnsibleFailJson({'msg': 'task failed'})):
+            error = self.assertRaises(AnsibleFailJson, self.fake_ktbw.main)
+        self.assertIn('task failed', error.result['msg'])
+
+    def test_fail_json_when_ansible_runner_not_found(self):
+        """test -x failing means ansible-runner is missing."""
+        self.mock_container.exec_run.side_effect = [
+            _make_exec_result(1, b''),  # test -x ansible-runner fails
+            _make_exec_result(0, b''),  # cleanup
+        ]
 
         error = self.assertRaises(AnsibleFailJson,
-                                  self.fake_ktbw._process_container_output,
-                                  encoded_json)
-        self.assertIn('Ansible JSON output has unexpected format',
-                      error.result['msg'])
-
-    def test_process_container_output_deprecation(self):
-        container_output_deprecation = "[DEPRECATION WARNING] Some deprecation"
-        container_output_json = {
-            'custom_stats': {},
-            'global_custom_stats': {},
-            'plays': [
-                {
-                    'tasks': [
-                        {
-                            'hosts': {
-                                'localhost': {
-                                    '_ansible_no_log': False,
-                                    'action': 'ping',
-                                    'changed': False,
-                                    'invocation': {
-                                        'module_args': {
-                                            'data': 'pong'
-                                        }
-                                    },
-                                    'ping': 'pong'
-                                }
-                            },
-                        }
-                    ]
-                }
-            ],
-        }
-        container_encoded_json = json.dumps(container_output_json)
-        container_output = (str(container_output_deprecation) +
-                            str(container_encoded_json)).encode('utf-8')
-
-        expected_output = {
-            'action': 'ping',
-            'changed': False,
-            'invocation': {
-                'module_args': {
-                    'data': 'pong'
-                }
-            },
-            'ping': 'pong'
-        }
-        generated_module_output = self.fake_ktbw._process_container_output(
-            container_output)
-
-        self.assertNotIn('_ansible_no_log', generated_module_output)
-        self.assertEqual(expected_output, generated_module_output)
-
-    def test_process_container_output_success(self):
-        container_output_json = {
-            'custom_stats': {},
-            'global_custom_stats': {},
-            'plays': [
-                {
-                    'tasks': [
-                        {
-                            'hosts': {
-                                'localhost': {
-                                    '_ansible_no_log': False,
-                                    'action': 'ping',
-                                    'changed': False,
-                                    'invocation': {
-                                        'module_args': {
-                                            'data': 'pong'
-                                        }
-                                    },
-                                    'ping': 'pong'
-                                }
-                            },
-                        }
-                    ]
-                }
-            ],
-        }
-        container_encoded_json = json.dumps(
-            container_output_json).encode('utf-8')
-
-        expected_output = {
-            'action': 'ping',
-            'changed': False,
-            'invocation': {
-                'module_args': {
-                    'data': 'pong'
-                }
-            },
-            'ping': 'pong'
-        }
-        generated_module_output = self.fake_ktbw._process_container_output(
-            container_encoded_json)
-
-        self.assertNotIn('_ansible_no_log', generated_module_output)
-        self.assertEqual(expected_output, generated_module_output)
+                                  self.fake_ktbw.main)
+        self.assertIn('ansible-runner', error.result['msg'])
 
 
 class TestModuleInteraction(TestKollaToolboxModule):
