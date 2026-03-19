@@ -2,7 +2,7 @@
 - name: Ensuring glance service ceph config subdir exists
   vars:
     service: "{{ glance_services['glance-api'] }}"
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/glance-api/ceph"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -25,7 +25,7 @@
 - name: Copy over ceph Glance keyrings
   vars:
     keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/glance/{{ keyring }}"
     dest: "{{ node_config_directory }}/glance-api/ceph/{{ keyring }}"
     mode: "0660"
@@ -34,7 +34,7 @@
   when: inventory_hostname in groups['glance-api']
 
 - name: Ensuring config directory has correct owner and permission
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/glance-api"
     recurse: true
     owner: "{{ config_owner_user }}"

@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,12 +10,12 @@
   with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Include tasks from external_ceph.yml
-  include_tasks: external_ceph.yml
+  ansible.builtin.include_tasks: external_ceph.yml
   when:
     - glance_backend_ceph | bool
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -27,19 +27,19 @@
       skip: true
 
 - name: Set glance policy file
-  set_fact:
+  ansible.builtin.set_fact:
     glance_policy_file: "{{ glance_policy.results.0.stat.path | basename }}"
     glance_policy_file_path: "{{ glance_policy.results.0.stat.path }}"
   when:
     - glance_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - glance_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -47,7 +47,7 @@
   with_dict: "{{ glance_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: "Configure uWSGI for Glance"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ glance_services }}"
@@ -98,7 +98,7 @@
 - name: Copying over glance-image-import.conf
   vars:
     service: "{{ glance_services['glance-api'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ node_custom_config }}/glance/glance-image-import.conf"
     dest: "{{ node_config_directory }}/glance-api/glance-image-import.conf"
     mode: "0660"
@@ -110,7 +110,7 @@
 - name: Copying over property-protections-rules.conf
   vars:
     service: "{{ glance_services['glance-api'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ node_custom_config }}/glance/property-protections-rules.conf"
     dest: "{{ node_config_directory }}/glance-api/property-protections-rules.conf"
     mode: "0660"
@@ -122,7 +122,7 @@
 - name: Copying over existing policy file
   vars:
     service: "{{ glance_services['glance-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ glance_policy_file_path }}"
     dest: "{{ node_config_directory }}/glance-api/{{ glance_policy_file }}"
     mode: "0660"

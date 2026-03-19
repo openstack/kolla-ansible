@@ -1,6 +1,6 @@
 ---
 - name: Precheck glance configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ glance_services }}"
@@ -18,7 +18,7 @@
 - name: Checking free port for Glance API
   vars:
     service: "{{ glance_services['glance-api'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ glance_api_listen_port }}"
     connect_timeout: 1
@@ -29,7 +29,7 @@
     - container_facts.containers['glance_api'] is not defined
 
 - name: Check if S3 configurations are defined
-  assert:
+  ansible.builtin.assert:
     that:
       - vars[item] is defined
     msg: "Glance S3 backend is enabled, either the {{ item }} or {{ item | replace('glance_backend_', '') }} variable must be defined."
