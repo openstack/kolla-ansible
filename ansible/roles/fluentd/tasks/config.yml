@@ -3,7 +3,7 @@
   vars:
     service_name: "fluentd"
     service: "{{ fluentd_services[service_name] }}"
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ service_name }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -13,13 +13,13 @@
   when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - kolla_copy_ca_into_containers | bool
 
 - name: Ensure /var/log/journal exists on EL systems
   become: true
-  file:
+  ansible.builtin.file:
     path: /var/log/journal
     state: directory
     owner: root
@@ -28,7 +28,7 @@
   when: kolla_base_distro in ['centos', 'rocky']
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -36,7 +36,7 @@
   with_dict: "{{ fluentd_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Find custom fluentd input config files
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/fluentd/input"
     pattern: "*.conf"
   run_once: true
@@ -44,7 +44,7 @@
   delegate_to: localhost
 
 - name: Find custom fluentd filter config files
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/fluentd/filter"
     pattern: "*.conf"
   run_once: true
@@ -52,7 +52,7 @@
   delegate_to: localhost
 
 - name: Find custom fluentd format config files
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/fluentd/format"
     pattern: "*.conf"
   run_once: true
@@ -60,7 +60,7 @@
   delegate_to: localhost
 
 - name: Find custom fluentd output config files
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/fluentd/output"
     pattern: "*.conf"
   run_once: true
@@ -126,7 +126,7 @@
       - name: "conf/output/03-opensearch.conf.j2"
         enabled: "{{ log_direct_to_opensearch }}"
     customised_output_files: "{{ find_custom_fluentd_outputs.files | map(attribute='path') | list }}"
-  template:
+  ansible.builtin.template:
     src: "fluentd.conf.j2"
     dest: "{{ node_config_directory }}/fluentd/fluentd.conf"
     mode: "0660"
@@ -134,7 +134,7 @@
 
 - name: Ensuring config directories have correct owner and permission
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
