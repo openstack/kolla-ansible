@@ -1,6 +1,6 @@
 ---
 - name: Ensuring collectd config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ collectd_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Ensuring Plugin directory exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}/collectd.conf.d"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -20,7 +20,7 @@
   with_dict: "{{ collectd_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -30,7 +30,7 @@
 - name: Copying over collectd.conf for services
   vars:
     service: "{{ collectd_services['collectd'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/collectd/collectd.conf"
     mode: "0660"
