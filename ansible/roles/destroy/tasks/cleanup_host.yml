@@ -1,7 +1,7 @@
 ---
 - name: Destroying Kolla host configuration
   become: true
-  script: ../tools/cleanup-host
+  ansible.builtin.script: ../tools/cleanup-host
   environment:
     enable_haproxy: "{{ enable_haproxy }}"
     glance_file_datadir_volume: "{{ glance_file_datadir_volume }}"
@@ -22,18 +22,18 @@
     - inventory_hostname in groups['octavia-health-manager']
   block:
     - name: Disable octavia-interface service
-      service:
+      ansible.builtin.service:
         name: octavia-interface
         enabled: false
         state: stopped
       failed_when: false
 
     - name: Remove octavia-interface service file
-      file:
+      ansible.builtin.file:
         path: /etc/systemd/system/octavia-interface.service
         state: absent
 
     - name: Remove dhclient.conf
-      file:
+      ansible.builtin.file:
         path: /etc/dhcp/octavia-dhclient.conf
         state: absent
