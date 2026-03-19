@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ cloudkitty_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -22,20 +22,20 @@
       skip: true
 
 - name: Set cloudkitty policy file
-  set_fact:
+  ansible.builtin.set_fact:
     cloudkitty_policy_file: "{{ cloudkitty_policy.results.0.stat.path | basename }}"
     cloudkitty_policy_file_path: "{{ cloudkitty_policy.results.0.stat.path }}"
   when:
     - cloudkitty_policy.results | length > 0
 
 - name: Check if custom metrics file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
   delegate_to: localhost
   register: cloudkitty_custom_metrics_file
 
 - name: Copying custom metrics file
-  copy:
+  ansible.builtin.copy:
     src: "{{ node_custom_config }}/cloudkitty/{{ cloudkitty_custom_metrics_yaml_file }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ cloudkitty_custom_metrics_yaml_file }}"
     mode: "0660"
@@ -45,16 +45,16 @@
   with_dict: "{{ cloudkitty_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Are we using {{ cloudkitty_custom_metrics_yaml_file }}?
-  set_fact:
+  ansible.builtin.set_fact:
     cloudkitty_custom_metrics_used: "{{ cloudkitty_custom_metrics_file.stat.exists }}"
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - cloudkitty_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -79,7 +79,7 @@
 - name: Copying over wsgi-cloudkitty.conf
   vars:
     service: "{{ cloudkitty_services['cloudkitty-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "wsgi-cloudkitty.conf.j2"
     dest: "{{ node_config_directory }}/cloudkitty-api/wsgi-cloudkitty.conf"
     mode: "0660"
@@ -87,7 +87,7 @@
   when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ cloudkitty_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ cloudkitty_policy_file }}"
     mode: "0660"
