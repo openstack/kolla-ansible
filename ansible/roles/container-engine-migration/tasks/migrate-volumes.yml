@@ -7,7 +7,7 @@
   register: containers
 
 - name: Import tasks from ovs-cleanup.yml
-  import_tasks: ovs-cleanup.yml
+  ansible.builtin.import_tasks: ovs-cleanup.yml
   when:
     - "'openvswitch_vswitchd' in containers.container_names"
     - neutron_plugin_agent == 'openvswitch'
@@ -22,14 +22,14 @@
 
 - name: Create directory for target container engine volumes
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ engine_data[target_engine].volumes_dir }}"
     state: directory
     mode: "{{ engine_data[target_engine].volumes_mode }}"
 
 - name: Find current container engine volumes
   become: true
-  find:
+  ansible.builtin.find:
     paths: "{{ engine_data[current_engine].volumes_dir }}"
     file_type: directory
   register: container_volumes
@@ -54,11 +54,11 @@
         source_path: "{{ item.path }}/_data"
       become: true
       changed_when: true
-      command: "mv -f {{ source_path }} {{ target_path }}"
+      ansible.builtin.command: "mv -f {{ source_path }} {{ target_path }}"
       with_items: "{{ container_volumes.files }}"
 
     - name: Cleanup volumes
-      file:
+      ansible.builtin.file:
         path: "{{ item.path }}"
         state: absent
       with_items: "{{ container_volumes.files }}"
@@ -67,6 +67,6 @@
 # to other instances in multinode deployment
 - name: Remove old Mnesia tables
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ engine_data[target_engine].volumes_dir }}/rabbitmq/_data/mnesia"
     state: absent
