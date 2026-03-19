@@ -1,6 +1,6 @@
 ---
 - name: Precheck designate configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ designate_services }}"
@@ -19,7 +19,7 @@
   register: container_facts
 
 - name: Checking free port for designate API
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ designate_api_listen_port }}"
     connect_timeout: 1
@@ -30,7 +30,7 @@
     - inventory_hostname in groups['designate-api']
 
 - name: Checking free port for designate mdns
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ 'dns' | kolla_address }}"
     port: "{{ designate_mdns_port }}"
     connect_timeout: 1
@@ -41,7 +41,7 @@
     - inventory_hostname in groups['designate-mdns']
 
 - name: Checking free port for designate backend bind9 port
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ designate_bind_port }}"
     connect_timeout: 1
@@ -53,7 +53,7 @@
     - inventory_hostname in groups['designate-backend-bind9']
 
 - name: Checking free port for designate backend rndc port
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ designate_rndc_port }}"
     connect_timeout: 1
