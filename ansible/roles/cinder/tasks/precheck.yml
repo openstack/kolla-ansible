@@ -1,6 +1,6 @@
 ---
 - name: Precheck cinder configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ cinder_services }}"
@@ -17,7 +17,7 @@
   register: container_facts
 
 - name: Checking free port for Cinder API
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ cinder_api_listen_port }}"
     connect_timeout: 1
@@ -29,7 +29,7 @@
 
 - name: Checking at least one valid backend is enabled for Cinder
   run_once: true
-  fail:
+  ansible.builtin.fail:
     msg: "Please enable at least one backend when enabling Cinder"
   when:
     - not skip_cinder_backend_check | bool
@@ -46,7 +46,7 @@
 
 - name: Checking LVM volume group exists for Cinder
   become: true
-  command: "vgs {{ cinder_volume_group }}"
+  ansible.builtin.command: "vgs {{ cinder_volume_group }}"
   register: result
   changed_when: false
   failed_when: result is failed
@@ -58,7 +58,7 @@
 
 - name: Checking for coordination backend if Ceph backend is enabled
   run_once: true
-  fail:
+  ansible.builtin.fail:
     msg: "Please enable valkey or etcd when using Cinder Ceph backend"
   when:
     - not skip_cinder_backend_check | bool
@@ -67,7 +67,7 @@
     - groups['cinder-volume'] | length > 1
 
 - name: Check if S3 configurations are defined
-  assert:
+  ansible.builtin.assert:
     that:
       - vars[item] is defined
     msg: "Cinder backup S3 backend is enabled, either the {{ item }} or {{ item | replace('cinder_backup_', '') }} variable must be defined."
@@ -79,7 +79,7 @@
   when: cinder_backup_driver == "s3"
 
 - name: Check if Lightbits configurations are defined
-  assert:
+  ansible.builtin.assert:
     that:
       - vars[item] is defined
     msg: "Cinder Lightbits backend is enabled, the {{ item }} variable must be defined."
@@ -89,7 +89,7 @@
   when: enable_cinder_backend_lightbits == "yes"
 
 - name: Check if cinder_cluster_name is configured for HA configurations
-  assert:
+  ansible.builtin.assert:
     that:
       - cinder_cluster_name != ""
     msg: |
@@ -101,7 +101,7 @@
     - groups['cinder-volume'] | length > 1
 
 - name: Check if cinder_cluster_name is configured and configuration is non-HA
-  assert:
+  ansible.builtin.assert:
     that:
       - cinder_cluster_name == ""
     msg: |

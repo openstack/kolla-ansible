@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,20 +10,20 @@
   with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Configure external Huawei backend
-  include_tasks: external_huawei.yml
+  ansible.builtin.include_tasks: external_huawei.yml
   when:
     - cinder_backend_huawei | bool
     - cinder_backend_huawei_xml_files | length > 0
     - inventory_hostname in groups['cinder-volume']
 
 - name: Configure external Ceph backend
-  include_tasks: external_ceph.yml
+  ansible.builtin.include_tasks: external_ceph.yml
   when:
     - cinder_backend_ceph | bool
     - inventory_hostname in groups['cinder-volume'] or inventory_hostname in groups['cinder-backup']
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -35,19 +35,19 @@
       skip: true
 
 - name: Set cinder policy file
-  set_fact:
+  ansible.builtin.set_fact:
     cinder_policy_file: "{{ cinder_policy.results.0.stat.path | basename }}"
     cinder_policy_file_path: "{{ cinder_policy.results.0.stat.path }}"
   when:
     - cinder_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - cinder_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -58,7 +58,7 @@
   vars:
     service: "{{ cinder_services['cinder-api'] }}"
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/cinder-api/cinder-wsgi.conf"
     mode: "0660"
@@ -71,7 +71,7 @@
     - cinder_wsgi_provider == "apache"
 
 - name: "Configure uWSGI for Cinder"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ cinder_services }}"
@@ -108,7 +108,7 @@
   vars:
     service: "{{ cinder_services['cinder-volume'] }}"
     hostnqn: "nqn.2014-08.org.nvmexpress:uuid:{{ ansible_facts.hostname | to_uuid }}"
-  template:
+  ansible.builtin.template:
     src: "templates/hostnqn.j2"
     dest: "{{ node_config_directory }}/cinder-volume/hostnqn"
     mode: "0660"
@@ -117,7 +117,7 @@
 
 - name: Copying over existing policy file
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ cinder_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ cinder_policy_file }}"
     mode: "0660"
@@ -129,7 +129,7 @@
   vars:
     service: "{{ cinder_services['cinder-volume'] }}"
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/cinder-volume/nfs_shares"
     mode: "0660"

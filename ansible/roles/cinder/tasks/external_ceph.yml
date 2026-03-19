@@ -2,7 +2,7 @@
 - name: Ensuring cinder service ceph config subdirs exists
   vars:
     service: "{{ cinder_services[item] }}"
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item }}/ceph"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -40,7 +40,7 @@
   vars:
     keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
     service: "{{ cinder_services['cinder-volume'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/cinder/cinder-volume/{{ keyring }}"
     dest: "{{ node_config_directory }}/cinder-volume/ceph/{{ keyring }}"
     mode: "0660"
@@ -54,7 +54,7 @@
   vars:
     service: "{{ cinder_services['cinder-backup'] }}"
     keyring: "{{ item.cluster }}.client.{{ item.user }}.keyring"
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/cinder/cinder-backup/{{ keyring }}"
     dest: "{{ node_config_directory }}/cinder-backup/ceph/{{ keyring }}"
     mode: "0660"
@@ -68,7 +68,7 @@
 
 - name: Ensuring config directory has correct owner and permission
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item }}"
     recurse: true
     owner: "{{ config_owner_user }}"

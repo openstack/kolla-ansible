@@ -2,23 +2,23 @@
 # NOTE (duonghq): I break config into 2 phases to prevent new version
 # of service start if node or process in node crash accidentally.
 - name: Configure cinder
-  include_tasks: config.yml
+  ansible.builtin.include_tasks: config.yml
   when: inventory_hostname == groups["cinder-api"][0]
 
 - name: Run cinder bootstrap container
-  import_tasks: bootstrap_service.yml
+  ansible.builtin.import_tasks: bootstrap_service.yml
 
 - name: Configure cinder
-  import_tasks: config.yml
+  ansible.builtin.import_tasks: config.yml
 
 - name: Check cinder containers
-  import_tasks: check-containers.yml
+  ansible.builtin.import_tasks: check-containers.yml
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Reload cinder services
-  import_tasks: reload.yml
+  ansible.builtin.import_tasks: reload.yml
 
 - name: Running Cinder online schema migration
   vars:
