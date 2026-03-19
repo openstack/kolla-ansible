@@ -3,7 +3,7 @@
   vars:
     service_name: "{{ item.0.service_name }}"
     service: "{{ common_services[service_name] }}"
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.1 }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -18,12 +18,12 @@
   when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - common_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -32,7 +32,7 @@
 
 - name: Ensure RabbitMQ Erlang cookie exists
   become: true
-  template:
+  ansible.builtin.template:
     src: "rabbitmq-erlang.cookie.j2"
     dest: "{{ node_config_directory }}/kolla-toolbox/rabbitmq-erlang.cookie"
     mode: "0660"
@@ -42,7 +42,7 @@
 
 - name: Ensuring config directories have correct owner and permission
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     owner: "{{ config_owner_user }}"
     group: "{{ config_owner_group }}"
@@ -53,7 +53,7 @@
   with_dict: "{{ common_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copy rabbitmq-env.conf to kolla toolbox
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/kolla-toolbox/rabbitmq-env.conf"
     mode: "0600"
@@ -67,7 +67,7 @@
     - enable_rabbitmq | bool
 
 - name: Copy rabbitmq erl_inetrc to kolla toolbox
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/kolla-toolbox/erl_inetrc"
     mode: "0600"
