@@ -1,6 +1,6 @@
 ---
 - name: Import tasks from lookup_cluster.yml
-  import_tasks: lookup_cluster.yml
+  ansible.builtin.import_tasks: lookup_cluster.yml
 
 # NOTE(jan.gutter): The following two tasks set facts that aren't really used.
 # They serve the purpose to trigger the handlers for bootstrapping:
@@ -8,7 +8,7 @@
 # If some volumes exist, add the new nodes to an existing cluster.
 
 - name: Determine whether a new cluster needs bootstrapping
-  set_fact:
+  ansible.builtin.set_fact:
     etcd_bootstrap_cluster: >-
       {%- set ns = namespace(cluster_members=[]) -%}
       {%- for host in groups['etcd'] -%}
@@ -24,7 +24,7 @@
   notify: Bootstrap etcd cluster
 
 - name: Determine when new services need bootstrapping
-  set_fact:
+  ansible.builtin.set_fact:
     etcd_bootstrap_services: >-
       {%- set ns = namespace(cluster_members=[]) -%}
       {%- for host in groups['etcd_had_volume_False'] -%}

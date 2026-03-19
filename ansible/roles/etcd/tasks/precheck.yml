@@ -1,6 +1,6 @@
 ---
 - name: Precheck etcd configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ etcd_services }}"
@@ -17,7 +17,7 @@
   register: container_facts
 
 - name: Checking free port for Etcd Peer
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ etcd_peer_port }}"
     connect_timeout: 1
@@ -28,7 +28,7 @@
     - inventory_hostname in groups[etcd_services.etcd.group]
 
 - name: Checking free port for Etcd Client
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ etcd_client_port }}"
     connect_timeout: 1

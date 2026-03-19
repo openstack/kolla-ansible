@@ -8,7 +8,7 @@
   # NOTE(jan.gutter): We need to set the ETCD environment vars here to
   # handle an upgrade scenario from older etcd containers. These can be
   # removed once the new workflow has been in place for a cycle or two.
-  command: >-
+  ansible.builtin.command: >-
     {{ kolla_container_engine }} exec
     -e ETCDCTL_API=3
     -e ETCDCTL_ENDPOINTS="{{ etcd_client_internal_endpoint }}"
@@ -30,12 +30,12 @@
     etcd_leader_id: >-
       {{ etcd_endpoint_status[0]['Status']['leader']
       | default('none') }}
-  group_by:
+  ansible.builtin.group_by:
     key: etcd_is_leader_{{ etcd_member_id == etcd_leader_id }}
   changed_when: false
 
 - name: Set the etcd cluster leader
-  set_fact:
+  ansible.builtin.set_fact:
     etcd_cluster_leader: "{{ groups.etcd_is_leader_True | sort | first }}"
   when: groups.etcd_is_leader_True is defined
   changed_when: false

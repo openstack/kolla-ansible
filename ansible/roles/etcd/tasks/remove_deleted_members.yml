@@ -4,7 +4,7 @@
     service_name: "etcd"
     service: "{{ etcd_services[service_name] }}"
   become: true
-  command: >-
+  ansible.builtin.command: >-
     {{ kolla_container_engine }} exec {{ service.container_name }}
     etcdctl member list
   changed_when: false
@@ -30,7 +30,7 @@
       | json_query('members[].{key: name, value: ID}') | items2dict }}
   become: true
   changed_when: true
-  command: >-
+  ansible.builtin.command: >-
     {{ kolla_container_engine }} exec {{ service.container_name }}
     etcdctl member remove {{ '%x' % etcd_member_id[etcd_deleted_member] }}
   run_once: true
