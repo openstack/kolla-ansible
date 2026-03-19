@@ -1,12 +1,12 @@
 ---
 - name: Ensuring private internal directory exist
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_internal_dir }}"
     state: "directory"
     mode: "0770"
 
 - name: Ensuring private external directory exist
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_external_dir }}"
     state: "directory"
     mode: "0770"
@@ -50,7 +50,7 @@
         provider: ownca
 
 - name: Creating external Server PEM File
-  assemble:
+  ansible.builtin.assemble:
     regexp: \.(crt|key)$
     src: "{{ certificates_external_dir }}"
     dest: "{{ kolla_external_fqdn_cert }}"
@@ -65,19 +65,19 @@
     - kolla_same_external_internal_vip | bool
   block:
     - name: Copy Certificate for ProxySQL
-      copy:
+      ansible.builtin.copy:
         src: "{{ certificates_external_dir }}/external.crt"
         dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
         mode: "0660"
 
     - name: Copy Key for ProxySQL
-      copy:
+      ansible.builtin.copy:
         src: "{{ certificates_external_dir }}/external.key"
         dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"
 
 - name: Copy the external PEM file to be the internal when internal + external are same network
-  copy:
+  ansible.builtin.copy:
     src: "{{ kolla_external_fqdn_cert }}"
     dest: "{{ kolla_internal_fqdn_cert }}"
     mode: "0660"
@@ -128,7 +128,7 @@
         provider: ownca
 
 - name: Creating internal Server PEM File
-  assemble:
+  ansible.builtin.assemble:
     regexp: \.(crt|key)$
     src: "{{ certificates_internal_dir }}"
     dest: "{{ kolla_internal_fqdn_cert }}"
@@ -144,13 +144,13 @@
     - not kolla_same_external_internal_vip | bool
   block:
     - name: Copy Certificate for ProxySQL
-      copy:
+      ansible.builtin.copy:
         src: "{{ certificates_internal_dir }}/internal.crt"
         dest: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
         mode: "0660"
 
     - name: Copy Key for ProxySQL
-      copy:
+      ansible.builtin.copy:
         src: "{{ certificates_internal_dir }}/internal.key"
         dest: "{{ kolla_certificates_dir }}/proxysql-key.pem"
         mode: "0660"

@@ -1,6 +1,6 @@
 ---
 - name: Ensuring private backend directory exist
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_backend_dir }}"
     mode: "0770"
     state: "directory"
@@ -40,19 +40,19 @@
     provider: ownca
 
 - name: Copy backend cert to default configuration location
-  copy:
+  ansible.builtin.copy:
     src: "{{ certificates_backend_dir }}/backend.crt"
     dest: "{{ kolla_certificates_dir }}/backend-cert.pem"
     mode: "0660"
 
 - name: Copy backend key to default configuration location
-  copy:
+  ansible.builtin.copy:
     src: "{{ certificates_backend_dir }}/backend.key"
     dest: "{{ kolla_certificates_dir }}/backend-key.pem"
     mode: "0660"
 
 - name: Copy backend TLS certificate and key for RabbitMQ
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "0600"
@@ -66,7 +66,7 @@
     - rabbitmq_enable_tls | bool
 
 - name: Copy backend TLS certificate and key for Mariadb
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "{{ item.mode | default('0600') }}"

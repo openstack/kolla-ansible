@@ -1,6 +1,6 @@
 ---
 - name: Ensuring private libvirt directory exist
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_libvirt_dir }}"
     mode: "0770"
     state: "directory"
@@ -40,25 +40,25 @@
     provider: ownca
 
 - name: Setting permissions on libvirt key
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_libvirt_dir }}/libvirt.key"
     mode: "0660"
     state: file
 
 - name: Ensure libvirt output directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ certificates_libvirt_output_dir }}"
     state: directory
     mode: "0770"
 
 - name: Copy libvirt root CA to default configuration location
-  copy:
+  ansible.builtin.copy:
     src: "{{ certificates_root_dir }}/root.crt"
     dest: "{{ certificates_libvirt_output_dir }}/cacert.pem"
     mode: "0660"
 
 - name: Copy libvirt cert to default configuration locations
-  copy:
+  ansible.builtin.copy:
     src: "{{ certificates_libvirt_dir }}/libvirt.crt"
     dest: "{{ certificates_libvirt_output_dir }}/{{ item }}cert.pem"
     mode: "0660"
@@ -67,7 +67,7 @@
     - client
 
 - name: Copy libvirt key to default configuration locations
-  copy:
+  ansible.builtin.copy:
     src: "{{ certificates_libvirt_dir }}/libvirt.key"
     dest: "{{ certificates_libvirt_output_dir }}/{{ item }}key.pem"
     mode: "0660"
