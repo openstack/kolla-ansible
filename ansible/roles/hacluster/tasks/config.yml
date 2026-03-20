@@ -1,7 +1,7 @@
 ---
 - name: Ensuring config directories exist
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -11,7 +11,7 @@
 
 - name: Copying over config.json files for services
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -21,7 +21,7 @@
 - name: Copying over corosync.conf into hacluster-corosync
   vars:
     service: "{{ hacluster_services['hacluster-corosync'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/hacluster-corosync/corosync.conf"
     mode: "0660"
@@ -35,7 +35,7 @@
 - name: Copying over Corosync authkey file
   vars:
     service: "{{ hacluster_services['hacluster-corosync'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/hacluster-corosync/authkey"
     mode: "0600"
@@ -48,7 +48,7 @@
 - name: Copying over Pacemaker authkey file
   vars:
     service: "{{ hacluster_services['hacluster-pacemaker'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}//hacluster-pacemaker/authkey"
     mode: "0600"
@@ -61,7 +61,7 @@
 - name: Copying over Pacemaker authkey file into hacluster-pacemaker-remote
   vars:
     service: "{{ hacluster_services['hacluster-pacemaker-remote'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/hacluster-pacemaker-remote/authkey"
     mode: "0600"

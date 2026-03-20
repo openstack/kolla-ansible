@@ -1,6 +1,6 @@
 ---
 - name: Ensure config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_custom_config }}/{{ item }}"
     mode: "0755"
     state: directory
@@ -13,21 +13,21 @@
     - hacluster-pacemaker
 
 - name: Check if Corosync authkey file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ node_custom_config }}/hacluster-corosync/authkey"
   delegate_to: localhost
   run_once: true
   register: hacluster_corosync_authkey_file
 
 - name: Check if Pacemaker authkey file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ node_custom_config }}/hacluster-pacemaker/authkey"
   delegate_to: localhost
   run_once: true
   register: hacluster_pacemaker_authkey_file
 
 - name: Generating Corosync authkey file
-  command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-corosync/authkey bs=4096 count=1"
+  ansible.builtin.command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-corosync/authkey bs=4096 count=1"
   delegate_to: localhost
   changed_when: false
   check_mode: false
@@ -35,7 +35,7 @@
   when: not hacluster_corosync_authkey_file.stat.exists
 
 - name: Generating Pacemaker authkey file
-  command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-pacemaker/authkey bs=4096 count=1"
+  ansible.builtin.command: "dd if=/dev/urandom of={{ node_custom_config }}/hacluster-pacemaker/authkey bs=4096 count=1"
   delegate_to: localhost
   changed_when: false
   check_mode: false
