@@ -11,18 +11,18 @@
 
 - name: Cleanup old neutron-tls-proxy config dir
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/neutron-tls-proxy"
     state: absent
   when: inventory_hostname in groups['neutron-server'] | default([])
 
 - name: Import tasks from neutron_plugin_agent_check.yml
-  import_tasks: neutron_plugin_agent_check.yml
+  ansible.builtin.import_tasks: neutron_plugin_agent_check.yml
 
 - name: Include tasks from rolling_upgrade.yml
-  include_tasks: rolling_upgrade.yml
+  ansible.builtin.include_tasks: rolling_upgrade.yml
   when: neutron_enable_rolling_upgrade | bool
 
 - name: Include tasks from legacy_upgrade.yml
-  include_tasks: legacy_upgrade.yml
+  ansible.builtin.include_tasks: legacy_upgrade.yml
   when: not neutron_enable_rolling_upgrade | bool

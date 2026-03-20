@@ -22,7 +22,7 @@
   register: container_volume_facts
 
 - name: Check for ML2/OVN presence
-  assert:
+  ansible.builtin.assert:
     that: neutron_plugin_agent == 'ovn'
     fail_msg: "ML2/OVN agent detected, neutron_plugin_agent is not set to 'ovn', Kolla-Ansible does not support this migration operation."
   when: (container_facts.containers['ovn_controller'] is defined)
@@ -30,7 +30,7 @@
     or (container_volume_facts['ovn_sb_db'] is defined)
 
 - name: Check for ML2/OVS presence
-  assert:
+  ansible.builtin.assert:
     that:
       - neutron_plugin_agent == 'openvswitch'
       - container_volume_facts.volumes['ovn_nb_db'] is not defined
