@@ -1,6 +1,6 @@
 ---
 - name: Precheck masakari configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ masakari_services }}"
@@ -17,7 +17,7 @@
   register: container_facts
 
 - name: Checking free port for Masakari API
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ masakari_api_port }}"
     connect_timeout: 1
@@ -29,7 +29,7 @@
 
 - name: Checking for coordination backend if running in multinode setup
   run_once: true
-  fail:
+  ansible.builtin.fail:
     msg: "Please enable Valkey or etcd when running in multinode scenario."
   when:
     - masakari_coordination_backend == ''
