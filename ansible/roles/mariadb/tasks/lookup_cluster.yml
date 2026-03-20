@@ -9,19 +9,19 @@
   when: migration_flag is not defined
 
 - name: Divide hosts by their MariaDB volume availability
-  group_by:
+  ansible.builtin.group_by:
     key: "{{ mariadb_shard_group }}_had_volume_{{ mariadb_volume is not changed }}"
   changed_when: false
 
 - name: Establish whether the cluster has already existed
-  set_fact:
+  ansible.builtin.set_fact:
     mariadb_cluster_exists: "{{ groups[mariadb_shard_group + '_had_volume_True'] is defined }}"
 
 - name: Check MariaDB port liveness and cluster status
   when: not mariadb_recover | default(False)
   block:
     - name: Check MariaDB service port liveness
-      wait_for:
+      ansible.builtin.wait_for:
         host: "{{ api_interface_address }}"
         port: "{{ mariadb_port }}"
         connect_timeout: 1
@@ -31,12 +31,12 @@
       ignore_errors: true
 
     - name: Divide hosts by their MariaDB service port liveness
-      group_by:
+      ansible.builtin.group_by:
         key: "{{ mariadb_shard_group }}_port_alive_{{ check_mariadb_port_liveness is success }}"
       changed_when: false
 
     - name: Fail on existing but stopped cluster
-      fail:
+      ansible.builtin.fail:
         msg: MariaDB cluster exists but is stopped. Please start it using kolla-ansible mariadb-recovery
       when:
         # NOTE(yoctozepto): we allow single-node cluster to start
@@ -65,16 +65,16 @@
           register: check_mariadb_sync_status
 
         - name: Extract MariaDB service WSREP sync status
-          set_fact:
+          ansible.builtin.set_fact:
             mariadb_sync_status: "{{ check_mariadb_sync_status.query_result[0][0]['Value'] }}"
 
     - name: Divide hosts by their MariaDB service WSREP sync status
-      group_by:
+      ansible.builtin.group_by:
         key: "{{ mariadb_shard_group }}_sync_status_{{ mariadb_sync_status | default('NA') }}"
       changed_when: false
 
     - name: Fail when MariaDB services are not synced across the whole cluster
-      fail:
+      ansible.builtin.fail:
         msg: MariaDB cluster is not synced. Please wait for WSREP sync before proceeding.
       when:
         - groups[mariadb_shard_group + '_port_alive_True'] is defined
