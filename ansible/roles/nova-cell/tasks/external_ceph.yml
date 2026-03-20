@@ -5,7 +5,7 @@
     paths:
       - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ keyring }}"
       - "{{ node_custom_config }}/nova/{{ keyring }}"
-  stat:
+  ansible.builtin.stat:
     path: "{{ lookup('first_found', paths) }}"
   delegate_to: localhost
   register: nova_cephx_keyring_file
@@ -20,7 +20,7 @@
     paths:
       - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ keyring }}"
       - "{{ node_custom_config }}/nova/{{ keyring }}"
-  stat:
+  ansible.builtin.stat:
     path: "{{ lookup('first_found', paths) }}"
   delegate_to: localhost
   register: cinder_cephx_keyring_file
@@ -30,7 +30,7 @@
     - external_ceph_cephx_enabled | bool
 
 - name: Extract nova key from file
-  set_fact:
+  ansible.builtin.set_fact:
     nova_cephx_raw_key:
       "{{ lookup('template', nova_cephx_keyring_file.stat.path) | regex_search('key\\s*=.*$', multiline=True) | regex_replace('key\\s*=\\s*(.*)\\s*', '\\1') }}"
   changed_when: false
@@ -39,7 +39,7 @@
     - external_ceph_cephx_enabled | bool
 
 - name: Extract cinder key from file
-  set_fact:
+  ansible.builtin.set_fact:
     cinder_cephx_raw_key:
       "{{
         lookup('template', cinder_cephx_keyring_file.stat.path) |
@@ -52,7 +52,7 @@
     - external_ceph_cephx_enabled | bool
 
 - name: Copy over ceph nova keyring file
-  template:
+  ansible.builtin.template:
     src: "{{ nova_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     owner: "{{ config_owner_user }}"
@@ -67,7 +67,7 @@
     - external_ceph_cephx_enabled | bool
 
 - name: Copy over ceph cinder keyring file
-  template:
+  ansible.builtin.template:
     src: "{{ cinder_cephx_keyring_file.stat.path }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     owner: "{{ config_owner_user }}"
@@ -87,7 +87,7 @@
     paths:
       - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ nova_cell_ceph_backend['cluster'] }}.conf"
       - "{{ node_custom_config }}/nova/{{ nova_cell_ceph_backend['cluster'] }}.conf"
-  template:
+  ansible.builtin.template:
     src: "{{ lookup('first_found', paths) }}"
     dest: "{{ node_config_directory }}/{{ item }}/"
     owner: "{{ config_owner_user }}"
@@ -112,7 +112,7 @@
         paths:
           - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ nova_cell_ceph_backend['cluster'] }}.conf"
           - "{{ node_custom_config }}/nova/{{ nova_cell_ceph_backend['cluster'] }}.conf"
-      file:
+      ansible.builtin.file:
         path: "/etc/ceph/"
         state: "directory"
         owner: "root"
@@ -125,7 +125,7 @@
         paths:
           - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ nova_cell_ceph_backend['cluster'] }}.conf"
           - "{{ node_custom_config }}/nova/{{ nova_cell_ceph_backend['cluster'] }}.conf"
-      template:
+      ansible.builtin.template:
         src: "{{ lookup('first_found', paths) }}"
         dest: "/etc/ceph/{{ nova_cell_ceph_backend['cluster'] }}.conf"
         owner: "root"
@@ -151,7 +151,7 @@
     - name: Ensuring libvirt secrets directory exists
       vars:
         service: "{{ nova_cell_services['nova-libvirt'] }}"
-      file:
+      ansible.builtin.file:
         path: "{{ libvirt_secrets_dir }}"
         state: "directory"
         owner: "{{ config_owner_user }}"
@@ -163,7 +163,7 @@
     - name: Pushing nova secret xml for libvirt
       vars:
         service: "{{ nova_cell_services['nova-libvirt'] }}"
-      template:
+      ansible.builtin.template:
         src: "secret.xml.j2"
         dest: "{{ libvirt_secrets_dir }}/{{ item.uuid }}.xml"
         owner: "{{ config_owner_user }}"
@@ -187,7 +187,7 @@
     - name: Pushing secrets key for libvirt
       vars:
         service: "{{ nova_cell_services['nova-libvirt'] }}"
-      template:
+      ansible.builtin.template:
         src: "libvirt-secret.j2"
         dest: "{{ libvirt_secrets_dir }}/{{ item.uuid }}.base64"
         owner: "{{ config_owner_user }}"

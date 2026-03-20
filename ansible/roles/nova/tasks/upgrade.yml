@@ -1,7 +1,7 @@
 ---
 # Create new set of configs on nodes
 - name: Configure nova
-  import_tasks: config.yml
+  ansible.builtin.import_tasks: config.yml
 
 - name: Run Nova upgrade checks
   become: true
@@ -27,7 +27,7 @@
   check_mode: false
 
 - name: Upgrade status check result
-  fail:
+  ansible.builtin.fail:
     msg:
       - "There was an upgrade status check failure!"
       - "See the detail at https://docs.openstack.org/nova/latest/cli/nova-status.html#nova-status-checks"
@@ -46,7 +46,7 @@
     - nova_safety_upgrade | bool
 
 - name: Check nova containers
-  import_tasks: check-containers.yml
+  ansible.builtin.import_tasks: check-containers.yml
 
 # TODO(donghm): Flush_handlers to restart nova services
 # should be run in serial nodes to decrease downtime if
@@ -54,7 +54,7 @@
 # Ansible strategy module for rolling upgrade is finished.
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 # NOTE(dszumski): The Nova upgrade is not finished here and
 # continues in subsequent tasks.

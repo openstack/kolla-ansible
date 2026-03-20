@@ -8,10 +8,10 @@
   any_errors_fatal: true
   block:
     - name: Import tasks from get_cell_settings.yml
-      import_tasks: get_cell_settings.yml
+      ansible.builtin.import_tasks: get_cell_settings.yml
 
     - name: Fail if cell settings not found
-      fail:
+      ansible.builtin.fail:
         msg: >-
           Unable to find settings for {{ nova_cell_name or 'the default cell' }}.
       when: not nova_cell_settings
@@ -19,6 +19,6 @@
     # TODO(yoctozepto): no need to do --by-service if ironic not used
     - name: Discover nova hosts
       become: true
-      command: >
+      ansible.builtin.command: >
         {{ kolla_container_engine }} exec -t nova_conductor nova-manage cell_v2 discover_hosts --by-service --cell_uuid {{ nova_cell_settings.cell_uuid }}
       changed_when: false

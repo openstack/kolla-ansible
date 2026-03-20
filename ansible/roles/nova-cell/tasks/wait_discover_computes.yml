@@ -24,7 +24,7 @@
   block:
     - name: Waiting for nova-compute services to register themselves
       become: true
-      command: >
+      ansible.builtin.command: >
         {{ kolla_container_engine }} exec kolla_toolbox openstack
         --os-interface {{ openstack_interface }}
         --os-auth-url {{ openstack_auth.auth_url }}
@@ -76,7 +76,7 @@
         any_failed_services: >-
           {{ (ansible_facts.nodename | default()) in failed_compute_service_hosts or
              ((ansible_facts.hostname | default()) ~ "-ironic") in failed_compute_service_hosts }}
-      fail:
+      ansible.builtin.fail:
         msg: >-
           The Nova compute service failed to register itself on the following
           hosts: {{ failed_compute_service_hosts | join(',') }}
@@ -86,6 +86,6 @@
          failed_compute_service_hosts | length > 0)
 
 - name: Include discover_computes.yml
-  include_tasks: discover_computes.yml
+  ansible.builtin.include_tasks: discover_computes.yml
   # Execute on one compute host per cell.
   when: inventory_hostname == all_computes_in_batch[0]
