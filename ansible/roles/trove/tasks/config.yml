@@ -41,6 +41,22 @@
   become: true
   with_dict: "{{ trove_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: "Configure uWSGI for trove-api"
+  ansible.builtin.include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ trove_services }}"
+    service: "{{ trove_services['trove-api'] }}"
+    service_name: "trove-api"
+    service_uwsgi_config_http_port: "{{ trove_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_wsgi_file: "{{ service.wsgi_file }}"
+    service_uwsgi_config_uid: "trove"
+    service_uwsgi_config_workers: "{{ trove_api_workers }}"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - trove_wsgi_provider == "uwsgi"
+
 - name: Copying over trove-wsgi.conf
   vars:
     service: "{{ trove_services['trove-api'] }}"
@@ -53,7 +69,9 @@
     - "{{ node_custom_config }}/trove/{{ inventory_hostname }}/trove-wsgi.conf"
     - "{{ node_custom_config }}/trove/trove-wsgi.conf"
     - "trove-wsgi.conf.j2"
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - trove_wsgi_provider == "apache"
+    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over trove-guestagent.conf
   vars:
