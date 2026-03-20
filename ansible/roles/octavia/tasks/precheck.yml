@@ -1,6 +1,6 @@
 ---
 - name: Precheck octavia configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ octavia_services }}"
@@ -18,7 +18,7 @@
   register: container_facts
 
 - name: Checking free port for Octavia API
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ octavia_api_listen_port }}"
     connect_timeout: 1
@@ -29,7 +29,7 @@
     - inventory_hostname in groups['octavia-api']
 
 - name: Checking free port for Octavia Health Manager
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ octavia_health_manager_port }}"
     connect_timeout: 1
@@ -40,7 +40,7 @@
     - inventory_hostname in groups['octavia-health-manager']
 
 - name: Checking certificate files exist for octavia
-  stat:
+  ansible.builtin.stat:
     path: "{{ node_custom_config }}/octavia/{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -56,7 +56,7 @@
     - server_ca.key.pem
 
 - name: Fail when Neutron plugin agent is not supported
-  fail:
+  ansible.builtin.fail:
     msg: >
       Neutron plugin agent {{ neutron_plugin_agent }} is not supported when
       octavia_network_type is tenant, only openvswitch is supported currently
@@ -67,7 +67,7 @@
     - neutron_plugin_agent != 'openvswitch'
 
 - name: Checking whether Valkey is enabled for Octavia Jobboard
-  assert:
+  ansible.builtin.assert:
     that: enable_valkey | bool
     fail_msg: "Valkey must be enabled when using Octavia Jobboard"
   run_once: true

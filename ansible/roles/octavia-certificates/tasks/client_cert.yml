@@ -3,7 +3,7 @@
 # generates its key&CSR and this CA signs it.
 
 - name: Create a key for the client certificate
-  command: >
+  ansible.builtin.command: >
     openssl genrsa -out client.key.pem 4096
   args:
     chdir: "{{ octavia_certs_work_dir }}/client_ca"
@@ -17,7 +17,7 @@
       O: "{{ octavia_certs_client_req_organization }}"
       OU: "{{ octavia_certs_client_req_organizational_unit }}"
       CN: "{{ octavia_certs_client_req_common_name }}"
-  command: >
+  ansible.builtin.command: >
     openssl req -new -config ../openssl.cnf
     -key client.key.pem
     -out client.csr.pem
@@ -28,7 +28,7 @@
     creates: "{{ octavia_certs_work_dir }}/client_ca/client.csr.pem"
 
 - name: Sign the client certificate request
-  command: >
+  ansible.builtin.command: >
     openssl ca -config ../openssl.cnf
     -name client_ca
     -days {{ octavia_certs_client_expiry }}
@@ -42,7 +42,7 @@
     creates: "{{ octavia_certs_work_dir }}/client_ca/client.cert.pem"
 
 - name: Create a concatenated client certificate and key file
-  assemble:
+  ansible.builtin.assemble:
     regexp: ^client\.(cert|key)\.pem$
     src: "{{ octavia_certs_work_dir }}/client_ca"
     dest: "{{ octavia_certs_work_dir }}/client_ca/client.cert-and-key.pem"
