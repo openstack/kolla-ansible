@@ -62,6 +62,22 @@
   become: true
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: "Configure uWSGI for zun-api"
+  ansible.builtin.include_role:
+    name: service-uwsgi-config
+  vars:
+    project_services: "{{ zun_services }}"
+    service: "{{ zun_services['zun-api'] }}"
+    service_name: "zun-api"
+    service_uwsgi_config_http_port: "{{ zun_api_listen_port }}"
+    service_uwsgi_config_log_file_chmod: "644"
+    service_uwsgi_config_module: "{{ service.wsgi }}"
+    service_uwsgi_config_uid: "zun"
+    service_uwsgi_config_workers: "{{ zun_api_workers }}"
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - zun_wsgi_provider == "uwsgi"
+
 - name: Copying over wsgi-zun files for services
   vars:
     service: "{{ zun_services['zun-api'] }}"
@@ -70,7 +86,9 @@
     dest: "{{ node_config_directory }}/zun-api/wsgi-zun.conf"
     mode: "0660"
   become: true
-  when: service | service_enabled_and_mapped_to_host
+  when:
+    - zun_wsgi_provider == "apache"
+    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
   ansible.builtin.template:

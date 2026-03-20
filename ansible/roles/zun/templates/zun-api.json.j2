@@ -1,20 +1,27 @@
 {% set zun_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set zun_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if zun_wsgi_provider == 'apache' else 'uwsgi /etc/zun/zun-api-uwsgi.ini' %}
 {
-    "command": "{{ zun_cmd }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/zun.conf",
             "dest": "/etc/zun/zun.conf",
             "owner": "zun",
             "perm": "0600"
-        },
+        }{% if zun_wsgi_provider == "apache" %},
         {
             "source": "{{ container_config_directory }}/wsgi-zun.conf",
             "dest": "/etc/{{ zun_dir }}/wsgi-zun.conf",
             "owner": "zun",
             "perm": "0600"
-        }{% if zun_policy_file is defined %},
+        }{% elif zun_wsgi_provider == "uwsgi" %},
+        {
+            "source": "{{ container_config_directory }}/zun-api-uwsgi.ini",
+            "dest": "/etc/zun/zun-api-uwsgi.ini",
+            "owner": "zun",
+            "perm": "0600"
+        }{% endif %}{% if zun_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ zun_policy_file }}",
             "dest": "/etc/zun/{{ zun_policy_file }}",
