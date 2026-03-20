@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -11,7 +11,7 @@
   when: item.key != 'ovn-sb-db-relay'
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -20,6 +20,6 @@
   when: item.key != 'ovn-sb-db-relay'
 
 - name: Ensure configuration for relays exists
-  include_tasks: config-relay.yml
+  ansible.builtin.include_tasks: config-relay.yml
   loop: "{{ range(1, ovn_sb_db_relay_count | int + 1) | list }}"
   when: enable_ovn_sb_db_relay | bool

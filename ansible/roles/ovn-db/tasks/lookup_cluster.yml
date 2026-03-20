@@ -10,21 +10,21 @@
   register: ovn_db_container_volume_facts
 
 - name: Divide hosts by their OVN NB volume availability
-  group_by:
+  ansible.builtin.group_by:
     key: "ovn-nb-db_had_volume_{{ ovn_db_container_volume_facts.volumes['ovn_nb_db'] is defined }}"
   changed_when: false
 
 - name: Divide hosts by their OVN SB volume availability
-  group_by:
+  ansible.builtin.group_by:
     key: "ovn-sb-db_had_volume_{{ ovn_db_container_volume_facts.volumes['ovn_sb_db'] is defined }}"
   changed_when: false
 
 - name: Establish whether the OVN NB cluster has already existed
-  set_fact:
+  ansible.builtin.set_fact:
     ovn_nb_db_cluster_exists: "{{ groups['ovn-nb-db' + '_had_volume_True'] is defined }}"
 
 - name: Establish whether the OVN SB cluster has already existed
-  set_fact:
+  ansible.builtin.set_fact:
     ovn_sb_db_cluster_exists: "{{ groups['ovn-sb-db' + '_had_volume_True'] is defined }}"
 
 - name: OVN NB checks
@@ -32,7 +32,7 @@
   when: inventory_hostname in groups.get('ovn-nb-db_had_volume_True', '')
   block:
     - name: Check if running on all OVN NB DB hosts
-      fail:
+      ansible.builtin.fail:
         msg: >
           Some hosts need database bootstrapping, but not all OVN NB DB hosts
           ({{ groups['ovn-nb-db'] | join(', ') }}) are in the target list
@@ -44,7 +44,7 @@
         - groups['ovn-nb-db'] | difference(ansible_play_batch) | list | length > 0
 
     - name: Check OVN NB service port liveness
-      wait_for:
+      ansible.builtin.wait_for:
         host: "{{ api_interface_address }}"
         port: "{{ ovn_nb_db_port }}"
         connect_timeout: 1
@@ -53,12 +53,12 @@
       ignore_errors: true
 
     - name: Divide hosts by their OVN NB service port liveness
-      group_by:
+      ansible.builtin.group_by:
         key: "ovn-nb-db_port_alive_{{ check_ovn_nb_db_port_liveness is success }}"
       changed_when: false
 
     - name: Get OVN NB database information
-      command: >
+      ansible.builtin.command: >
         {{ kolla_container_engine }} exec ovn_nb_db ovsdb-client query unix:/run/ovn/ovnnb_db.sock
         "[\"_Server\",{\"table\":\"Database\",\"where\":[[\"name\",\"==\", \"OVN_Northbound\"]],\"op\":\"select\"}]"
       become: true
@@ -67,13 +67,13 @@
       register: ovn_nb_db_info
 
     - name: Divide hosts by their OVN NB leader/follower role
-      group_by:
+      ansible.builtin.group_by:
         key: "ovn-nb-db_{{ 'leader' if (ovn_nb_db_info.stdout | from_json).0.rows.0.leader else 'follower' }}"
       when: check_ovn_nb_db_port_liveness is success
       changed_when: false
 
     - name: Fail on existing OVN NB cluster with no leader
-      fail:
+      ansible.builtin.fail:
         msg: OVN NB cluster exists but there is no leader - please check cluster status
       when:
         - groups['ovn-nb-db_leader'] is not defined and groups['ovn-nb-db_follower'] is defined
@@ -83,7 +83,7 @@
   when: inventory_hostname in groups.get('ovn-sb-db_had_volume_True', '')
   block:
     - name: Check if running on all OVN SB DB hosts
-      fail:
+      ansible.builtin.fail:
         msg: >
           Some hosts need database bootstrapping, but not all OVN SB DB hosts
           ({{ groups['ovn-sb-db'] | join(', ') }}) are in the target list
@@ -95,7 +95,7 @@
         - groups['ovn-sb-db'] | difference(ansible_play_batch) | list | length > 0
 
     - name: Check OVN SB service port liveness
-      wait_for:
+      ansible.builtin.wait_for:
         host: "{{ api_interface_address }}"
         port: "{{ ovn_sb_db_port }}"
         connect_timeout: 1
@@ -104,12 +104,12 @@
       ignore_errors: true
 
     - name: Divide hosts by their OVN SB service port liveness
-      group_by:
+      ansible.builtin.group_by:
         key: "ovn-sb-db_port_alive_{{ check_ovn_sb_db_port_liveness is success }}"
       changed_when: false
 
     - name: Get OVN SB database information
-      command: >
+      ansible.builtin.command: >
         {{ kolla_container_engine }} exec ovn_sb_db ovsdb-client query unix:/run/ovn/ovnsb_db.sock
         "[\"_Server\",{\"table\":\"Database\",\"where\":[[\"name\",\"==\", \"OVN_Southbound\"]],\"op\":\"select\"}]"
       become: true
@@ -118,13 +118,13 @@
       register: ovn_sb_db_info
 
     - name: Divide hosts by their OVN SB leader/follower role
-      group_by:
+      ansible.builtin.group_by:
         key: "ovn-sb-db_{{ 'leader' if (ovn_sb_db_info.stdout | from_json).0.rows.0.leader else 'follower' }}"
       when: check_ovn_sb_db_port_liveness is success
       changed_when: false
 
     - name: Fail on existing OVN SB cluster with no leader
-      fail:
+      ansible.builtin.fail:
         msg: OVN SB cluster exists but there is no leader - please check cluster status.
       when:
         - groups['ovn-sb-db_leader'] is not defined and groups['ovn-sb-db_follower'] is defined
