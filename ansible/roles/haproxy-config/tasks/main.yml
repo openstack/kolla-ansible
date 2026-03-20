@@ -9,7 +9,7 @@
       - "{{ node_custom_config }}/haproxy-config/{{ haproxy_service_template }}"
       - "templates/{{ haproxy_service_template }}"
     template_file: "{{ query('first_found', haproxy_templates) | first }}"
-  template:
+  ansible.builtin.template:
     src: "{{ template_file }}"
     dest: "{{ node_config_directory }}/haproxy/services.d/{{ item.key }}.cfg"
     mode: "0660"
@@ -23,7 +23,7 @@
 - name: "Add configuration when using single external frontend for {{ project_name }}"
   vars:
     service: "{{ item.value }}"
-  blockinfile:
+  ansible.builtin.blockinfile:
     create: true
     path: "{{ node_config_directory }}/haproxy/external-frontend-map"
     insertafter: EOF
