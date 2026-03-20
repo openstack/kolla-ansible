@@ -10,7 +10,7 @@
   vars:
     version: "{{ '6' if api_address_family == 'ipv6' else '4' }}"
   become: true
-  command: ip -{{ version }} -o addr show dev {{ api_interface }}
+  ansible.builtin.command: ip -{{ version }} -o addr show dev {{ api_interface }}
   register: ip_addr_output
   changed_when: false
   when:
@@ -23,7 +23,7 @@
 - name: Group HA nodes by status
   vars:
     re_safe_address: "{{ kolla_internal_vip_address | regex_escape }}"
-  group_by:
+  ansible.builtin.group_by:
     key: kolla_ha_is_master_{{ ip_addr_output.stdout is regex('\b' + re_safe_address + '\b') }}
   changed_when: false
   when:
@@ -113,7 +113,7 @@
     - Wait for backup haproxy to start
 
 - name: Wait for backup haproxy to start
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ haproxy_monitor_port }}"
   any_errors_fatal: true
@@ -148,7 +148,7 @@
     - Wait for backup proxysql to start
 
 - name: Wait for backup proxysql to start
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ proxysql_admin_port }}"
   any_errors_fatal: true
@@ -249,7 +249,7 @@
     - Wait for master haproxy to start
 
 - name: Wait for master haproxy to start
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ haproxy_monitor_port }}"
 
@@ -279,7 +279,7 @@
     - Wait for master proxysql to start
 
 - name: Wait for master proxysql to start
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ proxysql_admin_port }}"
 
@@ -310,7 +310,7 @@
   vars:
     service_name: "haproxy"
     service: "{{ loadbalancer_services[service_name] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ haproxy_monitor_port }}"
   when:
@@ -322,7 +322,7 @@
   vars:
     service_name: "proxysql"
     service: "{{ loadbalancer_services[service_name] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ kolla_internal_vip_address }}"
     port: "{{ proxysql_admin_port }}"
   when:

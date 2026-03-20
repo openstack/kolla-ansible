@@ -2,7 +2,7 @@
 - name: Copying over haproxy.pem
   vars:
     service: "{{ loadbalancer_services['haproxy'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ kolla_external_fqdn_cert }}"
     dest: "{{ node_config_directory }}/haproxy/{{ item }}"
     mode: "0660"
@@ -18,7 +18,7 @@
 - name: Copying over haproxy-internal.pem
   vars:
     service: "{{ loadbalancer_services['haproxy'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ kolla_internal_fqdn_cert }}"
     dest: "{{ node_config_directory }}/haproxy/{{ item }}"
     mode: "0660"
@@ -34,7 +34,7 @@
 - name: Copying over proxysql-cert.pem
   vars:
     service: "{{ loadbalancer_services['proxysql'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ kolla_certificates_dir }}/proxysql-cert.pem"
     dest: "{{ node_config_directory }}/proxysql/proxysql-cert.pem"
     mode: "0660"
@@ -47,7 +47,7 @@
 - name: Copying over proxysql-key.pem
   vars:
     service: "{{ loadbalancer_services['proxysql'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ kolla_certificates_dir }}/proxysql-key.pem"
     dest: "{{ node_config_directory }}/proxysql/proxysql-key.pem"
     mode: "0660"
@@ -58,7 +58,7 @@
     - not kolla_externally_managed_cert | bool
 
 - name: "Copy certificates and keys for {{ project_name }}"
-  import_role:
+  ansible.builtin.import_role:
     role: service-cert-copy
   vars:
     project_services: "{{ loadbalancer_services }}"
