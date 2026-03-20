@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ mistral_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -22,19 +22,19 @@
       skip: true
 
 - name: Set mistral policy file
-  set_fact:
+  ansible.builtin.set_fact:
     mistral_policy_file: "{{ mistral_policy.results.0.stat.path | basename }}"
     mistral_policy_file_path: "{{ mistral_policy.results.0.stat.path }}"
   when:
     - mistral_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - mistral_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -57,7 +57,7 @@
   with_dict: "{{ mistral_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ mistral_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ mistral_policy_file }}"
     mode: "0660"
@@ -70,7 +70,7 @@
   become: true
   vars:
     service: "{{ mistral_services['mistral-event-engine'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/mistral-event-engine/event_definitions.yaml"
     mode: "0660"
