@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   run_once: true
   delegate_to: localhost
@@ -22,19 +22,19 @@
       skip: true
 
 - name: Set barbican policy file
-  set_fact:
+  ansible.builtin.set_fact:
     barbican_policy_file: "{{ barbican_policy.results.0.stat.path | basename }}"
     barbican_policy_file_path: "{{ barbican_policy.results.0.stat.path }}"
   when:
     - barbican_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - barbican_copy_certs | bool
 
 - name: "Configure uWSGI for barbican-api"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ barbican_services }}"
@@ -53,7 +53,7 @@
     - barbican_wsgi_provider == "uwsgi"
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -63,7 +63,7 @@
 - name: Checking whether barbican-api-paste.ini file exists
   vars:
     service: "{{ barbican_services['barbican-api'] }}"
-  stat:
+  ansible.builtin.stat:
     path: "{{ node_custom_config }}/barbican/barbican-api-paste.ini"
   run_once: true
   delegate_to: localhost
@@ -73,7 +73,7 @@
 - name: Copying over barbican-api-paste.ini
   vars:
     service: "{{ barbican_services['barbican-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/barbican/barbican-api-paste.ini"
     dest: "{{ node_config_directory }}/barbican-api/barbican-api-paste.ini"
     mode: "0660"
@@ -98,7 +98,7 @@
   with_dict: "{{ barbican_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ barbican_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ barbican_policy_file }}"
     mode: "0660"
