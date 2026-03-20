@@ -1,6 +1,6 @@
 ---
 - name: Ensuring gnocchi service ceph config subdir exists
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}/ceph"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -20,7 +20,7 @@
   with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copy over ceph Gnocchi keyrings
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/gnocchi/{{ ceph_cluster }}.client.{{ ceph_gnocchi_user }}.keyring"
     dest: "{{ node_config_directory }}/{{ item.key }}/ceph/{{ ceph_cluster }}.client.{{ ceph_gnocchi_user }}.keyring"
     mode: "0660"
@@ -29,7 +29,7 @@
 
 - name: Ensuring config directory has correct owner and permission
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     recurse: true
     owner: "{{ config_owner_user }}"

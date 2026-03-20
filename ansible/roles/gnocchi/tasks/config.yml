@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,12 +10,12 @@
   with_dict: "{{ gnocchi_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Include tasks from external_ceph.yml
-  include_tasks: external_ceph.yml
+  ansible.builtin.include_tasks: external_ceph.yml
   when:
     - gnocchi_backend_storage == 'ceph'
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -27,19 +27,19 @@
       skip: true
 
 - name: Set gnocchi policy file
-  set_fact:
+  ansible.builtin.set_fact:
     gnocchi_policy_file: "{{ gnocchi_policy.results.0.stat.path | basename }}"
     gnocchi_policy_file_path: "{{ gnocchi_policy.results.0.stat.path }}"
   when:
     - gnocchi_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - gnocchi_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -64,7 +64,7 @@
 - name: Copying over wsgi-gnocchi.conf
   vars:
     service: "{{ gnocchi_services['gnocchi-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "wsgi-gnocchi.conf.j2"
     dest: "{{ node_config_directory }}/{{ item }}/wsgi-gnocchi.conf"
     mode: "0660"
@@ -76,7 +76,7 @@
     - "gnocchi-api"
 
 - name: "Configure uWSGI for Gnocchi"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ gnocchi_services }}"
@@ -91,7 +91,7 @@
     - service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ gnocchi_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ gnocchi_policy_file }}"
     mode: "0660"
