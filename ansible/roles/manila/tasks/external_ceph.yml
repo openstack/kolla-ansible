@@ -2,7 +2,7 @@
 - name: Ensuring manila service ceph config subdir exists
   vars:
     service: "{{ manila_services['manila-share'] }}"
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/manila-share/ceph"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -25,7 +25,7 @@
   with_items: "{{ manila_ceph_backends }}"
 
 - name: Copy over ceph Manila keyrings
-  template:
+  ansible.builtin.template:
     src: "{{ node_custom_config }}/manila/{{ item.cluster }}.client.{{ ceph_manila_user }}.keyring"
     dest: "{{ node_config_directory }}/manila-share/ceph/{{ item.cluster }}.client.{{ ceph_manila_user }}.keyring"
     mode: "0660"
@@ -37,7 +37,7 @@
 
 - name: Ensuring config directory has correct owner and permission
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item }}"
     recurse: true
     owner: "{{ config_owner_user }}"
