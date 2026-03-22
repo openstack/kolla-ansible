@@ -14,14 +14,14 @@
 # * the keystone_fernet volume exists but no container
 # Probably what we care about is the existence of Fernet key 0.
 - name: Group nodes where keystone_fernet is running
-  group_by:
+  ansible.builtin.group_by:
     key: keystone_fernet_running_{{ container_facts.containers['keystone_fernet'] is defined }}
   changed_when: false
 
 # NOTE(mgoddard): If we bootstrap Fernet keys on an existing cluster, this
 # would overwrite existing keys, and invalidate tokens created from them.
 - name: Fail if any hosts need bootstrapping and not all hosts targeted
-  fail:
+  ansible.builtin.fail:
     msg: >
       Some hosts ({{ groups['keystone_fernet_running_False'] | join(', ') }}) need
       Fernet key bootstrapping, but not all Keystone hosts are in the target

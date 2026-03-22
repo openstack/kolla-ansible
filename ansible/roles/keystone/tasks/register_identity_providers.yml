@@ -1,6 +1,6 @@
 ---
 - name: List configured attribute mappings (that can be used by IdPs)
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
       --os-auth-url={{ openstack_auth.auth_url }}
       --os-password={{ openstack_auth.password }}
@@ -18,12 +18,12 @@
   register: existing_mappings_register
 
 - name: Register existing mappings
-  set_fact:
+  ansible.builtin.set_fact:
     existing_mappings: "{{ existing_mappings_register.stdout_lines | map('trim') | list }}"
 
 - name: Remove unmanaged attribute mappings
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -60,7 +60,7 @@
 - name: Register attribute mappings in OpenStack
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -82,7 +82,7 @@
 - name: Update existing attribute mappings in OpenStack
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -103,7 +103,7 @@
 
 - name: List configured IdPs
   become: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -120,13 +120,13 @@
   register: existing_idps_register
 
 - name: Register existing idps
-  set_fact:
+  ansible.builtin.set_fact:
     existing_idps: "{{ existing_idps_register.stdout.split('\n') | map('trim') | list }}"
 
 - name: Remove unmanaged identity providers
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -147,7 +147,7 @@
 - name: Register Identity Providers in OpenStack
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -171,7 +171,7 @@
 - name: Update Identity Providers in OpenStack according to Kolla-Ansible configurations
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -194,7 +194,7 @@
 - name: Configure attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator)
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}
@@ -217,7 +217,7 @@
 - name: Update attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator).
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
     --os-auth-url={{ openstack_auth.auth_url }}
     --os-password={{ openstack_auth.password }}

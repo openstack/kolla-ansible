@@ -1,6 +1,6 @@
 ---
 - name: Precheck keystone configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ keystone_services }}"
@@ -18,7 +18,7 @@
   register: container_facts
 
 - name: Checking free port for Keystone Public
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ keystone_public_listen_port }}"
     connect_timeout: 1
@@ -31,7 +31,7 @@
 - name: Checking free port for Keystone SSH
   vars:
     keystone_ssh: "{{ keystone_services['keystone-ssh'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ keystone_ssh_port }}"
     connect_timeout: 1
@@ -44,7 +44,7 @@
 
 - name: Checking fernet_token_expiry
   run_once: true
-  assert:
+  ansible.builtin.assert:
     that:
       - fernet_token_expiry is number
       # Check that it is not a floating point number

@@ -3,7 +3,7 @@
   become: true
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
-  file:
+  ansible.builtin.file:
     state: absent
     path: "{{ item }}"
   when:
@@ -16,7 +16,7 @@
 - name: Create OpenID configuration directories
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
-  file:
+  ansible.builtin.file:
     dest: "{{ item }}"
     state: "directory"
     mode: "0770"
@@ -29,7 +29,7 @@
     - inventory_hostname in groups[keystone.group]
 
 - name: Find OpenID Identity Providers metadata files locally
-  find:
+  ansible.builtin.find:
     paths: "{{ item.metadata_folder }}"
     patterns: "*"
     recurse: false
@@ -44,7 +44,7 @@
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item.path }}"
     dest: "{{ keystone_host_federation_oidc_metadata_folder }}/{{ item.path | basename }}"
     mode: "0660"
@@ -56,7 +56,7 @@
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.certificate_file }}"
     dest: "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
     mode: "0660"
@@ -70,7 +70,7 @@
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.file }}"
     dest: "{{ keystone_host_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
     mode: "0660"
@@ -82,7 +82,7 @@
   become: true
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
-  find:
+  ansible.builtin.find:
     path: "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
     pattern: "*.pem"
   register: certificates_path
@@ -92,7 +92,7 @@
 - name: Setting the certificates variable
   vars:
     keystone: "{{ keystone_services['keystone'] }}"
-  set_fact:
+  ansible.builtin.set_fact:
     keystone_federation_openid_certificate_key_ids: >-
       {{
         certificates_path.files |
@@ -105,7 +105,7 @@
 - name: Copying modOIDC error page template
   vars:
     keystone: "{{ keystone_services.keystone }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ keystone_host_federation_base_folder }}/modoidc-error-page.html"
     mode: "0660"
