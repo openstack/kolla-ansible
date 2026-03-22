@@ -11,7 +11,7 @@
 - name: Checking free port for LetsEncrypt server
   vars:
     service: "{{ letsencrypt_services['letsencrypt-webserver'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ letsencrypt_webserver_port }}"
     connect_timeout: 1
@@ -25,7 +25,7 @@
   run_once: true
   vars:
     replace: "valid"
-  assert:
+  ansible.builtin.assert:
     that: letsencrypt_email | regex_replace('.*@.*$', replace) == "valid"
     fail_msg: "Letsencrypt contact email value didn't pass validation."
   when:
@@ -34,7 +34,7 @@
 
 - name: Validating letsencrypt EAB variables
   run_once: true
-  assert:
+  ansible.builtin.assert:
     that:
       - letsencrypt_eab_key_id != ""
       - letsencrypt_eab_hmac != ""
