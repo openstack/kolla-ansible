@@ -35,7 +35,7 @@
     - name: Create ironic_dhcp_hosts volume
       become: true
       changed_when: true
-      command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
+      ansible.builtin.command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
       when: container_volume_facts.volumes['ironic_dhcp_hosts'] is not defined
 
     - name: Migrate data from ironic_inspector_dhcp_hosts volume
@@ -45,7 +45,7 @@
         volumes_dir: >-
           {{ '/var/lib/docker/volumes' if kolla_container_engine == 'docker'
           else '/var/lib/containers/storage/volumes' }}
-      command: >-
+      ansible.builtin.command: >-
         mv {{ volumes_dir }}/ironic_inspector_dhcp_hosts/_data/
         {{ volumes_dir }}/ironic_dhcp_hosts/_data
       when: container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
@@ -82,16 +82,16 @@
     - not ironic_upgrade_skip_wait_check | bool
 
 - name: Import tasks from config.yml
-  import_tasks: config.yml
+  ansible.builtin.import_tasks: config.yml
 
 - name: Import tasks from check-containers.yml
-  import_tasks: check-containers.yml
+  ansible.builtin.import_tasks: check-containers.yml
 
 - name: Import tasks from bootstrap_service.yml
-  import_tasks: bootstrap_service.yml
+  ansible.builtin.import_tasks: bootstrap_service.yml
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Running Ironic online data migration
   vars:
@@ -118,7 +118,7 @@
 - name: Remove ironic_inspector_dhcp_hosts volume
   become: true
   changed_when: true
-  command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
+  ansible.builtin.command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
   when:
     - enable_ironic_dnsmasq | bool
     - container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined

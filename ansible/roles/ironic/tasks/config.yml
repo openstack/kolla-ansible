@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if Ironic policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -22,19 +22,19 @@
       skip: true
 
 - name: Set ironic policy file
-  set_fact:
+  ansible.builtin.set_fact:
     ironic_policy_file: "{{ ironic_policy.results.0.stat.path | basename }}"
     ironic_policy_file_path: "{{ ironic_policy.results.0.stat.path }}"
   when:
     - ironic_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - ironic_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -61,7 +61,7 @@
 - name: Copying over dnsmasq.conf
   vars:
     service: "{{ ironic_services['ironic-dnsmasq'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/ironic-dnsmasq/dnsmasq.conf"
     mode: "0660"
@@ -75,7 +75,7 @@
 - name: Copying pxelinux.cfg default
   vars:
     service: "{{ ironic_services['ironic-tftp'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/ironic-tftp/default"
     mode: "0660"
@@ -93,7 +93,7 @@
 - name: Copying ironic-agent kernel and initramfs (PXE)
   vars:
     service: "{{ ironic_services['ironic-tftp'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ ironic_agent_files_directory }}/ironic/{{ item }}"
     dest: "{{ node_config_directory }}/ironic-tftp/{{ item }}"
     mode: "0660"
@@ -110,7 +110,7 @@
 - name: Copying ironic-agent kernel and initramfs (iPXE)
   vars:
     service: "{{ ironic_services['ironic-http'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ ironic_agent_files_directory }}/ironic/{{ item }}"
     dest: "{{ node_config_directory }}/ironic-http/{{ item }}"
     mode: "0660"
@@ -126,7 +126,7 @@
 - name: Copying ipa.ipxe
   vars:
     service: "{{ ironic_services['ironic-http'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/ironic-http/ipa.ipxe"
     mode: "0660"
@@ -143,7 +143,7 @@
 - name: Copying ironic-http-httpd.conf
   vars:
     service: "{{ ironic_services['ironic-http'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/ironic-http/httpd.conf"
     mode: "0660"
@@ -156,7 +156,7 @@
 - name: Copying over ironic-prometheus-exporter-wsgi.conf
   vars:
     service: "{{ ironic_services['ironic-prometheus-exporter'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/ironic-prometheus-exporter/ironic-prometheus-exporter-wsgi.conf"
     mode: "0660"
@@ -172,7 +172,7 @@
     services_require_policy_json:
       - ironic-api
       - ironic-conductor
-  template:
+  ansible.builtin.template:
     src: "{{ ironic_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ ironic_policy_file }}"
     mode: "0660"
@@ -185,7 +185,7 @@
 - name: Copying over ironic-api-wsgi.conf
   vars:
     service: "{{ ironic_services['ironic-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "ironic-api-wsgi.conf.j2"
     dest: "{{ node_config_directory }}/ironic-api/ironic-api-wsgi.conf"
     mode: "0660"
@@ -195,7 +195,7 @@
     - ironic_wsgi_provider == "apache"
 
 - name: "Configure uWSGI for ironic-api"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ ironic_services }}"
