@@ -21,7 +21,7 @@
 
 # NOTE(yoctozepto): We have to loop this to avoid breaking on connection resets
 - name: Wait for first MariaDB service port liveness
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ mariadb_port }}"
     connect_timeout: 1
@@ -52,12 +52,12 @@
   listen: Bootstrap MariaDB cluster
 
 - name: Ensure MariaDB is running normally on bootstrap host
-  group_by:
+  ansible.builtin.group_by:
     key: mariadb_bootstrap_restart
   listen: Bootstrap MariaDB cluster
 
 - name: Restart MariaDB on existing cluster members
-  group_by:
+  ansible.builtin.group_by:
     key: mariadb_restart
   when:
     - groups[mariadb_shard_group + '_port_alive_True'] is defined
@@ -65,7 +65,7 @@
   listen: Restart mariadb container
 
 - name: Start MariaDB on new nodes
-  group_by:
+  ansible.builtin.group_by:
     key: mariadb_start
   when:
     - bootstrap_host is not defined or bootstrap_host != inventory_hostname

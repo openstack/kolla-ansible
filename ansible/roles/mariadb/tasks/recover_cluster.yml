@@ -1,11 +1,11 @@
 ---
 - name: Checking for mariadb cluster
-  fail:
+  ansible.builtin.fail:
     msg: "MariaDB cluster was not found. Is your inventory correct?"
   when: not mariadb_cluster_exists
 
 - name: Cleaning up temp file on localhost
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   delegate_to: localhost
@@ -48,31 +48,31 @@
     - name: Copying MariaDB log file to /tmp
       become: true
       changed_when: true
-      command: "cp {{ container_engine_volumes_path }}/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
+      ansible.builtin.command: "cp {{ container_engine_volumes_path }}/kolla_logs/_data/mariadb/mariadb.log /tmp/mariadb_tmp.log"
 
     # Look for sequence number in logs. Format is:
     # WSREP: Recovered position: <UUID>:<seqno>.
     - name: Get MariaDB wsrep recovery seqno
       become: true
       changed_when: false
-      shell: awk -F" " '/Recovered position/{seqno=$NF} END{split(seqno, a, ":"); print a[2]}' /tmp/mariadb_tmp.log
+      ansible.builtin.shell: awk -F" " '/Recovered position/{seqno=$NF} END{split(seqno, a, ":"); print a[2]}' /tmp/mariadb_tmp.log
       register: wsrep_recovery_seqno
 
     - name: Removing MariaDB log file from /tmp
       become: true
-      file:
+      ansible.builtin.file:
         path: /tmp/mariadb_tmp.log
         state: absent
       changed_when: false
       check_mode: false
 
     - name: Registering MariaDB seqno variable
-      set_fact:
+      ansible.builtin.set_fact:
         seqno: "{{ wsrep_recovery_seqno.stdout_lines[0] }}"
       changed_when: false
 
     - name: Comparing seqno value on all mariadb hosts
-      shell:
+      ansible.builtin.shell:
         cmd: |
           if [[ ! -z {{ hostvars[inventory_hostname]['seqno'] }} && ! -z {{ hostvars[item]['seqno'] }} &&
           {{ hostvars[inventory_hostname]['seqno'] }} =~ ^-?[0-9]+$ && {{ hostvars[item]['seqno'] }} =~ ^-?[0-9]+$ &&
@@ -84,7 +84,7 @@
       changed_when: false
 
     - name: Writing hostname of host with the largest seqno to temp file
-      template:
+      ansible.builtin.template:
         src: "hostname.j2"
         dest: "{{ mariadb_recover_tmp_file_path }}"
         mode: "0644"
@@ -95,16 +95,16 @@
 
     - name: Registering mariadb_recover_inventory_name from temp file
       connection: local
-      set_fact:
+      ansible.builtin.set_fact:
         mariadb_recover_inventory_name: "{{ lookup('file', mariadb_recover_tmp_file_path) }}"
 
 - name: Store bootstrap and master hostnames into facts
-  set_fact:
+  ansible.builtin.set_fact:
     bootstrap_host: "{{ mariadb_recover_inventory_name }}"
 
 - name: Set grastate.dat file from MariaDB container in bootstrap host
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     create: true
     dest: "{{ container_engine_volumes_path }}/mariadb/_data/grastate.dat"
     mode: "0660"
@@ -150,7 +150,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Wait for first MariaDB container
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ mariadb_port }}"
     connect_timeout: 1
@@ -201,7 +201,7 @@
     - bootstrap_host != inventory_hostname
 
 - name: Wait for slave MariaDB
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ mariadb_port }}"
     connect_timeout: 1
@@ -249,7 +249,7 @@
     - bootstrap_host == inventory_hostname
 
 - name: Wait for MariaDB
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ mariadb_port }}"
     connect_timeout: 1
@@ -261,4 +261,4 @@
   delay: 6
 
 - name: Import tasks from check.yml
-  import_tasks: check.yml
+  ansible.builtin.import_tasks: check.yml
