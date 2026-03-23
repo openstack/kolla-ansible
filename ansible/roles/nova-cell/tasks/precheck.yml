@@ -1,6 +1,6 @@
 ---
 - name: Precheck nova-cell configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ nova_cell_services }}"
@@ -23,7 +23,7 @@
 - name: Checking available compute nodes in inventory
   vars:
     nova_compute_ironic: "{{ nova_cell_services['nova-compute-ironic'] }}"
-  fail:
+  ansible.builtin.fail:
     msg: >
       At least 1 compute node required in inventory when ironic is disabled.
   when:
@@ -33,7 +33,7 @@
 - name: Checking free port for Nova NoVNC Proxy
   vars:
     service: "{{ nova_cell_services['nova-novncproxy'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_novncproxy_listen_port }}"
     connect_timeout: 1
@@ -46,7 +46,7 @@
 - name: Checking free port for Nova Serial Proxy
   vars:
     service: "{{ nova_cell_services['nova-serialproxy'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_serialproxy_listen_port }}"
     connect_timeout: 1
@@ -59,7 +59,7 @@
 - name: Checking free port for Nova Spice HTML5 Proxy
   vars:
     service: "{{ nova_cell_services['nova-spicehtml5proxy'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_spicehtml5proxy_listen_port }}"
     connect_timeout: 1
@@ -72,7 +72,7 @@
 - name: Checking free port for Nova SSH (API interface)
   vars:
     service: "{{ nova_cell_services['nova-ssh'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_ssh_port }}"
     connect_timeout: 1
@@ -85,7 +85,7 @@
 - name: Checking free port for Nova SSH (migration interface)
   vars:
     service: "{{ nova_cell_services['nova-ssh'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ migration_interface_address }}"
     port: "{{ nova_ssh_port }}"
     connect_timeout: 1
@@ -99,7 +99,7 @@
 - name: Checking free port for Nova Libvirt
   vars:
     service: "{{ nova_cell_services['nova-libvirt'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ nova_libvirt_port }}"
     connect_timeout: 1
@@ -112,7 +112,7 @@
 - name: Checking that host libvirt is not running
   vars:
     service: "{{ nova_cell_services['nova-libvirt'] }}"
-  stat:
+  ansible.builtin.stat:
     path: "/var/run/libvirt/libvirt-sock"
   register: result
   failed_when: result.stat.exists
@@ -123,7 +123,7 @@
 - name: Checking that nova_libvirt container is not running
   vars:
     nova_libvirt: "{{ nova_cell_services['nova-libvirt'] }}"
-  fail:
+  ansible.builtin.fail:
     msg: >-
       The nova_libvirt container is running, however it has been disabled via
       the 'enable_nova_libvirt_container' flag. Stop and remove the container

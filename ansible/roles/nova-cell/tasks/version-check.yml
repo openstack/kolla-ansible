@@ -27,14 +27,14 @@
       delegate_to: "{{ groups[service.group] | first }}"
 
     - name: Cache new Libvirt version
-      set_fact:
+      ansible.builtin.set_fact:
         libvirt_new_version: "{{ libvirt_version_new.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
       run_once: true
       delegate_facts: true
       delegate_to: "{{ groups[service.group] | first }}"
 
     - name: Get nova_libvirt image info
-      include_role:
+      ansible.builtin.include_role:
         name: service-image-info
       run_once: true
 
@@ -51,7 +51,7 @@
     - name: Get current Libvirt version
       any_errors_fatal: true
       become: true
-      command: "{{ kolla_container_engine }} exec {{ service.container_name }} libvirtd --version"
+      ansible.builtin.command: "{{ kolla_container_engine }} exec {{ service.container_name }} libvirtd --version"
       register: libvirt_version_current_results
       changed_when: false
       when:
@@ -66,7 +66,7 @@
       vars:
         current_version: "{{ libvirt_version_current_results.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
         new_version: "{{ hostvars[groups[service.group] | first].libvirt_new_version }}"
-      assert:
+      ansible.builtin.assert:
         that: "{{ new_version is version(current_version, '>=', strict=true) }}"
         fail_msg: >
           It looks like you're about to downgrade Libvirt in the nova_libvirt container from

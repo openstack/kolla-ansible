@@ -111,7 +111,7 @@
 - name: Checking libvirt container is ready
   become: true
   changed_when: false
-  shell:
+  ansible.builtin.shell:
     cmd: >
       set -o pipefail &&
       {{ kolla_container_engine }} exec -i nova_libvirt ls /run/libvirtd.pid
@@ -123,7 +123,7 @@
 # The SASL user needs to exist in order for nova-compute to start successfully.
 - name: Create libvirt SASL user
   become: true
-  shell:
+  ansible.builtin.shell:
     cmd: >
       set -o pipefail &&
       echo {{ libvirt_sasl_password }} |
@@ -135,7 +135,7 @@
 
 - name: Reload libvirtd
   become: true
-  service:
+  ansible.builtin.service:
     name: libvirtd
     state: reloaded
   when:
@@ -206,7 +206,7 @@
 # for slowness.
 
 - name: Wait for nova-compute services to update service versions
-  pause:
+  ansible.builtin.pause:
     seconds: "{{ nova_compute_startup_delay }}"
   run_once: true
   when:

@@ -1,6 +1,6 @@
 ---
 - name: Fail if nova_libvirt container is enabled
-  fail:
+  ansible.builtin.fail:
     msg: >-
       The nova_libvirt container has not been cleaned up because it is enabled.
       It may be disabled by setting enable_nova_libvirt_container to false.
@@ -22,7 +22,7 @@
     - name: Check if there are any running VMs
       become: true
       changed_when: false
-      shell:
+      ansible.builtin.shell:
         cmd: >
           set -o pipefail &&
           { pgrep -l qemu || test $? = 1; } | awk '!/qemu-ga/  && !/qemu-img/ {print $1}'
@@ -30,7 +30,7 @@
       register: running_vms
 
     - name: Fail if there are any running VMs
-      fail:
+      ansible.builtin.fail:
         msg: >-
           Refusing to remove nova_libvirt container with running VMs:
           {{ running_vms.stdout }}
@@ -59,7 +59,7 @@
 
 - name: Remove config for nova_libvirt
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/nova-libvirt"
     state: "absent"
 
@@ -70,19 +70,19 @@
   block:
     - name: Remove udev kolla kvm rules
       become: true
-      file:
+      ansible.builtin.file:
         path: "/etc/udev/rules.d/99-kolla-kvm.rules"
         state: absent
 
     - name: Reset /dev/kvm ownership
       become: true
-      file:
+      ansible.builtin.file:
         path: /dev/kvm
         group: kvm
 
     - name: Unmask qemu-kvm service
       become: true
-      systemd:
+      ansible.builtin.systemd:
         name: qemu-kvm.service
         masked: false
       when:
