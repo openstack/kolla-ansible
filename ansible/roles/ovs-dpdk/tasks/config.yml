@@ -1,7 +1,7 @@
 ---
 - name: Ensuring config directories exist
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -11,7 +11,7 @@
 
 - name: Copying over config.json files for services
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -19,7 +19,7 @@
 
 - name: Copying ovs-dpdkctl tool
   become: true
-  copy:
+  ansible.builtin.copy:
     src: ovs-dpdkctl.sh
     dest: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh"
     mode: "0770"
@@ -27,7 +27,7 @@
 - name: Install ovs-dpdkctl service and config
   become: true
   changed_when: true
-  command: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh install"
+  ansible.builtin.command: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh install"
   environment:
     CONFIG_FILE: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.conf"
     bridge_mappings: "{{ ovs_bridge_mappings }}"
@@ -41,7 +41,7 @@
 - name: Binds the interface to the target driver specified in the config
   become: true
   changed_when: true
-  command: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh bind_nics"
+  ansible.builtin.command: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.sh bind_nics"
   environment:
     CONFIG_FILE: "{{ node_config_directory }}/ovsdpdk-db/ovs-dpdkctl.conf"
     bridge_mappings: "{{ ovs_bridge_mappings }}"
