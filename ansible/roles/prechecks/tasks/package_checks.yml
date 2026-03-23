@@ -1,6 +1,6 @@
 ---
 - name: Checking docker SDK version
-  command: "{{ ansible_facts.python.executable }} -c \"import docker; print(docker.__version__)\""
+  ansible.builtin.command: "{{ ansible_facts.python.executable }} -c \"import docker; print(docker.__version__)\""
   register: result
   changed_when: false
   check_mode: false
@@ -10,7 +10,7 @@
   failed_when: result is failed or result.stdout is version(docker_py_version_min, '<')
 
 - name: Checking dbus-python package
-  command: "{{ ansible_facts.python.executable }} -c \"import dbus\""
+  ansible.builtin.command: "{{ ansible_facts.python.executable }} -c \"import dbus\""
   register: dbus_present
   changed_when: false
   when: inventory_hostname in groups['baremetal']
@@ -20,7 +20,7 @@
 # to check. as ansible_version does not provide major.minor in dict, we need to
 # set it as variable.
 - name: Checking Ansible version
-  assert:
+  ansible.builtin.assert:
     that:
       - ansible_version_host is version(ansible_version_min, '>=')
       - ansible_version_host is version(ansible_version_max, '<=')
