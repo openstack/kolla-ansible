@@ -21,7 +21,7 @@
       block:
         - name: Get current RabbitMQ version
           become: true
-          command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl --version"
+          ansible.builtin.command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl --version"
           register: rabbitmq_version_current
           changed_when: false
 
@@ -62,7 +62,7 @@
             new_version: "{{ rabbitmq_version_new.stdout | regex_replace('.[^.]+$', '') }}"
             # Note: 3.13 is the last release before 4.0.
             upgrade_version: "{{ '4.0 or 4.1' if current_version == '3.13' else current_version_major + '.' + (current_version_minor | int + 1) | string }}"
-          assert:
+          ansible.builtin.assert:
             that: (current_version_major == new_version_major and
               new_version_minor | int - current_version_minor | int <= 1) or
               (new_version | float == 4.0 and current_version | float == 3.13) or
@@ -75,7 +75,7 @@
               See these docs for more details: https://docs.openstack.org/kolla-ansible/latest/reference/message-queues/rabbitmq.html#slurp
 
         - name: Catch when RabbitMQ is being downgraded
-          assert:
+          ansible.builtin.assert:
             that: rabbitmq_version_current.stdout is version(rabbitmq_version_new.stdout | trim, 'le', version_type='semver')
             fail_msg: >
               Looks like you're about to downgrade RabbitMQ
