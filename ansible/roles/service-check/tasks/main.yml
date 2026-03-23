@@ -15,7 +15,7 @@
       {{ service_check_enabled_container_names |
       difference(container_facts.containers) |
       list }}
-  fail:
+  ansible.builtin.fail:
     msg: >
       The following {{ kolla_role_name | default(project_name) }} containers are missing or not running:
       {{ missing_containers | join(', ') }}
@@ -31,7 +31,7 @@
       selectattr("value.Status", "defined") |
       selectattr("value.Status", "search", "unhealthy") |
       map(attribute='key') | list }}
-  fail:
+  ansible.builtin.fail:
     msg: >
       The following {{ kolla_role_name | default(project_name) }} containers are unhealthy:
       {{ unhealthy_containers | join(', ') }}

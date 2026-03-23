@@ -10,7 +10,7 @@
 
 - name: "Validate configurations for {{ service.container_name }}"
   become: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec {{ service.container_name }}
     bash -c "[[ -f {{ inner_item['config'] }} ]] && oslo-config-validator --config-file {{ inner_item['generator'] }} --input-file {{ inner_item['config'] }}"
   when:
@@ -25,7 +25,7 @@
 
 - name: "Ensure log directory exists for {{ service.container_name }}"
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ output_dir }}"
     state: directory
     mode: "0755"
@@ -36,7 +36,7 @@
 
 - name: "Log configuration errors for {{ service.container_name }}"
   become: true
-  copy:
+  ansible.builtin.copy:
     content: "{{ inner_item.stderr }}"
     dest: "{{ output_dir }}/{{ inner_item.inner_item.config | basename }}.err"
     mode: "0644"
