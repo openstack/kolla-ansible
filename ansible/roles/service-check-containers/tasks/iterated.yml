@@ -25,13 +25,18 @@
   loop: "{{ range(1, (iterate_count | int) + 1) | list }}"
   register: container_check
 
+- name: "Store changed containers to pass to the handler"
+  ansible.builtin.set_fact:
+    "{{ service_name | replace('-', '_') }}_changed_containers": "{{ container_check.results | selectattr('changed') | default([]) }}"
+
 # NOTE(yoctozepto): Must be a separate task because one cannot see the whole
 # result in the previous task and Ansible has a quirk regarding notifiers.
 # For details see https://github.com/ansible/ansible/issues/22579
 - name: "Notify handlers to restart containers for {{ kolla_role_name | default(project_name) }}"
   vars:
-    handler: "{{ ['Restart ' + outer_item.key + ' container'] if container_check is changed else [] }}"
-  debug:
-    msg: "{{ ('Notifying handlers: ' + handler | join(',')) if container_check is changed else 'Nothing changed - not notifying handlers' }}"
-  changed_when: container_check is changed
+    handler: "{{ ['Restart ' + outer_item.key + ' container'] if changed_containers | length > 0 else [] }}"
+    changed_containers: "{{ lookup('vars', service_name | replace('-', '_') + '_changed_containers') }}"
+  ansible.builtin.debug:
+    msg: "{{ ('Notifying handlers: ' + handler | join(',')) if changed_containers | length > 0 else 'Nothing changed - not notifying handlers' }}"
+  changed_when: changed_containers | length > 0
   notify: "{{ handler }}"
