@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ skyline_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - skyline_copy_certs | bool
 
@@ -27,7 +27,7 @@
 - name: Copying over gunicorn.py files for services
   vars:
     service: "{{ skyline_services['skyline-apiserver'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/skyline-apiserver/gunicorn.py"
     mode: "0660"
@@ -40,7 +40,7 @@
 - name: Copying over nginx.conf files for services
   vars:
     service: "{{ skyline_services['skyline-console'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/skyline-console/nginx.conf"
     mode: "0660"
@@ -51,7 +51,7 @@
     - "nginx.conf.j2"
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -62,7 +62,7 @@
   become: true
   vars:
     service: "{{ skyline_services['skyline-console'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ node_custom_config }}/skyline/logos/{{ item }}"
     dest: "{{ node_config_directory }}/skyline-console/logos/"
     mode: "0660"
