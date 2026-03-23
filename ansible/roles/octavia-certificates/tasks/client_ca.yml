@@ -1,20 +1,20 @@
 ---
 - name: Create client_ca index.txt
-  copy:
+  ansible.builtin.copy:
     content: ''
     dest: "{{ octavia_certs_work_dir }}/client_ca/index.txt"
     force: false
     mode: "0660"
 
 - name: Create client_ca serial
-  copy:
+  ansible.builtin.copy:
     content: "1000\n"
     dest: "{{ octavia_certs_work_dir }}/client_ca/serial"
     force: false
     mode: "0660"
 
 - name: Create client_ca private key
-  command: >
+  ansible.builtin.command: >
     openssl genrsa -aes256 -out client_ca.key.pem
     -passout pass:{{ octavia_client_ca_password }} 4096
   args:
@@ -29,7 +29,7 @@
       O: "{{ octavia_certs_client_ca_organization }}"
       OU: "{{ octavia_certs_client_ca_organizational_unit }}"
       CN: "{{ octavia_certs_client_ca_common_name }}"
-  command: >
+  ansible.builtin.command: >
     openssl req -new -x509 -config ../openssl.cnf
     -key client_ca.key.pem
     -days {{ octavia_certs_client_ca_expiry }}

@@ -8,14 +8,14 @@
 # Client CA is used to generate certificates for Octavia controllers.
 
 - name: Check if any certificates are going to expire
-  include_tasks: check_expiry.yml
+  ansible.builtin.include_tasks: check_expiry.yml
   when: octavia_certs_check_expiry | bool
 
 - name: Generate Octavia certificates
   when: not octavia_certs_check_expiry | bool
   block:
     - name: Ensure server_ca and client_ca directories exist
-      file:
+      ansible.builtin.file:
         path: "{{ octavia_certs_work_dir }}/{{ item }}"
         state: "directory"
         mode: "0770"
@@ -24,28 +24,28 @@
         - client_ca
 
     - name: Copy openssl.cnf
-      copy:
+      ansible.builtin.copy:
         src: "{{ octavia_certs_openssl_cnf_path }}"
         dest: "{{ octavia_certs_work_dir }}/openssl.cnf"
         mode: "0600"
 
     - name: Import tasks from server_ca.yml
-      import_tasks: server_ca.yml
+      ansible.builtin.import_tasks: server_ca.yml
 
     - name: Import tasks from client_ca.yml
-      import_tasks: client_ca.yml
+      ansible.builtin.import_tasks: client_ca.yml
 
     - name: Import tasks from client_cert.yml
-      import_tasks: client_cert.yml
+      ansible.builtin.import_tasks: client_cert.yml
 
     - name: Ensure octavia directory exists under {{ node_custom_config }}
-      file:
+      ansible.builtin.file:
         path: "{{ node_custom_config }}/octavia"
         state: "directory"
         mode: "0770"
 
     - name: Copy the to-be-deployed keys and certs
-      copy:
+      ansible.builtin.copy:
         src: "{{ octavia_certs_work_dir }}/{{ item.src }}"
         dest: "{{ node_custom_config }}/octavia/{{ item.dest }}"
         mode: "0600"

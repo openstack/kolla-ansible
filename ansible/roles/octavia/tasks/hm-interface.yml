@@ -24,7 +24,7 @@
   changed_when: true
   vars:
     port_id: "{{ port_info.port.id }}"
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec kolla_toolbox openstack
     --os-interface {{ openstack_interface }}
     --os-auth-url {{ octavia_user_auth.auth_url }}
@@ -45,7 +45,7 @@
     port_id: "{{ port_info.port.id }}"
   become: true
   changed_when: true
-  command: >
+  ansible.builtin.command: >
     {{ kolla_container_engine }} exec openvswitch_vswitchd ovs-vsctl --may-exist \
     add-port br-int {{ octavia_network_interface }} \
     -- set Interface {{ octavia_network_interface }} type=internal \
@@ -56,7 +56,7 @@
 
 - name: Create octavia dhclient conf
   become: true
-  copy:
+  ansible.builtin.copy:
     content: |
       request subnet-mask,broadcast-address,interface-mtu;
       do-forward-updates false;
@@ -65,7 +65,7 @@
 
 - name: Create octavia-interface service
   become: true
-  template:
+  ansible.builtin.template:
     src: octavia-interface.service.j2
     dest: /etc/systemd/system/octavia-interface.service
     mode: "0644"
@@ -73,7 +73,7 @@
 
 - name: Restart octavia-interface.service if required
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: octavia-interface
     daemon_reload: true
     state: restarted
@@ -81,7 +81,7 @@
 
 - name: Enable and start octavia-interface.service
   become: true
-  service:
+  ansible.builtin.service:
     name: octavia-interface
     enabled: true
     state: started
@@ -89,7 +89,7 @@
 - name: Wait for interface ip appear on {{ octavia_network_interface }}
   vars:
     port_ip: "{{ port_info.port.fixed_ips[0].ip_address }}"
-  command: ip address show dev {{ octavia_network_interface }}
+  ansible.builtin.command: ip address show dev {{ octavia_network_interface }}
   changed_when: false
   register: ip_info
   until: ip_info.stdout.find(port_ip) != -1
@@ -99,5 +99,5 @@
 # NOTE(wuchunyang): we have gathered facts at first, but here we add a new
 # network device(o-hm0) which is not collected, so we need gather facts again
 - name: Gather facts
-  setup:
+  ansible.builtin.setup:
   when: octavia_interface.changed  # noqa no-handler
