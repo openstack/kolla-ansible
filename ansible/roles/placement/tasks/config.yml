@@ -1,7 +1,7 @@
 ---
 - name: Ensuring config directories exist
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,7 +10,7 @@
   with_dict: "{{ placement_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   delegate_to: localhost
   run_once: true
@@ -22,20 +22,20 @@
       skip: true
 
 - name: Set placement policy file
-  set_fact:
+  ansible.builtin.set_fact:
     placement_policy_file: "{{ placement_policy.results.0.stat.path | basename }}"
     placement_policy_file_path: "{{ placement_policy.results.0.stat.path }}"
   when:
     - placement_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - placement_copy_certs | bool
 
 - name: Copying over config.json files for services
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -60,7 +60,7 @@
   become: true
   vars:
     service: "{{ placement_services['placement-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/placement-api/placement-api-wsgi.conf"
     mode: "0660"
@@ -75,7 +75,7 @@
     - "Restart placement-api container"
 
 - name: "Configure uWSGI for Placement"
-  include_role:
+  ansible.builtin.include_role:
     name: service-uwsgi-config
   vars:
     project_services: "{{ placement_services }}"
@@ -96,7 +96,7 @@
   become: true
   vars:
     service: "{{ placement_services['placement-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "migrate-db.rc.j2"
     dest: "{{ node_config_directory }}/placement-api/migrate-db.rc"
     mode: "0660"
@@ -104,7 +104,7 @@
 
 - name: Copying over existing policy file
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ placement_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ placement_policy_file }}"
     mode: "0660"
