@@ -1,6 +1,6 @@
 ---
 - name: Precheck zun configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ zun_services }}"
@@ -19,7 +19,7 @@
   register: container_facts
 
 - name: Checking free port for Zun API
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ zun_api_port }}"
     connect_timeout: 1
@@ -30,7 +30,7 @@
     - inventory_hostname in groups['zun-api']
 
 - name: Checking free port for Zun WSproxy
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ zun_wsproxy_port }}"
     connect_timeout: 1
@@ -41,7 +41,7 @@
     - inventory_hostname in groups['zun-wsproxy']
 
 - name: Checking free port for zun-cni-daemon
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ zun_cni_daemon_port }}"
     connect_timeout: 1
@@ -52,7 +52,7 @@
     - inventory_hostname in groups['zun-cni-daemon']
 
 - name: Ensure kuryr enabled for zun
-  assert:
+  ansible.builtin.assert:
     that: enable_kuryr | bool
     fail_msg: "kuryr is required but not enabled"
   run_once: true

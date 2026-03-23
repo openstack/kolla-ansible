@@ -1,6 +1,6 @@
 ---
 - name: Ensuring config directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,13 +10,13 @@
   with_dict: "{{ zun_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Include tasks from external_ceph.yml
-  include_tasks: external_ceph.yml
+  ansible.builtin.include_tasks: external_ceph.yml
   when:
     - zun_configure_for_cinder_ceph | bool
     - inventory_hostname in groups['zun-compute']
 
 - name: Check if policies shall be overwritten
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   run_once: true
   delegate_to: localhost
@@ -28,19 +28,19 @@
       skip: true
 
 - name: Set zun policy file
-  set_fact:
+  ansible.builtin.set_fact:
     zun_policy_file: "{{ zun_policy.results.0.stat.path | basename }}"
     zun_policy_file_path: "{{ zun_policy.results.0.stat.path }}"
   when:
     - zun_policy.results | length > 0
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - zun_copy_certs | bool
 
 - name: Copying over config.json files for services
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
@@ -65,7 +65,7 @@
 - name: Copying over wsgi-zun files for services
   vars:
     service: "{{ zun_services['zun-api'] }}"
-  template:
+  ansible.builtin.template:
     src: "wsgi-zun.conf.j2"
     dest: "{{ node_config_directory }}/zun-api/wsgi-zun.conf"
     mode: "0660"
@@ -73,7 +73,7 @@
   when: service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
-  template:
+  ansible.builtin.template:
     src: "{{ zun_policy_file_path }}"
     dest: "{{ node_config_directory }}/{{ item.key }}/{{ zun_policy_file }}"
     mode: "0660"
