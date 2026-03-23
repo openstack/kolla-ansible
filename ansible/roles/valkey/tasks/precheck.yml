@@ -11,11 +11,11 @@
   register: redis_container_facts
 
 - name: Set migration flag if Redis is present
-  set_fact:
+  ansible.builtin.set_fact:
     valkey_is_migrating: "{{ redis_container_facts.containers['redis'] is defined }}"
 
 - name: Precheck valkey configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ valkey_services }}"
@@ -34,7 +34,7 @@
 - name: Checking free port for Valkey
   vars:
     service: "{{ valkey_services['valkey-server'] }}"
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ valkey_server_port }}"
     connect_timeout: 1

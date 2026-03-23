@@ -11,7 +11,7 @@
   register: redis_container_facts
 
 - name: Set valkey master host variables
-  set_fact:
+  ansible.builtin.set_fact:
     valkey_master_host: "{{ groups['valkey'][0] }}"
     redis_slave_hosts: "{{ groups.get('redis', [])[1:] }}"
     _valkey_migration: "{{ redis_container_facts.containers['redis'] is defined }}"
@@ -20,20 +20,20 @@
   when: redis_container_facts.containers['redis'] is defined
   block:
     - name: Set temporary Valkey migration vars
-      set_fact:
+      ansible.builtin.set_fact:
         valkey_server_port: "6380"
         valkey_sentinel_port: "26380"
         valkey_sentinel_monitor_name: "kolla-temp"
 
     - name: Start Valkey on temporary ports with temp sentinel monitor name
-      import_tasks: deploy.yml
+      ansible.builtin.import_tasks: deploy.yml
 
     - name: Wait for Valkey replication sync
       become: true
       changed_when: false
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
-      command: >-
+      ansible.builtin.command: >-
         {{ kolla_container_engine }} exec valkey_server
         valkey-cli -h {{ api_interface_address }} -p {{ valkey_server_port }} info replication
       register: valkey_replication
@@ -46,7 +46,7 @@
       changed_when: true
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
-      command: >-
+      ansible.builtin.command: >-
         {{ kolla_container_engine }} exec valkey_server valkey-cli
         -h {{ api_interface_address }} -p {{ valkey_server_port }}
         CONFIG SET replica-priority 10
@@ -54,7 +54,7 @@
     - name: Set replica-priority=0 on other valkey nodes to prevent promotion
       become: true
       changed_when: true
-      command: >-
+      ansible.builtin.command: >-
         {{ kolla_container_engine }} exec valkey_server valkey-cli
         -h {{ api_interface_address }} -p {{ valkey_server_port }} CONFIG SET replica-priority 0
       when: inventory_hostname != valkey_master_host
@@ -71,7 +71,7 @@
       changed_when: true
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
-      command: >-
+      ansible.builtin.command: >-
         {{ kolla_container_engine }} exec redis_sentinel redis-cli
         -h {{ api_interface_address }}
         -p {{ redis_sentinel_port }}
@@ -82,7 +82,7 @@
       changed_when: false
       delegate_to: "{{ valkey_master_host }}"
       run_once: true
-      command: >-
+      ansible.builtin.command: >-
         {{ kolla_container_engine }} exec valkey_server
         valkey-cli -h {{ api_interface_address }} -p {{ valkey_server_port }} info replication
       register: valkey_role
@@ -114,20 +114,20 @@
 # These tasks run always, regardless of Redis presence
 
 - name: Reset Valkey port to default (6379) after migration
-  set_fact:
+  ansible.builtin.set_fact:
     valkey_server_port: "6379"
     valkey_sentinel_port: "26379"
     valkey_sentinel_monitor_name: "kolla"
     _valkey_migration: false
 
 - name: Reconfigure/Redeploy Valkey on default ports
-  import_tasks: reconfigure.yml
+  ansible.builtin.import_tasks: reconfigure.yml
 
 - name: Verify Valkey responds on port 6379
-  import_tasks: check.yml
+  ansible.builtin.import_tasks: check.yml
 
 - name: Check valkey containers
-  import_tasks: check-containers.yml
+  ansible.builtin.import_tasks: check-containers.yml
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
