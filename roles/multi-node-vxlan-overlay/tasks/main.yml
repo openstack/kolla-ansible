@@ -1,20 +1,20 @@
 ---
 # Not all variables have sensible defaults, let's ensure these are set.
 - name: Ensure mandatory variables are defined
-  assert:
+  ansible.builtin.assert:
     that:
       - vxlan_interface_name is defined
       - vxlan_vni is defined
 
 - name: Set VXLAN interface facts
-  set_fact:
+  ansible.builtin.set_fact:
     tunnel_local_address: "{{ nodepool.private_ipv4 if nodepool.private_ipv4 | length > 0 else nodepool.public_ipv4 }}"
 
 # We have had cases where the nodepool private or public IP address is not assigned,
 # which causes hard to diagnose errors later on. Catch it early.
 
 - name: Assert that the nodepool private or public IPv4 address is assigned
-  assert:
+  ansible.builtin.assert:
     that: tunnel_local_address in ansible_all_ipv4_addresses
     fail_msg: >-
       The nodepool private/public IP address {{ tunnel_local_address }} is not assigned

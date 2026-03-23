@@ -1,7 +1,7 @@
 ---
 # Not all variables have sensible defaults, let's ensure these are set.
 - name: Ensure mandatory variables are defined
-  assert:
+  ansible.builtin.assert:
     that:
       - managed_interface_name is defined
       - managed_network_prefix is defined
@@ -9,7 +9,7 @@
       - managed_network_address_family is defined
 
 - name: Set managed interface facts
-  set_fact:
+  ansible.builtin.set_fact:
     managed_interface_address: "{{ managed_network_prefix }}{{ groups['all'].index(inventory_hostname) + 1 }}"
 
 - name: Add IPv4 address for managed network
@@ -36,7 +36,7 @@
 
 - name: Accept traffic on the managed network (IN)
   become: true
-  iptables:
+  ansible.builtin.iptables:
     state: present
     action: insert
     chain: INPUT
@@ -47,7 +47,7 @@
 # NOTE(yoctozepto): the default policy is ACCEPT but it is nicer to get statistics
 - name: Accept traffic on the managed network (OUT)
   become: true
-  iptables:
+  ansible.builtin.iptables:
     state: present
     action: insert
     chain: OUTPUT
