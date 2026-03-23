@@ -3,7 +3,7 @@
   changed_when: false
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-  shell: >-
+  ansible.builtin.shell: >-
     {{ kolla_container_engine }} exec -i {{ service.container_name }} bash -c
     "/opt/prometheus/promtool check config /etc/prometheus/prometheus.yml;
     /opt/prometheus/promtool check web-config /etc/prometheus/web.yml"
@@ -17,7 +17,7 @@
 - name: Assert prometheus config files are valid
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-  assert:
+  ansible.builtin.assert:
     that: "prometheus_config_validation_results.rc == 0"
     fail_msg: >-
       "{{ service.container_name }} config files are invalid, the output was:

@@ -1,7 +1,7 @@
 ---
 - name: Ensuring config directories exist
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ node_config_directory }}/{{ item.key }}"
     state: "directory"
     owner: "{{ config_owner_user }}"
@@ -10,20 +10,20 @@
   with_dict: "{{ prometheus_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Copying over TLS certificates
-  include_tasks: copy-certs.yml
+  ansible.builtin.include_tasks: copy-certs.yml
   when:
     - prometheus_copy_certs | bool
 
 - name: Copying over config.json files
   become: true
-  template:
+  ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
     dest: "{{ node_config_directory }}/{{ item.key }}/config.json"
     mode: "0660"
   with_dict: "{{ prometheus_services | select_services_enabled_and_mapped_to_host }}"
 
 - name: Find custom prometheus alert rules files
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/prometheus/"
     pattern: "*.rules"
   run_once: true
@@ -36,7 +36,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/prometheus-server/{{ item.path | basename }}"
     mode: "0660"
@@ -47,7 +47,7 @@
   with_items: "{{ prometheus_alert_rules.files }}"
 
 - name: Find prometheus common config overrides
-  find:
+  ansible.builtin.find:
     # NOTE(wszumski): Non-existent paths don't produce a failure
     paths:
       - "{{ node_custom_config }}/prometheus/prometheus.yml.d"
@@ -57,7 +57,7 @@
   run_once: true
 
 - name: Find prometheus host config overrides
-  find:
+  ansible.builtin.find:
     # NOTE(wszumski): Non-existent paths don't produce a failure
     paths:
       - "{{ node_custom_config }}/prometheus/{{ inventory_hostname }}/prometheus.yml.d"
@@ -88,7 +88,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-server'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-server/web.yml"
     mode: "0600"
@@ -102,7 +102,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-alertmanager'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-alertmanager/prometheus-alertmanager.yml"
     mode: "0660"
@@ -113,7 +113,7 @@
     - "{{ role_path }}/templates/prometheus-alertmanager.yml.j2"
 
 - name: Find custom Alertmanager alert notification templates
-  find:
+  ansible.builtin.find:
     path: "{{ node_custom_config }}/prometheus/"
     pattern: "*.tmpl"
   run_once: true
@@ -126,7 +126,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-alertmanager'] }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "{{ node_config_directory }}/prometheus-alertmanager/{{ item.path | basename }}"
     mode: "0660"
@@ -152,7 +152,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-openstack-exporter'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-openstack-exporter/clouds.yml"
     mode: "0660"
@@ -166,7 +166,7 @@
   become: true
   vars:
     service: "{{ prometheus_services['prometheus-blackbox-exporter'] }}"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ node_config_directory }}/prometheus-blackbox-exporter/prometheus-blackbox-exporter.yml"
     mode: "0660"
@@ -183,7 +183,7 @@
   when: service | service_enabled_and_mapped_to_host
   block:
     - name: Find extra prometheus server config files
-      find:
+      ansible.builtin.find:
         paths: "{{ node_custom_config }}/prometheus/extras/"
         patterns: "*"
         recurse: true
@@ -198,7 +198,7 @@
           {{ prometheus_config_extras_result.files | default([])
           | map(attribute='path') | map('dirname') | unique
           | map('relpath', base) | list }}
-      file:
+      ansible.builtin.file:
         path: "{{ node_config_directory }}/prometheus-server/{{ item }}"
         state: "directory"
         owner: "{{ config_owner_user }}"
@@ -211,7 +211,7 @@
       become: true
       vars:
         relpath: "{{ item | relpath(base) }}"
-      template:
+      ansible.builtin.template:
         src: "{{ item }}"
         dest: "{{ node_config_directory }}/prometheus-server/{{ relpath }}"
         mode: "0660"
