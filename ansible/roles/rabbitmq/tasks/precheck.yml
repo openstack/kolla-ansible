@@ -1,6 +1,6 @@
 ---
 - name: Precheck rabbitmq configuration
-  import_role:
+  ansible.builtin.import_role:
     name: service-precheck
   vars:
     service_precheck_services: "{{ rabbitmq_services }}"
@@ -17,7 +17,7 @@
   register: container_facts
 
 - name: Checking free port for RabbitMQ
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ rabbitmq_port }}"
     connect_timeout: 1
@@ -28,7 +28,7 @@
     - inventory_hostname in groups['rabbitmq']
 
 - name: Checking free port for RabbitMQ Management
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ rabbitmq_management_port }}"
     connect_timeout: 1
@@ -39,7 +39,7 @@
     - inventory_hostname in groups['rabbitmq']
 
 - name: Checking free port for RabbitMQ Cluster
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ rabbitmq_cluster_port }}"
     connect_timeout: 1
@@ -50,7 +50,7 @@
     - inventory_hostname in groups['rabbitmq']
 
 - name: Checking free port for RabbitMQ EPMD
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
     port: "{{ rabbitmq_epmd_port }}"
     connect_timeout: 1
@@ -63,14 +63,14 @@
 - name: Check if all rabbit hostnames are resolvable
   vars:
     nss_database: "{{ 'ahostsv4' if api_address_family == 'ipv4' else 'ahostsv6' }}"
-  command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
+  ansible.builtin.command: "getent {{ nss_database }} {{ hostvars[item].ansible_facts.hostname }}"
   changed_when: false
   check_mode: false
   register: rabbitmq_hostnames
   with_items: "{{ groups['rabbitmq'] }}"
 
 - name: Check if each rabbit hostname resolves uniquely to the proper IP address
-  fail:
+  ansible.builtin.fail:
     msg: Hostname has to resolve uniquely to the IP address of api_interface
   with_subelements:
     - "{{ rabbitmq_hostnames.results }}"
@@ -79,7 +79,7 @@
     - not item.1 is match('^'+('api' | kolla_address(item.0.item))+'\\b')
 
 - name: Check if TLS certificate exists for RabbitMQ
-  assert:
+  ansible.builtin.assert:
     that: cert | length > 0
     fail_msg: No TLS certificate provided for RabbitMQ.
   vars:
@@ -93,7 +93,7 @@
     - rabbitmq_enable_tls | bool
 
 - name: Check if TLS key exists for RabbitMQ
-  assert:
+  ansible.builtin.assert:
     that: key | length > 0
     fail_msg: No TLS key provided for RabbitMQ.
   vars:
@@ -114,13 +114,13 @@
   block:
     - name: List RabbitMQ queues
       become: true
-      command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
+      ansible.builtin.command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl list_queues --silent name type --formatter json"
       register: rabbitmq_queues
       changed_when: false
       check_mode: false
 
     - name: Check if RabbitMQ quorum queues need to be configured
-      assert:
+      ansible.builtin.assert:
         that: "{{ item.type == 'quorum' }}"
         fail_msg: >
           {{ item.name }} is a non-quorum queue.
@@ -133,7 +133,7 @@
       when: not (item.name is search('reply_') or item.name is search('_fanout'))
 
     - name: Check if RabbitMQ quorum queues for transient queues need to be configured
-      assert:
+      ansible.builtin.assert:
         that: "{{ item.type == 'quorum' }}"
         fail_msg: >
           {{ item.name }} is a non-quorum queue.
@@ -147,7 +147,7 @@
         - item.name is search('reply_') or (item.name is search('_fanout') and not om_enable_rabbitmq_stream_fanout | bool)
 
     - name: Check if RabbitMQ streams need to be configured
-      assert:
+      ansible.builtin.assert:
         that: "{{ item.type == 'stream' }}"
         fail_msg: >
           om_enable_rabbitmq_stream_fanout is True but {{ item.name }} is not a stream.
