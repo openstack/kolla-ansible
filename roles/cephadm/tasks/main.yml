@@ -1,9 +1,9 @@
 ---
 - name: Include package installation
-  include_tasks: pkg_{{ ansible_os_family | lower }}.yml
+  ansible.builtin.include_tasks: pkg_{{ ansible_os_family | lower }}.yml
 
 - name: Ensure /etc/ceph exists
-  file:
+  ansible.builtin.file:
     path: /etc/ceph
     state: directory
     mode: "0755"
@@ -19,7 +19,7 @@
   register: cephadm_ssh_key
 
 - name: Save public key
-  copy:
+  ansible.builtin.copy:
     content: "{{ cephadm_ssh_key.public_key }}"
     dest: /etc/ceph/cephadm.pub
     mode: "0644"
@@ -38,7 +38,7 @@
 - name: Bootstrap cephadm
   vars:
     mon_ip: "{{ hostvars[inventory_hostname]['ansible_' + api_interface_name | replace('-', '_')].ipv4.address }}"
-  command:
+  ansible.builtin.command:
     cmd: >
          cephadm
          --docker
@@ -57,25 +57,25 @@
 - name: Get ceph fsid
   vars:
     regexp: 'Cluster fsid: (.*)'
-  set_fact:
+  ansible.builtin.set_fact:
     ceph_fsid: "{{ cephadm_bootstrap_output.stdout | regex_search(regexp, '\\1') | first }}"
 
 - name: Template out cluster spec
-  template:
+  ansible.builtin.template:
     src: templates/cephadm.yml.j2
     dest: "/var/run/ceph/{{ ceph_fsid }}/cluster.yml"
     mode: "0600"
   become: true
 
 - name: Template out command spec
-  template:
+  ansible.builtin.template:
     src: templates/commands.sh.j2
     dest: "/var/run/ceph/{{ ceph_fsid }}/commands.sh"
     mode: "0600"
   become: true
 
 - name: Run commands
-  command:
+  ansible.builtin.command:
     cmd: >
          cephadm shell --
          bash -x /var/run/ceph/commands.sh
@@ -96,7 +96,7 @@
       [global]
       fsid = {{ ceph_fsid }}
       mon_host = {{ _mon_host | join(", ") }}
-  copy:
+  ansible.builtin.copy:
     content: "{{ ceph_conf_fixed }}"
     dest: "/etc/ceph/ceph.conf.fixed"
     mode: "0644"
