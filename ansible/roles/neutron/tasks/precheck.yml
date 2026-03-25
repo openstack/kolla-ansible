@@ -69,5 +69,15 @@
   when:
     - neutron_dns_integration | bool
 
+- name: Checking if neutron_external_interface and neutron_bridge_name have the same length
+  vars:
+    external_interfaces: "{{ neutron_external_interface.split(',') | list }}"
+    bridge_names: "{{ neutron_bridge_name.split(',') | list }}"
+  ansible.builtin.assert:
+    that:
+      - external_interfaces | length == bridge_names | length
+    fail_msg: "The number of entries in neutron_internal_interface does not match the number of entries in neutron_bridge_name."
+  run_once: true
+
 - name: Import tasks from neutron_plugin_agent_check.yml
   ansible.builtin.import_tasks: neutron_plugin_agent_check.yml
