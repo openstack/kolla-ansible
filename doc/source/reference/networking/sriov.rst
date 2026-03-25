@@ -21,7 +21,7 @@ shows which automatically appends ``sriovnicswitch`` to the
 .. path /etc/kolla/globals.yml
 .. code-block:: yaml
 
-   enable_neutron_sriov: "yes"
+   enable_neutron_sriov: true
 
 It is also a requirement to define physnet:interface mappings for all
 SRIOV devices as shown in the following example where ``sriovtenant1`` is the

@@ -43,7 +43,7 @@ Upgrade procedure
 
 .. note::
 
-   If you have set ``enable_cells`` to ``yes`` then you should read the
+   If you have set ``enable_cells`` to ``true`` then you should read the
    upgrade notes in the :ref:`Nova cells guide<nova-cells-upgrade>`.
 
 Kolla's strategy for upgrades is to never make a mess and to follow consistent
@@ -111,8 +111,7 @@ If performing a skip-level (SLURP) upgrade, update ``ansible`` or
 
    pip3 install --upgrade 'ansible-core>=|ANSIBLE_CORE_VERSION_MIN|,<|ANSIBLE_CORE_VERSION_MAX|.99'
 
-If upgrading to a Yoga release or later, install or upgrade Ansible Galaxy
-dependencies:
+Install or upgrade Ansible Galaxy dependencies:
 
 .. code-block:: console
 
@@ -150,7 +149,7 @@ For example:
 .. code-block:: console
 
    cp /etc/kolla/passwords.yml passwords.yml.old
-   cp kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
+   cp /path/to/venv/share/kolla-ansible/etc/kolla/passwords.yml passwords.yml.new
    kolla-genpwd -p passwords.yml.new
    kolla-mergepwd --old passwords.yml.old --new passwords.yml.new --final /etc/kolla/passwords.yml
 
@@ -316,6 +315,8 @@ Tools
 -----
 
 Kolla ships with several utilities intended to facilitate ease of operation.
+If you installed Kolla Ansible in a virtual environment, these scripts are
+located in ``/path/to/venv/share/kolla-ansible/tools/``.
 
 ``tools/cleanup-containers`` is used to remove deployed containers from the
 system. This can be useful when you want to do a new clean deployment. It will

@@ -109,7 +109,7 @@ To use provider networks in instances you also need to set the following in
 
 .. code-block:: yaml
 
-   enable_neutron_provider_networks: yes
+   enable_neutron_provider_networks: true
 
 For provider networks, compute hosts must have an external bridge
 created and configured by Ansible (this is also necessary when
@@ -188,7 +188,7 @@ L3 and DHCP agents can be created in a high availability (HA) state with:
 
 .. code-block:: yaml
 
-   enable_neutron_agent_ha: "yes"
+   enable_neutron_agent_ha: true
 
 This allows networking to fail over across controllers if the active agent is
 stopped. If this option is enabled, it can be advantageous to also set:
@@ -275,7 +275,7 @@ In order to deploy Neutron OVN Agent you need to set the following:
 .. path /etc/kolla/globals.yml
 .. code-block:: yaml
 
-   neutron_enable_ovn_agent: "yes"
+   neutron_enable_ovn_agent: true
 
 Currently the agent is only needed for QoS for hardware offloaded ports.
 
@@ -306,7 +306,7 @@ set the following (assuming neutron SR-IOV agent is also enabled using
 .. path /etc/kolla/globals.yml
 .. code-block:: yaml
 
-   enable_neutron_mlnx: "yes"
+   enable_neutron_mlnx: true
 
 Additionally, you will also need to provide physnet:interface mappings
 via ``neutron_mlnx_physnet_mappings`` which is presented to

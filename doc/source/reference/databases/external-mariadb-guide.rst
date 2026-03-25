@@ -31,7 +31,7 @@ by ensuring the following line exists within ``/etc/kolla/globals.yml`` :
 
 .. code-block:: yaml
 
-   enable_mariadb: "no"
+   enable_mariadb: false
 
 There are two ways in which you can use external MariaDB:
 * Using an already load-balanced MariaDB address
@@ -60,7 +60,7 @@ need to do the following:
 
 .. note::
 
-   If ``enable_external_mariadb_load_balancer`` is set to ``no``
+   If ``enable_external_mariadb_load_balancer`` is set to ``false``
    (default), the external DB load balancer should be accessible
    from all nodes during your deployment.
 
@@ -87,7 +87,7 @@ according to the following configuration:
 
 .. code-block:: yaml
 
-   enable_external_mariadb_load_balancer: yes
+   enable_external_mariadb_load_balancer: true
 
 Using External MariaDB with a privileged user
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

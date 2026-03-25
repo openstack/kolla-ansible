@@ -14,7 +14,7 @@ Enable the octavia service in ``globals.yml``:
 
 .. code-block:: yaml
 
-   enable_octavia: "yes"
+   enable_octavia: true
 
 Amphora provider
 ================
@@ -96,7 +96,7 @@ networks:
 
 .. code-block:: yaml
 
-   enable_neutron_provider_networks: yes
+   enable_neutron_provider_networks: true
 
 Configure the name of the network interface on the controllers used to access
 the Octavia management network. If using a VLAN provider network, ensure that
@@ -219,7 +219,7 @@ For example:
        allocation_pool_start: "10.1.2.100"
        allocation_pool_end: "10.1.2.200"
        gateway_ip: "10.1.2.1"
-       enable_dhcp: yes
+       enable_dhcp: true
 
 Deploy Octavia with Kolla Ansible:
 
@@ -251,16 +251,6 @@ as follows:
 
    Ensure that you have executed ``kolla-ansible post-deploy`` and set
    ``enable_octavia`` to yes in ``global.yml``
-
-.. note::
-
-   In Train and earlier releases, resources should be registered in the
-   ``admin`` project. This is configured via ``octavia_service_auth_project``,
-   and may be set to ``service`` to avoid a breaking change when upgrading to
-   Ussuri. Changing the project on an existing system requires at a minimum
-   registering a new security group in the new project. Ideally the flavor and
-   network should be recreated in the new project, although this will impact
-   existing Amphorae.
 
 Amphora flavor
 ~~~~~~~~~~~~~~

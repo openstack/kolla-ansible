@@ -7,7 +7,7 @@ this is via Virtual Machines (VMs), but may also be via bare metal servers if
 Nova is coupled with Ironic.
 
 Nova is enabled by default, but may be disabled by setting ``enable_nova`` to
-``no`` in ``globals.yml``.
+``false`` in ``globals.yml``.
 
 Virtualisation Drivers
 ======================
@@ -43,7 +43,7 @@ Consoles
 The console driver may be selected via ``nova_console`` in ``globals.yml``.
 Valid options are ``none``, ``novnc`` and ``spice``. Additionally,
 serial console support can be enabled by setting
-``enable_nova_serialconsole_proxy`` to ``yes``.
+``enable_nova_serialconsole_proxy`` to ``true``.
 
 Cells
 =====

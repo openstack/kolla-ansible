@@ -99,7 +99,7 @@ need to be enabled.
 
 .. code-block:: yaml
 
-   glance_enable_rolling_upgrade: "yes"
+   glance_enable_rolling_upgrade: true
 
 .. warning::
 
@@ -118,7 +118,7 @@ It is the default mode, ensure rolling upgrade method is not enabled.
 
 .. code-block:: yaml
 
-   glance_enable_rolling_upgrade: "no"
+   glance_enable_rolling_upgrade: false
 
 
 Other configuration
@@ -131,7 +131,7 @@ Glance cache is disabled by default, it can be enabled by:
 
 .. code-block:: yaml
 
-   enable_glance_image_cache: "yes"
+   enable_glance_image_cache: true
    glance_cache_max_size: "10737418240" # 10GB by default
 
 .. warning::
@@ -154,7 +154,7 @@ is disabled by default, it can be enabled by:
 
 .. code-block:: yaml
 
-   glance_enable_property_protection: "yes"
+   glance_enable_property_protection: true
 
 
 and defining ``property-protections-rules.conf`` under
@@ -170,7 +170,7 @@ is disabled by default, it can be enabled by:
 
 .. code-block:: yaml
 
-  glance_enable_interoperable_image_import: "yes"
+  glance_enable_interoperable_image_import: true
 
 and defining ``glance-image-import.conf`` under
 ``{{ node_custom_config }}/glance/``.

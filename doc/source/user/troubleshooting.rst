@@ -48,7 +48,7 @@ Debugging Kolla
 ~~~~~~~~~~~~~~~
 
 The status of containers after deployment can be determined on the deployment
-targets by executing:
+targets by executing (use `podman` instead of `docker` if applicable):
 
 .. code-block:: console
 
@@ -76,8 +76,10 @@ If the stdout logs are needed, please run:
 Note that most of the containers don't log to stdout so the above command will
 provide no information.
 
-To learn more about Docker command line operation please refer to `Docker
-documentation <https://docs.docker.com/reference/>`__.
+To learn more about container engine command line operation, please refer
+to the `Docker
+documentation <https://docs.docker.com/reference/>`__ or the `Podman
+documentation <https://docs.podman.io/en/stable/Commands.html>`__.
 
 The log volume "kolla_logs" is linked to ``/var/log/kolla`` on the host.
 You can find all kolla logs in there.

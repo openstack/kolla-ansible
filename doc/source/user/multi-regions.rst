@@ -29,8 +29,8 @@ Keystone and Horizon are enabled:
 
 .. code-block:: console
 
-   enable_keystone: "yes"
-   enable_horizon: "yes"
+   enable_keystone: true
+   enable_horizon: true
 
 Then, change the value of ``multiple_regions_names`` to add names of other
 regions. In this example, we consider two regions. The current one,
@@ -151,7 +151,7 @@ unnecessary in this region and run ``kolla-ansible``:
 
 .. code-block:: yaml
 
-   enable_keystone: "no"
-   enable_horizon: "no"
+   enable_keystone: false
+   enable_horizon: false
 
 The configuration is the same for any other region.

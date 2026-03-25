@@ -13,7 +13,7 @@ configure the ``Lightbits labs`` Cinder driver in
 
 .. code-block:: yaml
 
-  enable_cinder_backend_lightbits: "yes"
+  enable_cinder_backend_lightbits: true
 
 .. end
 

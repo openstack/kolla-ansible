@@ -29,7 +29,7 @@ the command line options.
 
 .. code-block:: yaml
 
-   enable_nova_fake: "yes"
+   enable_nova_fake: true
    num_nova_fake_per_node: 5
 
 Each Compute node will run 5 ``nova-compute`` containers and 5

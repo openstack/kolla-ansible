@@ -26,7 +26,7 @@ is ``192.168.1.1``, the config would look like the following:
 
 .. code-block:: yaml
 
-  enable_horizon: "yes"
+  enable_horizon: true
   acme_client_servers:
     - server certbot 192.168.1.1:80
 

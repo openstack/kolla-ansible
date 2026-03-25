@@ -16,7 +16,7 @@ Enable Ironic in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   enable_ironic: "yes"
+   enable_ironic: true
 
 In the same file, define a network interface as the default NIC for dnsmasq and
 define a network to be used for the Ironic cleaning network:
@@ -125,7 +125,7 @@ PXE filter service:
 
 .. code-block:: yaml
 
-   enable_ironic_pxe_filter: "yes"
+   enable_ironic_pxe_filter: true
 
 The PXE filter container runs alongside ``ironic-dnsmasq`` and cleans up stale
 DHCP entries. It is especially useful when auto discovery is enabled and when
@@ -189,20 +189,20 @@ keystone could be installed in one region (let's say region 1) and ironic -
 in another region (let's say region 2). In this case we don't install keystone
 together with ironic in region 2, but have to configure ironic to connect to
 existing keystone in region 1. To deploy ironic in this way we have to set
-variable ``enable_keystone`` to ``"no"``.
+variable ``enable_keystone`` to ``false``.
 
 .. code-block:: yaml
 
-    enable_keystone: "no"
+    enable_keystone: false
 
 It will prevent keystone from being installed in region 2.
 
 To add keystone-related sections in ironic.conf, it is also needed to set
-variable ``ironic_enable_keystone_integration`` to ``"yes"``
+variable ``ironic_enable_keystone_integration`` to ``true``
 
 .. code-block:: yaml
 
-    ironic_enable_keystone_integration: "yes"
+    ironic_enable_keystone_integration: true
 
 Avoiding problems with high availability
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

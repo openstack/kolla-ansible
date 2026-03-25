@@ -71,8 +71,8 @@ To enable ovs-dpdk, add the following configuration to
 .. code-block:: yaml
 
    ovs_datapath: "netdev"
-   enable_ovs_dpdk: yes
-   enable_openvswitch: yes
+   enable_ovs_dpdk: true
+   enable_openvswitch: true
    tunnel_interface: "dpdk_bridge"
    neutron_bridge_name: "dpdk_bridge"
 

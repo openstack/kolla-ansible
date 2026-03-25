@@ -216,7 +216,7 @@ adding:
 
 .. code-block:: yaml
 
-   enable_haproxy: "no"
+   enable_haproxy: false
 
 Note this method is not recommended and generally not tested by the
 Kolla community, but included since sometimes a free IP is not available
@@ -233,7 +233,7 @@ first disable the deployment of the central logging.
 
 .. code-block:: yaml
 
-   enable_central_logging: "no"
+   enable_central_logging: false
 
 Now you can use the parameter ``elasticsearch_address`` to configure the
 address of the external Elasticsearch environment.
