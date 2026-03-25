@@ -306,6 +306,42 @@ class PodmanWorker(ContainerWorker):
             self.changed = True
         return self.changed
 
+    def compare_cap_add(self, container_info):
+        new_cap_add = self.params.get('cap_add', list()).copy()
+
+        new_cap_add = [
+            'CAP_' + cap.upper()
+            if not cap.upper().startswith('CAP_')
+            else cap.upper()
+            for cap in new_cap_add
+        ]
+
+        try:
+            current_cap_add = (
+                container_info['HostConfig'].get('CapAdd', None) or []
+            )
+        except (KeyError, TypeError):
+            current_cap_add = []
+
+        current_cap_add = [cap.upper() for cap in current_cap_add]
+
+        privileged = container_info['HostConfig'].get('Privileged', False)
+        if not privileged:
+            # NOTE(blanson): prepare_container_args() always adds AUDIT_WRITE
+            # for non-privileged containers. Also works around Podman <4.4 bug
+            # where AUDIT_WRITE doesn't appear in inspect. Since capabilities
+            # can't be modified post-creation, this won't mask real drift.
+            if 'CAP_AUDIT_WRITE' not in new_cap_add:
+                new_cap_add.append('CAP_AUDIT_WRITE')
+
+            if 'CAP_AUDIT_WRITE' not in current_cap_add:
+                current_cap_add.append('CAP_AUDIT_WRITE')
+
+        if set(new_cap_add).symmetric_difference(set(current_cap_add)):
+            return True
+
+        return False
+
     def compare_pid_mode(self, container_info):
         new_pid_mode = self.params.get('pid_mode') or self.params.get('pid')
         current_pid_mode = container_info['HostConfig'].get('PidMode')
