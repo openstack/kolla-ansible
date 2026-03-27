@@ -1,20 +1,27 @@
-{% set cloudkitty_cmd = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
-{% set cloudkitty_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
+{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
+{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if cloudkitty_wsgi_provider == 'apache' else 'uwsgi /etc/cloudkitty/cloudkitty-api-uwsgi.ini' %}
 {
-    "command": "{{ cloudkitty_cmd }} -DFOREGROUND",
+    "command": "{{ command }}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/cloudkitty.conf",
             "dest": "/etc/cloudkitty/cloudkitty.conf",
             "owner": "cloudkitty",
             "perm": "0600"
-        },
+        }{% if cloudkitty_wsgi_provider == "apache" %},
         {
             "source": "{{ container_config_directory }}/wsgi-cloudkitty.conf",
-            "dest": "/etc/{{ cloudkitty_dir }}/wsgi-cloudkitty.conf",
+            "dest": "/etc/{{ apache_conf_dir }}/wsgi-cloudkitty.conf",
             "owner": "cloudkitty",
             "perm": "0600"
-        }{% if cloudkitty_policy_file is defined %},
+        }{% elif cloudkitty_wsgi_provider == "uwsgi" %},
+        {
+            "source": "{{ container_config_directory }}/cloudkitty-api-uwsgi.ini",
+            "dest": "/etc/cloudkitty/cloudkitty-api-uwsgi.ini",
+            "owner": "cloudkitty",
+            "perm": "0600"
+        }{% endif %}{% if cloudkitty_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ cloudkitty_policy_file }}",
             "dest": "/etc/cloudkitty/{{ cloudkitty_policy_file }}",
