@@ -159,3 +159,22 @@ different type, the follow procedure will be needed.
    .. code-block:: console
 
       kolla-ansible deploy --tags <service-tags>
+
+Handling Stream Replicas
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+RabbitMQ streams are expected to be replicated across the nodes in the
+cluster. However, RabbitMQ itself will only create replicas of a stream when
+the stream is initially declared. This means that any streams declared when a
+RabbitMQ node is out of service must be explicitly managed by an operator.
+RabbitMQ documents how to manage stream replicas here:
+https://www.rabbitmq.com/docs/streams#member-management
+
+An example script to create any missing stream replicas can be found under
+`kolla-ansible/contrib/ops/rabbitmq/rabbitmq-repair-stream-replicas.sh
+<https://opendev.org/openstack/kolla-ansible/src/branch/master/contrib/ops/rabbitmq/rabbitmq-repair-stream-replicas.sh>`__.
+This should be executed from a host running the RabbitMQ container.
+Currently, membership changes for streams `is not entirely safe
+<https://github.com/rabbitmq/rabbitmq-server/discussions/14246>`__, so this
+script should only be used when the RabbitMQ cluster is in a known healthy
+state.
