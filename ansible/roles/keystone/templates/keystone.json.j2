@@ -1,5 +1,3 @@
-{% set keystone_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
-{% set apache_user = 'www-data' if kolla_base_distro in ['ubuntu', 'debian'] else 'apache' %}
 {
     "command": "/usr/bin/keystone-startup.sh",
     "config_files": [
@@ -28,22 +26,16 @@
             "owner": "keystone",
             "perm": "0600",
             "optional": true
+        },
+        {
+            "source": "{{ container_config_directory }}/keystone-uwsgi.ini",
+            "dest": "/etc/keystone/keystone-api-uwsgi.ini",
+            "owner": "keystone",
+            "perm": "0600"
         }{% if keystone_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ keystone_policy_file }}",
             "dest": "/etc/keystone/{{ keystone_policy_file }}",
-            "owner": "keystone",
-            "perm": "0600"
-        }{% endif %}{% if keystone_wsgi_provider == 'apache' %},
-        {
-            "source": "{{ container_config_directory }}/wsgi-keystone.conf",
-            "dest": "/etc/{{ keystone_dir }}/wsgi-keystone.conf",
-            "owner": "keystone",
-            "perm": "0600"
-        }{% elif keystone_wsgi_provider == 'uwsgi' %},
-        {
-            "source": "{{ container_config_directory }}/keystone-uwsgi.ini",
-            "dest": "/etc/keystone/keystone-api-uwsgi.ini",
             "owner": "keystone",
             "perm": "0600"
         }{% endif %}{% if keystone_enable_tls_backend | bool %},
@@ -58,28 +50,7 @@
             "dest": "/etc/keystone/certs/keystone-key.pem",
             "owner": "keystone",
             "perm": "0600"
-        }{% endif %}{% if keystone_enable_federation_openid | bool and keystone_wsgi_provider == 'apache' %},
-        {
-            "source": "{{ container_config_directory }}/federation/oidc/metadata",
-            "dest": "{{ keystone_container_federation_oidc_metadata_folder }}",
-            "owner": "{{ apache_user }}:{{ apache_user }}",
-            "perm": "0600",
-            "merge": true
-        },
-        {
-            "source": "{{ container_config_directory }}/federation/oidc/cert",
-            "dest": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
-            "owner": "{{ apache_user }}:{{ apache_user }}",
-            "perm": "0600",
-            "merge": true
-        },
-        {
-            "source": "{{ container_config_directory }}/federation/modoidc-error-page.html",
-            "dest": "/var/www/html/modoidc-error-page.html",
-            "owner": "{{ apache_user }}:{{ apache_user }}",
-            "perm": "0600"
-        }
-        {% endif %}{% if kolla_copy_ca_into_containers | bool %},
+        }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
         {
             "source": "{{ container_config_directory }}/ca-certificates",
             "dest": "/var/lib/kolla/share/ca-certificates",
@@ -95,17 +66,7 @@
         {
             "path": "/var/log/kolla/keystone/keystone.log",
             "owner": "keystone:keystone"
-        },{% if keystone_enable_federation_openid | bool and keystone_wsgi_provider == 'apache' %}
-        {
-            "path": "{{ keystone_container_federation_oidc_metadata_folder }}",
-            "owner": "{{ apache_user }}:{{ apache_user }}",
-            "perm": "0700"
         },
-        {
-            "path": "{{ keystone_container_federation_oidc_idp_certificate_folder }}",
-            "owner": "{{ apache_user }}:{{ apache_user }}",
-            "perm": "0700"
-        },{% endif %}
         {
             "path": "/etc/keystone/fernet-keys",
             "owner": "keystone:keystone",

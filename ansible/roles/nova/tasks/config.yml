@@ -80,30 +80,6 @@
     - item.key in nova_services_require_policy_json
   with_dict: "{{ nova_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copying over nova-api-wsgi.conf
-  vars:
-    service: "{{ nova_services['nova-api'] }}"
-  ansible.builtin.template:
-    src: "nova-api-wsgi.conf.j2"
-    dest: "{{ node_config_directory }}/nova-api/nova-api-wsgi.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - nova_wsgi_provider == "apache"
-
-- name: Copying over nova-metadata-wsgi.conf
-  vars:
-    service: "{{ nova_services['nova-metadata'] }}"
-  ansible.builtin.template:
-    src: "nova-metadata-wsgi.conf.j2"
-    dest: "{{ node_config_directory }}/nova-metadata/nova-metadata-wsgi.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - nova_wsgi_provider == "apache"
-
 - name: Copying over vendordata file for nova services
   vars:
     service: "{{ nova_services[item] }}"
@@ -136,7 +112,6 @@
     service_uwsgi_config_workers: "{{ item.workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - nova_wsgi_provider == "uwsgi"
   loop:
     - { name: "nova-api", port: "{{ nova_api_listen_port }}", workers: "{{ nova_api_workers }}" }
     - { name: "nova-metadata", port: "{{ nova_metadata_listen_port }}", workers: "{{ nova_metadata_api_workers }}" }

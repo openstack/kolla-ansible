@@ -66,18 +66,6 @@
     - heat_policy_file is defined
   with_dict: "{{ heat_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copying over heat-api wsgi config
-  vars:
-    service: "{{ heat_services['heat-api'] }}"
-  ansible.builtin.template:
-    src: "{{ role_path }}/templates/wsgi-heat-api.conf.j2"
-    dest: "{{ node_config_directory }}/heat-api/wsgi-heat-api.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - heat_wsgi_provider == "apache"
-
 - name: Configure uWSGI for heat-api
   ansible.builtin.include_role:
     name: service-uwsgi-config
@@ -95,19 +83,6 @@
     service_uwsgi_config_workers: "{{ heat_api_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - heat_wsgi_provider == "uwsgi"
-
-- name: Copying over heat-api-cfn wsgi config
-  vars:
-    service: "{{ heat_services['heat-api-cfn'] }}"
-  ansible.builtin.template:
-    src: "{{ role_path }}/templates/wsgi-heat-api-cfn.conf.j2"
-    dest: "{{ node_config_directory }}/heat-api-cfn/wsgi-heat-api-cfn.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - heat_wsgi_provider == "apache"
 
 - name: Configure uWSGI for heat-api-cfn
   ansible.builtin.include_role:
@@ -126,4 +101,3 @@
     service_uwsgi_config_workers: "{{ heat_api_cfn_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - heat_wsgi_provider == "uwsgi"

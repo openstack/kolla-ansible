@@ -153,22 +153,6 @@
     - "ironic-http-httpd.conf.j2"
   when: service | service_enabled_and_mapped_to_host
 
-- name: Copying over ironic-prometheus-exporter-wsgi.conf
-  vars:
-    service: "{{ ironic_services['ironic-prometheus-exporter'] }}"
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/ironic-prometheus-exporter/ironic-prometheus-exporter-wsgi.conf"
-    mode: "0660"
-  become: true
-  with_first_found:
-    - "{{ node_config_directory }}/ironic/{{ inventory_hostname }}/ironic-prometheus-exporter-wsgi.conf"
-    - "{{ node_config_directory }}/ironic/ironic-prometheus-exporter-wsgi.conf"
-    - "ironic-prometheus-exporter-wsgi.conf.j2"
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - ironic_wsgi_provider == "apache"
-
 - name: Copying over existing Ironic policy file
   vars:
     services_require_policy_json:
@@ -183,18 +167,6 @@
     - ironic_policy_file is defined
     - item.key in services_require_policy_json
   with_dict: "{{ ironic_services | select_services_enabled_and_mapped_to_host }}"
-
-- name: Copying over ironic-api-wsgi.conf
-  vars:
-    service: "{{ ironic_services['ironic-api'] }}"
-  ansible.builtin.template:
-    src: "ironic-api-wsgi.conf.j2"
-    dest: "{{ node_config_directory }}/ironic-api/ironic-api-wsgi.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - ironic_wsgi_provider == "apache"
 
 - name: "Configure uWSGI for ironic-api"
   ansible.builtin.include_role:
@@ -213,7 +185,6 @@
     service_uwsgi_config_workers: "{{ item.workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - ironic_wsgi_provider == "uwsgi"
   loop:
     - { name: "ironic-api", port: "{{ ironic_api_listen_port }}", workers: "{{ ironic_api_workers }}" }
     - { name: "ironic-prometheus-exporter", port: "{{ ironic_prometheus_exporter_port }}", workers: "{{ ironic_prometheus_exporter_workers }}" }

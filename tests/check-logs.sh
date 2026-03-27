@@ -58,6 +58,10 @@ function check_fluentd_missing_logs {
         /var/log/kolla/haproxy/*)
             continue
             ;;
+        # TODO(mnasiadka): Remove me after G/2026.1 release
+        /var/log/kolla/keystone/*apache*)
+            continue
+            ;;
         /var/log/kolla/ironic/dnsmasq.log)
             continue
             ;;

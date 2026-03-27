@@ -76,19 +76,6 @@
     service_uwsgi_config_workers: "{{ zun_api_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - zun_wsgi_provider == "uwsgi"
-
-- name: Copying over wsgi-zun files for services
-  vars:
-    service: "{{ zun_services['zun-api'] }}"
-  ansible.builtin.template:
-    src: "wsgi-zun.conf.j2"
-    dest: "{{ node_config_directory }}/zun-api/wsgi-zun.conf"
-    mode: "0660"
-  become: true
-  when:
-    - zun_wsgi_provider == "apache"
-    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
   ansible.builtin.template:
