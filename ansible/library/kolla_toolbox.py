@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
+import io
 import json
-import re
+import secrets
+import tarfile
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule
@@ -24,7 +27,7 @@ module: kolla_toolbox
 short_description: >
   Module for invoking ansible module in kolla_toolbox container.
 description:
-  - A module targerting at invoking ansible module in kolla_toolbox
+  - A module targeting at invoking ansible module in kolla_toolbox
     container as used by Kolla project.
 options:
   container_engine:
@@ -103,6 +106,129 @@ EXAMPLES = '''
             domain_name: "default"
 '''
 
+# NOTE(mnasiadka): Full path to Python inside the kolla_toolbox container
+_PYTHON = '/opt/ansible/bin/python3'
+
+# NOTE(mnasiadka): Base directory for ansible-runner private_data_dir trees
+_PDD_BASEDIR = '/var/lib/ansible'
+
+# NOTE(mnasiadka): Script run inside kolla_toolbox to extract the terminal
+#                  ansible-runner vent from job_events and print it as JSON
+_PARSE_SCRIPT = """\
+import json, os, sys
+pdd = %r
+events_dir = None
+for root, dirs, files in os.walk(pdd):
+    if "job_events" in dirs:
+        events_dir = os.path.join(root, "job_events")
+        break
+if not events_dir:
+    print(json.dumps({"failed": True,
+                      "msg": "no job_events dir under " + pdd}))
+    sys.exit(1)
+terminal = {"runner_on_ok", "runner_on_failed",
+            "runner_on_unreachable", "runner_on_async_failed",
+            "runner_on_skipped"}
+for fname in sorted(os.listdir(events_dir)):
+    path = os.path.join(events_dir, fname)
+    with open(path) as f:
+        event = json.load(f)
+    event_type = event.get("event", "")
+    if event_type in terminal:
+        res = event.get("event_data", {}).get("res", {})
+        res.pop("_ansible_no_log", None)
+        res["_runner_status"] = event_type
+        print(json.dumps(res))
+        sys.exit(0)
+    lifecycle_events = {"runner_on_start", "runner_on_no_hosts",
+                 "runner_on_async_poll", "runner_on_async_ok"}
+    if event_type.startswith("runner_on_") and (
+            event_type not in lifecycle_events):
+        print(json.dumps({"failed": True,
+                          "msg": "unhandled runner event: "
+                                 + event_type}))
+        sys.exit(1)
+print(json.dumps({"failed": True,
+                  "msg": "no terminal event found"}))
+sys.exit(1)
+"""
+
+
+# NOTE(mnasiadka): Docker SDK exec_run returns a namedtuple with .exit_code
+#                  and .output attributes, while Podman SDK returns a
+#                  plain (exit_code, output) tuple.
+_ExecResult = collections.namedtuple(
+    '_ExecResult', ['exit_code', 'output'])
+
+
+def _build_playbook(module_name, module_args, extra_vars, check_mode):
+    """Return a JSON playbook string for *module_name* / *module_args*.
+
+    Both module_args and extra_vars are embedded as dicts so they live
+    on disk inside the container and never appear on any CLI.
+    """
+    play = {
+        'name': 'kolla_toolbox',
+        'hosts': 'localhost',
+        'gather_facts': False,
+        'tasks': [{'name': 'kolla_toolbox task',
+                   module_name: module_args}],
+    }
+    if extra_vars:
+        play['vars'] = extra_vars
+    if check_mode:
+        play['check_mode'] = True
+    return json.dumps([play])
+
+
+def _make_tar(files):
+    """Build an in-memory tar from {relative_path: str|bytes}.
+
+    Returns a BytesIO at position 0, ready for put_archive(base_dir).
+    Paths are relative to the put_archive destination.
+    Parent directory entries are created automatically.
+    """
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode='w') as tf:
+        seen_dirs = set()
+        for rel_path, content in files.items():
+            parts = rel_path.split('/')
+            for depth in range(1, len(parts)):
+                dir_path = '/'.join(parts[:depth])
+                if dir_path not in seen_dirs:
+                    dir_info = tarfile.TarInfo(name=dir_path)
+                    dir_info.type = tarfile.DIRTYPE
+                    dir_info.mode = 0o755
+                    tf.addfile(dir_info)
+                    seen_dirs.add(dir_path)
+            encoded = (content if isinstance(content, bytes)
+                       else content.encode('utf-8'))
+            info = tarfile.TarInfo(name=rel_path)
+            info.size = len(encoded)
+            info.mode = 0o644
+            tf.addfile(info, io.BytesIO(encoded))
+    buf.seek(0)
+    return buf
+
+
+def _exec_run(container, cmd, **kwargs):
+    """Normalise exec_run return value across Docker and Podman SDKs.
+
+    Docker SDK returns an ExecResult namedtuple with .exit_code and
+    .output attributes. Podman SDK returns a plain (exit_code, output)
+    tuple. This wrapper always returns an _ExecResult namedtuple.
+
+    tty=True is forced so output is a plain byte stream with no
+    multiplexed frame headers, avoiding the need to parse the
+    Docker/Podman mux format.
+    """
+    kwargs['tty'] = True
+
+    result = container.exec_run(cmd, **kwargs)
+    if isinstance(result, tuple):
+        return _ExecResult(*result)
+    return _ExecResult(result.exit_code, result.output)
+
 
 class KollaToolboxWorker():
     def __init__(self, module, client, container_errors) -> None:
@@ -122,113 +248,172 @@ class KollaToolboxWorker():
             )
         return cont[0]
 
-    def _format_module_args(self, module_args: dict) -> list:
-        """Format dict of module parameters into list of 'key=value' pairs."""
-        pairs = list()
-        for key, value in module_args.items():
-            if isinstance(value, dict):
-                value_json = json.dumps(value)
-                pairs.append(f"{key}='{value_json}'")
-            else:
-                pairs.append(f"{key}='{value}'")
-        return pairs
+    def _push_private_data_dir(self, kolla_toolbox, pdd, user):
+        """Push the ansible-runner private_data_dir tree into container.
 
-    def _generate_command(self) -> list:
-        """Generate the command that will be executed inside kolla_toolbox."""
-        args_formatted = self._format_module_args(
-            self.module.params.get('module_args'))
-        extra_vars_formatted = self._format_module_args(
-            self.module.params.get('module_extra_vars'))
+        Creates pdd (and pdd/tmp for Ansible's temp files) as root, then
+        chowns both to *user* if specified so ansible-runner can write
+        there even when the user has no shell (e.g. rabbitmq, nova).
 
-        command = ['ansible', 'localhost']
-        command.extend(['-m', self.module.params.get('module_name')])
-        if args_formatted:
-            command.extend(['-a', ' '.join(args_formatted)])
-        if extra_vars_formatted:
-            command.extend(['-e', ' '.join(extra_vars_formatted)])
-        if self.module.check_mode:
-            command.append('--check')
+        Pushes inventory and playbook via a single put_archive() call —
+        one tar stream through the socket, no secrets in any argv.
+        """
+        params = self.module.params
 
-        return command
+        playbook_json = _build_playbook(
+            params['module_name'],
+            params.get('module_args') or {},
+            params.get('module_extra_vars') or {},
+            self.module.check_mode,
+        )
 
-    def _run_command(self, kolla_toolbox, command, *args, **kwargs) -> bytes:
-        try:
-            _, output_raw = kolla_toolbox.exec_run(command,
-                                                   *args,
-                                                   **kwargs)
-        except self.container_errors.APIError as e:
+        # NOTE(mnasiadka): Build and run the setup script as root so it
+        #                  can always write to _PDD_BASEDIR.
+        #                  Chown pdd to the effective exec user
+        #                  so ansible-runner can create artifacts/.
+        chown_user = user if user else 'ansible'
+        if chown_user == 'root':
+            setup = (
+                'import os\n'
+                'for p in [%r, %r + "/tmp"]:\n'
+                '    os.makedirs(p, exist_ok=True)\n'
+            ) % (pdd, pdd)
+        else:
+            setup = (
+                'import os, pwd\n'
+                'pw = pwd.getpwnam(%r)\n'
+                'for p in [%r, %r + "/tmp"]:\n'
+                '    os.makedirs(p, exist_ok=True)\n'
+                '    os.chown(p, pw.pw_uid, pw.pw_gid)\n'
+            ) % (chown_user, pdd, pdd)
+
+        mkdir_result = _exec_run(
+            kolla_toolbox, [_PYTHON, '-c', setup], user='root')
+        if mkdir_result.exit_code != 0:
             self.module.fail_json(
-                msg='Container engine client encountered API error: '
-                    f'{e.explanation}'
-            )
-        return output_raw
-
-    def _process_container_output(self, output_raw: bytes) -> dict:
-        """Convert raw bytes output from container.exec_run into dictionary."""
-        try:
-            # Extract deprecation warning (if any)
-            warning_match = re.search(rb'\[DEPRECATION WARNING\].*',
-                                      output_raw)
-            if warning_match:
-                self.module.warn(warning_match.group(0).decode('utf-8'))
-
-            # Extract JSON block (including curly braces and content)
-            json_match = re.search(rb'\{.*\}', output_raw, re.DOTALL)
-            if json_match:
-                output_json = json.loads(json_match.group(0))
-            else:
-                self.module.fail_json(
-                    msg=('Parsing kolla_toolbox JSON output failed - '
-                         'no JSON block in output')
-                )
-
-        except json.JSONDecodeError as e:
-            self.module.fail_json(
-                msg=f'Parsing kolla_toolbox JSON output failed: {e}'
+                msg='Failed to create pdd %s in kolla_toolbox: %s'
+                    % (pdd, mkdir_result.output.decode(errors='replace'))
             )
 
-        # Expected format for the output is the following:
-        # {
-        #   "plays": [
-        #     {
-        #       "tasks": [
-        #         {
-        #           "hosts": {
-        #             "localhost": {
-        #               <module result>
-        #             }
-        #           }
-        #         }
-        #       ]
-        #     {
-        #   ]
-        # }
+        inventory = (
+            'localhost'
+            ' ansible_connection=local'
+            ' ansible_remote_tmp={pdd}/tmp'
+            ' ansible_local_tmp={pdd}/tmp'
+            ' ansible_local_temp={pdd}/tmp'
+            ' ansible_python_interpreter={python}\n'
+        ).format(pdd=pdd, python=_PYTHON)
 
-        try:
-            result = output_json['plays'][0]['tasks'][0]['hosts']['localhost']
-            result.pop('_ansible_no_log', None)
-        except KeyError:
+        kolla_toolbox.put_archive(pdd, _make_tar({
+            'inventory/hosts': inventory,
+            'project/main.json': playbook_json,
+        }))
+
+    def _parse_runner_result(self, kolla_toolbox, pdd, user):
+        """Extract the module result from ansible-runner job_events.
+
+        Runs _PARSE_SCRIPT inside the container via exec_run: it walks
+        job_events, finds the terminal event, and prints result as JSON.
+        No tar parsing, no path-prefix assumptions.
+        """
+        parse_kwargs = {}
+        if user:
+            parse_kwargs['user'] = user
+
+        result = _exec_run(
+            kolla_toolbox, [_PYTHON, '-c', _PARSE_SCRIPT % pdd],
+            **parse_kwargs
+        )
+
+        if result.exit_code != 0:
             self.module.fail_json(
-                msg=f'Ansible JSON output has unexpected format: {output_json}'
+                msg='Failed to read ansible-runner result (exit %d): %s'
+                    % (result.exit_code,
+                       result.output.decode(errors='replace'))
             )
 
-        return result
+        try:
+            res = json.loads(result.output.decode('utf-8'))
+        except json.JSONDecodeError:
+            self.module.fail_json(
+                msg='Could not parse ansible-runner result output: %r'
+                    % result.output
+            )
+
+        status = res.pop('_runner_status', 'runner_on_ok')
+        res.pop('_ansible_no_log', None)
+        if res.get('failed') or status not in ['runner_on_ok',
+                                               'runner_on_skipped']:
+            msg = res.pop(
+                'msg',
+                'Module execution failed inside kolla_toolbox'
+            )
+            self.module.fail_json(msg=msg, **res)
+
+        return res
 
     def main(self) -> None:
-        """Run command inside the kolla_toolbox container with defined args."""
+        """Run the requested module inside the kolla_toolbox container.
 
+        1. Generate a unique pdd name on the controller (no exec).
+        2. Push inventory + playbook via put_archive (secrets travel as
+           tar content, never in argv).
+        3. Run ansible-runner CLI (only pdd path in argv, no secrets).
+        4. Extract result via _PARSE_SCRIPT exec (walks job_events,
+           prints terminal event as JSON — no tar, no path assumptions).
+        5. Clean up pdd unconditionally in finally.
+        """
         kolla_toolbox = self._get_toolbox_container()
-        command = self._generate_command()
-        environment = {'ANSIBLE_STDOUT_CALLBACK': 'json',
-                       'ANSIBLE_LOAD_CALLBACK_PLUGINS': 'True'}
+        user = self.module.params.get('user')
 
-        output_raw = self._run_command(kolla_toolbox,
-                                       command,
-                                       environment=environment,
-                                       tty=True,
-                                       user=self.module.params.get('user'))
+        check_runner = _exec_run(
+            kolla_toolbox, ['test', '-x', '/opt/ansible/bin/ansible-runner'])
+        if check_runner.exit_code != 0:
+            self.module.fail_json(
+                msg="The 'ansible-runner' binary was not found in the "
+                    "kolla_toolbox container. Please ensure the container "
+                    "image is up to date and includes ansible-runner."
+            )
 
-        self.result = self._process_container_output(output_raw)
+        # NOTE(mnasiadka): Generate a unique pdd name without creating
+        #                  anything locally.
+        pdd = _PDD_BASEDIR + '/kolla_runner.' + secrets.token_urlsafe(8)
+
+        try:
+            self._push_private_data_dir(kolla_toolbox, pdd, user)
+
+            runner_env = {}
+            if self.module._diff:
+                runner_env['ANSIBLE_DIFF_MODE'] = '1'
+
+            runner_result = _exec_run(
+                kolla_toolbox,
+                ['/opt/ansible/bin/ansible-runner', 'run', pdd,
+                 '--playbook', 'main.json',
+                 '--rotate-artifacts', '1'],
+                user=user,
+                environment=runner_env
+            )
+            # exit 2 = task failed/unreachable; handled via event below.
+            # Anything else is a runner-level failure.
+            if runner_result.exit_code not in (0, 2):
+                self.module.fail_json(
+                    msg='ansible-runner exited with code %d: %s'
+                        % (runner_result.exit_code,
+                           runner_result.output.decode(errors='replace'))
+                )
+
+            self.result = self._parse_runner_result(
+                kolla_toolbox, pdd, user)
+
+        finally:
+            _exec_run(
+                kolla_toolbox,
+                [_PYTHON, '-c',
+                 'import shutil; shutil.rmtree(%r, ignore_errors=True)'
+                 % pdd],
+                user='root',
+            )
 
 
 def create_container_client(module: AnsibleModule):
@@ -273,7 +458,26 @@ def create_container_client(module: AnsibleModule):
     return client, container_errors
 
 
-def create_ansible_module() -> AnsibleModule:
+class KollaAnsibleModule(AnsibleModule):
+    """AnsibleModule subclass that redacts known sensitive keys
+
+    Overrides _log_invocation() to add sensitive values to
+    no_log_values before the "Invoked with ..." syslog message
+    is written, allowing the rest of module_args to remain
+    visible for debugging.
+    """
+
+    _NO_LOG_KEYS = frozenset({'auth', 'login_password', 'password'})
+
+    def _log_invocation(self):
+        for param in ('module_args', 'module_extra_vars'):
+            for key, value in (self.params.get(param) or {}).items():
+                if key in self._NO_LOG_KEYS and value is not None:
+                    self.no_log_values.add(str(value))
+        super()._log_invocation()
+
+
+def create_ansible_module() -> KollaAnsibleModule:
     argument_spec = dict(
         container_engine=dict(type='str',
                               choices=['podman', 'docker'],
@@ -286,8 +490,8 @@ def create_ansible_module() -> AnsibleModule:
         user=dict(type='str'),
     )
 
-    return AnsibleModule(argument_spec=argument_spec,
-                         supports_check_mode=True)
+    return KollaAnsibleModule(argument_spec=argument_spec,
+                              supports_check_mode=True)
 
 
 def main():
@@ -300,7 +504,7 @@ def main():
         module.exit_json(**ktbw.result)
     except Exception:
         module.fail_json(changed=True,
-                         msg=repr(traceback.format_exc()))
+                         msg=traceback.format_exc())
 
 
 if __name__ == '__main__':
