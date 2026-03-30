@@ -266,6 +266,19 @@ scrape_configs:
 {%         endfor %}
 {%     endif %}
 
+{%     if enable_prometheus_valkey_exporter | bool %}
+  - job_name: valkey_exporter
+    static_configs:
+{%         for host in groups["prometheus-valkey-exporter"] %}
+      - targets:
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_valkey_exporter_port'] }}'
+{%             if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{%             endif %}
+{%         endfor %}
+{%     endif %}
+
 alerting:
   alertmanagers:
     - static_configs:
