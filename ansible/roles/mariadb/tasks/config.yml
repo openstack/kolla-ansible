@@ -36,6 +36,26 @@
     - enable_mariabackup | bool
     - inventory_hostname == mariadb_backup_host
 
+- name: Check if custom wsrep-notify.sh exists
+  ansible.builtin.stat:
+    path: "{{ node_custom_config }}/mariadb/wsrep-notify.sh"
+  register: wsrep_notify_stat
+  delegate_to: localhost
+  run_once: true
+
+- name: Copying over wsrep-notify.sh
+  vars:
+    service_name: "mariadb"
+    service: "{{ mariadb_services[service_name] }}"
+  ansible.builtin.template:
+    src: "{{ node_custom_config }}/mariadb/wsrep-notify.sh"
+    dest: "{{ node_config_directory }}/{{ service_name }}/wsrep-notify.sh"
+    mode: "0770"
+  become: true
+  when:
+    - wsrep_notify_stat.stat.exists
+    - service | service_enabled_and_mapped_to_host
+
 - name: Copying over config.json files for services
   ansible.builtin.template:
     src: "{{ item.key }}.json.j2"
