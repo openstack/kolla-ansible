@@ -31,6 +31,25 @@
       >/tmp/logs/ansible/test-init-tempest-discover 2>&1
   changed_when: false
 
+# NOTE(bbezak): aarch64 Tempest guests may miss config-drive with the
+# default SCSI model, so force virtio-scsi for CirrOS.
+- name: Set Tempest image properties on aarch64
+  vars:
+    ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+    image_name: "cirros-{{ kolla_ansible_tempest_cirros_ver }}-aarch64-disk.img"
+  openstack.cloud.image:
+    cloud: "kolla-admin"
+    name: "{{ item }}"
+    visibility: public
+    properties:
+      hw_scsi_model: virtio-scsi
+  environment:
+    OS_CLIENT_CONFIG_FILE: "/etc/kolla/clouds.yaml"
+  loop:
+    - "{{ image_name }}"
+    - "{{ image_name }}_alt"
+  when: ansible_architecture == 'aarch64'
+
 - name: Run tempest tests
   environment:
     OS_LOG_CAPTURE: "1"
