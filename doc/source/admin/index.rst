@@ -13,3 +13,4 @@ Admin Guides
    production-architecture-guide
    deployment-philosophy
    password-rotation
+   proxysql
