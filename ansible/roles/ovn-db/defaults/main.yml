@@ -104,17 +104,10 @@ ovn_db_inactivity_probe: "60000"
 ovn_sb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
 ovn_nb_db_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
 ovn_sb_db_relay_active_inactivity_probe: "{{ ovn_db_inactivity_probe | int * 2 }}"
+ovn_sb_db_relay_config_file_args: >-
+  --db-sb-relay-config-file=/etc/ovn/ovsdb-relay.json
 ovn_sb_db_relay_passive_inactivity_probe: "{{ ovn_db_inactivity_probe }}"
 ovn_sb_db_relay_max_backoff: "{{ ovn_db_inactivity_probe }}"
-
-# TODO(mnnasiadka): remove that once Debian gets OVS 3.3+
-ovn_sb_db_relay_config_file_args: >-
-  {% if kolla_base_distro == 'debian' %}
-  --db-sb-relay-remote={{ ovn_sb_connection_no_relay }}
-  -- --remote=ptcp:{{ ovn_sb_db_relay_port_prefix ~ ovn_sb_db_relay_group_id }}:{{ api_interface_address | put_address_in_context('url') }}
-  {% else %}
-  --db-sb-relay-config-file=/etc/ovn/ovsdb-relay.json
-  {% endif %}
 
 # OVN startup commands
 ovn_nb_command: >-
