@@ -20,6 +20,20 @@
 - name: Reload cinder services
   ansible.builtin.import_tasks: reload.yml
 
+# TODO(mnasiadka): Remove me in 2026.2
+- name: Remove cinderv3 catalog entries
+  vars:
+    _cinder_volumev3:
+      - name: "cinderv3"
+        type: "volumev3"
+        description: "Openstack Block Storage (deprecated)"
+        endpoints: []
+        state: absent
+    service_ks_register_auth: "{{ openstack_cinder_auth }}"
+    service_ks_register_services: "{{ _cinder_volumev3 }}"
+  ansible.builtin.import_role:
+    name: service-ks-register
+
 - name: Running Cinder online schema migration
   vars:
     cinder_api: "{{ cinder_services['cinder-api'] }}"
