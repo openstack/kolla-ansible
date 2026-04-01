@@ -2,13 +2,13 @@
 - name: List configured attribute mappings (that can be used by IdPs)
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-      --os-auth-url={{ openstack_auth.auth_url }}
-      --os-password={{ openstack_auth.password }}
-      --os-username={{ openstack_auth.username }}
+      --os-auth-url={{ keystone_internal_url }}
+      --os-password={{ keystone_admin_password }}
+      --os-username={{ keystone_admin_user }}
       --os-identity-api-version=3
       --os-interface={{ openstack_interface }}
       --os-system-scope="all"
-      --os-user-domain-name={{ openstack_auth.user_domain_name }}
+      --os-user-domain-name={{ default_user_domain_name }}
       --os-region-name={{ openstack_region_name }}
       {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping list -c ID --format value
@@ -25,12 +25,12 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-system-scope="all"
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
@@ -51,6 +51,7 @@
     module_args:
       name: "{{ item.openstack_domain }}"
       auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
       endpoint_type: "{{ openstack_interface }}"
       cacert: "{{ openstack_cacert }}"
       region_name: "{{ openstack_region_name }}"
@@ -62,13 +63,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface {{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping create
@@ -84,13 +85,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     mapping set
@@ -105,13 +106,13 @@
   become: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
     identity provider list -c ID --format value
@@ -128,13 +129,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     identity provider delete {{ item }}
@@ -149,13 +150,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     identity provider create
@@ -173,13 +174,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface {{ openstack_interface }}
     --os-system-scope "all"
-    --os-user-domain-name {{ openstack_auth.user_domain_name }}
+    --os-user-domain-name {{ default_user_domain_name }}
     --os-region-name {{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
     identity provider set
@@ -196,13 +197,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     federation protocol create
@@ -219,13 +220,13 @@
   changed_when: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ openstack_auth.auth_url }}
-    --os-password={{ openstack_auth.password }}
-    --os-username={{ openstack_auth.username }}
+    --os-auth-url={{ keystone_internal_url }}
+    --os-password={{ keystone_admin_password }}
+    --os-username={{ keystone_admin_user }}
     --os-identity-api-version=3
     --os-interface={{ openstack_interface }}
     --os-system-scope="all"
-    --os-user-domain-name={{ openstack_auth.user_domain_name }}
+    --os-user-domain-name={{ default_user_domain_name }}
     --os-region-name={{ openstack_region_name }}
     {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
     federation protocol set
