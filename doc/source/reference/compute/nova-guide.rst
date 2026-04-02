@@ -45,6 +45,21 @@ Valid options are ``none``, ``novnc`` and ``spice``. Additionally,
 serial console support can be enabled by setting
 ``enable_nova_serialconsole_proxy`` to ``yes``.
 
+``spice`` consoles have additional configuration options used by Kolla Ansible:
+
+* nova_spice_html5: configures whether the HTML5 transcoding proxy used by
+  Horizon is enabled, and defaults to ``true``.
+* nova_spice_image_compression: which compression algorithm to use for images
+  when using the SPICE console type. Defaults to ``auto_glz``.
+* nova_spice_jpeg_compression: whether or not to use JPEG compression with
+  SPICE consoles. Defaults to ``auto``.
+* nova_spice_zlib_compression: whether or not to use zlib compression with
+  SPICE consoles. Defaults to ``auto``.
+* nova_spice_playback_compression: whether or not to use compression for video
+  playback. Defaults to ``true``.
+* nova_spice_streaming_mode: what streaming mode to use with SPICE consoles.
+  Defaults to ``filter``.
+
 Cells
 =====
 
