@@ -16,11 +16,8 @@ cloudkitty_services:
         external: false
         port: "{{ cloudkitty_api_port }}"
         listen_port: "{{ cloudkitty_api_listen_port }}"
-        frontend_http_extra:
-          - "timeout client {{ haproxy_cloudkitty_api_client_timeout }}"
         backend_http_extra:
           - "option httpchk"
-          - "timeout server {{ haproxy_cloudkitty_api_server_timeout }}"
       cloudkitty_api_external:
         enabled: "{{ enable_cloudkitty }}"
         mode: "http"
@@ -28,11 +25,8 @@ cloudkitty_services:
         external_fqdn: "{{ cloudkitty_external_fqdn }}"
         port: "{{ cloudkitty_api_public_port }}"
         listen_port: "{{ cloudkitty_api_listen_port }}"
-        frontend_http_extra:
-          - "timeout client {{ haproxy_cloudkitty_api_client_timeout }}"
         backend_http_extra:
           - "option httpchk"
-          - "timeout server {{ haproxy_cloudkitty_api_server_timeout }}"
   cloudkitty-processor:
     container_name: "cloudkitty_processor"
     group: "cloudkitty-processor"
@@ -55,12 +49,6 @@ cloudkitty_config_validation:
 cloudkitty_database_name: "cloudkitty"
 cloudkitty_database_user: "{% if use_preconfigured_databases | bool and use_common_mariadb_user | bool %}{{ database_user }}{% else %}cloudkitty{% endif %}"
 cloudkitty_database_address: "{{ database_address | put_address_in_context('url') }}:{{ database_port }}"
-
-####################
-# HAProxy
-####################
-haproxy_cloudkitty_api_client_timeout: "{{ haproxy_client_timeout }}"
-haproxy_cloudkitty_api_server_timeout: "{{ haproxy_server_timeout }}"
 
 ####################
 # Database sharding
