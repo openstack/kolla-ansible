@@ -103,3 +103,28 @@
         - "{{ node_custom_config }}/keystone/federation/modoidc-error-page.html"
         - "modoidc-error-page.html.j2"
       skip: true
+
+- name: Remove OpenID certificate and metadata files from keystone-httpd config directory.
+  vars:
+    keystone: "{{ keystone_services.keystone }}"
+  become: true
+  file:
+    state: absent
+    path: "{{ keystone_host_httpd_base_folder }}/federation"
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone_wsgi_provider == "uwsgi"
+
+- name: Copy over OpenID certificate and metadata files configuration from keystone config directory to keystone-httpd config directory.
+  vars:
+    keystone: "{{ keystone_services.keystone }}"
+  become: true
+  copy:
+    src: "{{ keystone_host_federation_base_folder }}"
+    dest: "{{ keystone_host_httpd_base_folder }}"
+    remote_src: true
+  when:
+    - inventory_hostname in groups[keystone.group]
+    - keystone.enabled | bool
+    - keystone_enable_federation_openid | bool
+    - keystone_wsgi_provider == "uwsgi"

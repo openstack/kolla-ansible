@@ -47,7 +47,7 @@ keystone_services:
   keystone-httpd:
     container_name: "keystone_httpd"
     group: "keystone"
-    enabled: "{{ enable_keystone_federation | bool }}"
+    enabled: "{{ enable_keystone_federation | bool and keystone_wsgi_provider == 'uwsgi' }}"
     image: "{{ keystone_httpd_image_full }}"
     volumes: "{{ keystone_httpd_default_volumes + keystone_httpd_extra_volumes }}"
     dimensions: "{{ keystone_httpd_dimensions }}"
@@ -260,6 +260,7 @@ keystone_container_federation_oidc_metadata_folder: "{{ '/etc/apache2/metadata' 
 keystone_container_federation_oidc_idp_certificate_folder: "{{ '/etc/apache2/cert' if kolla_base_distro in ['debian', 'ubuntu'] else '/etc/httpd/cert' }}"
 keystone_container_federation_oidc_attribute_mappings_folder: "{{ container_config_directory }}/federation/oidc/attribute_maps"
 keystone_host_federation_base_folder: "{{ node_config_directory }}/keystone/federation"
+keystone_host_httpd_base_folder: "{{ node_config_directory }}/keystone-httpd"
 keystone_host_federation_oidc_metadata_folder: "{{ keystone_host_federation_base_folder }}/oidc/metadata"
 keystone_host_federation_oidc_idp_certificate_folder: "{{ keystone_host_federation_base_folder }}/oidc/cert"
 keystone_host_federation_oidc_attribute_mappings_folder: "{{ keystone_host_federation_base_folder }}/oidc/attribute_maps"
