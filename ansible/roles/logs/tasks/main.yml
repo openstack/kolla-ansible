@@ -1,0 +1,17 @@
+---
+- name: Ensure /var/log/kolla exists
+  when: kolla_action in ['deploy', 'reconfigure']
+  block:
+    - name: Ensure log volume exists
+      become: true
+      kolla_container:
+        action: "create_volume"
+        common_options: "{{ docker_common_options }}"
+        name: "kolla_logs"
+
+    - name: Ensure kolla_logs volume link to /var/log/kolla exists
+      become: true
+      ansible.builtin.file:
+        src: "{{ container_engine_volumes_path }}/kolla_logs/_data"
+        path: /var/log/kolla
+        state: link
