@@ -517,3 +517,16 @@ class MigrateContainerEngine(KollaAnsibleMixin, Command):
         playbooks = _choose_playbooks(parsed_args, "migrate-container-engine")
 
         self.run_playbooks(parsed_args, playbooks)
+
+
+class MigrateValkey(KollaAnsibleMixin, Command):
+    """Migrate from Redis to Valkey"""
+
+    def take_action(self, parsed_args):
+        self.app.LOG.info(
+            "Migrate from Redis to Valkey"
+        )
+
+        playbooks = _choose_playbooks(parsed_args, "migrate-valkey")
+
+        self.run_playbooks(parsed_args, playbooks)

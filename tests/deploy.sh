@@ -52,6 +52,34 @@ function certificates {
     sudo chmod -R 777 /etc/kolla
 }
 
+function migrate_valkey {
+
+    RAW_INVENTORY=/etc/kolla/inventory
+    source $KOLLA_ANSIBLE_VENV_PATH/bin/activate
+
+    if grep -q '^enable_redis:' /etc/kolla/globals.yml; then
+        sed -i 's/^enable_redis:.*/enable_redis: "no"/' /etc/kolla/globals.yml
+    else
+        echo 'enable_redis: "no"' >> /etc/kolla/globals.yml
+    fi
+
+    if grep -q '^enable_valkey:' /etc/kolla/globals.yml; then
+        sed -i 's/^enable_valkey:.*/enable_valkey: "yes"/' /etc/kolla/globals.yml
+    else
+        echo 'enable_valkey: "yes"' >> /etc/kolla/globals.yml
+    fi
+
+    # Keep the initial Valkey password aligned with the current Redis password.
+    REDIS_PASSWORD=$(awk -F': ' '/^redis_master_password:/ {print $2}' /etc/kolla/passwords.yml)
+    if grep -q '^valkey_master_password:' /etc/kolla/passwords.yml; then
+        sed -i "s|^valkey_master_password:.*|valkey_master_password: ${REDIS_PASSWORD}|" /etc/kolla/passwords.yml
+    else
+        echo "valkey_master_password: ${REDIS_PASSWORD}" >> /etc/kolla/passwords.yml
+    fi
+
+    kolla-ansible pull -i ${RAW_INVENTORY} -t valkey -vvv &> /tmp/logs/ansible/pull-valkey
+    kolla-ansible migrate-valkey -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/migrate-valkey
+}
 
 function deploy {
 
@@ -68,6 +96,10 @@ function deploy {
     kolla-ansible pull -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/pull
     kolla-ansible deploy -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/deploy
     kolla-ansible post-deploy -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/post-deploy
+
+    if [[ $MIGRATE_VALKEY == 'yes' ]]; then
+        migrate_valkey
+    fi
 
     if [[ $HAS_UPGRADE == 'no' ]]; then
         kolla-ansible validate-config -i ${RAW_INVENTORY} -vvv &> /tmp/logs/ansible/validate-config

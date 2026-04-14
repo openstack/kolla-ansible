@@ -352,3 +352,58 @@ migration can be started with the following command:
    During the migration, all the container volumes will be migrated
    under the new container engine. Old container engine system packages will be
    removed from the system and all their resources and data will be deleted.
+
+Migrate Redis to Valkey
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Kolla-Ansible provides a manual migration path from Redis to Valkey.
+
+This is intended for existing deployments that already use Redis.
+For new deployments, enable Valkey from the start and run a normal deploy.
+One use case is migrating a Rocky Linux 9 based 2025.1 (Epoxy) deployment to
+Rocky Linux 10 before upgrading to 2025.2 (Flamingo) or 2026.1 (Gazpacho).
+
+Before starting the migration:
+
+#. Update ``/etc/kolla/globals.yml``:
+
+   .. code-block:: yaml
+
+      enable_redis: "no"
+      enable_valkey: "yes"
+
+#. If you use a custom inventory, make sure hosts are assigned to the
+   ``valkey`` group. For example:
+
+   .. code-block:: ini
+
+      [valkey:children]
+      control
+
+#. Make sure ``/etc/kolla/passwords.yml`` contains
+   ``valkey_master_password``. For the initial Redis to Valkey migration,
+   ``valkey_master_password`` must match ``redis_master_password``. If your
+   ``passwords.yml`` predates Valkey, update it using ``kolla-genpwd`` and
+   ``kolla-mergepwd`` as described in :ref:`Operating Kolla <operating-kolla>`.
+
+After updating the configuration, pull the Valkey images:
+
+.. code-block:: console
+
+   kolla-ansible pull --tags valkey
+
+Do not run ``kolla-ansible deploy`` or ``kolla-ansible reconfigure`` for this
+change. Start the migration with:
+
+.. code-block:: console
+
+   kolla-ansible migrate-valkey
+
+This command starts Valkey on temporary ports, migrates data from Redis,
+removes Redis, and then reconfigures Valkey on the default ports.
+
+Optionally, after the migration completes, verify the deployment:
+
+.. code-block:: console
+
+   kolla-ansible check
