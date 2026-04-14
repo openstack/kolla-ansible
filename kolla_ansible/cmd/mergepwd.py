@@ -46,6 +46,16 @@ def mergepwd(old, new, final, clean=False):
         print("ERROR: New passwords file not in expected key/value format")
         sys.exit(1)
 
+    # TODO(vurmil): Remove in H/2026.2 release as Redis migration is
+    # no longer required
+    if 'valkey_master_password' in new_passwords and \
+       'redis_master_password' in old_passwords and \
+       'valkey_master_password' not in old_passwords:
+
+        old_redis_pass = old_passwords.get('redis_master_password')
+        if old_redis_pass:
+            new_passwords['valkey_master_password'] = old_redis_pass
+
     if clean:
         # keep only new keys
         for key in new_passwords:
