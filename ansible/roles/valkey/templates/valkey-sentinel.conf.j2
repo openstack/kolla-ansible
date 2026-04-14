@@ -1,0 +1,12 @@
+{% set valkey_master_address = 'api' | kolla_address(groups['valkey'][0]) %}
+daemonize no
+pidfile "/var/run/valkey/valkey-sentinel.pid"
+logfile "/var/log/kolla/valkey/valkey-sentinel.log"
+bind {{ api_interface_address }}
+port {{ valkey_sentinel_port }}
+sentinel myid {{ inventory_hostname | hash('sha1') }}
+sentinel monitor {{ valkey_sentinel_monitor_name }} {{ valkey_master_address }} {{ valkey_server_port }} {{ valkey_sentinel_quorum }}
+sentinel auth-pass {{ valkey_sentinel_monitor_name }} {{ valkey_master_password }}
+sentinel down-after-milliseconds {{ valkey_sentinel_monitor_name }} 5000
+sentinel failover-timeout {{ valkey_sentinel_monitor_name }} 60000
+sentinel parallel-syncs {{ valkey_sentinel_monitor_name }} 1

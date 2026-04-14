@@ -51,10 +51,12 @@ Configure Designate options in ``/etc/kolla/globals.yml``
 .. important::
 
    If multiple nodes are assigned to be Designate workers, then you must
-   enable a supported coordination backend, currently only ``redis``
-   is supported. The backend choice can be overridden via the
-   ``designate_coordination_backend`` variable. It defaults to ``redis``
-   when ``redis`` is enabled (``enable_redis`` is set to ``yes``).
+   enable a supported coordination backend, currently only ``redis`` and
+   ``valkey`` are supported. The backend choice can be overridden via the
+   ``designate_coordination_backend`` variable. It defaults to ``valkey``
+   when ``valkey`` is enabled (``enable_valkey`` is set to ``yes``) and
+   defaults to ``redis`` when ``redis is enabled (``enable_redi`` is set to
+   ``yes``).
 
 The following additional variables are required depending on which backend you
 intend to use:

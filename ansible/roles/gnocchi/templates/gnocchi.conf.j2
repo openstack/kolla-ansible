@@ -3,7 +3,9 @@ debug = {{ gnocchi_logging_debug }}
 
 log_dir = /var/log/kolla/gnocchi
 
-{% if enable_redis | bool %}
+{% if enable_valkey | bool %}
+coordination_url = {{ valkey_connection_string }}
+{% elif enable_redis | bool %}
 coordination_url = {{ redis_connection_string }}
 {% endif %}
 
@@ -66,7 +68,10 @@ policy_file = {{ gnocchi_policy_file }}
 {% endif %}
 
 [incoming]
-{% if gnocchi_incoming_storage == 'redis' %}
+{% if gnocchi_incoming_storage == 'valkey' %}
+driver = redis
+redis_url = {{ valkey_connection_string }}
+{% elif gnocchi_incoming_storage == 'redis' %}
 driver = redis
 redis_url = {{ redis_connection_string }}
 {% endif %}

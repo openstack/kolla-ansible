@@ -168,9 +168,15 @@ ca_certificates_file = {{ openstack_cacert }}
 {% if enable_octavia_jobboard | bool %}
 
 [task_flow]
+{% if enable_valkey | bool %}
+jobboard_backend_hosts = {% for host in groups['valkey'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}{% if not loop.last %},{% endif %}{% endfor %}
+jobboard_backend_password = {{ valkey_master_password }}
+jobboard_backend_port = {{ valkey_sentinel_port }}
+{% elif enable_redis | bool %}
 jobboard_backend_hosts = {% for host in groups['redis'] %}{{ 'api' | kolla_address(host) | put_address_in_context('url') }}{% if not loop.last %},{% endif %}{% endfor %}
 jobboard_backend_password = {{ redis_master_password }}
 jobboard_backend_port = {{ redis_sentinel_port }}
+{% endif %}
 jobboard_backend_username = default
 jobboard_enabled = true
 jobboard_redis_backend_ssl_options = ssl:False

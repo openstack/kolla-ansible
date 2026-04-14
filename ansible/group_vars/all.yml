@@ -556,7 +556,7 @@ masakari_public_endpoint: "{{ masakari_external_fqdn | kolla_url(public_protocol
 masakari_api_port: "15868"
 masakari_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else masakari_api_port }}"
 masakari_api_listen_port: "{{ masakari_api_port }}"
-masakari_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
+masakari_coordination_backend: "{{ 'valkey' if enable_valkey | bool else 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
 
 memcached_port: "11211"
 memcache_security_strategy: "ENCRYPT"
@@ -731,6 +731,11 @@ trove_public_base_endpoint: "{{ trove_external_fqdn | kolla_url(public_protocol,
 trove_api_port: "8779"
 trove_api_public_port: "{{ haproxy_single_external_frontend_public_port if haproxy_single_external_frontend | bool else trove_api_port }}"
 trove_api_listen_port: "{{ trove_api_port }}"
+
+valkey_server_port: "6379"
+valkey_sentinel_port: "26379"
+valkey_sentinel_monitor_name: "kolla"
+valkey_sentinel_quorum: 2
 
 venus_internal_fqdn: "{{ kolla_internal_fqdn }}"
 venus_external_fqdn: "{{ kolla_external_fqdn }}"
@@ -943,6 +948,7 @@ enable_tacker: "no"
 enable_telegraf: "no"
 enable_trove: "no"
 enable_trove_singletenant: "no"
+enable_valkey: "no"
 enable_venus: "no"
 enable_watcher: "no"
 enable_zun: "no"
@@ -990,13 +996,32 @@ enable_opensearch_dashboards_external: "{{ enable_opensearch_dashboards | bool }
 redis_connection_string: "redis://{% for host in groups['redis'] %}{% if host == groups['redis'][0] %}default:{{ redis_master_password }}@{{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}?sentinel=kolla{% else %}&sentinel_fallback={{ 'api' | kolla_address(host) | put_address_in_context('url') }}:{{ redis_sentinel_port }}{% endif %}{% endfor %}{{ redis_connection_string_extras }}"
 redis_connection_string_extras: "&db=0&socket_timeout=60&retry_on_timeout=yes"
 
+###################
+# Valkey options
+###################
+valkey_connection_string: >-
+  redis://{%-
+  for host in groups['valkey'] -%}
+    {%- if host == groups['valkey'][0] -%}
+      default:{{- valkey_master_password -}}@{{-
+        'api' | kolla_address(host) | put_address_in_context('url')
+      -}}:{{- valkey_sentinel_port -}}?sentinel={{- valkey_sentinel_monitor_name -}}
+    {%- else -%}
+      &sentinel_fallback={{-
+        'api' | kolla_address(host) | put_address_in_context('url')
+      -}}:{{- valkey_sentinel_port -}}
+    {%- endif -%}
+  {%- endfor -%}
+  {{- valkey_connection_string_extras -}}
+valkey_connection_string_extras: "&db=0&socket_timeout=60&retry_on_timeout=yes"
+
 ####################
 # Osprofiler options
 ####################
 # valid values: ["elasticsearch", "redis"]
 osprofiler_backend: "elasticsearch"
 opensearch_connection_string: "elasticsearch://{{ opensearch_address | put_address_in_context('url') }}:{{ opensearch_port }}"
-osprofiler_backend_connection_string: "{{ redis_connection_string if osprofiler_backend == 'redis' else opensearch_connection_string }}"
+osprofiler_backend_connection_string: "{{ valkey_connection_string if osprofiler_backend == 'valkey' else redis_connection_string if osprofiler_backend == 'redis' else opensearch_connection_string }}"
 
 ####################
 # RabbitMQ options
@@ -1122,7 +1147,7 @@ barbican_library_path: "/usr/lib/libCryptoki2_64.so"
 gnocchi_backend_storage: "file"
 
 # Valid options are [redis, '']
-gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
+gnocchi_incoming_storage: "{{ 'valkey' if enable_valkey | bool else 'redis' if enable_redis | bool else '' }}"
 gnocchi_metric_datadir_volume: "gnocchi"
 
 #################################
@@ -1136,7 +1161,7 @@ cinder_backend_vmware_vstorage_object: "no"
 cinder_volume_group: "cinder-volumes"
 cinder_target_helper: "{{ 'lioadm' if ansible_facts.os_family == 'RedHat' else 'tgtadm' }}"
 # Valid options are [ '', redis, etcd ]
-cinder_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
+cinder_coordination_backend: "{{ 'valkey' if enable_valkey | bool else 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
 
 # Valid options are [ nfs, ceph, s3 ]
 cinder_backup_driver: "ceph"
@@ -1163,7 +1188,7 @@ designate_ns_record:
 designate_backend_external: "no"
 designate_backend_external_bind9_nameservers: ""
 # Valid options are [ '', redis ]
-designate_coordination_backend: "{{ 'redis' if enable_redis | bool else '' }}"
+designate_coordination_backend: "{{ 'valkey' if enable_valkey | bool else 'redis' if enable_redis | bool else '' }}"
 
 designate_enable_notifications_sink: "no"
 designate_notifications_topic_name: "notifications_designate"
@@ -1360,8 +1385,8 @@ s3_secret_key:
 # telemetry data.
 telegraf_enable_docker_input: "no"
 
-# Valid options are [ '', redis, etcd ]
-ironic_coordination_backend: "{{ 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
+# Valid options are [ '', etcd, redis, valkey ]
+ironic_coordination_backend: "{{ 'valkey' if enable_valkey | bool else 'redis' if enable_redis | bool else 'etcd' if enable_etcd | bool else '' }}"
 
 ##########
 # Octavia
