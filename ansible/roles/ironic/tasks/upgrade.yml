@@ -52,19 +52,13 @@
 
 - name: Wait for Ironic nodes not to wait
   become: true
-  vars:
-    ironic_auth:
-      auth_url: "{{ openstack_auth.auth_url }}"
-      username: "{{ openstack_auth.username }}"
-      password: "{{ openstack_auth.password }}"
-      user_domain_name: "{{ openstack_auth.user_domain_name }}"
-      system_scope: "all"
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
     module_name: "openstack.cloud.baremetal_node_info"
     module_args:
       region_name: "{{ openstack_region_name }}"
-      auth: "{{ ironic_auth }}"
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud_system }}"
       interface: "{{ openstack_interface }}"
       cacert: "{{ openstack_cacert }}"
   register: ironic_nodes

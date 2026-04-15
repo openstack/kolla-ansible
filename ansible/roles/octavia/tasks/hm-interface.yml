@@ -6,6 +6,7 @@
     module_name: openstack.cloud.port
     module_args:
       auth: "{{ octavia_user_auth }}"
+      cloud: "{{ openstack_octavia_auth_cloud }}"
       cacert: "{{ openstack_cacert }}"
       endpoint_type: "{{ openstack_interface }}"
       region_name: "{{ openstack_region_name }}"
@@ -26,13 +27,7 @@
     port_id: "{{ port_info.port.id }}"
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec kolla_toolbox openstack
-    --os-interface {{ openstack_interface }}
-    --os-auth-url {{ octavia_user_auth.auth_url }}
-    --os-identity-api-version 3
-    --os-project-domain-name {{ octavia_user_auth.domain_name }}
-    --os-project-name {{ octavia_user_auth.project_name }}
-    --os-region-name {{ openstack_region_name }}
-    --os-username {{ octavia_user_auth.username }}
+    --os-cloud {{ openstack_octavia_auth_cloud }}
     --os-password {{ octavia_user_auth.password }}
     {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
     port set --host {{ ansible_facts.nodename }} {{ port_id }}

@@ -3,13 +3,15 @@
   become: true
   ansible.builtin.command: >
     {{ kolla_container_engine }} exec keystone kolla_keystone_bootstrap
-    {{ openstack_auth.username }} {{ openstack_auth.password }} {{ openstack_auth.project_name }}
-    admin {{ keystone_internal_url }} {{ keystone_public_url }} {{ item }}
+    {{ keystone_admin_user }} {{ keystone_admin_password }} {{ keystone_admin_project }}
+    admin {{ keystone_internal_url }} {{ keystone_public_url }} {{ region }}
   register: keystone_bootstrap
   changed_when: (keystone_bootstrap.stdout | from_json).changed
   failed_when: (keystone_bootstrap.stdout | from_json).failed
   run_once: true
-  with_items: "{{ multiple_regions_names }}"
+  loop: "{{ multiple_regions_names }}"
+  loop_control:
+    loop_var: region
 
 - name: Register keystone service, endpoints, and users in Keystone
   ansible.builtin.import_role:
@@ -27,6 +29,7 @@
     module_args:
       name: "{{ keystone_default_user_role }}"
       auth: "{{ openstack_keystone_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
       endpoint_type: "{{ openstack_interface }}"
       cacert: "{{ openstack_cacert }}"
       region_name: "{{ openstack_region_name }}"
