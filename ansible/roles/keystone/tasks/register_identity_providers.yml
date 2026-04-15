@@ -1,241 +1,167 @@
 ---
 - name: List configured attribute mappings (that can be used by IdPs)
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-      --os-auth-url={{ keystone_internal_url }}
-      --os-password={{ keystone_admin_password }}
-      --os-username={{ keystone_admin_user }}
-      --os-identity-api-version=3
-      --os-interface={{ openstack_interface }}
-      --os-system-scope="all"
-      --os-user-domain-name={{ default_user_domain_name }}
-      --os-region-name={{ openstack_region_name }}
-      {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
-    mapping list -c ID --format value
-  run_once: true
-  changed_when: false
   become: true
-  register: existing_mappings_register
-
-- name: Register existing mappings
-  ansible.builtin.set_fact:
-    existing_mappings: "{{ existing_mappings_register.stdout_lines | map('trim') | list }}"
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_mapping_info
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+  run_once: true
+  register: existing_mappings
 
 - name: Remove unmanaged attribute mappings
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-system-scope="all"
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
-    mapping delete {{ item }}
-  run_once: true
   become: true
-  with_items: "{{ existing_mappings }}"
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_mapping
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      name: "{{ item.name }}"
+      state: absent
+  run_once: true
+  with_items: "{{ existing_mappings.mappings }}"
   when:
-    - item not in (keystone_identity_mappings | map(attribute='name') | list)
+    - item.name not in (keystone_identity_mappings | map(attribute='name') | list)
     - keystone_should_remove_attribute_mappings
 
 - name: Create unexisting domains
   become: true
-  changed_when: true
   kolla_toolbox:
     container_engine: "{{ kolla_container_engine }}"
-    module_name: "os_keystone_domain"
+    module_name: "openstack.cloud.identity_domain"
     module_args:
-      name: "{{ item.openstack_domain }}"
       auth: "{{ openstack_auth }}"
       cloud: "{{ openstack_auth_cloud }}"
-      endpoint_type: "{{ openstack_interface }}"
-      cacert: "{{ openstack_cacert }}"
       region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      name: "{{ item.openstack_domain }}"
+      state: present
   run_once: true
   with_items: "{{ keystone_identity_providers }}"
 
 - name: Register attribute mappings in OpenStack
   become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
-    mapping create
-    --rules "{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
-    {{ item.name }}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_mapping
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      name: "{{ item.name }}"
+      rules: "{{ '{{ keystone_identity_mapping_rules | from_json }}' }}"
+      state: present
+    module_extra_vars:
+      keystone_identity_mapping_rules: "{{ lookup('ansible.builtin.file', item.file) }}"
   run_once: true
-  when:
-    - item.name not in existing_mappings
-  with_items: "{{ keystone_identity_mappings }}"
-
-- name: Update existing attribute mappings in OpenStack
-  become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
-    mapping set
-    --rules="{{ keystone_container_federation_oidc_attribute_mappings_folder }}/{{ item.file | basename }}"
-    {{ item.name }}
-  run_once: true
-  when:
-    - item.name in existing_mappings
   with_items: "{{ keystone_identity_mappings }}"
 
 - name: List configured IdPs
   become: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }} {% endif %}
-    identity provider list -c ID --format value
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_idp_info
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
   run_once: true
-  changed_when: false
-  register: existing_idps_register
-
-- name: Register existing idps
-  ansible.builtin.set_fact:
-    existing_idps: "{{ existing_idps_register.stdout.split('\n') | map('trim') | list }}"
+  register: existing_idps
 
 - name: Remove unmanaged identity providers
   become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
-    identity provider delete {{ item }}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_idp
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      name: "{{ item.name }}"
+      state: absent
   run_once: true
-  with_items: "{{ existing_idps }}"
+  with_items: "{{ existing_idps.identity_providers }}"
   when:
-    - item not in (keystone_identity_providers | map(attribute='name') | list)
+    - item.name not in (keystone_identity_providers | map(attribute='name') | list)
     - keystone_should_remove_identity_providers
+
+- name: Gather Identity Domains information
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.identity_domain_info
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+  run_once: true
+  register: existing_identity_domains
+
+- name: Verify that required Identity Domains exist
+  ansible.builtin.fail:
+    msg: >
+      Domain "{{ item.openstack_domain }}" was not found in OpenStack.
+      Please create it first or check your keystone_identity_providers configuration.
+  run_once: true
+  loop: "{{ keystone_identity_providers }}"
+  when: >
+    existing_identity_domains.domains |
+    selectattr('name', 'equalto', item.openstack_domain) |
+    list | length == 0
 
 - name: Register Identity Providers in OpenStack
   become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
-    identity provider create
-    --description "{{ item.public_name }}"
-    --remote-id "{{ item.identifier }}"
-    --domain "{{ item.openstack_domain }}"
-    {{ item.name }}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.federation_idp
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      description: "{{ item.public_name }}"
+      remote_ids: "{{ '{{ keystone_identity_provider_remote_ids | from_json }}' }}"
+      domain_id: "{{ existing_identity_domains.domains | selectattr('name', 'equalto', item.openstack_domain) | map(attribute='id') | first }}"
+      name: "{{ item.name }}"
+      is_enabled: true
+      state: present
+    module_extra_vars:
+      keystone_identity_provider_remote_ids: "{{ [item.identifier] | to_json }}"
   run_once: true
-  when:
-    - item.name not in existing_idps
-  with_items: "{{ keystone_identity_providers }}"
-
-- name: Update Identity Providers in OpenStack according to Kolla-Ansible configurations
-  become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface {{ openstack_interface }}
-    --os-system-scope "all"
-    --os-user-domain-name {{ default_user_domain_name }}
-    --os-region-name {{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert {{ openstack_cacert }} {% endif %}
-    identity provider set
-    --description "{{ item.public_name }}"
-    --remote-id "{{ item.identifier }}"
-    "{{ item.name }}"
-  run_once: true
-  when:
-    - item.name in existing_idps
   with_items: "{{ keystone_identity_providers }}"
 
 - name: Configure attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator)
   become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
-    federation protocol create
-    --mapping {{ item.attribute_mapping }}
-    --identity-provider {{ item.name }}
-    {{ item.protocol }}
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.keystone_federation_protocol
+    module_args:
+      auth: "{{ openstack_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      region_name: "{{ openstack_region_name }}"
+      interface: "{{ openstack_interface }}"
+      ca_cert: "{{ openstack_cacert if openstack_cacert != '' else omit }}"
+      idp: "{{ item.name }}"
+      mapping: "{{ item.attribute_mapping }}"
+      name: "{{ item.protocol }}"
+      state: present
   run_once: true
-  when:
-    - item.name not in existing_idps
-  with_items: "{{ keystone_identity_providers }}"
-
-- name: Update attribute mappings for each Identity Provider. (We expect the mappings to be configured by the operator).
-  become: true
-  changed_when: true
-  ansible.builtin.command: >
-    {{ kolla_container_engine }} exec -t keystone openstack
-    --os-auth-url={{ keystone_internal_url }}
-    --os-password={{ keystone_admin_password }}
-    --os-username={{ keystone_admin_user }}
-    --os-identity-api-version=3
-    --os-interface={{ openstack_interface }}
-    --os-system-scope="all"
-    --os-user-domain-name={{ default_user_domain_name }}
-    --os-region-name={{ openstack_region_name }}
-    {% if openstack_cacert != '' %}--os-cacert={{ openstack_cacert }}{% endif %}
-    federation protocol set
-    --identity-provider {{ item.name }}
-    --mapping {{ item.attribute_mapping }}
-    {{ item.protocol }}
-  run_once: true
-  register: result
-  failed_when: result.rc not in [0, 1] # This command returns RC 1 on success, so we need to add this to avoid fails.
-  when:
-    - item.name in existing_idps
   with_items: "{{ keystone_identity_providers }}"
