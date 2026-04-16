@@ -48,10 +48,10 @@ APIs, configure the following in ``globals.yml``:
 
 .. code-block:: yaml
 
-  kolla_enable_tls_internal: "yes"
-  kolla_enable_tls_external: "yes"
-  kolla_enable_tls_backend: "yes"
-  kolla_copy_ca_into_containers: "yes"
+  kolla_enable_tls_internal: true
+  kolla_enable_tls_external: true
+  kolla_enable_tls_backend: true
+  kolla_copy_ca_into_containers: true
 
 If deploying on Debian or Ubuntu:
 
@@ -100,13 +100,13 @@ encryption:
 
 .. code-block:: yaml
 
-  kolla_enable_tls_external: "yes"
+  kolla_enable_tls_external: true
 
 To enable internal TLS encryption:
 
 .. code-block:: yaml
 
-  kolla_enable_tls_internal: "yes"
+  kolla_enable_tls_internal: true
 
 Two certificate files are required to use TLS securely with authentication,
 which will be provided by your Certificate Authority:
@@ -218,8 +218,18 @@ Enabling TLS on the backend services secures communication between the
 HAProxy listing on the internal/external VIP and the OpenStack
 services. It also enables secure end-to-end communication between OpenStack
 services that support TLS termination. The OpenStack services that support
-backend TLS termination in Victoria are: Nova, Ironic, Neutron, Keystone,
-Glance, Heat, Placement, Horizon, Barbican, and Cinder.
+backend TLS termination are:
+
+* Barbican
+* Cinder
+* Glance
+* Heat
+* Horizon
+* Ironic
+* Keystone
+* Neutron
+* Nova
+* Placement
 
 The configuration variables that control back-end TLS for service endpoints
 are:
@@ -235,11 +245,11 @@ communication:
 
 .. code-block:: yaml
 
-  kolla_enable_tls_backend: "yes"
+  kolla_enable_tls_backend: true
 
 It is also possible to enable back-end TLS on a per-service basis. For example,
 to enable back-end TLS for Keystone, set ``keystone_enable_tls_backend`` to
-``yes``.
+``true``.
 
 The default values for ``haproxy_backend_cacert`` and
 ``haproxy_backend_cacert_dir`` should suffice if the certificate is in the
@@ -284,7 +294,7 @@ disable verification of the backend certificate:
 
 .. code-block:: yaml
 
-  kolla_verify_tls_backend: "no"
+  kolla_verify_tls_backend: false
 
 Generating TLS certificates with Let's Encrypt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -297,7 +307,7 @@ must be configured in ``globals.yml``:
 
 .. code-block:: yaml
 
-  enable_letsencrypt: "yes"
+  enable_letsencrypt: true
   letsencrypt_email: "<The email used for registration and recovery contact>"
 
 The Let's Encrypt container will attempt to renew your certificates every 12

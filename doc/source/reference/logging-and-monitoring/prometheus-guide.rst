@@ -18,13 +18,13 @@ and change the following:
 
 .. code-block:: yaml
 
-   enable_prometheus: "yes"
+   enable_prometheus: true
 
 Note: This will deploy Prometheus version 2.x. Any potentially existing
 Prometheus 1.x instances deployed by previous Kolla Ansible releases will
 conflict with current version and should be manually stopped and/or removed.
 If you would like to stay with version 1.x, set the ``enable_prometheus``
-variable to ``no``.
+variable to ``false``.
 
 In order to remove leftover volume containing Prometheus 1.x data, execute:
 

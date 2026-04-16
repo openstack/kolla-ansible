@@ -39,14 +39,14 @@ Cinder is required, enable it in ``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
-   enable_cinder: "yes"
+   enable_cinder: true
 
 Enable Manila and generic back end in ``/etc/kolla/globals.yml``:
 
 .. code-block:: console
 
-   enable_manila: "yes"
-   enable_manila_backend_generic: "yes"
+   enable_manila: true
+   enable_manila_backend_generic: true
 
 By default Manila uses instance flavor id 100 for its file systems. For Manila
 to work, either create a new nova flavor with id 100 (use *nova flavor-create*)

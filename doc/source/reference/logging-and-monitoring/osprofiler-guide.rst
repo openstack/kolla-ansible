@@ -22,8 +22,8 @@ Enable ``OSprofiler`` in ``/etc/kolla/globals.yml`` file:
 
 .. code-block:: yaml
 
-   enable_osprofiler: "yes"
-   enable_elasticsearch: "yes"
+   enable_osprofiler: true
+   enable_elasticsearch: true
 
 Verify operation
 ----------------

@@ -77,8 +77,8 @@ Enable Shared File Systems service and HNAS driver in
 
 .. code-block:: yaml
 
-   enable_manila: "yes"
-   enable_manila_backend_hnas: "yes"
+   enable_manila: true
+   enable_manila_backend_hnas: true
 
 Configure the OpenStack networking so it can reach HNAS Management
 interface and HNAS EVS Data interface.

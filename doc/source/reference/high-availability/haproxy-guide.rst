@@ -19,8 +19,8 @@ setting the following in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   enable_haproxy: "no"
-   enable_keepalived: "no"
+   enable_haproxy: false
+   enable_keepalived: false
 
 Single external frontend for services
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,7 +91,7 @@ disabled by setting the following in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   haproxy_enable_http2: "no"
+   haproxy_enable_http2: false
 
 SSL/TLS Settings
 ----------------

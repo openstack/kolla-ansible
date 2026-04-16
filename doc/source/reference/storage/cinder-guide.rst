@@ -65,7 +65,7 @@ Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   enable_cinder_backend_lvm: "yes"
+   enable_cinder_backend_lvm: true
 
 .. note::
 
@@ -105,7 +105,7 @@ Finally, enable the ``nfs`` backend in ``/etc/kolla/globals.yml``:
 
 .. code-block:: yaml
 
-   enable_cinder_backend_nfs: "yes"
+   enable_cinder_backend_nfs: true
 
 Validation
 ~~~~~~~~~~
@@ -161,7 +161,7 @@ exist on the server and following parameter must be specified in
 
 .. code-block:: yaml
 
-   enable_cinder_backend_lvm: "yes"
+   enable_cinder_backend_lvm: true
 
 For Ubuntu and LVM2/iSCSI
 -------------------------
@@ -202,9 +202,9 @@ the following parameter must be specified in ``globals.yml``:
 
 .. code-block:: yaml
 
-   enable_cinder_backend_iscsi: "yes"
+   enable_cinder_backend_iscsi: true
 
-Also ``enable_cinder_backend_lvm`` should be set to ``no`` in this case.
+Also ``enable_cinder_backend_lvm`` should be set to ``false`` in this case.
 
 Skip Cinder prechecks for Custom backends
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

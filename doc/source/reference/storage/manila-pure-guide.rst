@@ -61,8 +61,8 @@ Enable Shared File Systems service and FlashBlade driver in
 
 .. code-block:: yaml
 
-   enable_manila: "yes"
-   enable_manila_backend_flashblade: "yes"
+   enable_manila: true
+   enable_manila_backend_flashblade: true
 
 Configure the OpenStack networking so it can reach FlashBlade Management
 interface and FlashBlade Data interface.

@@ -12,7 +12,7 @@ Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. code-block:: yaml
 
-   enable_cinder_backend_quobyte: "yes"
+   enable_cinder_backend_quobyte: true
 
 .. end
 

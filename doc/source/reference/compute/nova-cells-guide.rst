@@ -170,7 +170,7 @@ Support for deployment of multiple cells is disabled by default - nova is
 deployed in single conductor mode.
 
 Deployment of multiple cells may be enabled by setting ``enable_cells`` to
-``yes`` in ``globals.yml``. This deploys nova in superconductor mode, with
+``true`` in ``globals.yml``. This deploys nova in superconductor mode, with
 separate conductors for each cell.
 
 Naming cells

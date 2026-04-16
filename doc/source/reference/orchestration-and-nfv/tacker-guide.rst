@@ -40,8 +40,8 @@ In order to enable them, you need to edit the file
 
 .. code-block:: yaml
 
-   enable_tacker: "yes"
-   enable_barbican: "yes"
+   enable_tacker: true
+   enable_barbican: true
 
 .. warning::
 

@@ -16,7 +16,7 @@ the following:
 
 .. code-block:: yaml
 
-   enable_central_logging: "yes"
+   enable_central_logging: true
 
 OpenSearch
 ~~~~~~~~~~

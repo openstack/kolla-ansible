@@ -235,11 +235,11 @@ There are a few options that are required to deploy Kolla Ansible:
 
   By default Kolla Ansible provides a bare compute kit, however it does provide
   support for a vast selection of additional services. To enable them, set
-  ``enable_*`` to "yes".
+  ``enable_*`` to ``true``.
 
   Kolla now supports many OpenStack services, there is
   `a list of available services
-  <https://github.com/openstack/kolla-ansible/blob/master/README.rst#openstack-services>`_.
+  <https://opendev.org/openstack/kolla-ansible/src/branch/|KOLLA_BRANCH_NAME|/README.rst#openstack-services>`_.
   For more information about service configuration, Please refer to the
   :kolla-ansible-doc:`Services Reference Guide <reference/index.html>`.
 

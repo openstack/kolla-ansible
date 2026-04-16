@@ -20,13 +20,13 @@ and change the following:
 
 .. code-block:: yaml
 
-   enable_grafana: "yes"
+   enable_grafana: true
 
 If you would like to set up Prometheus as a data source, additionally set:
 
 .. code-block:: yaml
 
-   enable_prometheus: "yes"
+   enable_prometheus: true
 
 Please follow :doc:`Prometheus Guide <prometheus-guide>` for more information.
 

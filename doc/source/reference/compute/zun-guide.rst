@@ -17,11 +17,11 @@ following variables:
 
 .. code-block:: yaml
 
-   enable_zun: "yes"
-   enable_kuryr: "yes"
-   enable_etcd: "yes"
-   docker_configure_for_zun: "yes"
-   containerd_configure_for_zun: "yes"
+   enable_zun: true
+   enable_kuryr: true
+   enable_etcd: true
+   docker_configure_for_zun: true
+   containerd_configure_for_zun: true
 
 Docker reconfiguration requires rebootstrapping before deploy.
 Make sure you understand the consequences of restarting Docker.

@@ -14,7 +14,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. code-block:: yaml
 
-   enable_neutron_sfc: "yes"
+   enable_neutron_sfc: true
 
 Verification
 ------------
@@ -37,7 +37,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. code-block:: yaml
 
-   enable_neutron_fwaas: "yes"
+   enable_neutron_fwaas: true
 
 For more information on FWaaS in Neutron refer to the
 :neutron-doc:`Neutron FWaaS docs <admin/fwaas.html>`.
@@ -52,7 +52,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. code-block:: yaml
 
-   enable_neutron_vpnaas: "yes"
+   enable_neutron_vpnaas: true
 
 Verification
 ------------
@@ -119,7 +119,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. code-block:: yaml
 
-   enable_neutron_trunk: "yes"
+   enable_neutron_trunk: true
 
 Neutron Logging Framework
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,7 +131,7 @@ Modify the ``/etc/kolla/globals.yml`` file as the following example shows:
 
 .. code-block:: yaml
 
-   enable_neutron_packet_logging: "yes"
+   enable_neutron_packet_logging: true
 
 For OVS deployment, you need to override the firewall driver in
 `openvswitch_agent.ini` to:

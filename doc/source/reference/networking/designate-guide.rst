@@ -23,7 +23,7 @@ Enable Designate service in ``/etc/kolla/globals.yml``
 
 .. code-block:: yaml
 
-   enable_designate: "yes"
+   enable_designate: true
    neutron_dns_domain: "example.org."
 
 .. important::
@@ -54,7 +54,7 @@ Configure Designate options in ``/etc/kolla/globals.yml``
    enable a supported coordination backend, currently only ``valkey``
    is supported. The backend choice can be overridden via the
    ``designate_coordination_backend`` variable. It defaults to ``valkey``
-   when ``valkey`` is enabled (``enable_valkey`` is set to ``yes``).
+   when ``valkey`` is enabled (``enable_valkey`` is set to ``true``).
 
 The following additional variables are required depending on which backend you
 intend to use:
@@ -108,7 +108,7 @@ to trigger record creation & deletion.
 
 .. note::
    Service ``designate-sink`` in kolla deployments is disabled by default
-   and can be enabled by ``designate_enable_notifications_sink: yes``.
+   and can be enabled by ``designate_enable_notifications_sink: true``.
 
 Create default Designate Zone for Neutron:
 

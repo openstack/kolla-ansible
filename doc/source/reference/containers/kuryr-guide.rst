@@ -33,8 +33,8 @@ following variables
 
 .. code-block:: yaml
 
-   enable_etcd: "yes"
-   enable_kuryr: "yes"
+   enable_etcd: true
+   enable_kuryr: true
 
 Deploy the OpenStack cloud and kuryr network plugin
 

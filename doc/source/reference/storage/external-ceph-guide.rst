@@ -412,7 +412,7 @@ for Ceph includes following steps:
 
   .. code-block:: yaml
 
-     enable_manila_backend_cephfs_native: "yes"
+     enable_manila_backend_cephfs_native: true
 
 * Configure Ceph authentication details in ``/etc/kolla/globals.yml``:
 

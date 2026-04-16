@@ -23,7 +23,7 @@ by ensuring the following line exists within ``/etc/kolla/globals.yml`` :
 
 .. code-block:: yaml
 
-   enable_rabbitmq: "no"
+   enable_rabbitmq: false
 
 
 Overwriting transport_url within ``globals.yml``

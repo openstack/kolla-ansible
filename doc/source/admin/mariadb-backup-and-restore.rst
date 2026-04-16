@@ -27,7 +27,7 @@ Firstly, enable backups via ``globals.yml``:
 
 .. code-block:: console
 
-   enable_mariabackup: "yes"
+   enable_mariabackup: true
 
 Then, kick off a reconfiguration of MariaDB:
 

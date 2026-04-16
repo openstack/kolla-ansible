@@ -12,7 +12,7 @@ configure the ``FlashArray iSCSI`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. code-block:: yaml
 
-  enable_cinder_backend_pure_iscsi: "yes"
+  enable_cinder_backend_pure_iscsi: true
 
 .. end
 
@@ -21,7 +21,7 @@ configure the ``FlashArray FC`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. code-block:: yaml
 
-  enable_cinder_backend_pure_fc: "yes"
+  enable_cinder_backend_pure_fc: true
 
 .. end
 
@@ -31,7 +31,7 @@ configure the ``FlashArray NVMe-RoCE`` Cinder driver in
 
 .. code-block:: yaml
 
-  enable_cinder_backend_pure_roce: "yes"
+  enable_cinder_backend_pure_roce: true
 
 .. end
 
@@ -45,7 +45,7 @@ configure the ``FlashArray NVMe-TCP`` Cinder driver in
 
 .. code-block:: yaml
 
-  enable_cinder_backend_pure_nvme_tcp: "yes"
+  enable_cinder_backend_pure_nvme_tcp: true
 
 .. end
 

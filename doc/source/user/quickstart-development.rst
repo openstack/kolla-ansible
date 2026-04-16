@@ -98,7 +98,7 @@ Install Kolla-ansible
 
       git clone --branch |KOLLA_BRANCH_NAME| https://opendev.org/openstack/kolla-ansible
 
-#. Install requirements of ``kolla`` and ``kolla-ansible``:
+#. Install ``kolla-ansible`` and its dependencies:
 
    .. code-block:: console
 
@@ -160,8 +160,7 @@ manually or by running random password generator:
 
 .. code-block:: console
 
-   cd kolla-ansible/tools
-   ./generate_passwords.py
+   kolla-genpwd
 
 Kolla globals.yml
 -----------------
@@ -244,7 +243,7 @@ There are a few options that are required to deploy Kolla Ansible:
 
   By default Kolla Ansible provides a bare compute kit, however it does provide
   support for a vast selection of additional services. To enable them, set
-  ``enable_*`` to "yes".
+  ``enable_*`` to ``true``.
 
   Kolla now supports many OpenStack services, there is
   `a list of available services
@@ -283,27 +282,28 @@ need to setup basic host-level dependencies, like docker.
 Kolla Ansible provides a playbook that will install all required services in
 the correct versions.
 
-The following assumes the use of the ``all-in-one`` inventory. If using a
-different inventory, such as ``multinode``, replace the ``-i`` argument
-accordingly.
+The following assumes the use of the ``all-in-one`` inventory in your
+current directory.
+If using a different inventory, such as ``multinode``, replace the ``-i``
+argument accordingly.
 
 #. Bootstrap servers with kolla deploy dependencies:
 
   .. code-block:: console
 
-     kolla-ansible bootstrap-servers -i ../all-in-one
+     kolla-ansible bootstrap-servers -i all-in-one
 
 #. Do pre-deployment checks for hosts:
 
   .. code-block:: console
 
-     kolla-ansible prechecks -i ../all-in-one
+     kolla-ansible prechecks -i all-in-one
 
 #. Finally proceed to actual OpenStack deployment:
 
   .. code-block:: console
 
-     kolla-ansible deploy -i ../all-in-one
+     kolla-ansible deploy -i all-in-one
 
 When this playbook finishes, OpenStack should be up, running and functional!
 If error occurs during execution, refer to
