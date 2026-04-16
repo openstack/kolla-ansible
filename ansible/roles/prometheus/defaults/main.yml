@@ -121,6 +121,14 @@ prometheus_services:
     image: "{{ prometheus_libvirt_exporter_image_full }}"
     volumes: "{{ prometheus_libvirt_exporter_default_volumes + prometheus_libvirt_exporter_extra_volumes }}"
     dimensions: "{{ prometheus_libvirt_exporter_dimensions }}"
+  prometheus-openstack-network-exporter:
+    container_name: "prometheus_openstack_network_exporter"
+    group: "prometheus-openstack-network-exporter"
+    enabled: "{{ enable_prometheus_openstack_network_exporter | bool }}"
+    image: "{{ prometheus_openstack_network_exporter_image_full }}"
+    volumes: "{{ prometheus_openstack_network_exporter_default_volumes + prometheus_openstack_network_exporter_extra_volumes }}"
+    dimensions: "{{ prometheus_openstack_network_exporter_dimensions }}"
+    pid_mode: host
   prometheus-valkey-exporter:
     container_name: "prometheus_valkey_exporter"
     group: "prometheus-valkey-exporter"
@@ -405,6 +413,10 @@ prometheus_libvirt_exporter_image: "{{ docker_image_url }}prometheus-libvirt-exp
 prometheus_libvirt_exporter_tag: "{{ prometheus_tag }}"
 prometheus_libvirt_exporter_image_full: "{{ prometheus_libvirt_exporter_image }}:{{ prometheus_libvirt_exporter_tag }}"
 
+prometheus_openstack_network_exporter_image: "{{ docker_image_url }}prometheus-openstack-network-exporter"
+prometheus_openstack_network_exporter_tag: "{{ prometheus_tag }}"
+prometheus_openstack_network_exporter_image_full: "{{ prometheus_openstack_network_exporter_image }}:{{ prometheus_openstack_network_exporter_tag }}"
+
 prometheus_valkey_exporter_image: "{{ docker_image_url }}prometheus-valkey-exporter"
 prometheus_valkey_exporter_tag: "{{ prometheus_tag }}"
 prometheus_valkey_exporter_image_full: "{{ prometheus_valkey_exporter_image }}:{{ prometheus_valkey_exporter_tag }}"
@@ -417,6 +429,7 @@ prometheus_openstack_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_elasticsearch_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_libvirt_exporter_dimensions: "{{ default_container_dimensions }}"
+prometheus_openstack_network_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_valkey_exporter_dimensions: "{{ default_container_dimensions }}"
 
 prometheus_server_default_volumes:
@@ -453,6 +466,13 @@ prometheus_libvirt_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-libvirt-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "/run/libvirt:/run/libvirt:ro"
+prometheus_openstack_network_exporter_default_volumes:
+  - "{{ node_config_directory }}/prometheus-openstack-network-exporter/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/run/ovn:/run/ovn:ro"
+  - "/run/openvswitch:/run/openvswitch:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "kolla_logs:/var/log/kolla/"
 prometheus_valkey_exporter_default_volumes:
   - "{{ node_config_directory }}/prometheus-valkey-exporter/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -467,6 +487,7 @@ prometheus_openstack_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_elasticsearch_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_blackbox_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_libvirt_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
+prometheus_openstack_network_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 prometheus_valkey_exporter_extra_volumes: "{{ prometheus_extra_volumes }}"
 
 prometheus_openstack_exporter_disabled_volume: "{{ '--disable-service.volume' if not enable_cinder | bool else '' }}"
@@ -495,6 +516,11 @@ prometheus_mysqld_exporter_cmdline_extras: ""
 prometheus_openstack_exporter_cmdline_extras: ""
 
 prometheus_alertmanager_external_url: "{{ internal_protocol }}://{{ kolla_internal_fqdn | put_address_in_context('url') }}:{{ prometheus_alertmanager_port }}"
+
+############
+# Intervals
+############
+prometheus_openstack_network_exporter_interval: "{{ prometheus_scrape_interval }}"
 
 ###################
 # Copy certificates
