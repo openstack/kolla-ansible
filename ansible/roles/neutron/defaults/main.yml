@@ -215,6 +215,29 @@ neutron_services:
     volumes: "{{ neutron_ovn_agent_default_volumes + neutron_ovn_agent_extra_volumes }}"
     dimensions: "{{ neutron_ovn_agent_dimensions }}"
     healthcheck: "{{ neutron_ovn_agent_healthcheck }}"
+  neutron-ovn-vpn-agent:
+    container_name: "neutron_ovn_vpn_agent"
+    image: "{{ neutron_ovn_vpn_agent_image_full }}"
+    privileged: false
+    cgroupns_mode: "private"
+    pid_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - DAC_OVERRIDE
+      - DAC_READ_SEARCH
+      - SETPCAP
+    security_opt:
+      - "apparmor=unconfined"
+      - "seccomp=unconfined"
+      - "label=disable"
+    enabled: "{{ enable_neutron_vpnaas | bool and neutron_plugin_agent == 'ovn' }}"
+    group: neutron-ovn-vpn-agent
+    host_in_groups: "{{ inventory_hostname in groups['neutron-ovn-vpn-agent'] }}"
+    volumes: "{{ neutron_ovn_vpn_agent_default_volumes + neutron_ovn_vpn_agent_extra_volumes }}"
+    dimensions: "{{ neutron_ovn_vpn_agent_dimensions }}"
+    healthcheck: "{{ neutron_ovn_vpn_agent_healthcheck }}"
 
 ####################
 # Config Validate
@@ -339,6 +362,10 @@ neutron_ovn_agent_image: "{{ docker_image_url }}neutron-ovn-agent"
 neutron_ovn_agent_tag: "{{ neutron_tag }}"
 neutron_ovn_agent_image_full: "{{ neutron_ovn_agent_image }}:{{ neutron_ovn_agent_tag }}"
 
+neutron_ovn_vpn_agent_image: "{{ docker_image_url }}neutron-ovn-vpn-agent"
+neutron_ovn_vpn_agent_tag: "{{ neutron_tag }}"
+neutron_ovn_vpn_agent_image_full: "{{ neutron_ovn_vpn_agent_image }}:{{ neutron_ovn_vpn_agent_tag }}"
+
 neutron_agent_dimensions: "{{ default_container_dimensions }}"
 
 neutron_dhcp_agent_dimensions: "{{ neutron_agent_dimensions }}"
@@ -358,6 +385,7 @@ neutron_ovn_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_ovn_maintenance_worker_dimensions: "{{ default_container_dimensions }}"
 neutron_periodic_worker_dimensions: "{{ default_container_dimensions }}"
 neutron_rpc_server_dimensions: "{{ default_container_dimensions }}"
+neutron_ovn_vpn_agent_dimensions: "{{ neutron_agent_dimensions }}"
 
 neutron_dhcp_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
 neutron_dhcp_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -532,6 +560,19 @@ neutron_rpc_server_healthcheck:
   test: "{% if neutron_rpc_server_enable_healthchecks | bool %}{{ neutron_rpc_server_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ neutron_rpc_server_healthcheck_timeout }}"
 
+neutron_ovn_vpn_agent_enable_healthchecks: "{{ enable_container_healthchecks }}"
+neutron_ovn_vpn_agent_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+neutron_ovn_vpn_agent_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+neutron_ovn_vpn_agent_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+neutron_ovn_vpn_agent_healthcheck_test: ["CMD-SHELL", "healthcheck_port neutron-ovn-vpn-agent {{ om_rpc_port }}"]
+neutron_ovn_vpn_agent_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+neutron_ovn_vpn_agent_healthcheck:
+  interval: "{{ neutron_ovn_vpn_agent_healthcheck_interval }}"
+  retries: "{{ neutron_ovn_vpn_agent_healthcheck_retries }}"
+  start_period: "{{ neutron_ovn_vpn_agent_healthcheck_start_period }}"
+  test: "{% if neutron_ovn_vpn_agent_enable_healthchecks | bool %}{{ neutron_ovn_vpn_agent_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ neutron_ovn_vpn_agent_healthcheck_timeout }}"
+
 neutron_dhcp_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-dhcp-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -648,6 +689,14 @@ neutron_rpc_server_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
+neutron_ovn_vpn_agent_default_volumes:
+  - "{{ node_config_directory }}/neutron-ovn-vpn-agent/:{{ container_config_directory }}/:ro"
+  - "/etc/localtime:/etc/localtime:ro"
+  - "{{ '/etc/timezone:/etc/timezone:ro' if ansible_facts.os_family == 'Debian' else '' }}"
+  - "/run/netns:/run/netns:shared"
+  - "kolla_logs:/var/log/kolla/"
+  - "{{ '/dev/shm:/dev/shm' }}"
+  - "/bin/true:/usr/sbin/sysctl:ro"
 
 neutron_extra_volumes: "{{ default_extra_volumes }}"
 neutron_dhcp_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -667,6 +716,7 @@ neutron_ovn_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_ovn_maintenance_worker_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_periodic_worker_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_rpc_server_extra_volumes: "{{ neutron_extra_volumes }}"
+neutron_ovn_vpn_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 
 ####################
 # OpenStack
@@ -787,7 +837,9 @@ service_plugins:
   - name: "trunk"
     enabled: "{{ enable_neutron_trunk | bool }}"
   - name: "vpnaas"
-    enabled: "{{ enable_neutron_vpnaas | bool }}"
+    enabled: "{{ enable_neutron_vpnaas | bool and neutron_plugin_agent != 'ovn' }}"
+  - name: "ovn-vpnaas"
+    enabled: "{{ enable_neutron_vpnaas | bool and neutron_plugin_agent == 'ovn' }}"
   - name: "port_forwarding"
     enabled: "{{ enable_neutron_port_forwarding | bool }}"
   - name: "ovn-router"

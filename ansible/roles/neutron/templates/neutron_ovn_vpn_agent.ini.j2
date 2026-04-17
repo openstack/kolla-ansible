@@ -1,0 +1,17 @@
+{% set vpn_device_driver = 'OvnStrongSwanDriver' if kolla_base_distro in ['ubuntu', 'debian'] else 'OvnLibreSwanDriver' %}
+[DEFAULT]
+transport_url = {{ rpc_transport_url }}
+interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+
+[AGENT]
+extensions = vpnaas
+
+[vpnagent]
+vpn_device_driver = neutron_vpnaas.services.vpn.device_drivers.ovn_ipsec.{{ vpn_device_driver }}
+
+[ovs]
+ovsdb_connection = tcp:127.0.0.1:{{ ovsdb_port }}
+ovsdb_timeout = {{ ovsdb_timeout }}
+
+[ovn]
+ovn_sb_connection = {{ ovn_sb_connection_no_relay }}

@@ -1,0 +1,211 @@
+---
+- name: VPNaaS | Init ENV
+  ansible.builtin.include_tasks: init_env.yml
+
+- name: VPNaaS | Check if VPN agents are alive and reporting
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack network agent list -f value -c Binary -c Alive | grep "vpn-agent" | awk '{print $2}'
+  args:
+    executable: /bin/bash
+  register: vpn_agents_alive
+  until:
+    - vpn_agents_alive.stdout != ""
+    - "'False' not in vpn_agents_alive.stdout"
+  retries: 10
+  delay: 5
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Create IKE and IPsec Policies
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn ike policy create ikepolicy --ike-version v2 --auth-algorithm sha256 --encryption-algorithm aes-256 --pfs group14 || true
+    openstack vpn ipsec policy create ipsecpolicy --auth-algorithm sha256 --encryption-algorithm aes-256 --pfs group14 || true
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Setup Network Infrastructure
+  ansible.builtin.include_tasks: setup_site.yml
+  vars:
+    site_name: "{{ item.name }}"
+    site_cidr: "{{ item.cidr }}"
+    peer_cidr: "{{ item.peer }}"
+  loop:
+    - { name: 'west', cidr: "{{ ovn_vpnaas_west_cidr }}", peer: "{{ ovn_vpnaas_east_cidr }}" }
+    - { name: 'east', cidr: "{{ ovn_vpnaas_east_cidr }}", peer: "{{ ovn_vpnaas_west_cidr }}" }
+
+- name: VPNaaS | Wait for OVN Agent to settle
+  ansible.builtin.pause:
+    minutes: 2
+
+- name: VPNaaS | Check if VPN service west exists
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service list -f value -c ID -c Name | awk '$2=="vpn_west" {print $1}' | head -n 1
+  args:
+    executable: /bin/bash
+  environment: "{{ os_auth_env }}"
+  register: check_vpn_west
+  changed_when: false
+
+- name: VPNaaS | Create VPN service | west
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service create --router "router_west" "vpn_west"
+  environment: "{{ os_auth_env }}"
+  when: check_vpn_west.stdout | trim == ""
+  failed_when: false
+  changed_when: false
+
+- name: VPNaaS | Settle database consistency before next service
+  ansible.builtin.pause:
+    seconds: 20
+
+- name: VPNaaS | Ensure VPN service west exists and get ID
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service list -f value -c ID -c Name | awk '$2=="vpn_west" {print $1}' | head -n 1
+  args:
+    executable: /bin/bash
+  register: vpn_svc_west_out
+  until:
+    - vpn_svc_west_out.rc == 0
+    - vpn_svc_west_out.stdout | trim != ""
+  retries: 20
+  delay: 10
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Check if VPN service east exists
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service list -f value -c ID -c Name | awk '$2=="vpn_east" {print $1}' | head -n 1
+  args:
+    executable: /bin/bash
+  environment: "{{ os_auth_env }}"
+  register: check_vpn_east
+  changed_when: false
+
+- name: VPNaaS | Create VPN service | east
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service create --router "router_east" "vpn_east"
+  environment: "{{ os_auth_env }}"
+  when: check_vpn_east.stdout | trim == ""
+  failed_when: false
+  changed_when: false
+
+- name: VPNaaS | Settle database consistency before next service
+  ansible.builtin.pause:
+    seconds: 20
+
+- name: VPNaaS | Ensure VPN service east exists in DB
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service list -f value -c ID -c Name | awk '$2=="vpn_east" {print $1}' | head -n 1
+  args:
+    executable: /bin/bash
+  register: vpn_svc_east_out
+  until:
+    - vpn_svc_east_out.rc == 0
+    - vpn_svc_east_out.stdout | trim != ""
+  retries: 20
+  delay: 10
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Create Endpoint Groups
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn endpoint group create --type subnet --value "subnet_{{ item.name }}" "{{ item.name }}-local-epg" || true
+    openstack vpn endpoint group create --type cidr --value "{{ item.peer }}" "{{ item.name }}-peer-epg" || true
+  loop:
+    - { name: 'west', peer: "{{ ovn_vpnaas_east_cidr }}" }
+    - { name: 'east', peer: "{{ ovn_vpnaas_west_cidr }}" }
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Get Public IPs
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn service show "{{ item }}" -f value -c ext_v4_ip
+  register: vpn_ips
+  until:
+    - vpn_ips.stdout | trim != ""
+    - vpn_ips.stdout | trim != "None"
+  retries: 24
+  delay: 10
+  loop:
+    - "{{ vpn_svc_west_out.stdout.strip() }}"
+    - "{{ vpn_svc_east_out.stdout.strip() }}"
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Establish Connections
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn ipsec site connection create "conn_east" --vpnservice "{{ vpn_svc_east_out.stdout.strip() }}" --ikepolicy ikepolicy \
+        --ipsecpolicy ipsecpolicy --local-endpoint-group east-local-epg --peer-address "{{ vpn_ips.results[0].stdout.strip() }}" \
+        --peer-id "{{ vpn_ips.results[0].stdout.strip() }}" --peer-endpoint-group east-peer-epg --psk {{ ovn_vpnaas_psk }} || true
+
+    openstack vpn ipsec site connection create "conn_west" --vpnservice "{{ vpn_svc_west_out.stdout.strip() }}" --ikepolicy ikepolicy \
+        --ipsecpolicy ipsecpolicy --local-endpoint-group west-local-epg --peer-address "{{ vpn_ips.results[1].stdout.strip() }}" \
+        --peer-id "{{ vpn_ips.results[1].stdout.strip() }}" --peer-endpoint-group west-peer-epg --psk {{ ovn_vpnaas_psk }} || true
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Wait for Tunnel to be ACTIVE
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn ipsec site connection show "conn_{{ item }}" -f value -c status
+  register: tunnel_status
+  until: tunnel_status.stdout == "ACTIVE"
+  retries: "{{ ovn_vpnaas_tunnel_retries }}"
+  delay: "{{ ovn_vpnaas_tunnel_delay }}"
+  loop: ["west", "east"]
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | SHOW TUNNEL STATUS RESULT
+  ansible.builtin.debug:
+    msg:
+      - "************************************************************"
+      - "CONNECTION: conn_{{ item.item }}"
+      - "STATUS:     {{ item.stdout }}"
+      - "RESULT:     TUNNEL ESTABLISHED SUCCESSFULLY!"
+      - "************************************************************"
+  loop: "{{ tunnel_status.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: VPNaaS | Show Full Connection Details
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn ipsec site connection list
+  environment: "{{ os_auth_env }}"
+  register: final_list
+  changed_when: false
+
+- name: VPNaaS | Print Connection List Table
+  ansible.builtin.debug:
+    var: final_list.stdout_lines
+
+- name: VPNaaS | Final Cleanup
+  ansible.builtin.include_tasks: cleanup_site.yml
+  loop: ["west", "east"]
+  loop_control:
+    loop_var: site_to_clean
+
+- name: VPNaaS | Cleanup | Global Policies
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack vpn ipsec policy delete ipsecpolicy || true
+    openstack vpn ike policy delete ikepolicy || true
+  environment: "{{ os_auth_env }}"
+  changed_when: false

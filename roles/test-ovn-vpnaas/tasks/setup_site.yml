@@ -1,0 +1,76 @@
+---
+- name: VPNaaS | Create network | {{ site_name }}
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack network create "net_{{ site_name }}"
+  environment: "{{ os_auth_env }}"
+  register: net_create
+  failed_when:
+    - net_create.rc != 0
+    - "'already exists' not in net_create.stderr"
+  retries: "{{ ovn_vpnaas_consistency_retries }}"
+  delay: "{{ ovn_vpnaas_consistency_delay }}"
+  until: net_create.rc == 0 or 'already exists' in net_create.stderr
+  changed_when: false
+
+- name: VPNaaS | Create subnet | {{ site_name }}
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack subnet create --network "net_{{ site_name }}" --subnet-range "{{ site_cidr }}" "subnet_{{ site_name }}"
+  environment: "{{ os_auth_env }}"
+  register: subnet_create
+  failed_when:
+    - subnet_create.rc != 0
+    - "'already exists' not in subnet_create.stderr"
+  retries: "{{ ovn_vpnaas_consistency_retries }}"
+  delay: "{{ ovn_vpnaas_consistency_delay }}"
+  until: subnet_create.rc == 0 or 'already exists' in subnet_create.stderr
+  changed_when: false
+
+- name: VPNaaS | Create router | {{ site_name }}
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack router create --external-gateway public1 "router_{{ site_name }}"
+  environment: "{{ os_auth_env }}"
+  failed_when: false
+  changed_when: false
+
+- name: VPNaaS | Debug | List all routers
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack router list
+  environment: "{{ os_auth_env }}"
+  register: all_routers_debug
+  changed_when: false
+
+- name: VPNaaS | Debug | Show router list output
+  ansible.builtin.debug:
+    var: all_routers_debug.stdout_lines
+
+- name: VPNaaS | Get router ID | {{ site_name }}
+  ansible.builtin.shell: |
+    set -o pipefail
+    {{ ovn_vpnaas_activate }}
+    openstack router list --name "router_{{ site_name }}" -f value -c ID | head -n 1
+  args:
+    executable: /bin/bash
+  register: current_router_id
+  until: current_router_id.stdout != ""
+  retries: 5
+  delay: 10
+  environment: "{{ os_auth_env }}"
+  changed_when: false
+
+- name: VPNaaS | Attach subnet to router | {{ site_name }}
+  ansible.builtin.shell: |
+    {{ ovn_vpnaas_activate }}
+    openstack router add subnet "{{ current_router_id.stdout.strip() }}" "subnet_{{ site_name }}"
+  environment: "{{ os_auth_env }}"
+  register: router_add_result
+  failed_when:
+    - router_add_result.rc != 0
+    - "'already has an interface' not in router_add_result.stderr"
+  retries: "{{ ovn_vpnaas_consistency_retries }}"
+  delay: "{{ ovn_vpnaas_consistency_delay }}"
+  until: router_add_result.rc == 0 or 'already has an interface' in router_add_result.stderr
+  changed_when: false

@@ -1,0 +1,46 @@
+---
+- name: "VPNaaS | Cleanup | Site: {{ site_to_clean }}"
+  block:
+    - name: "VPNaaS | Cleanup | Delete Connection"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack vpn ipsec site connection delete "conn_{{ site_to_clean }}" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
+
+    - name: "VPNaaS | Cleanup | Delete VPN Service"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack vpn service delete "vpn_{{ site_to_clean }}" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
+
+    - name: "VPNaaS | Cleanup | Delete Endpoint Groups"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack vpn endpoint group delete "{{ site_to_clean }}-local-epg" || true
+        openstack vpn endpoint group delete "{{ site_to_clean }}-peer-epg" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
+
+    - name: "VPNaaS | Cleanup | Remove Subnet from Router"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack router remove subnet "router_{{ site_to_clean }}" "subnet_{{ site_to_clean }}" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
+
+    - name: "VPNaaS | Cleanup | Delete Router"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack router delete "router_{{ site_to_clean }}" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
+
+    - name: "VPNaaS | Cleanup | Delete Network/Subnet"
+      ansible.builtin.shell: |
+        {{ ovn_vpnaas_activate }}
+        openstack subnet delete "subnet_{{ site_to_clean }}" || true
+        openstack network delete "net_{{ site_to_clean }}" || true
+      environment: "{{ os_auth_env }}"
+      changed_when: false
