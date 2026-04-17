@@ -353,6 +353,8 @@ migration can be started with the following command:
    under the new container engine. Old container engine system packages will be
    removed from the system and all their resources and data will be deleted.
 
+.. _migrate-redis-to-valkey:
+
 Migrate Redis to Valkey
 ~~~~~~~~~~~~~~~~~~~~~~~
 
