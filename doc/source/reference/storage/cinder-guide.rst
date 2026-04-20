@@ -67,6 +67,14 @@ Enable the ``lvm`` backend in ``/etc/kolla/globals.yml``:
 
    enable_cinder_backend_lvm: true
 
+Edit the inventory file and add ``storage`` group as a child of
+``cinder-volume`` group:
+
+.. code-block:: ini
+
+   [cinder-volume:children]
+   storage
+
 .. note::
 
    There are currently issues using the LVM backend in a multi-controller setup,
@@ -151,9 +159,11 @@ Cinder LVM2 backend with iSCSI
 
 As of Newton-1 milestone, Kolla supports LVM2 as cinder backend. It is
 accomplished by introducing two new containers ``tgtd`` and ``iscsid``.
-``tgtd`` container serves as a bridge between cinder-volume process and a
-server hosting Logical Volume Groups (LVG). ``iscsid`` container serves as
-a bridge between nova-compute process and the server hosting LVG.
+``tgtd`` container is the target part of iSCSI setup which needs to run
+on the ``storage`` Ansible group for exposing volumes from LVM.
+``iscsid`` container is the client part of iSCSI setup which needs to run
+together with nova-compute for instance access to storage and on hosts
+running ``cinder-volume`` and ``cinder-backup`` for volume operations.
 
 In order to use Cinder's LVM backend, a LVG named ``cinder-volumes`` should
 exist on the server and following parameter must be specified in
@@ -162,37 +172,6 @@ exist on the server and following parameter must be specified in
 .. code-block:: yaml
 
    enable_cinder_backend_lvm: true
-
-For Ubuntu and LVM2/iSCSI
--------------------------
-
-``iscsd`` process uses configfs which is normally mounted at
-``/sys/kernel/config`` to store discovered targets information, on centos/rhel
-type of systems this special file system gets mounted automatically, which is
-not the case on debian/ubuntu. Since ``iscsid`` container runs on every nova
-compute node, the following steps must be completed on every Ubuntu server
-targeted for nova compute role.
-
-* Add configfs module to ``/etc/modules``
-* Rebuild initramfs using: ``update-initramfs -u`` command
-* Stop ``open-iscsi`` system service due to its conflicts
-  with iscsid container.
-
-  Ubuntu 16.04 (systemd):
-  ``systemctl stop open-iscsi; systemctl stop iscsid``
-
-* Make sure configfs gets mounted during a server boot up process. There are
-  multiple ways to accomplish it, one example:
-
-  .. code-block:: console
-
-     mount -t configfs /etc/rc.local /sys/kernel/config
-
-  .. note::
-
-     There is currently an issue with the folder /sys/kernel/config as it is
-     either empty or does not exist in several operating systems,
-     see `_bug 1631072 <https://bugs.launchpad.net/kolla/+bug/1631072>`__ for more info
 
 Cinder backend with external iSCSI storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

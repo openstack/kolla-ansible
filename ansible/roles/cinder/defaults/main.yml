@@ -41,7 +41,10 @@ cinder_services:
     healthcheck: "{{ cinder_scheduler_healthcheck }}"
   cinder-volume:
     container_name: cinder_volume
-    group: cinder-volume
+    group: >-
+      {{ 'cinder-volume-multiple' if (cinder_enabled_backends | length > 1 and enable_cinder_backend_lvm | bool) else
+         'cinder-volume-lvm' if enable_cinder_backend_lvm | bool else
+         'cinder-volume' }}
     enabled: true
     image: "{{ cinder_volume_image_full }}"
     privileged: true
@@ -52,7 +55,10 @@ cinder_services:
     healthcheck: "{{ cinder_volume_healthcheck }}"
   cinder-backup:
     container_name: cinder_backup
-    group: cinder-backup
+    group: >-
+      {{ 'cinder-backup-multiple' if (cinder_enabled_backends | length > 1 and enable_cinder_backend_lvm | bool) else
+         'cinder-backup-lvm' if enable_cinder_backend_lvm | bool else
+         'cinder-backup' }}
     enabled: "{{ enable_cinder_backup | bool }}"
     image: "{{ cinder_backup_image_full }}"
     privileged: true
