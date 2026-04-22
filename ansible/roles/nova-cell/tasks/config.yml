@@ -212,3 +212,23 @@
   with_items:
     - nova-compute
     - nova-compute-ironic
+
+- name: Copying over multipath.conf
+  become: true
+  vars:
+    service: "{{ nova_cell_services['nova-compute'] }}"
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ node_config_directory }}/nova-compute/multipath.conf"
+    mode: "0660"
+  with_first_found:
+    - files:
+        - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/multipath.conf"
+        - "{{ node_custom_config }}/multipath/{{ inventory_hostname }}/multipath.conf"
+        - "{{ node_custom_config }}/nova/multipath.conf"
+        - "{{ node_custom_config }}/multipath.conf"
+        - "multipath.conf.j2"
+      skip: true
+  when:
+    - service | service_enabled_and_mapped_to_host
+    - enable_multipathd | bool
