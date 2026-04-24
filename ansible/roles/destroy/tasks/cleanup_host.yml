@@ -15,25 +15,27 @@
     destroy_include_dev: "{{ destroy_include_dev }}"
     kolla_ansible_inventories: "{{ ansible_inventory_sources | join(' ') }}"
 
-- block:
-    - name: Disable octavia-interface service
-      service:
-        name: octavia-interface
-        enabled: no
-        state: stopped
-      failed_when: false
-
-    - name: Remove octavia-interface service file
-      file:
-        path: /etc/systemd/system/octavia-interface.service
-        state: absent
-
-    - name: Remove dhclient.conf
-      file:
-        path: /etc/dhcp/octavia-dhclient.conf
-        state: absent
+- name: Clean up Octavia interface service
+  become: true
   when:
     - enable_octavia | bool
     - octavia_auto_configure | bool
     - octavia_network_type == 'tenant'
     - inventory_hostname in groups['octavia-health-manager']
+  block:
+    - name: Disable octavia-interface service
+      ansible.builtin.service:
+        name: octavia-interface
+        enabled: false
+        state: stopped
+      failed_when: false
+
+    - name: Remove octavia-interface service file
+      ansible.builtin.file:
+        path: /etc/systemd/system/octavia-interface.service
+        state: absent
+
+    - name: Remove dhclient.conf
+      ansible.builtin.file:
+        path: /etc/dhcp/octavia-dhclient.conf
+        state: absent
