@@ -99,11 +99,23 @@ class InstallDeps(KollaAnsibleMixin, Command):
 class Prechecks(KollaAnsibleMixin, Command):
     """Do pre-deployment checks for hosts"""
 
+    def get_parser(self, prog_name):
+        parser = super().get_parser(prog_name)
+        group = parser.add_argument_group("Prechecks action")
+        group.add_argument(
+            "--use-test-images",
+            action="store_true",
+            help="Allow use of test images (i.e. quay.io/openstack.kolla)",
+        )
+        return parser
+
     def take_action(self, parsed_args):
         self.app.LOG.info("Pre-deployment checking")
 
         extra_vars = {}
         extra_vars["kolla_action"] = "precheck"
+        if parsed_args.use_test_images:
+            extra_vars["kolla_test_images"] = "yes"
 
         playbooks = _choose_playbooks(parsed_args,)
 
