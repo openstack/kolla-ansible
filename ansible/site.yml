@@ -44,7 +44,6 @@
         - enable_ironic_{{ enable_ironic | bool }}
         - enable_iscsid_{{ enable_iscsid | bool }}
         - enable_keystone_{{ enable_keystone | bool }}
-        - enable_kuryr_{{ enable_kuryr | bool }}
         - enable_letsencrypt_{{ enable_letsencrypt | bool }}
         - enable_loadbalancer_{{ enable_loadbalancer | bool }}
         - enable_magnum_{{ enable_magnum | bool }}
@@ -69,7 +68,6 @@
         - enable_tacker_{{ enable_tacker | bool }}
         - enable_trove_{{ enable_trove | bool }}
         - enable_watcher_{{ enable_watcher | bool }}
-        - enable_zun_{{ enable_zun | bool }}
   tags: always
 
 - name: Apply role prechecks
@@ -379,12 +377,6 @@
             tasks_from: loadbalancer
           tags: watcher
           when: enable_watcher | bool
-        - name: Configure loadbalancer for zun
-          ansible.builtin.include_role:
-            name: zun
-            tasks_from: loadbalancer
-          tags: zun
-          when: enable_zun | bool
         # NOTE(r-krcek): This last step will notify handlers if any
         # changes to the configuration have been made.
         - name: Check loadbalancer containers
@@ -713,19 +705,6 @@
   roles:
     - { role: neutron, tags: neutron }
 
-- name: Apply role kuryr
-  gather_facts: false
-  hosts:
-    - compute
-    - "&enable_kuryr_True"
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ kuryr_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: kuryr, tags: kuryr }
-
 - name: Apply role hacluster
   gather_facts: false
   hosts:
@@ -996,22 +975,6 @@
        default(100) }}
   roles:
     - { role: octavia, tags: octavia }
-
-- name: Apply role zun
-  gather_facts: false
-  hosts:
-    - zun-api
-    - zun-wsproxy
-    - zun-compute
-    - zun-cni-daemon
-    - "&enable_zun_True"
-  serial: '{{ kolla_serial|default("0") }}'
-  max_fail_percentage: >-
-    {{ zun_max_fail_percentage |
-       default(kolla_max_fail_percentage) |
-       default(100) }}
-  roles:
-    - { role: zun, tags: zun }
 
 - name: Apply role blazar
   gather_facts: false
