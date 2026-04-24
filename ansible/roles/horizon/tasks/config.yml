@@ -48,22 +48,6 @@
     mode: "0660"
   when: service | service_enabled_and_mapped_to_host
 
-- name: Copying over horizon.conf
-  become: true
-  vars:
-    service: "{{ horizon_services['horizon'] }}"
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/horizon/horizon.conf"
-    mode: "0660"
-  with_first_found:
-    - "{{ node_custom_config }}/horizon/{{ inventory_hostname }}/horizon.conf"
-    - "{{ node_custom_config }}/horizon/horizon.conf"
-    - "horizon.conf.j2"
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - horizon_wsgi_provider == "apache"
-
 - name: "Configure uWSGI for Horizon"
   ansible.builtin.include_role:
     name: service-uwsgi-config
@@ -81,7 +65,6 @@
     service_uwsgi_config_threads: "{{ horizon_wsgi_threads }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - horizon_wsgi_provider == "uwsgi"
 
 - name: Copying over kolla-settings.py
   become: true

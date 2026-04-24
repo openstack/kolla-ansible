@@ -1,0 +1,34 @@
+{% set apache_paths = [] %}
+{% if enable_keystone_federation | bool %}
+{%     set _ = apache_paths.append('/var/log/kolla/keystone/apache-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/keystone/apache-error.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/keystone/keystone-apache-public-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/keystone/keystone-apache-public-error.log') %}
+{% endif %}
+{% if enable_ironic | bool %}
+{%     set _ = apache_paths.append('/var/log/kolla/ironic/ironic-http-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/ironic/ironic-http-error.log') %}
+{% endif %}
+{% if enable_letsencrypt | bool %}
+{%     set _ = apache_paths.append('/var/log/kolla/letsencrypt/letsencrypt-webserver-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/letsencrypt/letsencrypt-webserver-error.log') %}
+{% endif %}
+{% if enable_skyline | bool %}
+{%     set _ = apache_paths.append('/var/log/kolla/skyline/skyline-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/skyline/skyline-error.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/skyline/skyline-nginx-access.log') %}
+{%     set _ = apache_paths.append('/var/log/kolla/skyline/skyline-nginx-error.log') %}
+{% endif %}
+{% if apache_paths | length > 0 %}
+<source>
+  @type tail
+  path {{ apache_paths | join(',') }}
+  pos_file /var/run/fluentd/kolla-apache.pos
+  tag kolla.*
+  enable_watch_timer {{ fluentd_enable_watch_timer }}
+  <parse>
+    @type regexp
+    expression /^(?<Payload>.*)$/
+  </parse>
+</source>
+{% endif %}

@@ -90,19 +90,6 @@
     service_uwsgi_config_workers: "{{ cloudkitty_api_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - cloudkitty_wsgi_provider == "uwsgi"
-
-- name: Copying over wsgi-cloudkitty.conf
-  vars:
-    service: "{{ cloudkitty_services['cloudkitty-api'] }}"
-  ansible.builtin.template:
-    src: "wsgi-cloudkitty.conf.j2"
-    dest: "{{ node_config_directory }}/cloudkitty-api/wsgi-cloudkitty.conf"
-    mode: "0660"
-  become: true
-  when:
-    - cloudkitty_wsgi_provider == "apache"
-    - service | service_enabled_and_mapped_to_host
 
 - name: Copying over existing policy file
   ansible.builtin.template:

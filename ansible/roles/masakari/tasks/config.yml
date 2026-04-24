@@ -89,18 +89,6 @@
     - masakari-instancemonitor
     - masakari-hostmonitor
 
-- name: Copying over wsgi-masakari file for services
-  vars:
-    service: "{{ masakari_services['masakari-api'] }}"
-  ansible.builtin.template:
-    src: "wsgi-masakari.conf.j2"
-    dest: "{{ node_config_directory }}/masakari-api/wsgi-masakari.conf"
-    mode: "0660"
-  become: true
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - masakari_wsgi_provider == "apache"
-
 - name: "Configure uWSGI for Masakari"
   ansible.builtin.include_role:
     name: service-uwsgi-config
@@ -115,7 +103,6 @@
     service_uwsgi_config_workers: "{{ masakari_api_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - masakari_wsgi_provider == "uwsgi"
 
 - name: Copying over masakari-api-paste.ini
   vars:

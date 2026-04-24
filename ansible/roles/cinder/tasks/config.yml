@@ -54,22 +54,6 @@
   become: true
   with_dict: "{{ cinder_services | select_services_enabled_and_mapped_to_host }}"
 
-- name: Copying over cinder-wsgi.conf
-  vars:
-    service: "{{ cinder_services['cinder-api'] }}"
-  become: true
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: "{{ node_config_directory }}/cinder-api/cinder-wsgi.conf"
-    mode: "0660"
-  with_first_found:
-    - "{{ node_custom_config }}/cinder/{{ inventory_hostname }}/cinder-wsgi.conf"
-    - "{{ node_custom_config }}/cinder/cinder-wsgi.conf"
-    - "cinder-wsgi.conf.j2"
-  when:
-    - service | service_enabled_and_mapped_to_host
-    - cinder_wsgi_provider == "apache"
-
 - name: "Configure uWSGI for Cinder"
   ansible.builtin.include_role:
     name: service-uwsgi-config
@@ -87,7 +71,6 @@
     service_uwsgi_config_workers: "{{ cinder_api_workers }}"
   when:
     - service | service_enabled_and_mapped_to_host
-    - cinder_wsgi_provider == "uwsgi"
 
 - name: Copying over cinder.conf
   vars:

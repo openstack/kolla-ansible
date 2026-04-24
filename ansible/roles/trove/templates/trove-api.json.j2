@@ -1,27 +1,18 @@
-{% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
-{% set apache_conf_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
-{% set command = ('/usr/sbin/' + apache_binary + ' -DFOREGROUND') if trove_wsgi_provider == 'apache' else 'uwsgi /etc/trove/trove-api-uwsgi.ini' %}
 {
-    "command": "{{ command }}",
+    "command": "uwsgi /etc/trove/trove-api-uwsgi.ini",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/trove.conf",
             "dest": "/etc/trove/trove.conf",
             "owner": "trove",
             "perm": "0600"
-        }{% if trove_wsgi_provider == "apache" %},
-        {
-            "source": "{{ container_config_directory }}/trove-wsgi.conf",
-            "dest": "/etc/{{ apache_conf_dir }}/trove-wsgi.conf",
-            "owner": "trove",
-            "perm": "0600"
-        }{% elif trove_wsgi_provider == "uwsgi" %},
+        },
         {
             "source": "{{ container_config_directory }}/trove-api-uwsgi.ini",
             "dest": "/etc/trove/trove-api-uwsgi.ini",
             "owner": "trove",
             "perm": "0600"
-        }{% endif %}{% if trove_policy_file is defined %},
+        }{% if trove_policy_file is defined %},
         {
             "source": "{{ container_config_directory }}/{{ trove_policy_file }}",
             "dest": "/etc/trove/{{ trove_policy_file }}",
