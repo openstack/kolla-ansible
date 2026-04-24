@@ -256,6 +256,32 @@ scrape_configs:
 {%     endfor %}
 {% endif %}
 
+{% if enable_prometheus_proxysql_exporter | bool %}
+  - job_name: proxysql
+    static_configs:
+{%     for host in groups["loadbalancer"] %}
+      - targets:
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['proxysql_prometheus_exporter_port'] }}'
+{%         if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{%         endif %}
+{%     endfor %}
+{% endif %}
+
+{% if enable_prometheus_valkey_exporter | bool %}
+  - job_name: valkey_exporter
+    static_configs:
+{%     for host in groups["prometheus-valkey-exporter"] %}
+      - targets:
+        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_valkey_exporter_port'] }}'
+{%         if hostvars[host].prometheus_instance_label | default(false, true) %}
+        labels:
+          instance: "{{ hostvars[host].prometheus_instance_label }}"
+{%         endif %}
+{%     endfor %}
+{% endif %}
+
 {% if enable_prometheus_alertmanager | bool %}
   - job_name: alertmanager
     static_configs:
@@ -267,32 +293,6 @@ scrape_configs:
           instance: "{{ hostvars[host].prometheus_instance_label }}"
 {%         endif %}
 {%     endfor %}
-
-{%     if enable_prometheus_proxysql_exporter | bool %}
-  - job_name: proxysql
-    static_configs:
-{%         for host in groups["loadbalancer"] %}
-      - targets:
-        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['proxysql_prometheus_exporter_port'] }}'
-{%             if hostvars[host].prometheus_instance_label | default(false, true) %}
-        labels:
-          instance: "{{ hostvars[host].prometheus_instance_label }}"
-{%             endif %}
-{%         endfor %}
-{%     endif %}
-
-{%     if enable_prometheus_valkey_exporter | bool %}
-  - job_name: valkey_exporter
-    static_configs:
-{%         for host in groups["prometheus-valkey-exporter"] %}
-      - targets:
-        - '{{ 'api' | kolla_address(host, override_var='prometheus_target_address') | put_address_in_context('url') }}:{{ hostvars[host]['prometheus_valkey_exporter_port'] }}'
-{%             if hostvars[host].prometheus_instance_label | default(false, true) %}
-        labels:
-          instance: "{{ hostvars[host].prometheus_instance_label }}"
-{%             endif %}
-{%         endfor %}
-{%     endif %}
 
 alerting:
   alertmanagers:
