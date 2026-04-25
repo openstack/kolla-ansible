@@ -1,0 +1,67 @@
+---
+- name: "Ensuring config directories exist for Nova Compute Ironic container {{ item }}"
+  vars:
+    nova_compute_ironic_id: "{{ item }}"
+  ansible.builtin.file:
+    path: "{{ node_config_directory }}/nova-compute-ironic-{{ item }}"
+    state: "directory"
+    owner: "{{ config_owner_user }}"
+    group: "{{ config_owner_group }}"
+    mode: "0770"
+  become: true
+
+- name: "Copying over config.json files for Nova Compute Ironic container {{ item }}"
+  vars:
+    nova_compute_ironic_id: "{{ item }}"
+  ansible.builtin.template:
+    src: "nova-compute-ironic.json.j2"
+    dest: "{{ node_config_directory }}/nova-compute-ironic-{{ item }}/config.json"
+    mode: "0660"
+  become: true
+
+- name: "Get Nova Compute Ironic multi-instance configuration for instance {{ item }}"
+  ansible.builtin.set_fact:
+    nova_multi_compute_ironic_instance_config: "{{ nova_multi_compute_ironic_config[(item | int) - 1] }}"
+
+- name: "Generate config files for Nova Compute Ironic {{ item }}"
+  vars:
+    service_name: "nova-compute-ironic"
+    nova_compute_shard_key: "{{ nova_multi_compute_ironic_instance_config['shard_key'] | default('default') }}"
+    nova_compute_conductor_group: "{{ nova_multi_compute_ironic_instance_config['conductor_group'] | default('default') }}"
+    nova_compute_ironic_custom_host: "{{ nova_multi_compute_ironic_instance_config['custom_host'] | default('') }}"
+    nova_compute_ironic_id: "{{ item }}"
+  merge_configs:
+    sources:
+      - "{{ role_path }}/templates/nova.conf.j2"
+      - "{{ node_custom_config }}/global.conf"
+      - "{{ node_custom_config }}/nova.conf"
+      - "{{ node_custom_config }}/nova/{{ service_name }}.conf"
+      - "{{ node_custom_config }}/nova/{{ service_name }}-{{ item }}.conf"
+      - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/nova.conf"
+      - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ service_name }}.conf"
+      - "{{ node_custom_config }}/nova/{{ inventory_hostname }}/{{ service_name }}-{{ item }}.conf"
+    dest: "{{ node_config_directory }}/nova-compute-ironic-{{ item }}/nova.conf"
+    mode: "0660"
+  become: true
+
+- name: "Copying over existing policy file for item {{ item }}"
+  vars:
+    service_name: "nova-compute-ironic"
+  ansible.builtin.template:
+    src: "{{ nova_policy_file_path }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}-{{ item }}/{{ nova_policy_file }}"
+    mode: "0660"
+  become: true
+  when:
+    - nova_policy_file is defined
+
+- name: "Copying over vendordata file for Nova Compute Ironic {{ item }}"
+  vars:
+    service_name: "nova-compute-ironic"
+  ansible.builtin.copy:
+    src: "{{ vendordata_file_path }}"
+    dest: "{{ node_config_directory }}/{{ service_name }}-{{ item }}/vendordata.json"
+    mode: "0660"
+  become: true
+  when:
+    - vendordata_file_path is defined

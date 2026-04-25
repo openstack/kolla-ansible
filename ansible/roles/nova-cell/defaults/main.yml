@@ -72,6 +72,8 @@ nova_cell_services:
     volumes: "{{ nova_compute_ironic_default_volumes + nova_compute_ironic_extra_volumes }}"
     dimensions: "{{ nova_compute_ironic_dimensions }}"
     healthcheck: "{{ nova_compute_ironic_healthcheck }}"
+    iterate: "{{ nova_multi_compute_ironic_config | length > 0 }}"
+    iterate_var: "{{ nova_multi_compute_ironic_config | length }}"
 
 ####################
 # Config Validate
@@ -501,7 +503,7 @@ nova_compute_default_volumes:
   - "{% if enable_shared_var_lib_nova_mnt | bool %}/var/lib/nova/mnt:/var/lib/nova/mnt:shared{% endif %}"
   - "{{ kolla_dev_repos_directory ~ '/nova:/dev-mode/nova' if nova_dev_mode | bool else '' }}"
 nova_compute_ironic_default_volumes:
-  - "{{ node_config_directory }}/nova-compute-ironic/:{{ container_config_directory }}/:ro"
+  - "{{ node_config_directory }}/nova-compute-ironic{{ '-' ~ item if item|default(0)|int > 0 else '' }}/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
@@ -674,6 +676,17 @@ nova_libvirt_cleanup_remove_volumes: false
 
 # Database
 nova_cell_database_enable_tls_internal: "{{ database_enable_tls_internal | bool }}"
+
+##############################
+# Nova Compute Ironic scaling
+##############################
+
+# The following option can be used to deploy multiple instances of Nova
+# Compute Ironic per host. This is useful for deployments with a large
+# number of baremetal nodes (>200). Please see the advanced documentation
+# section for further details.
+
+nova_multi_compute_ironic_config: []
 
 ###################
 # Copy certificates

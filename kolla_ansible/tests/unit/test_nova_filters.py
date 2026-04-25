@@ -73,6 +73,92 @@ class TestFilters(unittest.TestCase):
         self.assertRaisesRegex(jinja2.TemplateRuntimeError, 'duplicates',
                                self._test_extract_cell, test_data, 'cell0001')
 
+    def test_get_expected_ironic_compute_services_multi_compute(self):
+        example_ironic_compute_conf = {
+            # We expect the classic config to be ignored
+            'classic': ['custom-host-nova-compute'],
+            # We have a batch of 2 Ironic compute hosts which should
+            # run a total of 3 Nova compute Ironic instances
+            'multi': [
+                ['nova-compute-ironic-1',
+                 'nova-compute-ironic-2',
+                 'nova-compute-ironic',
+                 'something'],
+                ['nova-compute-ironic-3',
+                    'nova-compute-ironic',
+                    'something'],
+            ]
+        }
+        multi_conf = [
+            {"custom_host": "some_custom_host"},
+            {"shard_key": "shard_1", "conductor_group": "location_1"},
+            {"shard_key": "shard_2", "conductor_group": "location_1"},
+            {"conductor_group": "location_2"},
+            {"shard_key": "shard_1"}
+        ]
+        actual = filters.get_expected_ironic_compute_services(
+            example_ironic_compute_conf, multi_conf, 'nova-compute-ironic')
+        expected = [
+            'some_custom_host-ironic',
+            'location_1-shard_1-ironic',
+            'location_1-shard_2-ironic',
+        ]
+        self.assertListEqual(actual, expected)
+
+    def test_get_expected_ironic_compute_services_no_compute(self):
+        example_ironic_compute_conf = {
+            'classic': [],
+            'multi': []
+        }
+        actual = filters.get_expected_ironic_compute_services(
+            example_ironic_compute_conf, [], 'nova-compute-ironic')
+        expected = []
+        self.assertListEqual(actual, expected)
+
+    def test_get_expected_ironic_compute_services_classic_compute(self):
+        example_ironic_compute_conf = {
+            'classic': ['custom-foo'],
+            'multi': []
+        }
+        actual = filters.get_expected_ironic_compute_services(
+            example_ironic_compute_conf, [], 'nova-compute-ironic')
+        expected = ['custom-foo-ironic']
+        self.assertListEqual(actual, expected)
+
+    def test_get_expected_ironic_compute_services_classic_compute_multi(self):
+        # NOTE(dougszu): This isn't a recommended configuration
+        example_ironic_compute_conf = {
+            'classic': ['custom-foo', 'ctrl02', 'ctrl03'],
+            'multi': []
+        }
+        actual = filters.get_expected_ironic_compute_services(
+            example_ironic_compute_conf, [], 'nova-compute-ironic')
+        expected = [
+            'custom-foo-ironic',
+            'ctrl02-ironic',
+            'ctrl03-ironic',
+        ]
+        self.assertListEqual(actual, expected)
+
+    def test_get_expected_ironic_compute_services_bad_config(self):
+        example_ironic_compute_conf = {
+            'classic': [],
+            'multi': [
+                ['my-custom-group-1',
+                 'my-custom-group-2',
+                 'my-custom-group',
+                 'something'],
+            ]
+        }
+        multi_conf = [
+            {"shard_key": "shard_1", "conductor_group": "location_1"},
+        ]
+        with self.assertRaisesRegex(Exception,
+                                    'Unable to look up multi-compute Ironic '
+                                    'config for my-custom-group-2'):
+            filters.get_expected_ironic_compute_services(
+                example_ironic_compute_conf, multi_conf, 'my-custom-group')
+
     def test_namespace_haproxy_for_cell_with_empty_name(self):
         example_services = {
             'nova-novncproxy': {

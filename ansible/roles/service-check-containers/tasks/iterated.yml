@@ -23,6 +23,12 @@
     command: "{{ service.command | default(omit) }}"
     cgroupns_mode: "{{ service.cgroupns_mode | default(omit) }}"
   loop: "{{ range(1, (iterate_count | int) + 1) | list }}"
+  when:
+    # NOTE(dougszu): Due to issues with nova-compute-ironic HA, we can't have
+    # more than one instance for a given 'item'. Eg. nova_compute_ironic_1
+    # should never run on more than one host.
+    # See: https://specs.openstack.org/openstack/nova-specs/specs/2024.1/implemented/ironic-shards.html
+    - service_name != 'nova-compute-ironic' or inventory_hostname in groups[nova_cell_compute_ironic_group ~ '-' ~ item]
   register: container_check
 
 - name: "Store changed containers to pass to the handler"

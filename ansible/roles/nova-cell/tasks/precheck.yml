@@ -30,6 +30,20 @@
     - groups[nova_cell_compute_group] | length < 1
     - not nova_compute_ironic.enabled | bool
 
+- name: Checking nova multi-compute-ironic inventory
+  vars:
+    nova_compute_ironic: "{{ nova_cell_services['nova-compute-ironic'] }}"
+  ansible.builtin.assert:
+    msg: >
+      Each nova-compute-ironic-N group must contain a single host.
+    that:
+      - groups[nova_cell_compute_ironic_group ~ '-' ~ item] | length == 1
+  loop: "{{ range(1, (nova_compute_ironic.iterate_var | int) + 1) | list }}"
+  run_once: true
+  when:
+    - nova_compute_ironic.iterate | bool
+    - nova_compute_ironic.enabled | bool
+
 - name: Checking free port for Nova NoVNC Proxy
   vars:
     service: "{{ nova_cell_services['nova-novncproxy'] }}"

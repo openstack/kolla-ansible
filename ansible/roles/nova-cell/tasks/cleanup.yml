@@ -1,0 +1,26 @@
+---
+- name: Stop and remove containers for unmanaged services
+  become: true
+  vars:
+    service_name: "nova-compute-ironic"
+    service: "{{ nova_cell_services[service_name] }}"
+  kolla_container:
+    action: "stop_and_remove_container"
+    name: "{{ service.container_name ~ '_' ~ item }}"
+  loop: "{{ range(1, (service.iterate_var | int) + 1) | list }}"
+  when:
+    - service.iterate | bool
+    - inventory_hostname not in groups[nova_cell_compute_ironic_group ~ '-' ~ item]
+
+- name: Removing config for unmanaged services
+  vars:
+    service_name: "nova-compute-ironic"
+    service: "{{ nova_cell_services[service_name] }}"
+  ansible.builtin.file:
+    path: "{{ node_config_directory }}/{{ service_name ~ '-' ~ item }}"
+    state: "absent"
+  become: true
+  loop: "{{ range(1, (service.iterate_var | int) + 1) | list }}"
+  when:
+    - service.iterate | bool
+    - inventory_hostname not in groups[nova_cell_compute_ironic_group ~ '-' ~ item]

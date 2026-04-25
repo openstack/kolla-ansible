@@ -13,13 +13,14 @@
       {{ virt_computes_in_batch |
          map('extract', hostvars, ['ansible_facts', 'nodename']) |
          list }}
-    # For ironic, use {{ansible_facts.hostname}}-ironic since this is what we
-    # configure for [DEFAULT] host in nova.conf.
     ironic_compute_service_hosts: >-
       {{ ironic_computes_in_batch |
-         map('extract', hostvars) | json_query('[].nova_compute_ironic_custom_host || [].ansible_facts.hostname') |
-         map('regex_replace', '^(.*)$', '\1-ironic') |
-         list }}
+         map('extract', hostvars) |
+         json_query(
+           '{classic: [].nova_compute_ironic_custom_host || [].ansible_facts.hostname,
+             multi: [].group_names}') |
+         get_expected_ironic_compute_services(nova_multi_compute_ironic_config, nova_cell_compute_ironic_group) }}
+
     expected_compute_service_hosts: "{{ virt_compute_service_hosts + ironic_compute_service_hosts }}"
   block:
     - name: Waiting for nova-compute services to register themselves
@@ -73,13 +74,19 @@
         failed_compute_service_hosts: >-
           {{ expected_compute_service_hosts | difference(nova_compute_service_hosts) | list }}
         # Whether any compute services failed on this host.
+        ironic_compute_service_config_for_host:
+          classic: "{{ [nova_compute_ironic_custom_host | default(ansible_facts.hostname)] if inventory_hostname in ironic_computes_in_batch else [] }}"
+          multi: "{{ [group_names] }}"
+        expected_ironic_compute_services: >-
+          {{ ironic_compute_service_config_for_host | get_expected_ironic_compute_services(nova_multi_compute_ironic_config, nova_cell_compute_ironic_group) }}
         any_failed_services: >-
           {{ (ansible_facts.nodename | default()) in failed_compute_service_hosts or
-             ((ansible_facts.hostname | default()) ~ "-ironic") in failed_compute_service_hosts }}
+             expected_ironic_compute_services | intersect(failed_compute_service_hosts) | length > 0 }}
+
       ansible.builtin.fail:
         msg: >-
-          The Nova compute service failed to register itself on the following
-          hosts: {{ failed_compute_service_hosts | join(',') }}
+          The following Nova compute services failed to register
+          themselves: {{ failed_compute_service_hosts | join(',') }}
       when: >-
         any_failed_services or
         (nova_compute_registration_fatal | bool and
