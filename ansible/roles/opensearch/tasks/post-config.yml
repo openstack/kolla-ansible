@@ -87,3 +87,30 @@
   when:
     - not ansible_check_mode
     - opensearch_retention_policy_check.status == 404
+
+- name: Create OpenSearch Dashboards Index Pattern
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_dashboards_internal_endpoint }}/api/saved_objects/index-pattern/{{ opensearch_log_index_prefix }}-pattern"
+      method: POST
+      status_code: 200, 409
+      url_username: "{{ opensearch_dashboards_user }}"
+      url_password: "{{ opensearch_dashboards_password }}"
+      force_basic_auth: true
+      headers:
+        osd-xsrf: "true"
+      body:
+        attributes:
+          title: "{{ opensearch_log_index_prefix }}-*"
+          timeFieldName: "@timestamp"
+      body_format: json
+      ca_path: "{{ openstack_cacert }}"
+  register: opensearch_index_pattern_create
+  changed_when: opensearch_index_pattern_create.status == 200
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  when:
+    - not ansible_check_mode

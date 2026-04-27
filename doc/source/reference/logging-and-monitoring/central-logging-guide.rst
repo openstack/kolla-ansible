@@ -95,20 +95,38 @@ If you want to prevent OpenSearch Dashboards being exposed on the external
 VIP, you can set ``enable_opensearch_dashboards_external`` to ``false`` in
 ``/etc/kolla/globals.yml``.
 
-First Login
------------
+Index Pattern Configuration
+---------------------------
 
-When OpenSearch Dashboards is opened for the first time, it requires creating
-a default index pattern. To view, analyse and search logs, at least one
-index pattern has to be created. To match indices stored in OpenSearch,
-we suggest using the following configuration:
+Kolla Ansible fully automates the creation of the default index pattern.
+During the deployment or reconfiguration process, an index pattern is
+automatically provisioned. By default, it is dynamically configured to
+match the indices defined by the ``opensearch_log_index_prefix``
+variable (which defaults to ``flog``). This results in an automatic
+index pattern of ``flog-*``.
 
-#. Index pattern - flog-*
-#. Time Filter field name - @timestamp
-#. Expand index pattern when searching [DEPRECATED] - not checked
-#. Use event times to create index names [DEPRECATED] - not checked
+The time filter field name is automatically set to ``@timestamp``,
+ensuring that all time-based aggregations and histograms work perfectly
+out of the box.
 
-After setting parameters, one can create an index with the *Create* button.
+As a result, the **Discover** tab is immediately ready to display
+incoming log data upon your first login, requiring no manual setup
+from the operator.
+
+**Adding Custom Index Patterns Manually**
+
+If you configure custom Fluentd outputs to route specific logs to
+different indices, or if you ingest external metrics into OpenSearch,
+you may still need to create additional index patterns manually.
+To do this:
+
+1. Navigate to **Dashboards Management** -> **Index Patterns** in the
+   OpenSearch Dashboards UI.
+2. Click **Create index pattern**.
+3. Define your custom index pattern (e.g., ``my-custom-logs-*``).
+4. Select the appropriate Time Filter field name (typically
+   ``@timestamp``).
+5. Click the **Create index pattern** button.
 
 Search logs - Discover tab
 --------------------------
