@@ -161,3 +161,24 @@
       when:
         - item.name is search('_fanout')
         - om_enable_rabbitmq_stream_fanout | bool
+
+- name: Check if RabbitMQ stream queue policy variables are valid
+  when: om_enable_rabbitmq_stream_fanout | bool
+  block:
+    - name: Check if the value of rabbitmq_stream_max_segment_size_bytes is valid
+      ansible.builtin.assert:
+        that:
+          - rabbitmq_stream_max_segment_size_bytes is integer
+          - rabbitmq_stream_max_segment_size_bytes > 0
+        fail_msg: >
+          rabbitmq_stream_max_segment_size_bytes needs to be a positive integer.
+          Please check its value again.
+
+    - name: Check if the value of rabbitmq_stream_segment_max_age is valid
+      ansible.builtin.assert:
+        that:
+          - rabbitmq_stream_segment_max_age is string
+          - 'rabbitmq_stream_segment_max_age is regex("^[0-9]+[YMDhms]$")'
+        fail_msg: >
+          rabbitmq_stream_segment_max_age needs to have numeric string that ends with one of the units in [Y, M, D, h, m, s].
+          Please check its value again.

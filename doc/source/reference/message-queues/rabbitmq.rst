@@ -209,3 +209,34 @@ Currently, membership changes for streams `is not entirely safe
 <https://github.com/rabbitmq/rabbitmq-server/discussions/14246>`__, so this
 script should only be used when the RabbitMQ cluster is in a known healthy
 state.
+
+Streams Retention Period
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using RabbitMQ streams for fanout queues by setting
+``om_enable_rabbitmq_stream_fanout: true``, users can set retention policy for
+them with the use of two variables ``rabbitmq_stream_max_segment_size_bytes``
+and ``rabbitmq_stream_segment_max_age`` to avoid running out of disk space
+eventually.
+
+Default configuration set segments of a stream queues to have maximum size of
+500 MB (`RabbitMQ default <https://www.rabbitmq.com/docs/streams#declaring>`__)
+and the retention time of 1800 seconds once a segment reaches the maximum size
+(`oslo.messaging default
+<https://docs.openstack.org/oslo.messaging/latest/configuration/opts.html#oslo_messaging_rabbit.rabbit_transient_queues_ttl>`__).
+These default values will leave large number of ready messages in stream
+queues even though old ones are removed by the retention policy.
+So it is recommended to tune them based on how busy the cloud is.
+
+``rabbitmq_stream_max_segment_size_bytes`` sets the maximum size of stream
+segments. This variable needs to be positive integer.
+
+``rabbitmq_stream_segment_max_age`` sets the retention time of segments that
+reached the maximum size. This variable needs to be string with valid options
+of Y, M, D, h, m, s (e.g. 24h for 24 hours).
+
+.. code-block:: yaml
+
+   # Example custom retention policy configuration
+   rabbitmq_stream_max_segment_size_bytes: 5000 # 5 KB
+   rabbitmq_stream_segment_max_age: "60s" # 60 seconds
