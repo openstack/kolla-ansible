@@ -312,24 +312,6 @@ for use with availability zones:
   * ``/etc/kolla/config/nova/<hostname2>/ceph2.conf``
   * ``/etc/kolla/config/nova/<hostname2>/ceph2.client.cinder.keyring``
 
-If ``zun`` is enabled, and you wish to use cinder volumes with zun,
-it must also be configured to allow access to Cinder volumes:
-
-* Enable Cinder Ceph backend for Zun in ``globals.yml``:
-
-  .. code-block:: yaml
-
-     zun_configure_for_cinder_ceph: "yes"
-
-* Copy Ceph configuration file to:
-
-  * ``/etc/kolla/config/zun/zun-compute/ceph.conf``
-
-* Copy Ceph keyring file(s) to:
-
-  * ``/etc/kolla/config/zun/zun-compute/ceph.client.cinder.keyring``
-
-
 Nova
 ----
 
@@ -583,13 +565,3 @@ HTTPS (443) port will be used. For example:
 
 The HAProxy frontend port is defined via ``ceph_rgw_port``, and defaults to
 6780.
-
-Cephadm and Ceph Client Version
-===============================
-When configuring Zun with Cinder volumes, kolla-ansible installs some
-Ceph client packages on zun-compute hosts. You can set the version
-of the Ceph packages installed by,
-
-* Configuring Ceph version details in ``/etc/kolla/globals.yml``:
-
-  * ``ceph_version`` (default: ``pacific``)

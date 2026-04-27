@@ -13,4 +13,3 @@ compute services.
    nova-cells-guide
    nova-fake-driver
    nova-guide
-   zun-guide
