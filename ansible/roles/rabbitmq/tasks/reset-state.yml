@@ -4,10 +4,15 @@
   changed_when: true
   ansible.builtin.command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl stop_app"
 
+# TODO: rabbitmqctl force_reset is not supported with Khepri and
+# causes the reset to fail. Remove the fallback to force_reset
+# above RabbitMQ version 4.2 where only Khepri is used.
 - name: Reset the state of RabbitMQ
   become: true
   changed_when: true
-  ansible.builtin.command: "{{ kolla_container_engine }} exec rabbitmq rabbitmqctl force_reset"
+  ansible.builtin.command: >
+    {{ kolla_container_engine }} exec rabbitmq bash -c
+    'rabbitmqctl force_reset || rabbitmqctl reset'
 
 - name: Start the RabbitMQ application
   become: true
