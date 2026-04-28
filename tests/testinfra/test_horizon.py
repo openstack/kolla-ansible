@@ -12,13 +12,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import pytest
 import time
 import yaml
 
 from pathlib import Path
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import WebDriverException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 home = Path.home()
@@ -117,6 +121,53 @@ def test_horizon_login(host):
             original_size['width'], original_size['height'])
 
         assert 'Overview - OpenStack Dashboard' in driver.title  # nosec B101
+
+    except TimeoutException as e:
+        raise e
+    finally:
+        driver.quit()
+
+
+@pytest.mark.skipif(
+    os.getenv("SCENARIO") != "federation",
+    reason=(
+        "Current scenario is not federation. "
+        "Not running test."
+    )
+)
+def test_horizon_login_federation(host):
+
+    firefox_options = webdriver.FirefoxOptions()
+    selenium_url = host.environment().get(
+        'SELENIUM_REMOTE_URL', 'http://localhost:4500/wd/hub')
+
+    driver = webdriver.Remote(
+        command_executor=selenium_url,
+        options=firefox_options)
+
+    horizon_proto = host.environment().get('HORIZON_PROTO')
+    horizon_url = horizon_proto + "://192.0.2.10"
+    login_url = '/'.join((
+                horizon_url,
+                'auth',
+                'login'))
+
+    try:
+        driver.get(login_url)
+        auth_type_field = driver.find_element(By.ID, 'id_auth_type')
+        select = Select(auth_type_field)
+        select.select_by_value('example_provider_openid')
+        button = driver.find_element(By.CSS_SELECTOR, '.btn-primary')
+
+        try:
+            button.click()
+        except WebDriverException as e:
+            if "Reached error page" in str(e) or "dnsNotFound" in str(e):
+                pass  # This is expected behavior, so we ignore the exception
+            else:
+                raise  # Re-raise if it failed for an unexpected reason
+
+        assert "idp.example.org" in driver.current_url  # nosec B101
 
     except TimeoutException as e:
         raise e
