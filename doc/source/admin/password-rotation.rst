@@ -11,13 +11,6 @@ variable, only the most common ones.
    Always back up your ``passwords.yml`` file before making any changes.
    Otherwise, it is easy to make unrecoverable mistakes.
 
-.. warning::
-
-   This guide relies on recent changes to Kolla and Kolla-Ansible. You may
-   encounter errors if applying this guide to older deployments. It is
-   recommended that you update your containers and kolla-ansible to the latest
-   available versions before proceeding.
-
 Regenerating secrets
 --------------------
 
