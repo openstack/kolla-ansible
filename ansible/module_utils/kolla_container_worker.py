@@ -28,6 +28,9 @@ class ContainerWorker(ABC):
         self.changed = False
         # Use this to store arguments to pass to exit_json().
         self.result = {}
+        # Populated by compare_config() when config differs, so diff_config()
+        # can surface the output without running the exec a second time.
+        self._config_diff = None
 
         self.systemd = SystemdWorker(self.params)
 
@@ -57,36 +60,182 @@ class ContainerWorker(ABC):
 
     def compare_container(self):
         container = self.check_container()
-        if (not container or
-                self.check_container_differs() or
-                self.compare_config() or
-                self.systemd.check_unit_change()):
+        failures = []
+
+        if not container:
+            failures.append({'name': 'container_missing',
+                             'current': None,
+                             'desired': self.params.get('name')})
+        else:
+            container_info = self.get_container_info()
+            failures.extend(self.check_container_differs(container_info))
+            if self.compare_config():
+                failures.append({'name': 'config',
+                                 'current': self._config_diff,
+                                 'desired': 'up_to_date'})
+            if self.systemd.check_unit_change():
+                failures.append({'name': 'systemd_unit',
+                                 'current': 'out_of_date',
+                                 'desired': 'up_to_date'})
+
+        if failures:
             self.changed = True
+            self.result['comparison_failures'] = failures
+
         return self.changed
 
-    def check_container_differs(self):
-        container_info = self.get_container_info()
-        if not container_info:
-            return True
+    def check_container_differs(self, container_info=None):
+        """Return a list of dicts describing differences from the desired state
 
-        return (
-            self.compare_cap_add(container_info) or
-            self.compare_security_opt(container_info) or
-            self.compare_image(container_info) or
-            self.compare_ipc_mode(container_info) or
-            self.compare_labels(container_info) or
-            self.compare_privileged(container_info) or
-            self.compare_pid_mode(container_info) or
-            self.compare_cgroupns_mode(container_info) or
-            self.compare_tmpfs(container_info) or
-            self.compare_volumes(container_info) or
-            self.compare_volumes_from(container_info) or
-            self.compare_environment(container_info) or
-            self.compare_container_state(container_info) or
-            self.compare_dimensions(container_info) or
-            self.compare_command(container_info) or
-            self.compare_healthcheck(container_info)
-        )
+        Each entry is a dict with keys:
+          - ``name``: the comparison that failed (e.g. ``'image'``)
+          - ``current``: the value found on the running container
+          - ``desired``: the value requested by the module parameters
+
+        An empty list means no differences were found.
+        """
+        if container_info is None:
+            container_info = self.get_container_info()
+        if not container_info:
+            return [{'name': 'container_info_missing',
+                     'current': None, 'desired': None}]
+
+        checks = [
+            'cap_add',
+            'security_opt',
+            'image',
+            'ipc_mode',
+            'labels',
+            'privileged',
+            'pid_mode',
+            'cgroupns_mode',
+            'tmpfs',
+            'volumes',
+            'volumes_from',
+            'environment',
+            'container_state',
+            'dimensions',
+            'command',
+            'healthcheck',
+        ]
+
+        failures = []
+        for name in checks:
+            if getattr(self, 'compare_' + name)(container_info):
+                diff = getattr(self, 'diff_' + name)(container_info)
+                failures.append({'name': name,
+                                 'current': diff[0],
+                                 'desired': diff[1]})
+        return failures
+
+    # ------------------------------------------------------------------
+    # diff_* methods: return (current, desired) for each comparison.
+    # These are only called when the corresponding compare_* has already
+    # returned True, so they can focus purely on extracting values.
+    # ------------------------------------------------------------------
+
+    def diff_ipc_mode(self, container_info):
+        current = container_info['HostConfig'].get('IpcMode') or None
+        return current, self.params.get('ipc_mode')
+
+    def diff_cap_add(self, container_info):
+        try:
+            current = container_info['HostConfig'].get('CapAdd') or []
+        except (KeyError, TypeError):
+            current = []
+        return sorted(current), sorted(self.params.get('cap_add', []))
+
+    def diff_security_opt(self, container_info):
+        try:
+            current = container_info['HostConfig'].get('SecurityOpt') or []
+        except (KeyError, TypeError):
+            current = []
+        return sorted(current), sorted(self.params.get('security_opt', []))
+
+    def diff_image(self, container_info):
+        current = (container_info.get('Image') or
+                   container_info.get('Config', {}).get('Image'))
+        return current, self.params.get('image')
+
+    def diff_labels(self, container_info):
+        current = container_info['Config'].get('Labels', {})
+        desired = self.params.get('labels')
+        return current, desired
+
+    def diff_privileged(self, container_info):
+        current = container_info['HostConfig'].get('Privileged')
+        return current, self.params.get('privileged')
+
+    def diff_pid_mode(self, container_info):
+        current = container_info['HostConfig'].get('PidMode') or None
+        desired = self.params.get('pid_mode')
+        return current, desired
+
+    def diff_cgroupns_mode(self, container_info):
+        current = (container_info['HostConfig'].get('CgroupnsMode') or
+                   container_info['HostConfig'].get('CgroupMode') or 'host')
+        return current, self.params.get('cgroupns_mode')
+
+    def diff_tmpfs(self, container_info):
+        current = list(container_info['HostConfig'].get('Tmpfs') or [])
+        desired = list(self.generate_tmpfs() or [])
+        return sorted(current), sorted(desired)
+
+    def diff_volumes(self, container_info):
+        volumes, binds = self.generate_volumes()
+        current_vols = list(container_info['Config'].get('Volumes') or [])
+        current_binds = list(container_info['HostConfig'].get('Binds') or [])
+        desired_vols = list(volumes or [])
+        desired_binds = []
+        if binds:
+            for k, v in binds.items():
+                desired_binds.append('{}:{}:{}'.format(k,
+                                                       v['bind'],
+                                                       v['mode']))
+        return {'volumes': current_vols, 'binds': sorted(current_binds)}, \
+               {'volumes': desired_vols, 'binds': sorted(desired_binds)}
+
+    def diff_volumes_from(self, container_info):
+        current = list(container_info['HostConfig'].get('VolumesFrom') or [])
+        desired = list(self.params.get('volumes_from') or [])
+        return sorted(current), sorted(desired)
+
+    def diff_environment(self, container_info):
+        current_env = {}
+        for kv in container_info['Config'].get('Env', []):
+            k, v = kv.split('=', 1)
+            current_env[k] = v
+        desired_env = self.params.get('environment', {})
+        # Only show keys that are actually different
+        return sorted(current_env), sorted(desired_env)
+
+    def diff_container_state(self, container_info):
+        current = container_info['State'].get('Status')
+        desired = self.params.get('state')
+        return current, desired
+
+    def diff_dimensions(self, container_info):
+        new_dimensions = self.params.get('dimensions')
+        current_dimensions = container_info['HostConfig']
+        current = {k2: current_dimensions.get(k2)
+                   for k1, k2 in self.dimension_map.items()
+                   if k1 in new_dimensions}
+        desired = {self.dimension_map[k]: v
+                   for k, v in new_dimensions.items()
+                   if k in self.dimension_map}
+        return current, desired
+
+    def diff_command(self, container_info):
+        current = '{} {}'.format(
+            container_info.get('Path', ''),
+            ' '.join(container_info.get('Args', []))
+        ).strip()
+        return current, self.params.get('command')
+
+    def diff_healthcheck(self, container_info):
+        current = container_info['Config'].get('Healthcheck')
+        desired = self.params.get('healthcheck')
+        return current, desired
 
     def compare_ipc_mode(self, container_info):
         new_ipc_mode = self.params.get('ipc_mode')
@@ -172,7 +321,7 @@ class ContainerWorker(ABC):
             if k in new_labels:
                 if v != new_labels[k]:
                     return True
-            else:
+            elif k in current_labels:
                 del current_labels[k]
 
         if new_labels != current_labels:

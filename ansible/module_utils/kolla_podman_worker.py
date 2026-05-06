@@ -298,15 +298,6 @@ class PodmanWorker(ContainerWorker):
 
         return container.attrs
 
-    def compare_container(self):
-        container = self.check_container()
-        if (not container or
-                self.check_container_differs() or
-                self.compare_config() or
-                self.systemd.check_unit_change()):
-            self.changed = True
-        return self.changed
-
     def compare_cap_add(self, container_info):
         new_cap_add = self.params.get('cap_add', list()).copy()
 
@@ -526,6 +517,7 @@ class PodmanWorker(ContainerWorker):
             container = self.pc.containers.get(self.params['name'])
             container.reload()
             if container.status != 'running':
+                self._config_diff = 'container not running during config check'
                 return True
 
             rc, raw_output = container.exec_run(COMPARE_CONFIG_CMD,
@@ -535,6 +527,7 @@ class PodmanWorker(ContainerWorker):
         # expect that config is stale so we return True and recreate container
         except APIError as e:
             if e.is_client_error():
+                self._config_diff = 'container unavailable for config check'
                 return True
             else:
                 raise
@@ -545,6 +538,8 @@ class PodmanWorker(ContainerWorker):
         if rc == 0:
             return False
         elif rc == 1:
+            self._config_diff = (raw_output.decode('utf-8') if
+                                 isinstance(raw_output, bytes) else raw_output)
             return True
         else:
             raise Exception('Failed to compare container configuration: '
