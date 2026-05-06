@@ -1,0 +1,8 @@
+---
+- name: Check if using quay.io/openstack.kolla images
+  ansible.builtin.assert:
+    that: not (docker_registry == "quay.io" and docker_namespace == "openstack.kolla")
+    fail_msg: >-
+      Kolla images from quay.io/openstack.kolla namespace are meant only for testing purposes,
+      if you want to continue using them please use --use-test-images CLI argument
+  when: not kolla_test_images | bool
