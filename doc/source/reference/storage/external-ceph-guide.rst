@@ -555,6 +555,15 @@ This prevents cross-project and public object access. This can be resolved by
 setting ``ceph_rgw_swift_account_in_url`` to ``true``. This should match the
 ``rgw_swift_account_in_url`` configuration option in Ceph RadosGW.
 
+.. warning::
+
+   When using an external Ceph RadosGW for object storage endpoints
+   (when ``enable_ceph_rgw: true``), operators are advised to set
+   ``update_keystone_service_user_passwords: false`` in``globals.yml``.
+   Leaving this option enabled causes the service user password to be reset
+   on every reconfigure, which invalidates existing tokens and can cause
+   unforeseen outages for object storage consumers.
+
 Load balancing
 ==============
 
