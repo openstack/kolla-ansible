@@ -49,6 +49,7 @@ prometheus_services:
     image: "{{ prometheus_alertmanager_image_full }}"
     volumes: "{{ prometheus_alertmanager_default_volumes + prometheus_alertmanager_extra_volumes }}"
     dimensions: "{{ prometheus_alertmanager_dimensions }}"
+    healthcheck: "{{ prometheus_alertmanager_healthcheck }}"
     haproxy:
       prometheus_alertmanager:
         enabled: "{{ enable_prometheus_alertmanager | bool }}"
@@ -427,6 +428,23 @@ prometheus_blackbox_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_libvirt_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_openstack_network_exporter_dimensions: "{{ default_container_dimensions }}"
 prometheus_valkey_exporter_dimensions: "{{ default_container_dimensions }}"
+
+prometheus_alertmanager_enable_healthchecks: "{{ enable_container_healthchecks }}"
+prometheus_alertmanager_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+prometheus_alertmanager_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+prometheus_alertmanager_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+prometheus_alertmanager_healthcheck_test:
+  - "CMD-SHELL"
+  - >-
+    healthcheck_curl http://{{
+    api_interface_address | put_address_in_context('url') }}:{{ prometheus_alertmanager_port }}/-/healthy
+prometheus_alertmanager_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+prometheus_alertmanager_healthcheck:
+  interval: "{{ prometheus_alertmanager_healthcheck_interval }}"
+  retries: "{{ prometheus_alertmanager_healthcheck_retries }}"
+  start_period: "{{ prometheus_alertmanager_healthcheck_start_period }}"
+  test: "{% if prometheus_alertmanager_enable_healthchecks | bool %}{{ prometheus_alertmanager_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ prometheus_alertmanager_healthcheck_timeout }}"
 
 prometheus_server_default_volumes:
   - "{{ node_config_directory }}/prometheus-server/:{{ container_config_directory }}/:ro"
