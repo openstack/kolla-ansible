@@ -1,0 +1,95 @@
+---
+prelude: |
+  The Kolla Ansible ``22.0.0`` (Prelude) release continues the momentum of
+  the previous cycle with a strong focus on service modernisation, role
+  restructuring, and operator quality-of-life improvements. Highlights
+  include:
+
+  * **Service retirements and removals.**
+
+    - ``Zun`` and ``Kuryr`` dropped (``Zun`` is broken in 2026.1).
+    - ``InfluxDB`` (community EOL v1) and ``Telegraf`` removed.
+    - ``Venus`` removed due to the project being inactive.
+    - ``Neutron`` Linux Bridge mechanism driver support removed following
+      its upstream retirement.
+
+  * **Role restructuring.**
+
+    - The ``common`` role has been renamed to ``kolla_toolbox`` (inventory
+      group ``kolla-toolbox`` → ``kolla_toolbox``).
+    - Log-rotation tasks extracted into a dedicated ``cron`` role.
+    - Log collection tasks extracted into a dedicated ``kolla_logs`` role.
+    - Host bootstrap tasks moved into ``ansible-collection-kolla``.
+
+  * **Unified uWSGI for all API services.**
+
+    - All OpenStack API services now run under uWSGI using the shared
+      ``service-uwsgi-config`` role, dropping Apache WSGI support entirely.
+    - The remaining services (``Barbican``, ``Designate``, ``Glance``, and
+      ``Magnum``) have been migrated in this cycle.
+    - The now-unnecessary ``glance-tls-proxy`` container is removed during
+      upgrade.
+    - HTTP chunked input and configurable thread counts are available to all
+      uWSGI services.
+
+  * **RabbitMQ 4.2 support and upgrade paths.**
+
+    - Dynamic upgrade path validation via ``rabbitmq_allowed_upgrades`` and
+      seamless 4.2 upgrade paths are provided out of the box.
+    - Management interface TLS support via ``rabbitmq_enable_tls``.
+    - Stream retention policy configurable via
+      ``rabbitmq_stream_max_segment_size_bytes`` and
+      ``rabbitmq_stream_segment_max_age``.
+
+  * **Cinder deployment group changes.**
+
+    - ``cinder-volume`` and ``cinder-backup`` now default to the ``cinder``
+      (control) group instead of ``storage``.
+    - New inventory groups ``cinder-volume-lvm``, ``cinder-volume-multiple``,
+      ``cinder-backup-lvm``, and ``cinder-backup-multiple`` support advanced
+      LVM back-end topologies.
+
+  * **Neutron and OVN enhancements.**
+
+    - ``neutron-ovn-vpn-agent`` is now deployable to enable VPNaaS in OVN
+      environments.
+    - Neutron agent wrappers are enabled by default, allowing DHCP and L3
+      agents to restart without disturbing the main container processes and
+      reducing dataplane disruption.
+    - OVN metadata-agent HAProxy processes run in separate wrapper containers.
+    - ``ovn-northd`` command-line arguments and OVN DB environment variables
+      are configurable.
+
+  * **Observability additions.**
+
+    - New ``OpenStack Network Exporter`` for Prometheus gathers OVS/OVN
+      metrics.
+    - ``Valkey Exporter`` for Prometheus is now supported.
+    - Grafana gains an Alertmanager datasource and optional LDAP
+      authentication.
+    - ``OpenSearch Dashboards`` index patterns are created automatically.
+    - ``Fluentd`` ships logs directly to OpenSearch node IPs and
+      ``OpenSearch Dashboards`` connects directly to data nodes, removing
+      intermediate HAProxy hops.
+    - API health-check endpoints have been standardised across all services.
+
+  * **Ironic improvements.**
+
+    - Multiple Nova Compute Ironic instances on the same host are now
+      supported for large bare-metal deployments.
+    - The experimental ``ironic-pxe-filter`` service is available.
+    - Legacy (non-rolling) Ironic upgrade support has been dropped.
+    - DNS configuration can now be supplied through Ironic DHCP ranges for
+      IPA NTP and FQDN endpoint reachability.
+
+  * **Security hardening.**
+
+    - HAProxy TLS settings hardened to follow Mozilla SSL Modern
+      recommendations for HAProxy 2.8+ / OpenSSL 3.x.
+    - ``Skyline`` gains TLS 1.2/1.3 support for HTTPS upstream endpoints.
+    - Keystone ``mod_auth_openidc`` now supports templated OIDC metadata
+      files and customisable authentication error pages.
+
+  * **Ansible version bump.** The minimum supported version is now Ansible
+    ``12`` (ansible-core 2.19) and the maximum is Ansible ``13``
+    (ansible-core 2.20).
