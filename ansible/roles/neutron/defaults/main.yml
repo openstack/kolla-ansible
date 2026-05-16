@@ -178,15 +178,6 @@ neutron_services:
     volumes: "{{ neutron_bgp_dragent_default_volumes + neutron_bgp_dragent_extra_volumes }}"
     dimensions: "{{ neutron_bgp_dragent_dimensions }}"
     healthcheck: "{{ neutron_bgp_dragent_healthcheck }}"
-  neutron-infoblox-ipam-agent:
-    container_name: "neutron_infoblox_ipam_agent"
-    image: "{{ neutron_infoblox_ipam_agent_image_full }}"
-    privileged: true
-    enabled: "{{ enable_neutron_infoblox_ipam_agent | bool }}"
-    group: "neutron-infoblox-ipam-agent"
-    host_in_groups: "{{ inventory_hostname in groups['neutron-infoblox-ipam-agent'] }}"
-    volumes: "{{ neutron_infoblox_ipam_agent_default_volumes + neutron_infoblox_ipam_agent_extra_volumes }}"
-    dimensions: "{{ neutron_infoblox_ipam_agent_dimensions }}"
   neutron-metering-agent:
     container_name: "neutron_metering_agent"
     image: "{{ neutron_metering_agent_image_full }}"
@@ -346,10 +337,6 @@ neutron_bgp_dragent_image: "{{ docker_image_url }}neutron-bgp-dragent"
 neutron_bgp_dragent_tag: "{{ neutron_tag }}"
 neutron_bgp_dragent_image_full: "{{ neutron_bgp_dragent_image }}:{{ neutron_bgp_dragent_tag }}"
 
-neutron_infoblox_ipam_agent_image: "{{ docker_image_url }}neutron-infoblox-ipam-agent"
-neutron_infoblox_ipam_agent_tag: "{{ neutron_tag }}"
-neutron_infoblox_ipam_agent_image_full: "{{ neutron_infoblox_ipam_agent_image }}:{{ neutron_infoblox_ipam_agent_tag }}"
-
 neutron_metering_agent_image: "{{ docker_image_url }}neutron-metering-agent"
 neutron_metering_agent_tag: "{{ neutron_tag }}"
 neutron_metering_agent_image_full: "{{ neutron_metering_agent_image }}:{{ neutron_metering_agent_tag }}"
@@ -378,7 +365,6 @@ neutron_ovn_metadata_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_openvswitch_agent_dimensions: "{{ neutron_agent_dimensions }}"
 neutron_server_dimensions: "{{ default_container_dimensions }}"
 neutron_bgp_dragent_dimensions: "{{ default_container_dimensions }}"
-neutron_infoblox_ipam_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_metering_agent_dimensions: "{{ neutron_agent_dimensions }}"
 ironic_neutron_agent_dimensions: "{{ default_container_dimensions }}"
 neutron_ovn_agent_dimensions: "{{ neutron_agent_dimensions }}"
@@ -653,11 +639,6 @@ neutron_bgp_dragent_default_volumes:
   - "/etc/localtime:/etc/localtime:ro"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
-neutron_infoblox_ipam_agent_default_volumes:
-  - "{{ node_config_directory }}/neutron-infoblox-ipam-agent/:{{ container_config_directory }}/:ro"
-  - "/etc/localtime:/etc/localtime:ro"
-  - "kolla_logs:/var/log/kolla/"
-  - "{{ '/dev/shm:/dev/shm' }}"
 neutron_metering_agent_default_volumes:
   - "{{ node_config_directory }}/neutron-metering-agent/:{{ container_config_directory }}/:ro"
   - "/etc/localtime:/etc/localtime:ro"
@@ -709,7 +690,6 @@ neutron_ovn_metadata_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_openvswitch_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_server_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_bgp_dragent_extra_volumes: "{{ neutron_extra_volumes }}"
-neutron_infoblox_ipam_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_metering_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 ironic_neutron_agent_extra_volumes: "{{ neutron_extra_volumes }}"
 neutron_ovn_agent_extra_volumes: "{{ neutron_extra_volumes }}"
@@ -856,7 +836,7 @@ neutron_service_plugins: "{{ service_plugins | selectattr('enabled', 'equalto', 
 ####################
 neutron_notification_topics:
   - name: notifications
-    enabled: "{{ enable_ceilometer | bool or enable_neutron_infoblox_ipam_agent | bool }}"
+    enabled: "{{ enable_ceilometer | bool }}"
   - name: "{{ designate_notifications_topic_name }}"
     enabled: "{{ designate_enable_notifications_sink | bool }}"
 
@@ -888,16 +868,6 @@ l3_agent_extensions:
     enabled: "{{ enable_neutron_port_forwarding | bool }}"
 
 neutron_l3_agent_extensions: "{{ l3_agent_extensions | selectattr('enabled', 'equalto', true) | list }}"
-
-####################
-# Infoblox IPAM
-####################
-infoblox_cloud_data_center_id: "1"
-infoblox_grid_master_host: "192.168.1.1"
-infoblox_grid_master_name: "infoblox.localdomain"
-infoblox_admin_user_name: "admin"
-infoblox_wapi_version: "2.3"
-infoblox_wapi_max_results: "-50000"
 
 ######################
 # Mellanox Agent
