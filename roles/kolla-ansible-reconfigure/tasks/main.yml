@@ -94,16 +94,6 @@
 - name: "Capture state of containers prior to reconfigure (podman)"
   become: true
   vars:
-    # NOTE(blanson): There is a bug in podman 4.3.1 (debian-bookworm version)
-    # which prevents nova_compute from being idempotent.
-    # this isn't a big issues, but we can't just install a newer podman version.
-    # https://github.com/containers/podman/issues/17189
-    ignored_services: >-
-      {{ ovn_db_services
-        + (['nova_compute']
-          if ansible_facts.distribution | lower == 'debian'
-            and ansible_facts.distribution_major_version | int == 12
-          else []) }}
     ovn_db_services:
       - "ovn_nb_db"
       - "ovn_sb_db"
@@ -127,7 +117,6 @@
             })
           }}
       loop: "{{ _deploy_podman_facts.containers }}"
-      when: item.Name not in ignored_services
 
 - name: Run kolla-ansible reconfigure
   ansible.builtin.shell:
@@ -180,17 +169,6 @@
 - name: "Capture state of containers post reconfigure (podman)"
   become: true
   vars:
-    # NOTE(blanson): There is a bug in podman 4.3.1 (debian-bookworm version)
-    # which prevents nova_compute from being idempotent.
-    # this isn't a big issues, but we can't just install a newer podman version.
-    # https://github.com/containers/podman/issues/17189
-    ignored_services: >-
-      {{ ovn_db_services
-        + (['nova_compute']
-          if ansible_facts.distribution | lower == 'debian'
-            and ansible_facts.distribution_major_version | int == 12
-          else []) }}
-
     ovn_db_services:
       - "ovn_nb_db"
       - "ovn_sb_db"
@@ -214,7 +192,6 @@
             })
           }}
       loop: "{{ _reconfigure_podman_facts.containers }}"
-      when: item.Name not in ignored_services
 
 - name: Assert that containers were not restarted during reconfigure (docker)
   ansible.builtin.assert:
