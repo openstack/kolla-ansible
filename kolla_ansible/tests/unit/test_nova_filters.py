@@ -159,6 +159,82 @@ class TestFilters(unittest.TestCase):
             filters.get_expected_ironic_compute_services(
                 example_ironic_compute_conf, multi_conf, 'my-custom-group')
 
+    def _make_hostvars(self, hosts):
+        return {
+            h['name']: {
+                'ansible_facts': {'nodename': h['nodename']},
+                'nova_compute_availability_zone': h.get('az', ''),
+                'nova_compute_aggregates': h.get('aggregates', []),
+            }
+            for h in hosts
+        }
+
+    def test_nova_az_host_map_basic(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01',
+             'nodename': 'compute01.example.com',
+             'az': 'az-1'},
+            {'name': 'compute02',
+             'nodename': 'compute02.example.com',
+             'az': 'az-1'},
+            {'name': 'compute03',
+             'nodename': 'compute03.example.com',
+             'az': 'az-2'},
+        ])
+        result = filters.nova_az_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {
+            'az-1': ['compute01.example.com', 'compute02.example.com'],
+            'az-2': ['compute03.example.com'],
+        })
+
+    def test_nova_az_host_map_skips_unset(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01',
+             'nodename': 'compute01.example.com',
+             'az': 'az-1'},
+            {'name': 'compute02', 'nodename': 'compute02.example.com'},
+        ])
+        result = filters.nova_az_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {'az-1': ['compute01.example.com']})
+
+    def test_nova_az_host_map_empty(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01', 'nodename': 'compute01.example.com'},
+        ])
+        result = filters.nova_az_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {})
+
+    def test_nova_aggregate_host_map_basic(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01', 'nodename': 'compute01.example.com',
+             'aggregates': ['gpu', 'ssd']},
+            {'name': 'compute02', 'nodename': 'compute02.example.com',
+             'aggregates': ['gpu']},
+            {'name': 'compute03', 'nodename': 'compute03.example.com',
+             'aggregates': ['ssd']},
+        ])
+        result = filters.nova_aggregate_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {
+            'gpu': ['compute01.example.com', 'compute02.example.com'],
+            'ssd': ['compute01.example.com', 'compute03.example.com'],
+        })
+
+    def test_nova_aggregate_host_map_skips_unset(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01', 'nodename': 'compute01.example.com',
+             'aggregates': ['gpu']},
+            {'name': 'compute02', 'nodename': 'compute02.example.com'},
+        ])
+        result = filters.nova_aggregate_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {'gpu': ['compute01.example.com']})
+
+    def test_nova_aggregate_host_map_empty(self):
+        hostvars = self._make_hostvars([
+            {'name': 'compute01', 'nodename': 'compute01.example.com'},
+        ])
+        result = filters.nova_aggregate_host_map(hostvars, list(hostvars))
+        self.assertEqual(result, {})
+
     def test_namespace_haproxy_for_cell_with_empty_name(self):
         example_services = {
             'nova-novncproxy': {
