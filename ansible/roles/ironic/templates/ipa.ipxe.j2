@@ -12,7 +12,13 @@ chain pxelinux.cfg/${mac:hexhyp} || goto ipa
 
 :ipa
 :retry_boot
+set ipa_kernel ironic-agent.kernel
+set ipa_initramfs ironic-agent.initramfs
+{% for arch, files in ironic_agent_arch_files.items() %}
+iseq ${buildarch} {{ 'arm64' if arch == 'aarch64' else arch }} && set ipa_kernel {{ files.kernel }} ||
+iseq ${buildarch} {{ 'arm64' if arch == 'aarch64' else arch }} && set ipa_initramfs {{ files.initramfs }} ||
+{% endfor %}
 imgfree
-kernel --timeout 30000 {{ ironic_http_url }}/ironic-agent.kernel ipa-inspection-callback-url={{ ironic_internal_endpoint }}/v1/continue_inspection systemd.journald.forward_to_console=yes BOOTIF=${mac} initrd=ironic-agent.initramfs {{ ironic_kernel_cmdline_extras | join(' ') }} || goto retry_boot
-initrd --timeout 30000 {{ ironic_http_url }}/ironic-agent.initramfs || goto retry_boot
+kernel --timeout 30000 {{ ironic_http_url }}/${ipa_kernel} ipa-inspection-callback-url={{ ironic_internal_endpoint }}/v1/continue_inspection systemd.journald.forward_to_console=yes BOOTIF=${mac} initrd=${ipa_initramfs} {{ ironic_kernel_cmdline_extras | join(' ') }} || goto retry_boot
+initrd --timeout 30000 {{ ironic_http_url }}/${ipa_initramfs} || goto retry_boot
 boot

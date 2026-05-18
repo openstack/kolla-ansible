@@ -11,6 +11,14 @@
       vars:
         # NOTE(yoctozepto): needed here to use in other facts too
         openstack_core_enabled: "{{ scenario not in ['bifrost', 'mariadb', 'prometheus-opensearch'] }}"
+        ironic_ipa_files_project: >-
+          {{ 'ironic-python-agent-builder' if ansible_architecture == 'aarch64'
+          else 'ironic-python-agent' }}
+        tenks_default_boot_mode: "{{ 'uefi' if ansible_architecture == 'aarch64' else 'bios' }}"
+        tenks_libvirt_vm_emulator: >-
+          {{ '/usr/libexec/qemu-kvm' if ansible_facts.os_family == 'RedHat'
+          else '/usr/bin/qemu-system-aarch64' if ansible_architecture == 'aarch64'
+          else '/usr/bin/qemu-system-x86_64' }}
       set_fact:
         kolla_inventory_path: "/etc/kolla/inventory"
         logs_dir: "/tmp/logs"
@@ -26,6 +34,14 @@
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
+        ironic_ipa_files_url: >-
+          https://tarballs.opendev.org/openstack/{{ ironic_ipa_files_project }}/dib/files
+        ironic_ipa_image: >-
+          {{ 'ipa-debian-arm64-master' if ansible_architecture == 'aarch64'
+          else 'ipa-centos9-' ~ (zuul.branch | replace('/', '-')) }}
+        tenks_default_boot_mode: "{{ tenks_default_boot_mode }}"
+        tenks_libvirt_vm_arch: "{{ ansible_architecture }}"
+        tenks_libvirt_vm_emulator: "{{ tenks_libvirt_vm_emulator }}"
         kolla_ansible_venv_path: "{{ ansible_env.HOME }}/kolla-ansible-venv"
         kolla_runtime_venv_path: "{{ ansible_env.HOME }}/kolla-runtime-venv"
         kolla_internal_fqdn: "kolla.example.com"
@@ -236,12 +252,12 @@
 
         - name: Download Ironic Python Agent (IPA) images
           get_url:
-            url: "https://tarballs.opendev.org/openstack/ironic-python-agent/dib/files/{{ item.src }}"
+            url: "{{ ironic_ipa_files_url }}/{{ ironic_ipa_image }}.{{ item.src }}"
             dest: "/etc/kolla/config/ironic/{{ item.dest }}"
           with_items:
-            - src: "ipa-centos9-{{ zuul.branch | replace('/', '-') }}.initramfs"
+            - src: initramfs
               dest: ironic-agent.initramfs
-            - src: "ipa-centos9-{{ zuul.branch | replace('/', '-') }}.kernel"
+            - src: kernel
               dest: ironic-agent.kernel
       when: scenario == "ironic" or scenario == "multi-compute-ironic"
 

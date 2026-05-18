@@ -25,11 +25,17 @@ dhcp-option=210,/var/lib/ironic/tftpboot/
 dhcp-match=ipxe,175
 dhcp-match=set:efi,option:client-arch,7
 dhcp-match=set:efi,option:client-arch,9
+{%         if ironic_ipxe_bootfile_name_by_arch.get('aarch64') %}
+dhcp-match=set:efi-aarch64,option:client-arch,11
+{%         endif %}
 # Client is already running iPXE; move to next stage of chainloading
 dhcp-option=tag:ipxe,option:bootfile-name,{{ ironic_http_url }}/ipa.ipxe
 # Client is PXE booting over EFI without iPXE ROM,
 # send EFI version of iPXE chainloader
-dhcp-option=tag:efi,tag:!ipxe,option:bootfile-name,{{ ironic_dnsmasq_uefi_ipxe_boot_file }}
+dhcp-option=tag:efi,tag:!ipxe,option:bootfile-name,{{ ironic_ipxe_bootfile_name_by_arch.get('x86_64', ironic_dnsmasq_uefi_ipxe_boot_file) }}
+{%         if ironic_ipxe_bootfile_name_by_arch.get('aarch64') %}
+dhcp-option=tag:efi-aarch64,tag:!ipxe,option:bootfile-name,{{ ironic_ipxe_bootfile_name_by_arch['aarch64'] }}
+{%         endif %}
 {%     endif %}
 dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
 {% endif %}{# ipv6/ipv4 #}

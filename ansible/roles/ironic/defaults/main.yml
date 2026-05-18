@@ -276,6 +276,11 @@ ironic_dnsmasq_dhcp_default_lease_time: "10m"
 ironic_dnsmasq_serve_ipxe: true
 ironic_dnsmasq_boot_file: "{% if ironic_dnsmasq_serve_ipxe | bool %}undionly.kpxe{% else %}pxelinux.0{% endif %}"
 ironic_dnsmasq_uefi_ipxe_boot_file: "snponly.efi"
+ironic_ipxe_bootfile_name_by_arch: >-
+  {{ {'aarch64': ('ipxe-arm64.efi'
+                   if kolla_base_distro in ['debian', 'ubuntu']
+                   else 'ipxe-snponly-aarch64.efi')}
+     if 'aarch64' in ironic_agent_arch_files else {} }}
 ironic_cleaning_network:
 ironic_console_serial_speed: "115200n8"
 ironic_http_url: "http://{{ ironic_http_interface_address | put_address_in_context('url') }}:{{ ironic_http_port }}"
@@ -296,6 +301,12 @@ ironic_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 ironic_dev_mode: "{{ kolla_dev_mode }}"
 ironic_source_version: "{{ kolla_source_version }}"
 ironic_agent_files_directory: "{{ node_custom_config }}"
+ironic_agent_arch_files: {}
+ironic_agent_files: >-
+  {{ (['ironic-agent.kernel', 'ironic-agent.initramfs'] +
+      (ironic_agent_arch_files.values() | map(attribute='kernel') | list) +
+      (ironic_agent_arch_files.values() | map(attribute='initramfs') | list))
+     | unique | list }}
 
 
 ####################

@@ -67,7 +67,7 @@ function test_ironic_logged {
     while [[ $(openstack server show kolla_bm_boot_test -f value -c status) != "ACTIVE" ]]; do
         echo "Server not yet active, check $attempt - retrying"
         attempt=$((attempt+1))
-        if [[ $attempt -eq 16 ]]; then
+        if [[ $attempt -eq 20 ]]; then
             echo "FAILED: Server did not become active after $attempt checks"
             openstack server show kolla_bm_boot_test
             return 1
