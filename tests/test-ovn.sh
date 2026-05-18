@@ -8,27 +8,12 @@ set -o pipefail
 export PYTHONUNBUFFERED=1
 
 function test_ovn {
-    # NOTE(yoctozepto): could use real ini parsing but this is fine for now
-    local neutron_ml2_conf_path=/etc/kolla/neutron-server/ml2_conf.ini
-    ovn_nb_connection=$(sudo grep -P -o -e "(?<=^ovn_nb_connection = ).*" "$neutron_ml2_conf_path")
-    ovn_sb_connection=$(sudo grep -P -o -e "(?<=^ovn_sb_connection = ).*" "$neutron_ml2_conf_path")
-
     # List OVN NB/SB entries
     echo "OVN NB DB entries:"
-    # TODO(mnasiadka): Remove the first part of conditional in G cycle
-    if [ $IS_UPGRADE == "yes" ]; then
-        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" show
-    else
-        sudo ${container_engine} exec ovn_northd ovn-nbctl show
-    fi
+    sudo ${container_engine} exec ovn_northd ovn-nbctl show
 
     echo "OVN SB DB entries:"
-    # TODO(mnasiadka): Remove the first part of conditional in G cycle
-    if [ $IS_UPGRADE == "yes" ]; then
-        sudo ${container_engine} exec ovn_northd ovn-sbctl --db "$ovn_sb_connection" show
-    else
-        sudo ${container_engine} exec ovn_northd ovn-sbctl show
-    fi
+    sudo ${container_engine} exec ovn_northd ovn-sbctl show
 
     OVNNB_STATUS=$(sudo ${container_engine} exec ovn_nb_db ovs-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound)
     OVNSB_STATUS=$(sudo ${container_engine} exec ovn_sb_db ovs-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound)
@@ -102,20 +87,10 @@ function test_octavia {
     openstack floating ip set $lb_fip --port $lb_port_id
 
     echo "OVN NB entries for LB:"
-    # TODO(mnasiadka): Remove the first part of conditional in G cycle
-    if [ $IS_UPGRADE == "yes" ]; then
-        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list load_balancer
-    else
-        sudo ${container_engine} exec ovn_northd ovn-nbctl list load_balancer
-    fi
+    sudo ${container_engine} exec ovn_northd ovn-nbctl list load_balancer
 
     echo "OVN NB entries for NAT:"
-    # TODO(mnasiadka): Remove the first part of conditional in G cycle
-    if [ $IS_UPGRADE == "yes" ]; then
-        sudo ${container_engine} exec ovn_northd ovn-nbctl --db "$ovn_nb_connection" list nat
-    else
-        sudo ${container_engine} exec ovn_northd ovn-nbctl list nat
-    fi
+    sudo ${container_engine} exec ovn_northd ovn-nbctl list nat
 
     echo "Attempt to access the load balanced HTTP server."
     attempts=12
