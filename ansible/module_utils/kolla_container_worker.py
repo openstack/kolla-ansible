@@ -13,6 +13,7 @@
 from abc import ABC
 from abc import abstractmethod
 import logging
+import os
 import shlex
 
 from ansible.module_utils.kolla_systemd_worker import SystemdWorker
@@ -451,13 +452,14 @@ class ContainerWorker(ABC):
                 return True
 
     def compare_environment(self, container_info):
-        if self.params.get('environment'):
+        desired_env = self._format_env_vars()
+        if desired_env:
             current_env = dict()
             for kv in container_info['Config'].get('Env', list()):
                 k, v = kv.split('=', 1)
                 current_env.update({k: v})
 
-            for k, v in self.params.get('environment').items():
+            for k, v in desired_env.items():
                 if k not in current_env:
                     return True
                 if current_env[k] != v:
@@ -691,10 +693,28 @@ class ContainerWorker(ABC):
     def ensure_image(self):
         pass
 
+    def _get_host_timezone(self):
+        try:
+            with open('/etc/timezone') as f:
+                tz = f.read().strip()
+                if tz:
+                    return tz
+        except OSError:
+            pass
+        try:
+            link = os.readlink('/etc/localtime')
+            if 'zoneinfo/' in link:
+                return link.split('zoneinfo/', 1)[1]
+        except OSError:
+            pass
+        return 'UTC'
+
     def _inject_env_var(self, environment_info):
         newenv = {
-            'KOLLA_SERVICE_NAME': self.params.get('name').replace('_', '-')
+            'KOLLA_SERVICE_NAME': self.params.get('name').replace('_', '-'),
         }
+        if 'TZ' not in environment_info:
+            newenv['TZ'] = self._get_host_timezone()
         environment_info.update(newenv)
         return environment_info
 

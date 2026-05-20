@@ -1109,6 +1109,10 @@ class TestAttrComp(base.BaseTestCase):
     def setUp(self):
         super(TestAttrComp, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
+        self.tz_patcher = mock.patch.object(
+            pwm.PodmanWorker, '_get_host_timezone', return_value='UTC')
+        self.tz_patcher.start()
+        self.addCleanup(self.tz_patcher.stop)
 
     def test_compare_cap_add_unprivileged_no_user_caps(self):
         container_info = {'HostConfig': dict(
@@ -1454,9 +1458,12 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
                  'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=binary']
+                 'KOLLA_INSTALL_TYPE=binary',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=UTC']
         )}
         self.pw = get_PodmanWorker({
+            'name': 'test_container',
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='ubuntu',
                                 KOLLA_INSTALL_TYPE='binary')})
@@ -1467,12 +1474,27 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
                  'KOLLA_BASE_DISTRO=ubuntu',
-                 'KOLLA_INSTALL_TYPE=binary']
+                 'KOLLA_INSTALL_TYPE=binary',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=UTC']
         )}
         self.pw = get_PodmanWorker({
+            'name': 'test_container',
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='centos',
                                 KOLLA_INSTALL_TYPE='binary')})
+
+        self.assertTrue(self.pw.compare_environment(container_info))
+
+    def test_compare_environment_tz_change(self):
+        container_info = {'Config': dict(
+            Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=America/New_York']
+        )}
+        self.pw = get_PodmanWorker({
+            'name': 'test_container',
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
 
         self.assertTrue(self.pw.compare_environment(container_info))
 
