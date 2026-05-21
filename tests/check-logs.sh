@@ -42,10 +42,6 @@ function check_fluentd_missing_logs {
         /var/log/kolla/fluentd/fluentd.log)
             continue
             ;;
-        # TODO(mnasiadka): Remove me after G/2026.1 release
-        /var/log/kolla/glance-tls-proxy/glance-tls-proxy.log)
-            continue
-            ;;
         /var/log/kolla/gnocchi/*)
             continue
             ;;
