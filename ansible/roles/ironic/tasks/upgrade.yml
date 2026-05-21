@@ -1,55 +1,4 @@
 ---
-# TODO(mnasiadka): Remove this task after Gazpacho/2026.1 release
-- name: Remove ironic-inspector
-  become: true
-  kolla_container:
-    action: "stop_and_remove_container"
-    common_options: "{{ docker_common_options }}"
-    name: "ironic_inspector"
-    ignore_missing: true
-
-- name: Get container volume facts
-  become: true
-  kolla_container_facts:
-    container_engine: "{{ kolla_container_engine }}"
-    action: get_volumes
-    name:
-      - ironic_dhcp_hosts
-      - ironic_inspector_dhcp_hosts
-  check_mode: false
-  register: container_volume_facts
-
-# TODO(mnasiadka): Remove this block after Gazpacho/2026.1 release
-- name: Handle volume migration for ironic_dnsmasq
-  when:
-    - enable_ironic_dnsmasq | bool
-  block:
-    - name: Stop ironic_dnsmasq container
-      become: true
-      kolla_container:
-        action: "stop_container"
-        common_options: "{{ docker_common_options }}"
-        name: "ironic_dnsmasq"
-        ignore_missing: true
-
-    - name: Create ironic_dhcp_hosts volume
-      become: true
-      changed_when: true
-      ansible.builtin.command: "{{ kolla_container_engine }} volume create ironic_dhcp_hosts"
-      when: container_volume_facts.volumes['ironic_dhcp_hosts'] is not defined
-
-    - name: Migrate data from ironic_inspector_dhcp_hosts volume
-      become: true
-      changed_when: true
-      vars:
-        volumes_dir: >-
-          {{ '/var/lib/docker/volumes' if kolla_container_engine == 'docker'
-          else '/var/lib/containers/storage/volumes' }}
-      ansible.builtin.command: >-
-        mv {{ volumes_dir }}/ironic_inspector_dhcp_hosts/_data/
-        {{ volumes_dir }}/ironic_dhcp_hosts/_data
-      when: container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
-
 - name: Wait for Ironic nodes not to wait
   become: true
   kolla_toolbox:
@@ -107,12 +56,3 @@
   run_once: true
   delegate_to: "{{ groups[ironic_api.group][0] }}"
   when: inventory_hostname in groups[ironic_api.group]
-
-# TODO(mnasiadka): Remove this task after Gazpacho/2026.1 release
-- name: Remove ironic_inspector_dhcp_hosts volume
-  become: true
-  changed_when: true
-  ansible.builtin.command: "{{ kolla_container_engine }} volume rm ironic_inspector_dhcp_hosts"
-  when:
-    - enable_ironic_dnsmasq | bool
-    - container_volume_facts.volumes['ironic_inspector_dhcp_hosts'] is defined
