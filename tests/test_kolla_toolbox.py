@@ -649,6 +649,66 @@ class TestKollaToolboxWorkerMain(TestKollaToolboxModule):
                                   self.fake_ktbw.main)
         self.assertIn('ansible-runner', error.result['msg'])
 
+    def test_runner_exec_uses_ansible_user_when_no_user_param(self):
+        """user=None must exec ansible-runner as 'ansible', not as root.
+
+        Podman serialises user=None as null in ExecCreate; some daemon
+        versions interpret null as UID 0 (root), which breaks openstacksdk
+        lookups because HOME becomes /root instead of /var/lib/ansible.
+        """
+        self.mock_ansible_module.params['user'] = None
+
+        with mock.patch.object(self.fake_ktbw, '_push_private_data_dir'), \
+             mock.patch.object(self.fake_ktbw, '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
+
+        # call[0]=check_runner, call[1]=ansible-runner, call[2]=cleanup
+        runner_call = self.mock_container.exec_run.call_args_list[1]
+        self.assertEqual('ansible', runner_call.kwargs.get('user'))
+
+    def test_runner_exec_sets_home_to_pdd_basedir_for_ansible_user(self):
+        """HOME must be set to _PDD_BASEDIR to finds clouds.yaml."""
+        self.mock_ansible_module.params['user'] = None
+
+        with mock.patch.object(self.fake_ktbw, '_push_private_data_dir'), \
+             mock.patch.object(self.fake_ktbw, '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
+
+        runner_call = self.mock_container.exec_run.call_args_list[1]
+        env = runner_call.kwargs.get('environment', {})
+        self.assertEqual(kolla_toolbox._PDD_BASEDIR, env.get('HOME'))
+
+    def test_runner_exec_uses_explicit_user_param(self):
+        """When user='rabbitmq', ansible-runner must exec as 'rabbitmq'."""
+        self.mock_ansible_module.params['user'] = 'rabbitmq'
+
+        with mock.patch.object(self.fake_ktbw, '_push_private_data_dir'), \
+             mock.patch.object(self.fake_ktbw, '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
+
+        runner_call = self.mock_container.exec_run.call_args_list[1]
+        self.assertEqual('rabbitmq', runner_call.kwargs.get('user'))
+
+    def test_runner_exec_no_home_override_for_non_ansible_user(self):
+        """HOME must not be overridden for non-ansible users.
+
+        Forcing HOME=/var/lib/ansible when running as rabbitmq causes
+        PermissionError because rabbitmq cannot write to ansible's home.
+        """
+        self.mock_ansible_module.params['user'] = 'rabbitmq'
+
+        with mock.patch.object(self.fake_ktbw, '_push_private_data_dir'), \
+             mock.patch.object(self.fake_ktbw, '_parse_runner_result',
+                               return_value={'changed': False}):
+            self.fake_ktbw.main()
+
+        runner_call = self.mock_container.exec_run.call_args_list[1]
+        env = runner_call.kwargs.get('environment', {})
+        self.assertNotIn('HOME', env)
+
 
 class TestModuleInteraction(TestKollaToolboxModule):
     """Class focused on testing user input data from playbook."""
