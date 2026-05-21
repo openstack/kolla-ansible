@@ -382,7 +382,10 @@ class KollaToolboxWorker():
         try:
             self._push_private_data_dir(kolla_toolbox, pdd, user)
 
+            exec_user = user or 'ansible'
             runner_env = {}
+            if exec_user == 'ansible':
+                runner_env['HOME'] = _PDD_BASEDIR
             if self.module._diff:
                 runner_env['ANSIBLE_DIFF_MODE'] = '1'
 
@@ -391,7 +394,7 @@ class KollaToolboxWorker():
                 ['/opt/ansible/bin/ansible-runner', 'run', pdd,
                  '--playbook', 'main.json',
                  '--rotate-artifacts', '1'],
-                user=user,
+                user=exec_user,
                 environment=runner_env
             )
             # exit 2 = task failed/unreachable; handled via event below.
