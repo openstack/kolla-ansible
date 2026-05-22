@@ -1,5 +1,4 @@
 {% set collectd_config = '/etc/collectd/collectd.conf' if kolla_base_distro in ['ubuntu', 'debian'] else '/etc/collectd.conf' %}
-
 {
     "command": "/usr/sbin/collectd -f -C {{ collectd_config }}",
     "config_files": [
@@ -10,11 +9,23 @@
             "perm": "0600"
         }
     ],
-    "permissions": [
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
         {
             "path": "/var/log/kolla/collectd",
-            "owner": "collectd:collectd",
-            "recurse": true
+            "owner": "collectd:kolla",
+            "perm": "2775"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/collectd/*.log",
+            "owner": "collectd:kolla",
+            "perm": "0664"
         }
     ]
 }

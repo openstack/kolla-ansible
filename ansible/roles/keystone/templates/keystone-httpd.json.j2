@@ -1,7 +1,6 @@
 {% set apache_cmd = '/usr/sbin/apache2' if kolla_base_distro in ['ubuntu', 'debian'] else '/usr/sbin/httpd' %}
 {% set apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {% set apache_user = 'www-data' if kolla_base_distro in ['ubuntu', 'debian'] else 'apache' %}
-
 {
     "command": "{{ apache_cmd }} -DFOREGROUND",
     "config_files": [
@@ -50,10 +49,23 @@
             "perm": "0644"
         }{% endif %}
     ],
-    "permissions": [
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
         {
             "path": "/var/log/kolla/keystone",
-            "owner": "keystone:kolla"
+            "owner": "keystone:kolla",
+            "perm": "2775"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/keystone/*.log",
+            "owner": "keystone:kolla",
+            "perm": "0664"
         }{% if keystone_enable_federation_openid | bool %},
         {
             "path": "{{ keystone_container_federation_oidc_metadata_folder }}",

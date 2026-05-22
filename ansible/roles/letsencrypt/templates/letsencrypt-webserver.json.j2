@@ -1,7 +1,6 @@
 {% set letsencrypt_apache_dir = 'apache2/conf-enabled' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd/conf.d' %}
 {% set apache_binary = 'apache2' if kolla_base_distro in ['ubuntu', 'debian'] else 'httpd' %}
 {% set apache_user = 'www-data' if kolla_base_distro in ['ubuntu', 'debian'] else 'apache' %}
-
 {
     "command": "/usr/sbin/{{ apache_binary }} -DFOREGROUND",
     "config_files": [
@@ -20,9 +19,21 @@
     ],
     "directories": [
         {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
+        {
             "path": "/var/log/kolla/letsencrypt",
-            "owner": "{{ apache_user }}",
-            "perm": "0755"
+            "owner": "letsencrypt:kolla",
+            "perm": "2775"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/letsencrypt/*.log",
+            "owner": "letsencrypt:kolla",
+            "perm": "0664"
         }
     ]
 }

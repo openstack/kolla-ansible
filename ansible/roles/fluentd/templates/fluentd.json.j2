@@ -14,31 +14,43 @@
             "perm": "0644"
         }{% endif %}
     ],
-    "permissions": [
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
         {
             "path": "/var/log/kolla/fluentd",
-            "owner": "fluentd:fluentd",
-            "recurse": true
-        },
-{% for facility in syslog_facilities | selectattr('enabled') %}
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        }{% for facility in syslog_facilities | selectattr('enabled') %},
         {
             "path": "/var/log/kolla/{{ facility.logdir }}",
-            "owner": "fluentd:fluentd",
-            "recurse": true
-        },
-{% endfor %}
-{% if enable_fluentd_systemd | bool %}
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        }{% endfor %}
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/fluentd/*.log",
+            "owner": "fluentd:kolla",
+            "perm": "0664"
+        }{% for facility in syslog_facilities | selectattr('enabled') %},
+        {
+            "path": "/var/log/kolla/{{ facility.logdir }}/*.log",
+            "owner": "fluentd:kolla",
+            "perm": "0664"
+        }{% endfor %}{% if enable_fluentd_systemd | bool %},
         {
             "path": "/var/log/journal",
             "owner": "fluentd:fluentd",
             "recurse": true
-        },
-{% endif %}
+        }{% endif %},
         {
             "path": "/var/lib/fluentd/data",
             "owner": "fluentd:fluentd",
             "recurse": true
         }
     ]
-
 }

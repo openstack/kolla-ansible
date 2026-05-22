@@ -1,6 +1,5 @@
 {% set bind_cmd = 'named' if kolla_base_distro in ['ubuntu', 'debian'] else 'named' %}
 {% set bind_file = 'bind/named.conf' if kolla_base_distro in ['ubuntu', 'debian'] else 'named.conf' %}
-
 {
     "command": "/usr/sbin/{{ bind_cmd }} {{ designate_backend_bind9_cmdline_extras }}",
     "config_files": [
@@ -31,11 +30,23 @@
             "perm": "0644"
         }{% endif %}
     ],
-    "permissions": [
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
         {
             "path": "/var/log/kolla/named",
-            "owner": "root:root",
-            "recurse": true
+            "owner": "root:kolla",
+            "perm": "2775"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/named/*.log",
+            "owner": "root:kolla",
+            "perm": "0664"
         }
     ]
 }

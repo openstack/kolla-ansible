@@ -1,10 +1,29 @@
 {
     "command": "/usr/bin/ovn-northd -vconsole:emer -vsyslog:err -vfile:info --ovnnb-db={{ ovn_nb_connection }} --ovnsb-db={{ ovn_sb_connection_no_relay }} --log-file=/var/log/kolla/openvswitch/ovn-northd.log --pidfile=/run/ovn/ovn-northd.pid --unixctl=/run/ovn/ovn-northd.ctl{% if ovn_northd_cmdline_extras %} {{ ovn_northd_cmdline_extras }}{% endif %}",
-    "permissions": [
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
         {
             "path": "/var/log/kolla/openvswitch",
-            "owner": "root:root",
-            "recurse": true
+            "owner": "openvswitch:kolla",
+            "perm": "2775"
+        }
+    ],
+    "files": [
+        {
+            "path": "/var/log/kolla/openvswitch/ovn-northd.log",
+            "owner": "openvswitch:kolla",
+            "perm": "0664"
+        }
+    ],
+    "permissions": [
+        {
+            "path": "/var/log/kolla/openvswitch/*.log",
+            "owner": "openvswitch:kolla",
+            "perm": "0664"
         }
     ]
 }
