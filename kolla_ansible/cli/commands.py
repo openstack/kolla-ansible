@@ -83,9 +83,12 @@ class GatherFacts(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Gathering Ansible facts")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "gather-facts"
+
         playbooks = _choose_playbooks(parsed_args, "gather-facts")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class InstallDeps(KollaAnsibleMixin, Command):
@@ -202,9 +205,12 @@ class Certificates(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Generate TLS Certificates")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "certificates"
+
         playbooks = _choose_playbooks(parsed_args, "certificates")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class OctaviaCertificates(KollaAnsibleMixin, Command):
@@ -223,6 +229,7 @@ class OctaviaCertificates(KollaAnsibleMixin, Command):
 
     def take_action(self, parsed_args):
         extra_vars = {
+            "kolla_action": "octavia-certificates",
             "ansible_python_interpreter": sys.executable
         }
 
@@ -274,9 +281,12 @@ class Postdeploy(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Post-Deploying Playbooks")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "post-deploy"
+
         playbooks = _choose_playbooks(parsed_args, "post-deploy")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class Upgrade(KollaAnsibleMixin, Command):
@@ -388,9 +398,12 @@ class PruneImages(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Prune orphaned Kolla images")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "prune-images"
+
         playbooks = _choose_playbooks(parsed_args, "prune-images")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class BifrostDeploy(KollaAnsibleMixin, Command):
@@ -441,9 +454,12 @@ class RabbitMQResetState(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Force reset the state of RabbitMQ")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "rabbitmq-reset-state"
+
         playbooks = _choose_playbooks(parsed_args, "rabbitmq-reset-state")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class MariaDBBackup(KollaAnsibleMixin, Command):
@@ -499,9 +515,12 @@ class NovaLibvirtCleanup(KollaAnsibleMixin, Command):
     def take_action(self, parsed_args):
         self.app.LOG.info("Cleanup disabled nova_libvirt containers")
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "nova-libvirt-cleanup"
+
         playbooks = _choose_playbooks(parsed_args, "nova-libvirt-cleanup")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
 
 
 class Check(KollaAnsibleMixin, Command):
@@ -526,6 +545,9 @@ class MigrateContainerEngine(KollaAnsibleMixin, Command):
             "Migrate the container engine of the deployed Openstack"
         )
 
+        extra_vars = {}
+        extra_vars["kolla_action"] = "migrate-container-engine"
+
         playbooks = _choose_playbooks(parsed_args, "migrate-container-engine")
 
-        self.run_playbooks(parsed_args, playbooks)
+        self.run_playbooks(parsed_args, playbooks, extra_vars=extra_vars)
