@@ -1500,6 +1500,60 @@ class TestAttrComp(base.BaseTestCase):
             failed=True, msg=repr("Unsupported dimensions"),
             unsupported_dimensions=set(['kernel_memory']))
 
+    def test_compare_dimensions_cpuset_cpus_empty_current(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_cpus': '0-1,32-33'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetCpus': ''}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_cpuset_cpus_same(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_cpus': '0-1,32-33'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetCpus': '0-1,32-33'}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_cpuset_cpus_different(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_cpus': '0-1,32-33'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetCpus': '0-3'}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_cpuset_mems_empty_current(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_mems': '0'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetMems': ''}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_cpuset_mems_same(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_mems': '0'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetMems': '0'}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertFalse(self.dw.compare_dimensions(container_info))
+
+    def test_compare_dimensions_cpuset_mems_different(self):
+        self.fake_data['params']['dimensions'] = {
+            'cpuset_mems': '0'}
+        container_info = dict()
+        container_info['HostConfig'] = {
+            'CpusetMems': '1'}
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.assertTrue(self.dw.compare_dimensions(container_info))
+
     def test_compare_container_state_pos(self):
         container_info = {'State': dict(Status='running')}
         self.dw = get_DockerWorker({'state': 'exited'})
