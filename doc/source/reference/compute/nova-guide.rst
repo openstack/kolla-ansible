@@ -49,6 +49,14 @@ serial console support can be enabled by setting
 
 * nova_spice_html5: configures whether the HTML5 transcoding proxy used by
   Horizon is enabled, and defaults to ``true``.
+* nova_spice_require_secure: configures whether SPICE connections require that
+  the connection be secured by TLS. This defaults to ``false`` to remain
+  compatible with previous installations. Note that ``true`` implies
+  configuration and deployment of TLS certificates.
+
+Additionally ``spice`` has the following configuration options passed directly
+through to ``nova``:
+
 * nova_spice_image_compression: which compression algorithm to use for images
   when using the SPICE console type. Defaults to ``auto_glz``.
 * nova_spice_jpeg_compression: whether or not to use JPEG compression with
