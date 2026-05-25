@@ -1,4 +1,15 @@
 ---
+- name: Set reconfigure test variables
+  ansible.builtin.set_fact:
+    ovn_db_services:
+      - "ovn_nb_db"
+      - "ovn_sb_db"
+    _reconfigure_excluded_containers:
+      - "selenium"
+      - "neutron_dhcp_agent_dnsmasq_qdhcp-"
+      - "neutron_dhcp_agent_haproxy_qdhcp-"
+      - "neutron_l3_agent_haproxy_qrouter-"
+
 - name: Run kolla-ansible prechecks
   ansible.builtin.shell:
     cmd: >
@@ -15,10 +26,6 @@
   when:
     - scenario == 'ovn'
     - container_engine == 'docker'
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   block:
     - name: Remove OVN DB containers
       community.docker.docker_container:
@@ -34,10 +41,6 @@
 
 - name: "Capture state of containers prior to reconfigure (docker)"
   become: true
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   when:
     - container_engine == 'docker'
   block:
@@ -49,7 +52,13 @@
     - name: Get details of all containers on host
       community.docker.docker_container_info:
         name: "{{ item }}"
-      loop: "{{ _docker_host_info.containers | map(attribute='Names') | map('first') | map('regex_replace', '^/', '') | list }}"
+      loop: >-
+        {{
+          _docker_host_info.containers
+          | map(attribute='Names') | map('first') | map('regex_replace', '^/', '')
+          | reject('match', _reconfigure_excluded_containers | join('|'))
+          | list
+        }}
       register: _deploy_docker_info
 
     - name: Build container timestamps dict post-deploy
@@ -74,10 +83,6 @@
   when:
     - scenario == 'ovn'
     - container_engine == 'podman'
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   block:
     - name: Remove OVN DB containers
       containers.podman.podman_container:
@@ -93,10 +98,6 @@
 
 - name: "Capture state of containers prior to reconfigure (podman)"
   become: true
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   when:
     - container_engine == 'podman'
   block:
@@ -116,7 +117,14 @@
               }
             })
           }}
-      loop: "{{ _deploy_podman_facts.containers }}"
+      loop: >-
+        {{
+          _deploy_podman_facts.containers
+          | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
+          | list
+        }}
+      when:
+        - item.Name not in ovn_db_services
 
 - name: Run kolla-ansible reconfigure
   ansible.builtin.shell:
@@ -130,10 +138,6 @@
 
 - name: "Capture state of containers post reconfigure (docker)"
   become: true
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   when:
     - container_engine == 'docker'
   block:
@@ -146,7 +150,13 @@
     - name: Get details of all containers on host
       community.docker.docker_container_info:
         name: "{{ item }}"
-      loop: "{{ _docker_host_info.containers | map(attribute='Names') | map('first') | map('regex_replace', '^/', '') | list }}"
+      loop: >-
+        {{
+          _docker_host_info.containers
+          | map(attribute='Names') | map('first') | map('regex_replace', '^/', '')
+          | reject('match', _reconfigure_excluded_containers | join('|'))
+          | list
+        }}
       register: _reconfigure_docker_info
 
     - name: Build container timestamps dict post-reconfigure
@@ -168,10 +178,6 @@
 
 - name: "Capture state of containers post reconfigure (podman)"
   become: true
-  vars:
-    ovn_db_services:
-      - "ovn_nb_db"
-      - "ovn_sb_db"
   when:
     - container_engine == 'podman'
   block:
@@ -191,7 +197,14 @@
               }
             })
           }}
-      loop: "{{ _reconfigure_podman_facts.containers }}"
+      loop: >-
+        {{
+          _reconfigure_podman_facts.containers
+          | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
+          | list
+        }}
+      when:
+        - item.Name not in ovn_db_services
 
 - name: Assert that containers were not restarted during reconfigure (docker)
   ansible.builtin.assert:
