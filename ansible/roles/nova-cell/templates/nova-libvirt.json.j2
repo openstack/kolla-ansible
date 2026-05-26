@@ -74,5 +74,29 @@
             "owner": "root",
             "perm": "0644"
         }{% endif %}
+{#- The SPICE TLS bind-mounts below are owned root:nova with mode 0440
+    because qemu reads these files directly when starting the SPICE
+    server, and qemu runs as user 'nova' per qemu.conf. The libvirt_tls
+    certs above use 0600 owned root because libvirtd (running as root)
+    is the consumer for those, not qemu. -#}
+{% if nova_spice_require_secure | bool %},
+        {
+            "source": "{{ container_config_directory }}/serverkey.pem",
+            "dest": "/etc/pki/libvirt-spice/server-key.pem",
+            "owner": "root:nova",
+            "perm": "0440"
+        },
+        {
+            "source": "{{ container_config_directory }}/servercert.pem",
+            "dest": "/etc/pki/libvirt-spice/server-cert.pem",
+            "owner": "root:nova",
+            "perm": "0440"
+        },
+        {
+            "source": "{{ container_config_directory }}/cacert.pem",
+            "dest": "/etc/pki/libvirt-spice/ca-cert.pem",
+            "owner": "root:nova",
+            "perm": "0440"
+        }{% endif %}
     ]
 }

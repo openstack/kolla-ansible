@@ -146,3 +146,14 @@
     - container_facts.containers['nova_libvirt'] is defined
     - not nova_libvirt.enabled | bool
     - inventory_hostname in groups[nova_libvirt.group]
+
+- name: Checking that libvirt_tls is enabled when nova_spice_require_secure is true
+  ansible.builtin.assert:
+    msg: >-
+      nova_spice_require_secure requires libvirt_tls to be enabled, as the
+      SPICE TLS configuration reuses the libvirt TLS certificates.
+    that:
+      - libvirt_tls | bool
+  when:
+    - inventory_hostname in groups[nova_cell_compute_group]
+    - nova_spice_require_secure | bool
