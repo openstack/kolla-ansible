@@ -1,0 +1,71 @@
+---
+- name: Create IPA kernel image for Ironic
+  vars:
+    ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+  openstack.cloud.image:
+    cloud: kolla-admin
+    name: ipa.vmlinuz
+    disk_format: aki
+    container_format: aki
+    visibility: private
+    filename: /etc/kolla/config/ironic/ironic-agent.kernel
+  environment:
+    OS_CLIENT_CONFIG_FILE: /etc/kolla/clouds.yaml
+
+- name: Create IPA initramfs image for Ironic
+  vars:
+    ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+  openstack.cloud.image:
+    cloud: kolla-admin
+    name: ipa.initramfs
+    disk_format: ari
+    container_format: ari
+    visibility: private
+    filename: /etc/kolla/config/ironic/ironic-agent.initramfs
+  environment:
+    OS_CLIENT_CONFIG_FILE: /etc/kolla/clouds.yaml
+
+- name: Install ovs-vsctl wrapper for containerised Open vSwitch
+  ansible.builtin.copy:
+    dest: /usr/bin/ovs-vsctl
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      sudo {{ container_engine }} exec openvswitch_vswitchd ovs-vsctl "$@"
+  become: true
+
+- name: Upgrade pip in Tenks virtual environment
+  ansible.builtin.pip:
+    name: pip
+    state: latest # noqa: package-latest
+    virtualenv: "{{ deploy_tenks_venv_path }}"
+    virtualenv_command: python3 -m venv
+
+- name: Install Tenks into virtual environment
+  ansible.builtin.pip:
+    name: "{{ deploy_tenks_src_path }}"
+    virtualenv: "{{ deploy_tenks_venv_path }}"
+
+- name: Install Tenks Ansible roles
+  ansible.builtin.command:
+    cmd: >
+      {{ deploy_tenks_venv_path }}/bin/ansible-galaxy install
+      --role-file="{{ deploy_tenks_src_path }}/requirements.yml"
+      --roles-path="{{ deploy_tenks_src_path }}/ansible/roles/"
+  register: tenks_galaxy_install_result
+  until: tenks_galaxy_install_result is succeeded
+  retries: 9
+  delay: 10
+  changed_when: true
+
+- name: Run Tenks
+  ansible.builtin.shell:
+    cmd: >
+      . /etc/kolla/admin-openrc.sh &&
+      {{ deploy_tenks_venv_path }}/bin/ansible-playbook
+      -vvv
+      --inventory "{{ deploy_tenks_src_path }}/ansible/inventory"
+      "--extra-vars=@{{ ansible_env.HOME }}/tenks.yml"
+      "{{ deploy_tenks_src_path }}/ansible/deploy.yml"
+      >/tmp/logs/ansible/deploy-tenks 2>&1
+  changed_when: true
