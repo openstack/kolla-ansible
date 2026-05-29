@@ -12,6 +12,7 @@
 
 from abc import ABC
 from abc import abstractmethod
+import grp
 import logging
 import os
 import shlex
@@ -103,6 +104,7 @@ class ContainerWorker(ABC):
 
         checks = [
             'cap_add',
+            'group_add',
             'security_opt',
             'image',
             'ipc_mode',
@@ -139,18 +141,37 @@ class ContainerWorker(ABC):
         current = container_info['HostConfig'].get('IpcMode') or None
         return current, self.params.get('ipc_mode')
 
-    def diff_cap_add(self, container_info):
+    @staticmethod
+    def _get_host_config_list(container_info, key):
         try:
-            current = container_info['HostConfig'].get('CapAdd') or []
+            return container_info['HostConfig'].get(key) or []
         except (KeyError, TypeError):
-            current = []
+            return []
+
+    def diff_cap_add(self, container_info):
+        current = self._get_host_config_list(container_info, 'CapAdd')
         return sorted(current), sorted(self.params.get('cap_add', []))
 
-    def diff_security_opt(self, container_info):
+    @staticmethod
+    def _resolve_group_id(group):
         try:
-            current = container_info['HostConfig'].get('SecurityOpt') or []
-        except (KeyError, TypeError):
-            current = []
+            int(group)
+            return str(group)
+        except ValueError:
+            pass
+        return str(grp.getgrnam(group).gr_gid)
+
+    @property
+    def _resolved_group_add(self):
+        return [self._resolve_group_id(g)
+                for g in self.params.get('group_add') or []]
+
+    def diff_group_add(self, container_info):
+        current = self._get_host_config_list(container_info, 'GroupAdd')
+        return sorted(current), sorted(self._resolved_group_add)
+
+    def diff_security_opt(self, container_info):
+        current = self._get_host_config_list(container_info, 'SecurityOpt')
         return sorted(current), sorted(self.params.get('security_opt', []))
 
     def diff_image(self, container_info):
@@ -262,6 +283,12 @@ class ContainerWorker(ABC):
             current_cap_add = list()
         if set(new_cap_add).symmetric_difference(set(current_cap_add)):
             return True
+
+    def compare_group_add(self, container_info):
+        current_group_add = self._get_host_config_list(container_info,
+                                                       'GroupAdd')
+        return bool(set(self._resolved_group_add).symmetric_difference(
+            set(current_group_add)))
 
     def compare_security_opt(self, container_info):
         ipc_mode = self.params.get('ipc_mode')

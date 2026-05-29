@@ -128,6 +128,12 @@ options:
     required: False
     type: list
     default: list()
+  group_add:
+    description:
+      - List of additional group names or IDs to set for the container process
+    required: False
+    type: list
+    default: list()
   security_opt:
     description:
       - Set container security profile
@@ -301,6 +307,7 @@ def generate_module():
                                                            'private',
                                                            'shareable']),
         cap_add=dict(required=False, type='list', default=list()),
+        group_add=dict(required=False, type='list', default=list()),
         security_opt=dict(required=False, type='list', default=list()),
         pid_mode=dict(required=False, type='str', choices=['',
                                                            'host',

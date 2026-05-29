@@ -24,6 +24,7 @@ uri = "http+unix:/run/podman/podman.sock"
 CONTAINER_PARAMS = [
     'name',             # string
     'cap_add',          # list
+    'group_add',        # list
     'cgroupns',         # 'str',choices=['private', 'host']
     'command',          # array of strings  -- docker string
 
@@ -140,6 +141,12 @@ class PodmanWorker(ContainerWorker):
         for key, value in self.params.items():
             if key in CONTAINER_PARAMS and value is not None:
                 args[key] = value
+
+        # resolve group names to GIDs on the host before passing to podman
+        if self._resolved_group_add:
+            args['group_add'] = self._resolved_group_add
+        else:
+            args.pop('group_add', None)
 
         args.pop('restart_policy', None)    # handled by systemd
 
