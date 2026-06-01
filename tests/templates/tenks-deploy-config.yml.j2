@@ -12,8 +12,8 @@ node_types:
     physical_networks:
       - physnet1
     console_log_enabled: true
-    # NOTE(bbezak): Force QEMU to expose x86-64‑v2 features, so the Centos Stream IPA
-    # doesn’t fail with "Fatal glibc error: CPU does not support x86-64-v2".
+    # NOTE(bbezak): Force QEMU to expose the newest available CPU features to
+    # the IPA image.
     cpu_mode: maximum
 specs:
   - type: type0
@@ -21,6 +21,8 @@ specs:
     ironic_config:
       resource_class: test-rc
       network_interface: flat
+      properties:
+        cpu_arch: "{{ tenks_libvirt_vm_arch }}"
 
 nova_flavors:
   - resource_class: test-rc
@@ -32,7 +34,7 @@ physnet_mappings:
 deploy_kernel: ipa.vmlinuz
 deploy_ramdisk: ipa.initramfs
 
-default_boot_mode: "bios"
+default_boot_mode: "{{ tenks_default_boot_mode }}"
 
 # Use the libvirt daemon deployed by Kolla Ansible in the nova_libvirt
 # container. Tenks will install libvirt client packages.
@@ -42,9 +44,11 @@ libvirt_host_install_daemon: false
 # QEMU.
 libvirt_vm_engine: "qemu"
 
+libvirt_vm_arch: "{{ tenks_libvirt_vm_arch }}"
+
 # QEMU may not be installed on the host, so set the path and avoid
 # autodetection.
-libvirt_vm_emulator: "{% if ansible_facts.os_family == 'RedHat' %}/usr/libexec/qemu-kvm{% else %}/usr/bin/qemu-system-x86_64{% endif %}"
+libvirt_vm_emulator: "{{ tenks_libvirt_vm_emulator }}"
 
 # Specify a log path in the kolla_logs Docker volume. It is accessible on the
 # host at the same path.
@@ -59,4 +63,3 @@ libvirt_vm_log_owner: 42436
 # Libvirt 9: Cannot set interface flags on 'macvtap1': Value too large for
 # defined data type
 libvirt_vm_trust_guest_rx_filters: false
-

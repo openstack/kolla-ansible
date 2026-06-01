@@ -3,19 +3,15 @@
 {
     "command": "{{ apache_cmd }} -DFOREGROUND",
     "config_files": [
+{% for item in ironic_agent_files if groups['ironic-dnsmasq'] | length > 0 %}
+        {
+            "source": "{{ container_config_directory }}/{{ item }}",
+            "dest": "/var/lib/ironic/httpboot/{{ item }}",
+            "owner": "root",
+            "perm": "0644"
+        },
+{% endfor %}
 {% if groups['ironic-dnsmasq'] | length > 0 %}
-        {
-            "source": "{{ container_config_directory }}/ironic-agent.kernel",
-            "dest": "/var/lib/ironic/httpboot/ironic-agent.kernel",
-            "owner": "root",
-            "perm": "0644"
-        },
-        {
-            "source": "{{ container_config_directory }}/ironic-agent.initramfs",
-            "dest": "/var/lib/ironic/httpboot/ironic-agent.initramfs",
-            "owner": "root",
-            "perm": "0644"
-        },
         {
             "source": "{{ container_config_directory }}/ipa.ipxe",
             "dest": "/var/lib/ironic/httpboot/ipa.ipxe",

@@ -109,6 +109,22 @@ be used:
    $ curl https://tarballs.opendev.org/openstack/ironic-python-agent/dib/files/ipa-centos9-|KOLLA_BRANCH_NAME_DASHED|.initramfs \
      -o /etc/kolla/config/ironic/ironic-agent.initramfs
 
+For mixed x86_64 and aarch64 iPXE deployments, add the aarch64 IPA images
+with different filenames:
+
+.. code-block:: yaml
+
+   ironic_agent_arch_files:
+     aarch64:
+       kernel: ironic-agent-aarch64.kernel
+       initramfs: ironic-agent-aarch64.initramfs
+
+Place the additional files in ``/etc/kolla/config/ironic/``. Override
+``ironic_ipxe_bootfile_name_by_arch`` if the Ironic PXE image uses a
+non-standard bootloader filename.
+Set a node's ``cpu_arch`` property before Ironic-managed inspection so that
+Ironic selects the corresponding architecture-specific bootloader.
+
 You may optionally pass extra kernel parameters to the inspection kernel using:
 
 .. code-block:: yaml
@@ -270,6 +286,17 @@ inspection:
 
   openstack image create --disk-format ari --container-format ari --public \
     --file /etc/kolla/config/ironic/ironic-agent.initramfs deploy-initrd
+
+For mixed x86_64 and aarch64 deployments, register both IPA pairs with Glance
+and configure their image UUIDs in ``/etc/kolla/config/ironic.conf``:
+
+.. code-block:: ini
+
+   [conductor]
+   deploy_kernel_by_arch = x86_64:<x86-kernel-uuid>,aarch64:<aarch64-kernel-uuid>
+   deploy_ramdisk_by_arch = x86_64:<x86-ramdisk-uuid>,aarch64:<aarch64-ramdisk-uuid>
+
+Nodes using these defaults must have their ``cpu_arch`` property set.
 
 The :ironic-doc:`Ironic documentation <install/configure-nova-flavors>`
 describes how to create Nova flavors for bare metal.  For example:
