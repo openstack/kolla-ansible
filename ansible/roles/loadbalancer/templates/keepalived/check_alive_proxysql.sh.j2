@@ -3,4 +3,10 @@
 # This will return 0 when it successfully talks to the ProxySQL daemon via localhost
 # Failures return 1
 
-echo "show info" | socat unix-connect:/var/lib/kolla/proxysql/admin.sock stdio > /dev/null
+mariadb --no-defaults \
+  --protocol socket \
+  --socket=/var/lib/kolla/proxysql/admin.sock \
+  --user={{ proxysql_admin_user }} \
+  --password={{ proxysql_admin_password }} \
+  --skip-ssl \
+  -e "SELECT 1" 2>/dev/null
