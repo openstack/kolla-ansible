@@ -3,19 +3,45 @@
   ansible.builtin.import_role:
     role: service-check
 
-- name: Wait for MariaDB service to be ready through VIP
-  kolla_toolbox:
-    container_engine: "{{ kolla_container_engine }}"
-    module_name: mysql_query
-    module_args:
-      ca_cert: "{{ openstack_cacert if database_enable_tls_internal | bool else omit }}"
-      login_user: "{{ mariadb_shard_database_user }}"
-      login_password: "{{ database_password }}"
-      login_host: "{{ database_address }}"
-      query: "SHOW DATABASES;"
-  register: result
-  until: result is success
-  changed_when: false
-  retries: 6
-  delay: 10
-  become: true
+- name: Check MariaDB Galera cluster status
+  block:
+    - name: Query MariaDB Galera cluster status
+      kolla_toolbox:
+        container_engine: "{{ kolla_container_engine }}"
+        module_name: mysql_query
+        module_args:
+          ca_cert: "{{ openstack_cacert if database_enable_tls_backend | bool else omit }}"
+          login_user: "{{ mariadb_shard_database_user }}"
+          login_password: "{{ database_password }}"
+          login_host: "{{ api_interface_address }}"
+          login_port: "{{ mariadb_port }}"
+          query: "SHOW STATUS WHERE Variable_name IN ('wsrep_cluster_status', 'wsrep_local_state_comment', 'wsrep_ready', 'wsrep_connected');"
+      register: mariadb_cluster_status
+      changed_when: false
+      retries: 6
+      delay: 10
+      until:
+        - mariadb_cluster_status.query_result is defined
+        - mariadb_cluster_status.query_result | length > 0
+      become: true
+
+  rescue:
+    - name: Fail if MariaDB Galera status query did not return data
+      ansible.builtin.fail:
+        msg: >-
+          MariaDB Galera cluster status query did not return any result after
+          60 seconds. Last module result: {{ mariadb_cluster_status | default({}) }}
+
+- name: Assert MariaDB Galera cluster is ready
+  vars:
+    galera_status: "{{ mariadb_cluster_status.query_result[0] | items2dict(key_name='Variable_name', value_name='Value') }}"
+  ansible.builtin.assert:
+    that:
+      - galera_status.get('wsrep_cluster_status') == 'Primary'
+      - galera_status.get('wsrep_local_state_comment') == 'Synced'
+      - galera_status.get('wsrep_ready') == 'ON'
+      - galera_status.get('wsrep_connected') == 'ON'
+    fail_msg: >-
+      MariaDB Galera cluster is not ready after 60 seconds.
+      Current status: {{ galera_status }}
+    success_msg: "MariaDB Galera cluster is ready."
