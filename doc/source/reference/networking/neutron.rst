@@ -258,18 +258,6 @@ It is also possible to set a static mapping between a ``ovn-controller`` host
 (network node or hypervisor) and particular OVN relay using an Ansible host_var
 ``ovn_sb_db_relay_client_group_id``.
 
-Similarly - in order to have Neutron DHCP agents deployed in OVN networking
-scenario, use:
-
-.. path /etc/kolla/globals.yml
-.. code-block:: yaml
-
-   neutron_ovn_dhcp_agent: "yes"
-
-This might be desired for example when Ironic bare metal nodes are
-used as a compute service. Currently OVN is not able to answer DHCP
-queries on port type external, this is where Neutron agent helps.
-
 In order to deploy Neutron OVN Agent you need to set the following:
 
 .. path /etc/kolla/globals.yml
