@@ -289,6 +289,7 @@ class TestContainer(base.BaseTestCase):
         self.pw = get_PodmanWorker(self.fake_data['params'])
 
         self.pw.create_volume = mock.MagicMock()
+        self.pw.create_missing_bind_directories = mock.MagicMock()
         self.pw.create_container()
         expected_calls = [
             mock.call(name="kolla_logs"),
@@ -1102,6 +1103,69 @@ class TestVolume(base.BaseTestCase):
             failed=True,
             msg="Internal error: server error"
         )
+
+    def test_create_missing_bind_directories_creates(self):
+        self.pw = get_PodmanWorker({
+            'volumes': ['/var/log/kolla:/var/log/kolla:rw']
+        })
+        with mock.patch('kolla_podman_worker.os.path.exists',
+                        return_value=False) as mock_exists, \
+             mock.patch('kolla_podman_worker.os.makedirs') as mock_makedirs:
+            self.pw.create_missing_bind_directories()
+            mock_exists.assert_called_once_with('/var/log/kolla')
+            mock_makedirs.assert_called_once_with('/var/log/kolla',
+                                                  exist_ok=True)
+
+    def test_create_missing_bind_directories_exists(self):
+        self.pw = get_PodmanWorker({
+            'volumes': ['/var/log/kolla:/var/log/kolla:rw']
+        })
+        with mock.patch('kolla_podman_worker.os.path.exists',
+                        return_value=True) as mock_exists, \
+             mock.patch('kolla_podman_worker.os.makedirs') as mock_makedirs:
+            self.pw.create_missing_bind_directories()
+            mock_exists.assert_called_once_with('/var/log/kolla')
+            mock_makedirs.assert_not_called()
+
+    def test_create_missing_bind_directories_skips_named_volumes(self):
+        self.pw = get_PodmanWorker({
+            'volumes': [
+                'kolla_logs:/var/log/kolla/',
+                '/etc/kolla:/etc/kolla:ro',
+                '',
+            ]
+        })
+        with mock.patch('kolla_podman_worker.os.path.exists',
+                        return_value=False) as mock_exists, \
+             mock.patch('kolla_podman_worker.os.makedirs') as mock_makedirs:
+            self.pw.create_missing_bind_directories()
+            mock_exists.assert_called_once_with('/etc/kolla')
+            mock_makedirs.assert_called_once_with('/etc/kolla', exist_ok=True)
+
+    def test_create_missing_bind_directories_no_volumes(self):
+        self.pw = get_PodmanWorker({'volumes': None})
+        with mock.patch('kolla_podman_worker.os.path.exists') as mock_exists, \
+             mock.patch('kolla_podman_worker.os.makedirs') as mock_makedirs:
+            self.pw.create_missing_bind_directories()
+            mock_exists.assert_not_called()
+            mock_makedirs.assert_not_called()
+
+    def test_create_container_calls_create_missing_bind_directories(self):
+        self.fake_data['params']['volumes'] = [
+            '/etc/kolla/nova:/var/lib/kolla/config_files/:ro'
+        ]
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+        self.pw.create_container_volumes = mock.MagicMock()
+        self.pw.prepare_container_args = mock.MagicMock(
+            return_value={'some': 'value'})
+        self.pw.systemd.create_unit_file = mock.MagicMock(return_value=True)
+
+        with mock.patch('kolla_podman_worker.os.path.exists',
+                        return_value=False), \
+             mock.patch('kolla_podman_worker.os.makedirs') as mock_makedirs:
+            self.pw.create_container()
+            mock_makedirs.assert_called_once_with('/etc/kolla/nova',
+                                                  exist_ok=True)
 
 
 class TestAttrComp(base.BaseTestCase):
