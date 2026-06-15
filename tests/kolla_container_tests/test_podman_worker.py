@@ -766,6 +766,24 @@ class TestImage(base.BaseTestCase):
             user='root')
         self.assertTrue(return_data)
 
+    def test_compare_config_chenged_unicode_error(self):
+        self.fake_data['params']['name'] = 'my_container'
+        self.pw = get_PodmanWorker(self.fake_data['params'])
+        my_container = construct_container(self.fake_data['containers'][0])
+        invalid_bytes = b'\x8e\xfe\xfd'
+        my_container.exec_run = mock.Mock(return_value=(1, invalid_bytes))
+        self.pw.pc.containers.get.return_value = my_container
+
+        return_data = self.pw.compare_config()
+        self.pw.pc.containers.get.assert_called_once_with(
+            self.fake_data['params']['name'])
+        my_container.exec_run.assert_called_once_with(
+            pwm.COMPARE_CONFIG_CMD,
+            user='root')
+        self.assertTrue(return_data)
+        self.assertEqual(self.pw._config_diff,
+                         'container changed during config check')
+
     def test_compare_config_changed_container_exited(self):
         self.fake_data['params']['name'] = 'my_container'
         self.pw = get_PodmanWorker(self.fake_data['params'])
