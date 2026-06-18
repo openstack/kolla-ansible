@@ -13,6 +13,7 @@
 from podman.errors import APIError
 from podman import PodmanClient
 
+import os
 import shlex
 
 from ansible.module_utils.kolla_container_worker import COMPARE_CONFIG_CMD
@@ -591,6 +592,7 @@ class PodmanWorker(ContainerWorker):
     def create_container(self):
         # ensure volumes are pre-created before container creation
         self.create_container_volumes()
+        self.create_missing_bind_directories()
 
         args = self.prepare_container_args()
         container = self.pc.containers.create(**args)
@@ -739,6 +741,19 @@ class PodmanWorker(ContainerWorker):
                 continue
 
             self.create_volume(name=volume_name)
+
+    def create_missing_bind_directories(self):
+        volumes = self.params.get('volumes')
+        if not volumes:
+            return
+        for volume in volumes:
+            if not volume or not volume.strip():
+                continue
+            if volume[0] != '/':
+                continue
+            src = volume.split(':')[0]
+            if not os.path.exists(src):
+                os.makedirs(src, exist_ok=True)
 
     def remove_volume(self):
         if self.check_volume():
