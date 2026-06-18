@@ -12,6 +12,12 @@ function prepare_images {
         return
     fi
 
+    if [[ "${BASE_DISTRO}" =~ ^(debian|ubuntu)$ ]]; then
+        sudo apt install -y docker-buildx-plugin
+    else
+        sudo dnf install -y docker-buildx-plugin
+    fi
+
     sudo mkdir -p /tmp/logs/build
     sudo mkdir -p /opt/kolla_registry
 
