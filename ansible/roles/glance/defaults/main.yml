@@ -7,7 +7,7 @@ glance_services:
     enabled: true
     image: "{{ glance_api_image_full }}"
     environment: "{{ glance_api_container_proxy }}"
-    privileged: "{{ enable_cinder | bool and (enable_cinder_backend_iscsi | bool or cinder_backend_ceph | bool) }}"
+    privileged: "{{ glance_api_privileged | bool }}"
     volumes: "{{ glance_api_default_volumes + glance_api_extra_volumes }}"
     dimensions: "{{ glance_api_dimensions }}"
     healthcheck: "{{ glance_api_healthcheck }}"
@@ -181,9 +181,8 @@ glance_api_default_volumes:
   - "{{ kolla_dev_repos_directory ~ '/glance:/dev-mode/glance' if glance_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
-  # NOTE(yoctozepto): below to support Cinder iSCSI backends
   - "{% if enable_cinder | bool and enable_cinder_backend_iscsi | bool %}iscsi_info:/etc/iscsi{% endif %}"
-  - "{% if enable_cinder | bool and enable_cinder_backend_iscsi | bool %}/dev:/dev{% endif %}"
+  - "{% if glance_api_privileged | bool %}/dev:/dev{% endif %}"
 
 glance_extra_volumes: "{{ default_extra_volumes }}"
 glance_api_extra_volumes: "{{ glance_extra_volumes }}"
@@ -239,6 +238,12 @@ glance_git_repository: "{{ kolla_dev_repos_git }}/{{ project_name }}"
 glance_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 glance_dev_mode: "{{ kolla_dev_mode }}"
 glance_source_version: "{{ kolla_source_version }}"
+
+# iSCSI and VAST NVME-over-TCP need access to the real /dev fs.
+glance_api_privileged: "{{ (enable_cinder | bool) and
+    (enable_cinder_backend_iscsi | bool or
+    cinder_backend_ceph | bool or
+    enable_cinder_backend_vast | bool) }}"
 
 ###################
 # Glance cache
