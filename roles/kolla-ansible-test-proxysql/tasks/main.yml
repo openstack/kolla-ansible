@@ -1,0 +1,104 @@
+---
+- name: Assert that database VIP is set
+  ansible.builtin.assert:
+    that:
+      - test_database_vip is defined
+      - test_database_vip != ""
+    fail_msg: The variable test_database_vip is required
+
+- name: Get database password
+  when: test_database_password is undefined or test_database_password == ""
+  block:
+    - name: Scrape database password
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          grep ^database_password /etc/kolla/passwords.yml | cut -d" " -f2
+        executable: /bin/bash
+      register: db_password_grep
+      changed_when: false
+
+    - name: Set fact about database password
+      ansible.builtin.set_fact:
+        test_database_password: "{{ db_password_grep.stdout }}"
+
+- name: Get ProxySQL password
+  when: test_proxysql_password is undefined or test_proxysql_password == ""
+  block:
+    - name: Scrape ProxySQL password
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          grep proxysql_admin_password /etc/kolla/passwords.yml | cut -d" " -f2
+        executable: /bin/bash
+      register: proxysql_password_grep
+      changed_when: false
+
+    - name: Set fact about ProxySQL password
+      ansible.builtin.set_fact:
+        test_proxysql_password: "{{ proxysql_password_grep.stdout }}"
+
+- name: Install required packages
+  ansible.builtin.pip:
+    name: PyMySQL
+    virtualenv: "{{ kolla_ansible_venv_path }}"
+    virtualenv_command: "python3 -m venv"
+
+- name: Test ProxySQL connection
+  community.mysql.mysql_query:
+    login_host: "{{ test_database_vip }}"
+    login_user: "{{ test_database_user }}"
+    login_password: "{{ test_database_password }}"
+    login_port: "{{ test_database_port }}"
+    query: SHOW STATUS LIKE 'wsrep_cluster_size'
+  register: test_query
+  vars:
+    ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+
+- name: Assert that test query was successful
+  ansible.builtin.assert:
+    that: not test_query.failed
+    fail_msg: Database connection test failed.
+
+- name: Check if ProxySQL can see all MariaDB nodes as online
+  community.mysql.mysql_query:
+    login_host: "{{ test_database_vip }}"
+    login_user: "{{ test_proxysql_user }}"
+    login_password: "{{ test_proxysql_password }}"
+    login_port: "{{ test_proxysql_port }}"
+    query: SELECT COUNT(*) AS online_nodes FROM mysql_servers WHERE status='ONLINE'
+  register: mariadb_count
+  vars:
+    ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+
+- name: Assert that all MariaDB nodes are visible as online from ProxySQL
+  ansible.builtin.assert:
+    that:
+      - not mariadb_count.failed
+      - mariadb_count.rowcount[0] != 0 # Number of returned row of the first query is not zero
+      - mariadb_count.query_result[0][0]['online_nodes'] is defined # The first row of the first query is defined
+      - mariadb_count.query_result[0][0]['online_nodes'] | int == test_expected_mariadb_host_number | int # number of online nodes matches number of MariaDB
+    fail_msg: Number of online MariaDB servers does not match the size of MariaDB cluster
+
+- name: Test ProxySQL SSL connection
+  when: test_database_tls_enabled
+  block:
+    - name: Query SSL cipher algorithm of current session
+      community.mysql.mysql_query:
+        login_host: "{{ test_database_vip }}"
+        login_user: "{{ test_database_user }}"
+        login_password: "{{ test_database_password }}"
+        login_port: "{{ test_database_port }}"
+        query: SELECT SUBSTRING_INDEX(variable_value, ',', -1) AS 'ssl_cipher' FROM information_schema.session_status WHERE variable_name = 'Ssl_cipher' LIMIT 1
+      register: ssl_query
+      vars:
+        ansible_python_interpreter: "{{ kolla_ansible_venv_path }}/bin/python"
+
+    - name: Assert that SSL cipher is set
+      ansible.builtin.assert:
+        that:
+          - not ssl_query.failed
+          - ssl_query.rowcount[0] != 0 # Number of returned row of the first query is not zero
+          - ssl_query.query_result[0][0]['ssl_cipher'] is defined # ssl_cipher is defined in the first row of the first query
+          - ssl_query.query_result[0][0]['ssl_cipher'] != "" # ssl_cipher is not empty string in the first row of the first query
+        fail_msg: Database TLS is enabled but the current session is not encrypted
