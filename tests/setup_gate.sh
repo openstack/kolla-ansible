@@ -12,10 +12,12 @@ function prepare_images {
         return
     fi
 
-    if [[ "${CONTAINER_ENGINE}" != "docker" && "${BASE_DISTRO}" =~ ^(debian|ubuntu)$ ]]; then
-        sudo apt install -y docker-buildx-plugin
-    else
-        sudo dnf install -y docker-buildx-plugin
+    if [[ "${CONTAINER_ENGINE}" == "docker" ]]; then
+        if [[ "${BASE_DISTRO}" =~ ^(debian|ubuntu)$ ]]; then
+            sudo apt install -y docker-buildx-plugin
+        else
+            sudo dnf install -y docker-buildx-plugin
+        fi
     fi
 
     sudo mkdir -p /tmp/logs/build
