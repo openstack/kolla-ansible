@@ -38,6 +38,13 @@ The majority of the secrets can be applied by simply reconfiguring services
 with ``kolla-ansible reconfigure``. Below is a list of secrets that can be
 applied this way.
 
+.. note::
+
+   Rotating ``*_keystone_password`` secrets requires
+   ``update_keystone_service_user_passwords`` to be set to ``true`` in
+   ``globals.yml`` before running ``kolla-ansible reconfigure``, as the default
+   is ``false``. This setting may be reverted to ``false`` after the reconfigure
+   completes.
 
 * ``*_keystone_password``
 * ``*_database_password`` (excluding ``nova_database_password``)
