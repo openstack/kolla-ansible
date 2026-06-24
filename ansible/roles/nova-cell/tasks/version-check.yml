@@ -75,3 +75,47 @@
         success_msg: >
           Libvirt version check successful: target {{ new_version }} >= current {{ current_version }}.
       when: libvirt_version_current_results is not skipped
+
+- name: Check nova_libvirt image provides the libvirt start script
+  when: enable_nova_libvirt_container | bool and (groups[service.group] | length) > 0
+  vars:
+    service_name: "nova-libvirt"
+    service: "{{ nova_cell_services[service_name] }}"
+  tags: nova-libvirt-script-check
+  block:
+    - name: Look for kolla_nova_libvirt_start in the nova_libvirt image
+      become: true
+      kolla_container:
+        action: "start_container"
+        command: "ls /usr/local/bin/kolla_nova_libvirt_start"
+        common_options: "{{ docker_common_options }}"
+        container_engine: "{{ kolla_container_engine }}"
+        detach: false
+        environment:
+          KOLLA_CONFIG_STRATEGY: "{{ config_strategy }}"
+        image: "{{ service.image }}"
+        name: "nova_libvirt_script_check"
+        restart_policy: oneshot
+        remove_on_exit: true
+      register: nova_libvirt_script_check
+      failed_when: false
+      check_mode: false
+      run_once: true
+      delegate_to: "{{ groups[service.group] | first }}"
+
+    - name: Assert the nova_libvirt image is recent enough
+      run_once: true
+      delegate_to: "{{ groups[service.group] | first }}"
+      ansible.builtin.assert:
+        that:
+          - "'/usr/local/bin/kolla_nova_libvirt_start' in (nova_libvirt_script_check.stdout | default(''))"
+        fail_msg: >
+          The nova_libvirt image '{{ service.image }}' does not contain
+          /usr/local/bin/kolla_nova_libvirt_start, which this version of
+          Kolla-Ansible needs to launch libvirtd alongside virtlogd. This
+          almost always means the container image has not been updated to
+          match the upgraded Kolla-Ansible code. Pull or build a current
+          nova-libvirt image before deploying. If you intend to keep using
+          an older image, skip the tag 'nova-libvirt-script-check'.
+        success_msg: >
+          nova_libvirt image provides kolla_nova_libvirt_start.

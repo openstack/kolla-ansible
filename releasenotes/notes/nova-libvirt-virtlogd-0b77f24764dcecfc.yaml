@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    The ``nova_libvirt`` container now runs ``virtlogd`` as a sidecar
+    alongside ``libvirtd``, and ``qemu.conf`` is configured with
+    ``stdio_handler = "logd"`` so that libvirt routes instance console
+    chardevs through ``virtlogd``. This allows guest console logs to be
+    rotated according to ``/etc/libvirt/virtlogd.conf`` (by default 2MB
+    per file with 3 backups), instead of growing without bound as they
+    did when ``stdio_handler`` was set to ``"file"``.
+
+    Note that existing instances must be hard rebooted to pick up the
+    new console handler, as the chardev mode is fixed at qemu launch.
