@@ -539,8 +539,12 @@ class PodmanWorker(ContainerWorker):
         if rc == 0:
             return False
         elif rc == 1:
-            self._config_diff = (raw_output.decode('utf-8') if
-                                 isinstance(raw_output, bytes) else raw_output)
+            try:
+                self._config_diff = (raw_output.decode('utf-8') if
+                                     isinstance(raw_output, bytes) else
+                                     raw_output)
+            except UnicodeDecodeError:
+                self._config_diff = 'container changed during config check'
             return True
         else:
             raise Exception('Failed to compare container configuration: '
