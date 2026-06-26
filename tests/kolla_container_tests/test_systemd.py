@@ -187,16 +187,63 @@ class TestSystemd(base.BaseTestCase):
 
     def test_remove_unit_file(self):
         self.sw.check_unit_file = mock.Mock(return_value=True)
-        os.remove = mock.Mock()
+        self.sw.check_unit_file_symlink = mock.Mock(return_value=True)
         self.sw.reload = mock.Mock()
 
-        return_val = self.sw.remove_unit_file()
+        with mock.patch.object(os, 'remove') as remove_mock:
+            return_val = self.sw.remove_unit_file()
 
         self.assertTrue(return_val)
-        os.remove.assert_called_once_with(
-            '/etc/systemd/system/kolla-test-container.service'
+        service_path = '/etc/systemd/system/'
+        wants_path = service_path + 'multi-user.target.wants/'
+        remove_mock.assert_has_calls([
+            mock.call(service_path + 'kolla-test-container.service'),
+            mock.call(wants_path + 'kolla-test-container.service'),
+        ])
+        self.assertEqual(2, remove_mock.call_count)
+        self.sw.reload.assert_called_once()
+
+    def test_remove_unit_file_no_symlink(self):
+        self.sw.check_unit_file = mock.Mock(return_value=True)
+        self.sw.check_unit_file_symlink = mock.Mock(return_value=False)
+        self.sw.reload = mock.Mock()
+
+        with mock.patch.object(os, 'remove') as remove_mock:
+            return_val = self.sw.remove_unit_file()
+
+        self.assertTrue(return_val)
+        service_path = '/etc/systemd/system/'
+        remove_mock.assert_called_once_with(
+            service_path + 'kolla-test-container.service'
         )
         self.sw.reload.assert_called_once()
+
+    def test_remove_unit_file_no_unit_file(self):
+        self.sw.check_unit_file = mock.Mock(return_value=False)
+        self.sw.check_unit_file_symlink = mock.Mock(return_value=True)
+        self.sw.reload = mock.Mock()
+
+        with mock.patch.object(os, 'remove') as remove_mock:
+            return_val = self.sw.remove_unit_file()
+
+        self.assertTrue(return_val)
+        wants_path = '/etc/systemd/system/multi-user.target.wants/'
+        remove_mock.assert_called_once_with(
+            wants_path + 'kolla-test-container.service'
+        )
+        self.sw.reload.assert_called_once()
+
+    def test_remove_unit_file_nothing_to_remove(self):
+        self.sw.check_unit_file = mock.Mock(return_value=False)
+        self.sw.check_unit_file_symlink = mock.Mock(return_value=False)
+        self.sw.reload = mock.Mock()
+
+        with mock.patch.object(os, 'remove') as remove_mock:
+            return_val = self.sw.remove_unit_file()
+
+        self.assertFalse(return_val)
+        remove_mock.assert_not_called()
+        self.sw.reload.assert_not_called()
 
     def test_get_unit_state(self):
         unit_list = [
