@@ -445,15 +445,6 @@
             SCENARIO: "{{ scenario }}"
           when: openstack_core_tested or scenario in ['ironic', 'multi-compute-ironic' ,'magnum', 'nfv', 'octavia']
 
-        - name: Test OVN VPNaaS
-          import_role:
-            name: kolla-ansible-test-ovn-vpnaas
-          when:
-            - not is_upgrade
-            - scenario == 'ovn'
-            # FIXME(neutron): Enable when https://bugs.launchpad.net/neutron/+bug/2146308 is fixed
-            - not (ansible_facts.os_family == 'RedHat' and ansible_facts.distribution_major_version == '10')
-
         - name: Run test-ovn.sh script
           script:
             cmd: test-ovn.sh
