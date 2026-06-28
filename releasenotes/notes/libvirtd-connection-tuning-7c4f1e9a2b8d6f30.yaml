@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    The ``nova_libvirt`` container's ``libvirtd.conf`` now raises libvirt's
+    connection processing limits above their stock defaults, which are tuned
+    for a multi-tenant host rather than for Kolla's single-privileged-client
+    pattern. ``max_client_requests`` is raised from 5 to 20 and ``max_workers``
+    from 20 to 50. Both are exposed as the ``libvirt_max_client_requests`` and
+    ``libvirt_max_workers`` variables so they can be tuned further.
+fixes:
+  - |
+    Fixed intermittent instance build failures (``Cannot recv data:
+    Input/output error`` during ``defineXML``, leading to instances in
+    ``ERROR`` state) that occurred when several instances were built
+    concurrently. nova-compute is effectively the sole client of ``libvirtd``,
+    and libvirt's default per-client request cap of 5 was being exceeded by
+    concurrent builds plus periodic tasks, starving keepalive responses until
+    ``libvirtd`` dropped the connection.
