@@ -25,3 +25,13 @@ listen_addr = "{{ migration_interface_address }}"
 # Enable read-only access to libvirt socket
 auth_unix_ro = "none"
 {% endif %}
+
+# Connection processing limits. libvirt's defaults (max_workers=20,
+# max_client_requests=5) assume a multi-tenant host with many mutually
+# distrustful clients. Under Kolla, nova-compute is effectively the sole
+# privileged client, so the per-client cap of 5 becomes the binding
+# constraint: concurrent builds plus the resource-tracker periodic exceed
+# five in-flight RPCs and starve keepalive responses, causing libvirtd to
+# drop the connection after keepalive_interval (5s) x keepalive_count (5).
+max_workers = {{ libvirt_max_workers }}
+max_client_requests = {{ libvirt_max_client_requests }}
