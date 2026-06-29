@@ -198,3 +198,26 @@ Since the Yoga release, the ``kolla-ansible certificates`` command generates
 certificates for libvirt TLS. A single key and certificate is used for all
 hosts, with a Subject Alternative Name (SAN) entry for each compute host
 hostname.
+
+Libvirt Connection Limits
+=========================
+
+By default ``libvirt`` is configured by upstream packages with reasonable
+defaults for an environment where many users are starting and stopping virtual
+machines. This isn't true for Kolla Hypervisor nodes, where a single
+``nova-compute`` container manages all of the virtual machine instances on the
+machine.
+
+Kolla-Ansible therefore tunes the following values in ``libvirtd.conf``:
+
+* libvirt_max_client_requests: raised to 20 compared to the usual default of
+  5.
+* libvirt_max_workers: raised to 50 compared to the usual default of 20.
+
+Both of these values may be overridden in ``globals.yml``.
+
+This means that ``nova-compute`` can therefore perform 20 operations via
+libvirt simultaneously instead of the usual default of 5. These values should
+be safe, but if you see libvirt error messages saying ``Client hit max requests
+limit``, you may want to consider an additional increase -- especially if you
+have particularly large hypervisors.

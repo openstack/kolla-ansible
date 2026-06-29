@@ -582,6 +582,17 @@ libvirt_sasl_authname: "nova"
 libvirt_sasl_mech_list:
   - "{{ 'SCRAM-SHA-256' if libvirt_tls | bool else 'DIGEST-MD5' }}"
 
+# Connection processing limits for libvirtd. nova-compute is effectively the
+# only privileged client of libvirtd under Kolla, so libvirt's stock per-client
+# request cap (max_client_requests=5) is the binding constraint rather than a
+# safety net: concurrent instance builds plus the resource-tracker periodic
+# routinely exceed five in-flight RPCs, which starves keepalive responses until
+# libvirtd drops the connection. Raise the per-client cap, and the worker pool
+# along with it so that lifting the per-client limit does not starve other
+# connections (live migration, health checks, periodics).
+libvirt_max_client_requests: 20
+libvirt_max_workers: 50
+
 ####################
 # Kolla
 ####################
