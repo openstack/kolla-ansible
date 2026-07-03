@@ -15,16 +15,33 @@ node_types:
     # NOTE(bbezak): Force QEMU to expose x86-64‑v2 features, so the Centos Stream IPA
     # doesn’t fail with "Fatal glibc error: CPU does not support x86-64-v2".
     cpu_mode: maximum
+  type1:
+    memory_mb: 3072
+    vcpus: 1
+    volumes:
+      - capacity: 4GiB
+    physical_networks:
+      - physnet1
+    console_log_enabled: true
+    cpu_mode: maximum
+    ironic_driver: redfish
 specs:
   - type: type0
     count: 1
     ironic_config:
       resource_class: test-rc
       network_interface: flat
+  - type: type1
+    count: 1
+    ironic_config:
+      resource_class: test-rc-red
+      network_interface: flat
 
 nova_flavors:
   - resource_class: test-rc
     node_type: type0
+  - resource_class: test-rc-red
+    node_type: type1
 
 physnet_mappings:
   physnet1: {{ neutron_external_bridge_name }}
