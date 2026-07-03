@@ -15,6 +15,16 @@ node_types:
     # NOTE(bbezak): Force QEMU to expose the newest available CPU features to
     # the IPA image.
     cpu_mode: maximum
+  type1:
+    memory_mb: 3072
+    vcpus: 1
+    volumes:
+      - capacity: 4GiB
+    physical_networks:
+      - physnet1
+    console_log_enabled: true
+    cpu_mode: maximum
+    ironic_driver: redfish
 specs:
   - type: type0
     count: 1
@@ -23,10 +33,19 @@ specs:
       network_interface: flat
       properties:
         cpu_arch: "{{ tenks_libvirt_vm_arch }}"
+  - type: type1
+    count: 1
+    ironic_config:
+      resource_class: test-rc-red
+      network_interface: flat
+      properties:
+        cpu_arch: "{{ tenks_libvirt_vm_arch }}"
 
 nova_flavors:
   - resource_class: test-rc
     node_type: type0
+  - resource_class: test-rc-red
+    node_type: type1
 
 physnet_mappings:
   physnet1: {{ neutron_external_bridge_name }}
