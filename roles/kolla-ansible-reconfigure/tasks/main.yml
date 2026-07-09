@@ -64,19 +64,11 @@
     - name: Build container timestamps dict post-deploy
       ansible.builtin.set_fact:
         _deploy_docker_container_times: >-
-          {{
-            _deploy_docker_container_times | default({}) |
-            combine({
-              item.item: {
-                'started_at': item.container.State.StartedAt,
-                'finished_at': item.container.State.FinishedAt
-              }
-            })
-          }}
-      loop: "{{ _deploy_docker_info.results }}"
-      when:
-        - item.exists
-        - item.item not in ovn_db_services
+          {%- set _r = {} -%}
+          {%- for _i in _deploy_docker_info.results if _i.exists and _i.item not in ovn_db_services -%}
+          {%- set _ = _r.update({_i.item: {'started_at': _i.container.State.StartedAt, 'finished_at': _i.container.State.FinishedAt}}) -%}
+          {%- endfor -%}
+          {{ _r }}
 
 - name: Remove OVN DB containers and volumes on primary to test recreation (podman)
   become: true
@@ -108,23 +100,13 @@
     - name: "Build podman container timestamps dict post-deploy"
       ansible.builtin.set_fact:
         _deploy_podman_container_times: >-
-          {{
-            _deploy_podman_container_times | default({}) |
-            combine({
-              item.Name: {
-                'started_at': item.State.StartedAt,
-                'finished_at': item.State.FinishedAt
-              }
-            })
-          }}
-      loop: >-
-        {{
-          _deploy_podman_facts.containers
-          | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
-          | list
-        }}
-      when:
-        - item.Name not in ovn_db_services
+          {%- set _r = {} -%}
+          {%- for _i in _deploy_podman_facts.containers
+              | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
+              if _i.Name not in ovn_db_services -%}
+          {%- set _ = _r.update({_i.Name: {'started_at': _i.State.StartedAt, 'finished_at': _i.State.FinishedAt}}) -%}
+          {%- endfor -%}
+          {{ _r }}
 
 - name: Run kolla-ansible reconfigure
   ansible.builtin.shell:
@@ -162,19 +144,11 @@
     - name: Build container timestamps dict post-reconfigure
       ansible.builtin.set_fact:
         _reconfigure_docker_container_times: >-
-          {{
-            _reconfigure_docker_container_times | default({}) |
-            combine({
-              item.item: {
-                'started_at': item.container.State.StartedAt,
-                'finished_at': item.container.State.FinishedAt
-              }
-            })
-          }}
-      loop: "{{ _reconfigure_docker_info.results }}"
-      when:
-        - item.exists
-        - item.item not in ovn_db_services
+          {%- set _r = {} -%}
+          {%- for _i in _reconfigure_docker_info.results if _i.exists and _i.item not in ovn_db_services -%}
+          {%- set _ = _r.update({_i.item: {'started_at': _i.container.State.StartedAt, 'finished_at': _i.container.State.FinishedAt}}) -%}
+          {%- endfor -%}
+          {{ _r }}
 
 - name: "Capture state of containers post reconfigure (podman)"
   become: true
@@ -188,23 +162,13 @@
     - name: "Build podman container timestamps dict post-reconfigure"
       ansible.builtin.set_fact:
         _reconfigure_podman_container_times: >-
-          {{
-            _reconfigure_podman_container_times | default({}) |
-            combine({
-              item.Name: {
-                'started_at': item.State.StartedAt,
-                'finished_at': item.State.FinishedAt
-              }
-            })
-          }}
-      loop: >-
-        {{
-          _reconfigure_podman_facts.containers
-          | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
-          | list
-        }}
-      when:
-        - item.Name not in ovn_db_services
+          {%- set _r = {} -%}
+          {%- for _i in _reconfigure_podman_facts.containers
+              | rejectattr('Name', 'match', _reconfigure_excluded_containers | join('|'))
+              if _i.Name not in ovn_db_services -%}
+          {%- set _ = _r.update({_i.Name: {'started_at': _i.State.StartedAt, 'finished_at': _i.State.FinishedAt}}) -%}
+          {%- endfor -%}
+          {{ _r }}
 
 - name: Assert that containers were not restarted during reconfigure (docker)
   ansible.builtin.assert:
