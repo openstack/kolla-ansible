@@ -3,4 +3,8 @@ enabled = true
 driver = iptables_v2
 
 [service_providers]
+{% if neutron_plugin_agent == 'openvswitch' %}
 service_provider = FIREWALL_V2:fwaas_db:neutron_fwaas.services.firewall.service_drivers.agents.agents.FirewallAgentDriver:default
+{% elif neutron_plugin_agent == 'ovn' %}
+service_provider = FIREWALL_V2:fwaas_db:neutron_fwaas.services.firewall.service_drivers.ovn.firewall_l3_driver.OVNFwaasDriver:default
+{% endif %}
