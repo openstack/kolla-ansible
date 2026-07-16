@@ -1,0 +1,95 @@
+---
+- name: Build nova AZ to compute host mapping
+  ansible.builtin.set_fact:
+    _nova_az_host_map: "{{ hostvars | nova_az_host_map(groups[nova_cell_compute_group]) }}"
+  run_once: true
+
+- name: Get current nova AZ aggregates
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.host_aggregate_info
+    module_args:
+      auth: "{{ openstack_nova_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+  register: _nova_aggregate_info
+  run_once: true
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  when: _nova_az_host_map | default({}) | length > 0
+
+- name: Remove stale hosts from AZ aggregates
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.host_aggregate
+    module_args:
+      auth: "{{ openstack_nova_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ item['name'] }}"
+      availability_zone: "{{ item['availability_zone'] }}"
+      hosts: >-
+        {{
+          item['hosts'] | default([])
+          | intersect((_nova_az_host_map | default({}))[item['name']] | default([]))
+        }}
+      purge_hosts: true
+  loop: >-
+    {{
+      _nova_aggregate_info.result.aggregates
+      | selectattr('availability_zone', 'defined')
+      | selectattr('availability_zone', 'ne', None)
+      | list
+    }}
+  run_once: true
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  when: _nova_az_host_map | default({}) | length > 0
+
+- name: Manage nova host aggregates for availability zones
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.host_aggregate
+    module_args:
+      auth: "{{ openstack_nova_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ item.key }}"
+      availability_zone: "{{ item.key }}"
+      hosts: "{{ item.value }}"
+      purge_hosts: false
+  loop: "{{ _nova_az_host_map | default({}) | dict2items }}"
+  run_once: true
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  when: _nova_az_host_map | default({}) | length > 0
+
+- name: Build arbitrary aggregate to compute host mapping
+  ansible.builtin.set_fact:
+    _nova_aggregate_host_map: "{{ hostvars | nova_aggregate_host_map(groups[nova_cell_compute_group]) }}"
+  run_once: true
+
+- name: Manage nova host aggregates
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: openstack.cloud.host_aggregate
+    module_args:
+      auth: "{{ openstack_nova_auth }}"
+      cloud: "{{ openstack_auth_cloud }}"
+      cacert: "{{ openstack_cacert }}"
+      endpoint_type: "{{ openstack_interface }}"
+      region_name: "{{ openstack_region_name }}"
+      name: "{{ item.key }}"
+      hosts: "{{ item.value }}"
+      purge_hosts: true
+  loop: "{{ _nova_aggregate_host_map | default({}) | dict2items }}"
+  run_once: true
+  delegate_to: "{{ groups[nova_cell_conductor_group][0] }}"
+  when: _nova_aggregate_host_map | default({}) | length > 0

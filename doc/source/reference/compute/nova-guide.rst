@@ -154,3 +154,52 @@ package. To enable this feature, set ``enable_nova_swtpm`` to ``true``.
 Beware of `limitations`__ that come with this solution.
 
   __ https://docs.openstack.org/nova/latest/admin/emulated-tpm.html#limitations
+
+Host Aggregates and Availability Zones
+=======================================
+
+Kolla Ansible can manage Nova host aggregate membership and availability zones
+directly from inventory variables, reconciling the state on every deploy or
+reconfigure run.
+
+Availability Zones
+------------------
+
+Set ``nova_compute_availability_zone`` on a compute host or group to assign it
+to an AZ-backed host aggregate of the same name. The aggregate is created if it
+does not exist. Hosts with an empty value are left unmanaged.
+
+.. code-block:: yaml
+
+   # host_vars/compute01
+   nova_compute_availability_zone: az-1
+
+   # group_vars/gpu_computes
+   nova_compute_availability_zone: az-gpu
+
+When a host moves from one AZ to another, Kolla Ansible removes it from the
+old aggregate before adding it to the new one, avoiding Nova's restriction that
+a host may only belong to one AZ aggregate at a time.
+
+.. warning::
+
+   A compute host must not have any instances on it when its AZ is changed.
+   Nova will refuse the aggregate membership change while instances are
+   present on the host. Migrate or delete all instances from a host before
+   changing its ``nova_compute_availability_zone``.
+
+Arbitrary Aggregates
+--------------------
+
+Set ``nova_compute_aggregates`` to a list of aggregate names to assign a host
+to one or more aggregates without an availability zone. These aggregates are
+created if they do not exist and their host membership is reconciled on each
+run. A host may belong to both an AZ aggregate and any number of arbitrary
+aggregates simultaneously.
+
+.. code-block:: yaml
+
+   # host_vars/compute01
+   nova_compute_aggregates:
+     - gpu-v100
+     - ssd-storage

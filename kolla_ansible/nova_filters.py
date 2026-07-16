@@ -135,9 +135,44 @@ def _get_expected_compute_service_name(service_conf):
     return f"{cg}-{sk}-ironic"
 
 
+def nova_az_host_map(hostvars, compute_hosts):
+    """Build an AZ-name to nodename list mapping from compute host hostvars.
+
+    :param hostvars: Ansible hostvars dict.
+    :param compute_hosts: list of compute host names in the cell.
+    :returns: dict mapping AZ name to list of nodenames assigned to that AZ.
+    """
+    result = {}
+    for host in compute_hosts:
+        az = hostvars[host].get('nova_compute_availability_zone') or ''
+        if not az:
+            continue
+        nodename = hostvars[host]['ansible_facts']['nodename']
+        result.setdefault(az, []).append(nodename)
+    return result
+
+
+def nova_aggregate_host_map(hostvars, compute_hosts):
+    """Build an aggregate-name to nodename list mapping from compute hostvars.
+
+    :param hostvars: Ansible hostvars dict.
+    :param compute_hosts: list of compute host names in the cell.
+    :returns: dict mapping aggregate name to list of nodenames assigned to it.
+    """
+    result = {}
+    for host in compute_hosts:
+        aggregates = hostvars[host].get('nova_compute_aggregates') or []
+        nodename = hostvars[host]['ansible_facts']['nodename']
+        for agg in aggregates:
+            result.setdefault(agg, []).append(nodename)
+    return result
+
+
 def get_filters():
     return {
         "extract_cell": extract_cell,
         "namespace_haproxy_for_cell": namespace_haproxy_for_cell,
         "get_expected_ironic_compute_services": get_expected_ironic_compute_services,  # noqa
+        "nova_az_host_map": nova_az_host_map,
+        "nova_aggregate_host_map": nova_aggregate_host_map,
     }
