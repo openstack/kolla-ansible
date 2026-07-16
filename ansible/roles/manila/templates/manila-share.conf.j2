@@ -176,5 +176,23 @@ glusterfs_server_password = {{ manila_glusterfs_ssh_password }}
 {%     endif %}
 {% endif %}
 
+{% if enable_manila_backend_vast | bool %}
+[vast1]
+share_backend_name = VAST1
+share_driver = manila.share.drivers.vastdata.driver.VASTShareDriver
+snapshot_support = true
+driver_handles_share_servers = false
+vast_mgmt_host = {{ manila_vast_host }}
+{%     if manila_vast_api_token is defined and manila_vast_api_token | length > 0 %}
+vast_api_token = {{ manila_vast_api_token }}
+{%     else %}
+vast_mgmt_user = {{ manila_vast_user }}
+vast_mgmt_password = {{ manila_vast_password }}
+{%     endif %}
+vast_vippool_name = {{ manila_vast_vippool_name }}
+vast_root_export = {{ manila_vast_root_export }}
+vast_mgmt_port = {{ manila_vast_port }}
+{% endif %}
+
 [oslo_concurrency]
 lock_path = /var/lib/manila/tmp

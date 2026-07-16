@@ -26,3 +26,27 @@
   when:
     - container_facts.containers['manila_api'] is not defined
     - inventory_hostname in groups['manila-api']
+
+- name: Check if VAST Manila backend configurations are defined
+  ansible.builtin.assert:
+    that:
+      - vars[item] is defined
+      - vars[item] | length > 0
+    msg: "Manila VAST backend is enabled, the {{ item }} variable must be defined."
+  with_items:
+    - manila_vast_host
+    - manila_vast_vippool_name
+  when: enable_manila_backend_vast | bool
+
+- name: Check if VAST Manila user and password are defined when API token is not set
+  ansible.builtin.assert:
+    that:
+      - vars[item] is defined
+      - vars[item] | length > 0
+    msg: "Manila VAST backend is enabled, manila_vast_user and manila_vast_password must be defined when manila_vast_api_token is not set."
+  with_items:
+    - manila_vast_user
+    - manila_vast_password
+  when:
+    - enable_manila_backend_vast | bool
+    - manila_vast_api_token is not defined or manila_vast_api_token | length == 0
