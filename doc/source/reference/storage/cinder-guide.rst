@@ -204,6 +204,16 @@ The following parameters must also be set in ``globals.yml``:
                                  NVMe/TCP connections
 * ``cinder_vast_subsystem`` - NVMe subsystem identifier
 
+Authentication is configured using either an API token (recommended) or
+username and password. Set the following in ``passwords.yml``:
+
+* ``cinder_vast_api_token`` - management API token (recommended)
+
+If an API token is not available, the following parameter must instead be set
+in ``passwords.yml``:
+
+* ``cinder_vast_password`` - management API password
+
 The following parameters may optionally be overridden in ``globals.yml``:
 
 * ``cinder_backend_vast_name`` - volume backend name,
@@ -211,12 +221,9 @@ The following parameters may optionally be overridden in ``globals.yml``:
 * ``cinder_vast_port`` - management API port (default: ``443``)
 * ``cinder_vast_username`` - management API username (default: ``admin``)
 
-The following parameters must be set in ``passwords.yml``:
-
-* ``cinder_vast_password`` - management API password
-
 For details on these parameters and additional options, refer to the
-`VAST Data Cinder Reference Guide <https://docs.openstack.org/cinder/latest/configuration/block-storage/drivers/vastdata-volume-driver.html>`_.
+`VAST Data Cinder driver documentation <https://kb.vastdata.com/documentation/docs/vast-driver-for-cinder>`_
+and the `VAST Data Cinder Reference Guide <https://docs.openstack.org/cinder/latest/configuration/block-storage/drivers/vastdata-volume-driver.html>`_.
 
 On the VAST cluster, a VIP pool and NVMe subsystem must be configured for
 block storage operations prior to deploying this backend.
