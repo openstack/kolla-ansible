@@ -196,10 +196,10 @@ def get_DockerWorker(mod_param, docker_api_version='1.40'):
         return dw
 
 
-def inject_env_when_create_container(container_data):
+def inject_env_when_create_container(container_data, tz='UTC'):
     container_env = container_data.get('environment', dict()) or dict()
     container_svc_name = container_data.get('name').replace('_', '-')
-    container_env.update({'KOLLA_SERVICE_NAME': container_svc_name})
+    container_env.update({'KOLLA_SERVICE_NAME': container_svc_name, 'TZ': tz})
     container_data['environment'] = container_env
 
 
@@ -298,6 +298,10 @@ class TestContainer(base.BaseTestCase):
     def setUp(self):
         super(TestContainer, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
+        self.tz_patcher = mock.patch.object(
+            dwm.DockerWorker, '_get_host_timezone', return_value='UTC')
+        self.tz_patcher.start()
+        self.addCleanup(self.tz_patcher.stop)
 
     def test_create_container_without_dimensions(self):
         self.dw = get_DockerWorker(self.fake_data['params'])
@@ -1166,6 +1170,10 @@ class TestAttrComp(base.BaseTestCase):
     def setUp(self):
         super(TestAttrComp, self).setUp()
         self.fake_data = copy.deepcopy(FAKE_DATA)
+        self.tz_patcher = mock.patch.object(
+            dwm.DockerWorker, '_get_host_timezone', return_value='UTC')
+        self.tz_patcher.start()
+        self.addCleanup(self.tz_patcher.stop)
 
     def test_compare_cap_add_neg(self):
         container_info = {'HostConfig': dict(CapAdd=['data'])}
@@ -1328,9 +1336,12 @@ class TestAttrComp(base.BaseTestCase):
     def test_compare_environment_neg(self):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
-                 'KOLLA_BASE_DISTRO=ubuntu']
+                 'KOLLA_BASE_DISTRO=ubuntu',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=UTC']
         )}
         self.dw = get_DockerWorker({
+            'name': 'test_container',
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='ubuntu')})
 
@@ -1339,11 +1350,26 @@ class TestAttrComp(base.BaseTestCase):
     def test_compare_environment_pos(self):
         container_info = {'Config': dict(
             Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
-                 'KOLLA_BASE_DISTRO=ubuntu']
+                 'KOLLA_BASE_DISTRO=ubuntu',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=UTC']
         )}
         self.dw = get_DockerWorker({
+            'name': 'test_container',
             'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS',
                                 KOLLA_BASE_DISTRO='centos')})
+
+        self.assertTrue(self.dw.compare_environment(container_info))
+
+    def test_compare_environment_tz_change(self):
+        container_info = {'Config': dict(
+            Env=['KOLLA_CONFIG_STRATEGY=COPY_ALWAYS',
+                 'KOLLA_SERVICE_NAME=test-container',
+                 'TZ=America/New_York']
+        )}
+        self.dw = get_DockerWorker({
+            'name': 'test_container',
+            'environment': dict(KOLLA_CONFIG_STRATEGY='COPY_ALWAYS')})
 
         self.assertTrue(self.dw.compare_environment(container_info))
 
