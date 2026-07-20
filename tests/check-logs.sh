@@ -102,6 +102,24 @@ function check_docker_log_file_for_sigkill {
     sudo journalctl --no-pager -u ${CONTAINER_ENGINE}.service | grep "signal 9"
 }
 
+function check_uwsgi_log_file_for_crash {
+    # $1: file
+    # Detect uWSGI worker crashes, e.g. segfaults - the process dumps a
+    # backtrace and gets respawned, but this should never happen and is
+    # always worth failing the job for.
+    sudo grep -E "^(!!! uWSGI process [0-9]+ got .+ !!!|DAMN ! worker .+ died, killed by signal)" $1
+}
+
+function extract_uwsgi_crash_details {
+    # $1: file
+    # Print the full details of any uWSGI worker crash in the given file,
+    # including the backtrace, plus the resulting respawn message.
+    sudo sed -n -E \
+        -e '/^!!! uWSGI process [0-9]+ got .+ !!!/,/^\*\*\* end of backtrace \*\*\*/p' \
+        -e '/^DAMN ! worker .+ died, killed by signal/p' \
+        $1
+}
+
 function check_journal_for_oom {
     sudo journalctl --no-pager | grep "Out of memory: Killed process"
 }
@@ -205,6 +223,18 @@ if check_docker_log_file_for_sigkill >/dev/null; then
     any_critical=1
     echo "(critical) Found containers killed using signal 9 (SIGKILL) in docker logs."
 fi
+
+uwsgi_crash_summary_file=/tmp/logs/kolla/uwsgi-crash.log
+rm -f $uwsgi_crash_summary_file
+for f in $(sudo find /var/log/kolla/ -type f -name '*-uwsgi.log'); do
+    if check_uwsgi_log_file_for_crash $f >/dev/null; then
+        any_critical=1
+        echo "(critical) Found a uWSGI worker crash in $f. Matches in $uwsgi_crash_summary_file"
+        echo $f >> $uwsgi_crash_summary_file
+        extract_uwsgi_crash_details $f >> $uwsgi_crash_summary_file
+        echo >> $uwsgi_crash_summary_file
+    fi
+done
 
 if check_journal_for_oom >/dev/null; then
     any_critical=1
