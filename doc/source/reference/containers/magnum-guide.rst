@@ -56,4 +56,4 @@ To deploy magnum and its dashboard in an existing OpenStack cluster:
 
 .. code-block:: console
 
-   kolla-ansible deploy -i <inventory> --tags common,horizon,magnum
+   kolla-ansible deploy -i <inventory> --tags horizon,magnum

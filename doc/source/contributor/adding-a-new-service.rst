@@ -16,12 +16,6 @@ which Kolla uses throughout and which should be followed.
   this should be updated with appropriate roles, tags, and conditions. Ensure
   also that supporting hosts such as haproxy are updated when necessary.
 
-* The common role
-
-  A ``common`` role exists which sets up logging, ``kolla-toolbox`` and other
-  supporting components. This should be included in all services within
-  ``meta/main.yml`` of your role.
-
 * Common tasks
 
   All services should include the following tasks:
