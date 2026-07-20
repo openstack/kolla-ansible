@@ -34,7 +34,7 @@
     - service_name in services_need_config
   with_nested:
     - "{{ cinder_services | dict2items }}"
-    - "{{ cinder_ceph_backends + [cinder_backup_ceph_backend] }}"
+    - "{{ cinder_ceph_backends + ([cinder_backup_ceph_backend] if enable_cinder_backup | bool and cinder_backup_driver == 'ceph' else []) }}"
 
 - name: Copy over Ceph keyring files for cinder-volume
   vars:
@@ -59,9 +59,7 @@
     dest: "{{ node_config_directory }}/cinder-backup/ceph/{{ keyring }}"
     mode: "0660"
   become: true
-  with_items:
-    - "{{ cinder_ceph_backends }}"
-    - "{{ cinder_backup_ceph_backend }}"
+  with_items: "{{ cinder_ceph_backends + ([cinder_backup_ceph_backend] if enable_cinder_backup | bool and cinder_backup_driver == 'ceph' else []) }}"
   when:
     - external_ceph_cephx_enabled | bool
     - service | service_enabled_and_mapped_to_host
