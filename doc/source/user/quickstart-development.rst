@@ -48,7 +48,7 @@ execution, which is described in
 
 #. Install Python build dependencies:
 
-   For CentOS or Rocky, run:
+   For Rocky, run:
 
    .. code-block:: console
 
@@ -65,7 +65,7 @@ Install dependencies for the virtual environment
 
 #. Install the virtual environment dependencies.
 
-   For CentOS or Rocky, you don't need to do anything.
+   For Rocky, you don't need to do anything.
 
    For Debian or Ubuntu, run:
 
@@ -180,7 +180,6 @@ There are a few options that are required to deploy Kolla Ansible:
 
   Kolla provides choice of several Linux distributions in containers:
 
-  - CentOS Stream (``centos``)
   - Debian (``debian``)
   - Rocky (``rocky``)
   - Ubuntu (``ubuntu``)
