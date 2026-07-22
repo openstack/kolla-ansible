@@ -249,60 +249,12 @@ cinder_api_workers: "{{ openstack_service_workers }}"
 ####################
 # Cinder
 ####################
-cinder_backends:
-  - name: "{{ cinder_backend_lvm_name }}"
-    enabled: "{{ enable_cinder_backend_lvm | bool }}"
-  - name: "{{ cinder_backend_nfs_name }}"
-    enabled: "{{ enable_cinder_backend_nfs | bool }}"
-  - name: "{{ cinder_backend_quobyte_name }}"
-    enabled: "{{ enable_cinder_backend_quobyte | bool }}"
-  - name: "{{ cinder_backend_pure_iscsi_name }}"
-    enabled: "{{ enable_cinder_backend_pure_iscsi | bool }}"
-  - name: "{{ cinder_backend_pure_fc_name }}"
-    enabled: "{{ enable_cinder_backend_pure_fc | bool }}"
-  - name: "{{ cinder_backend_pure_roce_name }}"
-    enabled: "{{ enable_cinder_backend_pure_roce | bool }}"
-  - name: "{{ cinder_backend_pure_nvme_tcp_name }}"
-    enabled: "{{ enable_cinder_backend_pure_nvme_tcp | bool }}"
-  - name: "{{ cinder_backend_lightbits_name }}"
-    enabled: "{{ enable_cinder_backend_lightbits | bool }}"
-  - name: "{{ cinder_backend_vast_name }}"
-    enabled: "{{ enable_cinder_backend_vast | bool }}"
-
-cinder_backend_ceph_name: "rbd-1"
-cinder_backend_lvm_name: "lvm-1"
-cinder_backend_nfs_name: "nfs-1"
-cinder_backend_quobyte_name: "QuobyteHD"
-cinder_backend_pure_iscsi_name: "Pure-FlashArray-iscsi"
-cinder_backend_pure_fc_name: "Pure-FlashArray-fc"
-cinder_backend_pure_roce_name: "Pure-FlashArray-roce"
-cinder_backend_pure_nvme_tcp_name: "Pure-FlashArray-nvme-tcp"
-cinder_backend_lightbits_name: "Lightbits-NVMe-TCP"
-cinder_backend_vast_name: "vast-nvme-tcp"
-
-cinder_ceph_backends:
-  - name: "{{ cinder_backend_ceph_name }}"
-    backend_name: "{{ cinder_backend_ceph_name }}"
-    cluster: "{{ ceph_cluster }}"
-    user: "{{ ceph_cinder_user }}"
-    pool: "{{ ceph_cinder_pool_name }}"
-    enabled: "{{ cinder_backend_ceph | bool }}"
-
-cinder_backup_backend_ceph_name: "rbd-1"
-cinder_backup_ceph_backend: >-
-  {{
-    cinder_ceph_backends |
-    selectattr('name', 'equalto', cinder_backup_backend_ceph_name) | list | first |
-    combine({'pool': ceph_cinder_backup_pool_name, 'user': ceph_cinder_backup_user})
-  }}
-
+# NOTE: the cinder backend definitions (cinder_backends, cinder_ceph_backends,
+# cinder_enabled_backends, cinder_backup_backend_ceph_name,
+# cinder_backup_ceph_backend and the cinder_backend_*_name variables) are
+# defined in group_vars/all/cinder.yml so that all cinder backend definitions
+# live in one place and are in scope for the iscsi role.
 skip_cinder_backend_check: false
-
-cinder_enabled_backends: >-
-  {{
-    cinder_backends | selectattr('enabled', 'equalto', true) | list
-    + cinder_ceph_backends | selectattr('enabled', 'equalto', true) | list
-  }}
 
 ####################
 # Notification
