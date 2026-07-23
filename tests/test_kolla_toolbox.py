@@ -210,6 +210,52 @@ class TestBuildPlaybook(base.BaseTestCase):
         # It appears once, inside the dict — not as a CLI token
         self.assertNotIn("password='S3cr3t'", playbook_str)
 
+    def test_omit_placeholders_stripped_from_module_args(self):
+        """Nested omit must not reach inner modules as a set parameter."""
+        module_args = {
+            'login_user': 'root',
+            'ca_cert': '__omit_place_holder__deadbeef',
+        }
+        result = json.loads(
+            kolla_toolbox._build_playbook(
+                'community.mysql.mysql_user', module_args, {}, False))
+
+        task_args = result[0]['tasks'][0]['community.mysql.mysql_user']
+        self.assertEqual({'login_user': 'root'}, task_args)
+
+    def test_empty_values_stripped_from_module_args(self):
+        """An empty ca_cert makes mysql modules verify certificates."""
+        module_args = {
+            'login_user': 'root',
+            'ca_cert': '',
+        }
+        result = json.loads(
+            kolla_toolbox._build_playbook(
+                'community.mysql.mysql_user', module_args, {}, False))
+
+        task_args = result[0]['tasks'][0]['community.mysql.mysql_user']
+        self.assertEqual({'login_user': 'root'}, task_args)
+
+    def test_sanitize_module_args(self):
+        module_args = {
+            'login_user': 'root',
+            'ca_cert': '',
+            'client_cert': None
+        }
+        sanitized_args = kolla_toolbox._sanitize_module_args(module_args)
+        self.assertEqual({'login_user': 'root', 'client_cert': None},
+                         sanitized_args)
+
+    def test_sanitize_module_args_keeps_falsy_values(self):
+        """Only unset strings are dropped, other falsy values are kept."""
+        module_args = {
+            'single_transaction': False,
+            'connect_timeout': 0,
+            'positional_args': [],
+        }
+        sanitized_args = kolla_toolbox._sanitize_module_args(module_args)
+        self.assertEqual(module_args, sanitized_args)
+
     def test_extra_vars_under_play_vars(self):
         extra_vars = {'db_host': 'localhost', 'db_port': 3306}
         result = json.loads(
