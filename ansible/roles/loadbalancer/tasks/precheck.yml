@@ -96,6 +96,30 @@
         that: haproxy_internal_cert_file.stat.exists
         fail_msg: "Internal haproxy certificate file is not found. It is configured via 'kolla_internal_fqdn_cert'"
 
+- name: Check database internal TLS CA (ProxySQL CA) certificate existence
+  when:
+    - database_enable_tls_internal | bool
+    - enable_proxysql | bool
+    - not kolla_externally_managed_cert | bool
+  block:
+    - name: Checking if database internal TLS CA (ProxySQL CA) certificate exists
+      run_once: true
+      ansible.builtin.stat:
+        path: "{{ kolla_certificates_dir }}/proxysql-ca.pem"
+      delegate_to: localhost
+      register: proxysql_ca_cert_file
+      changed_when: false
+
+    - name: Assert that database internal TLS CA (ProxySQL) certificate exists
+      run_once: true
+      ansible.builtin.assert:
+        that: proxysql_ca_cert_file.stat.exists
+        fail_msg: >
+          "Database internal CA certificate file is not found. It needs to be named 'proxysql-ca.pem' "
+          "and located at 'kolla_certificates_dir'. This file should be a copy of internal CA certificate."
+          "However, if you're using chain of certificates, for example intermediate certificate, "
+          "'proxysql-ca.pem' should be a copy of the intermediate certificate."
+
 - name: Checking the kolla_external_vip_interface is present
   ansible.builtin.assert:
     that: kolla_external_vip_interface in ansible_facts.interfaces

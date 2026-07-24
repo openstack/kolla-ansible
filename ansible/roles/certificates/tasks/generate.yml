@@ -59,6 +59,14 @@
     - letsencrypt_managed_certs == 'internal' or letsencrypt_managed_certs == ''
     - kolla_enable_tls_external | bool
 
+# ProxySQL frontend TLS (database internal TLS) needs separate CA file
+- name: Copy CA certificate for ProxySQL
+  ansible.builtin.copy:
+    src: "{{ certificates_root_dir }}/root.crt"
+    dest: "{{ kolla_certificates_dir }}/proxysql-ca.pem"
+    mode: "0660"
+  when: database_enable_tls_internal | bool
+
 - name: Copy external certificates for ProxySQL
   when:
     - database_enable_tls_internal | bool
