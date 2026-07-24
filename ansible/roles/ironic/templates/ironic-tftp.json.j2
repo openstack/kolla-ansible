@@ -1,6 +1,5 @@
 {% set pxe_dir = '/var/lib/ironic/tftpboot/pxelinux.cfg' %}
 {% set pxe_cfg = 'default' %}
-
 {
     "command": "/usr/sbin/in.tftpd --verbose --foreground --user nobody --address {{ ironic_tftp_listen_address }}:69 --map-file /map-file /var/lib/ironic/tftpboot",
     "config_files": [
@@ -21,7 +20,24 @@
         }
 {% endif %}
     ],
+    "directories": [
+        {
+            "path": "/var/log/kolla",
+            "owner": "fluentd:kolla",
+            "perm": "2775"
+        },
+        {
+            "path": "/var/log/kolla/ironic",
+            "owner": "ironic:kolla",
+            "perm": "2775"
+        }
+    ],
     "permissions": [
+        {
+            "path": "/var/log/kolla/ironic/*.log",
+            "owner": "ironic:kolla",
+            "perm": "0664"
+        },
         {
             "path": "{{ pxe_dir }}",
             "owner": "ironic:ironic",
