@@ -6,13 +6,25 @@ set -o errexit
 # Enable unbuffered output for Ansible in Jenkins.
 export PYTHONUNBUFFERED=1
 
+# neutron_agents_wrappers (see ansible/roles/neutron) spawns per-namespace
+# helper containers (dnsmasq/haproxy/keepalived) that are not managed by
+# Kolla and can be created/removed by Neutron independently of the deploy,
+# e.g. neutron_dhcp_agent_dnsmasq_qdhcp-<uuid>. Ignore them in these checks.
+IGNORE_CONTAINERS_REGEX='_(qdhcp|qrouter|ovnmeta)-'
+
+filter_unmanaged_containers() {
+    grep -Ev "$IGNORE_CONTAINERS_REGEX" || true
+}
+
 
 check_podman_failures() {
     failed_containers=$(sudo podman ps -a --format "{{.Names}}" \
         --filter status=created \
-        --filter status=paused \
         --filter status=exited \
-        --filter status=unknown)
+        --filter status=paused \
+        --filter status=removing \
+        --filter status=unknown \
+        | filter_unmanaged_containers)
 
     for container in $failed_containers; do
         sudo podman inspect $container
@@ -28,7 +40,8 @@ check_podman_unhealthies() {
     done
 
     unhealthy_containers=$(sudo podman ps -a --format "{{.Names}}" \
-        --filter health=unhealthy)
+        --filter health=unhealthy \
+        | filter_unmanaged_containers)
 
     for container in $unhealthy_containers; do
         echo "Discovered unhealthy container: $container"
@@ -50,10 +63,12 @@ check_docker_failures() {
     # are treated as failure.
     failed_containers=$(sudo docker ps -a --format "{{.Names}}" \
         --filter status=created \
-        --filter status=restarting \
-        --filter status=paused \
         --filter status=exited \
-        --filter status=dead)
+        --filter status=dead \
+        --filter status=paused \
+        --filter status=removing \
+        --filter status=restarting \
+        | filter_unmanaged_containers)
 
     for container in $failed_containers; do
         sudo docker inspect $container
@@ -69,7 +84,8 @@ check_docker_unhealthies() {
     done
 
     unhealthy_containers=$(sudo docker ps -a --format "{{.Names}}" \
-        --filter health=unhealthy)
+        --filter health=unhealthy \
+        | filter_unmanaged_containers)
 
     for container in $unhealthy_containers; do
         echo "Discovered unhealthy container: $container"
