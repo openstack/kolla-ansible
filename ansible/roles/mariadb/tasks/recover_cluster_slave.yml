@@ -1,0 +1,44 @@
+---
+- name: Restart slave MariaDB container
+  become: true
+  kolla_container:
+    action: "start_container"
+    common_options: "{{ docker_common_options }}"
+    name: "{{ mariadb_service.container_name }}"
+    image: "{{ mariadb_service.image }}"
+    volumes: "{{ mariadb_service.volumes }}"
+    dimensions: "{{ mariadb_service.dimensions }}"
+    environment: "{{ mariadb_service.environment | default({}) }}"
+    healthcheck: "{{ mariadb_service.healthcheck | default(omit) }}"
+  delegate_to: "{{ mariadb_recover_slave_host }}"
+
+- name: Wait for slave MariaDB
+  ansible.builtin.wait_for:
+    host: "{{ 'api' | kolla_address(mariadb_recover_slave_host) }}"
+    port: "{{ mariadb_port }}"
+    connect_timeout: 1
+    timeout: 60
+    search_regex: "MariaDB"
+  register: check_mariadb_port
+  until: check_mariadb_port is success
+  retries: 10
+  delay: 6
+  delegate_to: "{{ mariadb_recover_slave_host }}"
+
+- name: Wait for slave MariaDB to sync WSREP
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: mysql_query
+    module_args:
+      login_db: "mysql"
+      login_host: "{{ 'api' | kolla_address(mariadb_recover_slave_host) }}"
+      login_port: "{{ mariadb_port }}"
+      login_user: "{{ database_user }}"
+      login_password: "{{ database_password }}"
+      query: 'SHOW STATUS LIKE "wsrep_local_state_comment"'
+  register: result
+  until: result.query_result is defined and result.query_result[0][0]['Value'] == "Synced"
+  retries: 30
+  delay: 10
+  delegate_to: "{{ mariadb_recover_slave_host }}"
