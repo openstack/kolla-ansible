@@ -88,6 +88,27 @@
     - not ansible_check_mode
     - opensearch_retention_policy_check.status == 404
 
+- name: Wait for OpenSearch Dashboards API to become ready
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_dashboards_internal_endpoint }}/api/status"
+      method: GET
+      status_code: 200
+      url_username: "{{ opensearch_dashboards_user }}"
+      url_password: "{{ opensearch_dashboards_password }}"
+      force_basic_auth: true
+      ca_path: "{{ openstack_cacert }}"
+  register: result
+  until: result.get('status') == 200
+  retries: 30
+  delay: 10
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  when: not ansible_check_mode
+
 - name: Create OpenSearch Dashboards Index Pattern
   become: true
   kolla_toolbox:
