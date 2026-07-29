@@ -238,11 +238,13 @@ glance_dev_repos_pull: "{{ kolla_dev_repos_pull }}"
 glance_dev_mode: "{{ kolla_dev_mode }}"
 glance_source_version: "{{ kolla_source_version }}"
 
-# iSCSI and VAST NVME-over-TCP need access to the real /dev fs.
-glance_api_privileged: "{{ (enable_cinder | bool) and
-    (enable_cinder_backend_iscsi | bool or
+# Some Cinder backends need access to the real /dev fs.
+enable_cinder_backend_privileged: >-
+  {{ enable_cinder_backend_iscsi | bool or
     cinder_backend_ceph | bool or
-    enable_cinder_backend_vast | bool) }}"
+    enable_cinder_backend_vast | bool
+  }}
+glance_api_privileged: "{{ enable_cinder | bool and enable_cinder_backend_privileged | bool }}"
 
 ###################
 # Glance cache
