@@ -470,7 +470,14 @@ class KollaAnsibleModule(AnsibleModule):
     visible for debugging.
     """
 
-    _NO_LOG_KEYS = frozenset({'auth', 'login_password', 'password'})
+    _NO_LOG_KEYS = frozenset(
+        {
+            'auth',
+            'login_password',
+            'password',
+            'url_password',
+        }
+    )
 
     def _log_invocation(self):
         for param in ('module_args', 'module_extra_vars'):
