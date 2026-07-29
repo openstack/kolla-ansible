@@ -57,6 +57,29 @@
     dimensions: "{{ service.dimensions }}"
     healthcheck: "{{ service.healthcheck | default(omit) }}"
 
+- name: Wait for OpenSearch cluster to recover
+  become: true
+  kolla_toolbox:
+    container_engine: "{{ kolla_container_engine }}"
+    module_name: uri
+    module_args:
+      url: "{{ opensearch_internal_endpoint }}/_cluster/health?wait_for_status=yellow&timeout=30s"
+      timeout: 35
+      status_code: 200
+      validate_certs: "{{ kolla_enable_tls_internal | bool }}"
+      return_content: true
+      body_format: json
+      ca_path: "{{ openstack_cacert }}"
+  delegate_to: "{{ groups['opensearch'][0] }}"
+  run_once: true
+  retries: 60
+  delay: 5
+  register: result
+  until: result.get('status') == 200
+  listen: "Restart opensearch container"
+  when:
+    - kolla_action != "config"
+
 - name: Restart opensearch-dashboards container
   vars:
     service_name: "opensearch-dashboards"
