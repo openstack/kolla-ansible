@@ -7,6 +7,9 @@
     name:
       - "{{ service.container_name }}"
   register: container_info
+  until: container_info is not failed
+  retries: 5
+  delay: 3
 
 - name: "Validate configurations for {{ service.container_name }}"
   become: true
@@ -16,6 +19,9 @@
   when:
     - container_info.containers | length > 0
   register: result
+  until: result.rc in [0, 1]
+  retries: 5
+  delay: 3
   failed_when: result.rc not in [0, 1]  # rc 1 is expected when errors are found in the config file, or when the config file doesn't exist
   with_items: "{{ service_config_validation }}"
   loop_control:
