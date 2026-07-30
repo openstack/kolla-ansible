@@ -65,7 +65,11 @@ Install dependencies for the virtual environment
 
 #. Install the virtual environment dependencies.
 
-   For CentOS or Rocky, you don't need to do anything.
+   For CentOS or Rocky ``<10`` run:
+
+   .. code-block:: console
+
+      sudo dnf install python3.12
 
    For Debian or Ubuntu, run:
 
@@ -75,6 +79,14 @@ Install dependencies for the virtual environment
 
 #. Create a virtual environment and activate it:
 
+   For CentOS or Rocky run:
+
+   .. code-block:: console
+
+      python3.12 -m venv /path/to/venv
+      source /path/to/venv/bin/activate
+
+   For Debian or Ubuntu, run:
    .. code-block:: console
 
       python3 -m venv /path/to/venv
