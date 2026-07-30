@@ -49,3 +49,7 @@
   become: true
   changed_when: false
   ansible.builtin.command: "{{ kolla_container_engine }} exec {{ service.container_name }} rabbitmqctl wait --timeout 60 {{ rabbitmq_pid_file }}"
+  register: result
+  until: result.rc == 0
+  retries: 10
+  delay: 5
