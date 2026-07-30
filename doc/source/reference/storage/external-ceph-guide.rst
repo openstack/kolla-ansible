@@ -537,6 +537,19 @@ This prevents cross-project and public object access. This can be resolved by
 setting ``ceph_rgw_swift_account_in_url`` to ``true``. This should match the
 ``rgw_swift_account_in_url`` configuration option in Ceph RadosGW.
 
+.. warning::
+
+   Kolla Ansible has no visibility of the configuration of an externally
+   managed RadosGW service, so mismatches are not detected. If
+   ``ceph_rgw_swift_compatibility`` or ``ceph_rgw_swift_account_in_url`` do
+   not match the RadosGW configuration, RadosGW will not recognise the Swift
+   URLs registered in Keystone, and typically falls back to handling requests
+   with its S3 API handler. This results in hard to diagnose 403 errors from
+   Swift clients such as Horizon. When changing any non-default ``rgw_*``
+   option on the RadosGW service (for example via ``ceph config set``),
+   ensure that the corresponding Kolla Ansible variables are updated to
+   match, and vice versa.
+
 Load balancing
 ==============
 
