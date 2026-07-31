@@ -92,8 +92,8 @@ the use of - in a variable name it is not possible to use the default
 br-ex name for the neutron_bridge_name or tunnel_interface.
 
 At present, the tunnel interface ip is configured using network manager on
-on ubuntu and systemd on centos family operating systems. systemd is used
-to work around a limitation of the centos network manager implementation which
+on ubuntu and systemd on rocky operating systems. systemd is used
+to work around a limitation of the rocky network manager implementation which
 does not consider the creation of an ovs bridge to be a hotplug event. In
 the future, a new config option will be introduced to allow systemd to be used
 on all host distros for those who do not wish to enable the network manager

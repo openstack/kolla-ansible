@@ -138,13 +138,13 @@ be enabled by appending ``--type source`` to the :command:`kolla-build` or
 
    .. note::
 
-      By default :command:`kolla-build` will build all containers using CentOS as
+      By default :command:`kolla-build` will build all containers using Rocky as
       the base image. To change this behavior, use the following parameter with
       :command:`kolla-build` or ``tools/build.py`` command:
 
       .. code-block:: console
 
-         --base [centos|debian|rocky|ubuntu]
+         --base [debian|rocky|ubuntu]
 
 Configure and Deploy a Bifrost Container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

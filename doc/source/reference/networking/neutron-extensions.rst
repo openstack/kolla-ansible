@@ -48,7 +48,7 @@ Neutron VPNaaS (VPN-as-a-Service)
 .. warning::
 
    OVN VPNaaS is currently not supported on RHEL 10 based distributions
-   (e.g., Rocky Linux 10, CentOS Stream 10) due to an upstream bug in
+   (e.g., Rocky Linux 10) due to an upstream bug in
    Neutron. See `LP#2146308 <https://bugs.launchpad.net/neutron/+bug/2146308>`_
    for details.
 

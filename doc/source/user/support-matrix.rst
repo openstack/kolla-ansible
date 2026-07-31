@@ -7,13 +7,6 @@ Supported Operating Systems
 
 Kolla Ansible supports the following host Operating Systems (OS):
 
-.. note::
-
-   CentOS Stream 10 is supported as a host OS while Kolla does not publish CS10
-   based images. Users can build them on their own. We recommend using Rocky
-   Linux 10 images instead.
-
-* CentOS Stream 10
 * Debian Trixie (13)
 * Rocky Linux 10
 * Ubuntu Noble (24.04)
@@ -24,7 +17,6 @@ Supported container images
 For best results, the base container image distribution should match the host
 OS distribution. The following values are supported for ``kolla_base_distro``:
 
-* ``centos``
 * ``debian``
 * ``rocky``
 * ``ubuntu``
