@@ -3,7 +3,7 @@
     @type copy
     <store>
        @type opensearch
-       hosts {% for host in groups['opensearch'] %}{{ 'api' | kolla_address(host) }}{% if not loop.last %},{% endif %}{% endfor %}
+       hosts {% if opensearch_address is defined and opensearch_address != kolla_internal_fqdn %}{{ opensearch_address }}{% else %}{% for host in groups['opensearch'] %}{{ 'api' | kolla_address(host) }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
        port {{ opensearch_port }}
        scheme {{ fluentd_opensearch_scheme }}
 {%     if fluentd_opensearch_user != '' and fluentd_opensearch_password != '' %}
