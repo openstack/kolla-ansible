@@ -180,6 +180,14 @@ class DockerWorker(ContainerWorker):
                             'ExitCode: %s Message: %s' %
                             (exec_inspect['ExitCode'], output))
 
+    def dimensions_differ(self, a, b, key):
+        if key in ('cpuset_cpus', 'cpuset_mems'):
+            a = str(a or '')
+            b = str(b or '')
+            return a != b
+
+        return super().dimensions_differ(a, b, key)
+
     def get_image_id(self):
         full_image = self.params.get('image')
 
