@@ -1,5 +1,5 @@
 {
-    "command": "neutron-periodic-workers",
+    "command": "neutron-periodic-workers --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini{% if enable_neutron_vpnaas | bool %} --config-file /etc/neutron/neutron_vpnaas.conf{% endif %}{% if enable_neutron_fwaas | bool %} --config-file /etc/neutron/fwaas_driver.ini{% endif %}",
     "config_files": [
         {
             "source": "{{ container_config_directory }}/neutron.conf",
@@ -16,6 +16,12 @@
         {
             "source": "{{ container_config_directory }}/neutron_vpnaas.conf",
             "dest": "/etc/neutron/neutron_vpnaas.conf",
+            "owner": "neutron",
+            "perm": "0600"
+        }{% endif %}{% if enable_neutron_fwaas | bool %},
+        {
+            "source": "{{ container_config_directory }}/fwaas_driver.ini",
+            "dest": "/etc/neutron/fwaas_driver.ini",
             "owner": "neutron",
             "perm": "0600"
         }{% endif %}{% if kolla_copy_ca_into_containers | bool %},
