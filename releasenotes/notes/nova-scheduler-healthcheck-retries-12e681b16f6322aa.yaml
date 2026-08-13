@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    The ``nova_scheduler`` container healthcheck asserts an established AMQP
+    connection, but every deploy and every reconfigure signals the scheduler
+    to restart its workers and they take
+    ``[DEFAULT]/manager_shutdown_timeout`` (160 seconds by default) to come
+    back. The default 30 second interval with 3 retries only covers 90
+    seconds of that, so the container could be reported unhealthy for the
+    rest of the restart even though the scheduler was fine.
+    ``nova_scheduler_healthcheck_retries`` now defaults to 8, which covers
+    the whole window, and is documented in the sample ``globals.yml``.
+    `LP#2162860 <https://bugs.launchpad.net/kolla/+bug/2162860>`__
