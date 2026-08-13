@@ -219,6 +219,21 @@ workaround_ansible_issue_8743: true
 #default_container_healthcheck_timeout: 30
 #default_container_healthcheck_retries: 3
 #default_container_healthcheck_start_period: 5
+# Individual services accept per-service overrides of the options above,
+# named <service>_healthcheck_<option>. nova_scheduler ships with a wider
+# one: its healthcheck asserts an established AMQP connection, but every
+# deploy and every reconfigure signals the scheduler to restart its
+# workers, and they take [DEFAULT]/manager_shutdown_timeout in nova.conf
+# (160 seconds by default) to come back. The default 30 second interval
+# with 3 retries only covers 90 seconds of that.
+#nova_scheduler_healthcheck_retries: 8
+# The conductors wait for the same period, but are only ever stopped by
+# the container engine, which kills them after docker_graceful_timeout
+# and so stays inside what the default healthcheck covers. Raise these
+# to match if docker_graceful_timeout is raised towards
+# manager_shutdown_timeout.
+#nova_conductor_healthcheck_retries: 3
+#nova_super_conductor_healthcheck_retries: 3
 
 ##################
 # Firewall options
