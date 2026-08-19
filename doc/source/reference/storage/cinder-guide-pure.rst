@@ -1,13 +1,13 @@
 .. cinder-guide-pure:
 
-=====================================
-Pure Storage FlashArray for OpenStack
-=====================================
+=================================
+Everpure FlashArray for OpenStack
+=================================
 
-Pure Storage FlashArray Cinder Driver
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Everpure FlashArray Cinder Driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To use the ``Pure Storage FlashArray iSCSI`` Cinder backend, enable and
+To use the ``Everpure FlashArray iSCSI`` Cinder backend, enable and
 configure the ``FlashArray iSCSI`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. code-block:: yaml
@@ -16,7 +16,7 @@ configure the ``FlashArray iSCSI`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. end
 
-To use the ``Pure Storage FlashArray FC`` Cinder backend, enable and
+To use the ``Everpure FlashArray FC`` Cinder backend, enable and
 configure the ``FlashArray FC`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. code-block:: yaml
@@ -25,7 +25,7 @@ configure the ``FlashArray FC`` Cinder driver in ``/etc/kolla/globals.yml``.
 
 .. end
 
-To use the ``Pure Storage FlashArray NVMe-RoCE`` Cinder backend, enable and
+To use the ``Everpure FlashArray NVMe-RoCE`` Cinder backend, enable and
 configure the ``FlashArray NVMe-RoCE`` Cinder driver in
 ``/etc/kolla/globals.yml``.
 
@@ -39,7 +39,7 @@ configure the ``FlashArray NVMe-RoCE`` Cinder driver in
 
   The NVMe-RoCE driver is only supported from OpenStack Zed and later.
 
-To use the ``Pure Storage FlashArray NVMe-TCP`` Cinder backend, enable and
+To use the ``Everpure FlashArray NVMe-TCP`` Cinder backend, enable and
 configure the ``FlashArray NVMe-TCP`` Cinder driver in
 ``/etc/kolla/globals.yml``.
 
@@ -53,7 +53,7 @@ configure the ``FlashArray NVMe-TCP`` Cinder driver in
 
   The NVMe-TCP driver is only supported from OpenStack 2023.2 (Bobcat) and later.
 
-It is important to note that you cannot mix iSCSI and FC Pure Storage
+It is important to note that you cannot mix the iSCSI and FC Everpure
 FlashArray drivers in the same OpenStack cluster.
 
 Also set the values for the following parameters in ``/etc/kolla/globals.yml``:
@@ -62,7 +62,7 @@ Also set the values for the following parameters in ``/etc/kolla/globals.yml``:
 * ``pure_san_ip``
 
 For details on how to use these parameters, refer to the
-`Pure Storage Cinder Reference Guide <https://docs.openstack.org/cinder/latest/configuration/block-storage/drivers/pure-storage-driver.html>`_.
+`Everpure Cinder Reference Guide <https://docs.openstack.org/cinder/latest/configuration/block-storage/drivers/everpure-driver.html>`_.
 
 There are numerous other parameters that can be set for this driver and
 these are detailed in the above link.

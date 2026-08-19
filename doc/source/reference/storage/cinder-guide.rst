@@ -300,16 +300,16 @@ that appears in cinder.conf:
    * - Quobyte Storage for OpenStack
      - cinder_backend_quobyte_name
      - QuobyteHD
-   * - Pure Storage FlashArray for OpenStack (iSCSI)
+   * - Everpure FlashArray for OpenStack (iSCSI)
      - cinder_backend_pure_iscsi_name
      - Pure-FlashArray-iscsi
-   * - Pure Storage FlashArray for OpenStack
+   * - Everpure FlashArray for OpenStack (FC)
      - cinder_backend_pure_fc_name
      - Pure-FlashArray-fc
-   * - Pure Storage FlashArray for OpenStack
+   * - Everpure FlashArray for OpenStack (NVMe-RoCE)
      - cinder_backend_pure_roce_name
      - Pure-FlashArray-roce
-   * - Pure Storage FlashArray for OpenStack
+   * - Everpure FlashArray for OpenStack (NVMe-TCP)
      - cinder_backend_pure_nvme_tcp_name
      - Pure-FlashArray-nvme-tcp
    * - Lightbits Labs storage backend

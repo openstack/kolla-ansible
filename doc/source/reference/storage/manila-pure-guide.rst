@@ -1,18 +1,18 @@
 .. _manila-pure-guide:
 
-==========================================================
-Pure Storage FlashBlade File Services Driver for OpenStack
-==========================================================
+======================================================
+Everpure FlashBlade File Services Driver for OpenStack
+======================================================
 
 Overview
 ~~~~~~~~
-The Pure Storage FlashBlade File Services Driver for OpenStack
+The Everpure FlashBlade File Services Driver for OpenStack
 provides NFS Shared File Systems to OpenStack.
 
 
 Requirements
 ------------
-- Pure Storage FlashBlade
+- Everpure FlashBlade
 
 - Purity//FB v2.3.0 or higher
 
@@ -163,7 +163,7 @@ Create a NFS share using the FlashBlade back end:
 
 .. code-block:: console
 
-   $ openstack share create --name <myflashbladeshare \
+   $ openstack share create --name <myflashbladeshare> \
      --description "My Manila share" \
      --share-type default_share_flashblade \
      NFS 1
@@ -277,8 +277,8 @@ Modify the file ``/etc/kolla/config/manila-share.conf`` and add the contents:
 For more information about how to manage shares, see the
 :manila-doc:`Manage shares <user/create-and-manage-shares.html>`.
 
-For details on how to use the Pure Storage FlashBlade, refer to the
-`Pure Storage Manila Reference Guide <https://docs.openstack.org/manila/latest/configuration/shared-file-systems/drivers/purestorage-flashblade-driver.html>`_.
+For details on how to use the Everpure FlashBlade, refer to the
+`Everpure Manila Reference Guide <https://docs.openstack.org/manila/latest/configuration/shared-file-systems/drivers/everpure-flashblade-driver.html>`_.
 
 The use of this backend requires that the ``purity_fb`` SDK package is
 installed in the ``manila-share`` container. To do this follow the steps
