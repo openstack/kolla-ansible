@@ -15,8 +15,12 @@
 
 from importlib.machinery import SourceFileLoader
 import os
+import tempfile
 
 from io import StringIO
+
+from ansible.parsing.dataloader import DataLoader
+from ansible.template import Templar
 from oslotest import base
 
 
@@ -210,4 +214,41 @@ class OverrideConfigParserTest(base.BaseTestCase):
         output = StringIO()
         parser.write(output)
         self.assertEqual(TESTC_NO_WHITESPACE, output.getvalue())
+        output.close()
+
+    def test_read_config_lstrip_blocks(self):
+        # An indented Jinja2 block tag on its own line must not leak its
+        # leading whitespace into the following line, or the line gets
+        # parsed as a continuation of the previous key's value instead of
+        # a new key.
+        content = (
+            "[DEFAULT]\n"
+            "key1 = value1\n"
+            "  {% if true %}\n"
+            "key2 = value2\n"
+            "  {% endif %}\n"
+            "key3 = value3\n"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source = os.path.join(tmpdir, 'source.conf')
+            with open(source, 'w') as f:
+                f.write(content)
+
+            loader = DataLoader()
+            loader.set_basedir(tmpdir)
+            action = object.__new__(merge_configs.ActionModule)
+            action._loader = loader
+            action._templar = Templar(loader=loader)
+
+            config = merge_configs.OverrideConfigParser()
+            action.read_config(source, config)
+
+        output = StringIO()
+        config.write(output)
+        self.assertEqual(
+            "[DEFAULT]\n"
+            "key1 = value1\n"
+            "key2 = value2\n"
+            "key3 = value3\n\n",
+            output.getvalue())
         output.close()
