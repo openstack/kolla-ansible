@@ -20,6 +20,7 @@ function prepare_images {
 
     python3 -m venv ~/kolla-venv
     source ~/kolla-venv/bin/activate
+    pip3 install -U pip
     if [[ "$CONTAINER_ENGINE" == "docker" ]]; then
         pip install "${KOLLA_SRC_DIR}" "docker"
     else
