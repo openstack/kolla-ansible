@@ -10,12 +10,10 @@
   register: container_facts
 
 - name: Taking database backup via Mariabackup - backup type {{ mariadb_backup_type }}
-  vars:
-    cmd: "{{ 'kolla_mariadb_backup.sh' if mariadb_backup_target == 'active' else 'kolla_mariadb_backup_replica.sh' }}"
   become: true
   kolla_container:
     action: "start_container"
-    command: "bash -c 'sudo -E kolla_set_configs && /usr/local/bin/{{ cmd }}'"
+    command: "bash -c 'sudo -E kolla_set_configs && /usr/local/bin/kolla_mariadb_backup.sh'"
     common_options: "{{ docker_common_options }}"
     detach: false
     # NOTE(mgoddard): Try to use the same image as the MariaDB server container
