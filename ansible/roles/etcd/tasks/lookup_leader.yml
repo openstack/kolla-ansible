@@ -1,5 +1,14 @@
 ---
 # NOTE(jan.gutter): These tasks assume a cluster is running
+- name: Get info on etcd container
+  become: true
+  kolla_container_facts:
+    action: get_containers
+    container_engine: "{{ kolla_container_engine }}"
+    name:
+      - etcd
+  register: etcd_container_info
+
 - name: Check for the etcd leader
   vars:
     service_name: "etcd"
@@ -18,6 +27,7 @@
   changed_when: false
   when:
     - inventory_hostname in (groups.etcd_had_volume_True | default([]))
+    - etcd_container_info.containers['etcd'] is defined
   register: etcd_endpoint_status_result
 
 - name: Divide hosts by their etcd leader status
