@@ -1,0 +1,16 @@
+---
+fixes:
+  - |
+    Fixes MariaDB backups failing since MariaDB 10.11.19 and 11.4.13.
+    Mariabackup copied the data directory of ``mariadb_backup_host`` but
+    connected through the load balancer, which could route it to a different
+    Galera member. The backup lock then applied to the wrong node. It now
+    connects to the MariaDB instance on the host it backs up.
+upgrade:
+  - |
+    ``mariadb_backup_target`` no longer has any effect. Backups are always
+    taken from ``mariadb_backup_host``.
+  - |
+    Full backups are now named ``mysqlbackup-<date>.qp.xbc.xbs.gz`` and
+    incrementals ``incremental-<date>-mysqlbackup-<date>.qp.xbc.xbs.gz``,
+    matching the restore documentation. Existing backups remain restorable.
