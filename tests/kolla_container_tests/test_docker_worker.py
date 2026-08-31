@@ -1165,6 +1165,73 @@ class TestVolume(base.BaseTestCase):
         )
 
 
+class TestTLS(base.BaseTestCase):
+
+    def setUp(self):
+        super(TestTLS, self).setUp()
+        self.tz_patcher = mock.patch.object(
+            dwm.DockerWorker, '_get_host_timezone', return_value='UTC')
+        self.tz_patcher.start()
+        self.addCleanup(self.tz_patcher.stop)
+
+    @mock.patch('docker.tls.TLSConfig')
+    def test_tls_disabled_by_default(self, mock_tls_config):
+        self.dw = get_DockerWorker({'name': 'test_container'})
+        self.dw.generate_tls()
+        mock_tls_config.assert_called_once_with(verify=None)
+
+    @mock.patch('docker.tls.TLSConfig')
+    def test_tls_verify_enabled_no_certs(self, mock_tls_config):
+        self.dw = get_DockerWorker({
+            'name': 'test_container',
+            'tls_verify': True})
+        self.dw.generate_tls()
+        mock_tls_config.assert_called_once_with(verify=True)
+
+    @mock.patch('os.path.isfile', return_value=True)
+    @mock.patch('os.access', return_value=True)
+    @mock.patch('docker.tls.TLSConfig')
+    def test_tls_verify_with_client_cert_and_key(self, mock_tls_config,
+                                                 mock_access, mock_isfile):
+        self.dw = get_DockerWorker({
+            'name': 'test_container',
+            'tls_verify': True,
+            'tls_cert': '/path/to/cert.pem',
+            'tls_key': '/path/to/key.pem'})
+        self.dw.generate_tls()
+        mock_tls_config.assert_called_once_with(
+            verify=True,
+            client_cert=('/path/to/cert.pem', '/path/to/key.pem'))
+
+    @mock.patch('os.path.isfile', return_value=True)
+    @mock.patch('os.access', return_value=True)
+    @mock.patch('docker.tls.TLSConfig')
+    def test_tls_verify_with_cacert(self, mock_tls_config,
+                                    mock_access, mock_isfile):
+        self.dw = get_DockerWorker({
+            'name': 'test_container',
+            'tls_verify': True,
+            'tls_cacert': '/path/to/ca.pem'})
+        self.dw.generate_tls()
+        mock_tls_config.assert_called_once_with(
+            verify='/path/to/ca.pem')
+
+    @mock.patch('os.path.isfile', return_value=False)
+    @mock.patch('os.access', return_value=True)
+    @mock.patch('docker.tls.TLSConfig')
+    def test_tls_verify_cert_file_missing_fails(self, mock_tls_config,
+                                                mock_access, mock_isfile):
+        self.dw = get_DockerWorker({
+            'name': 'test_container',
+            'tls_verify': True,
+            'tls_cert': '/missing/cert.pem',
+            'tls_key': '/missing/key.pem'})
+        self.dw.generate_tls()
+        self.dw.module.fail_json.assert_any_call(
+            failed=True,
+            msg='There is no file at "/missing/cert.pem"')
+
+
 class TestAttrComp(base.BaseTestCase):
 
     def setUp(self):
