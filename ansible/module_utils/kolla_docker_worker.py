@@ -41,8 +41,8 @@ class DockerWorker(ContainerWorker):
 
     def generate_tls(self):
         tls = {'verify': self.params.get('tls_verify')}
-        tls_cert = self.params.get('tls_cert'),
-        tls_key = self.params.get('tls_key'),
+        tls_cert = self.params.get('tls_cert')
+        tls_key = self.params.get('tls_key')
         tls_cacert = self.params.get('tls_cacert')
 
         if tls['verify']:
