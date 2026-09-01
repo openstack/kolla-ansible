@@ -1332,6 +1332,12 @@ class TestAttrComp(base.BaseTestCase):
         self.pw = get_PodmanWorker({'privileged': False})
         self.assertTrue(self.pw.compare_privileged(container_info))
 
+    def test_compare_labels_image_missing(self):
+        container_info = {'Config': dict(Labels={'kolla_version': '1.0.1'})}
+        self.pw = get_PodmanWorker({'labels': {}})
+        self.pw.check_image = mock.MagicMock(return_value=dict())
+        self.assertFalse(self.pw.compare_labels(container_info))
+
     def test_compare_labels_neg(self):
         container_info = {'Config': dict(Labels={'kolla_version': '2.0.1'})}
         self.pw = get_PodmanWorker({'labels': {'kolla_version': '2.0.1'}})

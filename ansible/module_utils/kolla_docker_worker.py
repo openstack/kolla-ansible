@@ -77,6 +77,7 @@ class DockerWorker(ContainerWorker):
             for image_name in repo_tags:
                 if image_name == find_image:
                     return image
+        return dict()
 
     def check_volume(self):
         for vol in self.dc.volumes()['Volumes'] or list():

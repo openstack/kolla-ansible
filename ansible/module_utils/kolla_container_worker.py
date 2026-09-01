@@ -317,7 +317,10 @@ class ContainerWorker(ABC):
     def compare_labels(self, container_info):
         new_labels = self.params.get('labels')
         current_labels = container_info['Config'].get('Labels', dict())
-        image_labels = self.check_image().get('Labels', dict())
+        image_info = self.check_image()
+        if not image_info:
+            return False
+        image_labels = image_info.get('Labels', dict())
         for k, v in image_labels.items():
             if k in new_labels:
                 if v != new_labels[k]:
