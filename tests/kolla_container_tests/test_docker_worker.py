@@ -1251,6 +1251,12 @@ class TestAttrComp(base.BaseTestCase):
         self.dw = get_DockerWorker({'privileged': False})
         self.assertTrue(self.dw.compare_privileged(container_info))
 
+    def test_compare_labels_image_missing(self):
+        container_info = {'Config': dict(Labels={'kolla_version': '1.0.1'})}
+        self.dw = get_DockerWorker({'labels': {}})
+        self.dw.check_image = mock.MagicMock(return_value=dict())
+        self.assertFalse(self.dw.compare_labels(container_info))
+
     def test_compare_labels_neg(self):
         container_info = {'Config': dict(Labels={'kolla_version': '2.0.1'})}
         self.dw = get_DockerWorker({'labels': {'kolla_version': '2.0.1'}})
