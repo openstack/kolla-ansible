@@ -90,6 +90,9 @@ sub-folders is also supported when using a custom ``provisioning.yaml``
 file. Dashboards will be imported into the Grafana dashboards 'General'
 folder by default.
 
+To set a custom home dashboard, place the dashboard file in
+``{{ node_custom_config }}/grafana/grafana_home_dashboard.json``.
+
 Grafana provisioner config can be altered by placing ``provisioning.yaml`` to
 ``{{ node_custom_config }}/grafana/`` folder.
 

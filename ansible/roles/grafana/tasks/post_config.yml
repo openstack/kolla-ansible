@@ -41,20 +41,3 @@
   failed_when: response.status not in [200, 409] or response.status == 409 and ("name already exists" not in response.json.message | default(""))
   with_dict: "{{ grafana_data_sources }}"
   when: item.value.enabled | bool
-
-- name: Disable Getting Started panel
-  become: true
-  kolla_toolbox:
-    container_engine: "{{ kolla_container_engine }}"
-    module_name: uri
-    module_args:
-      url: "{{ grafana_internal_endpoint }}/api/user/helpflags/1"
-      method: PUT
-      user: "{{ grafana_admin_username }}"
-      password: "{{ grafana_admin_password }}"
-      force_basic_auth: true
-      status_code: 200
-  register: grafana_response
-  changed_when: grafana_response.status == 200
-  run_once: true
-  when: "'grafana_home_dashboard.json' in check_extra_conf_grafana.files | map(attribute='path') | map('basename')"
