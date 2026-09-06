@@ -228,9 +228,10 @@ class ActionModule(action.ActionBase):
                 templar=self._templar,
                 shared_loader_obj=self._shared_loader_obj)
             copy_result = copy_action.run(task_vars=task_vars)
-            copy_result['invocation']['module_args'].update({
-                'src': result_file, 'sources': sources,
-                'whitespace': whitespace})
+            if 'invocation' in copy_result:
+                copy_result['invocation']['module_args'].update({
+                    'src': result_file, 'sources': sources,
+                    'whitespace': whitespace})
             result.update(copy_result)
         finally:
             shutil.rmtree(local_tempdir)
