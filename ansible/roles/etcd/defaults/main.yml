@@ -92,7 +92,9 @@ etcd_enable_healthchecks: "{{ enable_container_healthchecks }}"
 etcd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
 etcd_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
 etcd_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-etcd_healthcheck_test: ["CMD-SHELL", "healthcheck_curl http://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}/health"]
+etcd_healthcheck_test:
+  - "CMD-SHELL"
+  - "healthcheck_curl {{ etcd_protocol }}://{{ api_interface_address | put_address_in_context('url') }}:{{ etcd_client_port }}/health"
 etcd_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
 etcd_healthcheck:
   interval: "{{ etcd_healthcheck_interval }}"
