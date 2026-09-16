@@ -44,6 +44,8 @@ options:
   module_args:
     description:
       - The module args use by the module
+      - Keys whose value is an empty string or a nested omit placeholder
+        are dropped, so the invoked module sees them as unset
     required: False
     type: dict
   module_extra_vars:
@@ -161,6 +163,20 @@ _ExecResult = collections.namedtuple(
     '_ExecResult', ['exit_code', 'output'])
 
 
+def _sanitize_module_args(module_args):
+    """Drop empty strings and Ansible omit placeholders from module_args."""
+    if not module_args:
+        return {}
+    omit_prefix = '__omit_place_holder__'
+    sanitized = {}
+    for key, value in module_args.items():
+        if isinstance(value, str) and (
+                value == '' or value.startswith(omit_prefix)):
+            continue
+        sanitized[key] = value
+    return sanitized
+
+
 def _build_playbook(module_name, module_args, extra_vars, check_mode):
     """Return a JSON playbook string for *module_name* / *module_args*.
 
@@ -172,7 +188,7 @@ def _build_playbook(module_name, module_args, extra_vars, check_mode):
         'hosts': 'localhost',
         'gather_facts': False,
         'tasks': [{'name': 'kolla_toolbox task',
-                   module_name: module_args}],
+                   module_name: _sanitize_module_args(module_args)}],
     }
     if extra_vars:
         play['vars'] = extra_vars
