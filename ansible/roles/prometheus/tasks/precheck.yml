@@ -28,21 +28,21 @@
   ansible.builtin.assert:
     that:
       - prometheus_bcrypt_salt is defined
-      - prometheus_bcrypt_salt is string
+      - prometheus_bcrypt_salt is string or prometheus_bcrypt_salt is vault_encrypted
       - prometheus_bcrypt_salt | length == 22
 
 - name: Check that prometheus_password is correctly set
   ansible.builtin.assert:
     that:
       - prometheus_password is defined
-      - prometheus_password is string
+      - prometheus_password is string or prometheus_password is vault_encrypted
       - prometheus_password | length > 0
 
 - name: Check that prometheus_grafana_password is correctly set
   ansible.builtin.assert:
     that:
       - prometheus_grafana_password is defined
-      - prometheus_grafana_password is string
+      - prometheus_grafana_password is string or prometheus_grafana_password is vault_encrypted
       - prometheus_grafana_password | length > 0
   when: enable_grafana | bool
 
@@ -50,7 +50,7 @@
   ansible.builtin.assert:
     that:
       - prometheus_skyline_password is defined
-      - prometheus_skyline_password is string
+      - prometheus_skyline_password is string or prometheus_skyline_password is vault_encrypted
       - prometheus_skyline_password | length > 0
   when: enable_skyline | bool
 
