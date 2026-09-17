@@ -152,6 +152,12 @@ class SystemdWorker(object):
             self.sysdir + self.container_dict['service_name']
         )
 
+    def check_unit_file_symlink(self):
+        return os.path.isfile(
+            self.sysdir + "multi-user.target.wants/" +
+            self.container_dict['service_name']
+        )
+
     def check_unit_change(self, new_content=''):
         if not new_content:
             new_content = self.generate_unit_file()
@@ -186,13 +192,21 @@ class SystemdWorker(object):
         return False
 
     def remove_unit_file(self):
+        removed = False
+
         if self.check_unit_file():
             os.remove(self.sysdir + self.container_dict['service_name'])
+            removed = True
+
+        if self.check_unit_file_symlink():
+            os.remove(self.sysdir + "multi-user.target.wants/" +
+                      self.container_dict['service_name'])
+            removed = True
+
+        if removed:
             self.reload()
 
-            return True
-        else:
-            return False
+        return removed
 
     def get_unit_state(self):
         unit_list = self.manager.ListUnits()
