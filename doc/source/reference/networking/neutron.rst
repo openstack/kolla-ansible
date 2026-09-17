@@ -25,10 +25,10 @@ value is ``eth1``. These external interfaces are used by hosts in the
 ``network`` group.  They are also used by hosts in the ``compute`` group if
 ``enable_neutron_provider_networks`` is set or DVR is enabled.
 
-The external interfaces are each plugged into a bridge (Open vSwitch or Linux
-Bridge, depending on the driver) defined by ``neutron_bridge_name``, which
-defaults to ``br-ex``. When there are multiple external interfaces,
-``neutron_bridge_name`` should be a comma-separated list of the same length.
+The external interfaces are each plugged into an Open vSwitch bridge defined by
+``neutron_bridge_name``, which defaults to ``br-ex``. When there are multiple
+external interfaces, ``neutron_bridge_name`` should be a comma-separated list
+of the same length.
 
 The default Neutron physical network is ``physnet1``, or ``physnet1`` to
 ``physnetN`` when there are multiple external network interfaces. This may be
