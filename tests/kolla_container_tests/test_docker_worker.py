@@ -56,6 +56,7 @@ FAKE_DATA = {
             'network_mode': 'host',
             'ipc_mode': '',
             'cap_add': None,
+            'group_add': None,
             'security_opt': None,
             'pid_mode': '',
             'privileged': False,
@@ -326,7 +327,7 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.create_container.assert_called_once_with(
             **{k: self.fake_data['params'][k] for k in expected_args})
         self.dw.dc.create_host_config.assert_called_with(
-            cap_add=None, network_mode='host', ipc_mode=None,
+            cap_add=None, group_add=[], network_mode='host', ipc_mode=None,
             pid_mode=None, tmpfs=None, volumes_from=None, blkio_weight=10,
             security_opt=None, privileged=None)
 
@@ -1251,6 +1252,45 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'HostConfig': dict(CapAdd=['data1'])}
         self.dw = get_DockerWorker({'cap_add': ['data2']})
         self.assertTrue(self.dw.compare_cap_add(container_info))
+
+    def test_compare_group_add_neg(self):
+        container_info = {'HostConfig': dict(GroupAdd=['1000'])}
+        self.dw = get_DockerWorker({'group_add': ['1000']})
+        self.assertIs(False, self.dw.compare_group_add(container_info))
+
+    def test_compare_group_add_pos(self):
+        container_info = {'HostConfig': dict(GroupAdd=['1000'])}
+        self.dw = get_DockerWorker({'group_add': ['2000']})
+        self.assertIs(True, self.dw.compare_group_add(container_info))
+
+    def test_compare_group_add_empty(self):
+        container_info = {'HostConfig': dict(GroupAdd=None)}
+        self.dw = get_DockerWorker({'group_add': []})
+        self.assertIs(False, self.dw.compare_group_add(container_info))
+
+    def test_compare_group_add_by_name_neg(self):
+        container_info = {'HostConfig': dict(GroupAdd=['190'])}
+        self.dw = get_DockerWorker({'group_add': ['systemd-journal']})
+        grp_path = 'ansible.module_utils.kolla_container_worker.grp.getgrnam'
+        with mock.patch(grp_path) as mock_grp:
+            mock_grp.return_value.gr_gid = 190
+            self.assertIs(False, self.dw.compare_group_add(container_info))
+
+    def test_compare_group_add_by_name_pos(self):
+        container_info = {'HostConfig': dict(GroupAdd=['190'])}
+        self.dw = get_DockerWorker({'group_add': ['other-group']})
+        grp_path = 'ansible.module_utils.kolla_container_worker.grp.getgrnam'
+        with mock.patch(grp_path) as mock_grp:
+            mock_grp.return_value.gr_gid = 999
+            self.assertIs(True, self.dw.compare_group_add(container_info))
+
+    def test_compare_group_add_by_name_unknown(self):
+        container_info = {'HostConfig': dict(GroupAdd=[])}
+        self.dw = get_DockerWorker({'group_add': ['no-such-group']})
+        grp_path = 'ansible.module_utils.kolla_container_worker.grp.getgrnam'
+        with mock.patch(grp_path, side_effect=KeyError('no-such-group')):
+            self.assertRaises(KeyError, self.dw.compare_group_add,
+                              container_info)
 
     def test_compare_ipc_mode_neg(self):
         container_info = {'HostConfig': dict(IpcMode='data')}

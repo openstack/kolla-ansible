@@ -292,6 +292,7 @@ class DockerWorker(ContainerWorker):
             'network_mode': 'host',
             'ipc_mode': self.params.get('ipc_mode'),
             'cap_add': self.params.get('cap_add'),
+            'group_add': self._resolved_group_add,
             'security_opt': self.params.get('security_opt'),
             'pid_mode': self.params.get('pid_mode'),
             'privileged': self.params.get('privileged'),
