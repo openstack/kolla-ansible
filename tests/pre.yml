@@ -65,6 +65,17 @@
         state: present
       when: ansible_facts.distribution == "Rocky"
 
+    # TODO(mnasiadka): prefer IPv4 over IPv6 in getaddrinfo() to avoid
+    # slow/failing AAAA lookups against hosts without real IPv6
+    # connectivity. Remove once IPv6 in VexxHost ca-ymq-1 is reliable.
+    - name: Prefer IPv4 over IPv6 for name resolution
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/gai.conf
+        line: "precedence ::ffff:0:0/96  100"
+        create: true
+      when: nodepool.region == 'ca-ymq-1'
+
     # NOTE(yoctozepto): we use gawk to add time to each logged line
     # outside of Ansible (e.g. for init-runonce)
     - name: Install gawk and required Python modules
