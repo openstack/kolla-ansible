@@ -1,4 +1,14 @@
 ---
+- name: "Copy CA certificates for mariabackup"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ kolla_certificates_dir }}/ca/"
+    dest: "{{ node_config_directory }}/mariabackup/ca-certificates"
+    mode: "0644"
+  when:
+    - enable_mariabackup | bool
+    - inventory_hostname == mariadb_backup_host
+
 - name: "Copy certificates and keys for {{ project_name }}"
   ansible.builtin.import_role:
     role: service-cert-copy
