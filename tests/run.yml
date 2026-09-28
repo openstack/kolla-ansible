@@ -33,6 +33,7 @@
         openstack_core_tested: "{{ scenario in ['core', 'cephadm', 'cells', 'ovn', 'lets-encrypt', 'container-engine-migration'] }}"
         dashboard_enabled: "{{ openstack_core_enabled }}"
         upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
+        previous_release_requirements_src_dir: "{{ ansible_env.HOME }}/src/previous-release-requirements"
         docker_image_tag_suffix: "{{ '-aarch64' if ansible_architecture == 'aarch64' else '' }}"
         ironic_ipa_files_url: >-
           https://tarballs.opendev.org/openstack/{{ ironic_ipa_files_project }}/dib/files
@@ -138,13 +139,19 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
-        - name: Checkout the previous requirements branch
+        # NOTE(mnasiadka): checked out into a separate worktree,
+        # so that the requirements checkout used by kolla-build is untouched
+        - name: Checkout the previous requirements branch into a separate worktree
           shell:
             cmd: |
-              git checkout stable/{{ previous_release | lower }}
-              echo "requirements checked out to:"
-              git log --pretty=oneline  -1
+              git worktree add -f {{ previous_release_requirements_src_dir }} stable/{{ previous_release | lower }}
+              echo "requirements (previous release) checked out to:"
+              git -C {{ previous_release_requirements_src_dir }} log --pretty=oneline -1
             chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
+
+        - name: Use the previous release upper-constraints for the initial deployment
+          set_fact:
+            upper_constraints_file: "{{ previous_release_requirements_src_dir }}/upper-constraints.txt"
       when: is_upgrade
 
     - name: Ensure /etc/kolla exists
@@ -626,13 +633,9 @@
               git log --pretty=oneline  -1
             chdir: "{{ kolla_ansible_src_dir }}"
 
-        - name: Checkout the current requirements branch
-          shell:
-            cmd: |
-              git checkout {{ zuul.projects["opendev.org/openstack/requirements"].checkout }}
-              echo "requirements checked out to:"
-              git log --pretty=oneline  -1
-            chdir: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/"
+        - name: Use the current release upper-constraints for the upgrade
+          set_fact:
+            upper_constraints_file: "{{ ansible_env.HOME }}/src/opendev.org/openstack/requirements/upper-constraints.txt"
 
         # TODO(bbezak): Drop this workaround once kolla-ansible supports bcrypt 5.
         - name: Pin bcrypt to <5 in upper-constraints in CI
