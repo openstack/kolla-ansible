@@ -13,27 +13,14 @@
 # limitations under the License.
 
 import builtins
-import contextlib
 import io
 import json
 import os
 import sys
 import tarfile
 
-from ansible.module_utils import basic
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.common.text.converters import to_bytes
-try:
-    from ansible.module_utils.testing import patch_module_args
-except ImportError:
-    # TODO(dougszu): Remove this exception handler when Python 3.10 support
-    # is not required. Python 3.10 isn't supported by Ansible Core 2.18 which
-    # provides patch_module_args
-    @contextlib.contextmanager
-    def patch_module_args(args):
-        serialized_args = to_bytes(json.dumps({'ANSIBLE_MODULE_ARGS': args}))
-        with mock.patch.object(basic, '_ANSIBLE_ARGS', serialized_args):
-            yield
+from ansible.module_utils.testing import patch_module_args
 
 from importlib.machinery import SourceFileLoader
 from oslotest import base
