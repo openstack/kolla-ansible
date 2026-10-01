@@ -3,13 +3,13 @@
   ansible.builtin.pip:
     name: "{{ kolla_ansible_tempest_packages + kolla_ansible_tempest_packages_extra }}"
     extra_args: "{{ ('-c' + kolla_ansible_tempest_upper_constraints) if kolla_ansible_tempest_upper_constraints | length > 0 }}"
-    virtualenv: "{{ kolla_ansible_venv_path }}"
+    virtualenv: "{{ kolla_ansible_tempest_venv_path }}"
     virtualenv_command: "python3 -m venv"
 
 - name: Init tempest workspace
   ansible.builtin.shell:
     cmd: >
-      {{ kolla_ansible_venv_path }}/bin/tempest init tempest
+      {{ kolla_ansible_tempest_venv_path }}/bin/tempest init tempest
       >/tmp/logs/ansible/test-init-tempest 2>&1
     creates: "/home/zuul/tempest"
 
@@ -23,7 +23,7 @@
   ansible.builtin.shell:
     chdir: "/home/zuul/tempest"
     cmd: >
-      {{ kolla_ansible_venv_path }}/bin/discover-tempest-config
+      {{ kolla_ansible_tempest_venv_path }}/bin/discover-tempest-config
       --debug
       --image {{ image }}
       --os-cloud kolla-admin
@@ -61,7 +61,7 @@
   ansible.builtin.shell:
     chdir: "/home/zuul/tempest"
     cmd: >
-      {{ kolla_ansible_venv_path }}/bin/tempest run
+      {{ kolla_ansible_tempest_venv_path }}/bin/tempest run
       --config-file etc/tempest.conf
       {% if kolla_ansible_tempest_regex | length > 0 %}
       --regex '{{ kolla_ansible_tempest_regex | join("|") }}'
