@@ -56,6 +56,7 @@
       - "{{ role_path }}/templates/keystone.conf.j2"
       - "{{ node_custom_config }}/global.conf"
       - "{{ node_custom_config }}/keystone.conf"
+      - "{{ node_custom_config }}/keystone/keystone.conf"
       - "{{ node_custom_config }}/keystone/{{ item.key }}.conf"
       - "{{ node_custom_config }}/keystone/{{ inventory_hostname }}/keystone.conf"
     dest: "{{ node_config_directory }}/{{ item.key }}/keystone.conf"
@@ -63,23 +64,23 @@
   become: true
   with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
   when:
-    - item.key in [ "keystone", "keystone-fernet" ]
+    - item.key in [ "keystone-api", "keystone-fernet" ]
 
 - name: Copying keystone-startup script for keystone
   vars:
-    service: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.template:
     src: "keystone-startup.sh.j2"
-    dest: "{{ node_config_directory }}/keystone/keystone-startup.sh"
+    dest: "{{ node_config_directory }}/keystone-api/keystone-startup.sh"
     mode: "0660"
   become: true
   when: service | service_enabled_and_mapped_to_host
 
 - name: Create Keystone domain-specific config directory
   vars:
-    service: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.file:
-    dest: "{{ node_config_directory }}/keystone/domains/"
+    dest: "{{ node_config_directory }}/keystone-api/domains/"
     state: "directory"
     mode: "0770"
   become: true
@@ -98,10 +99,10 @@
 
 - name: Copying Keystone Domain specific settings
   vars:
-    service: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.template:
     src: "{{ item.path }}"
-    dest: "{{ node_config_directory }}/keystone/domains/"
+    dest: "{{ node_config_directory }}/keystone-api/domains/"
     mode: "0660"
   become: true
   register: keystone_domains
@@ -117,7 +118,7 @@
     mode: "0660"
   become: true
   when:
-    - item.key in [ "keystone", "keystone-fernet" ]
+    - item.key in [ "keystone-api", "keystone-fernet" ]
     - keystone_policy_file is defined
   with_dict: "{{ keystone_services | select_services_enabled_and_mapped_to_host }}"
 
@@ -131,8 +132,8 @@
     name: service-uwsgi-config
   vars:
     project_services: "{{ keystone_services }}"
-    service: "{{ keystone_services['keystone'] }}"
-    service_name: "keystone"
+    service: "{{ keystone_services['keystone-api'] }}"
+    service_name: "keystone-api"
     service_uwsgi_config_host: >-
       {{ '127.0.0.1' if enable_keystone_federation | bool
       else api_interface_address | put_address_in_context('url') }}
@@ -165,7 +166,7 @@
 
 - name: Checking whether keystone-paste.ini file exists
   vars:
-    service: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.stat:
     path: "{{ node_custom_config }}/keystone/keystone-paste.ini"
   delegate_to: localhost
@@ -175,10 +176,10 @@
 
 - name: Copying over keystone-paste.ini
   vars:
-    service: "{{ keystone_services['keystone'] }}"
+    service: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.template:
     src: "{{ node_custom_config }}/keystone/keystone-paste.ini"
-    dest: "{{ node_config_directory }}/keystone/keystone-paste.ini"
+    dest: "{{ node_config_directory }}/keystone-api/keystone-paste.ini"
     mode: "0660"
   become: true
   when:

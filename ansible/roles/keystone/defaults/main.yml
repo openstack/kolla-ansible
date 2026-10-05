@@ -1,13 +1,13 @@
 ---
 keystone_services:
-  keystone:
-    container_name: "keystone"
+  keystone-api:
+    container_name: "keystone_api"
     group: "keystone"
     enabled: true
-    image: "{{ keystone_image_full }}"
-    volumes: "{{ keystone_default_volumes + keystone_extra_volumes }}"
-    dimensions: "{{ keystone_dimensions }}"
-    healthcheck: "{{ keystone_healthcheck }}"
+    image: "{{ keystone_api_image_full }}"
+    volumes: "{{ keystone_api_default_volumes + keystone_api_extra_volumes }}"
+    dimensions: "{{ keystone_api_dimensions }}"
+    healthcheck: "{{ keystone_api_healthcheck }}"
     wsgi: "keystone.wsgi.api:application"
     haproxy:
       keystone_internal:
@@ -107,9 +107,9 @@ keystone_groupname: "keystone"
 ####################
 keystone_tag: "{{ openstack_tag }}"
 
-keystone_image: "{{ docker_image_url }}keystone"
-keystone_service_tag: "{{ keystone_tag }}"
-keystone_image_full: "{{ keystone_image }}:{{ keystone_service_tag }}"
+keystone_api_image: "{{ docker_image_url }}keystone-api"
+keystone_api_tag: "{{ keystone_tag }}"
+keystone_api_image_full: "{{ keystone_api_image }}:{{ keystone_api_tag }}"
 
 keystone_httpd_image: "{{ docker_image_url }}httpd"
 keystone_httpd_tag: "{{ keystone_tag }}"
@@ -123,27 +123,27 @@ keystone_ssh_image: "{{ docker_image_url }}keystone-ssh"
 keystone_ssh_tag: "{{ keystone_tag }}"
 keystone_ssh_image_full: "{{ keystone_ssh_image }}:{{ keystone_ssh_tag }}"
 
-keystone_dimensions: "{{ default_container_dimensions }}"
+keystone_api_dimensions: "{{ default_container_dimensions }}"
 keystone_httpd_dimensions: "{{ default_container_dimensions }}"
 keystone_fernet_dimensions: "{{ default_container_dimensions }}"
 keystone_ssh_dimensions: "{{ default_container_dimensions }}"
 
-keystone_enable_healthchecks: "{{ enable_container_healthchecks }}"
-keystone_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
-keystone_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
-keystone_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
-keystone_healthcheck_test:
+keystone_api_enable_healthchecks: "{{ enable_container_healthchecks }}"
+keystone_api_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
+keystone_api_healthcheck_retries: "{{ default_container_healthcheck_retries }}"
+keystone_api_healthcheck_start_period: "{{ default_container_healthcheck_start_period }}"
+keystone_api_healthcheck_test:
   - "CMD-SHELL"
   - >-
     healthcheck_curl {{ 'https' if keystone_enable_tls_backend | bool else 'http' }}://{{
     api_interface_address | put_address_in_context('url') }}:{{ keystone_public_listen_port }}/healthcheck
-keystone_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
-keystone_healthcheck:
-  interval: "{{ keystone_healthcheck_interval }}"
-  retries: "{{ keystone_healthcheck_retries }}"
-  start_period: "{{ keystone_healthcheck_start_period }}"
-  test: "{% if keystone_enable_healthchecks | bool %}{{ keystone_healthcheck_test }}{% else %}NONE{% endif %}"
-  timeout: "{{ keystone_healthcheck_timeout }}"
+keystone_api_healthcheck_timeout: "{{ default_container_healthcheck_timeout }}"
+keystone_api_healthcheck:
+  interval: "{{ keystone_api_healthcheck_interval }}"
+  retries: "{{ keystone_api_healthcheck_retries }}"
+  start_period: "{{ keystone_api_healthcheck_start_period }}"
+  test: "{% if keystone_api_enable_healthchecks | bool %}{{ keystone_api_healthcheck_test }}{% else %}NONE{% endif %}"
+  timeout: "{{ keystone_api_healthcheck_timeout }}"
 
 keystone_httpd_enable_healthchecks: "{{ enable_container_healthchecks }}"
 keystone_httpd_healthcheck_interval: "{{ default_container_healthcheck_interval }}"
@@ -188,8 +188,8 @@ keystone_ssh_healthcheck:
   test: "{% if keystone_ssh_enable_healthchecks | bool %}{{ keystone_ssh_healthcheck_test }}{% else %}NONE{% endif %}"
   timeout: "{{ keystone_ssh_healthcheck_timeout }}"
 
-keystone_default_volumes:
-  - "{{ node_config_directory }}/keystone/:{{ container_config_directory }}/:ro"
+keystone_api_default_volumes:
+  - "{{ node_config_directory }}/keystone-api/:{{ container_config_directory }}/:ro"
   - "{{ kolla_dev_repos_directory ~ '/keystone:/dev-mode/keystone' if keystone_dev_mode | bool else '' }}"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
@@ -200,6 +200,7 @@ keystone_httpd_default_volumes:
   - "kolla_logs:/var/log/kolla/"
 
 keystone_extra_volumes: "{{ default_extra_volumes }}"
+keystone_api_extra_volumes: "{{ keystone_extra_volumes }}"
 keystone_httpd_extra_volumes: "{{ keystone_extra_volumes }}"
 
 ####################

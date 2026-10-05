@@ -2,7 +2,7 @@
 - name: Remove OpenID certificate and metadata files
   become: true
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.file:
     state: absent
     path: "{{ item }}"
@@ -15,7 +15,7 @@
 
 - name: Create OpenID configuration directories
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.file:
     dest: "{{ item }}"
     state: "directory"
@@ -42,7 +42,7 @@
 
 - name: Template OpenID Identity Providers metadata
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   become: true
   ansible.builtin.template:
     src: "{{ item.path }}"
@@ -54,7 +54,7 @@
 
 - name: Copying OpenID Identity Providers certificate
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   become: true
   ansible.builtin.copy:
     src: "{{ item.certificate_file }}"
@@ -68,7 +68,7 @@
 
 - name: Copying OpenStack Identity Providers attribute mappings
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   become: true
   ansible.builtin.copy:
     src: "{{ item.file }}"
@@ -81,7 +81,7 @@
 - name: Setting the certificates files variable
   become: true
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.find:
     path: "{{ keystone_host_federation_oidc_idp_certificate_folder }}"
     pattern: "*.pem"
@@ -91,7 +91,7 @@
 
 - name: Setting the certificates variable
   vars:
-    keystone: "{{ keystone_services['keystone'] }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.set_fact:
     keystone_federation_openid_certificate_key_ids: >-
       {{
@@ -104,7 +104,7 @@
 
 - name: Copying modOIDC error page template
   vars:
-    keystone: "{{ keystone_services.keystone }}"
+    keystone: "{{ keystone_services['keystone-api'] }}"
   ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ keystone_host_federation_base_folder }}/modoidc-error-page.html"

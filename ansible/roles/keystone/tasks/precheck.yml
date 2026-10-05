@@ -6,6 +6,7 @@
     service_precheck_services: "{{ keystone_services }}"
     service_name: "{{ project_name }}"
 
+# TODO(mnasiadka): Remove keystone from that list in 2027.2
 - name: Get container facts
   become: true
   kolla_container_facts:
@@ -13,10 +14,12 @@
     container_engine: "{{ kolla_container_engine }}"
     name:
       - keystone
+      - keystone_api
       - keystone_ssh
   check_mode: false
   register: container_facts
 
+# TODO(mnasiadka): Remove keystone from that list in 2027.2
 - name: Checking free port for Keystone Public
   ansible.builtin.wait_for:
     host: "{{ api_interface_address }}"
@@ -26,6 +29,7 @@
     state: stopped
   when:
     - container_facts.containers['keystone'] is not defined
+    - container_facts.containers['keystone_api'] is not defined
     - inventory_hostname in groups['keystone']
 
 - name: Checking free port for Keystone SSH
