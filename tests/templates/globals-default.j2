@@ -241,6 +241,11 @@ enable_valkey: "yes"
 
 {% if groups['all'] | length == 1 %}
 keepalived_track_script_enabled: "no"
+{% else %}
+# Drop connections sourced from the VIP quickly after a keepalived
+# failover instead of waiting ~15 minutes with the kernel default
+# (LP#1917068).
+haproxy_host_ipv4_tcp_retries2: 6
 {% endif %}
 
 neutron_modules_extra:
