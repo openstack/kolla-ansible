@@ -2,14 +2,14 @@
 # NOTE(yoctozepto): This should ideally be per controller, i.e. controller
 # generates its key&CSR and this CA signs it.
 
-- name: Create a key for the client certificate
-  ansible.builtin.command: >
-    openssl genrsa -out client.key.pem 4096
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/client_ca"
-    creates: "{{ octavia_certs_work_dir }}/client_ca/client.key.pem"
+- name: Creating client certificate key
+  community.crypto.openssl_privatekey:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client.key.pem"
+    mode: "0600"
+    size: 4096
+    type: RSA
 
-- name: Create the certificate request for the client certificate
+- name: Creating client certificate signing request (CSR)
   vars:
     client_req_subject:
       C: "{{ octavia_certs_client_req_country }}"
@@ -17,29 +17,34 @@
       O: "{{ octavia_certs_client_req_organization }}"
       OU: "{{ octavia_certs_client_req_organizational_unit }}"
       CN: "{{ octavia_certs_client_req_common_name }}"
-  ansible.builtin.command: >
-    openssl req -new -config ../openssl.cnf
-    -key client.key.pem
-    -out client.csr.pem
-    -subj "/{{ client_req_subject.items() | map('join', '=') | join('/') }}"
-    -batch
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/client_ca"
-    creates: "{{ octavia_certs_work_dir }}/client_ca/client.csr.pem"
+  community.crypto.openssl_csr:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client.csr.pem"
+    privatekey_path: "{{ octavia_certs_work_dir }}/client_ca/client.key.pem"
+    use_common_name_for_san: false
+    basic_constraints:
+      - 'CA:FALSE'
+    basic_constraints_critical: true
+    key_usage:
+      - digitalSignature
+    key_usage_critical: true
+    extended_key_usage:
+      - clientAuth
+    country_name: "{{ client_req_subject.C }}"
+    state_or_province_name: "{{ client_req_subject.ST }}"
+    organization_name: "{{ client_req_subject.O }}"
+    organizational_unit_name: "{{ client_req_subject.OU }}"
+    common_name: "{{ client_req_subject.CN }}"
 
 - name: Sign the client certificate request
-  ansible.builtin.command: >
-    openssl ca -config ../openssl.cnf
-    -name client_ca
-    -days {{ octavia_certs_client_expiry }}
-    -in client.csr.pem
-    -out client.cert.pem
-    -key {{ octavia_client_ca_password }}
-    -notext
-    -batch
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/client_ca"
-    creates: "{{ octavia_certs_work_dir }}/client_ca/client.cert.pem"
+  community.crypto.x509_certificate:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client.cert.pem"
+    csr_path: "{{ octavia_certs_work_dir }}/client_ca/client.csr.pem"
+    provider: ownca
+    ownca_path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.cert.pem"
+    ownca_privatekey_path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
+    ownca_privatekey_passphrase: "{{ octavia_client_ca_password }}"
+    ownca_digest: sha256
+    ownca_not_after: "+{{ octavia_certs_client_expiry }}d"
 
 - name: Create a concatenated client certificate and key file
   ansible.builtin.assemble:

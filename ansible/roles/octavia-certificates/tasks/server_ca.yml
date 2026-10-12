@@ -1,13 +1,15 @@
 ---
-- name: Generate server_ca private key
-  ansible.builtin.command: >
-    openssl genrsa -aes256 -out server_ca.key.pem
-    -passout pass:{{ octavia_ca_password }} 4096
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/server_ca"
-    creates: "{{ octavia_certs_work_dir }}/server_ca/server_ca.key.pem"
+- name: Creating server_ca private key
+  community.crypto.openssl_privatekey:
+    path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.key.pem"
+    mode: "0600"
+    size: 4096
+    type: RSA
+    cipher: auto
+    passphrase: "{{ octavia_ca_password }}"
+    regenerate: never
 
-- name: Create server_ca certificate
+- name: Creating server_ca certificate signing request (CSR)
   vars:
     server_ca_subject:
       C: "{{ octavia_certs_server_ca_country }}"
@@ -15,14 +17,30 @@
       O: "{{ octavia_certs_server_ca_organization }}"
       OU: "{{ octavia_certs_server_ca_organizational_unit }}"
       CN: "{{ octavia_certs_server_ca_common_name }}"
-  ansible.builtin.command: >
-    openssl req -new -x509 -config ../openssl.cnf
-    -key server_ca.key.pem
-    -days {{ octavia_certs_server_ca_expiry }}
-    -out server_ca.cert.pem
-    -subj "/{{ server_ca_subject.items() | map('join', '=') | join('/') }}"
-    -passin pass:{{ octavia_ca_password }}
-    -batch
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/server_ca"
-    creates: "{{ octavia_certs_work_dir }}/server_ca/server_ca.cert.pem"
+  community.crypto.openssl_csr:
+    path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.csr.pem"
+    privatekey_path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.key.pem"
+    privatekey_passphrase: "{{ octavia_ca_password }}"
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - digitalSignature
+      - keyCertSign
+    key_usage_critical: true
+    use_common_name_for_san: false
+    country_name: "{{ server_ca_subject.C }}"
+    state_or_province_name: "{{ server_ca_subject.ST }}"
+    organization_name: "{{ server_ca_subject.O }}"
+    organizational_unit_name: "{{ server_ca_subject.OU }}"
+    common_name: "{{ server_ca_subject.CN }}"
+
+- name: Create self-signed server_ca certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.cert.pem"
+    csr_path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.csr.pem"
+    privatekey_path: "{{ octavia_certs_work_dir }}/server_ca/server_ca.key.pem"
+    privatekey_passphrase: "{{ octavia_ca_password }}"
+    provider: selfsigned
+    selfsigned_digest: sha256
+    selfsigned_not_after: "+{{ octavia_certs_server_ca_expiry }}d"
