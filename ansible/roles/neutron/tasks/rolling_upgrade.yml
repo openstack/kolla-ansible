@@ -1,4 +1,37 @@
 ---
+# TODO: Remove this block in 2027.2
+- name: Clean up obsolete neutron OVN metadata agent
+  become: true
+  when: neutron_plugin_agent == 'ovn'
+  block:
+    - name: Remove obsolete neutron OVN metadata agent container
+      kolla_container:
+        action: "stop_and_remove_container"
+        common_options: "{{ docker_common_options }}"
+        name: "neutron_ovn_metadata_agent"
+        ignore_missing: true
+
+    - name: Get container names for obsolete OVN metadata HAProxy cleanup
+      kolla_container_facts:
+        action: get_containers_names
+        container_engine: "{{ kolla_container_engine }}"
+      register: ovn_metadata_haproxy_containers
+
+    - name: Remove obsolete neutron OVN metadata agent HAProxy containers
+      kolla_container:
+        action: "stop_and_remove_container"
+        common_options: "{{ docker_common_options }}"
+        name: "{{ item }}"
+        ignore_missing: true
+      loop: >-
+        {{ ovn_metadata_haproxy_containers.container_names | default([])
+           | select('match', '^neutron_ovn_metadata_agent_haproxy_') | list }}
+
+    - name: Remove obsolete neutron OVN metadata agent configuration
+      ansible.builtin.file:
+        path: "{{ node_config_directory }}/neutron-ovn-metadata-agent"
+        state: absent
+
 - name: Import tasks from config-host.yml
   ansible.builtin.import_tasks: config-host.yml
 
