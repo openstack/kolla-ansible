@@ -346,7 +346,7 @@ Running Neutron agents subprocesses in separate containers
 There is a feature in Kolla-Ansible that allows to overcome
 the issue of breaking data plane connectivity, dhcp and metadata services
 when restarting neutron-l3-agent and neutron-dhcp-agent in ml2/ovs or
-restarting the neutron-ovn-metadata-agent in ml2/ovn.
+restarting the neutron-ovn-agent in ml2/ovn.
 
 To enable it, modify the configuration in ``/etc/kolla/globals.yml``:
 

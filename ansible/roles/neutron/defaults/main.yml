@@ -191,6 +191,12 @@ neutron_services:
     volumes: "{{ neutron_ovn_agent_default_volumes + neutron_ovn_agent_extra_volumes }}"
     dimensions: "{{ neutron_ovn_agent_dimensions }}"
     healthcheck: "{{ neutron_ovn_agent_healthcheck }}"
+    cgroupns_mode: "{{ 'host' if neutron_agents_wrappers | bool else 'private' }}"
+    pid_mode: "{{ 'host' if neutron_agents_wrappers | bool else '' }}"
+    environment:
+      KOLLA_IMAGE: "{{ neutron_ovn_agent_image_full }}"
+      KOLLA_NAME: "neutron_ovn_agent"
+      KOLLA_NEUTRON_WRAPPERS: "{{ 'true' if neutron_agents_wrappers | bool else 'false' }}"
     cap_add:
       - DAC_OVERRIDE
       - DAC_READ_SEARCH
@@ -622,6 +628,9 @@ neutron_ovn_agent_default_volumes:
   - "/run/netns:/run/netns:shared"
   - "kolla_logs:/var/log/kolla/"
   - "{{ '/dev/shm:/dev/shm' }}"
+  - "{{ '/var/run/docker.sock:/var/run/docker.sock:ro' if neutron_agents_wrappers | bool and kolla_container_engine == 'docker' else '' }}"
+  - "{{ '/run/podman/podman.sock:/run/podman/podman.sock' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' else '' }}"
+  - "{{ '/var/lib/containers:/var/lib/containers' if neutron_agents_wrappers | bool and kolla_container_engine == 'podman' else '' }}"
 neutron_ovn_maintenance_worker_default_volumes:
   - "{{ node_config_directory }}/neutron-ovn-maintenance-worker/:{{ container_config_directory }}/:ro"
   - "kolla_logs:/var/log/kolla/"
