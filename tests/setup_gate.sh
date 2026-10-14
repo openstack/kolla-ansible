@@ -84,7 +84,7 @@ EOF
 
     if [[ $BASE_DISTRO == "debian" || $BASE_DISTRO == "ubuntu" ]]; then
         sudo tee -a /etc/kolla/kolla-build.conf <<EOF
-base_image = quay.io/openstack.kolla/${BASE_DISTRO}
+base_image = quay.io/opendevmirror/${BASE_DISTRO}
 EOF
     fi
 
