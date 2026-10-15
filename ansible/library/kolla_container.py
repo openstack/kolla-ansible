@@ -170,6 +170,14 @@ options:
     required: False
     default: False
     type: bool
+  systempaths_unconfined:
+    description:
+      - Clear Docker's default MaskedPaths/ReadonlyPaths container hardening
+        (equivalent to C(docker run --security-opt systempaths=unconfined))
+      - Docker only, ignored under Podman
+    required: False
+    default: False
+    type: bool
   remove_on_exit:
     description:
       - When not detaching from container, remove on successful exit
@@ -315,6 +323,8 @@ def generate_module():
         cgroupns_mode=dict(required=False, type='str',
                            choices=['private', 'host']),
         privileged=dict(required=False, type='bool', default=False),
+        systempaths_unconfined=dict(required=False, type='bool',
+                                    default=False),
         graceful_timeout=dict(required=False, type='int'),
         remove_on_exit=dict(required=False, type='bool', default=True),
         restart_policy=dict(required=False, type='str', choices=[
