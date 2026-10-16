@@ -48,6 +48,18 @@
   become: true
   when: service | service_enabled_and_mapped_to_host
 
+- name: Check if separate database internal TLS CA certificate (proxysql-ca.pem) exists
+  vars:
+    service: "{{ loadbalancer_services['proxysql'] }}"
+  ansible.builtin.stat:
+    path: "{{ kolla_certificates_dir }}/proxysql-ca.pem"
+  delegate_to: localhost
+  register: proxysql_ca_file
+  changed_when: false
+  run_once: true
+  when:
+    - service | service_enabled_and_mapped_to_host
+
 - name: Remove mariadb.cfg if proxysql enabled
   vars:
     service: "{{ loadbalancer_services['keepalived'] }}"
