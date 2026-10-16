@@ -131,6 +131,7 @@ def check_json_j2():
             'rabbitmq_ha_replica_count': 2,
             'rabbitmq_message_ttl_ms': 600000,
             'rabbitmq_queue_expiry_ms': 3600000,
+            'proxysql_ca_file': {'stat': {'exists': False}},
 
         }
         data = template.render(**context)
