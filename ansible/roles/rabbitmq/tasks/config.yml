@@ -17,6 +17,16 @@
   become: true
   with_dict: "{{ rabbitmq_services | select_services_enabled_and_mapped_to_host }}"
 
+- name: Copying over rabbitmq-erlang.cookie
+  become: true
+  vars:
+    service: "{{ rabbitmq_services['rabbitmq'] }}"
+  ansible.builtin.template:
+    src: "rabbitmq-erlang.cookie.j2"
+    dest: "{{ node_config_directory }}/{{ project_name }}/rabbitmq-erlang.cookie"
+    mode: "0660"
+  when: service | service_enabled_and_mapped_to_host
+
 - name: Copying over rabbitmq-env.conf
   become: true
   vars:

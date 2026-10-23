@@ -5,22 +5,3 @@
     action: "create_volume"
     common_options: "{{ docker_common_options }}"
     name: "{{ project_name }}"
-  register: rabbitmq_volume
-
-- name: Running RabbitMQ bootstrap container
-  vars:
-    service_name: "rabbitmq"
-    service: "{{ rabbitmq_services[service_name] }}"
-  become: true
-  kolla_container:
-    action: "start_container"
-    common_options: "{{ docker_common_options }}"
-    detach: false
-    environment: "{{ service.bootstrap_environment }}"
-    image: "{{ service.image }}"
-    labels:
-      BOOTSTRAP:
-    name: "{{ project_name }}_bootstrap"
-    restart_policy: oneshot
-    volumes: "{{ service.volumes }}"
-  when: rabbitmq_volume is changed  # noqa no-handler
