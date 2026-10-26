@@ -1,27 +1,15 @@
 ---
-- name: Create client_ca index.txt
-  ansible.builtin.copy:
-    content: ''
-    dest: "{{ octavia_certs_work_dir }}/client_ca/index.txt"
-    force: false
-    mode: "0660"
+- name: Creating client_ca private key
+  community.crypto.openssl_privatekey:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
+    mode: "0600"
+    size: 4096
+    type: RSA
+    cipher: auto
+    passphrase: "{{ octavia_client_ca_password }}"
+    regenerate: never
 
-- name: Create client_ca serial
-  ansible.builtin.copy:
-    content: "1000\n"
-    dest: "{{ octavia_certs_work_dir }}/client_ca/serial"
-    force: false
-    mode: "0660"
-
-- name: Create client_ca private key
-  ansible.builtin.command: >
-    openssl genrsa -aes256 -out client_ca.key.pem
-    -passout pass:{{ octavia_client_ca_password }} 4096
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/client_ca"
-    creates: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
-
-- name: Create client_ca certificate
+- name: Creating client_ca certificate signing request (CSR)
   vars:
     client_ca_subject:
       C: "{{ octavia_certs_client_ca_country }}"
@@ -29,14 +17,30 @@
       O: "{{ octavia_certs_client_ca_organization }}"
       OU: "{{ octavia_certs_client_ca_organizational_unit }}"
       CN: "{{ octavia_certs_client_ca_common_name }}"
-  ansible.builtin.command: >
-    openssl req -new -x509 -config ../openssl.cnf
-    -key client_ca.key.pem
-    -days {{ octavia_certs_client_ca_expiry }}
-    -out client_ca.cert.pem
-    -subj "/{{ client_ca_subject.items() | map('join', '=') | join('/') }}"
-    -passin pass:{{ octavia_client_ca_password }}
-    -batch
-  args:
-    chdir: "{{ octavia_certs_work_dir }}/client_ca"
-    creates: "{{ octavia_certs_work_dir }}/client_ca/client_ca.cert.pem"
+  community.crypto.openssl_csr:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.csr.pem"
+    privatekey_path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
+    privatekey_passphrase: "{{ octavia_client_ca_password }}"
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - digitalSignature
+      - keyCertSign
+    key_usage_critical: true
+    use_common_name_for_san: false
+    country_name: "{{ client_ca_subject.C }}"
+    state_or_province_name: "{{ client_ca_subject.ST }}"
+    organization_name: "{{ client_ca_subject.O }}"
+    organizational_unit_name: "{{ client_ca_subject.OU }}"
+    common_name: "{{ client_ca_subject.CN }}"
+
+- name: Create self-signed client_ca certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.cert.pem"
+    csr_path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.csr.pem"
+    privatekey_path: "{{ octavia_certs_work_dir }}/client_ca/client_ca.key.pem"
+    privatekey_passphrase: "{{ octavia_client_ca_password }}"
+    provider: selfsigned
+    selfsigned_digest: sha256
+    selfsigned_not_after: "+{{ octavia_certs_client_ca_expiry }}d"
