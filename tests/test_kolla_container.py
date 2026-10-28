@@ -77,6 +77,8 @@ class ModuleArgsTest(base.BaseTestCase):
             cgroupns_mode=dict(required=False, type='str',
                                choices=['private', 'host']),
             privileged=dict(required=False, type='bool', default=False),
+            systempaths_unconfined=dict(required=False, type='bool',
+                                        default=False),
             graceful_timeout=dict(required=False, type='int'),
             remove_on_exit=dict(required=False, type='bool', default=True),
             restart_policy=dict(

@@ -1292,6 +1292,12 @@ class TestAttrComp(base.BaseTestCase):
         self.pw = get_PodmanWorker({'pid_mode': 'host2'})
         self.assertTrue(self.pw.compare_pid_mode(container_info))
 
+    def test_compare_systempaths_unconfined_noop(self):
+        container_info = {'HostConfig': dict()}
+        self.pw = get_PodmanWorker({'systempaths_unconfined': True})
+        self.assertFalse(self.pw.compare_systempaths_unconfined(
+            container_info))
+
     def test_compare_cgroupns_mode_neg(self):
         container_info = {'HostConfig': dict(CgroupMode='host')}
         self.pw = get_PodmanWorker({'cgroupns_mode': 'host'})

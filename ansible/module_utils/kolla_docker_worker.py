@@ -317,6 +317,13 @@ class DockerWorker(ContainerWorker):
         if cgroupns_mode is not None:
             host_config['CgroupnsMode'] = cgroupns_mode
 
+        # NOTE: python-docker does not support clearing MaskedPaths/
+        # ReadonlyPaths (docker run --security-opt systempaths=unconfined)
+        # natively so we stuff it in manually.
+        if self.params.get('systempaths_unconfined'):
+            host_config['MaskedPaths'] = []
+            host_config['ReadonlyPaths'] = []
+
         # detached containers should only log to journald
         if self.params.get('detach'):
             options['log_config'] = docker.types.LogConfig(

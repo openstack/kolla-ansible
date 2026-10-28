@@ -356,6 +356,27 @@ class TestContainer(base.BaseTestCase):
         self.dw.dc.create_container.assert_called_once_with(
             **{k: self.fake_data['params'][k] for k in expected_args})
 
+    def test_create_container_with_systempaths_unconfined(self):
+        self.fake_data['params']['systempaths_unconfined'] = True
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertEqual(
+            [], self.fake_data['params']['host_config']['MaskedPaths'])
+        self.assertEqual(
+            [], self.fake_data['params']['host_config']['ReadonlyPaths'])
+
+    def test_create_container_without_systempaths_unconfined(self):
+        self.dw = get_DockerWorker(self.fake_data['params'])
+        self.dw.dc.create_host_config = mock.MagicMock(
+            return_value=self.fake_data['params']['host_config'])
+        self.dw.create_container()
+        self.assertNotIn(
+            'MaskedPaths', self.fake_data['params']['host_config'])
+        self.assertNotIn(
+            'ReadonlyPaths', self.fake_data['params']['host_config'])
+
     def test_create_container_with_None_healthcheck(self):
         self.fake_data['params']['healthcheck'] = \
             {'test': ['NONE']}
@@ -1365,6 +1386,28 @@ class TestAttrComp(base.BaseTestCase):
         container_info = {'HostConfig': dict(Privileged=True)}
         self.dw = get_DockerWorker({'privileged': False})
         self.assertTrue(self.dw.compare_privileged(container_info))
+
+    def test_compare_systempaths_unconfined_neg(self):
+        container_info = {'HostConfig': dict(MaskedPaths=[],
+                                             ReadonlyPaths=[])}
+        self.dw = get_DockerWorker({'systempaths_unconfined': True})
+        self.assertFalse(self.dw.compare_systempaths_unconfined(
+            container_info))
+
+    def test_compare_systempaths_unconfined_pos(self):
+        container_info = {'HostConfig': dict(MaskedPaths=['/proc/acpi'],
+                                             ReadonlyPaths=['/proc/sys'])}
+        self.dw = get_DockerWorker({'systempaths_unconfined': True})
+        self.assertTrue(self.dw.compare_systempaths_unconfined(
+            container_info))
+
+    def test_compare_systempaths_unconfined_ignore_when_privileged(self):
+        container_info = {'HostConfig': dict(MaskedPaths=['/proc/acpi'],
+                                             ReadonlyPaths=['/proc/sys'])}
+        self.dw = get_DockerWorker({'systempaths_unconfined': True,
+                                   'privileged': True})
+        self.assertFalse(self.dw.compare_systempaths_unconfined(
+            container_info))
 
     def test_compare_labels_image_missing(self):
         container_info = {'Config': dict(Labels={'kolla_version': '1.0.1'})}

@@ -112,6 +112,7 @@ class ContainerWorker(ABC):
             'privileged',
             'pid_mode',
             'cgroupns_mode',
+            'systempaths_unconfined',
             'tmpfs',
             'volumes',
             'volumes_from',
@@ -197,6 +198,14 @@ class ContainerWorker(ABC):
         current = (container_info['HostConfig'].get('CgroupnsMode') or
                    container_info['HostConfig'].get('CgroupMode') or 'host')
         return current, self.params.get('cgroupns_mode')
+
+    def diff_systempaths_unconfined(self, container_info):
+        current_masked = self._get_host_config_list(
+            container_info, 'MaskedPaths')
+        current_readonly = self._get_host_config_list(
+            container_info, 'ReadonlyPaths')
+        current = not current_masked and not current_readonly
+        return current, self.params.get('systempaths_unconfined', False)
 
     def diff_tmpfs(self, container_info):
         current = list(container_info['HostConfig'].get('Tmpfs') or [])
@@ -336,6 +345,19 @@ class ContainerWorker(ABC):
         current_privileged = container_info['HostConfig']['Privileged']
         if new_privileged != current_privileged:
             return True
+
+    def compare_systempaths_unconfined(self, container_info):
+        if self.params.get('privileged', False):
+            # MaskedPaths/ReadonlyPaths are not applied to privileged
+            # containers, so this setting is meaningless there
+            return False
+        new_value = self.params.get('systempaths_unconfined', False)
+        current_masked = self._get_host_config_list(
+            container_info, 'MaskedPaths')
+        current_readonly = self._get_host_config_list(
+            container_info, 'ReadonlyPaths')
+        current_value = not current_masked and not current_readonly
+        return new_value != current_value
 
     @abstractmethod
     def compare_image(self, container_info=None):

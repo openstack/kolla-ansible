@@ -356,6 +356,11 @@ class PodmanWorker(ContainerWorker):
         if new_pid_mode != current_pid_mode:
             return True
 
+    def compare_systempaths_unconfined(self, container_info):
+        # Podman has no MaskedPaths/ReadonlyPaths HostConfig equivalent,
+        # so this Docker-only setting is never considered to differ.
+        return False
+
     def compare_image(self, container_info=None):
         def parse_tag(tag):
             splits = tag.rsplit('/', 1)
