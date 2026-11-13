@@ -8,21 +8,12 @@ state_path = /var/lib/placement
 [oslo_middleware]
 enable_proxy_headers_parsing = true
 
-[oslo_concurrency]
-lock_path = /var/lib/placement/tmp
-
 [placement_database]
 connection = mysql+pymysql://{{ placement_database_user }}:{{ placement_database_password }}@{{ placement_database_address }}/{{ placement_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if placement_database_enable_tls_internal | bool }}
 connection_recycle_time = {{ database_connection_recycle_time }}
 max_overflow = 1000
 max_pool_size = {{ database_max_pool_size }}
 max_retries = -1
-
-[cache]
-backend = oslo_cache.memcache_pool
-enabled = true
-memcache_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
 
 [keystone_authtoken]
 service_type = placement
