@@ -103,7 +103,6 @@ openstack_projects = [
     'kolla-ansible',
     'magnum',
     'manila',
-    'networking-sfc',
     'neutron-vpnaas',
     'neutron',
     'nova',
