@@ -53,10 +53,29 @@
         bridge_name: "{{ neutron_external_bridge_name }}"
   tasks:
     - name: Set Rockylinux mirror to download.rockylinux.org
-      become: true
-      ansible.builtin.shell:
-        cmd: sed -i 's/mirrorlist/#mirrorlist/g; s/#baseurl/baseurl/g' /etc/yum.repos.d/rocky.repo
       when: ansible_facts.distribution == "Rocky"
+      block:
+        # NOTE: $releasever points at the newest minor release, which may not
+        # match the node image. Pin to the node's minor release and use the
+        # vault once that release is no longer in pub.
+        - name: Check if Rocky Linux release is still available in pub
+          ansible.builtin.uri:
+            url: "https://dl.rockylinux.org/pub/rocky/{{ ansible_facts.distribution_version }}/BaseOS/{{ ansible_facts.architecture }}/os/repodata/repomd.xml"
+            method: HEAD
+            status_code: [200, 404]
+          register: rocky_pub_release
+          until: rocky_pub_release.status in [200, 404]
+          retries: 5
+          delay: 10
+
+        - name: Point Rocky Linux repositories at pinned release
+          become: true
+          vars:
+            rocky_contentdir: "{{ 'pub' if rocky_pub_release.status == 200 else 'vault' }}/rocky/{{ ansible_facts.distribution_version }}"
+          ansible.builtin.shell:
+            cmd: >-
+              sed -i 's/mirrorlist/#mirrorlist/g; s/#baseurl/baseurl/g;
+              s|$contentdir/$releasever|{{ rocky_contentdir }}|g' /etc/yum.repos.d/rocky.repo
 
     - name: Install kernel-modules-extra for running kernel
       become: true
