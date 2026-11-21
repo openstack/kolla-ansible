@@ -168,10 +168,58 @@ function test_prometheus {
     echo "SUCCESS: Prometheus"
 }
 
+function check_opensearch_systemd_journal_forwarding {
+    output_path=$1
+    OPENSEARCH_QUERY="${OS_AUTH_URL%:*}:9200/flog-*/_search?q=message:HelloFromSystemdJournal"
+    args=(
+        --location
+        --fail
+    )
+    if [[ "$TLS_ENABLED" = "True" ]]; then
+        args+=(--cacert $OS_CACERT)
+    fi
+    if ! curl "${args[@]}" "$OPENSEARCH_QUERY" > $output_path; then
+        return 1
+    fi
+    HITS=$(python3 -c "import sys, json; print(json.load(sys.stdin)['hits']['total']['value'])" < $output_path)
+    if [ "$HITS" -ge "1" ]; then
+        return 0
+    fi
+    return 1
+}
+
+function test_opensearch_systemd_journal_forwarding {
+    echo "TESTING: OpenSearch systemd journal forwarding"
+    echo 'HelloFromSystemdJournal' | systemd-cat
+    sleep 30
+    echo "docker exec fluentd id -a"
+    sudo docker exec fluentd id -a
+    echo "docker exec fluentd ls -lR /var/log/journal"
+    sudo docker exec fluentd ls -lR /var/log/journal
+    echo "journalctl --disk-usage"
+    sudo journalctl --disk-usage
+    output_path=$(mktemp)
+    attempt=1
+    while ! check_opensearch_systemd_journal_forwarding $output_path; do
+        echo "OpenSearch systemd journal message not found yet"
+        attempt=$((attempt+1))
+        if [[ $attempt -eq 12 ]]; then
+            echo "FAILED: OpenSearch systemd journal forwarding check failed. Response:"
+            cat $output_path
+            return 1
+        fi
+        sleep 10
+    done
+    echo "SUCCESS: OpenSearch systemd journal forwarding"
+}
+
 function test_prometheus_opensearch_logged {
     . /etc/kolla/admin-openrc.sh
     test_opensearch_dashboards
     test_opensearch
+    if [[ ${IS_PREVIOUS_RELEASE} != 'yes' ]]; then
+        test_opensearch_systemd_journal_forwarding
+    fi
     test_grafana
     test_prometheus
 }
