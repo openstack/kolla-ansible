@@ -319,7 +319,10 @@ designate_source_version: "{{ kolla_source_version }}"
 ####################
 ## Designate
 #####################
-designate_dnssec_validation: "yes"
+# NOTE: BIND 9.20 (Debian Trixie) refuses 'dnssec-validation yes' without
+# configured trust anchors. Use 'no' there, which matches the effective
+# behaviour of 'yes' with no trust anchors on older BIND versions.
+designate_dnssec_validation: "{{ 'no' if kolla_base_distro == 'debian' and kolla_base_distro_version == 'trixie' else 'yes' }}"
 designate_recursion: "no"
 ## Example for designate_forwarders_addresses: "10.199.200.1; 10.199.100.1"
 designate_forwarders_addresses: ""
