@@ -154,7 +154,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertDictEqual(
             self.fake_data['containers'][0],
             self.dfw.result['containers']['my_container'])
-        self.dfw.client.containers.list.assert_called_once_with(all=False)
+        self.dfw.client.containers.list.assert_called_once_with(
+            all=False, ignore_removed=True)
 
     def test_get_containers_multi(self):
         self.dfw = get_DockerFactsWorker(
@@ -168,7 +169,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('my_container', self.dfw.result['containers'])
         self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
-        self.dfw.client.containers.list.assert_called_once_with(all=False)
+        self.dfw.client.containers.list.assert_called_once_with(
+            all=False, ignore_removed=True)
 
     def test_get_containers_all_running(self):
         self.dfw = get_DockerFactsWorker({'name': [],
@@ -181,7 +183,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('my_container', self.dfw.result['containers'])
         self.assertNotIn('my_container', self.dfw.result)
         self.assertNotIn('exited_container', self.dfw.result['containers'])
-        self.dfw.client.containers.list.assert_called_once_with(all=False)
+        self.dfw.client.containers.list.assert_called_once_with(
+            all=False, ignore_removed=True)
 
     def test_get_containers_all_including_stopped(self):
         self.dfw = get_DockerFactsWorker({'name': [],
@@ -195,7 +198,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.assertIn('my_container', self.dfw.result['containers'])
         self.assertIn('exited_container', self.dfw.result['containers'])
-        self.dfw.client.containers.list.assert_called_once_with(all=True)
+        self.dfw.client.containers.list.assert_called_once_with(
+            all=True, ignore_removed=True)
 
     def test_get_containers_disappeared(self):
         # A container removed after it was listed (e.g. a short-lived
@@ -399,6 +403,8 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertFalse(self.dfw.result['changed'])
         self.assertIn('container_names', self.dfw.result)
         self.assertEqual(self.dfw.result['container_names'], expected_names)
+        self.dfw.client.containers.list.assert_called_once_with(
+            ignore_removed=True)
 
     def test_get_containers_names_no_containers(self):
         """Test fetching container names when no containers exist"""
