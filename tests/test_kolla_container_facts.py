@@ -197,6 +197,53 @@ class TestContainerFacts(base.BaseTestCase):
         self.assertIn('exited_container', self.dfw.result['containers'])
         self.dfw.client.containers.list.assert_called_once_with(all=True)
 
+    def test_get_containers_disappeared(self):
+        # A container removed after it was listed (e.g. a short-lived
+        # container started with --rm) is skipped.
+        self.dfw = get_DockerFactsWorker({'name': [],
+                                          'action': 'get_containers',
+                                          'args': {
+                                              'get_all_containers': True}})
+        all_containers = get_containers(self.fake_data['containers'], all=True)
+        all_containers[1].reload.side_effect = docker_error.NotFound(
+            "not found")
+        self.dfw.client.containers.list.return_value = all_containers
+        self.dfw.get_containers()
+
+        self.assertIn('my_container', self.dfw.result['containers'])
+        self.assertNotIn('exited_container', self.dfw.result['containers'])
+
+    def test_get_containers_not_requested_not_reloaded(self):
+        self.dfw = get_DockerFactsWorker({'name': ['my_container'],
+                                          'action': 'get_containers',
+                                          'args': {
+                                              'get_all_containers': True}})
+        all_containers = get_containers(self.fake_data['containers'], all=True)
+        all_containers[1].reload.side_effect = docker_error.NotFound(
+            "not found")
+        self.dfw.client.containers.list.return_value = all_containers
+        self.dfw.get_containers()
+
+        self.assertEqual(['my_container'],
+                         list(self.dfw.result['containers']))
+        all_containers[0].reload.assert_called_once_with()
+        all_containers[1].reload.assert_not_called()
+
+    @mock.patch.object(kcf, 'DockerFactsWorker')
+    @mock.patch.object(kcf, 'AnsibleModule')
+    def test_main_failure(self, mock_module, mock_worker):
+        module = mock_module.return_value
+        module.params = {'container_engine': 'docker',
+                         'action': 'get_containers'}
+        mock_worker.return_value.result = {'changed': False}
+        mock_worker.return_value.get_containers.side_effect = Exception(
+            'failure')
+        kcf.main()
+
+        module.fail_json.assert_called_once_with(changed=True,
+                                                 msg=mock.ANY)
+        self.assertIn('failure', module.fail_json.call_args[1]['msg'])
+
     def test_get_containers_env(self):
         fake_env = dict(KOLLA_BASE_DISTRO='ubuntu',
                         KOLLA_INSTALL_TYPE='binary',
