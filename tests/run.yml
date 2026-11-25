@@ -443,16 +443,6 @@
             SCENARIO: "{{ scenario }}"
           when: openstack_core_tested or scenario in ['ironic', 'multi-compute-ironic' ,'magnum', 'nfv', 'octavia']
 
-        - name: Run test-ovn.sh script
-          script:
-            cmd: test-ovn.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "ovn"
-          environment:
-            CONTAINER_ENGINE: "{{ container_engine }}"
-            IS_UPGRADE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
-
         - import_role:
             name: kolla-ansible-tempest
           vars:
@@ -461,113 +451,9 @@
               - "{{ tempest_src_dir if (zuul.branch == 'master' and not is_upgrade) else 'tempest' }}"
           when: openstack_core_tested
 
-        - name: Run test-scenario-nfv.sh script
-          script:
-            cmd: test-scenario-nfv.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "nfv"
-
-        - block:
-            - import_role:
-                name: deploy-tenks
-
-            - name: Run test-ironic.sh script
-              script:
-                cmd: test-ironic.sh
-                executable: /bin/bash
-                chdir: "{{ kolla_ansible_src_dir }}"
-              environment:
-                TLS_ENABLED: "{{ tls_enabled }}"
-                MULTI_COMPUTE_IRONIC: "{{ scenario == 'multi-compute-ironic' }}"
-          when: scenario == "ironic" or scenario == "multi-compute-ironic"
-
-        - name: Run test-magnum.sh script
-          script:
-            cmd: test-magnum.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "magnum"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-
-        - name: Run test-octavia.sh script
-          script:
-            cmd: test-octavia.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "octavia"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-
-        - name: Run test-masakari.sh script
-          script:
-            cmd: test-masakari.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "masakari"
-          environment:
-            CONTAINER_ENGINE: "{{ container_engine }}"
-
-        - name: Run test-mariadb.sh script
-          script:
-            cmd: test-mariadb.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "mariadb"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-            CONTAINER_ENGINE: "{{ container_engine }}"
-
-        - name: Test ProxySQL
-          import_role:
-            name: kolla-ansible-test-proxysql
-          vars:
-            test_database_vip: "{{ kolla_internal_vip_address }}"
-            test_database_tls_enabled: "{{ tls_enabled }}"
-          when: scenario == "cells"
-
-        - name: Run test-prometheus-opensearch.sh script
-          script:
-            cmd: test-prometheus-opensearch.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            IS_PREVIOUS_RELEASE: "{{ is_upgrade | bool | ternary('yes', 'no') }}"
-            TLS_ENABLED: "{{ tls_enabled }}"
-          when:
-            - scenario == "prometheus-opensearch"
-
-        - name: Run test-skyline.sh script
-          script:
-            cmd: test-skyline.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "skyline"
-
-        - name: Run test-skyline-sso.sh script
-          script:
-            cmd: test-skyline-sso.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "skyline-sso"
-
-        - name: Run test-telemetry.sh script
-          script:
-            cmd: test-telemetry.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          when: scenario == "telemetry"
-
-        - name: Run test-container-engine-migration.sh script
-          script:
-            cmd: test-container-engine-migration.sh
-            executable: /bin/bash
-            chdir: "{{ kolla_ansible_src_dir }}"
-          environment:
-            KOLLA_ANSIBLE_VENV_PATH: "{{ kolla_ansible_venv_path }}"
-            IP_VERSION: "{{ 6 if address_family == 'ipv6' else 4 }}"
-          when: scenario == "container-engine-migration"
+        - name: Run scenario specific tests
+          include_tasks: "scenarios/{{ scenario }}.yml"
+          when: (playbook_dir ~ '/scenarios/' ~ scenario ~ '.yml') is file
       when: scenario != "bifrost"
 
 # NOTE(yoctozepto): each host checks itself
