@@ -54,10 +54,6 @@ project_name = {{ octavia_service_auth_project }}
 project_domain_name = {{ default_project_domain_name }}
 cafile = {{ openstack_cacert }}
 
-memcache_security_strategy = {{ memcache_security_strategy }}
-memcache_secret_key = {{ memcache_secret_key }}
-memcached_servers = {% for host in groups['memcached'] %}{{ 'api' | kolla_address(host) | put_address_in_context('memcache') }}:{{ memcached_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
 [keystone_authtoken]
 service_type = load-balancer
 www_authenticate_uri = {{ keystone_public_url }}
@@ -118,7 +114,6 @@ loadbalancer_topology = {{ octavia_loadbalancer_topology }}
 
 [oslo_messaging]
 topic = octavia_prov
-rpc_thread_pool_size = 2
 
 [oslo_messaging_notifications]
 transport_url = {{ notify_transport_url }}
@@ -185,6 +180,3 @@ jobboard_redis_sentinel = {{ valkey_sentinel_monitor_name }}
 jobboard_redis_sentinel_ssl_options = ssl:False
 persistence_connection = mysql+pymysql://{{ octavia_persistence_database_user }}:{{ octavia_persistence_database_password }}@{{ octavia_persistence_database_address }}/{{ octavia_persistence_database_name }}{{ '?ssl_ca=' ~ openstack_cacert if octavia_database_enable_tls_internal | bool }}
 {% endif %}
-
-[oslo_concurrency]
-lock_path = /var/lib/octavia/tmp
