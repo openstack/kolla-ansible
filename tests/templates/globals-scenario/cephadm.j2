@@ -1,0 +1,21 @@
+# kolla-ansible vars
+enable_cinder: "yes"
+enable_neutron_agent_ha: "yes"
+enable_valkey: "yes"
+cinder_cluster_name: "kolla_ceph"
+# External Ceph
+glance_backend_ceph: "yes"
+cinder_backend_ceph: "yes"
+nova_backend_ceph: "yes"
+# RabbitMQ tuning
+rabbitmq_cluster_partition_handling: "autoheal"
+rabbitmq_extra_config:
+  cluster_keepalive_interval: 50000
+
+enable_ceph_rgw: "yes"
+ceph_rgw_hosts:
+{% for host in hostvars | reject('equalto', 'localhost') %}
+  - host: {{ host }}
+    ip: {{ hostvars[host]['ansible_host'] }}
+    port: 6780
+{% endfor %}
