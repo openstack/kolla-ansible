@@ -52,6 +52,34 @@
           - "veth-{{ neutron_external_bridge_name }}-ext"
         bridge_name: "{{ neutron_external_bridge_name }}"
   tasks:
+    # NOTE: Small swap file as a safety net against OOM on 8GB nodes.
+    - name: Configure swap file
+      when: configure_swap_size | int > 0
+      become: true
+      block:
+        - name: Create swap file
+          ansible.builtin.command:
+            cmd: "dd if=/dev/zero of=/swapfile bs=1M count={{ configure_swap_size }}"
+            creates: /swapfile
+
+        - name: Ensure swap file permissions
+          ansible.builtin.file:
+            path: /swapfile
+            owner: root
+            group: root
+            mode: "0600"
+
+        - name: Enable swap file
+          ansible.builtin.shell:
+            cmd: "swapon --show=NAME --noheadings | grep -qx /swapfile || { mkswap /swapfile && swapon /swapfile; }"
+          changed_when: false
+
+        - name: Set low swappiness
+          ansible.posix.sysctl:
+            name: vm.swappiness
+            value: "10"
+            sysctl_set: true
+
     - name: Set Rockylinux mirror to download.rockylinux.org
       when: ansible_facts.distribution == "Rocky"
       block:
